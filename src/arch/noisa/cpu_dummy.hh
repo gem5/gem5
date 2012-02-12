@@ -2,5 +2,6 @@
 class BaseCPU
 {
   public:
-    static int numSimulatedInstructions() { return 0; }
+    static int numSimulatedInsts() { return 0; }
+    static int numSimulatedOps() { return 0; }
 };

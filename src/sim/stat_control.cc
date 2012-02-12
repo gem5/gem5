@@ -97,11 +97,13 @@ SimTicksReset simTicksReset;
 struct Global
 {
     Stats::Formula hostInstRate;
+    Stats::Formula hostOpRate;
     Stats::Formula hostTickRate;
     Stats::Value hostMemory;
     Stats::Value hostSeconds;
 
     Stats::Value simInsts;
+    Stats::Value simOps;
 
     Global();
 };
@@ -109,11 +111,19 @@ struct Global
 Global::Global()
 {
     simInsts
-        .functor(BaseCPU::numSimulatedInstructions)
+        .functor(BaseCPU::numSimulatedInsts)
         .name("sim_insts")
         .desc("Number of instructions simulated")
         .precision(0)
         .prereq(simInsts)
+        ;
+
+    simOps
+        .functor(BaseCPU::numSimulatedOps)
+        .name("sim_ops")
+        .desc("Number of ops (including micro ops) simulated")
+        .precision(0)
+        .prereq(simOps)
         ;
 
     simSeconds
@@ -147,6 +157,13 @@ Global::Global()
         .prereq(simInsts)
         ;
 
+    hostOpRate
+        .name("host_op_rate")
+        .desc("Simulator op (including micro ops) rate (op/s)")
+        .precision(0)
+        .prereq(simOps)
+        ;
+
     hostMemory
         .functor(memUsage)
         .name("host_mem_usage")
@@ -169,6 +186,7 @@ Global::Global()
 
     simSeconds = simTicks / simFreq;
     hostInstRate = simInsts / hostSeconds;
+    hostOpRate = simOps / hostSeconds;
     hostTickRate = simTicks / hostSeconds;
 
     registerResetCallback(&simTicksReset);

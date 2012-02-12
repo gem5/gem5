@@ -449,6 +449,8 @@ class DefaultCommit
 
     /** Stat for the total number of committed instructions. */
     Stats::Scalar commitCommittedInsts;
+    /** Stat for the total number of committed ops. */
+    Stats::Scalar commitCommittedOps;
     /** Stat for the total number of squashed instructions discarded by commit.
      */
     Stats::Scalar commitSquashedInsts;
@@ -466,7 +468,9 @@ class DefaultCommit
     Stats::Distribution numCommittedDist;
 
     /** Total number of instructions committed. */
-    Stats::Vector statComInst;
+    Stats::Vector instsCommitted;
+    /** Total number of ops (including micro ops) committed. */
+    Stats::Vector opsCommitted;
     /** Total number of software prefetches committed. */
     Stats::Vector statComSwp;
     /** Stat for the total number of committed memory references. */

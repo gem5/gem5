@@ -116,6 +116,8 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
 
     numInst = 0;
     startNumInst = 0;
+    numOp = 0;
+    startNumOp = 0;
     numLoad = 0;
     startNumLoad = 0;
     lastIcacheStall = 0;
@@ -156,8 +158,13 @@ BaseSimpleCPU::regStats()
     BaseCPU::regStats();
 
     numInsts
-        .name(name() + ".num_insts")
-        .desc("Number of instructions executed")
+        .name(name() + ".committedInsts")
+        .desc("Number of instructions committed")
+        ;
+
+    numOps
+        .name(name() + ".committedOps")
+        .desc("Number of ops (including micro ops) committed")
         ;
 
     numIntAluAccesses

@@ -331,7 +331,9 @@ class BaseCPU : public MemObject
      */
     virtual BranchPred *getBranchPred() { return NULL; };
 
-    virtual Counter totalInstructions() const = 0;
+    virtual Counter totalInsts() const = 0;
+
+    virtual Counter totalOps() const = 0;
 
     // Function tracing
   private:
@@ -354,13 +356,24 @@ class BaseCPU : public MemObject
     }
 
     static int numSimulatedCPUs() { return cpuList.size(); }
-    static Counter numSimulatedInstructions()
+    static Counter numSimulatedInsts()
     {
         Counter total = 0;
 
         int size = cpuList.size();
         for (int i = 0; i < size; ++i)
-            total += cpuList[i]->totalInstructions();
+            total += cpuList[i]->totalInsts();
+
+        return total;
+    }
+
+    static Counter numSimulatedOps()
+    {
+        Counter total = 0;
+
+        int size = cpuList.size();
+        for (int i = 0; i < size; ++i)
+            total += cpuList[i]->totalOps();
 
         return total;
     }

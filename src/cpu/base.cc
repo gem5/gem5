@@ -93,7 +93,7 @@ CPUProgressEvent::CPUProgressEvent(BaseCPU *_cpu, Tick ival)
 void
 CPUProgressEvent::process()
 {
-    Counter temp = cpu->totalInstructions();
+    Counter temp = cpu->totalOps();
 #ifndef NDEBUG
     double ipc = double(temp - lastNumInst) / (_interval / cpu->ticks(1));
 

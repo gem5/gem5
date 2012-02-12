@@ -398,6 +398,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
     bool isSyscall() const
     { return staticInst->isSyscall(); }
+    bool isMicroop() const { return staticInst->isMicroop(); }
+    bool isLastMicroop() const { return staticInst->isLastMicroop(); }
 
 
     /////////////////////////////////////////////

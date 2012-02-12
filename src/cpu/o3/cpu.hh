@@ -389,7 +389,10 @@ class FullO3CPU : public BaseO3CPU
     void removeThread(ThreadID tid);
 
     /** Count the Total Instructions Committed in the CPU. */
-    virtual Counter totalInstructions() const;
+    virtual Counter totalInsts() const;
+
+    /** Count the Total Ops (including micro ops) committed in the CPU. */
+    virtual Counter totalOps() const;
 
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay);
@@ -547,7 +550,7 @@ class FullO3CPU : public BaseO3CPU
     ListIt addInst(DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(ThreadID tid);
+    void instDone(ThreadID tid, DynInstPtr &inst);
 
     /** Remove an instruction from the front end of the list.  There's
      *  no restriction on location of the instruction.
@@ -797,6 +800,8 @@ class FullO3CPU : public BaseO3CPU
     Stats::Scalar quiesceCycles;
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector committedInsts;
+    /** Stat for the number of committed ops (including micro ops) per thread. */
+    Stats::Vector committedOps;
     /** Stat for the total number of committed instructions. */
     Stats::Scalar totalCommittedInsts;
     /** Stat for the CPI per thread. */

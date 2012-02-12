@@ -506,6 +506,11 @@ FullO3CPU<Impl>::regStats()
         .name(name() + ".committedInsts")
         .desc("Number of Instructions Simulated");
 
+    committedOps
+        .init(numThreads)
+        .name(name() + ".committedOps")
+        .desc("Number of Ops (including micro ops) Simulated");
+
     totalCommittedInsts
         .name(name() + ".committedInsts_total")
         .desc("Number of Instructions Simulated");
@@ -718,13 +723,26 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
 
 template <class Impl>
 Counter
-FullO3CPU<Impl>::totalInstructions() const
+FullO3CPU<Impl>::totalInsts() const
 {
     Counter total(0);
 
     ThreadID size = thread.size();
     for (ThreadID i = 0; i < size; i++)
         total += thread[i]->numInst;
+
+    return total;
+}
+
+template <class Impl>
+Counter
+FullO3CPU<Impl>::totalOps() const
+{
+    Counter total(0);
+
+    ThreadID size = thread.size();
+    for (ThreadID i = 0; i < size; i++)
+        total += thread[i]->numOp;
 
     return total;
 }
@@ -1458,13 +1476,19 @@ FullO3CPU<Impl>::addInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::instDone(ThreadID tid)
+FullO3CPU<Impl>::instDone(ThreadID tid, DynInstPtr &inst)
 {
     // Keep an instruction count.
-    thread[tid]->numInst++;
-    thread[tid]->numInsts++;
-    committedInsts[tid]++;
-    totalCommittedInsts++;
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
+        thread[tid]->numInst++;
+        thread[tid]->numInsts++;
+        committedInsts[tid]++;
+        totalCommittedInsts++;
+    }
+    thread[tid]->numOp++;
+    thread[tid]->numOps++;
+    committedOps[tid]++;
+
     system->totalNumInsts++;
     // Check for instruction-count-based events.
     comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);

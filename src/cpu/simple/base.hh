@@ -189,18 +189,31 @@ class BaseSimpleCPU : public BaseCPU
     Counter numInst;
     Counter startNumInst;
     Stats::Scalar numInsts;
+    Counter numOp;
+    Counter startNumOp;
+    Stats::Scalar numOps;
 
     void countInst()
     {
-        numInst++;
-        numInsts++;
+        if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
+            numInst++;
+            numInsts++;
+        }
+        numOp++;
+        numOps++;
+
         system->totalNumInsts++;
         thread->funcExeInst++;
     }
 
-    virtual Counter totalInstructions() const
+    virtual Counter totalInsts() const
     {
         return numInst - startNumInst;
+    }
+
+    virtual Counter totalOps() const
+    {
+        return numOp - startNumOp;
     }
 
     //number of integer alu accesses

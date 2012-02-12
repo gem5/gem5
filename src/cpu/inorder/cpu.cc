@@ -634,16 +634,21 @@ InOrderCPU::regStats()
     committedInsts
         .init(numThreads)
         .name(name() + ".committedInsts")
-        .desc("Number of Instructions Simulated (Per-Thread)");
+        .desc("Number of Instructions committed (Per-Thread)");
+
+    committedOps
+        .init(numThreads)
+        .name(name() + ".committedOps")
+        .desc("Number of Ops committed (Per-Thread)");
 
     smtCommittedInsts
         .init(numThreads)
         .name(name() + ".smtCommittedInsts")
-        .desc("Number of SMT Instructions Simulated (Per-Thread)");
+        .desc("Number of SMT Instructions committed (Per-Thread)");
 
     totalCommittedInsts
         .name(name() + ".committedInsts_total")
-        .desc("Number of Instructions Simulated (Total)");
+        .desc("Number of Instructions committed (Total)");
 
     cpi
         .name(name() + ".cpi")
@@ -1437,19 +1442,26 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     
     // Increment thread-state's instruction count
     thread[tid]->numInst++;
+    thread[tid]->numOp++;
 
     // Increment thread-state's instruction stats
     thread[tid]->numInsts++;
+    thread[tid]->numOps++;
 
     // Count committed insts per thread stats
-    committedInsts[tid]++;
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
+        committedInsts[tid]++;
 
-    // Count total insts committed stat
-    totalCommittedInsts++;
+        // Count total insts committed stat
+        totalCommittedInsts++;
+    }
+
+    committedOps[tid]++;
 
     // Count SMT-committed insts per thread stat
     if (numActiveThreads() > 1) {
-        smtCommittedInsts[tid]++;
+        if (!inst->isMicroop() || inst->isLastMicroop())
+            smtCommittedInsts[tid]++;
     }
 
     // Instruction-Mix Stats
@@ -1470,7 +1482,7 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     }
 
     // Check for instruction-count-based events.
-    comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);
+    comInstEventQueue[tid]->serviceEvents(thread[tid]->numOp);
 
     // Finally, remove instruction from CPU
     removeInst(inst);

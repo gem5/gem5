@@ -765,12 +765,23 @@ class InOrderCPU : public BaseCPU
     }
 
     /** Count the Total Instructions Committed in the CPU. */
-    virtual Counter totalInstructions() const
+    virtual Counter totalInsts() const
     {
         Counter total(0);
 
         for (ThreadID tid = 0; tid < (ThreadID)thread.size(); tid++)
             total += thread[tid]->numInst;
+
+        return total;
+    }
+
+    /** Count the Total Ops Committed in the CPU. */
+    virtual Counter totalOps() const
+    {
+        Counter total(0);
+
+        for (ThreadID tid = 0; tid < (ThreadID)thread.size(); tid++)
+            total += thread[tid]->numOp;
 
         return total;
     }
@@ -854,6 +865,9 @@ class InOrderCPU : public BaseCPU
 
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector committedInsts;
+
+    /** Stat for the number of committed ops per thread. */
+    Stats::Vector committedOps;
 
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector smtCommittedInsts;

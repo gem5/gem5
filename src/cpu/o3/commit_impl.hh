@@ -169,6 +169,10 @@ DefaultCommit<Impl>::regStats()
         .name(name() + ".commitCommittedInsts")
         .desc("The number of committed instructions")
         .prereq(commitCommittedInsts);
+    commitCommittedOps
+        .name(name() + ".commitCommittedOps")
+        .desc("The number of committed instructions")
+        .prereq(commitCommittedInsts);
     commitSquashedInsts
         .name(name() + ".commitSquashedInsts")
         .desc("The number of squashed insts skipped by commit")
@@ -193,10 +197,17 @@ DefaultCommit<Impl>::regStats()
         .flags(Stats::pdf)
         ;
 
-    statComInst
+    instsCommitted
         .init(cpu->numThreads)
-        .name(name() + ".count")
+        .name(name() + ".committedInsts")
         .desc("Number of instructions committed")
+        .flags(total)
+        ;
+
+    opsCommitted
+        .init(cpu->numThreads)
+        .name(name() + ".committedOps")
+        .desc("Number of ops (including micro ops) committed")
         .flags(total)
         ;
 
@@ -988,12 +999,14 @@ DefaultCommit<Impl>::commitInsts()
                 // Set the doneSeqNum to the youngest committed instruction.
                 toIEW->commitInfo[tid].doneSeqNum = head_inst->seqNum;
 
-                ++commitCommittedInsts;
+                if (!head_inst->isMicroop() || head_inst->isLastMicroop())
+                    ++commitCommittedInsts;
+                ++commitCommittedOps;
 
                 // To match the old model, don't count nops and instruction
                 // prefetches towards the total commit count.
                 if (!head_inst->isNop() && !head_inst->isInstPrefetch()) {
-                    cpu->instDone(tid);
+                    cpu->instDone(tid, head_inst);
                 }
 
                 if (tid == 0) {
@@ -1175,7 +1188,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         if (head_inst->traceData) {
             if (DTRACE(ExecFaulting)) {
                 head_inst->traceData->setFetchSeq(head_inst->seqNum);
-                head_inst->traceData->setCPSeq(thread[tid]->numInst);
+                head_inst->traceData->setCPSeq(thread[tid]->numOp);
                 head_inst->traceData->dump();
             }
             delete head_inst->traceData;
@@ -1209,7 +1222,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             head_inst->seqNum, head_inst->pcState());
     if (head_inst->traceData) {
         head_inst->traceData->setFetchSeq(head_inst->seqNum);
-        head_inst->traceData->setCPSeq(thread[tid]->numInst);
+        head_inst->traceData->setCPSeq(thread[tid]->numOp);
         head_inst->traceData->dump();
         delete head_inst->traceData;
         head_inst->traceData = NULL;
@@ -1360,10 +1373,14 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
     if (inst->isDataPrefetch()) {
         statComSwp[tid]++;
     } else {
-        statComInst[tid]++;
+        if (!inst->isMicroop() || inst->isLastMicroop())
+            instsCommitted[tid]++;
+        opsCommitted[tid]++;
     }
 #else
-    statComInst[tid]++;
+    if (!inst->isMicroop() || inst->isLastMicroop())
+        instsCommitted[tid]++;
+    opsCommitted[tid]++;
 #endif
 
     //

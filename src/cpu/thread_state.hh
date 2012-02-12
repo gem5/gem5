@@ -132,6 +132,10 @@ struct ThreadState {
     Counter numInst;
     /** Stat for number instructions committed. */
     Stats::Scalar numInsts;
+    /** Number of ops (including micro ops) committed. */
+    Counter numOp;
+    /** Stat for number ops (including micro ops) committed. */
+    Stats::Scalar numOps;
     /** Stat for number of memory references. */
     Stats::Scalar numMemRefs;
 
