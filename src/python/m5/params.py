@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
 # Copyright (c) 2010-2011 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -28,6 +40,7 @@
 # Authors: Steve Reinhardt
 #          Nathan Binkert
 #          Gabe Black
+#          Andreas Hansson
 
 #####################################################################
 #
@@ -1324,10 +1337,11 @@ AllMemory = AddrRange(0, MaxAddr)
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
 class PortRef(object):
-    def __init__(self, simobj, name):
+    def __init__(self, simobj, name, role):
         assert(isSimObject(simobj) or isSimObjectClass(simobj))
         self.simobj = simobj
         self.name = name
+        self.role = role
         self.peer = None   # not associated with another port yet
         self.ccConnected = False # C++ port connection done?
         self.index = -1  # always -1 for non-vector ports
@@ -1397,12 +1411,24 @@ class PortRef(object):
     def ccConnect(self):
         from m5.internal.pyobject import connectPorts
 
+        if self.role == 'SLAVE':
+            # do nothing and let the master take care of it
+            return
+
         if self.ccConnected: # already done this
             return
         peer = self.peer
         if not self.peer: # nothing to connect to
             return
+
+        # check that we connect a master to a slave
+        if self.role == peer.role:
+            raise TypeError, \
+                "cannot connect '%s' and '%s' due to identical role '%s'" \
+                % (peer, self, self.role)
+
         try:
+            # self is always the master and peer the slave
             connectPorts(self.simobj.getCCObject(), self.name, self.index,
                          peer.simobj.getCCObject(), peer.name, peer.index)
         except:
@@ -1416,8 +1442,8 @@ class PortRef(object):
 # A reference to an individual element of a VectorPort... much like a
 # PortRef, but has an index.
 class VectorPortElementRef(PortRef):
-    def __init__(self, simobj, name, index):
-        PortRef.__init__(self, simobj, name)
+    def __init__(self, simobj, name, role, index):
+        PortRef.__init__(self, simobj, name, role)
         self.index = index
 
     def __str__(self):
@@ -1426,10 +1452,11 @@ class VectorPortElementRef(PortRef):
 # A reference to a complete vector-valued port (not just a single element).
 # Can be indexed to retrieve individual VectorPortElementRef instances.
 class VectorPortRef(object):
-    def __init__(self, simobj, name):
+    def __init__(self, simobj, name, role):
         assert(isSimObject(simobj) or isSimObjectClass(simobj))
         self.simobj = simobj
         self.name = name
+        self.role = role
         self.elements = []
 
     def __str__(self):
@@ -1444,7 +1471,7 @@ class VectorPortRef(object):
             raise TypeError, "VectorPort index must be integer"
         if key >= len(self.elements):
             # need to extend list
-            ext = [VectorPortElementRef(self.simobj, self.name, i)
+            ext = [VectorPortElementRef(self.simobj, self.name, self.role, i)
                    for i in range(len(self.elements), key+1)]
             self.elements.extend(ext)
         return self.elements[key]
@@ -1488,34 +1515,62 @@ class VectorPortRef(object):
 # logical port in the SimObject class, not a particular port on a
 # SimObject instance.  The latter are represented by PortRef objects.
 class Port(object):
-    # Port("description")
-    def __init__(self, *args):
-        if len(args) == 1:
-            self.desc = args[0]
-        else:
-            raise TypeError, 'wrong number of arguments'
-        # self.name is set by SimObject class on assignment
-        # e.g., pio_port = Port("blah") sets self.name to 'pio_port'
-
     # Generate a PortRef for this port on the given SimObject with the
     # given name
     def makeRef(self, simobj):
-        return PortRef(simobj, self.name)
+        return PortRef(simobj, self.name, self.role)
 
     # Connect an instance of this port (on the given SimObject with
     # the given name) with the port described by the supplied PortRef
     def connect(self, simobj, ref):
         self.makeRef(simobj).connect(ref)
 
+class MasterPort(Port):
+    # MasterPort("description")
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.desc = args[0]
+            self.role = 'MASTER'
+        else:
+            raise TypeError, 'wrong number of arguments'
+
+class SlavePort(Port):
+    # SlavePort("description")
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.desc = args[0]
+            self.role = 'SLAVE'
+        else:
+            raise TypeError, 'wrong number of arguments'
+
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a Bus).
 class VectorPort(Port):
     def __init__(self, *args):
-        Port.__init__(self, *args)
         self.isVec = True
 
     def makeRef(self, simobj):
-        return VectorPortRef(simobj, self.name)
+        return VectorPortRef(simobj, self.name, self.role)
+
+class VectorMasterPort(VectorPort):
+    # VectorMasterPort("description")
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.desc = args[0]
+            self.role = 'MASTER'
+            VectorPort.__init__(self, *args)
+        else:
+            raise TypeError, 'wrong number of arguments'
+
+class VectorSlavePort(VectorPort):
+    # VectorSlavePort("description")
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.desc = args[0]
+            self.role = 'SLAVE'
+            VectorPort.__init__(self, *args)
+        else:
+            raise TypeError, 'wrong number of arguments'
 
 # 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
 # proxy objects (via set_param_desc()) so that proxy error messages
@@ -1549,6 +1604,7 @@ __all__ = ['Param', 'VectorParam',
            'MaxAddr', 'MaxTick', 'AllMemory',
            'Time',
            'NextEthernetAddr', 'NULL',
-           'Port', 'VectorPort']
+           'MasterPort', 'SlavePort',
+           'VectorMasterPort', 'VectorSlavePort']
 
 import SimObject

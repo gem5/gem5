@@ -61,10 +61,10 @@ Bus())
 # l2cache & bus
 system.toL2Bus = Bus()
 system.l2c = L2(size='4MB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.port
+system.l2c.cpu_side = system.toL2Bus.master
 
 # connect l2c to membus
-system.l2c.mem_side = system.membus.port
+system.l2c.mem_side = system.membus.slave
 
 # add L1 caches
 for cpu in cpus:
@@ -74,10 +74,10 @@ for cpu in cpus:
     cpu.connectAllPorts(system.toL2Bus, system.membus)
     cpu.clock = '2GHz'
 
-system.system_port = system.membus.port
+system.system_port = system.membus.slave
 
 # connect memory to membus
-system.physmem.port = system.membus.port
+system.physmem.port = system.membus.master
 
 
 # -----------------------

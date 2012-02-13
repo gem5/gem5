@@ -43,7 +43,7 @@ class PciDevice(DmaDevice):
     type = 'PciDevice'
     abstract = True
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    config = Port("PCI configuration space port")
+    config = SlavePort("PCI configuration space port")
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")

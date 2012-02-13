@@ -91,7 +91,7 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
      # Tie the cpu test and functional ports to the ruby cpu ports and
      # physmem, respectively
      #
-     cpus[i].test = ruby_port.port
+     cpus[i].test = ruby_port.slave
      cpus[i].functional = system.funcmem.port
      
      #

@@ -50,8 +50,8 @@ cpu.clock = '2GHz'
 system = System(cpu = cpu,
                 physmem = PhysicalMemory(),
                 membus = Bus())
-system.system_port = system.membus.port
-system.physmem.port = system.membus.port
+system.system_port = system.membus.slave
+system.physmem.port = system.membus.master
 cpu.connectAllPorts(system.membus)
 
 root = Root(full_system = False, system = system)

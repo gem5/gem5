@@ -90,7 +90,7 @@ class IntDev
     IntDev(MemObject * parent, Tick latency = 0)
     {
         if (parent != NULL) {
-            intPort = new IntPort(parent->name() + ".int_port",
+            intPort = new IntPort(parent->name() + ".int_master",
                     parent, this, latency);
         } else {
             intPort = NULL;

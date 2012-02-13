@@ -33,7 +33,7 @@ from MemObject import MemObject
 class PioDevice(MemObject):
     type = 'PioDevice'
     abstract = True
-    pio = Port("Programmed I/O port")
+    pio = SlavePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
 
 class BasicPioDevice(PioDevice):
@@ -45,7 +45,7 @@ class BasicPioDevice(PioDevice):
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
-    dma = Port("DMA port")
+    dma = MasterPort("DMA port")
     min_backoff_delay = Param.Latency('4ns',
       "min time between a nack packet being received and the next request made by the device")
     max_backoff_delay = Param.Latency('10us',

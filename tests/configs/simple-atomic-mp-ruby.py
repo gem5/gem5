@@ -45,10 +45,10 @@ for cpu in cpus:
     cpu.clock = '2GHz'
 
 # connect memory to membus
-system.physmem.port = system.membus.port
+system.physmem.port = system.membus.master
 
 # Connect the system port for loading of binaries etc
-system.system_port = system.membus.port
+system.system_port = system.membus.slave
 
 # -----------------------
 # run simulation

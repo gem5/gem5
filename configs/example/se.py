@@ -182,8 +182,8 @@ if options.ruby:
     Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 else:
-    system.system_port = system.membus.port
-    system.physmem.port = system.membus.port
+    system.system_port = system.membus.slave
+    system.physmem.port = system.membus.master
     CacheConfig.config_cache(options, system)
 
 for i in xrange(np):

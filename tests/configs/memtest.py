@@ -63,22 +63,22 @@ system = System(cpu = cpus, funcmem = PhysicalMemory(),
 # l2cache & bus
 system.toL2Bus = Bus(clock="500GHz", width=16)
 system.l2c = L2(size='64kB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.port
+system.l2c.cpu_side = system.toL2Bus.master
 
 # connect l2c to membus
-system.l2c.mem_side = system.membus.port
+system.l2c.mem_side = system.membus.slave
 
 # add L1 caches
 for cpu in cpus:
     cpu.l1c = L1(size = '32kB', assoc = 4)
     cpu.l1c.cpu_side = cpu.test
-    cpu.l1c.mem_side = system.toL2Bus.port
+    cpu.l1c.mem_side = system.toL2Bus.slave
     system.funcmem.port = cpu.functional
 
-system.system_port = system.membus.port
+system.system_port = system.membus.slave
 
 # connect memory to membus
-system.physmem.port = system.membus.port
+system.physmem.port = system.membus.master
 
 
 # -----------------------

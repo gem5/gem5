@@ -41,5 +41,5 @@ class NetworkTest(MemObject):
     traffic_type = Param.Counter(0, "Traffic type: uniform random, tornado, bit complement")
     inj_rate = Param.Float(0.1, "Packet injection rate")
     precision = Param.Int(3, "Number of digits of precision after decimal point")
-    test = Port("Port to the memory system to test")
+    test = MasterPort("Port to the memory system to test")
     system = Param.System(Parent.any, "System we belong to")

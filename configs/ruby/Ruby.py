@@ -106,7 +106,7 @@ def create_system(options, system, piobus = None, dma_devices = []):
     system.sys_port_proxy = sys_port_proxy
 
     # Connect the system port for loading of binaries etc
-    system.system_port = system.sys_port_proxy.port
+    system.system_port = system.sys_port_proxy.slave
 
 
     #

@@ -44,8 +44,8 @@ def config_cache(options, system):
                                 block_size=options.cacheline_size)
 
         system.tol2bus = Bus()
-        system.l2.cpu_side = system.tol2bus.port
-        system.l2.mem_side = system.membus.port
+        system.l2.cpu_side = system.tol2bus.master
+        system.l2.mem_side = system.membus.slave
         system.l2.num_cpus = options.num_cpus
 
     for i in xrange(options.num_cpus):

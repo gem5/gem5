@@ -39,7 +39,7 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
 class System(MemObject):
     type = 'System'
-    system_port = Port("System port")
+    system_port = MasterPort("System port")
 
     @classmethod
     def export_method_cxx_predecls(cls, code):

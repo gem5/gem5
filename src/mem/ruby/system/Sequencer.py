@@ -34,11 +34,12 @@ from MemObject import MemObject
 class RubyPort(MemObject):
     type = 'RubyPort'
     abstract = True
-    port = VectorPort("M5 port")
+    slave = VectorSlavePort("CPU slave port")
+    master = VectorMasterPort("CPU master port")
     version = Param.Int(0, "")
-    pio_port = Port("Ruby_pio_port")
+    pio_port = MasterPort("Ruby_pio_port")
     physmem = Param.PhysicalMemory("")
-    physMemPort = Port("port to physical memory")
+    physMemPort = MasterPort("port to physical memory")
     using_ruby_tester = Param.Bool(False, "")
     using_network_tester = Param.Bool(False, "")
     access_phys_mem = Param.Bool(True,

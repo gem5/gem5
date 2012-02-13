@@ -33,13 +33,14 @@ from MemObject import MemObject
 
 class Bus(MemObject):
     type = 'Bus'
-    port = VectorPort("vector port for connecting devices")
+    slave = VectorSlavePort("vector port for connecting masters")
+    master = VectorMasterPort("vector port for connecting slaves")
     bus_id = Param.Int(0, "blah")
     clock = Param.Clock("1GHz", "bus clock speed")
     header_cycles = Param.Int(1, "cycles of overhead per transaction")
     width = Param.Int(64, "bus width (bytes)")
     block_size = Param.Int(64, "The default block size if one isn't set by a device attached to the bus.")
-    default = \
-            Port("Default port for requests that aren't handled by a device.")
+    default = MasterPort("Default port for requests that aren't handled " \
+                             "by a device.")
     use_default_range = \
             Param.Bool(False, "Query default port device for legal range.")

@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2008 The Regents of The University of Michigan
 # Copyright (c) 2011 Regents of the University of California
 # All rights reserved.
@@ -27,6 +39,7 @@
 #
 # Authors: Nathan Binkert
 #          Rick Strong
+#          Andreas Hansson
 
 import sys
 
@@ -138,24 +151,28 @@ class BaseCPU(MemObject):
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
-    icache_port = Port("Instruction Port")
-    dcache_port = Port("Data Port")
+    icache_port = MasterPort("Instruction Port")
+    dcache_port = MasterPort("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
 
     if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
-    _uncached_ports = []
+    _uncached_slave_ports = []
+    _uncached_master_ports = []
     if buildEnv['TARGET_ISA'] == 'x86':
-        _uncached_ports = ["interrupts.pio", "interrupts.int_port"]
+        _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
+        _uncached_master_ports += ["interrupts.int_master"]
 
     def connectCachedPorts(self, bus):
         for p in self._cached_ports:
-            exec('self.%s = bus.port' % p)
+            exec('self.%s = bus.slave' % p)
 
     def connectUncachedPorts(self, bus):
-        for p in self._uncached_ports:
-            exec('self.%s = bus.port' % p)
+        for p in self._uncached_slave_ports:
+            exec('self.%s = bus.master' % p)
+        for p in self._uncached_master_ports:
+            exec('self.%s = bus.slave' % p)
 
     def connectAllPorts(self, cached_bus, uncached_bus = None):
         self.connectCachedPorts(cached_bus)
@@ -190,5 +207,5 @@ class BaseCPU(MemObject):
         self.toL2Bus = Bus()
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
-        self.l2cache.cpu_side = self.toL2Bus.port
+        self.toL2Bus.master = self.l2cache.cpu_side
         self._cached_ports = ['l2cache.mem_side']

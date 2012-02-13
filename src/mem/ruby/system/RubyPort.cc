@@ -68,11 +68,22 @@ RubyPort::init()
 Port *
 RubyPort::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "port") {
-        M5Port* cpuPort = new M5Port(csprintf("%s-port%d", name(), idx),
+    // used by the CPUs to connect the caches to the interconnect, and
+    // for the x86 case also the interrupt master
+    if (if_name == "slave") {
+        M5Port* cpuPort = new M5Port(csprintf("%s-slave%d", name(), idx),
                                      this, ruby_system, access_phys_mem);
         cpu_ports.push_back(cpuPort);
         return cpuPort;
+    }
+
+    // used by the x86 CPUs to connect the interrupt PIO and interrupt slave
+    // port
+    if (if_name == "master") {
+        PioPort* masterPort = new PioPort(csprintf("%s-master%d", name(), idx),
+                                          this);
+
+        return masterPort;
     }
 
     if (if_name == "pio_port") {

@@ -37,8 +37,8 @@ class EtherObject(SimObject):
 
 class EtherLink(EtherObject):
     type = 'EtherLink'
-    int0 = Port("interface 0")
-    int1 = Port("interface 1")
+    int0 = SlavePort("interface 0")
+    int1 = SlavePort("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
@@ -64,7 +64,7 @@ class EtherDump(SimObject):
 class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
-    interface = Port("Ethernet Interface")
+    interface = MasterPort("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above

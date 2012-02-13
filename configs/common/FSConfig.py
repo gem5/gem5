@@ -74,21 +74,21 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.bridge = Bridge(delay='50ns', nack_delay='4ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
-    self.bridge.master = self.iobus.port
-    self.bridge.slave = self.membus.port
-    self.physmem.port = self.membus.port
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
+    self.physmem.port = self.membus.master
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
     self.disk2.childImage(disk('linux-bigswap2.img'))
     self.tsunami = BaseTsunami()
     self.tsunami.attachIO(self.iobus)
-    self.tsunami.ide.pio = self.iobus.port
-    self.tsunami.ide.config = self.iobus.port
-    self.tsunami.ide.dma = self.iobus.port
-    self.tsunami.ethernet.pio = self.iobus.port
-    self.tsunami.ethernet.config = self.iobus.port
-    self.tsunami.ethernet.dma = self.iobus.port
+    self.tsunami.ide.pio = self.iobus.master
+    self.tsunami.ide.config = self.iobus.master
+    self.tsunami.ide.dma = self.iobus.slave
+    self.tsunami.ethernet.pio = self.iobus.master
+    self.tsunami.ethernet.config = self.iobus.master
+    self.tsunami.ethernet.dma = self.iobus.slave
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
@@ -99,7 +99,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.console = binary('console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 
-    self.system_port = self.membus.port
+    self.system_port = self.membus.slave
 
     return self
 
@@ -124,7 +124,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     # RubyPort currently does support functional accesses.  Therefore provide
     # the piobus a direct connection to physical memory
     #
-    self.piobus.port = physmem.port
+    self.piobus.master_port = physmem.port
 
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
@@ -132,12 +132,12 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     self.disk2.childImage(disk('linux-bigswap2.img'))
     self.tsunami = BaseTsunami()
     self.tsunami.attachIO(self.piobus)
-    self.tsunami.ide.pio = self.piobus.port
-    self.tsunami.ide.config = self.piobus.port
-    self.tsunami.ide.dma = self.piobus.port
-    self.tsunami.ethernet.pio = self.piobus.port
-    self.tsunami.ethernet.config = self.piobus.port
-    self.tsunami.ethernet.dma = self.piobus.port
+    self.tsunami.ide.pio = self.piobus.master
+    self.tsunami.ide.config = self.piobus.master
+    self.tsunami.ide.dma = self.piobus.slave
+    self.tsunami.ethernet.pio = self.piobus.master
+    self.tsunami.ethernet.config = self.piobus.master
+    self.tsunami.ethernet.dma = self.piobus.slave
 
     #
     # Store the dma devices for later connection to dma ruby ports.
@@ -182,18 +182,18 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.t1000.attachIO(self.iobus)
     self.physmem = PhysicalMemory(range = AddrRange(Addr('1MB'), size = '64MB'), zero = True)
     self.physmem2 = PhysicalMemory(range = AddrRange(Addr('2GB'), size ='256MB'), zero = True)
-    self.bridge.master = self.iobus.port
-    self.bridge.slave = self.membus.port
-    self.physmem.port = self.membus.port
-    self.physmem2.port = self.membus.port
-    self.rom.port = self.membus.port
-    self.nvram.port = self.membus.port
-    self.hypervisor_desc.port = self.membus.port
-    self.partition_desc.port = self.membus.port
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
+    self.physmem.port = self.membus.master
+    self.physmem2.port = self.membus.master
+    self.rom.port = self.membus.master
+    self.nvram.port = self.membus.master
+    self.hypervisor_desc.port = self.membus.master
+    self.partition_desc.port = self.membus.master
     self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
     self.disk0.childImage(disk('disk.s10hw2'))
-    self.disk0.pio = self.iobus.port
+    self.disk0.pio = self.iobus.master
 
     # The puart0 and hvuart are placed on the IO bus, so create ranges
     # for them. The remaining IO range is rather fragmented, so poke
@@ -220,7 +220,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.hypervisor_desc_bin = binary('1up-hv.bin')
     self.partition_desc_bin = binary('1up-md.bin')
 
-    self.system_port = self.membus.port
+    self.system_port = self.membus.slave
 
     return self
 
@@ -241,8 +241,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.membus = MemBus(bus_id=1)
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.bridge.master = self.iobus.port
-    self.bridge.slave = self.membus.port
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
 
     self.mem_mode = mem_mode
 
@@ -285,7 +285,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
                                       zero = True)
         self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'),
                                     size = '64MB'), zero = True)
-        self.nvmem.port = self.membus.port
+        self.nvmem.port = self.membus.master
         self.boot_loader = binary('boot.arm')
         self.boot_loader_mem = self.nvmem
         self.gic_cpu_addr = self.realview.gic.cpu_addr
@@ -295,14 +295,14 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
             boot_flags += " init=/init "
         self.boot_osflags = boot_flags
 
-    self.physmem.port = self.membus.port
+    self.physmem.port = self.membus.master
     self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
-    self.system_port = self.membus.port
+    self.system_port = self.membus.slave
 
     return self
 
@@ -322,21 +322,21 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.membus = MemBus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange('1GB'))
-    self.bridge.master = self.iobus.port
-    self.bridge.slave = self.membus.port
-    self.physmem.port = self.membus.port
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
+    self.physmem.port = self.membus.master
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
     self.disk2.childImage(disk('linux-bigswap2.img'))
     self.malta = BaseMalta()
     self.malta.attachIO(self.iobus)
-    self.malta.ide.pio = self.iobus.port
-    self.malta.ide.config = self.iobus.port
-    self.malta.ide.dma = self.iobus.port
-    self.malta.ethernet.pio = self.iobus.port
-    self.malta.ethernet.config = self.iobus.port
-    self.malta.ethernet.dma = self.iobus.port
+    self.malta.ide.pio = self.iobus.master
+    self.malta.ide.config = self.iobus.master
+    self.malta.ide.dma = self.iobus.slave
+    self.malta.ethernet.pio = self.iobus.master
+    self.malta.ethernet.config = self.iobus.master
+    self.malta.ethernet.dma = self.iobus.slave
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
@@ -346,7 +346,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.console = binary('mips/console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 
-    self.system_port = self.membus.port
+    self.system_port = self.membus.slave
 
     return self
 
@@ -362,13 +362,13 @@ def connectX86ClassicSystem(x86_sys):
     APIC_range_size = 1 << 12;
 
     x86_sys.membus = MemBus(bus_id=1)
-    x86_sys.physmem.port = x86_sys.membus.port
+    x86_sys.physmem.port = x86_sys.membus.master
 
     # North Bridge
     x86_sys.iobus = Bus(bus_id=0)
     x86_sys.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    x86_sys.bridge.master = x86_sys.iobus.port
-    x86_sys.bridge.slave = x86_sys.membus.port
+    x86_sys.bridge.master = x86_sys.iobus.slave
+    x86_sys.bridge.slave = x86_sys.membus.master
     # Allow the bridge to pass through the IO APIC (two pages),
     # everything in the IO address range up to the local APIC, and
     # then the entire PCI address space and beyond
@@ -386,8 +386,8 @@ def connectX86ClassicSystem(x86_sys):
     # Create a bridge from the IO bus to the memory bus to allow access to
     # the local APIC (two pages)
     x86_sys.apicbridge = Bridge(delay='50ns', nack_delay='4ns')
-    x86_sys.apicbridge.slave = x86_sys.iobus.port
-    x86_sys.apicbridge.master = x86_sys.membus.port
+    x86_sys.apicbridge.slave = x86_sys.iobus.master
+    x86_sys.apicbridge.master = x86_sys.membus.slave
     x86_sys.apicbridge.ranges = [AddrRange(interrupts_address_space_base,
                                            interrupts_address_space_base +
                                            APIC_range_size - 1)]
@@ -395,7 +395,7 @@ def connectX86ClassicSystem(x86_sys):
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
 
-    x86_sys.system_port = x86_sys.membus.port
+    x86_sys.system_port = x86_sys.membus.slave
 
 def connectX86RubySystem(x86_sys):
     # North Bridge
@@ -406,7 +406,7 @@ def connectX86RubySystem(x86_sys):
     # RubyPort currently does support functional accesses.  Therefore provide
     # the piobus a direct connection to physical memory
     #
-    x86_sys.piobus.port = x86_sys.physmem.port
+    x86_sys.piobus.master = x86_sys.physmem.port
 
     x86_sys.pc.attachIO(x86_sys.piobus)
 

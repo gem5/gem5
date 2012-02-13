@@ -48,8 +48,9 @@ class MemTest(MemObject):
         "progress report interval (in accesses)")
     trace_addr = Param.Addr(0, "address to trace")
 
-    test = Port("Port to the memory system to test")
-    functional = Port("Port to the functional memory used for verification")
+    test = MasterPort("Port to the memory system to test")
+    functional = MasterPort("Port to the functional memory " \
+                                "used for verification")
     suppress_func_warnings = Param.Bool(False,
         "suppress warnings when functional accesses fail.\n")
     sys = Param.System(Parent.any, "System Parameter")

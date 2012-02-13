@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -35,6 +47,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Andreas Hansson
  */
 
 #ifndef __ARCH_X86_INTERRUPTS_HH__
@@ -225,8 +238,15 @@ class Interrupts : public BasicPioDevice, IntDev
 
     Port *getPort(const std::string &if_name, int idx = -1)
     {
-        if (if_name == "int_port")
+        // a bit of an odd one since there is now two ports in the
+        // Python class we also need two ports even if they are
+        // identical
+        if (if_name == "int_master") {
             return intPort;
+        } else if (if_name == "int_slave") {
+            // memory leak...but will be removed in the next patch
+            return new IntPort(name() + ".int_slave", this, this, latency);
+        }
         return BasicPioDevice::getPort(if_name, idx);
     }
 

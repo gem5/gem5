@@ -160,13 +160,13 @@ else:
     mem_size = SysConfig().mem()
 if options.caches or options.l2cache:
     test_sys.iocache = IOCache(addr_range=mem_size)
-    test_sys.iocache.cpu_side = test_sys.iobus.port
-    test_sys.iocache.mem_side = test_sys.membus.port
+    test_sys.iocache.cpu_side = test_sys.iobus.master
+    test_sys.iocache.mem_side = test_sys.membus.slave
 else:
     test_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
                                ranges = [AddrRange(mem_size)])
-    test_sys.iobridge.slave = test_sys.iobus.port
-    test_sys.iobridge.master = test_sys.membus.port
+    test_sys.iobridge.slave = test_sys.iobus.master
+    test_sys.iobridge.master = test_sys.membus.slave
 
 for i in xrange(np):
     if options.fastmem:

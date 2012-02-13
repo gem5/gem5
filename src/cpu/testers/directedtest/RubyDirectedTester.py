@@ -48,6 +48,6 @@ class InvalidateGenerator(DirectedGenerator):
 
 class RubyDirectedTester(MemObject):
     type = 'RubyDirectedTester'
-    cpuPort = VectorPort("the cpu ports")
+    cpuPort = VectorMasterPort("the cpu ports")
     requests_to_complete = Param.Int("checks to complete")
     generator = Param.DirectedGenerator("the request generator")

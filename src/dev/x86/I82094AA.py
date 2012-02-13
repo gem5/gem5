@@ -37,7 +37,7 @@ class I82094AA(BasicPioDevice):
     apic_id = Param.Int(1, 'APIC id for this IO APIC')
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     pio_addr = Param.Addr("Device address")
-    int_port = Port("Port for sending and receiving interrupt messages")
+    int_master = MasterPort("Port for sending interrupt messages")
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
     external_int_pic = Param.I8259(NULL, "External PIC, if any")

@@ -40,10 +40,10 @@ cpu.clock = '2GHz'
 system = System(cpu = cpu,
                 physmem = ruby_memory,
                 membus = Bus())
-system.physmem.port = system.membus.port
+system.physmem.port = system.membus.master
 cpu.connectAllPorts(system.membus)
 
 # Connect the system port for loading of binaries etc
-system.system_port = system.membus.port
+system.system_port = system.membus.slave
 
 root = Root(full_system = False, system = system)

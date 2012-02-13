@@ -44,7 +44,7 @@ from MemObject import MemObject
 class X86PagetableWalker(MemObject):
     type = 'X86PagetableWalker'
     cxx_class = 'X86ISA::Walker'
-    port = Port("Port for the hardware table walker")
+    port = MasterPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
 
 class X86TLB(BaseTLB):

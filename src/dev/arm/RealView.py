@@ -181,10 +181,10 @@ class RealViewPBX(RealView):
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
     def attachOnChipIO(self, bus, bridge):
-       self.gic.pio = bus.port
-       self.l2x0_fake.pio = bus.port
-       self.a9scu.pio = bus.port
-       self.local_cpu_timer.pio = bus.port
+       self.gic.pio = bus.master
+       self.l2x0_fake.pio = bus.master
+       self.a9scu.pio = bus.master
+       self.local_cpu_timer.pio = bus.master
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, l2x0, a9scu, local_cpu_timer)
        bridge.ranges = [AddrRange(self.realview_io.pio_addr,
@@ -195,33 +195,33 @@ class RealViewPBX(RealView):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-       self.uart.pio          = bus.port
-       self.realview_io.pio   = bus.port
-       self.timer0.pio        = bus.port
-       self.timer1.pio        = bus.port
-       self.clcd.pio          = bus.port
-       self.clcd.dma          = bus.port
-       self.kmi0.pio          = bus.port
-       self.kmi1.pio          = bus.port
-       self.cf_ctrl.pio       = bus.port
-       self.cf_ctrl.config    = bus.port
-       self.cf_ctrl.dma       = bus.port
-       self.dmac_fake.pio     = bus.port
-       self.uart1_fake.pio    = bus.port
-       self.uart2_fake.pio    = bus.port
-       self.uart3_fake.pio    = bus.port
-       self.smc_fake.pio      = bus.port
-       self.sp810_fake.pio    = bus.port
-       self.watchdog_fake.pio = bus.port
-       self.gpio0_fake.pio    = bus.port
-       self.gpio1_fake.pio    = bus.port
-       self.gpio2_fake.pio    = bus.port
-       self.ssp_fake.pio      = bus.port
-       self.sci_fake.pio      = bus.port
-       self.aaci_fake.pio     = bus.port
-       self.mmc_fake.pio      = bus.port
-       self.rtc_fake.pio      = bus.port
-       self.flash_fake.pio    = bus.port
+       self.uart.pio          = bus.master
+       self.realview_io.pio   = bus.master
+       self.timer0.pio        = bus.master
+       self.timer1.pio        = bus.master
+       self.clcd.pio          = bus.master
+       self.clcd.dma          = bus.slave
+       self.kmi0.pio          = bus.master
+       self.kmi1.pio          = bus.master
+       self.cf_ctrl.pio       = bus.master
+       self.cf_ctrl.config    = bus.master
+       self.cf_ctrl.dma       = bus.slave
+       self.dmac_fake.pio     = bus.master
+       self.uart1_fake.pio    = bus.master
+       self.uart2_fake.pio    = bus.master
+       self.uart3_fake.pio    = bus.master
+       self.smc_fake.pio      = bus.master
+       self.sp810_fake.pio    = bus.master
+       self.watchdog_fake.pio = bus.master
+       self.gpio0_fake.pio    = bus.master
+       self.gpio1_fake.pio    = bus.master
+       self.gpio2_fake.pio    = bus.master
+       self.ssp_fake.pio      = bus.master
+       self.sci_fake.pio      = bus.master
+       self.aaci_fake.pio     = bus.master
+       self.mmc_fake.pio      = bus.master
+       self.rtc_fake.pio      = bus.master
+       self.flash_fake.pio    = bus.master
 
 # Reference for memory map and interrupt number
 # RealView Emulation Baseboard User Guide (ARM DUI 0143B)
@@ -261,8 +261,8 @@ class RealViewEB(RealView):
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
     def attachOnChipIO(self, bus, bridge):
-       self.gic.pio = bus.port
-       self.l2x0_fake.pio = bus.port
+       self.gic.pio = bus.master
+       self.l2x0_fake.pio = bus.master
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, l2x0)
        bridge.ranges = [AddrRange(self.realview_io.pio_addr,
@@ -273,31 +273,31 @@ class RealViewEB(RealView):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-       self.uart.pio          = bus.port
-       self.realview_io.pio   = bus.port
-       self.timer0.pio        = bus.port
-       self.timer1.pio        = bus.port
-       self.clcd.pio          = bus.port
-       self.clcd.dma          = bus.port
-       self.kmi0.pio          = bus.port
-       self.kmi1.pio          = bus.port
-       self.dmac_fake.pio     = bus.port
-       self.uart1_fake.pio    = bus.port
-       self.uart2_fake.pio    = bus.port
-       self.uart3_fake.pio    = bus.port
-       self.smc_fake.pio      = bus.port
-       self.sp810_fake.pio    = bus.port
-       self.watchdog_fake.pio = bus.port
-       self.gpio0_fake.pio    = bus.port
-       self.gpio1_fake.pio    = bus.port
-       self.gpio2_fake.pio    = bus.port
-       self.ssp_fake.pio      = bus.port
-       self.sci_fake.pio      = bus.port
-       self.aaci_fake.pio     = bus.port
-       self.mmc_fake.pio      = bus.port
-       self.rtc_fake.pio      = bus.port
-       self.flash_fake.pio    = bus.port
-       self.smcreg_fake.pio   = bus.port
+       self.uart.pio          = bus.master
+       self.realview_io.pio   = bus.master
+       self.timer0.pio        = bus.master
+       self.timer1.pio        = bus.master
+       self.clcd.pio          = bus.master
+       self.clcd.dma          = bus.slave
+       self.kmi0.pio          = bus.master
+       self.kmi1.pio          = bus.master
+       self.dmac_fake.pio     = bus.master
+       self.uart1_fake.pio    = bus.master
+       self.uart2_fake.pio    = bus.master
+       self.uart3_fake.pio    = bus.master
+       self.smc_fake.pio      = bus.master
+       self.sp810_fake.pio    = bus.master
+       self.watchdog_fake.pio = bus.master
+       self.gpio0_fake.pio    = bus.master
+       self.gpio1_fake.pio    = bus.master
+       self.gpio2_fake.pio    = bus.master
+       self.ssp_fake.pio      = bus.master
+       self.sci_fake.pio      = bus.master
+       self.aaci_fake.pio     = bus.master
+       self.mmc_fake.pio      = bus.master
+       self.rtc_fake.pio      = bus.master
+       self.flash_fake.pio    = bus.master
+       self.smcreg_fake.pio   = bus.master
 
 class VExpress_ELT(RealView):
     pci_cfg_base = 0xD0000000
@@ -349,9 +349,9 @@ class VExpress_ELT(RealView):
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
     def attachOnChipIO(self, bus, bridge):
-       self.gic.pio = bus.port
-       self.a9scu.pio = bus.port
-       self.local_cpu_timer.pio = bus.port
+       self.gic.pio = bus.master
+       self.a9scu.pio = bus.master
+       self.local_cpu_timer.pio = bus.master
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, a9scu)
        bridge.ranges = [AddrRange(self.pci_cfg_base, self.a9scu.pio_addr - 1),
@@ -361,44 +361,44 @@ class VExpress_ELT(RealView):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-       self.elba_uart.pio       = bus.port
-       self.uart.pio            = bus.port
-       self.realview_io.pio     = bus.port
-       self.v2m_timer0.pio      = bus.port
-       self.v2m_timer1.pio      = bus.port
-       self.elba_timer0.pio     = bus.port
-       self.elba_timer1.pio     = bus.port
-       self.clcd.pio            = bus.port
-       self.clcd.dma            = bus.port
-       self.kmi0.pio            = bus.port
-       self.kmi1.pio            = bus.port
-       self.elba_kmi0.pio       = bus.port
-       self.elba_kmi1.pio       = bus.port
-       self.cf_ctrl.pio         = bus.port
-       self.cf_ctrl.config      = bus.port
+       self.elba_uart.pio       = bus.master
+       self.uart.pio            = bus.master
+       self.realview_io.pio     = bus.master
+       self.v2m_timer0.pio      = bus.master
+       self.v2m_timer1.pio      = bus.master
+       self.elba_timer0.pio     = bus.master
+       self.elba_timer1.pio     = bus.master
+       self.clcd.pio            = bus.master
+       self.clcd.dma            = bus.slave
+       self.kmi0.pio            = bus.master
+       self.kmi1.pio            = bus.master
+       self.elba_kmi0.pio       = bus.master
+       self.elba_kmi1.pio       = bus.master
+       self.cf_ctrl.pio         = bus.master
+       self.cf_ctrl.config      = bus.master
        self.cf_ctrl.dma         = bus.port
-       self.ide.pio             = bus.port
-       self.ide.config          = bus.port
-       self.ide.dma             = bus.port
-       self.ethernet.pio        = bus.port
-       self.ethernet.config     = bus.port
-       self.ethernet.dma        = bus.port
+       self.ide.pio             = bus.master
+       self.ide.config          = bus.master
+       self.ide.dma             = bus.slave
+       self.ethernet.pio        = bus.master
+       self.ethernet.config     = bus.master
+       self.ethernet.dma        = bus.slave
        self.pciconfig.pio       = bus.default
        bus.use_default_range    = True
 
-       self.l2x0_fake.pio       = bus.port
-       self.dmac_fake.pio       = bus.port
-       self.uart1_fake.pio      = bus.port
-       self.uart2_fake.pio      = bus.port
-       self.uart3_fake.pio      = bus.port
-       self.smc_fake.pio        = bus.port
-       self.sp810_fake.pio      = bus.port
-       self.watchdog_fake.pio   = bus.port
-       self.aaci_fake.pio       = bus.port
-       self.elba_aaci_fake.pio  = bus.port
-       self.mmc_fake.pio        = bus.port
-       self.rtc_fake.pio        = bus.port
-       self.spsc_fake.pio       = bus.port
-       self.lan_fake.pio        = bus.port
-       self.usb_fake.pio        = bus.port
+       self.l2x0_fake.pio       = bus.master
+       self.dmac_fake.pio       = bus.master
+       self.uart1_fake.pio      = bus.master
+       self.uart2_fake.pio      = bus.master
+       self.uart3_fake.pio      = bus.master
+       self.smc_fake.pio        = bus.master
+       self.sp810_fake.pio      = bus.master
+       self.watchdog_fake.pio   = bus.master
+       self.aaci_fake.pio       = bus.master
+       self.elba_aaci_fake.pio  = bus.master
+       self.mmc_fake.pio        = bus.master
+       self.rtc_fake.pio        = bus.master
+       self.spsc_fake.pio       = bus.master
+       self.lan_fake.pio        = bus.master
+       self.usb_fake.pio        = bus.master
 

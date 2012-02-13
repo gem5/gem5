@@ -88,7 +88,7 @@ for ruby_port in system.ruby._cpu_ruby_ports:
     #
     # Tie the ruby tester ports to the ruby cpu ports
     #
-    tester.cpuPort = ruby_port.port
+    tester.cpuPort = ruby_port.slave
 
     #
     # Tell the sequencer this is the ruby tester so that it

@@ -41,8 +41,8 @@ test_sys.cpu.connectAllPorts(test_sys.membus)
 # from masters on the IO bus to the memory bus
 test_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
                            ranges = [AddrRange(0, '8GB')])
-test_sys.iobridge.slave = test_sys.iobus.port
-test_sys.iobridge.master = test_sys.membus.port
+test_sys.iobridge.slave = test_sys.iobus.master
+test_sys.iobridge.master = test_sys.membus.slave
 
 drive_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-server.rcS'))
@@ -50,8 +50,8 @@ drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 drive_sys.cpu.connectAllPorts(drive_sys.membus)
 drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
                             ranges = [AddrRange(0, '8GB')])
-drive_sys.iobridge.slave = drive_sys.iobus.port
-drive_sys.iobridge.master = drive_sys.membus.port
+drive_sys.iobridge.slave = drive_sys.iobus.master
+drive_sys.iobridge.master = drive_sys.membus.slave
 
 root = makeDualRoot(True, test_sys, drive_sys, "ethertrace")
 

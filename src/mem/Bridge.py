@@ -31,8 +31,8 @@ from MemObject import MemObject
 
 class Bridge(MemObject):
     type = 'Bridge'
-    slave = Port('Slave port')
-    master = Port('Master port')
+    slave = SlavePort('Slave port')
+    master = MasterPort('Master port')
     req_size = Param.Int(16, "The number of requests to buffer")
     resp_size = Param.Int(16, "The number of requests to buffer")
     delay = Param.Latency('0ns', "The latency of this bridge")

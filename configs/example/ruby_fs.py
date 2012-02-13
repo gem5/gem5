@@ -130,8 +130,9 @@ for (i, cpu) in enumerate(system.cpu):
     if buildEnv['TARGET_ISA'] == "x86":
         cpu.itb.walker.port = system.ruby._cpu_ruby_ports[i].port
         cpu.dtb.walker.port = system.ruby._cpu_ruby_ports[i].port
-        cpu.interrupts.pio = system.piobus.port
-        cpu.interrupts.int_port = system.piobus.port
+        cpu.interrupts.pio = system.piobus.master
+        cpu.interrupts.int_master = system.piobus.slave
+        cpu.interrupts.int_slave = system.piobus.master
 
 root = Root(full_system = True, system = system)
 

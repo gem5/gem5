@@ -46,7 +46,7 @@ from m5.params import *
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
 from m5.params import ParamDesc, VectorParamDesc, \
-     isNullPointer, SimObjectVector
+     isNullPointer, SimObjectVector, Port
 
 from m5.proxy import *
 from m5.proxy import isproxy

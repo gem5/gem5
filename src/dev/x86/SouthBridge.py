@@ -102,15 +102,15 @@ class SouthBridge(SimObject):
         self.speaker.i8254 = self.pit
         self.io_apic.external_int_pic = self.pic1
         # Connect to the bus
-        self.cmos.pio = bus.port
-        self.dma1.pio = bus.port
-        self.ide.pio = bus.port
-        self.ide.config = bus.port
-        self.ide.dma = bus.port
-        self.keyboard.pio = bus.port
-        self.pic1.pio = bus.port
-        self.pic2.pio = bus.port
-        self.pit.pio = bus.port
-        self.speaker.pio = bus.port
-        self.io_apic.pio = bus.port
-        self.io_apic.int_port = bus.port
+        self.cmos.pio = bus.master
+        self.dma1.pio = bus.master
+        self.ide.pio = bus.master
+        self.ide.config = bus.master
+        self.ide.dma = bus.slave
+        self.keyboard.pio = bus.master
+        self.pic1.pio = bus.master
+        self.pic2.pio = bus.master
+        self.pit.pio = bus.master
+        self.speaker.pio = bus.master
+        self.io_apic.pio = bus.master
+        self.io_apic.int_master = bus.slave
