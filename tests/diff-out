@@ -186,6 +186,7 @@ sub pct_diff
   'host_seconds' => 1,
   'host_tick_rate' => 1,
   'host_inst_rate' => 1,
+  'host_op_rate' => 1,
   'host_mem_usage' => 1
 );
 
@@ -194,12 +195,13 @@ sub pct_diff
 #  ==> list stats here WITHOUT trailing thread ID
 #
 @key_stat_list = (
-  'COM:IPC',
-  'ISSUE:MSIPC',
-  'COM:count',
-  'host_inst_rate',
+  'ipc',
+  'committedInsts',
+  'committedOps',
   'sim_insts',
+  'sim_ops',
   'sim_ticks',
+  'host_inst_rate',
   'host_mem_usage'
 );
 
