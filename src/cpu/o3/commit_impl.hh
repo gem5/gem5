@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -868,6 +868,11 @@ DefaultCommit<Impl>::commit()
                 fromIEW->branchTaken[tid];
             toIEW->commitInfo[tid].squashInst =
                                     rob->findInst(tid, squashed_inst);
+            if (toIEW->commitInfo[tid].mispredictInst) {
+                if (toIEW->commitInfo[tid].mispredictInst->isUncondCtrl()) {
+                     toIEW->commitInfo[tid].branchTaken = true;
+                }
+            }
 
             toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
 

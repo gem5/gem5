@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -79,15 +91,24 @@ class TournamentBP
      * @param bp_history Pointer that will be set to the BPHistory object.
      */
     void uncondBr(void * &bp_history);
-
+    /**
+     * Updates the branch predictor to Not Taken if a BTB entry is
+     * invalid or not found.
+     * @param branch_addr The address of the branch to look up.
+     * @param bp_history Pointer to any bp history state.
+     * @return Whether or not the branch is taken.
+     */
+    void BTBUpdate(Addr &branch_addr, void * &bp_history);
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
      * @param taken Whether or not the branch was taken.
      * @param bp_history Pointer to the BPHistory object that was created
      * when the branch was predicted.
+     * @param squashed is set when this function is called during a squash
+     * operation.
      */
-    void update(Addr &branch_addr, bool taken, void *bp_history);
+    void update(Addr &branch_addr, bool taken, void *bp_history, bool squashed);
 
     /**
      * Restores the global branch history on a squash.
@@ -149,11 +170,14 @@ class TournamentBP
         static int newCount;
 #endif
         unsigned globalHistory;
+        unsigned localHistory;
         bool localPredTaken;
         bool globalPredTaken;
         bool globalUsed;
     };
 
+    /** Flag for invalid predictor index */
+    static const int invalidPredictorIndex = -1;
     /** Local counters. */
     std::vector<SatCounter> localCtrs;
 

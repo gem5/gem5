@@ -137,6 +137,16 @@ class BPredUnit
      */
     bool BPLookup(Addr instPC, void * &bp_history);
 
+     /**
+     * If a branch is not taken, because the BTB address is invalid or missing,
+     * this function sets the appropriate counter in the global and local
+     * predictors to not taken.
+     * @param inst_PC The PC to look up the local predictor.
+     * @param bp_history Pointer that will be set to an object that
+     * has the branch predictor state associated with the lookup.
+     */
+    void BPBTBUpdate(Addr instPC, void * &bp_history);
+
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
      * @param inst_PC The PC to look up.
@@ -159,9 +169,11 @@ class BPredUnit
      * @param taken Whether the branch was taken or not taken.
      * @param bp_history Pointer to the branch predictor state that is
      * associated with the branch lookup that is being updated.
+     * @param squashed Set to true when this function is called during a
+     * squash operation.
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    void BPUpdate(Addr instPC, bool taken, void *bp_history);
+    void BPUpdate(Addr instPC, bool taken, void *bp_history, bool squashed);
 
     /**
      * Updates the BTB with the target of a branch.

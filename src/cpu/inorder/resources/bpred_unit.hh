@@ -160,9 +160,10 @@ class BPredUnit
      * @param taken Whether the branch was taken or not taken.
      * @param bp_history Pointer to the branch predictor state that is
      * associated with the branch lookup that is being updated.
+     * @param squashed if the branch in question was squashed or not
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    void BPUpdate(Addr instPC, bool taken, void *bp_history);
+    void BPUpdate(Addr instPC, bool taken, void *bp_history, bool squashed);
 
     /**
      * Updates the BTB with the target of a branch.

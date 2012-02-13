@@ -79,6 +79,14 @@ LocalBP::reset()
     }
 }
 
+void
+LocalBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
+{
+// Place holder for a function that is called to update predictor history when
+// a BTB entry is invalid or not found.
+}
+
+
 bool
 LocalBP::lookup(Addr &branch_addr, void * &bp_history)
 {

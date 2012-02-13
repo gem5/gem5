@@ -284,7 +284,8 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
         // Update the branch predictor with the correct results.
         BPUpdate(predHist[tid].back().pc.instAddr(),
                  predHist[tid].back().predTaken,
-                 predHist[tid].back().bpHistory);
+                 predHist[tid].back().bpHistory,
+                 false);
 
         predHist[tid].pop_back();
     }
@@ -367,7 +368,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         }
 
         BPUpdate((*hist_it).pc.instAddr(), actually_taken,
-                 pred_hist.front().bpHistory);
+                 pred_hist.front().bpHistory, true);
 
         // only update BTB on branch taken right???
         if (actually_taken)
@@ -425,12 +426,12 @@ BPredUnit::BPLookup(Addr inst_PC, void * &bp_history)
 
 
 void
-BPredUnit::BPUpdate(Addr inst_PC, bool taken, void *bp_history)
+BPredUnit::BPUpdate(Addr inst_PC, bool taken, void *bp_history, bool squashed)
 {
     if (predictor == Local) {
         localBP->update(inst_PC, taken, bp_history);
     } else if (predictor == Tournament) {
-        tournamentBP->update(inst_PC, taken, bp_history);
+        tournamentBP->update(inst_PC, taken, bp_history, squashed);
     } else {
         panic("Predictor type is unexpected value!");
     }

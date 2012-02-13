@@ -278,11 +278,15 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, ThreadID tid)
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
     toFetch->decodeInfo[tid].predIncorrect = true;
+    toFetch->decodeInfo[tid].mispredictInst = inst;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
     toFetch->decodeInfo[tid].branchTaken = inst->pcState().branching();
     toFetch->decodeInfo[tid].squashInst = inst;
+    if (toFetch->decodeInfo[tid].mispredictInst->isUncondCtrl()) {
+            toFetch->decodeInfo[tid].branchTaken = true;
+    }
 
     InstSeqNum squash_seq_num = inst->seqNum;
 
