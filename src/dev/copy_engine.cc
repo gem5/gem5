@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -65,7 +77,7 @@ CopyEngine::CopyEngine(const Params *p)
 
 
 CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
-    : ce(_ce), channelId(cid), busy(false), underReset(false),
+    : cePort(NULL), ce(_ce), channelId(cid), busy(false), underReset(false),
     refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
     latAfterCompletion(ce->params()->latAfterCompletion),
     completionDataReg(0), nextState(Idle), drainEvent(NULL),
@@ -97,24 +109,24 @@ CopyEngine::CopyEngineChannel::~CopyEngineChannel()
     delete cePort;
 }
 
-void
-CopyEngine::init()
+Port *
+CopyEngine::getPort(const std::string &if_name, int idx)
 {
-    PciDev::init();
-    for (int x = 0; x < chan.size(); x++)
-        chan[x]->init();
+    if (if_name == "dma") {
+        if (idx < chan.size())
+            return chan[idx]->getPort();
+    }
+    return PciDev::getPort(if_name, idx);
 }
 
-void
-CopyEngine::CopyEngineChannel::init()
-{
-    Port *peer;
 
+Port *
+CopyEngine::CopyEngineChannel::getPort()
+{
+    assert(cePort == NULL);
     cePort = new DmaPort(ce, ce->sys, ce->params()->min_backoff_delay,
-            ce->params()->max_backoff_delay);
-    peer = ce->dmaPort->getPeer()->getOwner()->getPort("");
-    peer->setPeer(cePort);
-    cePort->setPeer(peer);
+                         ce->params()->max_backoff_delay);
+    return cePort;
 }
 
 void
