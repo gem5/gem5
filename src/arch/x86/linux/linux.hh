@@ -150,11 +150,13 @@ class X86Linux32 : public Linux
     static const int TGT_O_EXCL         = 00000200;     //!< O_EXCL
     static const int TGT_O_NOCTTY       = 00000400;     //!< O_NOCTTY
     static const int TGT_O_SYNC         = 00010000;     //!< O_SYNC
-//    static const int TGT_O_DRD        = 0x00010000;   //!< O_DRD
-//    static const int TGT_O_DIRECTIO   = 0x00020000; //!< O_DIRECTIO
-//    static const int TGT_O_CACHE      = 0x00002000;   //!< O_CACHE
-//    static const int TGT_O_DSYNC      = 0x00008000;   //!< O_DSYNC
-//    static const int TGT_O_RSYNC      = 0x00040000;   //!< O_RSYNC
+    static const int TGT_O_ASYNC        = 00020000;
+    static const int TGT_O_DIRECT       = 00040000;     //!< O_DIRECTIO
+    static const int TGT_O_LARGEFILE    = 00100000;
+    static const int TGT_O_DIRECTORY    = 00200000;
+    static const int TGT_O_NOFOLLOW     = 00400000;
+    static const int TGT_O_NOATIME      = 01000000;
+    static const int TGT_O_CLOEXEC      = 02000000;
 
     static const int NUM_OPEN_FLAGS;
 
