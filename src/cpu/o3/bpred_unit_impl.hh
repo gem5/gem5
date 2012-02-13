@@ -196,7 +196,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
     if (pred_taken) {
         if (inst->isReturn()) {
             ++usedRAS;
-
+            predict_record.wasReturn = true;
             // If it's a function return call, then look up the address
             // in the RAS.
             TheISA::PCState rasTop = RAS[tid].top();
@@ -231,6 +231,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
 
             if (BTB.valid(pc.instAddr(), tid)) {
                 ++BTBHits;
+                predict_record.validBTB = true;
 
                 // If it's not a return, use the BTB to get the target addr.
                 target = BTB.lookup(pc.instAddr(), tid);
@@ -250,12 +251,17 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
                       DPRINTF(Fetch, "BranchPred: [tid:%i]:[sn:%i] BPBTBUpdate"
                               " called for %s\n",
                               tid, inst->seqNum, inst->pcState());
+                } else if (inst->isCall() && !inst->isUncondCtrl()) {
+                      RAS[tid].pop();
                 }
                 TheISA::advancePC(target, inst->staticInst);
             }
 
         }
     } else {
+        if (inst->isReturn()) {
+           predict_record.wasReturn = true;
+        }
         TheISA::advancePC(target, inst->staticInst);
     }
 
@@ -302,12 +308,13 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
             RAS[tid].restore(pred_hist.front().RASIndex,
                              pred_hist.front().RASTarget);
-        } else if (pred_hist.front().wasCall) {
-            DPRINTF(Fetch, "BranchPred: [tid:%i]: Removing speculative entry "
-                    "added to the RAS.\n",tid);
-
-            RAS[tid].pop();
-        }
+        } else if(pred_hist.front().wasCall && pred_hist.front().validBTB) {
+                 // Was a call but predicated false. Pop RAS here
+                 DPRINTF(Fetch, "BranchPred: [tid: %i] Squashing"
+                         "  Call [sn:%i] PC: %s Popping RAS\n", tid,
+                         pred_hist.front().seqNum, pred_hist.front().pc);
+                 RAS[tid].pop();
+           }
 
         // This call should delete the bpHistory.
         BPSquash(pred_hist.front().bpHistory);
@@ -377,18 +384,46 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
 
         BPUpdate((*hist_it).pc, actually_taken,
                  pred_hist.front().bpHistory, true);
-        if (actually_taken){
-            DPRINTF(Fetch,"BranchPred: [tid: %i] BTB Update called for [sn:%i]"
-                           " PC: %s\n", tid,(*hist_it).seqNum, (*hist_it).pc);
+        if (actually_taken) {
+            if (hist_it->wasReturn && !hist_it->usedRAS) {
+                 DPRINTF(Fetch, "BranchPred: [tid: %i] Incorrectly predicted"
+                           "  return [sn:%i] PC: %s\n", tid, hist_it->seqNum,
+                            hist_it->pc);
+                 RAS[tid].pop();
+            }
+           DPRINTF(Fetch,"BranchPred: [tid: %i] BTB Update called for [sn:%i]"
+                            " PC: %s\n", tid,hist_it->seqNum, hist_it->pc);
+
+
             BTB.update((*hist_it).pc, corrTarget, tid);
+
+        } else {
+           //Actually not Taken
+           if (hist_it->usedRAS) {
+                DPRINTF(Fetch,"BranchPred: [tid: %i] Incorrectly predicted"
+                           "  return [sn:%i] PC: %s Restoring RAS\n", tid,
+                           hist_it->seqNum, hist_it->pc);
+                DPRINTF(Fetch, "BranchPred: [tid:%i]: Restoring top of RAS"
+                               " to: %i, target: %s.\n", tid,
+                              hist_it->RASIndex, hist_it->RASTarget);
+                RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget);
+
+           } else if (hist_it->wasCall && hist_it->validBTB) {
+                 //Was a Call but predicated false. Pop RAS here
+                 DPRINTF(Fetch, "BranchPred: [tid: %i] Incorrectly predicted"
+                           "  Call [sn:%i] PC: %s Popping RAS\n", tid,
+                           hist_it->seqNum, hist_it->pc);
+                 RAS[tid].pop();
+           }
         }
         DPRINTF(Fetch, "BranchPred: [tid:%i]: Removing history for [sn:%i]"
-                       " PC %s  Actually Taken: %i\n", tid, (*hist_it).seqNum,
-                       (*hist_it).pc, actually_taken);
+                       " PC %s  Actually Taken: %i\n", tid, hist_it->seqNum,
+                       hist_it->pc, actually_taken);
 
         pred_hist.erase(hist_it);
 
-        DPRINTF(Fetch, "[tid:%i]: predHist.size(): %i\n", tid, predHist[tid].size());
+        DPRINTF(Fetch, "[tid:%i]: predHist.size(): %i\n", tid,
+                                         predHist[tid].size());
     }
 }
 

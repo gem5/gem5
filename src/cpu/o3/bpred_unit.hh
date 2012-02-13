@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -196,7 +208,7 @@ class BPredUnit
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), RASTarget(0), RASIndex(0),
               tid(_tid), predTaken(pred_taken), usedRAS(0),
-              wasCall(0), bpHistory(bp_history)
+              wasCall(0), wasReturn(0), validBTB(0), bpHistory(bp_history)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -227,6 +239,10 @@ class BPredUnit
         /** Whether or not the instruction was a call. */
         bool wasCall;
 
+        /** Whether or not the instruction was a return. */
+        bool wasReturn;
+        /** Whether or not the instruction had a valid BTB entry. */
+        bool validBTB;
         /** Pointer to the history object passed back from the branch
          * predictor.  It is used to update or restore state of the
          * branch predictor.

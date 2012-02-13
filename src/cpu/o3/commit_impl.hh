@@ -1232,6 +1232,10 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         delete head_inst->traceData;
         head_inst->traceData = NULL;
     }
+    if (head_inst->isReturn()) {
+        DPRINTF(Commit,"Return Instruction Committed [sn:%lli] PC %s \n",
+                        head_inst->seqNum, head_inst->pcState());
+    }
 
     // Update the commit rename map
     for (int i = 0; i < head_inst->numDestRegs(); i++) {
