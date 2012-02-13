@@ -1,11 +1,18 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/tmp/gem5.ali/src/python/m5/main.py", line 357, in main
-    exec filecode in scope
-  File "tests/run.py", line 70, in <module>
-    execfile(joinpath(tests_root, 'configs', test_filename + '.py'))
-  File "tests/configs/realview-simple-atomic-dual.py", line 86, in <module>
-    system.l2c.num_cpus = 2
-  File "/tmp/gem5.ali/src/python/m5/SimObject.py", line 725, in __setattr__
-    % (self.__class__.__name__, attr)
-AttributeError: Class L2 has no parameter num_cpus
+warn: Sockets disabled, not accepting vnc client connections
+warn: Sockets disabled, not accepting terminal connections
+warn: Sockets disabled, not accepting gdb connections
+warn: The clidr register always reports 0 caches.
+warn: clidr LoUIS field of 0b001 to match current ARM implementations.
+warn: The csselr register isn't implemented.
+warn: The ccsidr register isn't implemented and always reads as 0.
+warn: 	instruction 'mcr bpiallis' unimplemented
+warn: 	instruction 'mcr icialluis' unimplemented
+warn: 	instruction 'mcr dccimvac' unimplemented
+warn: 	instruction 'mcr dccmvau' unimplemented
+warn: 	instruction 'mcr icimvau' unimplemented
+warn: 	instruction 'mcr bpiallis' unimplemented
+warn: LCD dual screen mode not supported
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+warn: 	instruction 'mcr icialluis' unimplemented
+warn: 	instruction 'mcr icialluis' unimplemented
+hack: be nice to actually delete the event here

@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb 11 2012 13:10:40
-gem5 started Feb 11 2012 16:39:00
+gem5 compiled Feb 12 2012 17:19:56
+gem5 started Feb 12 2012 21:01:11
 gem5 executing on zizzer
 command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/fs/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM/tests/fast/long/fs/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux.arm.smp.fb.2.6.38.8
 info: Using bootloader at address 0x80000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 2503580880500 because m5_exit instruction encountered
+Exiting @ tick 2503289265500 because m5_exit instruction encountered

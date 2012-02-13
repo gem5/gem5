@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb 11 2012 13:05:17
-gem5 started Feb 11 2012 13:09:24
+gem5 compiled Feb 12 2012 17:15:14
+gem5 started Feb 12 2012 17:33:14
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/quick/se/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py build/ALPHA/tests/fast/quick/se/01.hello-2T-smt/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -11,4 +11,4 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 Hello world!
 Hello world!
-Exiting @ tick 13202000 because target called exit()
+Exiting @ tick 13973500 because target called exit()

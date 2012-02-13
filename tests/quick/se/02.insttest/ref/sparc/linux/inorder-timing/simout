@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb 11 2012 13:08:33
-gem5 started Feb 11 2012 13:55:34
+gem5 compiled Feb 12 2012 17:18:12
+gem5 started Feb 12 2012 18:17:51
 gem5 executing on zizzer
 command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/quick/se/02.insttest/sparc/linux/inorder-timing -re tests/run.py build/SPARC/tests/fast/quick/se/02.insttest/sparc/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
@@ -18,4 +18,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 25058500 because target called exit()
+Exiting @ tick 25007500 because target called exit()

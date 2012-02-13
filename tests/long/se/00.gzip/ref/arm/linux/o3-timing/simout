@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb 11 2012 13:10:40
-gem5 started Feb 11 2012 15:39:44
+gem5 compiled Feb 12 2012 17:19:56
+gem5 started Feb 12 2012 20:00:24
 gem5 executing on zizzer
 command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/se/00.gzip/arm/linux/o3-timing -re tests/run.py build/ARM/tests/fast/long/se/00.gzip/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -38,4 +38,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 177116942500 because target called exit()
+Exiting @ tick 164280509500 because target called exit()
