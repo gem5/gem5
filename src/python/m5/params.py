@@ -1349,6 +1349,11 @@ class PortRef(object):
     def __str__(self):
         return '%s.%s' % (self.simobj, self.name)
 
+    def __len__(self):
+        # Return the number of connected ports, i.e. 0 is we have no
+        # peer and 1 if we do.
+        return int(self.peer != None)
+
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
         return str(self.peer)
@@ -1462,6 +1467,11 @@ class VectorPortRef(object):
     def __str__(self):
         return '%s.%s[:]' % (self.simobj, self.name)
 
+    def __len__(self):
+        # Return the number of connected peers, corresponding the the
+        # length of the elements.
+        return len(self.elements)
+
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
         return ' '.join([el.ini_str() for el in self.elements])
@@ -1524,6 +1534,17 @@ class Port(object):
     # the given name) with the port described by the supplied PortRef
     def connect(self, simobj, ref):
         self.makeRef(simobj).connect(ref)
+
+    # No need for any pre-declarations at the moment as we merely rely
+    # on an unsigned int.
+    def cxx_predecls(self, code):
+        pass
+
+    # Declare an unsigned int with the same name as the port, that
+    # will eventually hold the number of connected ports (and thus the
+    # number of elements for a VectorPort).
+    def cxx_decl(self, code):
+        code('unsigned int port_${{self.name}}_connection_count;')
 
 class MasterPort(Port):
     # MasterPort("description")

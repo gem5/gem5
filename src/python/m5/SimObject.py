@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -27,6 +39,7 @@
 #
 # Authors: Steve Reinhardt
 #          Nathan Binkert
+#          Andreas Hansson
 
 import sys
 from types import FunctionType, MethodType, ModuleType
@@ -386,6 +399,7 @@ class MetaSimObject(type):
         # will also be inherited from the base class's param struct
         # here).
         params = cls._params.local.values()
+        ports = cls._ports.local
 
         code('%module(package="m5.internal") param_$cls')
         code()
@@ -441,6 +455,7 @@ class MetaSimObject(type):
         # will also be inherited from the base class's param struct
         # here).
         params = cls._params.local.values()
+        ports = cls._ports.local
         try:
             ptypes = [p.ptype for p in params]
         except:
@@ -481,6 +496,8 @@ class EventQueue;
 ''')
         for param in params:
             param.cxx_predecls(code)
+        for port in ports.itervalues():
+            port.cxx_predecls(code)
         code()
 
         if cls._base:
@@ -517,6 +534,9 @@ class EventQueue;
             ''')
         for param in params:
             param.cxx_decl(code)
+        for port in ports.itervalues():
+            port.cxx_decl(code)
+
         code.dedent()
         code('};')
 
@@ -960,7 +980,8 @@ class SimObject(object):
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
             if port != None:
-                setattr(cc_params, port_name, port)
+                setattr(cc_params, 'port_' + port_name + '_connection_count',
+                        len(port))
         self._ccParams = cc_params
         return self._ccParams
 
