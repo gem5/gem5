@@ -46,7 +46,6 @@ def config_cache(options, system):
         system.tol2bus = Bus()
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
-        system.l2.num_cpus = options.num_cpus
 
     for i in xrange(options.num_cpus):
         if options.caches:
