@@ -118,7 +118,7 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         l1_cntrl.sequencer = cpu_seq
 
         if piobus != None:
-            cpu_seq.pio_port = piobus.port
+            cpu_seq.pio_port = piobus.slave
 
         if options.recycle_latency:
             l1_cntrl.recycle_latency = options.recycle_latency
@@ -213,9 +213,9 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
         if dma_device.type == 'MemTest':
-            exec("system.dma_cntrl%d.dma_sequencer.port = dma_device.test" % i)
+            exec("system.dma_cntrl%d.dma_sequencer.slave = dma_device.test" % i)
         else:
-            exec("system.dma_cntrl%d.dma_sequencer.port = dma_device.dma" % i)
+            exec("system.dma_cntrl%d.dma_sequencer.slave = dma_device.dma" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
         if options.recycle_latency:

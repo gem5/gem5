@@ -133,7 +133,7 @@ for (i, cpu) in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #
-    cpu.test = system.ruby._cpu_ruby_ports[i].port
+    cpu.test = system.ruby._cpu_ruby_ports[i].slave
     cpu.functional = system.funcmem.port
 
     #

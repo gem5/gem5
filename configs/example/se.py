@@ -190,8 +190,8 @@ for i in xrange(np):
     system.cpu[i].workload = multiprocesses[i]
 
     if options.ruby:
-        system.cpu[i].icache_port = system.ruby._cpu_ruby_ports[i].port
-        system.cpu[i].dcache_port = system.ruby._cpu_ruby_ports[i].port
+        system.cpu[i].icache_port = system.ruby._cpu_ruby_ports[i].slave
+        system.cpu[i].dcache_port = system.ruby._cpu_ruby_ports[i].slave
 
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port

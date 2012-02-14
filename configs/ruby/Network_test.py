@@ -96,7 +96,7 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         l1_cntrl.sequencer = cpu_seq
 
         if piobus != None:
-            cpu_seq.pio_port = piobus.port
+            cpu_seq.pio_port = piobus.slave
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #

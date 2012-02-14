@@ -195,8 +195,8 @@ if len(bm) == 2:
         drive_sys.kernel = binary(options.kernel)
     drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
                                ranges = [AddrRange(bm[1].mem())])
-    drive_sys.iobridge.slave = drive_sys.iobus.port
-    drive_sys.iobridge.master = drive_sys.membus.port
+    drive_sys.iobridge.slave = drive_sys.iobus.master
+    drive_sys.iobridge.master = drive_sys.membus.slave
 
     drive_sys.init_param = options.init_param
     root = makeDualRoot(True, test_sys, drive_sys, options.etherdump)

@@ -109,7 +109,7 @@ for ruby_port in system.ruby._cpu_ruby_ports:
      #
      # Tie the cpu test ports to the ruby cpu port
      #
-     cpus[i].test = ruby_port.port
+     cpus[i].test = ruby_port.slave
      ruby_port.access_phys_mem = False
 
      i += 1
