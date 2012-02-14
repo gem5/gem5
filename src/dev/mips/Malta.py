@@ -63,6 +63,6 @@ class Malta(Platform):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-        self.cchip.pio = bus.port
-        self.io.pio = bus.port
-        self.uart.pio = bus.port
+        self.cchip.pio = bus.master
+        self.io.pio = bus.master
+        self.uart.pio = bus.master

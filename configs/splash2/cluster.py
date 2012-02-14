@@ -221,19 +221,19 @@ system.l2 = L2(size = options.l2size, assoc = 8)
 # Connect the L2 cache and memory together
 # ----------------------
 
-system.physmem.port = system.membus.port
-system.l2.cpu_side = system.toL2bus.port
-system.l2.mem_side = system.membus.port
+system.physmem.port = system.membus.master
+system.l2.cpu_side = system.toL2bus.slave
+system.l2.mem_side = system.membus.master
 
 # ----------------------
 # Connect the L2 cache and clusters together
 # ----------------------
 for cluster in clusters:
-    cluster.l1.cpu_side = cluster.clusterbus.port
-    cluster.l1.mem_side = system.toL2bus.port
+    cluster.l1.cpu_side = cluster.clusterbus.master
+    cluster.l1.mem_side = system.toL2bus.slave
     for cpu in cluster.cpus:
-        cpu.icache_port = cluster.clusterbus.port
-        cpu.dcache_port = cluster.clusterbus.port
+        cpu.icache_port = cluster.clusterbus.slave
+        cpu.dcache_port = cluster.clusterbus.slave
 
 # ----------------------
 # Define the root

@@ -147,11 +147,16 @@ def make_level(spec, prototypes, attach_obj, attach_port):
      fanout = spec[0]
      parent = attach_obj # use attach obj as config parent too
      if len(spec) > 1 and (fanout > 1 or options.force_bus):
+          port = getattr(attach_obj, attach_port)
           new_bus = Bus(clock="500MHz", width=16)
-          new_bus.port = getattr(attach_obj, attach_port)
+          if (port.role == 'MASTER'):
+               new_bus.slave = port
+               attach_port = "master"
+          else:
+               new_bus.master = port
+               attach_port = "slave"
           parent.cpu_side_bus = new_bus
           attach_obj = new_bus
-          attach_port = "port"
      objs = [prototypes[0]() for i in xrange(fanout)]
      if len(spec) > 1:
           # we just built caches, more levels to go
@@ -177,6 +182,10 @@ if options.atomic:
     root.system.mem_mode = 'atomic'
 else:
     root.system.mem_mode = 'timing'
+
+# The system port is never used in the tester so merely connect it
+# to avoid problems
+root.system.system_port = root.system.physmem.port
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')

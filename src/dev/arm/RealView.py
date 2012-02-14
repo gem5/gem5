@@ -376,7 +376,7 @@ class VExpress_ELT(RealView):
        self.elba_kmi1.pio       = bus.master
        self.cf_ctrl.pio         = bus.master
        self.cf_ctrl.config      = bus.master
-       self.cf_ctrl.dma         = bus.port
+       self.cf_ctrl.dma         = bus.slave
        self.ide.pio             = bus.master
        self.ide.config          = bus.master
        self.ide.dma             = bus.slave
