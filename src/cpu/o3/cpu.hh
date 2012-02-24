@@ -361,9 +361,6 @@ class FullO3CPU : public BaseO3CPU
         this->dtb->demapPage(vaddr, asn);
     }
 
-    /** Returns a specific port. */
-    Port *getPort(const std::string &if_name, int idx);
-
     /** Ticks CPU, calling tick() on each stage, and checking the overall
      *  activity to see if the CPU should deschedule itself.
      */
@@ -781,10 +778,10 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
-    Port* getIcachePort() { return &icachePort; }
+    virtual CpuPort &getInstPort() { return icachePort; }
 
     /** Get the dcache port (used to find block size for translations). */
-    Port* getDcachePort() { return &dcachePort; }
+    virtual CpuPort &getDataPort() { return dcachePort; }
 
     Addr lockAddr;
 

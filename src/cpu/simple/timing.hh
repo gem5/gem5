@@ -231,9 +231,15 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Tick previousTick;
 
-  public:
+  protected:
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+     /** Return a reference to the data port. */
+    virtual CpuPort &getDataPort() { return dcachePort; }
+
+    /** Return a reference to the instruction port. */
+    virtual CpuPort &getInstPort() { return icachePort; }
+
+  public:
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

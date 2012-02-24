@@ -70,12 +70,6 @@ class Resource {
     /** Return name of this resource */
     virtual std::string name();
 
-    /** Define this function if resource, has a port to connect to an outside
-     *  simulation object.
-     */
-    virtual Port* getPort(const std::string &if_name, int idx) 
-    { return NULL; }
-
     /** Return ID for this resource */
     int getId() { return id; }
 

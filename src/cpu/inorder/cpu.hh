@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -61,6 +73,7 @@
 #include "sim/eventq.hh"
 #include "sim/process.hh"
 
+class CacheUnit;
 class ThreadContext;
 class MemInterface;
 class MemObject;
@@ -96,6 +109,12 @@ class InOrderCPU : public BaseCPU
     /* Destructor */
     ~InOrderCPU();
     
+    /** Return a reference to the data port. */
+    virtual CpuPort &getDataPort() { return dataPort; }
+
+    /** Return a reference to the instruction port. */
+    virtual CpuPort &getInstPort() { return instPort; }
+
     /** CPU ID */
     int cpu_id;
 
@@ -132,6 +151,31 @@ class InOrderCPU : public BaseCPU
     /** Overall CPU status. */
     Status _status;
   private:
+
+    /**
+     * CachePort class for the in-order CPU, interacting with a
+     * specific CacheUnit in the pipeline.
+     */
+    class CachePort : public CpuPort
+    {
+
+      private:
+        /** Pointer to cache unit */
+        CacheUnit *cacheUnit;
+
+      public:
+        /** Default constructor. */
+        CachePort(CacheUnit *_cacheUnit);
+
+      protected:
+
+        /** Timing version of receive */
+        bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of a failed timing request. */
+        void recvRetry();
+    };
+
     /** Define TickEvent for the CPU */
     class TickEvent : public Event
     {
@@ -244,6 +288,10 @@ class InOrderCPU : public BaseCPU
                           CPUEventPri event_pri = InOrderCPU_Pri);
 
   public:
+
+    /** Width (processing bandwidth) of each stage */
+    int stageWidth;
+
     /** Interface between the CPU and CPU resources. */
     ResourcePool *resPool;
 
@@ -257,21 +305,8 @@ class InOrderCPU : public BaseCPU
     /** Used by resources to signify a denied access to a resource. */
     ResourceRequest *dummyReq[ThePipeline::MaxThreads];
 
-    /** Identifies the resource id that identifies a fetch
-     * access unit.
-     */
-    unsigned fetchPortIdx;
-
-    /** Identifies the resource id that identifies a data
-     * access unit.
-     */
-    unsigned dataPortIdx;
-
     /** The Pipeline Stages for the CPU */
     PipelineStage *pipelineStage[ThePipeline::NumStages];
-
-    /** Width (processing bandwidth) of each stage */
-    int stageWidth;
 
     /** Program Counters */
     TheISA::PCState pc[ThePipeline::MaxThreads];
@@ -396,6 +431,14 @@ class InOrderCPU : public BaseCPU
         }
     };
 
+  private:
+
+    /** Data port. Note that it has to appear after the resPool. */
+    CachePort dataPort;
+
+    /** Instruction port. Note that it has to appear after the resPool. */
+    CachePort instPort;
+
   public:
 
     /** Registers statistics. */
@@ -408,9 +451,6 @@ class InOrderCPU : public BaseCPU
 
     /** Initialize the CPU */
     void init();
-
-    /** Get a Memory Port */
-    Port* getPort(const std::string &if_name, int idx = 0);
 
     /** HW return from error interrupt. */
     Fault hwrei(ThreadID tid);
@@ -810,12 +850,6 @@ class InOrderCPU : public BaseCPU
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
-
-    /** Pointer to the icache interface. */
-    MemInterface *icacheInterface;
-
-    /** Pointer to the dcache interface. */
-    MemInterface *dcacheInterface;
 
     /** Whether or not the CPU should defer its registration. */
     bool deferRegistration;

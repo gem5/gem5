@@ -302,7 +302,7 @@ DefaultIEW<Impl>::initStage()
 // Initialize the checker's dcache port here
 #if USE_CHECKER
     if (cpu->checker) {
-        cpu->checker->setDcachePort(cpu->getDcachePort());
+        cpu->checker->setDcachePort(&cpu->getDataPort());
      }
 #endif
 

@@ -60,17 +60,6 @@
 using namespace std;
 using namespace TheISA;
 
-Port *
-TimingSimpleCPU::getPort(const std::string &if_name, int idx)
-{
-    if (if_name == "dcache_port")
-        return &dcachePort;
-    else if (if_name == "icache_port")
-        return &icachePort;
-    else
-        panic("No Such Port\n");
-}
-
 void
 TimingSimpleCPU::init()
 {

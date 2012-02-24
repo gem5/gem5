@@ -73,39 +73,6 @@ class CacheUnit : public Resource
     };
 
   public:
-    /** CachePort class for the Cache Unit.  Handles doing the
-     * communication with the cache/memory.
-     */
-    class CachePort : public Port
-    {
-      protected:
-        /** Pointer to cache port unit */
-        CacheUnit *cachePortUnit;
-
-      public:
-        /** Default constructor. */
-        CachePort(CacheUnit *_cachePortUnit)
-          : Port(_cachePortUnit->name() + "-cache-port",
-                 (MemObject*)_cachePortUnit->cpu),
-            cachePortUnit(_cachePortUnit)
-        { }
-
-      protected:
-        /** Atomic version of receive.  Panics. */
-        Tick recvAtomic(PacketPtr pkt);
-
-        /** Functional version of receive.*/
-        void recvFunctional(PacketPtr pkt);
-
-        /** Receives range changes. */
-        void recvRangeChange();
-
-        /** Timing version of receive */
-        bool recvTiming(PacketPtr pkt);
-
-        /** Handles doing a retry of a failed fetch. */
-        void recvRetry();
-    };
 
     void init();
 
@@ -149,9 +116,6 @@ class CacheUnit : public Resource
     void trap(Fault fault, ThreadID tid, DynInstPtr inst);
 
     void recvRetry();
-
-    /** Returns a specific port. */
-    Port *getPort(const std::string &if_name, int idx);
     
     Fault read(DynInstPtr inst, Addr addr,
                uint8_t *data, unsigned size, unsigned flags);
@@ -175,7 +139,7 @@ class CacheUnit : public Resource
     
   protected:
     /** Cache interface. */
-    CachePort *cachePort;
+    Port *cachePort;
 
     bool cachePortBlocked;
 

@@ -101,8 +101,20 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     Range<Addr> physMemAddr;
 
+  protected:
+
+    /** Return a reference to the data port. */
+    virtual CpuPort &getDataPort() { return dcachePort; }
+
+    /** Return a reference to the instruction port. */
+    virtual CpuPort &getInstPort() { return icachePort; }
+
   public:
 
+    /**
+     * Override the getPort of the BaseCPU so that we can provide a pointer
+     * to the physmemPort, unique to the Atomic CPU.
+     */
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void serialize(std::ostream &os);

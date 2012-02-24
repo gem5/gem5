@@ -296,6 +296,21 @@ BaseCPU::regStats()
         threadContexts[0]->regStats(name());
 }
 
+Port *
+BaseCPU::getPort(const string &if_name, int idx)
+{
+    // Get the right port based on name. This applies to all the
+    // subclasses of the base CPU and relies on their implementation
+    // of getDataPort and getInstPort. In all cases there methods
+    // return a CpuPort pointer.
+    if (if_name == "dcache_port")
+        return &getDataPort();
+    else if (if_name == "icache_port")
+        return &getInstPort();
+    else
+        panic("CPU %s has no port named %s\n", name(), if_name);
+}
+
 Tick
 BaseCPU::nextCycle()
 {
@@ -363,8 +378,8 @@ BaseCPU::switchOut()
 void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    Port *ic = getPort("icache_port");
-    Port *dc = getPort("dcache_port");
+    CpuPort &ic = getInstPort();
+    CpuPort &dc = getDataPort();
     assert(threadContexts.size() == oldCPU->threadContexts.size());
 
     _cpuId = oldCPU->cpuId();
@@ -453,16 +468,16 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // Connect new CPU to old CPU's memory only if new CPU isn't
     // connected to anything.  Also connect old CPU's memory to new
     // CPU.
-    if (!ic->isConnected()) {
-        Port *peer = oldCPU->getPort("icache_port")->getPeer();
-        ic->setPeer(peer);
-        peer->setPeer(ic);
+    if (!ic.isConnected()) {
+        Port *peer = oldCPU->getInstPort().getPeer();
+        ic.setPeer(peer);
+        peer->setPeer(&ic);
     }
 
-    if (!dc->isConnected()) {
-        Port *peer = oldCPU->getPort("dcache_port")->getPeer();
-        dc->setPeer(peer);
-        peer->setPeer(dc);
+    if (!dc.isConnected()) {
+        Port *peer = oldCPU->getDataPort().getPeer();
+        dc.setPeer(peer);
+        peer->setPeer(&dc);
     }
 }
 

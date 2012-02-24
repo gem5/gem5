@@ -63,7 +63,6 @@ class BranchPred;
 class CheckerCPU;
 class ThreadContext;
 class System;
-class Port;
 
 namespace TheISA
 {
@@ -147,6 +146,23 @@ class BaseCPU : public MemObject
     };
 
   public:
+
+    /**
+     * Purely virtual method that returns a reference to the data
+     * port. All subclasses must implement this method.
+     *
+     * @return a reference to the data port
+     */
+    virtual CpuPort &getDataPort() = 0;
+
+    /**
+     * Purely virtual method that returns a reference to the instruction
+     * port. All subclasses must implement this method.
+     *
+     * @return a reference to the instruction port
+     */
+    virtual CpuPort &getInstPort() = 0;
+
     /** Reads this CPU's ID. */
     int cpuId() { return _cpuId; }
 
@@ -154,6 +170,23 @@ class BaseCPU : public MemObject
     MasterID dataMasterId() { return _dataMasterId; }
     /** Reads this CPU's unique instruction requestor ID */
     MasterID instMasterId() { return _instMasterId; }
+
+    /**
+     * Get a port on this MemObject. This method is virtual to allow
+     * the subclasses of the BaseCPU to override it. All CPUs have a
+     * data and instruction port, but the Atomic CPU (in its current
+     * form) adds a port directly connected to the memory and has to
+     * override getPort.
+     *
+     * This method uses getDataPort and getInstPort to resolve the two
+     * ports.
+     *
+     * @param if_name the port name
+     * @param idx ignored index
+     *
+     * @return a pointer to the port with the given name
+     */
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
 //    Tick currentTick;
     inline Tick frequency() const { return SimClock::Frequency / clock; }

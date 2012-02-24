@@ -106,7 +106,7 @@ ThreadState::initMemProxies(ThreadContext *tc)
     // (i.e. due to restoring from a checkpoint and later switching
     // in.
     if (physProxy == NULL)
-        physProxy = new PortProxy(*baseCpu->getPort("dcache_port"));
+        physProxy = new PortProxy(baseCpu->getDataPort());
     if (virtProxy == NULL)
         virtProxy = new FSTranslatingPortProxy(tc);
 }

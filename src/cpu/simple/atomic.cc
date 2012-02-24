@@ -68,16 +68,12 @@ AtomicSimpleCPU::TickEvent::description() const
 Port *
 AtomicSimpleCPU::getPort(const string &if_name, int idx)
 {
-    if (if_name == "dcache_port")
-        return &dcachePort;
-    else if (if_name == "icache_port")
-        return &icachePort;
-    else if (if_name == "physmem_port") {
+    if (if_name == "physmem_port") {
         hasPhysMemPort = true;
         return &physmemPort;
+    } else {
+        return BaseCPU::getPort(if_name, idx);
     }
-    else
-        panic("No Such Port\n");
 }
 
 void

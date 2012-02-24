@@ -67,7 +67,6 @@
 
 // forward declarations
 class Checkpoint;
-class MemObject;
 class Process;
 class Processor;
 class ThreadContext;

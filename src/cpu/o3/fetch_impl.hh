@@ -335,10 +335,10 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setIcache()
 {
-    assert(cpu->getIcachePort()->isConnected());
+    assert(cpu->getInstPort().isConnected());
 
     // Size of cache block.
-    cacheBlkSize = cpu->getIcachePort()->peerBlockSize();
+    cacheBlkSize = cpu->getInstPort().peerBlockSize();
 
     // Create mask to get rid of offset bits.
     cacheBlkMask = (cacheBlkSize - 1);
@@ -623,7 +623,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         fetchedCacheLines++;
 
         // Access the cache.
-        if (!cpu->getIcachePort()->sendTiming(data_pkt)) {
+        if (!cpu->getInstPort().sendTiming(data_pkt)) {
             assert(retryPkt == NULL);
             assert(retryTid == InvalidThreadID);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
@@ -1358,7 +1358,7 @@ DefaultFetch<Impl>::recvRetry()
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
 
-        if (cpu->getIcachePort()->sendTiming(retryPkt)) {
+        if (cpu->getInstPort().sendTiming(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;
             retryPkt = NULL;
             retryTid = InvalidThreadID;

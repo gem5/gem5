@@ -67,61 +67,22 @@ printMemData(uint8_t *data, unsigned size)
 }
 #endif
 
-Tick
-CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
-{
-    panic("%s doesn't expect recvAtomic callback!", cachePortUnit->name());
-    return curTick();
-}
-
-void
-CacheUnit::CachePort::recvFunctional(PacketPtr pkt)
-{
-    DPRINTF(InOrderCachePort, "Doesn't update state on a recvFunctional."
-            "Ignoring packet for %x.\n", pkt->getAddr());
-}
-
-void
-CacheUnit::CachePort::recvRangeChange()
-{
-}
-
-bool
-CacheUnit::CachePort::recvTiming(Packet *pkt)
-{
-    if (pkt->isError())
-        DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
-                pkt->getAddr());
-    else if (pkt->isResponse())
-        cachePortUnit->processCacheCompletion(pkt);
-    else {
-        //@note: depending on consistency model, update here
-        DPRINTF(InOrderCachePort, "Received snoop pkt %x,Ignoring\n", pkt->getAddr());
-    }
-
-    return true;
-}
-
-void
-CacheUnit::CachePort::recvRetry()
-{
-    cachePortUnit->recvRetry();
-}
-
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      cachePortBlocked(false)
+      cachePort(NULL), cachePortBlocked(false)
 {
-    cachePort = new CachePort(this);
-
     // Hard-Code Selection For Now
-    if (res_name == "icache_port")
+    if (res_id == ICache)
         _tlb = params->itb;
-    else if (res_name == "dcache_port")
+    else if (res_id == DCache)
         _tlb = params->dtb;
     else
         fatal("Unrecognized TLB name passed by user");
+
+    // Note that the CPU port is not yet instantiated (as it is done
+    // after the resource pool), we delay setting the cachePort
+    // pointer until init().
 
     for (int i=0; i < MaxThreads; i++) {
         tlbBlocked[i] = false;
@@ -136,23 +97,22 @@ CacheUnit::tlb()
 
 }
 
-Port *
-CacheUnit::getPort(const string &if_name, int idx)
-{
-    if (if_name == resName)
-        return cachePort;
-    else
-        return NULL;
-}
-
 void
 CacheUnit::init()
 {
+    // Get the appropriate port from the CPU based on the resource name.
+    if (id == ICache) {
+        cachePort = &cpu->getInstPort();
+    } else if (id == DCache) {
+        cachePort = &cpu->getDataPort();
+    }
+    assert(cachePort != NULL);
+
     for (int i = 0; i < width; i++) {
         reqs[i] = new CacheRequest(this);
     }
 
-    cacheBlkSize = this->cachePort->peerBlockSize();
+    cacheBlkSize = cachePort->peerBlockSize();
     cacheBlkMask = cacheBlkSize  - 1;
 
     initSlots();
@@ -446,7 +406,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
     assert(cache_req && "Can't Find Instruction for Read!");
 
     // The block size of our peer
-    unsigned blockSize = this->cachePort->peerBlockSize();
+    unsigned blockSize = cacheBlkSize;
 
     //The size of the data we're trying to read.
     int fullSize = size;
@@ -541,7 +501,7 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
     assert(cache_req && "Can't Find Instruction for Write!");
 
     // The block size of our peer
-    unsigned blockSize = this->cachePort->peerBlockSize();
+    unsigned blockSize = cacheBlkSize;
 
     //The size of the data we're trying to write.
     int fullSize = size;

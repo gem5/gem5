@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -39,7 +51,7 @@ using namespace std;
 using namespace ThePipeline;
 
 ResourcePool::ResourcePool(InOrderCPU *_cpu, InOrderCPUParams *params)
-    : cpu(_cpu)
+    : cpu(_cpu), instUnit(NULL), dataUnit(NULL)
 {
     //@todo: use this function to instantiate the resources in resource pool. This will help in the
     //auto-generation of this pipeline model.
@@ -53,9 +65,13 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, InOrderCPUParams *params)
 
     resources.push_back(new TLBUnit("itlb", ITLB, StageWidth, 0, _cpu, params));
 
-    memObjects.push_back(ICache);
-    resources.push_back(new CacheUnit("icache_port", ICache,
-            StageWidth * MaxThreads, 0, _cpu, params));
+
+    // Keep track of the instruction fetch unit so we can easily
+    // provide a pointer to it in the CPU.
+    instUnit = new FetchUnit("icache_port", ICache,
+                             StageWidth * MaxThreads, 0, _cpu,
+                             params);
+    resources.push_back(instUnit);
 
     resources.push_back(new DecodeUnit("decode_unit", Decode, StageWidth, 0,
             _cpu, params));
@@ -84,9 +100,12 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, InOrderCPUParams *params)
 
     resources.push_back(new TLBUnit("dtlb", DTLB, StageWidth, 0, _cpu, params));
 
-    memObjects.push_back(DCache);
-    resources.push_back(new CacheUnit("dcache_port", DCache,
-            StageWidth * MaxThreads, 0, _cpu, params));
+    // Keep track of the data load/store unit so we can easily provide
+    // a pointer to it in the CPU.
+    dataUnit = new CacheUnit("dcache_port", DCache,
+                             StageWidth * MaxThreads, 0, _cpu,
+                             params);
+    resources.push_back(dataUnit);
 
     resources.push_back(new GraduationUnit("graduation_unit", Grad,
             StageWidth * MaxThreads, 0, _cpu, params));
@@ -117,34 +136,6 @@ ResourcePool::regStats()
     for (int idx = 0; idx < num_resources; idx++) {
         resources[idx]->regStats();
     }
-}
-
-Port *
-ResourcePool::getPort(const std::string &if_name, int idx)
-{
-    for (int i = 0; i < memObjects.size(); i++) {
-        int obj_idx = memObjects[i];
-        Port *port = resources[obj_idx]->getPort(if_name, idx);
-        if (port != NULL) {
-            return port;
-        }
-    }
-
-    return NULL;
-}
-
-unsigned
-ResourcePool::getPortIdx(const std::string &port_name)
-{
-    for (int i = 0; i < memObjects.size(); i++) {
-        unsigned obj_idx = memObjects[i];
-        Port *port = resources[obj_idx]->getPort(port_name, obj_idx);
-        if (port != NULL) {
-            return obj_idx;
-        }
-    }
-
-    return 0;
 }
 
 ResReqPtr

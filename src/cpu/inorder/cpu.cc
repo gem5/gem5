@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -34,6 +46,7 @@
 #include "arch/utility.hh"
 #include "base/bigint.hh"
 #include "config/the_isa.hh"
+#include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/resources/resource_list.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/first_stage.hh"
@@ -50,10 +63,11 @@
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
 #include "debug/InOrderCPU.hh"
+#include "debug/InOrderCachePort.hh"
 #include "debug/Interrupt.hh"
+#include "debug/Quiesce.hh"
 #include "debug/RefCount.hh"
 #include "debug/SkedCache.hh"
-#include "debug/Quiesce.hh"
 #include "params/InOrderCPU.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -67,6 +81,34 @@
 using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
+
+InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit) :
+    CpuPort(_cacheUnit->name() + "-cache-port", _cacheUnit->cpu),
+    cacheUnit(_cacheUnit)
+{ }
+
+bool
+InOrderCPU::CachePort::recvTiming(Packet *pkt)
+{
+    if (pkt->isError())
+        DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
+                pkt->getAddr());
+    else if (pkt->isResponse())
+        cacheUnit->processCacheCompletion(pkt);
+    else {
+        //@note: depending on consistency model, update here
+        DPRINTF(InOrderCachePort, "Received snoop pkt %x,Ignoring\n",
+                pkt->getAddr());
+    }
+
+    return true;
+}
+
+void
+InOrderCPU::CachePort::recvRetry()
+{
+    cacheUnit->recvRetry();
+}
 
 InOrderCPU::TickEvent::TickEvent(InOrderCPU *c)
   : Event(CPU_Tick_Pri), cpu(c)
@@ -191,7 +233,10 @@ InOrderCPU::InOrderCPU(Params *params)
       _status(Idle),
       tickEvent(this),
       stageWidth(params->stageWidth),
+      resPool(new ResourcePool(this, params)),
       timeBuffer(2 , 2),
+      dataPort(resPool->getDataUnit()),
+      instPort(resPool->getInstUnit()),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
       system(params->system),
@@ -206,8 +251,6 @@ InOrderCPU::InOrderCPU(Params *params)
       instsPerSwitch(0)
 {    
     cpu_params = params;
-
-    resPool = new ResourcePool(this, params);
 
     // Resize for Multithreading CPUs
     thread.resize(numThreads);
@@ -238,17 +281,6 @@ InOrderCPU::InOrderCPU(Params *params)
         } else {
             threadModel = Single;
         }
-    }
-
-    // Bind the fetch & data ports from the resource pool.
-    fetchPortIdx = resPool->getPortIdx(params->fetchMemPort);
-    if (fetchPortIdx == 0) {
-        fatal("Unable to find port to fetch instructions from.\n");
-    }
-
-    dataPortIdx = resPool->getPortIdx(params->dataMemPort);
-    if (dataPortIdx == 0) {
-        fatal("Unable to find port for data.\n");
     }
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
@@ -773,12 +805,6 @@ InOrderCPU::init()
 
     // Call Initializiation Routine for Resource Pool
     resPool->init();
-}
-
-Port*
-InOrderCPU::getPort(const std::string &if_name, int idx)
-{
-    return resPool->getPort(if_name, idx);
 }
 
 Fault
@@ -1735,8 +1761,7 @@ InOrderCPU::syscall(int64_t callnum, ThreadID tid)
 TheISA::TLB*
 InOrderCPU::getITBPtr()
 {
-    CacheUnit *itb_res =
-        dynamic_cast<CacheUnit*>(resPool->getResource(fetchPortIdx));
+    CacheUnit *itb_res = resPool->getInstUnit();
     return itb_res->tlb();
 }
 
@@ -1744,38 +1769,26 @@ InOrderCPU::getITBPtr()
 TheISA::TLB*
 InOrderCPU::getDTBPtr()
 {
-    CacheUnit *dtb_res =
-        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
-    return dtb_res->tlb();
+    return resPool->getDataUnit()->tlb();
 }
 
 Decoder *
 InOrderCPU::getDecoderPtr()
 {
-    FetchUnit *fetch_res =
-        dynamic_cast<FetchUnit*>(resPool->getResource(fetchPortIdx));
-    return &fetch_res->decoder;
+    return &resPool->getInstUnit()->decoder;
 }
 
 Fault
 InOrderCPU::read(DynInstPtr inst, Addr addr,
                  uint8_t *data, unsigned size, unsigned flags)
 {
-    //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
-    //       you want to run w/out caches?
-    CacheUnit *cache_res = 
-        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
-
-    return cache_res->read(inst, addr, data, size, flags);
+    return resPool->getDataUnit()->read(inst, addr, data, size, flags);
 }
 
 Fault
 InOrderCPU::write(DynInstPtr inst, uint8_t *data, unsigned size,
                   Addr addr, unsigned flags, uint64_t *write_res)
 {
-    //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
-    //       you want to run w/out caches?
-    CacheUnit *cache_res =
-        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
-    return cache_res->write(inst, data, size, addr, flags, write_res);
+    return resPool->getDataUnit()->write(inst, data, size, addr, flags,
+                                         write_res);
 }

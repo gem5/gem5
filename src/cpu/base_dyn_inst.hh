@@ -975,7 +975,7 @@ BaseDynInst<Impl>::splitRequest(RequestPtr req, RequestPtr &sreqLow,
                                 RequestPtr &sreqHigh)
 {
     // Check to see if the request crosses the next level block boundary.
-    unsigned block_size = cpu->getDcachePort()->peerBlockSize();
+    unsigned block_size = cpu->getDataPort().peerBlockSize();
     Addr addr = req->getVaddr();
     Addr split_addr = roundDown(addr + req->getSize() - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);

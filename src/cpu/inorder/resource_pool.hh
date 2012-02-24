@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -32,7 +44,6 @@
 #ifndef __CPU_INORDER_RESOURCE_POOL_HH__
 #define __CPU_INORDER_RESOURCE_POOL_HH__
 
-#include <list>
 #include <string>
 #include <vector>
 
@@ -46,9 +57,9 @@
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
+class CacheUnit;
 class Event;
-class InOrderCPU;
-class Resource;
+class FetchUnit;
 class ResourceEvent;
 
 class ResourcePool {
@@ -142,14 +153,7 @@ class ResourcePool {
     /** Register Statistics in All Resources */
     void regStats();
 
-    /** Returns a specific port. */
-    Port* getPort(const std::string &if_name, int idx);
-
-    /** Returns a specific port. */
-    unsigned getPortIdx(const std::string &port_name);
-
     /** Returns a specific resource. */
-    unsigned getResIdx(const std::string &res_name);
     unsigned getResIdx(const ThePipeline::ResourceId &res_id);
 
     /** Returns a pointer to a resource */
@@ -215,11 +219,29 @@ class ResourcePool {
 
     DynInstPtr dummyInst[ThePipeline::MaxThreads];
 
-  private:
-    std::vector<Resource *> resources;
+    /**
+     * Get a pointer to the (always present) instruction fetch unit.
+     *
+     * @return the instruction unit
+     */
+    FetchUnit *getInstUnit() const { return instUnit; }
 
-    /** Resources that interface with memory objects */
-    std::vector<int> memObjects;
+    /**
+     * Get a pointer to the (always present) data load/store unit.
+     *
+     * @return the data cache unit
+     */
+    CacheUnit *getDataUnit() const { return dataUnit; }
+
+  private:
+
+    /** The instruction fetch unit. */
+    FetchUnit *instUnit;
+
+    /** The data load/store unit. */
+    CacheUnit *dataUnit;
+
+    std::vector<Resource *> resources;
 
     /** Resources that need to be updated on an inst. graduation */
     std::vector<int> gradObjects;

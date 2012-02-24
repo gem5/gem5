@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -40,7 +52,7 @@ using namespace std;
 using namespace ThePipeline;
 
 ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
-    : cpu(_cpu)
+    : cpu(_cpu), instUnit(NULL), dataUnit(NULL)
 {
     //@todo: use this function to instantiate the resources in resource pool. 
     //This will help in the auto-generation of this pipeline model.
@@ -54,10 +66,12 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     resources.push_back(new FetchSeqUnit("fetch_seq_unit", FetchSeq,
                                          stage_width * 2, 0, _cpu, params));
 
-    memObjects.push_back(ICache);
-    resources.push_back(new FetchUnit("icache_port", ICache,
-                                      stage_width * 2 + MaxThreads, 0, _cpu,
-                                      params));
+    // Keep track of the instruction fetch unit so we can easily
+    // provide a pointer to it in the CPU.
+    instUnit = new FetchUnit("icache_port", ICache,
+                             stage_width * 2 + MaxThreads, 0, _cpu,
+                             params);
+    resources.push_back(instUnit);
 
     resources.push_back(new DecodeUnit("decode_unit", Decode,
                                        stage_width, 0, _cpu, params));
@@ -84,10 +98,12 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                         _cpu,
                                         params));
 
-    memObjects.push_back(DCache);
-    resources.push_back(new CacheUnit("dcache_port", DCache, 
-                                      stage_width * 2 + MaxThreads, 0, _cpu,
-                                      params));
+    // Keep track of the data load/store unit so we can easily provide
+    // a pointer to it in the CPU.
+    dataUnit = new CacheUnit("dcache_port", DCache,
+                             stage_width * 2 + MaxThreads, 0, _cpu,
+                             params);
+    resources.push_back(dataUnit);
 
     gradObjects.push_back(BPred);
     resources.push_back(new GraduationUnit("graduation_unit", Grad,
@@ -149,58 +165,6 @@ ResourcePool::regStats()
     for (int idx = 0; idx < num_resources; idx++) {
         resources[idx]->regStats();
     }
-}
-
-Port *
-ResourcePool::getPort(const std::string &if_name, int idx)
-{
-    DPRINTF(Resource, "Binding %s in Resource Pool.\n", if_name);
-
-    for (int i = 0; i < memObjects.size(); i++) {
-        int obj_idx = memObjects[i];
-        Port *port = resources[obj_idx]->getPort(if_name, idx);
-        if (port != NULL) {
-            DPRINTF(Resource, "%s set to resource %s(#%i) in Resource Pool.\n", 
-                    if_name, resources[obj_idx]->name(), obj_idx);
-            return port;
-        }
-    }
-
-    return NULL;
-}
-
-unsigned
-ResourcePool::getPortIdx(const std::string &port_name)
-{
-    DPRINTF(Resource, "Finding Port Idx for %s.\n", port_name);
-
-    for (int i = 0; i < memObjects.size(); i++) {
-        unsigned obj_idx = memObjects[i];
-        Port *port = resources[obj_idx]->getPort(port_name, obj_idx);
-        if (port != NULL) {
-            DPRINTF(Resource, "Returning Port Idx %i for %s.\n", obj_idx, 
-                    port_name);
-            return obj_idx;
-        }
-    }
-
-    return 0;
-}
-
-unsigned
-ResourcePool::getResIdx(const std::string &res_name)
-{
-    DPRINTF(Resource, "Finding Resource Idx for %s.\n", res_name);
-
-    int num_resources = resources.size();
-
-    for (int idx = 0; idx < num_resources; idx++) {
-        if (resources[idx]->name() == res_name)
-            return idx;
-    }
-
-    panic("Can't find resource idx for: %s\n", res_name);
-    return 0;
 }
 
 unsigned

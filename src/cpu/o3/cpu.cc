@@ -578,18 +578,6 @@ FullO3CPU<Impl>::regStats()
 }
 
 template <class Impl>
-Port *
-FullO3CPU<Impl>::getPort(const std::string &if_name, int idx)
-{
-    if (if_name == "dcache_port")
-        return &dcachePort;
-    else if (if_name == "icache_port")
-        return &icachePort;
-    else
-        panic("No Such Port\n");
-}
-
-template <class Impl>
 void
 FullO3CPU<Impl>::tick()
 {

@@ -54,7 +54,7 @@
 using namespace TheISA;
 
 FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
-    : PortProxy(*(tc->getCpuPtr()->getPort("dcache_port"))), _tc(tc)
+    : PortProxy(tc->getCpuPtr()->getDataPort()), _tc(tc)
 {
 }
 
