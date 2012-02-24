@@ -144,16 +144,16 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     else
         panic("Unknown int size");
 
-    initVirtMem->writeBlob(stack_min, (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(stack_min, (uint8_t*)&argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
     //Copy the aux stuff
     for (vector<auxv_t>::size_type x = 0; x < auxv.size(); x++) {
-        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
 

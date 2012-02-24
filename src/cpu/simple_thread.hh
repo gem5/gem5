@@ -206,14 +206,6 @@ class SimpleThread : public ThreadState
 
     System *getSystemPtr() { return system; }
 
-    PortProxy* getPhysProxy() { return physProxy; }
-
-    /** Return a virtual port. This port cannot be cached locally in an object.
-     * After a CPU switch it may point to the wrong memory object which could
-     * mean stale data.
-     */
-    FSTranslatingPortProxy* getVirtProxy() { return virtProxy; }
-
     Status status() const { return _status; }
 
     void setStatus(Status newStatus) { _status = newStatus; }

@@ -143,9 +143,9 @@ class ThreadContext
 
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
-    virtual PortProxy* getPhysProxy() = 0;
+    virtual PortProxy &getPhysProxy() = 0;
 
-    virtual FSTranslatingPortProxy* getVirtProxy() = 0;
+    virtual FSTranslatingPortProxy &getVirtProxy() = 0;
 
     /**
      * Initialise the physical and virtual port proxies and tie them to
@@ -155,7 +155,7 @@ class ThreadContext
      */
     virtual void initMemProxies(ThreadContext *tc) = 0;
 
-    virtual SETranslatingPortProxy *getMemProxy() = 0;
+    virtual SETranslatingPortProxy &getMemProxy() = 0;
 
     virtual Process *getProcessPtr() = 0;
 
@@ -319,13 +319,13 @@ class ProxyThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
-    PortProxy* getPhysProxy() { return actualTC->getPhysProxy(); }
+    PortProxy &getPhysProxy() { return actualTC->getPhysProxy(); }
 
-    FSTranslatingPortProxy* getVirtProxy() { return actualTC->getVirtProxy(); }
+    FSTranslatingPortProxy &getVirtProxy() { return actualTC->getVirtProxy(); }
 
     void initMemProxies(ThreadContext *tc) { actualTC->initMemProxies(tc); }
 
-    SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
+    SETranslatingPortProxy &getMemProxy() { return actualTC->getMemProxy(); }
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 

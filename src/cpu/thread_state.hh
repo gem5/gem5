@@ -49,9 +49,6 @@ namespace TheISA {
 };
 
 class Checkpoint;
-class PortProxy;
-class SETranslatingPort;
-class FSTranslatingPort;
 
 /**
  *  Struct for holding general thread state that is needed across CPU
@@ -102,13 +99,13 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
-    PortProxy* getPhysProxy() { return physProxy; }
+    PortProxy &getPhysProxy() { return *physProxy; }
 
-    FSTranslatingPortProxy* getVirtProxy() { return virtProxy; }
+    FSTranslatingPortProxy &getVirtProxy() { return *virtProxy; }
 
     Process *getProcessPtr() { return process; }
 
-    SETranslatingPortProxy* getMemProxy();
+    SETranslatingPortProxy &getMemProxy();
 
     /** Reads the number of instructions functionally executed and
      * committed.
@@ -183,8 +180,8 @@ struct ThreadState {
 
     /** A translating port proxy, outgoing only, for functional
      * accesse to virtual addresses. */
-    FSTranslatingPortProxy* virtProxy;
-    SETranslatingPortProxy* proxy;
+    FSTranslatingPortProxy *virtProxy;
+    SETranslatingPortProxy *proxy;
 
   public:
     /*

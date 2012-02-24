@@ -114,14 +114,14 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 
-    virtual PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
+    virtual PortProxy &getPhysProxy() { return thread->getPhysProxy(); }
 
-    virtual FSTranslatingPortProxy* getVirtProxy();
+    virtual FSTranslatingPortProxy &getVirtProxy();
 
     virtual void initMemProxies(ThreadContext *tc)
     { thread->initMemProxies(tc); }
 
-    virtual SETranslatingPortProxy* getMemProxy()
+    virtual SETranslatingPortProxy &getMemProxy()
     { return thread->getMemProxy(); }
 
     /** Returns this thread's status. */

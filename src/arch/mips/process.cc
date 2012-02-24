@@ -150,7 +150,7 @@ MipsLiveProcess::argsInit(int pageSize)
 
     argc = htog((IntType)argc);
 
-    initVirtMem->writeBlob(stack_min, (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(stack_min, (uint8_t*)&argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
@@ -158,9 +158,9 @@ MipsLiveProcess::argsInit(int pageSize)
 
     // Copy the aux vector
     for (typename vector<auxv_t>::size_type x = 0; x < auxv.size(); x++) {
-        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
 
@@ -168,7 +168,7 @@ MipsLiveProcess::argsInit(int pageSize)
     for (unsigned i = 0; i < 2; i++) {
         const IntType zero = 0;
         const Addr addr = auxv_array_base + 2 * intSize * (auxv.size() + i);
-        initVirtMem->writeBlob(addr, (uint8_t*)&zero, intSize);
+        initVirtMem.writeBlob(addr, (uint8_t*)&zero, intSize);
     }
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);

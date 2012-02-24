@@ -114,7 +114,7 @@ LinuxArmSystem::initState()
     DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
     DDUMP(Loader, boot_data, size << 2);
 
-    physProxy->writeBlob(ParamsList, boot_data, size << 2);
+    physProxy.writeBlob(ParamsList, boot_data, size << 2);
 
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");

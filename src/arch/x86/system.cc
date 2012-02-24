@@ -138,17 +138,14 @@ X86System::initState()
     const int PDPTBits = 9;
     const int PDTBits = 9;
 
-    // Get a port proxy to write the page tables and descriptor tables.
-    PortProxy* physProxy = tc->getPhysProxy();
-
     /*
      * Set up the gdt.
      */
     uint8_t numGDTEntries = 0;
     // Place holder at selector 0
     uint64_t nullDescriptor = 0;
-    physProxy->writeBlob(GDTBase + numGDTEntries * 8,
-            (uint8_t *)(&nullDescriptor), 8);
+    physProxy.writeBlob(GDTBase + numGDTEntries * 8,
+                        (uint8_t *)(&nullDescriptor), 8);
     numGDTEntries++;
 
     //64 bit code segment
@@ -169,8 +166,8 @@ X86System::initState()
     //it's beginning in memory and it's actual data, we'll use an
     //intermediary.
     uint64_t csDescVal = csDesc;
-    physProxy->writeBlob(GDTBase + numGDTEntries * 8,
-            (uint8_t *)(&csDescVal), 8);
+    physProxy.writeBlob(GDTBase + numGDTEntries * 8,
+                        (uint8_t *)(&csDescVal), 8);
 
     numGDTEntries++;
 
@@ -192,8 +189,8 @@ X86System::initState()
     dsDesc.limitHigh = 0xF;
     dsDesc.limitLow = 0xFF;
     uint64_t dsDescVal = dsDesc;
-    physProxy->writeBlob(GDTBase + numGDTEntries * 8,
-            (uint8_t *)(&dsDescVal), 8);
+    physProxy.writeBlob(GDTBase + numGDTEntries * 8,
+                        (uint8_t *)(&dsDescVal), 8);
 
     numGDTEntries++;
 
@@ -220,8 +217,8 @@ X86System::initState()
     tssDesc.limitHigh = 0xF;
     tssDesc.limitLow = 0xFF;
     uint64_t tssDescVal = tssDesc;
-    physProxy->writeBlob(GDTBase + numGDTEntries * 8,
-            (uint8_t *)(&tssDescVal), 8);
+    physProxy.writeBlob(GDTBase + numGDTEntries * 8,
+                        (uint8_t *)(&tssDescVal), 8);
 
     numGDTEntries++;
 
@@ -250,25 +247,25 @@ X86System::initState()
     // read/write, user, not present
     uint64_t pml4e = X86ISA::htog(0x6);
     for (int offset = 0; offset < (1 << PML4Bits) * 8; offset += 8) {
-        physProxy->writeBlob(PageMapLevel4 + offset, (uint8_t *)(&pml4e), 8);
+        physProxy.writeBlob(PageMapLevel4 + offset, (uint8_t *)(&pml4e), 8);
     }
     // Point to the only PDPT
     pml4e = X86ISA::htog(0x7 | PageDirPtrTable);
-    physProxy->writeBlob(PageMapLevel4, (uint8_t *)(&pml4e), 8);
+    physProxy.writeBlob(PageMapLevel4, (uint8_t *)(&pml4e), 8);
 
     // Page Directory Pointer Table
 
     // read/write, user, not present
     uint64_t pdpe = X86ISA::htog(0x6);
     for (int offset = 0; offset < (1 << PDPTBits) * 8; offset += 8) {
-        physProxy->writeBlob(PageDirPtrTable + offset,
-                (uint8_t *)(&pdpe), 8);
+        physProxy.writeBlob(PageDirPtrTable + offset,
+                            (uint8_t *)(&pdpe), 8);
     }
     // Point to the PDTs
     for (int table = 0; table < NumPDTs; table++) {
         pdpe = X86ISA::htog(0x7 | PageDirTable[table]);
-        physProxy->writeBlob(PageDirPtrTable + table * 8,
-                (uint8_t *)(&pdpe), 8);
+        physProxy.writeBlob(PageDirPtrTable + table * 8,
+                            (uint8_t *)(&pdpe), 8);
     }
 
     // Page Directory Tables
@@ -279,8 +276,8 @@ X86System::initState()
         for (int offset = 0; offset < (1 << PDTBits) * 8; offset += 8) {
             // read/write, user, present, 4MB
             uint64_t pdte = X86ISA::htog(0x87 | base);
-            physProxy->writeBlob(PageDirTable[table] + offset,
-                    (uint8_t *)(&pdte), 8);
+            physProxy.writeBlob(PageDirTable[table] + offset,
+                                (uint8_t *)(&pdte), 8);
             base += pageSize;
         }
     }
@@ -342,9 +339,6 @@ void
 X86System::writeOutSMBiosTable(Addr header,
         Addr &headerSize, Addr &structSize, Addr table)
 {
-    // Get a port proxy to write the table and header to memory.
-    PortProxy* physProxy = threadContexts[0]->getPhysProxy();
-
     // If the table location isn't specified, just put it after the header.
     // The header size as of the 2.5 SMBios specification is 0x1F bytes
     if (!table)
@@ -363,9 +357,6 @@ void
 X86System::writeOutMPTable(Addr fp,
         Addr &fpSize, Addr &tableSize, Addr table)
 {
-    // Get a port proxy to write the table and header to memory.
-    PortProxy* physProxy = threadContexts[0]->getPhysProxy();
-
     // If the table location isn't specified and it exists, just put
     // it after the floating pointer. The fp size as of the 1.4 Intel MP
     // specification is 0x10 bytes.

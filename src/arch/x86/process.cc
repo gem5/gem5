@@ -172,7 +172,7 @@ X86_64LiveProcess::initState()
         0x0f,0x05,                             // syscall
         0xc3                                   // retq
     };
-    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
+    initVirtMem.writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
             vtimeBlob, sizeof(vtimeBlob));
 
     uint8_t vgettimeofdayBlob[] = {
@@ -180,7 +180,7 @@ X86_64LiveProcess::initState()
         0x0f,0x05,                             // syscall
         0xc3                                   // retq
     };
-    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
+    initVirtMem.writeBlob(vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
             vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
@@ -269,7 +269,7 @@ I386LiveProcess::initState()
     assert(_gdtSize % sizeof(zero) == 0);
     for (Addr gdtCurrent = _gdtStart;
             gdtCurrent < _gdtStart + _gdtSize; gdtCurrent += sizeof(zero)) {
-        initVirtMem->write(gdtCurrent, zero);
+        initVirtMem.write(gdtCurrent, zero);
     }
 
     // Set up the vsyscall page for this process.
@@ -281,7 +281,7 @@ I386LiveProcess::initState()
         0x89, 0xe5, // mov %esp, %ebp
         0x0f, 0x34  // sysenter
     };
-    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsyscallOffset,
+    initVirtMem.writeBlob(vsyscallPage.base + vsyscallPage.vsyscallOffset,
             vsyscallBlob, sizeof(vsyscallBlob));
 
     uint8_t vsysexitBlob[] = {
@@ -290,7 +290,7 @@ I386LiveProcess::initState()
         0x59,       // pop %ecx
         0xc3        // ret
     };
-    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsysexitOffset,
+    initVirtMem.writeBlob(vsyscallPage.base + vsyscallPage.vsysexitOffset,
             vsysexitBlob, sizeof(vsysexitBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
@@ -608,11 +608,11 @@ X86LiveProcess::argsInit(int pageSize,
 
     //Write out the sentry void *
     IntType sentry_NULL = 0;
-    initVirtMem->writeBlob(sentry_base,
+    initVirtMem.writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
     //Write the file name
-    initVirtMem->writeString(file_name_base, filename.c_str());
+    initVirtMem.writeString(file_name_base, filename.c_str());
 
     //Fix up the aux vectors which point to data
     assert(auxv[auxv.size() - 3].a_type == M5_AT_RANDOM);
@@ -625,22 +625,22 @@ X86LiveProcess::argsInit(int pageSize,
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
     {
-        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
     //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
-    initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
+    initVirtMem.writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
             (uint8_t*)&zero, 2 * intSize);
 
-    initVirtMem->writeString(aux_data_base, platform.c_str());
+    initVirtMem.writeString(aux_data_base, platform.c_str());
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register

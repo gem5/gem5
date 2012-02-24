@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -43,7 +55,6 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
-#include "mem/physical.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "params/LiveProcess.hh"
 #include "params/Process.hh"
@@ -91,7 +102,11 @@ template struct AuxVector<uint64_t>;
 
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system),
-      max_stack_size(params->max_stack_size)
+      max_stack_size(params->max_stack_size),
+      M5_pid(system->allocatePID()),
+      pTable(new PageTable(name(), M5_pid)),
+      initVirtMem(system->getSystemPort(), this,
+                  SETranslatingPortProxy::Always)
 {
     string in = params->input;
     string out = params->output;
@@ -127,7 +142,6 @@ Process::Process(ProcessParams * params)
     else
         stderr_fd = Process::openOutputFile(err);
 
-    M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)
     Process::FdMap *fdo = &fd_map[STDIN_FILENO];
     fdo->fd = stdin_fd;
@@ -159,7 +173,6 @@ Process::Process(ProcessParams * params)
 
     mmap_start = mmap_end = 0;
     nxm_start = nxm_end = 0;
-    pTable = new PageTable(name(), M5_pid);
     // other parameters will be initialized when the program is loaded
 }
 
@@ -233,9 +246,6 @@ Process::initState()
 
     // mark this context as active so it will start ticking.
     tc->activate(0);
-
-    initVirtMem = new SETranslatingPortProxy(*system->getSystemPort(), this,
-                                             SETranslatingPortProxy::Always);
 }
 
 // map simulator fd sim_fd to target fd tgt_fd

@@ -45,24 +45,24 @@ using namespace std;
 namespace AlphaISA {
 
 PageTableEntry
-kernel_pte_lookup(PortProxy* mem, Addr ptbr, VAddr vaddr)
+kernel_pte_lookup(PortProxy &mem, Addr ptbr, VAddr vaddr)
 {
     Addr level1_pte = ptbr + vaddr.level1();
-    PageTableEntry level1 = mem->read<uint64_t>(level1_pte);
+    PageTableEntry level1 = mem.read<uint64_t>(level1_pte);
     if (!level1.valid()) {
         DPRINTF(VtoPhys, "level 1 PTE not valid, va = %#\n", vaddr);
         return 0;
     }
 
     Addr level2_pte = level1.paddr() + vaddr.level2();
-    PageTableEntry level2 = mem->read<uint64_t>(level2_pte);
+    PageTableEntry level2 = mem.read<uint64_t>(level2_pte);
     if (!level2.valid()) {
         DPRINTF(VtoPhys, "level 2 PTE not valid, va = %#x\n", vaddr);
         return 0;
     }
 
     Addr level3_pte = level2.paddr() + vaddr.level3();
-    PageTableEntry level3 = mem->read<uint64_t>(level3_pte);
+    PageTableEntry level3 = mem.read<uint64_t>(level3_pte);
     if (!level3.valid()) {
         DPRINTF(VtoPhys, "level 3 PTE not valid, va = %#x\n", vaddr);
         return 0;

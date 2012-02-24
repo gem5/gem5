@@ -47,7 +47,7 @@
 #include "params/X86E820Table.hh"
 #include "sim/sim_object.hh"
 
-class Port;
+class PortProxy;
 
 namespace X86ISA
 {
@@ -75,7 +75,7 @@ namespace X86ISA
         E820Table(Params *p) : SimObject(p), entries(p->entries)
         {}
 
-        void writeTo(Port * port, Addr countAddr, Addr addr);
+        void writeTo(PortProxy& proxy, Addr countAddr, Addr addr);
     };
 };
 

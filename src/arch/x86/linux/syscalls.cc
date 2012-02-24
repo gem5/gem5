@@ -81,7 +81,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int code = process->getSyscallArg(tc, index);
     uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
-    SETranslatingPortProxy* p = tc->getMemProxy();
+    SETranslatingPortProxy &p = tc->getMemProxy();
     switch(code)
     {
       //Each of these valid options should actually check addr.
@@ -91,7 +91,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return 0;
       case GetFS:
         fsBase = tc->readMiscRegNoEffect(MISCREG_FS_BASE);
-        p->write(addr, fsBase);
+        p.write(addr, fsBase);
         return 0;
       case SetGS:
         tc->setMiscRegNoEffect(MISCREG_GS_BASE, addr);
@@ -99,7 +99,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return 0;
       case GetGS:
         gsBase = tc->readMiscRegNoEffect(MISCREG_GS_BASE);
-        p->write(addr, gsBase);
+        p.write(addr, gsBase);
         return 0;
       default:
         return -EINVAL;

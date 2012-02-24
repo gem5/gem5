@@ -71,8 +71,8 @@ class VPtr
         if (!ptr)
             return;
 
-        FSTranslatingPortProxy* proxy = tc->getVirtProxy();
-        proxy->readBlob(ptr, buffer, sizeof(T));
+        FSTranslatingPortProxy &proxy = tc->getVirtProxy();
+        proxy.readBlob(ptr, buffer, sizeof(T));
     }
 
     bool

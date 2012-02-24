@@ -65,7 +65,7 @@ class ElfObject : public ObjectFile
   public:
     virtual ~ElfObject() {}
 
-    bool loadSections(PortProxy *memProxy,
+    bool loadSections(PortProxy& memProxy,
             Addr addrMask = std::numeric_limits<Addr>::max());
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());

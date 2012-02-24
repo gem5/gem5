@@ -39,21 +39,21 @@
 
 #include "arch/x86/bios/e820.hh"
 #include "arch/x86/isa_traits.hh"
-#include "mem/port.hh"
+#include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;
 using namespace X86ISA;
 
 template<class T>
-void writeVal(T val, Port * port, Addr &addr)
+void writeVal(T val, PortProxy& proxy, Addr &addr)
 {
     T guestVal = htog(val);
-    port->writeBlob(addr, (uint8_t *)&guestVal, sizeof(T));
+    proxy.writeBlob(addr, (uint8_t *)&guestVal, sizeof(T));
     addr += sizeof(T);
 }
 
-void X86ISA::E820Table::writeTo(Port * port, Addr countAddr, Addr addr)
+void X86ISA::E820Table::writeTo(PortProxy& proxy, Addr countAddr, Addr addr)
 {
     uint8_t e820Nr = entries.size();
 
@@ -63,12 +63,12 @@ void X86ISA::E820Table::writeTo(Port * port, Addr countAddr, Addr addr)
 
     uint8_t guestE820Nr = htog(e820Nr);
 
-    port->writeBlob(countAddr, (uint8_t *)&guestE820Nr, sizeof(guestE820Nr));
+    proxy.writeBlob(countAddr, (uint8_t *)&guestE820Nr, sizeof(guestE820Nr));
 
     for (int i = 0; i < e820Nr; i++) {
-        writeVal(entries[i]->addr, port, addr);
-        writeVal(entries[i]->size, port, addr);
-        writeVal(entries[i]->type, port, addr);
+        writeVal(entries[i]->addr, proxy, addr);
+        writeVal(entries[i]->size, proxy, addr);
+        writeVal(entries[i]->type, proxy, addr);
     }
 }
 

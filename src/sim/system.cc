@@ -57,8 +57,6 @@
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/fs_translating_port_proxy.hh"
-#include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
 #include "sim/byteswap.hh"
@@ -79,6 +77,8 @@ System::System(Params *p)
       _numContexts(0),
       pagePtr(0),
       init_param(p->init_param),
+      physProxy(_systemPort),
+      virtProxy(_systemPort),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
       memoryMode(p->mem_mode),
@@ -106,12 +106,6 @@ System::System(Params *p)
         kernelSymtab = new SymbolTable;
         if (!debugSymbolTable)
             debugSymbolTable = new SymbolTable;
-
-        /**
-         * Get a port proxy to memory
-         */
-        physProxy = new PortProxy(*getSystemPort());
-        virtProxy = new FSTranslatingPortProxy(*getSystemPort());
     }
 
     // Get the generic system master IDs

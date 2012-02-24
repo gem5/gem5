@@ -359,31 +359,31 @@ SparcLiveProcess::argsInit(int pageSize)
 
     // Write out the sentry void *
     uint64_t sentry_NULL = 0;
-    initVirtMem->writeBlob(sentry_base,
+    initVirtMem.writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
     // Write the file name
-    initVirtMem->writeString(file_name_base, filename.c_str());
+    initVirtMem.writeString(file_name_base, filename.c_str());
 
     // Copy the aux stuff
     for (int x = 0; x < auxv.size(); x++) {
-        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
 
     // Write out the terminating zeroed auxilliary vector
     const IntType zero = 0;
-    initVirtMem->writeBlob(auxv_array_base + intSize * 2 * auxv.size(),
+    initVirtMem.writeBlob(auxv_array_base + intSize * 2 * auxv.size(),
             (uint8_t*)&zero, intSize);
-    initVirtMem->writeBlob(auxv_array_base + intSize * (2 * auxv.size() + 1),
+    initVirtMem.writeBlob(auxv_array_base + intSize * (2 * auxv.size() + 1),
             (uint8_t*)&zero, intSize);
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     // Set up space for the trap handlers into the processes address space.
     // Since the stack grows down and there is reserved address space abov
@@ -416,9 +416,9 @@ Sparc64LiveProcess::argsInit(int intSize, int pageSize)
     SparcLiveProcess::argsInit<uint64_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(fillStart,
+    initVirtMem.writeBlob(fillStart,
             (uint8_t*)fillHandler64, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(spillStart,
+    initVirtMem.writeBlob(spillStart,
             (uint8_t*)spillHandler64, sizeof(MachInst) *  numSpillInsts);
 }
 
@@ -428,9 +428,9 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     SparcLiveProcess::argsInit<uint32_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(fillStart,
+    initVirtMem.writeBlob(fillStart,
             (uint8_t*)fillHandler32, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(spillStart,
+    initVirtMem.writeBlob(spillStart,
             (uint8_t*)spillHandler32, sizeof(MachInst) *  numSpillInsts);
 }
 
@@ -452,7 +452,7 @@ void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 uint32_t regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemProxy()->tryWriteBlob(
+                if (!tc->getMemProxy().tryWriteBlob(
                         sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");
@@ -487,7 +487,7 @@ Sparc64LiveProcess::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 IntReg regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemProxy()->tryWriteBlob(
+                if (!tc->getMemProxy().tryWriteBlob(
                         sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");

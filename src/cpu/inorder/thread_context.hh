@@ -115,9 +115,9 @@ class InOrderThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
+    PortProxy &getPhysProxy() { return thread->getPhysProxy(); }
 
-    FSTranslatingPortProxy* getVirtProxy();
+    FSTranslatingPortProxy &getVirtProxy();
 
     void initMemProxies(ThreadContext *tc)
     { thread->initMemProxies(tc); }
@@ -144,7 +144,7 @@ class InOrderThreadContext : public ThreadContext
         return this->thread->quiesceEvent;
     }
 
-    SETranslatingPortProxy* getMemProxy() { return thread->getMemProxy(); }
+    SETranslatingPortProxy &getMemProxy() { return thread->getMemProxy(); }
 
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() { return thread->getProcessPtr(); }

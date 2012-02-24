@@ -121,18 +121,18 @@ class BaseBufferArg {
     //
     // copy data into simulator space (read from target memory)
     //
-    virtual bool copyIn(SETranslatingPortProxy* memproxy)
+    virtual bool copyIn(SETranslatingPortProxy &memproxy)
     {
-        memproxy->readBlob(addr, bufPtr, size);
+        memproxy.readBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
     }
 
     //
     // copy data out of simulator space (write to target memory)
     //
-    virtual bool copyOut(SETranslatingPortProxy* memproxy)
+    virtual bool copyOut(SETranslatingPortProxy &memproxy)
     {
-        memproxy->writeBlob(addr, bufPtr, size);
+        memproxy.writeBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
     }
 
@@ -464,7 +464,7 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 //Here are a couple convenience functions
 template<class OS>
 static void
-copyOutStatBuf(SETranslatingPortProxy* mem, Addr addr,
+copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
         hst_stat *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
@@ -475,7 +475,7 @@ copyOutStatBuf(SETranslatingPortProxy* mem, Addr addr,
 
 template<class OS>
 static void
-copyOutStat64Buf(SETranslatingPortProxy* mem, Addr addr,
+copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
         hst_stat64 *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
@@ -530,7 +530,7 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
 
@@ -608,7 +608,7 @@ chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -714,7 +714,7 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -744,7 +744,7 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -809,7 +809,7 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -838,7 +838,7 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -899,7 +899,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -958,19 +958,19 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -EBADF;
     }
 
-    SETranslatingPortProxy *p = tc->getMemProxy();
+    SETranslatingPortProxy &p = tc->getMemProxy();
     uint64_t tiov_base = process->getSyscallArg(tc, index);
     size_t count = process->getSyscallArg(tc, index);
     struct iovec hiov[count];
     for (size_t i = 0; i < count; ++i) {
         typename OS::tgt_iovec tiov;
 
-        p->readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
-                    (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
+        p.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
+                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        p->readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
-                    hiov[i].iov_len);
+        p.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
+                   hiov[i].iov_len);
     }
 
     int result = writev(process->sim_fd(fd), hiov, count);
@@ -1136,7 +1136,7 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
-    if (!tc->getMemProxy()->tryReadString(path,
+    if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1255,8 +1255,8 @@ timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if(taddr != 0) {
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
-        SETranslatingPortProxy *p = tc->getMemProxy();
-        p->writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
+        SETranslatingPortProxy &p = tc->getMemProxy();
+        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
     }
     return sec;
 }

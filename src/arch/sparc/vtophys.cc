@@ -81,7 +81,7 @@ vtophys(ThreadContext *tc, Addr addr)
     int pri_context = bits(tlbdata,47,32);
     // int sec_context = bits(tlbdata,63,48);
 
-    PortProxy* mem = tc->getPhysProxy();
+    PortProxy &mem = tc->getPhysProxy();
     TLB* itb = tc->getITBPtr();
     TLB* dtb = tc->getDTBPtr();
     TlbEntry* tbe;
@@ -110,9 +110,9 @@ vtophys(ThreadContext *tc, Addr addr)
     dtb->GetTsbPtr(tc, addr, ctx_zero ? 0 : pri_context, tsbs);
     va_tag = bits(addr, 63, 22);
     for (int x = 0; x < 4; x++) {
-        ttetag = betoh(mem->read<uint64_t>(tsbs[x]));
+        ttetag = betoh(mem.read<uint64_t>(tsbs[x]));
         if (ttetag.valid() && ttetag.va() == va_tag) {
-            uint64_t entry = mem->read<uint64_t>(tsbs[x]) + sizeof(uint64_t);
+            uint64_t entry = mem.read<uint64_t>(tsbs[x]) + sizeof(uint64_t);
             // I think it's sun4v at least!
             pte.populate(betoh(entry), PageTableEntry::sun4v);
             DPRINTF(VtoPhys, "Virtual(%#x)->Physical(%#x) found in TTE\n",

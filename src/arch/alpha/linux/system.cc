@@ -88,9 +88,9 @@ LinuxAlphaSystem::initState()
      * Since we aren't using a bootloader, we have to copy the
      * kernel arguments directly into the kernel's memory.
      */
-    virtProxy->writeBlob(CommandLine(),
-                         (uint8_t*)params()->boot_osflags.c_str(),
-                         params()->boot_osflags.length()+1);
+    virtProxy.writeBlob(CommandLine(),
+                        (uint8_t*)params()->boot_osflags.c_str(),
+                        params()->boot_osflags.length()+1);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
@@ -98,8 +98,8 @@ LinuxAlphaSystem::initState()
      * calculated it by using the PIT, RTC, etc.
      */
     if (kernelSymtab->findAddress("est_cycle_freq", addr))
-        virtProxy->write(addr, (uint64_t)(SimClock::Frequency /
-                                          params()->boot_cpu_frequency));
+        virtProxy.write(addr, (uint64_t)(SimClock::Frequency /
+                                         params()->boot_cpu_frequency));
 
 
     /**
@@ -109,7 +109,7 @@ LinuxAlphaSystem::initState()
      * 255 ASNs.
      */
     if (kernelSymtab->findAddress("dp264_mv", addr))
-        virtProxy->write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
+        virtProxy.write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
     else
         panic("could not find dp264_mv\n");
 
@@ -176,10 +176,8 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         assert(intrFreq);
-        FSTranslatingPortProxy* vp;
-
-        vp = tc->getVirtProxy();
-        vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        vp.writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
     }
 }
 

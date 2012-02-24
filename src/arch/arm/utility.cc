@@ -91,18 +91,18 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
         }
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        FSTranslatingPortProxy* vp = tc->getVirtProxy();
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
         uint64_t arg;
         if (size == sizeof(uint64_t)) {
             // If the argument is even it must be aligned
             if ((number % 2) != 0)
                 number++;
-            arg = vp->read<uint64_t>(sp +
+            arg = vp.read<uint64_t>(sp +
                     (number-NumArgumentRegs) * sizeof(uint32_t));
             // since two 32 bit args == 1 64 bit arg, increment number
             number++;
         } else {
-            arg = vp->read<uint32_t>(sp +
+            arg = vp.read<uint32_t>(sp +
                            (number-NumArgumentRegs) * sizeof(uint32_t));
         }
         return arg;

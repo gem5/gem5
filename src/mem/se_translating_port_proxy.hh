@@ -47,7 +47,8 @@
 
 #include "mem/page_table.hh"
 #include "mem/port_proxy.hh"
-#include "sim/process.hh"
+
+class Process;
 
 /**
  * @file

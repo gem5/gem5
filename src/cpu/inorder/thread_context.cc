@@ -38,7 +38,7 @@
 
 using namespace TheISA;
 
-FSTranslatingPortProxy*
+FSTranslatingPortProxy&
 InOrderThreadContext::getVirtProxy()
 {
     return thread->getVirtProxy();

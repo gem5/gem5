@@ -39,6 +39,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/sim_object.hh"
 #include "sim/syscallreturn.hh"
 
@@ -48,7 +49,6 @@ struct LiveProcessParams;
 class SyscallDesc;
 class System;
 class ThreadContext;
-class SETranslatingPortProxy;
 
 template<class IntType>
 struct AuxVector
@@ -121,16 +121,13 @@ class Process : public SimObject
 
     virtual void initState();
 
-  protected:
-    /// Memory object for initialization (image loading)
-    SETranslatingPortProxy *initVirtMem;
-
   public:
-    PageTable *pTable;
 
     //This id is assigned by m5 and is used to keep process' tlb entries
     //separated.
     uint64_t M5_pid;
+
+    PageTable* pTable;
 
     class FdMap
     {
@@ -151,6 +148,10 @@ class Process : public SimObject
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
     };
+
+  protected:
+    /// Memory proxy for initialization (image loading)
+    SETranslatingPortProxy initVirtMem;
 
   private:
     // file descriptor remapping support

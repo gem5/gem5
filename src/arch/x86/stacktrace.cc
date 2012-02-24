@@ -48,29 +48,27 @@ namespace X86ISA
     {
         Addr addr = 0;
 
-        FSTranslatingPortProxy* vp;
-
-        vp = tc->getVirtProxy();
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
             panic("thread info not compiled into kernel\n");
-        thread_info_size = vp->readGtoH<int32_t>(addr);
+        thread_info_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
             panic("thread info not compiled into kernel\n");
-        task_struct_size = vp->readGtoH<int32_t>(addr);
+        task_struct_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
             panic("thread info not compiled into kernel\n");
-        task_off = vp->readGtoH<int32_t>(addr);
+        task_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
             panic("thread info not compiled into kernel\n");
-        pid_off = vp->readGtoH<int32_t>(addr);
+        pid_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
             panic("thread info not compiled into kernel\n");
-        name_off = vp->readGtoH<int32_t>(addr);
+        name_off = vp.readGtoH<int32_t>(addr);
     }
 
     Addr
@@ -82,10 +80,8 @@ namespace X86ISA
 
         Addr tsk;
 
-        FSTranslatingPortProxy* vp;
-
-        vp = tc->getVirtProxy();
-        tsk = vp->readGtoH<Addr>(base + task_off);
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        tsk = vp.readGtoH<Addr>(base + task_off);
 
         return tsk;
     }
@@ -99,10 +95,8 @@ namespace X86ISA
 
         uint16_t pd;
 
-        FSTranslatingPortProxy* vp;
-
-        vp = tc->getVirtProxy();
-        pd = vp->readGtoH<uint16_t>(task + pid_off);
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        pd = vp.readGtoH<uint16_t>(task + pid_off);
 
         return pd;
     }

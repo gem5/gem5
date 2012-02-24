@@ -59,7 +59,7 @@ HexFile::~HexFile()
 }
 
 bool
-HexFile::loadSections(PortProxy* memProxy)
+HexFile::loadSections(PortProxy& memProxy)
 {
     char Line[64];
     Addr MemAddr;
@@ -71,7 +71,7 @@ HexFile::loadSections(PortProxy* memProxy)
         parseLine(Line, &MemAddr, &Data);
         if (MemAddr != 0) {
             // Now, write to memory
-            memProxy->writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
+            memProxy.writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
         }
     }
     return true;

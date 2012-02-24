@@ -48,29 +48,27 @@ namespace ArmISA
     {
         Addr addr = 0;
 
-        FSTranslatingPortProxy* vp;
-
-        vp = tc->getVirtProxy();
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
             panic("thread info not compiled into kernel\n");
-        thread_info_size = vp->readGtoH<int32_t>(addr);
+        thread_info_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
             panic("thread info not compiled into kernel\n");
-        task_struct_size = vp->readGtoH<int32_t>(addr);
+        task_struct_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
             panic("thread info not compiled into kernel\n");
-        task_off = vp->readGtoH<int32_t>(addr);
+        task_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
             panic("thread info not compiled into kernel\n");
-        pid_off = vp->readGtoH<int32_t>(addr);
+        pid_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
             panic("thread info not compiled into kernel\n");
-        name_off = vp->readGtoH<int32_t>(addr);
+        name_off = vp.readGtoH<int32_t>(addr);
     }
 
     Addr

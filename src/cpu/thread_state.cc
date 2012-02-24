@@ -106,6 +106,9 @@ ThreadState::initMemProxies(ThreadContext *tc)
     // (i.e. due to restoring from a checkpoint and later switching
     // in.
     if (physProxy == NULL)
+        // this cannot be done in the constructor as the thread state
+        // itself is created in the base cpu constructor and the
+        // getPort is a virtual function at the moment
         physProxy = new PortProxy(baseCpu->getDataPort());
     if (virtProxy == NULL)
         virtProxy = new FSTranslatingPortProxy(tc);
@@ -125,16 +128,12 @@ ThreadState::profileSample()
         profile->sample(profileNode, profilePC);
 }
 
-SETranslatingPortProxy *
+SETranslatingPortProxy &
 ThreadState::getMemProxy()
 {
-    if (proxy != NULL)
-        return proxy;
-
-    /* Use this port proxy to for syscall emulation writes to memory. */
-    proxy = new SETranslatingPortProxy(*process->system->getSystemPort(),
-                                       process,
-                                       SETranslatingPortProxy::NextPage);
-
-    return proxy;
+    if (proxy == NULL)
+        proxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
+                                           process,
+                                           SETranslatingPortProxy::NextPage);
+    return *proxy;
 }

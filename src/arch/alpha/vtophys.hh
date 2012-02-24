@@ -41,7 +41,7 @@ class PortProxy;
 
 namespace AlphaISA {
 
-PageTableEntry kernel_pte_lookup(PortProxy* mem, Addr ptbr,
+PageTableEntry kernel_pte_lookup(PortProxy &mem, Addr ptbr,
                                  VAddr vaddr);
 
 Addr vtophys(Addr vaddr);

@@ -52,9 +52,10 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             return tc->readIntReg(16 + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        FSTranslatingPortProxy* vp = tc->getVirtProxy();
-        uint64_t arg = vp->read<uint64_t>(sp +
-                           (number-NumArgumentRegs) * sizeof(uint64_t));
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        uint64_t arg = vp.read<uint64_t>(sp +
+                                         (number-NumArgumentRegs) *
+                                         sizeof(uint64_t));
         return arg;
     }
 }

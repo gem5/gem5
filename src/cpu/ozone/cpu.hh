@@ -114,12 +114,12 @@ class OzoneCPU : public BaseCPU
 
         Process *getProcessPtr() { return thread->getProcessPtr(); }
 
-        PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
+        PortProxy &getPhysProxy() { return thread->getPhysProxy(); }
 
-        FSTranslatingPortProxy* getVirtProxy()
+        FSTranslatingPortProxy &getVirtProxy()
         { return thread->getVirtProxy(); }
 
-        SETranslatingPortProxy* getMemProxy() { return thread->getMemProxy(); }
+        SETranslatingPortProxy &getMemProxy() { return thread->getMemProxy(); }
 
         Status status() const { return thread->status(); }
 

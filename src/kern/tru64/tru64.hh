@@ -397,7 +397,7 @@ class Tru64 : public OperatingSystem
     /// memory space.  Used by statfs() and fstatfs().
     template <class T>
     static void
-    copyOutStatfsBuf(SETranslatingPortProxy *mem, Addr addr,
+    copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
                      global_statfs *host)
     {
         using namespace TheISA;
@@ -1160,13 +1160,13 @@ class Tru64_F64 : public Tru64
 
     typedef F64_stat tgt_stat;
 /*
-    static void copyOutStatBuf(SETranslatingPortProxy *mem, Addr addr,
+    static void copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
                                global_stat *host)
     {
         Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
     }*/
 
-    static void copyOutStatfsBuf(SETranslatingPortProxy *mem, Addr addr,
+    static void copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
                                  global_statfs *host)
     {
         Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
@@ -1206,13 +1206,13 @@ class Tru64_PreF64 : public Tru64
 
     typedef pre_F64_stat tgt_stat;
 /*
-    static void copyOutStatBuf(SETranslatingPortProxy *mem, Addr addr,
+    static void copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
                                global_stat *host)
     {
         Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
     }*/
 
-    static void copyOutStatfsBuf(SETranslatingPortProxy *mem, Addr addr,
+    static void copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
                                  global_statfs *host)
     {
         Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);

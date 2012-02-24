@@ -414,7 +414,7 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 }
 
 bool
-ElfObject::loadSections(PortProxy* memProxy, Addr addrMask)
+ElfObject::loadSections(PortProxy& memProxy, Addr addrMask)
 {
     if (!ObjectFile::loadSections(memProxy, addrMask))
         return false;

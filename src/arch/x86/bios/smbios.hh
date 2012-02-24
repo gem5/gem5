@@ -89,7 +89,7 @@ class SMBiosStructure : public SimObject
         return 4;
     }
 
-    virtual uint16_t writeOut(PortProxy* proxy, Addr addr);
+    virtual uint16_t writeOut(PortProxy& proxy, Addr addr);
 
   protected:
     bool stringFields;
@@ -98,7 +98,7 @@ class SMBiosStructure : public SimObject
 
     std::vector<std::string> strings;
 
-    void writeOutStrings(PortProxy* proxy, Addr addr);
+    void writeOutStrings(PortProxy& proxy, Addr addr);
 
     int getStringLength();
 
@@ -145,7 +145,7 @@ class BiosInformation : public SMBiosStructure
     BiosInformation(Params * p);
 
     uint8_t getLength() { return 0x18; }
-    uint16_t writeOut(PortProxy* proxy, Addr addr);
+    uint16_t writeOut(PortProxy& proxy, Addr addr);
 };
 
 class SMBiosTable : public SimObject
@@ -223,7 +223,7 @@ class SMBiosTable : public SimObject
         smbiosHeader.intermediateHeader.tableAddr = addr;
     }
 
-    void writeOut(PortProxy* proxy, Addr addr,
+    void writeOut(PortProxy& proxy, Addr addr,
             Addr &headerSize, Addr &structSize);
 };
 

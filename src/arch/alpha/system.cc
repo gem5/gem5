@@ -119,8 +119,8 @@ AlphaSystem::initState()
      * others do.)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        virtProxy->writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
-                             strlen(params()->boot_osflags.c_str()));
+        virtProxy.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
+                            strlen(params()->boot_osflags.c_str()));
     }
 
     /**
@@ -130,9 +130,9 @@ AlphaSystem::initState()
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
         data = htog(params()->system_type);
-        virtProxy->write(addr+0x50, data);
+        virtProxy.write(addr+0x50, data);
         data = htog(params()->system_rev);
-        virtProxy->write(addr+0x58, data);
+        virtProxy.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
 }
@@ -178,8 +178,8 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
     // lda  gp,Y(gp): opcode 8, Ra = 29, rb = 29
     const uint32_t gp_lda_pattern  = (8 << 26) | (29 << 21) | (29 << 16);
 
-    uint32_t i1 = virtProxy->read<uint32_t>(addr);
-    uint32_t i2 = virtProxy->read<uint32_t>(addr + sizeof(MachInst));
+    uint32_t i1 = virtProxy.read<uint32_t>(addr);
+    uint32_t i2 = virtProxy.read<uint32_t>(addr + sizeof(MachInst));
 
     if ((i1 & inst_mask) == gp_ldah_pattern &&
         (i2 & inst_mask) == gp_lda_pattern) {
@@ -196,7 +196,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        virtProxy->write(addr, htog(Phys2K0Seg(access)));
+        virtProxy.write(addr, htog(Phys2K0Seg(access)));
     } else {
         panic("could not find m5AlphaAccess\n");
     }

@@ -70,10 +70,10 @@ const char X86ISA::IntelMP::FloatingPointer::signature[] = "_MP_";
 
 template<class T>
 uint8_t
-writeOutField(PortProxy* proxy, Addr addr, T val)
+writeOutField(PortProxy& proxy, Addr addr, T val)
 {
     uint64_t guestVal = X86ISA::htog(val);
-    proxy->writeBlob(addr, (uint8_t *)(&guestVal), sizeof(T));
+    proxy.writeBlob(addr, (uint8_t *)(&guestVal), sizeof(T));
 
     uint8_t checkSum = 0;
     while(guestVal) {
@@ -84,7 +84,7 @@ writeOutField(PortProxy* proxy, Addr addr, T val)
 }
 
 uint8_t
-writeOutString(PortProxy* proxy, Addr addr, string str, int length)
+writeOutString(PortProxy& proxy, Addr addr, string str, int length)
 {
     char cleanedString[length + 1];
     cleanedString[length] = 0;
@@ -97,7 +97,7 @@ writeOutString(PortProxy* proxy, Addr addr, string str, int length)
         memcpy(cleanedString, str.c_str(), str.length());
         memset(cleanedString + str.length(), 0, length - str.length());
     }
-    proxy->writeBlob(addr, (uint8_t *)(&cleanedString), length);
+    proxy.writeBlob(addr, (uint8_t *)(&cleanedString), length);
 
     uint8_t checkSum = 0;
     for (int i = 0; i < length; i++)
@@ -107,7 +107,7 @@ writeOutString(PortProxy* proxy, Addr addr, string str, int length)
 }
 
 Addr
-X86ISA::IntelMP::FloatingPointer::writeOut(PortProxy* proxy, Addr addr)
+X86ISA::IntelMP::FloatingPointer::writeOut(PortProxy& proxy, Addr addr)
 {
     // Make sure that either a config table is present or a default
     // configuration was found but not both.
@@ -120,7 +120,7 @@ X86ISA::IntelMP::FloatingPointer::writeOut(PortProxy* proxy, Addr addr)
 
     uint8_t checkSum = 0;
 
-    proxy->writeBlob(addr, (uint8_t *)signature, 4);
+    proxy.writeBlob(addr, (uint8_t *)signature, 4);
     for (int i = 0; i < 4; i++)
         checkSum += signature[i];
 
@@ -128,20 +128,20 @@ X86ISA::IntelMP::FloatingPointer::writeOut(PortProxy* proxy, Addr addr)
 
     // The length of the structure in paragraphs, aka 16 byte chunks.
     uint8_t length = 1;
-    proxy->writeBlob(addr + 8, &length, 1);
+    proxy.writeBlob(addr + 8, &length, 1);
     checkSum += length;
 
-    proxy->writeBlob(addr + 9, &specRev, 1);
+    proxy.writeBlob(addr + 9, &specRev, 1);
     checkSum += specRev;
 
-    proxy->writeBlob(addr + 11, &defaultConfig, 1);
+    proxy.writeBlob(addr + 11, &defaultConfig, 1);
     checkSum += defaultConfig;
 
     uint32_t features2_5 = imcrPresent ? (1 << 7) : 0;
     checkSum += writeOutField(proxy, addr + 12, features2_5);
 
     checkSum = -checkSum;
-    proxy->writeBlob(addr + 10, &checkSum, 1);
+    proxy.writeBlob(addr + 10, &checkSum, 1);
 
     return 16;
 }
@@ -158,10 +158,10 @@ X86IntelMPFloatingPointerParams::create()
 }
 
 Addr
-X86ISA::IntelMP::BaseConfigEntry::writeOut(PortProxy* proxy,
+X86ISA::IntelMP::BaseConfigEntry::writeOut(PortProxy& proxy,
         Addr addr, uint8_t &checkSum)
 {
-    proxy->writeBlob(addr, &type, 1);
+    proxy.writeBlob(addr, &type, 1);
     checkSum += type;
     return 1;
 }
@@ -171,12 +171,12 @@ X86ISA::IntelMP::BaseConfigEntry::BaseConfigEntry(Params * p, uint8_t _type) :
 {}
 
 Addr
-X86ISA::IntelMP::ExtConfigEntry::writeOut(PortProxy* proxy,
+X86ISA::IntelMP::ExtConfigEntry::writeOut(PortProxy& proxy,
         Addr addr, uint8_t &checkSum)
 {
-    proxy->writeBlob(addr, &type, 1);
+    proxy.writeBlob(addr, &type, 1);
     checkSum += type;
-    proxy->writeBlob(addr + 1, &length, 1);
+    proxy.writeBlob(addr + 1, &length, 1);
     checkSum += length;
     return 1;
 }
@@ -189,17 +189,17 @@ X86ISA::IntelMP::ExtConfigEntry::ExtConfigEntry(Params * p,
 const char X86ISA::IntelMP::ConfigTable::signature[] = "PCMP";
 
 Addr
-X86ISA::IntelMP::ConfigTable::writeOut(PortProxy* proxy, Addr addr)
+X86ISA::IntelMP::ConfigTable::writeOut(PortProxy& proxy, Addr addr)
 {
     uint8_t checkSum = 0;
 
-    proxy->writeBlob(addr, (uint8_t *)signature, 4);
+    proxy.writeBlob(addr, (uint8_t *)signature, 4);
     for (int i = 0; i < 4; i++)
         checkSum += signature[i];
 
     // Base table length goes here but will be calculated later.
 
-    proxy->writeBlob(addr + 6, (uint8_t *)(&specRev), 1);
+    proxy.writeBlob(addr + 6, (uint8_t *)(&specRev), 1);
     checkSum += specRev;
 
     // The checksum goes here but is still being calculated.
@@ -213,7 +213,7 @@ X86ISA::IntelMP::ConfigTable::writeOut(PortProxy* proxy, Addr addr)
     checkSum += writeOutField(proxy, addr + 36, localApic);
 
     uint8_t reserved = 0;
-    proxy->writeBlob(addr + 43, &reserved, 1);
+    proxy.writeBlob(addr + 43, &reserved, 1);
     checkSum += reserved;
 
     vector<BaseConfigEntry *>::iterator baseEnt;
@@ -261,7 +261,7 @@ X86IntelMPConfigTableParams::create()
 
 Addr
 X86ISA::IntelMP::Processor::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, localApicID);
@@ -271,8 +271,8 @@ X86ISA::IntelMP::Processor::writeOut(
     checkSum += writeOutField(proxy, addr + 8, featureFlags);
 
     uint32_t reserved = 0;
-    proxy->writeBlob(addr + 12, (uint8_t *)(&reserved), 4);
-    proxy->writeBlob(addr + 16, (uint8_t *)(&reserved), 4);
+    proxy.writeBlob(addr + 12, (uint8_t *)(&reserved), 4);
+    proxy.writeBlob(addr + 16, (uint8_t *)(&reserved), 4);
     return 20;
 }
 
@@ -298,7 +298,7 @@ X86IntelMPProcessorParams::create()
 
 Addr
 X86ISA::IntelMP::Bus::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, busID);
@@ -318,7 +318,7 @@ X86IntelMPBusParams::create()
 
 Addr
 X86ISA::IntelMP::IOAPIC::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, id);
@@ -343,7 +343,7 @@ X86IntelMPIOAPICParams::create()
 
 Addr
 X86ISA::IntelMP::IntAssignment::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, interruptType);
@@ -381,7 +381,7 @@ X86IntelMPLocalIntAssignmentParams::create()
 
 Addr
 X86ISA::IntelMP::AddrSpaceMapping::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);
@@ -405,7 +405,7 @@ X86IntelMPAddrSpaceMappingParams::create()
 
 Addr
 X86ISA::IntelMP::BusHierarchy::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);
@@ -413,7 +413,7 @@ X86ISA::IntelMP::BusHierarchy::writeOut(
     checkSum += writeOutField(proxy, addr + 4, parentBus);
 
     uint32_t reserved = 0;
-    proxy->writeBlob(addr + 5, (uint8_t *)(&reserved), 3);
+    proxy.writeBlob(addr + 5, (uint8_t *)(&reserved), 3);
 
     return length;
 }
@@ -434,7 +434,7 @@ X86IntelMPBusHierarchyParams::create()
 
 Addr
 X86ISA::IntelMP::CompatAddrSpaceMod::writeOut(
-        PortProxy* proxy, Addr addr, uint8_t &checkSum)
+        PortProxy& proxy, Addr addr, uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);

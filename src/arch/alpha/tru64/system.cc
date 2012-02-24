@@ -47,7 +47,7 @@ Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
-        virtProxy->write(addr, (uint32_t)0);
+        virtProxy.write(addr, (uint32_t)0);
     }
 
 #ifdef DEBUG

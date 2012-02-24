@@ -125,9 +125,9 @@ class CheckerThreadContext : public ThreadContext
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 
-    PortProxy* getPhysProxy() { return actualTC->getPhysProxy(); }
+    PortProxy &getPhysProxy() { return actualTC->getPhysProxy(); }
 
-    FSTranslatingPortProxy* getVirtProxy()
+    FSTranslatingPortProxy &getVirtProxy()
     { return actualTC->getVirtProxy(); }
 
     //XXX: How does this work now?
@@ -139,7 +139,7 @@ class CheckerThreadContext : public ThreadContext
         actualTC->connectMemPorts(tc);
     }
 
-    SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
+    SETranslatingPortProxy &getMemProxy() { return actualTC->getMemProxy(); }
 
     /** Executes a syscall in SE mode. */
     void syscall(int64_t callnum)

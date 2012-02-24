@@ -121,29 +121,25 @@ void
 CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
 {
     uint8_t *dst = (uint8_t *)dest;
-    FSTranslatingPortProxy* vp = tc->getVirtProxy();
-
-    vp->readBlob(src, dst, cplen);
+    tc->getVirtProxy().readBlob(src, dst, cplen);
 }
 
 void
 CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 {
     uint8_t *src = (uint8_t *)source;
-    FSTranslatingPortProxy* vp = tc->getVirtProxy();
-
-    vp->writeBlob(dest, src, cplen);
+    tc->getVirtProxy().writeBlob(dest, src, cplen);
 }
 
 void
 CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
     char *start = dst;
-    FSTranslatingPortProxy* vp = tc->getVirtProxy();
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
 
     bool foundNull = false;
     while ((dst - start + 1) < maxlen && !foundNull) {
-        vp->readBlob(vaddr++, (uint8_t*)dst, 1);
+        vp.readBlob(vaddr++, (uint8_t*)dst, 1);
         if (dst == '\0')
             foundNull = true;
         dst++;
@@ -156,11 +152,11 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 void
 CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
 {
-    FSTranslatingPortProxy* vp = tc->getVirtProxy();
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
     for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();
-            gen.next())
+         gen.next())
     {
-        vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
+        vp.writeBlob(gen.addr(), (uint8_t*)src, gen.size());
         src += gen.size();
     }
 }

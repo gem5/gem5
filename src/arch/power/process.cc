@@ -218,37 +218,37 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
 
     //Write out the sentry void *
     uint32_t sentry_NULL = 0;
-    initVirtMem->writeBlob(sentry_base,
+    initVirtMem.writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
         if (auxv[i].a_type == M5_AT_PLATFORM) {
             auxv[i].a_val = platform_base;
-            initVirtMem->writeString(platform_base, platform.c_str());
+            initVirtMem.writeString(platform_base, platform.c_str());
         } else if (auxv[i].a_type == M5_AT_EXECFN) {
             auxv[i].a_val = aux_data_base;
-            initVirtMem->writeString(aux_data_base, filename.c_str());
+            initVirtMem.writeString(aux_data_base, filename.c_str());
         }
     }
 
     //Copy the aux stuff
     for (int x = 0; x < auxv.size(); x++)
     {
-        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+        initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
-        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+        initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
     //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
-    initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
+    initVirtMem.writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
             (uint8_t*)&zero, 2 * intSize);
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 

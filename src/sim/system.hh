@@ -56,20 +56,18 @@
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "kern/system_events.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "params/System.hh"
 
 class BaseCPU;
 class BaseRemoteGDB;
-class FSTranslatingPortProxy;
 class GDBListener;
 class ObjectFile;
 class PhysicalMemory;
 class Platform;
-class PortProxy;
 class ThreadContext;
-class VirtualPort;
 
 class System : public MemObject
 {
@@ -117,14 +115,14 @@ class System : public MemObject
     virtual void init();
 
     /**
-     * Get a pointer to the system port that can be used by
+     * Get a reference to the system port that can be used by
      * non-structural simulation objects like processes or threads, or
      * external entities like loaders and debuggers, etc, to access
      * the memory system.
      *
-     * @return a pointer to the system port we own
+     * @return a reference to the system port we own
      */
-    Port* getSystemPort() { return &_systemPort; }
+    Port& getSystemPort() { return _systemPort; }
 
     /**
      * Additional function to return the Port of a memory object.
@@ -181,8 +179,8 @@ class System : public MemObject
 
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
-    PortProxy* physProxy;
-    FSTranslatingPortProxy* virtProxy;
+    PortProxy physProxy;
+    FSTranslatingPortProxy virtProxy;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;

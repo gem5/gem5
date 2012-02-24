@@ -52,7 +52,7 @@ class HexFile
     virtual ~HexFile();
 
     void close();
-    bool loadSections(PortProxy* memProxy);
+    bool loadSections(PortProxy& memProxy);
 };
 
 #endif // __BASE_LOADER_HEX_FILE_HH__

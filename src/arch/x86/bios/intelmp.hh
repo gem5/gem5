@@ -93,7 +93,7 @@ class FloatingPointer : public SimObject
 
   public:
 
-    Addr writeOut(PortProxy* proxy, Addr addr);
+    Addr writeOut(PortProxy& proxy, Addr addr);
 
     Addr getTableAddr()
     {
@@ -117,7 +117,7 @@ class BaseConfigEntry : public SimObject
 
   public:
 
-    virtual Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    virtual Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     BaseConfigEntry(Params * p, uint8_t _type);
 };
@@ -132,7 +132,7 @@ class ExtConfigEntry : public SimObject
 
   public:
 
-    virtual Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    virtual Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     ExtConfigEntry(Params * p, uint8_t _type, uint8_t _length);
 };
@@ -155,7 +155,7 @@ class ConfigTable : public SimObject
     std::vector<ExtConfigEntry *> extEntries;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr);
+    Addr writeOut(PortProxy& proxy, Addr addr);
 
     ConfigTable(Params * p);
 };
@@ -172,7 +172,7 @@ class Processor : public BaseConfigEntry
     uint32_t featureFlags;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     Processor(Params * p);
 };
@@ -186,7 +186,7 @@ class Bus : public BaseConfigEntry
     std::string busType;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     Bus(Params * p);
 };
@@ -202,7 +202,7 @@ class IOAPIC : public BaseConfigEntry
     uint32_t address;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     IOAPIC(Params * p);
 };
@@ -221,7 +221,7 @@ class IntAssignment : public BaseConfigEntry
     uint8_t destApicIntIn;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     IntAssignment(X86IntelMPBaseConfigEntryParams * p,
             Enums::X86IntelMPInterruptType _interruptType,
@@ -269,7 +269,7 @@ class AddrSpaceMapping : public ExtConfigEntry
     uint64_t addrLength;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     AddrSpaceMapping(Params * p);
 };
@@ -284,7 +284,7 @@ class BusHierarchy : public ExtConfigEntry
     uint8_t parentBus;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     BusHierarchy(Params * p);
 };
@@ -299,7 +299,7 @@ class CompatAddrSpaceMod : public ExtConfigEntry
     uint32_t rangeList;
 
   public:
-    Addr writeOut(PortProxy* proxy, Addr addr, uint8_t &checkSum);
+    Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     CompatAddrSpaceMod(Params * p);
 };

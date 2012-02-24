@@ -55,10 +55,8 @@ ProcessInfo::task(Addr ksp) const
 
     Addr tsk;
 
-    FSTranslatingPortProxy* vp;
-
-    vp = tc->getVirtProxy();
-    tsk = vp->readGtoH<Addr>(base + task_off);
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    tsk = vp.readGtoH<Addr>(base + task_off);
 
     return tsk;
 }
@@ -72,10 +70,8 @@ ProcessInfo::pid(Addr ksp) const
 
     uint16_t pd;
 
-    FSTranslatingPortProxy* vp;
-
-    vp = tc->getVirtProxy();
-    pd = vp->readGtoH<uint16_t>(task + pid_off);
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    pd = vp.readGtoH<uint16_t>(task + pid_off);
 
     return pd;
 }

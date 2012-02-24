@@ -83,7 +83,7 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(PortProxy *memProxy, Addr addrMask =
+    virtual bool loadSections(PortProxy& memProxy, Addr addrMask =
             std::numeric_limits<Addr>::max());
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max()) = 0;
@@ -111,7 +111,7 @@ class ObjectFile
     Section data;
     Section bss;
 
-    bool loadSection(Section *sec, PortProxy* memProxy, Addr addrMask);
+    bool loadSection(Section *sec, PortProxy& memProxy, Addr addrMask);
     void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:
