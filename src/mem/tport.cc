@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 #include "debug/Bus.hh"
@@ -34,35 +47,36 @@
 
 using namespace std;
 
-SimpleTimingPort::SimpleTimingPort(string pname, MemObject *_owner)
-    : Port(pname, _owner), sendEvent(NULL), drainEvent(NULL),
+SimpleTimingPort::SimpleTimingPort(const string &_name, MemObject *_owner,
+                                   const string _label)
+    : Port(_name, _owner), label(_label), sendEvent(this), drainEvent(NULL),
       waitingOnRetry(false)
 {
-    sendEvent =  new EventWrapper<SimpleTimingPort,
-        &SimpleTimingPort::processSendEvent>(this);
 }
 
 SimpleTimingPort::~SimpleTimingPort()
 {
-    delete sendEvent;
 }
 
 bool
 SimpleTimingPort::checkFunctional(PacketPtr pkt)
 {
+    pkt->pushLabel(label);
+
     DeferredPacketIterator i = transmitList.begin();
     DeferredPacketIterator end = transmitList.end();
+    bool found = false;
 
-    for (; i != end; ++i) {
-        PacketPtr target = i->pkt;
-        // If the target contains data, and it overlaps the
-        // probed request, need to update data
-        if (pkt->checkFunctional(target)) {
-            return true;
-        }
+    while (!found && i != end) {
+        // If the buffered packet contains data, and it overlaps the
+        // current packet, then update data
+        found = pkt->checkFunctional(i->pkt);
+        ++i;
     }
 
-    return false;
+    pkt->popLabel();
+
+    return found;
 }
 
 void
@@ -108,15 +122,17 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
 void
 SimpleTimingPort::schedSendEvent(Tick when)
 {
+    // if we are waiting on a retry, do not schedule a send event, and
+    // instead rely on retry being called
     if (waitingOnRetry) {
-        assert(!sendEvent->scheduled());
+        assert(!sendEvent.scheduled());
         return;
     }
 
-    if (!sendEvent->scheduled()) {
-        owner->schedule(sendEvent, when);
-    } else if (sendEvent->when() > when) {
-        owner->reschedule(sendEvent, when);
+    if (!sendEvent.scheduled()) {
+        owner->schedule(&sendEvent, when);
+    } else if (sendEvent.when() > when) {
+        owner->reschedule(&sendEvent, when);
     }
 }
 
@@ -153,40 +169,55 @@ SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
     assert(false); // should never get here
 }
 
+void SimpleTimingPort::trySendTiming()
+{
+    assert(deferredPacketReady());
+    // take the next packet off the list here, as we might return to
+    // ourselves through the sendTiming call below
+    DeferredPacket dp = transmitList.front();
+    transmitList.pop_front();
+
+    // attempt to send the packet and remember the outcome
+    waitingOnRetry = !sendTiming(dp.pkt);
+
+    if (waitingOnRetry) {
+        // put the packet back at the front of the list (packet should
+        // not have changed since it wasn't accepted)
+        assert(!sendEvent.scheduled());
+        transmitList.push_front(dp);
+    }
+}
+
+void
+SimpleTimingPort::scheduleSend(Tick time)
+{
+    // the next ready time is either determined by the next deferred packet,
+    // or in the cache through the MSHR ready time
+    Tick nextReady = std::min(deferredPacketReadyTime(), time);
+    if (nextReady != MaxTick) {
+        // if the sendTiming caused someone else to call our
+        // recvTiming we could already have an event scheduled, check
+        if (!sendEvent.scheduled())
+            owner->schedule(&sendEvent, std::max(nextReady, curTick() + 1));
+    } else {
+        // no more to send, so if we're draining, we may be done
+        if (drainEvent && !sendEvent.scheduled()) {
+            drainEvent->process();
+            drainEvent = NULL;
+        }
+    }
+}
 
 void
 SimpleTimingPort::sendDeferredPacket()
 {
-    assert(deferredPacketReady());
-    // take packet off list here; if recvTiming() on the other side
-    // calls sendTiming() back on us (like SimpleTimingCpu does), then
-    // we get confused by having a non-active packet on transmitList
-    DeferredPacket dp = transmitList.front();
-    transmitList.pop_front();
-    bool success = sendTiming(dp.pkt);
+    // try to send what is on the list
+    trySendTiming();
 
-    if (success) {
-        if (!transmitList.empty() && !sendEvent->scheduled()) {
-            Tick time = transmitList.front().tick;
-            owner->schedule(sendEvent, time <= curTick() ? curTick()+1 : time);
-        }
-
-        if (transmitList.empty() && drainEvent && !sendEvent->scheduled()) {
-            drainEvent->process();
-            drainEvent = NULL;
-        }
-    } else {
-        // Unsuccessful, need to put back on transmitList.  Callee
-        // should not have messed with it (since it didn't accept that
-        // packet), so we can just push it back on the front.
-        assert(!sendEvent->scheduled());
-        transmitList.push_front(dp);
-    }
-
-    waitingOnRetry = !success;
-
-    if (waitingOnRetry) {
-        DPRINTF(Bus, "Send failed, waiting on retry\n");
+    // if we succeeded and are not waiting for a retry, schedule the
+    // next send
+    if (!waitingOnRetry) {
+        scheduleSend();
     }
 }
 
@@ -195,6 +226,9 @@ void
 SimpleTimingPort::recvRetry()
 {
     DPRINTF(Bus, "Received retry\n");
+    // note that in the cache we get a retry even though we may not
+    // have a packet to retry (we could potentially decide on a new
+    // packet every time we retry)
     assert(waitingOnRetry);
     sendDeferredPacket();
 }
@@ -211,7 +245,7 @@ SimpleTimingPort::processSendEvent()
 unsigned int
 SimpleTimingPort::drain(Event *de)
 {
-    if (transmitList.size() == 0 && !sendEvent->scheduled())
+    if (transmitList.empty() && !sendEvent.scheduled())
         return 0;
     drainEvent = de;
     return 1;

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -97,50 +109,88 @@ class BaseCache : public MemObject
 
   protected:
 
-    class CachePort : public SimpleTimingPort
+    /**
+     * A cache master port is used for the memory-side port of the
+     * cache, and in addition to the basic timing port that only sends
+     * response packets through a transmit list, it also offers the
+     * ability to schedule and send request packets (requests &
+     * writebacks). The send event is scheduled through requestBus,
+     * and the sendDeferredPacket of the timing port is modified to
+     * consider both the transmit list and the requests from the MSHR.
+     */
+    class CacheMasterPort : public SimpleTimingPort
     {
-      public:
-        BaseCache *cache;
-
-      protected:
-        CachePort(const std::string &_name, BaseCache *_cache,
-                  const std::string &_label);
-
-        virtual unsigned deviceBlockSize() const;
-
-        bool recvRetryCommon();
-
-        typedef EventWrapper<Port, &Port::sendRetry>
-            SendRetryEvent;
-
-        const std::string label;
 
       public:
-        void setBlocked();
 
-        void clearBlocked();
-
-        bool checkFunctional(PacketPtr pkt);
-
-        bool blocked;
-
-        bool mustSendRetry;
-
+        /**
+         * Schedule a send of a request packet (from the MSHR). Note
+         * that we could already have a retry or a transmit list of
+         * responses outstanding.
+         */
         void requestBus(RequestCause cause, Tick time)
         {
             DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
-            if (!waitingOnRetry) {
-                schedSendEvent(time);
-            }
+            schedSendEvent(time);
         }
 
         void respond(PacketPtr pkt, Tick time) {
             schedSendTiming(pkt, time);
         }
+
+      protected:
+
+        CacheMasterPort(const std::string &_name, BaseCache *_cache,
+                        const std::string &_label);
+
+        /**
+         * Memory-side port always snoops.
+         *
+         * return always true
+         */
+        virtual bool isSnooping() { return true; }
     };
 
-    CachePort *cpuSidePort;
-    CachePort *memSidePort;
+    /**
+     * A cache slave port is used for the CPU-side port of the cache,
+     * and it is basically a simple timing port that uses a transmit
+     * list for responses to the CPU (or connected master). In
+     * addition, it has the functionality to block the port for
+     * incoming requests. If blocked, the port will issue a retry once
+     * unblocked.
+     */
+    class CacheSlavePort : public SimpleTimingPort
+    {
+
+      public:
+
+        /** Do not accept any new requests. */
+        void setBlocked();
+
+        /** Return to normal operation and accept new requests. */
+        void clearBlocked();
+
+        void respond(PacketPtr pkt, Tick time) {
+            schedSendTiming(pkt, time);
+        }
+
+      protected:
+
+        CacheSlavePort(const std::string &_name, BaseCache *_cache,
+                       const std::string &_label);
+
+        bool blocked;
+
+        bool mustSendRetry;
+
+      private:
+
+        EventWrapper<Port, &Port::sendRetry> sendRetryEvent;
+
+    };
+
+    CacheSlavePort *cpuSidePort;
+    CacheMasterPort *memSidePort;
 
   protected:
 

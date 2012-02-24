@@ -41,6 +41,7 @@
  *          Dave Greene
  *          Steve Reinhardt
  *          Ron Dreslinski
+ *          Andreas Hansson
  */
 
 /**
@@ -76,59 +77,68 @@ class Cache : public BaseCache
 
   protected:
 
-    class CpuSidePort : public CachePort
+    /**
+     * The CPU-side port extends the base cache slave port with access
+     * functions for functional, atomic and timing requests.
+     */
+    class CpuSidePort : public CacheSlavePort
     {
-      public:
-        CpuSidePort(const std::string &_name,
-                    Cache<TagStore> *_cache,
-                    const std::string &_label);
+      private:
 
-        // BaseCache::CachePort just has a BaseCache *; this function
-        // lets us get back the type info we lost when we stored the
-        // cache pointer there.
-        Cache<TagStore> *myCache() {
-            return static_cast<Cache<TagStore> *>(cache);
-        }
+        // a pointer to our specific cache implementation
+        Cache<TagStore> *cache;
+
+      protected:
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvFunctional(PacketPtr pkt);
+
+        virtual unsigned deviceBlockSize() const
+        { return cache->getBlockSize(); }
 
         virtual AddrRangeList getAddrRanges();
 
-        virtual bool recvTiming(PacketPtr pkt);
-
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-    };
-
-    class MemSidePort : public CachePort
-    {
       public:
-        MemSidePort(const std::string &_name,
-                    Cache<TagStore> *_cache,
+
+        CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
                     const std::string &_label);
 
-        // BaseCache::CachePort just has a BaseCache *; this function
-        // lets us get back the type info we lost when we stored the
-        // cache pointer there.
-        Cache<TagStore> *myCache() {
-            return static_cast<Cache<TagStore> *>(cache);
-        }
+    };
 
-        void sendPacket();
+    /**
+     * The memory-side port extends the base cache master port with
+     * access functions for functional, atomic and timing snoops.
+     */
+    class MemSidePort : public CacheMasterPort
+    {
+      private:
 
-        void processSendEvent();
+        // a pointer to our specific cache implementation
+        Cache<TagStore> *cache;
 
-        virtual bool isSnooping();
+      protected:
 
         virtual bool recvTiming(PacketPtr pkt);
-
-        virtual void recvRetry();
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        typedef EventWrapper<MemSidePort, &MemSidePort::processSendEvent>
-                SendEvent;
+        virtual unsigned deviceBlockSize() const
+        { return cache->getBlockSize(); }
+
+      public:
+
+        MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
+                    const std::string &_label);
+
+        /**
+         * Overload sendDeferredPacket of SimpleTimingPort.
+         */
+        virtual void sendDeferredPacket();
     };
 
     /** Tag and data Storage */

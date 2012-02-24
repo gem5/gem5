@@ -95,7 +95,7 @@ template<class TagStore>
 Port *
 Cache<TagStore>::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "" || if_name == "cpu_side") {
+    if (if_name == "cpu_side") {
         return cpuSidePort;
     } else if (if_name == "mem_side") {
         return memSidePort;
@@ -1553,16 +1553,12 @@ Cache<TagStore>::nextMSHRReadyTime()
 
 template<class TagStore>
 AddrRangeList
-Cache<TagStore>::CpuSidePort::
-getAddrRanges()
+Cache<TagStore>::CpuSidePort::getAddrRanges()
 {
-    // CPU side port doesn't snoop; it's a target only.  It can
-    // potentially respond to any address.
     AddrRangeList ranges;
-    ranges.push_back(myCache()->getAddrRange());
+    ranges.push_back(cache->getAddrRange());
     return ranges;
 }
-
 
 template<class TagStore>
 bool
@@ -1575,32 +1571,33 @@ Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
         return false;
     }
 
-    myCache()->timingAccess(pkt);
+    cache->timingAccess(pkt);
     return true;
 }
-
 
 template<class TagStore>
 Tick
 Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
-    return myCache()->atomicAccess(pkt);
+    assert(pkt->isRequest());
+    // atomic request
+    return cache->atomicAccess(pkt);
 }
-
 
 template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, true);
+    assert(pkt->isRequest());
+    // functional request
+    cache->functionalAccess(pkt, true);
 }
-
 
 template<class TagStore>
 Cache<TagStore>::
 CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
-    : BaseCache::CachePort(_name, _cache, _label)
+    : BaseCache::CacheSlavePort(_name, _cache, _label), cache(_cache)
 {
 }
 
@@ -1612,17 +1609,6 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
 
 template<class TagStore>
 bool
-Cache<TagStore>::MemSidePort::isSnooping()
-{
-    // Memory-side port always snoops, but never passes requests
-    // through to targets on the cpu side (so we don't add anything to
-    // the address range list).
-    return true;
-}
-
-
-template<class TagStore>
-bool
 Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
 {
     // this needs to be fixed so that the cache updates the mshr and sends the
@@ -1631,60 +1617,45 @@ Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
     if (pkt->wasNacked())
         panic("Need to implement cache resending nacked packets!\n");
 
-    if (pkt->isRequest() && blocked) {
-        DPRINTF(Cache,"Scheduling a retry while blocked\n");
-        mustSendRetry = true;
-        return false;
-    }
-
     if (pkt->isResponse()) {
-        myCache()->handleResponse(pkt);
+        cache->handleResponse(pkt);
     } else {
-        myCache()->snoopTiming(pkt);
+        cache->snoopTiming(pkt);
     }
     return true;
 }
-
 
 template<class TagStore>
 Tick
 Cache<TagStore>::MemSidePort::recvAtomic(PacketPtr pkt)
 {
-    // in atomic mode, responses go back to the sender via the
-    // function return from sendAtomic(), not via a separate
-    // sendAtomic() from the responder.  Thus we should never see a
-    // response packet in recvAtomic() (anywhere, not just here).
-    assert(!pkt->isResponse());
-    return myCache()->snoopAtomic(pkt);
+    assert(pkt->isRequest());
+    // atomic snoop
+    return cache->snoopAtomic(pkt);
 }
-
 
 template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, false);
+    assert(pkt->isRequest());
+    // functional snoop (note that in contrast to atomic we don't have
+    // a specific functionalSnoop method, as they have the same
+    // behaviour regardless)
+    cache->functionalAccess(pkt, false);
 }
-
-
 
 template<class TagStore>
 void
-Cache<TagStore>::MemSidePort::sendPacket()
+Cache<TagStore>::MemSidePort::sendDeferredPacket()
 {
-    // if we have responses that are ready, they take precedence
+    // if we have a response packet waiting we have to start with that
     if (deferredPacketReady()) {
-        bool success = sendTiming(transmitList.front().pkt);
-
-        if (success) {
-            //send successful, remove packet
-            transmitList.pop_front();
-        }
-
-        waitingOnRetry = !success;
+        // use the normal approach from the timing port
+        trySendTiming();
     } else {
-        // check for non-response packets (requests & writebacks)
-        PacketPtr pkt = myCache()->getTimingPacket();
+        // check for request packets (requests & writebacks)
+        PacketPtr pkt = cache->getTimingPacket();
         if (pkt == NULL) {
             // can happen if e.g. we attempt a writeback and fail, but
             // before the retry, the writeback is eliminated because
@@ -1693,65 +1664,39 @@ Cache<TagStore>::MemSidePort::sendPacket()
         } else {
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
-            bool success = sendTiming(pkt);
+            waitingOnRetry = !sendTiming(pkt);
 
-            waitingOnRetry = !success;
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");
                 if (!mshr->isForwardNoResponse()) {
+                    // we are awaiting a retry, but we
+                    // delete the packet and will be creating a new packet
+                    // when we get the opportunity
                     delete pkt;
                 }
+                // note that we have now masked any requestBus and
+                // schedSendEvent (we will wait for a retry before
+                // doing anything), and this is so even if we do not
+                // care about this packet and might override it before
+                // it gets retried
             } else {
-                myCache()->markInService(mshr, pkt);
+                cache->markInService(mshr, pkt);
             }
         }
     }
 
-
-    // tried to send packet... if it was successful (no retry), see if
-    // we need to rerequest bus or not
+    // if we succeeded and are not waiting for a retry, schedule the
+    // next send, not only looking at the response transmit list, but
+    // also considering when the next MSHR is ready
     if (!waitingOnRetry) {
-        Tick nextReady = std::min(deferredPacketReadyTime(),
-                                  myCache()->nextMSHRReadyTime());
-        // @TODO: need to facotr in prefetch requests here somehow
-        if (nextReady != MaxTick) {
-            DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
-            cache->schedule(sendEvent, std::max(nextReady, curTick() + 1));
-        } else {
-            // no more to send right now: if we're draining, we may be done
-            if (drainEvent && !sendEvent->scheduled()) {
-                drainEvent->process();
-                drainEvent = NULL;
-            }
-        }
+        scheduleSend(cache->nextMSHRReadyTime());
     }
 }
-
-template<class TagStore>
-void
-Cache<TagStore>::MemSidePort::recvRetry()
-{
-    assert(waitingOnRetry);
-    sendPacket();
-}
-
-
-template<class TagStore>
-void
-Cache<TagStore>::MemSidePort::processSendEvent()
-{
-    assert(!waitingOnRetry);
-    sendPacket();
-}
-
 
 template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
-    : BaseCache::CachePort(_name, _cache, _label)
+    : BaseCache::CacheMasterPort(_name, _cache, _label), cache(_cache)
 {
-    // override default send event from SimpleTimingPort
-    delete sendEvent;
-    sendEvent = new SendEvent(this);
 }

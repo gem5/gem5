@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 #ifndef __MEM_TPORT_HH__
@@ -76,6 +89,9 @@ class SimpleTimingPort : public Port
      * serviced yet. */
     DeferredPacketList transmitList;
 
+    /** Label to use for print request packets label stack. */
+    const std::string label;
+
     /** This function attempts to send deferred packets.  Scheduled to
      * be called in the future via SendEvent. */
     void processSendEvent();
@@ -86,7 +102,8 @@ class SimpleTimingPort : public Port
      * When the event time expires it attempts to send the packet.
      * If it cannot, the packet sent when recvRetry() is called.
      **/
-    Event *sendEvent;
+    EventWrapper<SimpleTimingPort,
+                 &SimpleTimingPort::processSendEvent> sendEvent;
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
@@ -94,10 +111,6 @@ class SimpleTimingPort : public Port
 
     /** Remember whether we're awaiting a retry from the bus. */
     bool waitingOnRetry;
-
-    /** Check the list of buffered packets against the supplied
-     * functional request. */
-    bool checkFunctional(PacketPtr funcPkt);
 
     /** Check whether we have a packet ready to go on the transmit list. */
     bool deferredPacketReady()
@@ -126,7 +139,24 @@ class SimpleTimingPort : public Port
      * non-empty and that the head packet is scheduled for curTick() (or
      * earlier).
      */
-    void sendDeferredPacket();
+    virtual void sendDeferredPacket();
+
+    /**
+     * Attempt to send the packet at the front of the transmit list,
+     * and set waitingOnRetry accordingly. The packet is temporarily
+     * taken off the list, but put back at the front if not
+     * successfully sent.
+     */
+    void trySendTiming();
+
+    /**
+     * Based on the transmit list, or the provided time, schedule a
+     * send event if there are packets to send. If we are idle and
+     * asked to drain then do so.
+     *
+     * @param time an alternative time for the next send event
+     */
+    void scheduleSend(Tick time = MaxTick);
 
     /** This function is notification that the device should attempt to send a
      * packet again. */
@@ -149,8 +179,13 @@ class SimpleTimingPort : public Port
 
 
   public:
-    SimpleTimingPort(std::string pname, MemObject *_owner);
+    SimpleTimingPort(const std::string &_name, MemObject *_owner,
+                     const std::string _label = "SimpleTimingPort");
     ~SimpleTimingPort();
+
+    /** Check the list of buffered packets against the supplied
+     * functional request. */
+    bool checkFunctional(PacketPtr pkt);
 
     /** Hook for draining timing accesses from the system.  The
      * associated SimObject's drain() functions should be implemented

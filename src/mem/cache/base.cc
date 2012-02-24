@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -42,13 +54,20 @@
 
 using namespace std;
 
-BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
-                                const std::string &_label)
-    : SimpleTimingPort(_name, _cache), cache(_cache),
-      label(_label), blocked(false), mustSendRetry(false)
+BaseCache::CacheMasterPort::CacheMasterPort(const std::string &_name,
+                                            BaseCache *_cache,
+                                            const std::string &_label)
+    : SimpleTimingPort(_name, _cache, _label)
 {
 }
 
+BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
+                                          BaseCache *_cache,
+                                          const std::string &_label)
+    : SimpleTimingPort(_name, _cache, _label), blocked(false),
+      mustSendRetry(false), sendRetryEvent(this)
+{
+}
 
 BaseCache::BaseCache(const Params *p)
     : MemObject(p),
@@ -69,56 +88,25 @@ BaseCache::BaseCache(const Params *p)
 {
 }
 
-
-bool
-BaseCache::CachePort::checkFunctional(PacketPtr pkt)
-{
-    pkt->pushLabel(label);
-    bool done = SimpleTimingPort::checkFunctional(pkt);
-    pkt->popLabel();
-    return done;
-}
-
-
-unsigned
-BaseCache::CachePort::deviceBlockSize() const
-{
-    return cache->getBlockSize();
-}
-
-
-bool
-BaseCache::CachePort::recvRetryCommon()
-{
-    assert(waitingOnRetry);
-    waitingOnRetry = false;
-    return false;
-}
-
-
 void
-BaseCache::CachePort::setBlocked()
+BaseCache::CacheSlavePort::setBlocked()
 {
     assert(!blocked);
-    DPRINTF(Cache, "Cache Blocking\n");
+    DPRINTF(CachePort, "Cache port %s blocking new requests\n", name());
     blocked = true;
-    //Clear the retry flag
-    mustSendRetry = false;
 }
 
 void
-BaseCache::CachePort::clearBlocked()
+BaseCache::CacheSlavePort::clearBlocked()
 {
     assert(blocked);
-    DPRINTF(Cache, "Cache Unblocking\n");
+    DPRINTF(CachePort, "Cache port %s accepting new requests\n", name());
     blocked = false;
-    if (mustSendRetry)
-    {
-        DPRINTF(Cache, "Cache Sending Retry\n");
+    if (mustSendRetry) {
+        DPRINTF(CachePort, "Cache port %s sending retry\n", name());
         mustSendRetry = false;
-        SendRetryEvent *ev = new SendRetryEvent(this, true);
         // @TODO: need to find a better time (next bus cycle?)
-        cache->schedule(ev, curTick() + 1);
+        owner->schedule(sendRetryEvent, curTick() + 1);
     }
 }
 
@@ -126,8 +114,8 @@ BaseCache::CachePort::clearBlocked()
 void
 BaseCache::init()
 {
-    if (!cpuSidePort || !memSidePort)
-        panic("Cache not hooked up on both sides\n");
+    if (!cpuSidePort->isConnected() || !memSidePort->isConnected())
+        panic("Cache %s not hooked up on both sides\n", name());
     cpuSidePort->sendRangeChange();
 }
 
