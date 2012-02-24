@@ -59,6 +59,8 @@ class MessagePort : public SimpleTimingPort
 
     Tick recvAtomic(PacketPtr pkt);
 
+  protected:
+
     virtual Tick recvMessage(PacketPtr pkt) = 0;
 
     // Accept and ignore responses.
@@ -66,15 +68,6 @@ class MessagePort : public SimpleTimingPort
     {
         return 0;
     }
-
-    // Since by default we're assuming everything we send is accepted, panic.
-    virtual Tick recvNack(PacketPtr pkt)
-    {
-        panic("Unhandled message nack.\n");
-    }
-
-    void sendMessageTiming(PacketPtr pkt, Tick latency);
-    Tick sendMessageAtomic(PacketPtr pkt);
 };
 
 #endif

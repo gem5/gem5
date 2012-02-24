@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -34,30 +46,14 @@ Tick
 MessagePort::recvAtomic(PacketPtr pkt)
 {
     if (pkt->cmd == MemCmd::MessageReq) {
-        // We received a message.
         return recvMessage(pkt);
     } else if (pkt->cmd == MemCmd::MessageResp) {
+        // normally we would never see responses in recvAtomic, but
+        // since the timing port uses recvAtomic to implement
+        // recvTiming we have to deal with both cases
         return recvResponse(pkt);
-    } else if (pkt->wasNacked()) {
-        return recvNack(pkt);
-    } else if (pkt->isError()) {
-        panic("Packet is error.\n");
     } else {
-        panic("Unexpected memory command %s.\n", pkt->cmd.toString());
+        panic("%s received unexpected atomic command %s from %s.\n",
+              name(), pkt->cmd.toString(), getPeer()->name());
     }
-}
-
-void
-MessagePort::sendMessageTiming(PacketPtr pkt, Tick latency)
-{
-    schedSendTiming(pkt, curTick() + latency);
-}
-
-Tick
-MessagePort::sendMessageAtomic(PacketPtr pkt)
-{
-    Tick latency = sendAtomic(pkt);
-    assert(pkt->isResponse());
-    latency += recvResponse(pkt);
-    return latency;
 }

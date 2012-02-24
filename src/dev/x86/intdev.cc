@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -31,17 +43,21 @@
 #include "dev/x86/intdev.hh"
 
 void
-X86ISA::IntDev::IntPort::sendMessage(ApicList apics,
-        TriggerIntMessage message, bool timing)
+X86ISA::IntDev::IntPort::sendMessage(ApicList apics, TriggerIntMessage message,
+                                     bool timing)
 {
     ApicList::iterator apicIt;
     for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
         PacketPtr pkt = buildIntRequest(*apicIt, message);
         if (timing) {
-            sendMessageTiming(pkt, latency);
+            schedSendTiming(pkt, curTick() + latency);
             // The target handles cleaning up the packet in timing mode.
         } else {
-            sendMessageAtomic(pkt);
+            // ignore the latency involved in the atomic transaction
+            sendAtomic(pkt);
+            assert(pkt->isResponse());
+            // also ignore the latency in handling the response
+            recvResponse(pkt);
             delete pkt->req;
             delete pkt;
         }
