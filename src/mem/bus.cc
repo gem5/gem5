@@ -56,8 +56,9 @@
 Bus::Bus(const BusParams *p)
     : MemObject(p), busId(p->bus_id), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
-      drainEvent(NULL), busIdle(this), inRetry(false), defaultPortId(-1),
-      useDefaultRange(p->use_default_range), defaultBlockSize(p->block_size),
+      drainEvent(NULL), busIdle(this), inRetry(false),
+      defaultPortId(INVALID_PORT_ID), useDefaultRange(p->use_default_range),
+      defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
 {
     //width, clock period, and header cycles must be positive
@@ -76,7 +77,7 @@ Bus::getPort(const std::string &if_name, int idx)
     std::string portName;
     int id = interfaces.size();
     if (if_name == "default") {
-        if (defaultPortId == -1) {
+        if (defaultPortId == INVALID_PORT_ID) {
             defaultPortId = id;
             portName = csprintf("%s-default", name());
         } else
@@ -301,7 +302,7 @@ Bus::findPort(Addr addr)
     int dest_id;
 
     dest_id = checkPortCache(addr);
-    if (dest_id != -1)
+    if (dest_id != INVALID_PORT_ID)
         return dest_id;
 
     // Check normal port ranges
@@ -321,13 +322,16 @@ Bus::findPort(Addr addr)
                 return defaultPortId;
             }
         }
-
-        panic("Unable to find destination for addr %#llx\n", addr);
+    } else if (defaultPortId != INVALID_PORT_ID) {
+        DPRINTF(Bus, "Unable to find destination for addr %#llx, "
+                "will use default port\n", addr);
+        return defaultPortId;
     }
 
-    DPRINTF(Bus, "Unable to find destination for addr %#llx, "
-            "will use default port\n", addr);
-    return defaultPortId;
+    // we should use the range for the default port and it did not
+    // match, or the default port is not set
+    fatal("Unable to find destination for addr %#llx on bus %s\n", addr,
+          name());
 }
 
 

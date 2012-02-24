@@ -220,7 +220,7 @@ class Bus : public MemObject
             return portCache[2].id;
         }
 
-        return -1;
+        return INVALID_PORT_ID;
     }
 
     // Clears the earliest entry of the cache and inserts a new port entry
@@ -316,6 +316,9 @@ class Bus : public MemObject
 
     /** Port that handles requests that don't match any of the interfaces.*/
     short defaultPortId;
+
+    /** A symbolic name for a port id that denotes no port. */
+    static const short INVALID_PORT_ID = -1;
 
     /** If true, use address range provided by default device.  Any
        address not handled by another port and not in default device's
