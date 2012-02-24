@@ -45,14 +45,14 @@
 class RubyTester : public MemObject
 {
   public:
-    class CpuPort : public SimpleTimingPort
+    class CpuPort : public Port
     {
       private:
         RubyTester *tester;
 
       public:
         CpuPort(const std::string &_name, RubyTester *_tester, int _idx)
-            : SimpleTimingPort(_name, _tester), tester(_tester), idx(_idx)
+            : Port(_name, _tester), tester(_tester), idx(_idx)
         {}
 
         int idx;
@@ -60,6 +60,8 @@ class RubyTester : public MemObject
       protected:
         virtual bool recvTiming(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
+        virtual void recvFunctional(PacketPtr pkt) { }
+        virtual void recvRangeChange() { }
     };
 
     struct SenderState : public Packet::SenderState

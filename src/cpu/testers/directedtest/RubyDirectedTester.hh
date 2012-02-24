@@ -47,14 +47,15 @@ class DirectedGenerator;
 class RubyDirectedTester : public MemObject
 {
   public:
-    class CpuPort : public SimpleTimingPort
+    class CpuPort : public Port
     {
       private:
         RubyDirectedTester *tester;
 
       public:
-        CpuPort(const std::string &_name, RubyDirectedTester *_tester, uint32_t _idx)
-            : SimpleTimingPort(_name, _tester), tester(_tester), idx(_idx)
+        CpuPort(const std::string &_name, RubyDirectedTester *_tester,
+                uint32_t _idx)
+            : Port(_name, _tester), tester(_tester), idx(_idx)
         {}
 
         uint32_t idx;
@@ -62,6 +63,8 @@ class RubyDirectedTester : public MemObject
       protected:
         virtual bool recvTiming(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
+        virtual void recvFunctional(PacketPtr pkt) { }
+        virtual void recvRangeChange() { }
     };
 
     typedef RubyDirectedTesterParams Params;
