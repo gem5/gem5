@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,48 +34,35 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Andreas Hansson
  */
 
-/**
- * @file
- * Port object definitions.
- */
-#include "base/trace.hh"
-#include "debug/Config.hh"
-#include "mem/mem_object.hh"
-#include "mem/port.hh"
+#include "base/chunk_generator.hh"
+#include "mem/port_proxy.hh"
 
-Port::Port(const std::string &_name, MemObject *_owner)
-    : portName(_name), peer(NULL), owner(_owner)
+void
+PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd)
 {
-}
+    Request req;
 
-Port::~Port()
-{
+    for (ChunkGenerator gen(addr, size, _port.peerBlockSize());
+         !gen.done(); gen.next()) {
+        req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
+        Packet pkt(&req, cmd, Packet::Broadcast);
+        pkt.dataStatic(p);
+        _port.sendFunctional(&pkt);
+        p += gen.size();
+    }
 }
 
 void
-Port::setPeer(Port *port)
+PortProxy::memsetBlob(Addr addr, uint8_t v, int size)
 {
-    DPRINTF(Config, "setting peer to %s\n", port->name());
+    // quick and dirty...
+    uint8_t *buf = new uint8_t[size];
 
-    peer = port;
-}
+    std::memset(buf, v, size);
+    blobHelper(addr, buf, size, MemCmd::WriteReq);
 
-void
-Port::setOwner(MemObject *_owner)
-{
-    owner = _owner;
-}
-
-void
-Port::printAddr(Addr a)
-{
-    Request req(a, 1, 0, Request::funcMasterId);
-    Packet pkt(&req, MemCmd::PrintReq, Packet::Broadcast);
-    Packet::PrintReqState prs(std::cerr);
-    pkt.senderState = &prs;
-
-    sendFunctional(&pkt);
+    delete [] buf;
 }

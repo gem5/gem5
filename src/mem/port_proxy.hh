@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,13 +41,17 @@
  * @file
  * PortProxy Object Declaration.
  *
- * Port proxies are used when non structural entities need access to
- * the memory system. Proxy objects replace the previous
- * FunctionalPort, TranslatingPort and VirtualPort objects, which
- * provided the same functionality as the proxies, but were instances
- * of ports not corresponding to real structural ports of the
- * simulated system. Via the port proxies all the accesses go through
- * an actual port and thus are transparent to a potentially
+ * Port proxies are used when non-structural entities need access to
+ * the memory system (or structural entities that want to peak into
+ * the memory system without making a real memory access).
+ *
+ * Proxy objects replace the previous FunctionalPort, TranslatingPort
+ * and VirtualPort objects, which provided the same functionality as
+ * the proxies, but were instances of ports not corresponding to real
+ * structural ports of the simulated system. Via the port proxies all
+ * the accesses go through an actual port (either the system port,
+ * e.g. for processes or initialisation, or a the data port of the
+ * CPU, e.g. for threads) and thus are transparent to a potentially
  * distributed memory and automatically adhere to the memory map of
  * the system.
  */
@@ -60,13 +64,12 @@
     #include "arch/isa_traits.hh"
 #endif
 
-#include "base/types.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 
 /**
- * This object is a proxy for a structural port,
- * to be used for debug accesses.
+ * This object is a proxy for a structural port, to be used for debug
+ * accesses.
  *
  * This proxy object is used when non structural entities
  * (e.g. thread contexts, object file loaders) need access to the
@@ -80,31 +83,33 @@
  */
 class PortProxy
 {
-  protected:
+  private:
+
+    /** The actual physical port used by this proxy. */
     Port &_port;
+
+    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd);
 
   public:
     PortProxy(Port &port) : _port(port) { }
     virtual ~PortProxy() { }
 
-  public:
     /**
      * Read size bytes memory at address and store in p.
      */
-    virtual void readBlob(Addr address, uint8_t* p, int size)
-    { _port.readBlob(address, p, size); }
+    virtual void readBlob(Addr addr, uint8_t* p, int size)
+    { blobHelper(addr, p, size, MemCmd::ReadReq); }
 
     /**
      * Write size bytes from p to address.
      */
-    virtual void writeBlob(Addr address, uint8_t* p, int size)
-    { _port.writeBlob(address, p, size); }
+    virtual void writeBlob(Addr addr, uint8_t* p, int size)
+    { blobHelper(addr, p, size, MemCmd::WriteReq); }
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    virtual void memsetBlob(Addr address, uint8_t  v, int size)
-    { _port.memsetBlob(address, v, size); }
+    virtual void memsetBlob(Addr addr, uint8_t v, int size);
 
     /**
      * Read sizeof(T) bytes from address and return as object T.

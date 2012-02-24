@@ -41,6 +41,7 @@ Source('mport.cc')
 Source('packet.cc')
 Source('port.cc')
 Source('tport.cc')
+Source('port_proxy.cc')
 Source('fs_translating_port_proxy.cc')
 Source('se_translating_port_proxy.cc')
 

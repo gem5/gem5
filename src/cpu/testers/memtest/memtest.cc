@@ -125,6 +125,7 @@ MemTest::MemTest(const Params *p)
       tickEvent(this),
       cachePort("test", this),
       funcPort("functional", this),
+      funcProxy(funcPort),
       retryPkt(NULL),
 //      mainMem(main_mem),
 //      checkMem(check_mem),
@@ -237,7 +238,7 @@ MemTest::completeRequest(PacketPtr pkt)
                 exitSimLoop("maximum number of loads reached");
         } else {
             assert(pkt->isWrite());
-            funcPort.writeBlob(req->getPaddr(), pkt_data, req->getSize());
+            funcProxy.writeBlob(req->getPaddr(), pkt_data, req->getSize());
             numWrites++;
             numWritesStat++;
         }
@@ -349,7 +350,7 @@ MemTest::tick()
         outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
-        funcPort.readBlob(req->getPaddr(), result, req->getSize());
+        funcProxy.readBlob(req->getPaddr(), result, req->getSize());
 
         DPRINTF(MemTest,
                 "id %d initiating %sread at addr %x (blk %x) expecting %x\n",

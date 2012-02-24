@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Andreas Hansson
  */
 
 /**
@@ -54,11 +55,8 @@
 
 #include <list>
 
-#include "base/misc.hh"
 #include "base/range.hh"
-#include "base/types.hh"
 #include "mem/packet.hh"
-#include "mem/request.hh"
 
 /** This typedef is used to clean up getAddrRanges(). It's declared
  * outside the Port object since it's also used by some mem objects.
@@ -227,37 +225,10 @@ class Port
     */
     unsigned peerBlockSize() const { return peer->deviceBlockSize(); }
 
-    /** This function is a wrapper around sendFunctional()
-        that breaks a larger, arbitrarily aligned access into
-        appropriate chunks.  The default implementation can use
-        getBlockSize() to determine the block size and go from there.
-    */
-    virtual void readBlob(Addr addr, uint8_t *p, int size);
-
-    /** This function is a wrapper around sendFunctional()
-        that breaks a larger, arbitrarily aligned access into
-        appropriate chunks.  The default implementation can use
-        getBlockSize() to determine the block size and go from there.
-    */
-    virtual void writeBlob(Addr addr, uint8_t *p, int size);
-
-    /** Fill size bytes starting at addr with byte value val.  This
-        should not need to be virtual, since it can be implemented in
-        terms of writeBlob().  However, it shouldn't be
-        performance-critical either, so it could be if we wanted to.
-    */
-    virtual void memsetBlob(Addr addr, uint8_t val, int size);
-
     /** Inject a PrintReq for the given address to print the state of
      * that address throughout the memory system.  For debugging.
      */
     void printAddr(Addr a);
-
-  private:
-
-    /** Internal helper function for read/writeBlob().
-     */
-    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd);
 };
 
 #endif //__MEM_PORT_HH__

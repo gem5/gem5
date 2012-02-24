@@ -38,6 +38,7 @@
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "mem/port_proxy.hh"
 #include "params/MemTest.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
@@ -108,6 +109,7 @@ class MemTest : public MemObject
 
     CpuPort cachePort;
     CpuPort funcPort;
+    PortProxy funcProxy;
 
     class MemTestSenderState : public Packet::SenderState, public FastAlloc
     {
