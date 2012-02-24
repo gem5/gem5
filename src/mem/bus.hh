@@ -287,6 +287,11 @@ class Bus : public MemObject
     bool inRetry;
     std::set<int> inRecvRangeChange;
 
+    // keep track of the number of master ports (not counting the
+    // default master) since we need this as an offset into the
+    // interfaces vector
+    unsigned int nbrMasterPorts;
+
     /** An ordered vector of pointers to the peer port interfaces
         connected to this bus.*/
     std::vector<BusPort*> interfaces;

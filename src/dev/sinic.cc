@@ -1714,7 +1714,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     if (transmitTick)
         schedule(txEvent, curTick() + transmitTick);
 
-    pioPort->sendRangeChange();
+    pioPort.sendRangeChange();
 
 }
 

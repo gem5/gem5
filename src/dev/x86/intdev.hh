@@ -84,17 +84,12 @@ class IntDev
                 TriggerIntMessage message, bool timing);
     };
 
-    IntPort * intPort;
+    IntPort intPort;
 
   public:
-    IntDev(MemObject * parent, Tick latency = 0)
+    IntDev(MemObject * parent, Tick latency = 0) :
+        intPort(parent->name() + ".int_master", parent, this, latency)
     {
-        if (parent != NULL) {
-            intPort = new IntPort(parent->name() + ".int_master",
-                    parent, this, latency);
-        } else {
-            intPort = NULL;
-        }
     }
 
     virtual ~IntDev()

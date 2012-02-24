@@ -460,9 +460,9 @@ Pl111::fillFifo()
         // will be uncacheable as well. If we have uncacheable and cacheable
         // requests in the memory system for the same address it won't be
         // pleased
-        dmaPort->dmaAction(MemCmd::ReadReq, curAddr + startAddr, dmaSize,
-                &dmaDoneEvent[dmaPendingNum-1], curAddr + dmaBuffer, 0,
-                Request::UNCACHEABLE);
+        dmaPort.dmaAction(MemCmd::ReadReq, curAddr + startAddr, dmaSize,
+                          &dmaDoneEvent[dmaPendingNum-1], curAddr + dmaBuffer,
+                          0, Request::UNCACHEABLE);
         curAddr += dmaSize;
     }
 }

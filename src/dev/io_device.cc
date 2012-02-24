@@ -55,33 +55,28 @@ PioPort::getAddrRanges()
 
 
 PioDevice::PioDevice(const Params *p)
-    : MemObject(p), sys(p->system), pioPort(NULL)
+    : MemObject(p), sys(p->system), pioPort(this, sys)
 {}
 
 PioDevice::~PioDevice()
 {
-    if (pioPort)
-        delete pioPort;
 }
 
 void
 PioDevice::init()
 {
-    if (!pioPort)
+    if (!pioPort.isConnected())
         panic("Pio port of %s not connected to anything!", name());
-    pioPort->sendRangeChange();
+    pioPort.sendRangeChange();
 }
 
 Port *
 PioDevice::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "pio") {
-        if (pioPort != NULL)
-            fatal("%s: pio port already connected to %s",
-                  name(), pioPort->getPeer()->name());
-        pioPort = new PioPort(this, sys);
-        return pioPort;
+        return &pioPort;
     }
+    panic("PioDevice %s has no port named %s\n", name(), if_name);
     return NULL;
 }
 
@@ -89,7 +84,7 @@ unsigned int
 PioDevice::drain(Event *de)
 {
     unsigned int count;
-    count = pioPort->drain(de);
+    count = pioPort.drain(de);
     if (count)
         changeState(Draining);
     else
@@ -185,14 +180,23 @@ DmaPort::recvTiming(PacketPtr pkt)
 }
 
 DmaDevice::DmaDevice(const Params *p)
-    : PioDevice(p), dmaPort(NULL)
+    : PioDevice(p), dmaPort(this, sys, params()->min_backoff_delay,
+                            params()->max_backoff_delay)
 { }
+
+void
+DmaDevice::init()
+{
+    if (!dmaPort.isConnected())
+        panic("DMA port of %s not connected to anything!", name());
+    PioDevice::init();
+}
 
 unsigned int
 DmaDevice::drain(Event *de)
 {
     unsigned int count;
-    count = pioPort->drain(de) + dmaPort->drain(de);
+    count = pioPort.drain(de) + dmaPort.drain(de);
     if (count)
         changeState(Draining);
     else
@@ -362,8 +366,6 @@ DmaPort::sendDma()
 
 DmaDevice::~DmaDevice()
 {
-    if (dmaPort)
-        delete dmaPort;
 }
 
 
@@ -371,12 +373,7 @@ Port *
 DmaDevice::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "dma") {
-        if (dmaPort != NULL)
-            fatal("%s: dma port already connected to %s",
-                  name(), dmaPort->getPeer()->name());
-        dmaPort = new DmaPort(this, sys, params()->min_backoff_delay,
-                              params()->max_backoff_delay);
-        return dmaPort;
+        return &dmaPort;
     }
     return PioDevice::getPort(if_name, idx);
 }

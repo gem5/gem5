@@ -76,6 +76,12 @@ PhysicalMemory::PhysicalMemory(const Params *p)
     if (size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
 
+    // create the appropriate number of ports
+    for (int i = 0; i < p->port_port_connection_count; ++i) {
+        ports.push_back(new MemoryPort(csprintf("%s-port%d", name(), i),
+                                       this));
+    }
+
     if (params()->null)
         return;
 
@@ -109,13 +115,12 @@ PhysicalMemory::PhysicalMemory(const Params *p)
 void
 PhysicalMemory::init()
 {
-    if (ports.size() == 0) {
+    if (ports.empty()) {
         fatal("PhysicalMemory object %s is unconnected!", name());
     }
 
     for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
-        if (*pi)
-            (*pi)->sendRangeChange();
+        (*pi)->sendRangeChange();
     }
 }
 
@@ -438,22 +443,14 @@ Port *
 PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
     if (if_name != "port") {
-        panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
+        panic("PhysicalMemory::getPort: unknown port %s requested\n", if_name);
     }
 
-    if (idx >= (int)ports.size()) {
-        ports.resize(idx + 1);
+    if (idx >= static_cast<int>(ports.size())) {
+        panic("PhysicalMemory::getPort: unknown index %d requested\n", idx);
     }
 
-    if (ports[idx] != NULL) {
-        panic("PhysicalMemory::getPort: port %d already assigned", idx);
-    }
-
-    MemoryPort *port =
-        new MemoryPort(csprintf("%s-port%d", name(), idx), this);
-
-    ports[idx] = port;
-    return port;
+    return ports[idx];
 }
 
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,

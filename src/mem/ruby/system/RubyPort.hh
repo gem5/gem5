@@ -137,7 +137,7 @@ class RubyPort : public MemObject
     int m_version;
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;
-    PioPort* pio_port;
+    PioPort pio_port;
     bool m_usingRubyTester;
 
   private:
@@ -155,7 +155,7 @@ class RubyPort : public MemObject
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
-    PioPort* physMemPort;
+    PioPort physMemPort;
 
     /*! Vector of CPU Port attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;

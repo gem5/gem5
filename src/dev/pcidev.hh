@@ -151,7 +151,7 @@ class PciDev : public DmaDevice
     Platform *platform;
     Tick pioDelay;
     Tick configDelay;
-    PciConfigPort *configPort;
+    PciConfigPort configPort;
 
     /**
      * Write to the PCI config space data that is stored locally. This may be
@@ -221,12 +221,7 @@ class PciDev : public DmaDevice
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "config") {
-            if (configPort != NULL)
-                panic("pciconfig port already connected to.");
-            configPort = new PciConfigPort(this, params()->pci_bus,
-                    params()->pci_dev, params()->pci_func,
-                    params()->platform);
-            return configPort;
+            return &configPort;
         }
         return DmaDevice::getPort(if_name, idx);
     }

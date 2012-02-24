@@ -192,7 +192,7 @@ class PioDevice : public MemObject
 
     /** The pioPort that handles the requests for us and provides us requests
      * that it sees. */
-    PioPort *pioPort;
+    PioPort pioPort;
 
     /**
      * Every PIO device is obliged to provide an implementation that
@@ -271,7 +271,7 @@ class BasicPioDevice : public PioDevice
 class DmaDevice : public PioDevice
 {
    protected:
-    DmaPort *dmaPort;
+    DmaPort dmaPort;
 
   public:
     typedef DmaDeviceParams Params;
@@ -284,21 +284,25 @@ class DmaDevice : public PioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data, Tick delay = 0)
+    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
+                  Tick delay = 0)
     {
-        dmaPort->dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
+        dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
     }
 
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data, Tick delay = 0)
+    void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
+                 Tick delay = 0)
     {
-        dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
+        dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
     }
 
-    bool dmaPending() { return dmaPort->dmaPending(); }
+    bool dmaPending() { return dmaPort.dmaPending(); }
+
+    virtual void init();
 
     virtual unsigned int drain(Event *de);
 
-    unsigned cacheBlockSize() const { return dmaPort->cacheBlockSize(); }
+    unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 

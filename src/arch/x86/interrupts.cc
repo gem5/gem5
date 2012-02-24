@@ -554,7 +554,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 break;
             }
             pendingIPIs += apics.size();
-            intPort->sendMessage(apics, message, timing);
+            intPort.sendMessage(apics, message, timing);
             newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
         break;
@@ -612,7 +612,8 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingInit(false), initVector(0),
     pendingStartup(false), startupVector(0),
     startedUp(false), pendingUnmaskableInt(false),
-    pendingIPIs(0), cpu(NULL)
+    pendingIPIs(0), cpu(NULL),
+    intSlavePort(name() + ".int_slave", this, this, latency)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));

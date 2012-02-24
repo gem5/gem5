@@ -57,6 +57,7 @@ Bus::Bus(const BusParams *p)
     : MemObject(p), busId(p->bus_id), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
       drainEvent(NULL), busIdle(this), inRetry(false),
+      nbrMasterPorts(p->port_master_connection_count),
       defaultPortId(INVALID_PORT_ID), useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
@@ -68,27 +69,55 @@ Bus::Bus(const BusParams *p)
         fatal("Bus clock period must be positive\n");
     if (headerCycles <= 0)
         fatal("Number of header cycles must be positive\n");
+
+    // create the ports based on the size of the master and slave
+    // vector ports, and the presence of the default master
+
+    // id used to index into interfaces which is a flat vector of all
+    // ports
+    int id = 0;
+    for (int i = 0; i < p->port_master_connection_count; ++i) {
+        std::string portName = csprintf("%s-p%d", name(), id);
+        interfaces.push_back(new BusPort(portName, this, id));
+        ++id;
+    }
+
+    // note that the first slave port is now stored on index
+    // nbrMasterPorts in the vector
+    for (int i = 0; i < p->port_slave_connection_count; ++i) {
+        std::string portName = csprintf("%s-p%d", name(), id);
+        interfaces.push_back(new BusPort(portName, this, id));
+        ++id;
+    }
+
+    // see if we have a default master connected and if so add the
+    // port at the end
+    if (p->port_default_connection_count) {
+        defaultPortId = id;
+        std::string portName = csprintf("%s-default", name());
+        interfaces.push_back(new BusPort(portName, this, id));
+        ++id;
+    }
+
     clearPortCache();
 }
 
 Port *
 Bus::getPort(const std::string &if_name, int idx)
 {
-    std::string portName;
-    int id = interfaces.size();
-    if (if_name == "default") {
-        if (defaultPortId == INVALID_PORT_ID) {
-            defaultPortId = id;
-            portName = csprintf("%s-default", name());
-        } else
-            fatal("Default port already set on %s\n", name());
+    if (if_name == "master") {
+        // the master index translates directly to the interfaces
+        // vector as they are stored first
+        return interfaces[idx];
+    } else if (if_name == "slave") {
+        // the slaves are stored after the masters and we must thus
+        // offset the slave index with the number of master ports
+        return interfaces[nbrMasterPorts + idx];
+    } else  if (if_name == "default") {
+        return interfaces[defaultPortId];
     } else {
-        portName = csprintf("%s-p%d", name(), id);
+        panic("No port %s %d on bus %s\n", if_name, idx, name());
     }
-    BusPort *bp = new BusPort(portName, this, id);
-    interfaces.push_back(bp);
-    cachedBlockSizeValid = false;
-    return bp;
 }
 
 void

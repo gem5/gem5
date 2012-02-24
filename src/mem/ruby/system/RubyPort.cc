@@ -35,7 +35,8 @@
 #include "mem/ruby/system/RubyPort.hh"
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p)
+    : MemObject(p), pio_port(csprintf("%s-pio-port", name()), this),
+      physMemPort(csprintf("%s-physMemPort", name()), this)
 {
     m_version = p->version;
     assert(m_version != -1);
@@ -46,8 +47,6 @@ RubyPort::RubyPort(const Params *p)
     m_mandatory_q_ptr = NULL;
 
     m_request_cnt = 0;
-    pio_port = NULL;
-    physMemPort = NULL;
 
     m_usingRubyTester = p->using_ruby_tester;
     access_phys_mem = p->access_phys_mem;
@@ -87,21 +86,11 @@ RubyPort::getPort(const std::string &if_name, int idx)
     }
 
     if (if_name == "pio_port") {
-        // ensure there is only one pio port
-        assert(pio_port == NULL);
-
-        pio_port = new PioPort(csprintf("%s-pio-port%d", name(), idx), this);
-
-        return pio_port;
+        return &pio_port;
     }
 
     if (if_name == "physMemPort") {
-        // RubyPort should only have one port to physical memory
-        assert (physMemPort == NULL);
-
-        physMemPort = new PioPort(csprintf("%s-physMemPort", name()), this);
-
-        return physMemPort;
+        return &physMemPort;
     }
 
     return NULL;
@@ -194,12 +183,12 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
-        assert(ruby_port->pio_port != NULL);
+        assert(ruby_port->pio_port.isConnected());
         DPRINTF(RubyPort,
                 "Request for address 0x%#x is assumed to be a pio request\n",
                 pkt->getAddr());
 
-        return ruby_port->pio_port->sendTiming(pkt);
+        return ruby_port->pio_port.sendTiming(pkt);
     }
 
     assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
@@ -426,7 +415,7 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
-        assert(ruby_port->pio_port != NULL);
+        assert(ruby_port->pio_port.isConnected());
         DPRINTF(RubyPort, "Request for address 0x%#x is a pio request\n",
                                                            pkt->getAddr());
         panic("RubyPort::PioPort::recvFunctional() not implemented!\n");
@@ -461,7 +450,7 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
-        ruby_port->physMemPort->sendFunctional(pkt);
+        ruby_port->physMemPort.sendFunctional(pkt);
     }
 
     // turn packet around to go back to requester if response expected
@@ -554,12 +543,12 @@ RubyPort::getDrainCount(Event *de)
     // event should have been descheduled.
     assert(isDeadlockEventScheduled() == false);
 
-    if (pio_port != NULL) {
-        count += pio_port->drain(de);
+    if (pio_port.isConnected()) {
+        count += pio_port.drain(de);
         DPRINTF(Config, "count after pio check %d\n", count);
     }
-    if (physMemPort != NULL) {
-        count += physMemPort->drain(de);
+    if (physMemPort.isConnected()) {
+        count += physMemPort.drain(de);
         DPRINTF(Config, "count after physmem check %d\n", count);
     }
 
@@ -640,7 +629,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
-        ruby_port->physMemPort->sendAtomic(pkt);
+        ruby_port->physMemPort.sendAtomic(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -675,7 +664,7 @@ bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
     AddrRangeList physMemAddrList =
-        ruby_port->physMemPort->getPeer()->getAddrRanges();
+        ruby_port->physMemPort.getPeer()->getAddrRanges();
     for (AddrRangeIter iter = physMemAddrList.begin();
          iter != physMemAddrList.end();
          iter++) {

@@ -44,6 +44,7 @@
 
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/tlb.hh"
+#include "dev/io_device.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
@@ -328,7 +329,7 @@ class TableWalker : public MemObject
 
 
     /** Port to issue translation requests from */
-    DmaPort *port;
+    DmaPort port;
 
     /** TLB that is initiating these table walks */
     TLB *tlb;

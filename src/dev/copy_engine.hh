@@ -61,7 +61,7 @@ class CopyEngine : public PciDev
     class CopyEngineChannel
     {
       private:
-        DmaPort *cePort;
+        DmaPort cePort;
         CopyEngine *ce;
         CopyEngineReg::ChanRegs  cr;
         int channelId;

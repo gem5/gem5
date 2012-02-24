@@ -2051,7 +2051,7 @@ unsigned int
 IGbE::drain(Event *de)
 {
     unsigned int count;
-    count = pioPort->drain(de) + dmaPort->drain(de);
+    count = pioPort.drain(de) + dmaPort.drain(de);
     if (rxDescCache.hasOutstandingEvents() ||
         txDescCache.hasOutstandingEvents()) {
         count++;

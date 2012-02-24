@@ -131,10 +131,10 @@ class Bridge : public MemObject
         Bridge *bridge;
 
         /**
-         * Pointer to the master port on the other side of the bridge
+         * Master port on the other side of the bridge
          * (connected to the other bus).
          */
-        BridgeMasterPort* masterPort;
+        BridgeMasterPort& masterPort;
 
         /** Minimum request delay though this bridge. */
         Tick delay;
@@ -189,11 +189,11 @@ class Bridge : public MemObject
          */
         class SendEvent : public Event
         {
-            BridgeSlavePort *port;
+            BridgeSlavePort& port;
 
           public:
-            SendEvent(BridgeSlavePort *p) : port(p) {}
-            virtual void process() { port->trySend(); }
+            SendEvent(BridgeSlavePort& p) : port(p) {}
+            virtual void process() { port.trySend(); }
             virtual const char *description() const { return "bridge send"; }
         };
 
@@ -214,7 +214,7 @@ class Bridge : public MemObject
          * @param _ranges a number of address ranges to forward
          */
         BridgeSlavePort(const std::string &_name, Bridge *_bridge,
-                        BridgeMasterPort* _masterPort, int _delay,
+                        BridgeMasterPort& _masterPort, int _delay,
                         int _nack_delay, int _resp_limit,
                         std::vector<Range<Addr> > _ranges);
 
@@ -272,7 +272,7 @@ class Bridge : public MemObject
          * Pointer to the slave port on the other side of the bridge
          * (connected to the other bus).
          */
-        BridgeSlavePort* slavePort;
+        BridgeSlavePort& slavePort;
 
         /** Minimum delay though this bridge. */
         Tick delay;
@@ -303,11 +303,11 @@ class Bridge : public MemObject
          */
         class SendEvent : public Event
         {
-            BridgeMasterPort *port;
+            BridgeMasterPort& port;
 
           public:
-            SendEvent(BridgeMasterPort *p) : port(p) {}
-            virtual void process() { port->trySend(); }
+            SendEvent(BridgeMasterPort& p) : port(p) {}
+            virtual void process() { port.trySend(); }
             virtual const char *description() const { return "bridge send"; }
         };
 
@@ -326,7 +326,7 @@ class Bridge : public MemObject
          * @param _req_limit the size of the request queue
          */
         BridgeMasterPort(const std::string &_name, Bridge *_bridge,
-                         BridgeSlavePort* _slavePort, int _delay,
+                         BridgeSlavePort& _slavePort, int _delay,
                          int _req_limit);
 
         /**

@@ -124,7 +124,7 @@ class I82094AA : public PioDevice, public IntDev
     Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "int_master")
-            return intPort;
+            return &intPort;
         return PioDevice::getPort(if_name, idx);
     }
 

@@ -283,7 +283,8 @@ MaltaPChip::translatePciToDma(Addr busAddr)
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
-                    pioPort->readBlob(pteAddr, (uint8_t*)&pteEntry, sizeof(uint64_t));
+                    pioPort.readBlob(pteAddr, (uint8_t*)&pteEntry,
+                                     sizeof(uint64_t));
 
                     dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
 

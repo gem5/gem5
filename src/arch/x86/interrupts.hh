@@ -188,6 +188,9 @@ class Interrupts : public BasicPioDevice, IntDev
 
     int initialApicId;
 
+    // Port for receiving interrupts
+    IntPort intSlavePort;
+
   public:
 
     int getInitialApicId() { return initialApicId; }
@@ -242,10 +245,9 @@ class Interrupts : public BasicPioDevice, IntDev
         // Python class we also need two ports even if they are
         // identical
         if (if_name == "int_master") {
-            return intPort;
+            return &intPort;
         } else if (if_name == "int_slave") {
-            // memory leak...but will be removed in the next patch
-            return new IntPort(name() + ".int_slave", this, this, latency);
+            return &intSlavePort;
         }
         return BasicPioDevice::getPort(if_name, idx);
     }

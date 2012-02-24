@@ -45,13 +45,14 @@
 #include "debug/Checkpoint.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
-#include "dev/io_device.hh"
 #include "sim/system.hh"
 
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(NULL), tlb(NULL), currState(NULL), pending(false),
+    : MemObject(p), port(this, params()->sys, params()->min_backoff,
+                         params()->max_backoff, true),
+      tlb(NULL), currState(NULL), pending(false),
       masterId(p->sys->getMasterId(name())),
       doL1DescEvent(this), doL2DescEvent(this), doProcessEvent(this)
 {
@@ -94,13 +95,7 @@ Port*
 TableWalker::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
-        if (port != NULL)
-            return port;
-        System *sys = params()->sys;
-        Tick minb = params()->min_backoff;
-        Tick maxb = params()->max_backoff;
-        port = new DmaPort(this, sys, minb, maxb, true);
-        return port;
+        return &port;
     }
     return NULL;
 }
@@ -225,24 +220,24 @@ TableWalker::processWalk()
     }
 
     if (currState->timing) {
-        port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                &doL1DescEvent, (uint8_t*)&currState->l1Desc.data,
-                currState->tc->getCpuPtr()->ticks(1), flag);
+        port.dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
+                       &doL1DescEvent, (uint8_t*)&currState->l1Desc.data,
+                       currState->tc->getCpuPtr()->ticks(1), flag);
         DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
                 stateQueueL1.size());
         stateQueueL1.push_back(currState);
         currState = NULL;
     } else if (!currState->functional) {
-        port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                NULL, (uint8_t*)&currState->l1Desc.data,
-                currState->tc->getCpuPtr()->ticks(1), flag);
+        port.dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
+                       NULL, (uint8_t*)&currState->l1Desc.data,
+                       currState->tc->getCpuPtr()->ticks(1), flag);
         doL1Descriptor();
         f = currState->fault;
     } else {
         RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag, masterId);
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
-        port->sendFunctional(pkt);
+        port.sendFunctional(pkt);
         doL1Descriptor();
         delete req;
         delete pkt;
@@ -574,11 +569,11 @@ TableWalker::doL1Descriptor()
 
         if (currState->timing) {
             currState->delayed = true;
-            port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
+            port.dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
                     &doL2DescEvent, (uint8_t*)&currState->l2Desc.data,
                     currState->tc->getCpuPtr()->ticks(1));
         } else if (!currState->functional) {
-            port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
+            port.dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
                     NULL, (uint8_t*)&currState->l2Desc.data,
                     currState->tc->getCpuPtr()->ticks(1));
             doL2Descriptor();
@@ -586,7 +581,7 @@ TableWalker::doL1Descriptor()
             RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0, masterId);
             PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
             pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
-            port->sendFunctional(pkt);
+            port.sendFunctional(pkt);
             doL2Descriptor();
             delete req;
             delete pkt;

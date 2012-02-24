@@ -82,7 +82,9 @@ PciDev::PciConfigPort::getAddrRanges()
 
 PciDev::PciDev(const Params *p)
     : DmaDevice(p), platform(p->platform), pioDelay(p->pio_latency),
-      configDelay(p->config_latency), configPort(NULL)
+      configDelay(p->config_latency),
+      configPort(this, params()->pci_bus, params()->pci_dev,
+                 params()->pci_func, params()->platform)
 {
     config.vendor = htole(p->VendorID);
     config.device = htole(p->DeviceID);
@@ -148,17 +150,17 @@ PciDev::PciDev(const Params *p)
 void
 PciDev::init()
 {
-    if (!configPort && !configPort->isConnected())
+    if (!configPort.isConnected())
         panic("PCI config port on %s not connected to anything!\n", name());
-   configPort->sendRangeChange();
-   PioDevice::init();
+   configPort.sendRangeChange();
+   DmaDevice::init();
 }
 
 unsigned int
 PciDev::drain(Event *de)
 {
     unsigned int count;
-    count = pioPort->drain(de) + dmaPort->drain(de) + configPort->drain(de);
+    count = pioPort.drain(de) + dmaPort.drain(de) + configPort.drain(de);
     if (count)
         changeState(Draining);
     else
@@ -300,7 +302,7 @@ PciDev::writeConfig(PacketPtr pkt)
                             BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
                                 platform->calcPciIOAddr(he_new_bar) :
                                 platform->calcPciMemAddr(he_new_bar);
-                            pioPort->sendRangeChange();
+                            pioPort.sendRangeChange();
                         }
                     }
                     config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
@@ -353,7 +355,7 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     UNSERIALIZE_ARRAY(config.data,
                       sizeof(config.data) / sizeof(config.data[0]));
-    pioPort->sendRangeChange();
+    pioPort.sendRangeChange();
 
 }
 

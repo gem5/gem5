@@ -55,7 +55,7 @@
 
 Bridge::BridgeSlavePort::BridgeSlavePort(const std::string &_name,
                                          Bridge* _bridge,
-                                         BridgeMasterPort* _masterPort,
+                                         BridgeMasterPort& _masterPort,
                                          int _delay, int _nack_delay,
                                          int _resp_limit,
                                          std::vector<Range<Addr> > _ranges)
@@ -63,24 +63,25 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string &_name,
       delay(_delay), nackDelay(_nack_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), inRetry(false),
-      respQueueLimit(_resp_limit), sendEvent(this)
+      respQueueLimit(_resp_limit), sendEvent(*this)
 {
 }
 
 Bridge::BridgeMasterPort::BridgeMasterPort(const std::string &_name,
                                            Bridge* _bridge,
-                                           BridgeSlavePort* _slavePort,
+                                           BridgeSlavePort& _slavePort,
                                            int _delay, int _req_limit)
     : Port(_name, _bridge), bridge(_bridge), slavePort(_slavePort),
-      delay(_delay), inRetry(false), reqQueueLimit(_req_limit), sendEvent(this)
+      delay(_delay), inRetry(false), reqQueueLimit(_req_limit),
+      sendEvent(*this)
 {
 }
 
 Bridge::Bridge(Params *p)
     : MemObject(p),
-      slavePort(p->name + "-slave", this, &masterPort, p->delay,
+      slavePort(p->name + "-slave", this, masterPort, p->delay,
                 p->nack_delay, p->resp_size, p->ranges),
-      masterPort(p->name + "-master", this, &slavePort, p->delay, p->req_size),
+      masterPort(p->name + "-master", this, slavePort, p->delay, p->req_size),
       ackWrites(p->write_ack), _params(p)
 {
     if (ackWrites)
@@ -90,19 +91,14 @@ Bridge::Bridge(Params *p)
 Port*
 Bridge::getPort(const std::string &if_name, int idx)
 {
-    Port* port;
-
     if (if_name == "slave")
-        port = &slavePort;
+        return &slavePort;
     else if (if_name == "master")
-        port = &masterPort;
-    else
+        return &masterPort;
+    else {
+        panic("Bridge %s has no port named %s\n", name(), if_name);
         return NULL;
-
-    if (port->getPeer() != NULL)
-        panic("bridge side %s already connected to %s.",
-                if_name, port->getPeer()->name());
-    return port;
+    }
 }
 
 
@@ -148,7 +144,7 @@ Bridge::BridgeMasterPort::recvTiming(PacketPtr pkt)
 
     DPRINTF(BusBridge, "Request queue size: %d\n", requestQueue.size());
 
-    slavePort->queueForSendTiming(pkt);
+    slavePort.queueForSendTiming(pkt);
 
     return true;
 }
@@ -165,7 +161,7 @@ Bridge::BridgeSlavePort::recvTiming(PacketPtr pkt)
     DPRINTF(BusBridge, "Response queue size: %d outresp: %d\n",
             responseQueue.size(), outstandingResponses);
 
-    if (masterPort->reqQueueFull()) {
+    if (masterPort.reqQueueFull()) {
         DPRINTF(BusBridge, "Request queue full, nacking\n");
         nackRequest(pkt);
         return true;
@@ -187,7 +183,7 @@ Bridge::BridgeSlavePort::recvTiming(PacketPtr pkt)
         }
     }
 
-    masterPort->queueForSendTiming(pkt);
+    masterPort.queueForSendTiming(pkt);
 
     return true;
 }
@@ -422,7 +418,7 @@ Bridge::BridgeMasterPort::recvAtomic(PacketPtr pkt)
 Tick
 Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 {
-    return delay + masterPort->sendAtomic(pkt);
+    return delay + masterPort.sendAtomic(pkt);
 }
 
 void
@@ -450,14 +446,14 @@ Bridge::BridgeSlavePort::recvFunctional(PacketPtr pkt)
     }
 
     // also check the master port's request queue
-    if (masterPort->checkFunctional(pkt)) {
+    if (masterPort.checkFunctional(pkt)) {
         return;
     }
 
     pkt->popLabel();
 
     // fall through if pkt still not satisfied
-    masterPort->sendFunctional(pkt);
+    masterPort.sendFunctional(pkt);
 }
 
 bool

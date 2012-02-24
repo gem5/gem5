@@ -51,10 +51,10 @@ X86ISA::IntDev::IntPort::sendMessage(ApicList apics,
 void
 X86ISA::IntDev::init()
 {
-    if (!intPort) {
+    if (!intPort.isConnected()) {
         panic("Int port not connected to anything!");
     }
-    intPort->sendRangeChange();
+    intPort.sendRangeChange();
 }
 
 X86ISA::IntSourcePin *
