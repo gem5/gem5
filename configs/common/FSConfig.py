@@ -354,7 +354,7 @@ def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port
 
-def connectX86ClassicSystem(x86_sys):
+def connectX86ClassicSystem(x86_sys, numCPUs):
     # Constants similar to x86_traits.hh
     IO_address_space_base = 0x8000000000000000
     pci_config_address_space_base = 0xc000000000000000
@@ -390,7 +390,8 @@ def connectX86ClassicSystem(x86_sys):
     x86_sys.apicbridge.master = x86_sys.membus.slave
     x86_sys.apicbridge.ranges = [AddrRange(interrupts_address_space_base,
                                            interrupts_address_space_base +
-                                           APIC_range_size - 1)]
+                                           numCPUs * APIC_range_size
+                                           - 1)]
 
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
@@ -435,7 +436,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
         # dma controllers
         self._dma_devices = [self.pc.south_bridge.ide]
     else:
-        connectX86ClassicSystem(self)
+        connectX86ClassicSystem(self, numCPUs)
 
     self.intrctrl = IntrControl()
 
