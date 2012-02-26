@@ -1225,7 +1225,8 @@ let {{
                             fault = new GeneralProtection(0);
                     }
                   default:
-                    panic("Unrecognized control register %d.\\n", dest);
+                    fault = new GenericISA::M5PanicFault(
+                            "Unrecognized control register %d.\\n", dest);
                 }
                 ControlDest = newVal;
             }
@@ -1314,8 +1315,8 @@ let {{
                 }
                 break;
               case SegCallGateCheck:
-                panic("CS checks for far calls/jumps through call gates"
-                        "not implemented.\\n");
+                fault = new GenericISA::M5PanicFault("CS checks for far "
+                        "calls/jumps through call gates not implemented.\\n");
                 break;
               case SegSoftIntGateCheck:
                 // Check permissions.
@@ -1365,8 +1366,8 @@ let {{
                         fault = new GeneralProtection(selector);
                     }
                 } else {
-                    panic("Interrupt CS checks not implemented "
-                            "in legacy mode.\\n");
+                    fault = new GenericISA::M5PanicFault("Interrupt CS "
+                            "checks not implemented in legacy mode.\\n");
                 }
                 break;
               case SegTRCheck:
@@ -1396,7 +1397,8 @@ let {{
                 }
                 break;
               default:
-                panic("Undefined segment check type.\\n");
+                fault = new GenericISA::M5PanicFault(
+                        "Undefined segment check type.\\n");
             }
         '''
         flag_code = '''
@@ -1425,7 +1427,8 @@ let {{
                 replaceBits(target, 31, 16, bits(desc, 63, 48));
                 break;
               default:
-                panic("Wrdh used with wrong descriptor type!\\n");
+                fault = new GenericISA::M5PanicFault(
+                        "Wrdh used with wrong descriptor type!\\n");
             }
             DestReg = target;
         '''
@@ -1449,49 +1452,60 @@ let {{
         code = '''
             SegDescriptor desc = SrcReg1;
             SegSelector selector = SrcReg2;
-            if (selector.si || selector.ti) {
-                if (!desc.p)
-                    panic("Segment not present.\\n");
-                SegAttr attr = 0;
-                attr.dpl = desc.dpl;
-                attr.unusable = 0;
-                attr.defaultSize = desc.d;
-                attr.longMode = desc.l;
-                attr.avl = desc.avl;
-                attr.granularity = desc.g;
-                attr.present = desc.p;
-                attr.system = desc.s;
-                attr.type = desc.type;
-                if (!desc.s) {
-                    // The expand down bit happens to be set for gates.
-                    if (desc.type.e) {
-                        panic("Gate descriptor encountered.\\n");
+            // This while loop is so we can use break statements in the code
+            // below to skip the rest of this section without a bunch of
+            // nesting.
+            while (true) {
+                if (selector.si || selector.ti) {
+                    if (!desc.p) {
+                        fault = new GenericISA::M5PanicFault(
+                                "Segment not present.\\n");
+                        break;
                     }
-                    attr.readable = 1;
-                    attr.writable = 1;
-                    attr.expandDown = 0;
-                } else {
-                    if (desc.type.codeOrData) {
-                        attr.expandDown = 0;
-                        attr.readable = desc.type.r;
-                        attr.writable = 0;
-                    } else {
-                        attr.expandDown = desc.type.e;
+                    SegAttr attr = 0;
+                    attr.dpl = desc.dpl;
+                    attr.unusable = 0;
+                    attr.defaultSize = desc.d;
+                    attr.longMode = desc.l;
+                    attr.avl = desc.avl;
+                    attr.granularity = desc.g;
+                    attr.present = desc.p;
+                    attr.system = desc.s;
+                    attr.type = desc.type;
+                    if (!desc.s) {
+                        // The expand down bit happens to be set for gates.
+                        if (desc.type.e) {
+                            fault = new GenericISA::M5PanicFault(
+                                    "Gate descriptor encountered.\\n");
+                            break;
+                        }
                         attr.readable = 1;
-                        attr.writable = desc.type.w;
+                        attr.writable = 1;
+                        attr.expandDown = 0;
+                    } else {
+                        if (desc.type.codeOrData) {
+                            attr.expandDown = 0;
+                            attr.readable = desc.type.r;
+                            attr.writable = 0;
+                        } else {
+                            attr.expandDown = desc.type.e;
+                            attr.readable = 1;
+                            attr.writable = desc.type.w;
+                        }
                     }
+                    Addr base = desc.baseLow | (desc.baseHigh << 24);
+                    Addr limit = desc.limitLow | (desc.limitHigh << 16);
+                    if (desc.g)
+                        limit = (limit << 12) | mask(12);
+                    SegBaseDest = base;
+                    SegLimitDest = limit;
+                    SegAttrDest = attr;
+                } else {
+                    SegBaseDest = SegBaseDest;
+                    SegLimitDest = SegLimitDest;
+                    SegAttrDest = SegAttrDest;
                 }
-                Addr base = desc.baseLow | (desc.baseHigh << 24);
-                Addr limit = desc.limitLow | (desc.limitHigh << 16);
-                if (desc.g)
-                    limit = (limit << 12) | mask(12);
-                SegBaseDest = base;
-                SegLimitDest = limit;
-                SegAttrDest = attr;
-            } else {
-                SegBaseDest = SegBaseDest;
-                SegLimitDest = SegLimitDest;
-                SegAttrDest = SegAttrDest;
+                break;
             }
         '''
 }};

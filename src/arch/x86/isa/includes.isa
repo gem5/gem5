@@ -106,6 +106,7 @@ output exec {{
 #include <cmath>
 #include <limits>
 
+#include "arch/generic/debugfaults.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
