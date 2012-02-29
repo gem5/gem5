@@ -1,12 +1,10 @@
 warn: Sockets disabled, not accepting gdb connections
-For more information see: http://www.m5sim.org/warn/d946bea6
-warn: Prefetch instrutions is Alpha do not do anything
-For more information see: http://www.m5sim.org/warn/3e0eccba
-warn: Prefetch instrutions is Alpha do not do anything
-For more information see: http://www.m5sim.org/warn/3e0eccba
+warn: Prefetch instructions in Alpha do not do anything
+warn: Prefetch instructions in Alpha do not do anything
 hack: be nice to actually delete the event here
 
 gzip: stdout: Broken pipe
-stdout: Broken pipe
+
+gzip: stdout: Broken pipe
 
 gzip: stdout: Broken pipe
