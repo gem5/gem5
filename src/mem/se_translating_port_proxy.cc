@@ -63,7 +63,7 @@ SETranslatingPortProxy::~SETranslatingPortProxy()
 { }
 
 bool
-SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
 {
     int prevSize = 0;
 
@@ -81,7 +81,7 @@ SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size)
 }
 
 void
-SETranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 {
     if (!tryReadBlob(addr, p, size))
         fatal("readBlob(0x%x, ...) failed", addr);
@@ -89,7 +89,7 @@ SETranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size)
 
 
 bool
-SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size) const
 {
     int prevSize = 0;
 
@@ -120,14 +120,14 @@ SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size)
 
 
 void
-SETranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size) const
 {
     if (!tryWriteBlob(addr, p, size))
         fatal("writeBlob(0x%x, ...) failed", addr);
 }
 
 bool
-SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size)
+SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size) const
 {
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
         Addr paddr;
@@ -149,7 +149,7 @@ SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size)
 }
 
 void
-SETranslatingPortProxy::memsetBlob(Addr addr, uint8_t val, int size)
+SETranslatingPortProxy::memsetBlob(Addr addr, uint8_t val, int size) const
 {
     if (!tryMemsetBlob(addr, val, size))
         fatal("memsetBlob(0x%x, ...) failed", addr);
@@ -157,7 +157,7 @@ SETranslatingPortProxy::memsetBlob(Addr addr, uint8_t val, int size)
 
 
 bool
-SETranslatingPortProxy::tryWriteString(Addr addr, const char *str)
+SETranslatingPortProxy::tryWriteString(Addr addr, const char *str) const
 {
     uint8_t c;
 
@@ -177,14 +177,14 @@ SETranslatingPortProxy::tryWriteString(Addr addr, const char *str)
 }
 
 void
-SETranslatingPortProxy::writeString(Addr addr, const char *str)
+SETranslatingPortProxy::writeString(Addr addr, const char *str) const
 {
     if (!tryWriteString(addr, str))
         fatal("writeString(0x%x, ...) failed", addr);
 }
 
 bool
-SETranslatingPortProxy::tryReadString(std::string &str, Addr addr)
+SETranslatingPortProxy::tryReadString(std::string &str, Addr addr) const
 {
     uint8_t c;
 
@@ -204,7 +204,7 @@ SETranslatingPortProxy::tryReadString(std::string &str, Addr addr)
 }
 
 void
-SETranslatingPortProxy::readString(std::string &str, Addr addr)
+SETranslatingPortProxy::readString(std::string &str, Addr addr) const
 {
     if (!tryReadString(str, addr))
         fatal("readString(0x%x, ...) failed", addr);

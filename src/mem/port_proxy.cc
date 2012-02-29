@@ -41,7 +41,7 @@
 #include "mem/port_proxy.hh"
 
 void
-PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd)
+PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const
 {
     Request req;
 
@@ -56,7 +56,7 @@ PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd)
 }
 
 void
-PortProxy::memsetBlob(Addr addr, uint8_t v, int size)
+PortProxy::memsetBlob(Addr addr, uint8_t v, int size) const
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];
