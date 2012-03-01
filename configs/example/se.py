@@ -82,10 +82,8 @@ parser.add_option("--errout", default="", help="Redirect stderr to a file.")
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 
-if buildEnv['PROTOCOL'] != 'None':
-    parser.add_option("--ruby", action="store_true")
-    if '--ruby' in sys.argv:
-        Ruby.define_options(parser)
+if '--ruby' in sys.argv:
+    Ruby.define_options(parser)
 
 (options, args) = parser.parse_args()
 
