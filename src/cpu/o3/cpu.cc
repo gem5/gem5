@@ -653,7 +653,7 @@ FullO3CPU<Impl>::init()
     if (icachePort.isConnected())
         fetch.setIcache();
 
-    if (FullSystem) {
+    if (FullSystem && !params()->defer_registration) {
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());

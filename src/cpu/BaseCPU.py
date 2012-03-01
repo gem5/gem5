@@ -100,33 +100,32 @@ class BaseCPU(MemObject):
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
         interrupts = Param.SparcInterrupts(
-                SparcInterrupts(), "Interrupt Controller")
+                NULL, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaTLB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaTLB(AlphaITB(), "Instruction TLB")
         interrupts = Param.AlphaInterrupts(
-                AlphaInterrupts(), "Interrupt Controller")
+                NULL, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
-        _localApic = X86LocalApic(pio_addr=0x2000000000000000)
-        interrupts = Param.X86LocalApic(_localApic, "Interrupt Controller")
+        interrupts = Param.X86LocalApic(NULL, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'mips':
         dtb = Param.MipsTLB(MipsTLB(), "Data TLB")
         itb = Param.MipsTLB(MipsTLB(), "Instruction TLB")
         interrupts = Param.MipsInterrupts(
-                MipsInterrupts(), "Interrupt Controller")
+                NULL, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'arm':
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
         interrupts = Param.ArmInterrupts(
-                ArmInterrupts(), "Interrupt Controller")
+                NULL, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
         itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
         interrupts = Param.PowerInterrupts(
-                PowerInterrupts(), "Interrupt Controller")
+                NULL, "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             buildEnv['TARGET_ISA']
@@ -163,6 +162,25 @@ class BaseCPU(MemObject):
     if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
         _uncached_master_ports += ["interrupts.int_master"]
+
+    def createInterruptController(self):
+        if buildEnv['TARGET_ISA'] == 'sparc':
+            self.interrupts = SparcInterrupts()
+        elif buildEnv['TARGET_ISA'] == 'alpha':
+            self.interrupts = AlphaInterrupts()
+        elif buildEnv['TARGET_ISA'] == 'x86':
+            _localApic = X86LocalApic(pio_addr=0x2000000000000000)
+            self.interrupts = _localApic
+        elif buildEnv['TARGET_ISA'] == 'mips':
+            self.interrupts = MipsInterrupts()
+        elif buildEnv['TARGET_ISA'] == 'arm':
+            self.interrupts = ArmInterrupts()
+        elif buildEnv['TARGET_ISA'] == 'power':
+            self.interrupts = PowerInterrupts()
+        else:
+            print "Don't know what Interrupt Controller to use for ISA %s" % \
+                buildEnv['TARGET_ISA']
+            sys.exit(1)
 
     def connectCachedPorts(self, bus):
         for p in self._cached_ports:
