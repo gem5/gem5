@@ -247,21 +247,21 @@ VncServer::data()
             setEncodings();
             break;
           case ClientFrameBufferUpdate:
-             requestFbUpdate();
-             break;
+            requestFbUpdate();
+            break;
           case ClientKeyEvent:
-             recvKeyboardInput();
-             break;
+            recvKeyboardInput();
+            break;
           case ClientPointerEvent:
-             recvPointerInput();
-             break;
+            recvPointerInput();
+            break;
           case ClientCutText:
-             recvCutText();
-             break;
+            recvCutText();
+            break;
           default:
-             panic("Unimplemented message type recv from client: %d\n",
-                     message_type);
-             break;
+            panic("Unimplemented message type recv from client: %d\n",
+                  message_type);
+            break;
         }
         break;
       default:
