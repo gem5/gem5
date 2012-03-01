@@ -268,4 +268,6 @@ operator<<(std::ostream &out, const Time &time)
     return out;
 }
 
+time_t mkutctime(struct tm *time);
+
 #endif // __BASE_TIME_HH__

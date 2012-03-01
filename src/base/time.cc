@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 
@@ -144,3 +146,22 @@ sleep(const Time &time)
     nanosleep(&ts, NULL);
 #endif
 }
+
+time_t
+mkutctime(struct tm *time)
+{
+    time_t ret;
+    char *tz;
+
+    tz = getenv("TZ");
+    setenv("TZ", "", 1);
+    tzset();
+    ret = mktime(time);
+    if (tz)
+        setenv("TZ", tz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
+    return ret;
+}
+

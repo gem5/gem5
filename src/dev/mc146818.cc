@@ -176,24 +176,6 @@ MC146818::readData(uint8_t addr)
     }
 }
 
-static time_t
-mkutctime(struct tm *time)
-{
-    time_t ret;
-    char *tz;
-
-    tz = getenv("TZ");
-    setenv("TZ", "", 1);
-    tzset();
-    ret = mktime(time);
-    if (tz)
-        setenv("TZ", tz, 1);
-    else
-        unsetenv("TZ");
-    tzset();
-    return ret;
-}
-
 void
 MC146818::tickClock()
 {
