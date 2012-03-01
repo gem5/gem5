@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2012 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -625,6 +625,58 @@ let {{
     header_output += RegRegImmImmOpDeclare.subst(bfiIop)
     decoder_output += RegRegImmImmOpConstructor.subst(bfiIop)
     exec_output += PredOpExecute.subst(bfiIop)
+
+    mrc14code = '''
+    CPSR cpsr = Cpsr;
+    if (cpsr.mode == MODE_USER) {
+        if (FullSystem)
+            return new UndefinedInstruction;
+        else
+            return new UndefinedInstruction(false, mnemonic);
+    }
+    Dest = MiscOp1;
+    '''
+
+    mrc14Iop = InstObjParams("mrc", "Mrc14", "RegRegOp",
+                             { "code": mrc14code,
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(mrc14Iop)
+    decoder_output += RegRegOpConstructor.subst(mrc14Iop)
+    exec_output += PredOpExecute.subst(mrc14Iop)
+
+
+    mcr14code = '''
+    CPSR cpsr = Cpsr;
+    if (cpsr.mode == MODE_USER) {
+        if (FullSystem)
+            return new UndefinedInstruction;
+        else
+            return new UndefinedInstruction(false, mnemonic);
+    }
+    MiscDest = Op1;
+    '''
+    mcr14Iop = InstObjParams("mcr", "Mcr14", "RegRegOp",
+                             { "code": mcr14code,
+                               "predicate_test": predicateTest },
+                               ["IsSerializeAfter","IsNonSpeculative"])
+    header_output += RegRegOpDeclare.subst(mcr14Iop)
+    decoder_output += RegRegOpConstructor.subst(mcr14Iop)
+    exec_output += PredOpExecute.subst(mcr14Iop)
+
+    mrc14UserIop = InstObjParams("mrc", "Mrc14User", "RegRegOp",
+                                 { "code": "Dest = MiscOp1;",
+                                   "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(mrc14UserIop)
+    decoder_output += RegRegOpConstructor.subst(mrc14UserIop)
+    exec_output += PredOpExecute.subst(mrc14UserIop)
+
+    mcr14UserIop = InstObjParams("mcr", "Mcr14User", "RegRegOp",
+                                 { "code": "MiscDest = Op1",
+                                   "predicate_test": predicateTest },
+                                   ["IsSerializeAfter","IsNonSpeculative"])
+    header_output += RegRegOpDeclare.subst(mcr14UserIop)
+    decoder_output += RegRegOpConstructor.subst(mcr14UserIop)
+    exec_output += PredOpExecute.subst(mcr14UserIop)
 
     mrc15code = '''
     CPSR cpsr = Cpsr;

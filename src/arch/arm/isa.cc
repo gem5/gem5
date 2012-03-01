@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -233,11 +233,20 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_FPSCR_EXC:
         return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrExcMask;
       case MISCREG_L2CTLR:
-        // mostly unimplemented, just set NumCPUs field from sim and return
-        L2CTLR l2ctlr = 0;
-        // b00:1CPU to b11:4CPUs
-        l2ctlr.numCPUs = tc->getSystemPtr()->numContexts() - 1;
-        return l2ctlr;
+        {
+            // mostly unimplemented, just set NumCPUs field from sim and return
+            L2CTLR l2ctlr = 0;
+            // b00:1CPU to b11:4CPUs
+            l2ctlr.numCPUs = tc->getSystemPtr()->numContexts() - 1;
+            return l2ctlr;
+        }
+      case MISCREG_DBGDIDR:
+        /* For now just implement the version number.
+         * Return 0 as we don't support debug architecture yet.
+         */
+         return 0;
+      case MISCREG_DBGDSCR_INT:
+        return 0;
     }
     return readMiscRegNoEffect(misc_reg);
 }

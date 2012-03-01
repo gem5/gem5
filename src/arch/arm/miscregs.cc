@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,36 @@
 
 namespace ArmISA
 {
+
+MiscRegIndex
+decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
+{
+    switch(crn) {
+      case 0:
+        switch (opc2) {
+          case 0:
+            switch (crm) {
+              case 0:
+                return MISCREG_DBGDIDR;
+              case 1:
+                return MISCREG_DBGDSCR_INT;
+              default:
+                warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+                     crn, opc1, crm, opc2);
+                return NUM_MISCREGS;
+            }
+          default:
+                warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+                     crn, opc1, crm, opc2);
+                return NUM_MISCREGS;
+        }
+      default:
+        warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+             crn, opc1, crm, opc2);
+        return NUM_MISCREGS;
+    }
+
+}
 
 MiscRegIndex
 decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)

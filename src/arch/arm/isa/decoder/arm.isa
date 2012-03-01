@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2012 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -114,6 +114,7 @@ format DataOp {
             1: decode CPNUM { // 27-24=1110,4 ==1
                 0x1: M5ops::m5ops();
                 0xa, 0xb: ShortFpTransfer::shortFpTransfer();
+                0xe: McrMrc14::mcrMrc14();
                 0xf: McrMrc15::mcrMrc15();
             } // CPNUM  (OP4 == 1)
         } //OPCODE_4
