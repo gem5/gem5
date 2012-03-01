@@ -55,7 +55,6 @@ using namespace Linux;
 ArmSystem::ArmSystem(Params *p)
     : System(p), bootldr(NULL)
 {
-    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 }
 
 void
@@ -113,6 +112,7 @@ ArmSystem::initState()
         }
     }
 
+    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 }
 
 ArmSystem::~ArmSystem()
