@@ -43,7 +43,8 @@ class ArmMachineType(Enum):
     map = {'RealView_EB' : 827,
            'RealView_PBX' : 1901,
            'VExpress_ELT' : 2272,
-           'VExpress_CA9' : 2272}
+           'VExpress_CA9' : 2272,
+           'VExpress_EMM' : 2272}
 
 class ArmSystem(System):
     type = 'ArmSystem'
@@ -65,5 +66,6 @@ class LinuxArmSystem(ArmSystem):
     load_addr_mask = 0x0fffffff
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
+    atags_addr = Param.Addr(0x100, "Address where default atags structure should be written")
 
 

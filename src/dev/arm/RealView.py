@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2011 ARM Limited
+# Copyright (c) 2009-2012 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@ from Ide import *
 from Platform import Platform
 from Terminal import Terminal
 from Uart import Uart
+from PhysicalMemory import *
 
 class AmbaDevice(BasicPioDevice):
     type = 'AmbaDevice'
@@ -119,6 +120,11 @@ class CpuLocalTimer(BasicPioDevice):
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
     clock = Param.Clock('1GHz', "Clock speed at which the timer counts")
 
+class PL031(AmbaIntDevice):
+    type = 'PL031'
+    time = Param.Time('01/01/2009', "System time to use ('Now' for actual time)")
+    amba_id = 0x00341031
+
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
     vnc = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
@@ -136,6 +142,15 @@ class RealView(Platform):
     type = 'RealView'
     system = Param.System(Parent.any, "system")
     pci_cfg_base = Param.Addr(0, "Base address of PCI Configuraiton Space")
+    mem_start_addr = Param.Addr(0, "Start address of main memory")
+    max_mem_size = Param.Addr('256MB', "Maximum amount of RAM supported by platform")
+
+    def setupBootLoader(self, mem_bus, cur_sys, loc):
+        self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'), size = '64MB'), zero = True)
+        self.nvmem.port = mem_bus.master
+        cur_sys.boot_loader = loc('boot.arm')
+        cur_sys.boot_loader_mem = self.nvmem
+
 
 # Reference for memory map and interrupt number
 # RealView Platform Baseboard Explore for Cortex-A9 User Guide(ARM DUI 0440A)
@@ -189,7 +204,9 @@ class RealViewPBX(RealView):
        # (gic, l2x0, a9scu, local_cpu_timer)
        bridge.ranges = [AddrRange(self.realview_io.pio_addr,
                                   self.a9scu.pio_addr - 1),
-                        AddrRange(self.flash_fake.pio_addr, Addr.max)]
+                        AddrRange(self.flash_fake.pio_addr,
+                                  self.flash_fake.pio_addr + \
+                                  self.flash_fake.pio_size - 1)]
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -300,6 +317,7 @@ class RealViewEB(RealView):
        self.smcreg_fake.pio   = bus.master
 
 class VExpress_ELT(RealView):
+    max_mem_size = '2GB'
     pci_cfg_base = 0xD0000000
     elba_uart = Pl011(pio_addr=0xE0009000, int_num=42)
     uart = Pl011(pio_addr=0xFF009000, int_num=121)
@@ -401,4 +419,85 @@ class VExpress_ELT(RealView):
        self.spsc_fake.pio       = bus.master
        self.lan_fake.pio        = bus.master
        self.usb_fake.pio        = bus.master
+
+
+class VExpress_EMM(RealView):
+    mem_start_addr = '2GB'
+    max_mem_size = '2GB'
+    uart = Pl011(pio_addr=0x1c090000, int_num=37)
+    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, pio_addr=0x1C010000)
+    gic = Gic(dist_addr=0x2C001000, cpu_addr=0x2C002000)
+    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
+    timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='50MHz', clock1='50MHz')
+    timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='50MHz', clock1='50MHz')
+    clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
+    kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
+    kmi1   = Pl050(pio_addr=0x1c070000, int_num=45)
+    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
+                            io_shift = 2, ctrl_offset = 2, Command = 0x1,
+                            BAR0 = 0x1C1A0000, BAR0Size = '256B',
+                            BAR1 = 0x1C1A0100, BAR1Size = '4096B',
+                            BAR0LegacyIO = True, BAR1LegacyIO = True)
+    vram           = PhysicalMemory(range = AddrRange(0x18000000, size='32MB'), zero = True)
+    rtc            = PL031(pio_addr=0x1C170000, int_num=36)
+
+    l2x0_fake      = IsaFake(pio_addr=0x2C100000, pio_size=0xfff)
+    uart1_fake     = AmbaFake(pio_addr=0x1C0A0000)
+    uart2_fake     = AmbaFake(pio_addr=0x1C0B0000)
+    uart3_fake     = AmbaFake(pio_addr=0x1C0C0000)
+    sp810_fake     = AmbaFake(pio_addr=0x1C020000, ignore_access=True)
+    watchdog_fake  = AmbaFake(pio_addr=0x1C0F0000)
+    aaci_fake      = AmbaFake(pio_addr=0x1C040000)
+    lan_fake       = IsaFake(pio_addr=0x1A000000, pio_size=0xffff)
+    usb_fake       = IsaFake(pio_addr=0x1B000000, pio_size=0x1ffff)
+    mmc_fake       = AmbaFake(pio_addr=0x1c050000)
+
+    def setupBootLoader(self, mem_bus, cur_sys, loc):
+        self.nvmem = PhysicalMemory(range = AddrRange(0, size = '64MB'), zero = True)
+        self.nvmem.port = mem_bus.master
+        cur_sys.boot_loader = loc('boot_emm.arm')
+        cur_sys.boot_loader_mem = self.nvmem
+        cur_sys.atags_addr = 0x80000100
+
+    # Attach I/O devices that are on chip and also set the appropriate
+    # ranges for the bridge
+    def attachOnChipIO(self, bus, bridge):
+       self.gic.pio = bus.master
+       self.local_cpu_timer.pio = bus.master
+       # Bridge ranges based on excluding what is part of on-chip I/O
+       # (gic, a9scu)
+       bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
+                        AddrRange(0x30000000, size='256MB'),
+                        AddrRange(0x40000000, size='512MB'),
+                        AddrRange(0x18000000, size='64MB'),
+                        AddrRange(0x1C000000, size='64MB')]
+
+    # Attach I/O devices to specified bus object.  Can't do this
+    # earlier, since the bus object itself is typically defined at the
+    # System level.
+    def attachIO(self, bus):
+       self.uart.pio            = bus.master
+       self.realview_io.pio     = bus.master
+       self.timer0.pio          = bus.master
+       self.timer1.pio          = bus.master
+       self.clcd.pio            = bus.master
+       self.clcd.dma            = bus.slave
+       self.kmi0.pio            = bus.master
+       self.kmi1.pio            = bus.master
+       self.cf_ctrl.pio         = bus.master
+       self.cf_ctrl.config      = bus.master
+       self.rtc.pio             = bus.master
+       bus.use_default_range    = True
+       self.vram.port           = bus.master
+
+       self.l2x0_fake.pio       = bus.master
+       self.uart1_fake.pio      = bus.master
+       self.uart2_fake.pio      = bus.master
+       self.uart3_fake.pio      = bus.master
+       self.sp810_fake.pio      = bus.master
+       self.watchdog_fake.pio   = bus.master
+       self.aaci_fake.pio       = bus.master
+       self.lan_fake.pio        = bus.master
+       self.usb_fake.pio        = bus.master
+       self.mmc_fake.pio        = bus.master
 

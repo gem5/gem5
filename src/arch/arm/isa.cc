@@ -213,8 +213,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
              "config registers and jumping to ThumbEE vectors\n");
         return 0x0031; // !ThumbEE | !Jazelle | Thumb | ARM
       case MISCREG_ID_PFR1:
-        warn("reading unimplmented register ID_PFR1");
-        return 0;
+        return 0x00001; // !Timer | !Virti | !M Profile | !TrustZone | ARMv4
       case MISCREG_CTR:
         return 0x86468006; // V7, 64 byte cache line, load/exclusive is exact
       case MISCREG_ACTLR:

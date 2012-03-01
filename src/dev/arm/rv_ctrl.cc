@@ -103,6 +103,8 @@ RealViewCtrl::read(PacketPtr pkt)
       case IdReg:
         pkt->set<uint32_t>(params()->idreg);
         break;
+      case CfgStat:
+        pkt->set<uint32_t>(1);
       default:
         warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
              daddr);

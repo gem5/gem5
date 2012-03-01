@@ -114,7 +114,7 @@ LinuxArmSystem::initState()
     DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
     DDUMP(Loader, boot_data, size << 2);
 
-    physProxy.writeBlob(ParamsList, boot_data, size << 2);
+    physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
 
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
@@ -154,7 +154,7 @@ LinuxArmSystem::initState()
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);
         threadContexts[i]->setIntReg(1, params()->machine_type);
-        threadContexts[i]->setIntReg(2, ParamsList);
+        threadContexts[i]->setIntReg(2, params()->atags_addr);
     }
 }
 

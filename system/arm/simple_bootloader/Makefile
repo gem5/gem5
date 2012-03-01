@@ -40,21 +40,24 @@
 # Need to have CROSS_COMPILE set to /path/to/bin/arm-unknown-linux-gnu-
 # or have arm-unknown-linux-gnu in your path
 
-CROSS_COMPILE?=arm-none-linux-gnueabi-
+CROSS_COMPILE?=arm-linux-gnueabi-
 
 CC=$(CROSS_COMPILE)gcc
 CPP=$(CROSS_COMPILE)g++
 LD=$(CROSS_COMPILE)ld
 
-all: boot.arm
+all: boot.arm boot_emm.arm
 
 boot.o: simple.S
-	$(CC) -mfloat-abi=softfp -march=armv7-a -fno-builtin -nostdinc -o boot.o -c simple.S
+	$(CC) -mfloat-abi=softfp -march=armv7-a -fno-builtin -nostdinc -o $@ -c $<
 
 boot.arm: boot.o
-	$(LD) -o boot.arm -N -Ttext 0x80000000 boot.o -non_shared -static
+	$(LD) -o $@ -N -Ttext 0x80000000 $< -non_shared -static
+boot_emm.arm: boot.o
+	$(LD) -o $@ -N -Ttext 0x00000010 $< -non_shared -static
 
 
 clean:	
-	rm *.o boot.arm
+	$(RM) -f *.o boot.arm boot_emm.arm
 
+.PHONY: all clean

@@ -252,6 +252,9 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.realview = RealViewEB()
     elif machine_type == "VExpress_ELT":
         self.realview = VExpress_ELT()
+    elif machine_type == "VExpress_EMM":
+        self.realview = VExpress_EMM()
+        self.load_addr_mask = 0xffffffff
     else:
         print "Unknown Machine Type"
         sys.exit(1)
@@ -273,21 +276,17 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
         self.machine_type = machine_type
-        if convert.toMemorySize(mdesc.mem()) > convert.toMemorySize('256MB'):
-            print "The currently implemented ARM platforms only easily support 256MB of DRAM"
-            print "It might be possible to get some more by using 256MB@0x30000000, but this"
-            print "is untested and may require some heroics"
+        if convert.toMemorySize(mdesc.mem()) > self.realview.max_mem_size:
+            print "The currently selected ARM platforms doesn't support"
+            print " the amount of DRAM you've selected. Please try"
+            print " another platform"
 
         boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
                      'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
 
-        self.physmem = PhysicalMemory(range = AddrRange(Addr(mdesc.mem())),
-                                      zero = True)
-        self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'),
-                                    size = '64MB'), zero = True)
-        self.nvmem.port = self.membus.master
-        self.boot_loader = binary('boot.arm')
-        self.boot_loader_mem = self.nvmem
+        self.physmem = PhysicalMemory(range = AddrRange(self.realview.mem_start_addr,
+                                                        size = mdesc.mem()))
+        self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 

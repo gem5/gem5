@@ -52,9 +52,6 @@
 
 class LinuxArmSystem : public ArmSystem
 {
-  protected:
-    static const int ParamsList =  0x100;
-
   public:
     /** Boilerplate params code */
     typedef LinuxArmSystemParams Params;
