@@ -421,6 +421,12 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 
+Port *
+TLB::getPort()
+{
+    return walker->getPort("port");
+}
+
 } // namespace X86ISA
 
 X86ISA::TLB *

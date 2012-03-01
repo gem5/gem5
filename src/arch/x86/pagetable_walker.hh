@@ -80,7 +80,6 @@ namespace X86ISA
 
         friend class WalkerPort;
         WalkerPort port;
-        Port *getPort(const std::string &if_name, int idx = -1);
 
         // State to track each walk of the page table
         class WalkerState : public FastAlloc
@@ -167,6 +166,7 @@ namespace X86ISA
                 RequestPtr req, BaseTLB::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 Addr &pageSize, BaseTLB::Mode mode);
+        Port *getPort(const std::string &if_name, int idx = -1);
 
       protected:
         // The TLB we're supposed to load.

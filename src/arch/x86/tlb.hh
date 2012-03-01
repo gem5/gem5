@@ -120,6 +120,8 @@ namespace X86ISA
         // Checkpointing
         virtual void serialize(std::ostream &os);
         virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+        virtual Port * getPort();
     };
 }
 
