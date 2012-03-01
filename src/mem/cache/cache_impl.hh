@@ -994,6 +994,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         if (blk->isDirty()) {
             allocateWriteBuffer(writebackBlk(blk), time, true);
         }
+        blk->status &= ~BlkValid;
         tags->invalidateBlk(blk);
     }
 
