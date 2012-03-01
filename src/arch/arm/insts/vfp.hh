@@ -108,7 +108,9 @@ enum VfpRoundingMode
 };
 
 static inline float bitsToFp(uint64_t, float);
+static inline double bitsToFp(uint64_t, double);
 static inline uint32_t fpToBits(float);
+static inline uint64_t fpToBits(double);
 
 template <class fpType>
 static inline bool
