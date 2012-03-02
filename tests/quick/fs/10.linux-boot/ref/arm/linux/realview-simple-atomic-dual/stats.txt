@@ -11,15 +11,15 @@ host_mem_usage                                 376104                       # Nu
 host_seconds                                    29.73                       # Real time elapsed on the host
 sim_insts                                    61546998                       # Number of instructions simulated
 sim_ops                                      79563488                       # Number of ops (including micro ops) simulated
-system.nvmem.bytes_read                            68                       # Number of bytes read from this memory
-system.nvmem.bytes_inst_read                       68                       # Number of instructions bytes read from this memory
-system.nvmem.bytes_written                          0                       # Number of bytes written to this memory
-system.nvmem.num_reads                             17                       # Number of read requests responded to by this memory
-system.nvmem.num_writes                             0                       # Number of write requests responded to by this memory
-system.nvmem.num_other                              0                       # Number of other requests responded to by this memory
-system.nvmem.bw_read                               28                       # Total read bandwidth from this memory (bytes/s)
-system.nvmem.bw_inst_read                          28                       # Instruction read bandwidth from this memory (bytes/s)
-system.nvmem.bw_total                              28                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bytes_read                   68                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read              68                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_written                 0                       # Number of bytes written to this memory
+system.realview.nvmem.num_reads                    17                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_writes                    0                       # Number of write requests responded to by this memory
+system.realview.nvmem.num_other                     0                       # Number of other requests responded to by this memory
+system.realview.nvmem.bw_read                      28                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read                 28                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total                     28                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read                   123270308                       # Number of bytes read from this memory
 system.physmem.bytes_inst_read                1011392                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written                 10185232                       # Number of bytes written to this memory
