@@ -129,7 +129,19 @@ help_texts = {
 
 Export("help_texts")
 
-def AddM5Option(*args, **kwargs):
+
+# There's a bug in scons in that (1) by default, the help texts from
+# AddOption() are supposed to be displayed when you type 'scons -h'
+# and (2) you can override the help displayed by 'scons -h' using the
+# Help() function, but these two features are incompatible: once
+# you've overridden the help text using Help(), there's no way to get
+# at the help texts from AddOptions.  See:
+#     http://scons.tigris.org/issues/show_bug.cgi?id=2356
+#     http://scons.tigris.org/issues/show_bug.cgi?id=2611
+# This hack lets us extract the help text from AddOptions and
+# re-inject it via Help().  Ideally someday this bug will be fixed and
+# we can just use AddOption directly.
+def AddLocalOption(*args, **kwargs):
     col_width = 30
 
     help = "  " + ", ".join(args)
@@ -144,18 +156,18 @@ def AddM5Option(*args, **kwargs):
 
     AddOption(*args, **kwargs)
 
-AddM5Option('--colors', dest='use_colors', action='store_true',
-            help="Add color to abbreviated scons output")
-AddM5Option('--no-colors', dest='use_colors', action='store_false',
-            help="Don't add color to abbreviated scons output")
-AddM5Option('--default', dest='default', type='string', action='store',
-            help='Override which build_opts file to use for defaults')
-AddM5Option('--ignore-style', dest='ignore_style', action='store_true',
-            help='Disable style checking hooks')
-AddM5Option('--update-ref', dest='update_ref', action='store_true',
-            help='Update test reference outputs')
-AddM5Option('--verbose', dest='verbose', action='store_true',
-            help='Print full tool command lines')
+AddLocalOption('--colors', dest='use_colors', action='store_true',
+               help="Add color to abbreviated scons output")
+AddLocalOption('--no-colors', dest='use_colors', action='store_false',
+               help="Don't add color to abbreviated scons output")
+AddLocalOption('--default', dest='default', type='string', action='store',
+               help='Override which build_opts file to use for defaults')
+AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',
+               help='Disable style checking hooks')
+AddLocalOption('--update-ref', dest='update_ref', action='store_true',
+               help='Update test reference outputs')
+AddLocalOption('--verbose', dest='verbose', action='store_true',
+               help='Print full tool command lines')
 
 use_colors = GetOption('use_colors')
 if use_colors:
