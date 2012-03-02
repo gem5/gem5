@@ -188,7 +188,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
                 "Request for address 0x%#x is assumed to be a pio request\n",
                 pkt->getAddr());
 
-        return ruby_port->pio_port.sendTiming(pkt);
+        return ruby_port->pio_port.sendNextCycle(pkt);
     }
 
     assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
@@ -637,7 +637,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
-        sendTiming(pkt);
+        sendNextCycle(pkt);
     } else {
         delete pkt;
     }
@@ -645,7 +645,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 }
 
 bool
-RubyPort::M5Port::sendTiming(PacketPtr pkt)
+RubyPort::M5Port::sendNextCycle(PacketPtr pkt)
 {
     //minimum latency, must be > 0
     schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
@@ -653,7 +653,7 @@ RubyPort::M5Port::sendTiming(PacketPtr pkt)
 }
 
 bool
-RubyPort::PioPort::sendTiming(PacketPtr pkt)
+RubyPort::PioPort::sendNextCycle(PacketPtr pkt)
 {
     //minimum latency, must be > 0
     schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
@@ -690,6 +690,6 @@ RubyPort::ruby_eviction_callback(const Address& address)
     Request req(address.getAddress(), 0, 0, Request::funcMasterId);
     for (CpuPortIter it = cpu_ports.begin(); it != cpu_ports.end(); it++) {
         Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
-        (*it)->sendTiming(pkt);
+        (*it)->sendNextCycle(pkt);
     }
 }
