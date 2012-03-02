@@ -56,25 +56,6 @@
 #include "mem/request.hh"
 #include "sim/faults.hh"
 
-#define NOHASH
-#ifndef NOHASH
-
-#include "base/hashmap.hh"
-
-unsigned int MyHashFunc(const BaseDynInst *addr)
-{
-    unsigned a = (unsigned)addr;
-    unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;
-
-    return hash;
-}
-
-typedef m5::hash_map<const BaseDynInst *, const BaseDynInst *, MyHashFunc>
-my_hash_t;
-
-my_hash_t thishash;
-#endif
-
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
                                StaticInstPtr _macroop,

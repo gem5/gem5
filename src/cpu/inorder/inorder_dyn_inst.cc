@@ -591,24 +591,3 @@ InOrderDynInst::dump(std::string &outstring)
 
     outstring = s.str();
 }
-
-
-#define NOHASH
-#ifndef NOHASH
-
-#include "base/hashmap.hh"
-
-unsigned int MyHashFunc(const InOrderDynInst *addr)
-{
-    unsigned a = (unsigned)addr;
-    unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;
-
-    return hash;
-}
-
-typedef m5::hash_map<const InOrderDynInst *, const InOrderDynInst *,
-                     MyHashFunc>
-my_hash_t;
-
-my_hash_t thishash;
-#endif
