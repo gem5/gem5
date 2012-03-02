@@ -35,12 +35,12 @@
 #
 # SCons top-level build description (SConstruct) file.
 #
-# While in this directory ('m5'), just type 'scons' to build the default
+# While in this directory ('gem5'), just type 'scons' to build the default
 # configuration (see below), or type 'scons build/<CONFIG>/<binary>'
-# to build some other configuration (e.g., 'build/ALPHA_FS/m5.opt' for
+# to build some other configuration (e.g., 'build/ALPHA/gem5.opt' for
 # the optimized full-system version).
 #
-# You can build M5 in a different directory as long as there is a
+# You can build gem5 in a different directory as long as there is a
 # 'build/<CONFIG>' somewhere along the target path.  The build system
 # expects that all configs under the same build directory are being
 # built for the same host system.
@@ -49,19 +49,19 @@
 #
 #   The following two commands are equivalent.  The '-u' option tells
 #   scons to search up the directory tree for this SConstruct file.
-#   % cd <path-to-src>/m5 ; scons build/ALPHA_FS/m5.debug
-#   % cd <path-to-src>/m5/build/ALPHA_FS; scons -u m5.debug
+#   % cd <path-to-src>/gem5 ; scons build/ALPHA/gem5.debug
+#   % cd <path-to-src>/gem5/build/ALPHA; scons -u gem5.debug
 #
 #   The following two commands are equivalent and demonstrate building
 #   in a directory outside of the source tree.  The '-C' option tells
 #   scons to chdir to the specified directory to find this SConstruct
 #   file.
-#   % cd <path-to-src>/m5 ; scons /local/foo/build/ALPHA_FS/m5.debug
-#   % cd /local/foo/build/ALPHA_FS; scons -C <path-to-src>/m5 m5.debug
+#   % cd <path-to-src>/gem5 ; scons /local/foo/build/ALPHA/gem5.debug
+#   % cd /local/foo/build/ALPHA; scons -C <path-to-src>/gem5 gem5.debug
 #
 # You can use 'scons -H' to print scons options.  If you're in this
-# 'm5' directory (or use -u or -C to tell scons where to find this
-# file), you can use 'scons -h' to print all the M5-specific build
+# 'gem5' directory (or use -u or -C to tell scons where to find this
+# file), you can use 'scons -h' to print all the gem5-specific build
 # options as well.
 #
 ###################################################
@@ -77,7 +77,7 @@ try:
 except SystemExit, e:
     print """
 For more details, see:
-    http://m5sim.org/wiki/index.php/Compiling_M5
+    http://gem5.org/Dependencies
 """
     raise
 
@@ -93,7 +93,7 @@ either (1) rearranging your PATH so that scons finds the non-default
 on the scons script.
 
 For more details, see:
-    http://m5sim.org/wiki/index.php/Using_a_non-default_Python_installation
+    http://gem5.org/wiki/index.php/Using_a_non-default_Python_installation
 """
     raise
 
@@ -113,7 +113,7 @@ import SCons
 import SCons.Node
 
 extra_python_paths = [
-    Dir('src/python').srcnode().abspath, # M5 includes
+    Dir('src/python').srcnode().abspath, # gem5 includes
     Dir('ext/ply').srcnode().abspath, # ply is used by several files
     ]
     
@@ -191,7 +191,7 @@ main.AppendENVPath('PYTHONPATH', extra_python_paths)
 #
 # Mercurial Stuff.
 #
-# If the M5 directory is a mercurial repository, we should do some
+# If the gem5 directory is a mercurial repository, we should do some
 # extra things.
 #
 ########################################################################
@@ -264,7 +264,7 @@ if not GetOption('ignore_style') and hgdir.exists() and sys.stdin.isatty():
 ###################################################
 
 # Find default configuration & binary.
-Default(environ.get('M5_DEFAULT_BINARY', 'build/ALPHA_SE/m5.debug'))
+Default(environ.get('M5_DEFAULT_BINARY', 'build/ALPHA/gem5.debug'))
 
 # helper function: find last occurrence of element in list
 def rfind(l, elt, offs = -1):
@@ -818,7 +818,7 @@ sticky_vars.AddVariables(
                  sorted(CpuModel.list)),
     BoolVariable('NO_FAST_ALLOC', 'Disable fast object allocator', False),
     BoolVariable('FORCE_FAST_ALLOC',
-                 'Enable fast object allocator, even for m5.debug', False),
+                 'Enable fast object allocator, even for gem5.debug', False),
     BoolVariable('FAST_ALLOC_STATS', 'Enable fast object allocator statistics',
                  False),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
