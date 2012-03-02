@@ -189,7 +189,9 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 
     switch (misc_reg) {
       case MISCREG_MPIDR:
-        return tc->cpuId();
+
+        return 0x80000000 | // multiprocessor extensions available
+               tc->cpuId();
         break;
       case MISCREG_ID_MMFR0:
         return 0x03; // VMSAv7 support
