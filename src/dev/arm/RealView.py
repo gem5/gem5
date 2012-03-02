@@ -485,6 +485,7 @@ class VExpress_EMM(RealView):
        self.kmi0.pio            = bus.master
        self.kmi1.pio            = bus.master
        self.cf_ctrl.pio         = bus.master
+       self.cf_ctrl.dma         = bus.slave
        self.cf_ctrl.config      = bus.master
        self.rtc.pio             = bus.master
        bus.use_default_range    = True
