@@ -75,6 +75,9 @@ Ruby.create_system(options, system)
 
 assert(len(system.ruby._cpu_ruby_ports) == 1)
 
+# create the interrupt controller
+cpu.createInterruptController()
+
 #
 # Tie the cpu cache ports to the ruby cpu ports and
 # physmem, respectively

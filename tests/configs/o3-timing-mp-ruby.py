@@ -40,6 +40,8 @@ ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
 
 for cpu in cpus:
+    # create the interrupt controller
+    cpu.createInterruptController()
     cpu.connectAllPorts(system.membus)
     cpu.clock = '2GHz'
 

@@ -35,6 +35,8 @@ from Benchmarks import *
 test_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-stream-client.rcS'))
 test_sys.cpu = AtomicSimpleCPU(cpu_id=0)
+# create the interrupt controller
+test_sys.cpu.createInterruptController()
 test_sys.cpu.connectAllPorts(test_sys.membus)
 # In contrast to the other (one-system) Tsunami configurations we do
 # not have an IO cache but instead rely on an IO bridge for accesses
@@ -47,6 +49,8 @@ test_sys.iobridge.master = test_sys.membus.slave
 drive_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-server.rcS'))
 drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
+# create the interrupt controller
+drive_sys.cpu.createInterruptController()
 drive_sys.cpu.connectAllPorts(drive_sys.membus)
 drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
                             ranges = [AddrRange(0, '8GB')])

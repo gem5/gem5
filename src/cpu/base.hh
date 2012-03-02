@@ -302,7 +302,7 @@ class BaseCPU : public MemObject
     typedef BaseCPUParams Params;
     const Params *params() const
     { return reinterpret_cast<const Params *>(_params); }
-    BaseCPU(Params *params);
+    BaseCPU(Params *params, bool is_checker = false);
     virtual ~BaseCPU();
 
     virtual void init();

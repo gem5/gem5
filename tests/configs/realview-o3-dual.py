@@ -88,6 +88,8 @@ system.l2c.mem_side = system.membus.slave
 for c in cpus:
     c.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
                                 L1(size = '32kB', assoc = 4))
+    # create the interrupt controller
+    c.createInterruptController()
     # connect cpu level-1 caches to shared level-2 cache
     c.connectAllPorts(system.toL2Bus, system.membus)
     c.clock = '2GHz'

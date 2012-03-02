@@ -118,7 +118,7 @@ CPUProgressEvent::description() const
     return "CPU Progress";
 }
 
-BaseCPU::BaseCPU(Params *p)
+BaseCPU::BaseCPU(Params *p, bool is_checker)
     : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
@@ -219,10 +219,17 @@ BaseCPU::BaseCPU(Params *p)
             schedule(event, p->function_trace_start);
         }
     }
-    // Check if CPU model has interrupts connected. The CheckerCPU
-    // cannot take interrupts directly for example.
-    if (interrupts)
-        interrupts->setCPU(this);
+
+    // The interrupts should always be present unless this CPU is
+    // switched in later or in case it is a checker CPU
+    if (!params()->defer_registration && !is_checker) {
+        if (interrupts) {
+            interrupts->setCPU(this);
+        } else {
+            fatal("CPU %s has no interrupt controller.\n"
+                  "Ensure createInterruptController() is called.\n", name());
+        }
+    }
 
     if (FullSystem) {
         profileEvent = NULL;

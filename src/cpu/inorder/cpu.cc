@@ -387,6 +387,12 @@ InOrderCPU::InOrderCPU(Params *params)
 
     }
 
+    // InOrderCPU always requires an interrupt controller.
+    if (!params->defer_registration && !interrupts) {
+        fatal("InOrderCPU %s has no interrupt controller.\n"
+              "Ensure createInterruptController() is called.\n", name());
+    }
+
     dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyReqInst->setSquashed();
     dummyReqInst->resetInstCount();

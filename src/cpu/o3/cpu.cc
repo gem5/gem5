@@ -460,6 +460,12 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         this->threadContexts.push_back(tc);
     }
 
+    // FullO3CPU always requires an interrupt controller.
+    if (!params->defer_registration && !interrupts) {
+        fatal("FullO3CPU %s has no interrupt controller.\n"
+              "Ensure createInterruptController() is called.\n", name());
+    }
+
     for (ThreadID tid = 0; tid < this->numThreads; tid++)
         this->thread[tid]->setFuncExeInst(0);
 

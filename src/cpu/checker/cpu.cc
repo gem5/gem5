@@ -64,7 +64,7 @@ CheckerCPU::init()
 }
 
 CheckerCPU::CheckerCPU(Params *p)
-    : BaseCPU(p), thread(NULL), tc(NULL)
+    : BaseCPU(p, true), thread(NULL), tc(NULL)
 {
     memReq = NULL;
     curStaticInst = NULL;

@@ -104,6 +104,8 @@ cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
                             L1(size = '32kB', assoc = 4),
                             PageTableWalkerCache(),
                             PageTableWalkerCache())
+# create the interrupt controller
+cpu.createInterruptController()
 # connect cpu level-1 caches to shared level-2 cache
 cpu.connectAllPorts(system.toL2Bus, system.membus)
 cpu.clock = '2GHz'

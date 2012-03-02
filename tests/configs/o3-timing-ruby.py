@@ -41,6 +41,8 @@ system = System(cpu = cpu,
                 physmem = ruby_memory,
                 membus = Bus())
 system.physmem.port = system.membus.master
+# create the interrupt controller
+cpu.createInterruptController()
 cpu.connectAllPorts(system.membus)
 
 # Connect the system port for loading of binaries etc

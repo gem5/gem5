@@ -48,6 +48,8 @@ system = System(cpu = cpu,
                 membus = Bus())
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master
+# create the interrupt controller
+cpu.createInterruptController()
 cpu.connectAllPorts(system.membus)
 cpu.clock = '2GHz'
 
