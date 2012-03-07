@@ -48,5 +48,5 @@ opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
 sticky_vars.AddVariables(opt)
 export_vars += ['PROTOCOL']
 
-opt = BoolVariable('NO_HTML', 'Do not create HTML files', False)
+opt = BoolVariable('SLICC_HTML', 'Create HTML files', False)
 sticky_vars.AddVariables(opt)

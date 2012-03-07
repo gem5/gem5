@@ -953,24 +953,52 @@ else:
     print 'Unknown compiler, please fix compiler options'
     Exit(1)
 
-makeEnv('debug', '.do',
-        CCFLAGS = Split(ccflags['debug']),
-        CPPDEFINES = ['DEBUG', 'TRACING_ON=1'])
+
+# To speed things up, we only instantiate the build environments we
+# need.  We try to identify the needed environment for each target; if
+# we can't, we fall back on instantiating all the environments just to
+# be safe.
+target_types = ['debug', 'opt', 'fast', 'prof']
+obj2target = {'do': 'debug', 'o': 'opt', 'fo': 'fast', 'po': 'prof'}
+
+def identifyTarget(t):
+    ext = t.split('.')[-1]
+    if ext in target_types:
+        return ext
+    if obj2target.has_key(ext):
+        return obj2target[ext]
+    match = re.search(r'/tests/([^/]+)/', t)
+    if match and match.group(1) in target_types:
+        return match.group(1)
+    return 'all'
+
+needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
+if 'all' in needed_envs:
+    needed_envs += target_types
+
+# Debug binary
+if 'debug' in needed_envs:
+    makeEnv('debug', '.do',
+            CCFLAGS = Split(ccflags['debug']),
+            CPPDEFINES = ['DEBUG', 'TRACING_ON=1'])
 
 # Optimized binary
-makeEnv('opt', '.o',
-        CCFLAGS = Split(ccflags['opt']),
-        CPPDEFINES = ['TRACING_ON=1'])
+if 'opt' in needed_envs:
+    makeEnv('opt', '.o',
+            CCFLAGS = Split(ccflags['opt']),
+            CPPDEFINES = ['TRACING_ON=1'])
 
 # "Fast" binary
-makeEnv('fast', '.fo', strip = True,
-        CCFLAGS = Split(ccflags['fast']),
-        CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'])
+if 'fast' in needed_envs:
+    makeEnv('fast', '.fo', strip = True,
+            CCFLAGS = Split(ccflags['fast']),
+            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'])
 
 # Profiled binary
-makeEnv('prof', '.po',
-        CCFLAGS = Split(ccflags['prof']),
-        CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-        LINKFLAGS = '-pg')
+if 'prof' in needed_envs:
+    makeEnv('prof', '.po',
+            CCFLAGS = Split(ccflags['prof']),
+            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+            LINKFLAGS = '-pg')
 
 Return('envList')
