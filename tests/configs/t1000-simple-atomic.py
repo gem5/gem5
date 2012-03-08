@@ -34,6 +34,8 @@ import FSConfig
 cpu = AtomicSimpleCPU(cpu_id=0)
 system = FSConfig.makeSparcSystem('atomic')
 system.cpu = cpu
+# create the interrupt controller
+cpu.createInterruptController()
 cpu.connectAllPorts(system.membus)
 
 root = Root(full_system=True, system=system)
