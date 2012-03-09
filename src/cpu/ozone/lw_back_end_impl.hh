@@ -1469,17 +1469,7 @@ LWBackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    //
-    //  Pick off the software prefetches
-    //
-#ifdef TARGET_ALPHA
-    if (inst->isDataPrefetch())
-        exeSwp[tid]++;
-    else
-        exeInst[tid]++;
-#else
     exeInst[tid]++;
-#endif
 
     //
     //  Control operations

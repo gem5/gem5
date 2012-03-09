@@ -1365,22 +1365,9 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    //
-    //  Pick off the software prefetches
-    //
-#ifdef TARGET_ALPHA
-    if (inst->isDataPrefetch()) {
-        statComSwp[tid]++;
-    } else {
-        if (!inst->isMicroop() || inst->isLastMicroop())
-            instsCommitted[tid]++;
-        opsCommitted[tid]++;
-    }
-#else
     if (!inst->isMicroop() || inst->isLastMicroop())
         instsCommitted[tid]++;
     opsCommitted[tid]++;
-#endif
 
     //
     //  Control Instructions

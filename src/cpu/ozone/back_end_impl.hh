@@ -1728,17 +1728,7 @@ BackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    //
-    //  Pick off the software prefetches
-    //
-#ifdef TARGET_ALPHA
-    if (inst->isDataPrefetch())
-        exe_swp[tid]++;
-    else
-        exe_inst[tid]++;
-#else
     exe_inst[tid]++;
-#endif
 
     //
     //  Control operations

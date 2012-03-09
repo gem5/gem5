@@ -1614,17 +1614,7 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    //
-    //  Pick off the software prefetches
-    //
-#ifdef TARGET_ALPHA
-    if (inst->isDataPrefetch())
-        iewExecutedSwp[tid]++;
-    else
-        iewIewExecutedcutedInsts++;
-#else
     iewExecutedInsts++;
-#endif
 
 #if TRACING_ON
     inst->completeTick = curTick();
