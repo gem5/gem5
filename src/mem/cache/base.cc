@@ -83,7 +83,7 @@ BaseCache::BaseCache(const Params *p)
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
       drainEvent(NULL),
-      addrRange(p->addr_range),
+      addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
 }

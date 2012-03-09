@@ -1556,9 +1556,7 @@ template<class TagStore>
 AddrRangeList
 Cache<TagStore>::CpuSidePort::getAddrRanges()
 {
-    AddrRangeList ranges;
-    ranges.push_back(cache->getAddrRange());
-    return ranges;
+    return cache->getAddrRanges();
 }
 
 template<class TagStore>

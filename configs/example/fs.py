@@ -159,7 +159,7 @@ if bm[0]:
 else:
     mem_size = SysConfig().mem()
 if options.caches or options.l2cache:
-    test_sys.iocache = IOCache(addr_range=test_sys.physmem.range)
+    test_sys.iocache = IOCache(addr_ranges=[mem_size])
     test_sys.iocache.cpu_side = test_sys.iobus.master
     test_sys.iocache.mem_side = test_sys.membus.slave
 else:

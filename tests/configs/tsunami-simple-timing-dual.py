@@ -63,7 +63,7 @@ class IOCache(BaseCache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
-    addr_range=AddrRange(0, size='8GB')
+    addr_ranges = [AddrRange(0, size='8GB')]
     forward_snoops = False
     is_top_level = True
 

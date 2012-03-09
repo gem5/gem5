@@ -78,7 +78,7 @@ class IOCache(BaseCache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
-    addr_range = AddrRange(0, size=mem_size)
+    addr_ranges = [AddrRange(0, size=mem_size)]
     forward_snoops = False
     is_top_level = True
 
@@ -88,7 +88,7 @@ cpu = AtomicSimpleCPU(cpu_id=0)
 mdesc = SysConfig(disk = 'linux-x86.img')
 system = FSConfig.makeLinuxX86System('atomic', mdesc=mdesc)
 system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')
-system.iocache = IOCache(addr_range=mem_size)
+system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 

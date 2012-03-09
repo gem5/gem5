@@ -269,7 +269,7 @@ class BaseCache : public MemObject
     /**
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
-    Range<Addr> addrRange;
+    AddrRangeList addrRanges;
 
   public:
     /** System we are currently operating in. */
@@ -439,7 +439,7 @@ class BaseCache : public MemObject
     Addr blockAlign(Addr addr) const { return (addr & ~(Addr(blkSize - 1))); }
 
 
-    const Range<Addr> &getAddrRange() const { return addrRange; }
+    const AddrRangeList &getAddrRanges() const { return addrRanges; }
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
