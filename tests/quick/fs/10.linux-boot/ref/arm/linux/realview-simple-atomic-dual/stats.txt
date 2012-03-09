@@ -4,11 +4,11 @@ sim_seconds                                  2.411694                       # Nu
 sim_ticks                                2411694099500                       # Number of ticks simulated
 final_tick                               2411694099500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1397437                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1806505                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            54757981393                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 382236                       # Number of bytes of host memory used
-host_seconds                                    44.04                       # Real time elapsed on the host
+host_inst_rate                                2022463                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2614492                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            79249307765                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 379912                       # Number of bytes of host memory used
+host_seconds                                    30.43                       # Real time elapsed on the host
 sim_insts                                    61546998                       # Number of instructions simulated
 sim_ops                                      79563488                       # Number of ops (including micro ops) simulated
 system.realview.nvmem.bytes_read                   68                       # Number of bytes read from this memory
@@ -264,7 +264,7 @@ system.cpu0.committedOps                     44975797                       # Nu
 system.cpu0.num_int_alu_accesses             39858123                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                  4945                       # Number of float alu accesses
 system.cpu0.num_func_calls                    1311755                       # number of times a function call or return occured
-system.cpu0.num_conditional_control_insts      4494669                       # number of instructions that are conditional controls
+system.cpu0.num_conditional_control_insts      4652122                       # number of instructions that are conditional controls
 system.cpu0.num_int_insts                    39858123                       # number of integer instructions
 system.cpu0.num_fp_insts                         4945                       # number of float instructions
 system.cpu0.num_int_register_reads          202125744                       # number of times the integer registers were read
@@ -433,7 +433,7 @@ system.cpu1.committedOps                     34587691                       # Nu
 system.cpu1.num_int_alu_accesses             30998246                       # Number of integer alu accesses
 system.cpu1.num_fp_alu_accesses                  5772                       # Number of float alu accesses
 system.cpu1.num_func_calls                     758024                       # number of times a function call or return occured
-system.cpu1.num_conditional_control_insts      3375080                       # number of instructions that are conditional controls
+system.cpu1.num_conditional_control_insts      3438794                       # number of instructions that are conditional controls
 system.cpu1.num_int_insts                    30998246                       # number of integer instructions
 system.cpu1.num_fp_insts                         5772                       # number of float instructions
 system.cpu1.num_int_register_reads          156835040                       # number of times the integer registers were read

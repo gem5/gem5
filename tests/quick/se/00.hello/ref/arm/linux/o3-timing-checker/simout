@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar  7 2012 20:12:09
-gem5 started Mar  7 2012 20:12:14
+gem5 compiled Mar  9 2012 10:15:20
+gem5 started Mar  9 2012 10:17:15
 gem5 executing on zizzer
 command line: build/ARM/gem5.fast -d build/ARM/tests/fast/quick/se/00.hello/arm/linux/o3-timing-checker -re tests/run.py build/ARM/tests/fast/quick/se/00.hello/arm/linux/o3-timing-checker
 Global frequency set at 1000000000000 ticks per second
