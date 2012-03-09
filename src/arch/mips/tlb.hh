@@ -114,6 +114,11 @@ class TLB : public BaseTLB
     void translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);
 
+    /** Function stub for CheckerCPU compilation issues. MIPS does not
+     *  support the Checker model at the moment.
+     */
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+
   private:
     Fault translateInst(RequestPtr req, ThreadContext *tc);
     Fault translateData(RequestPtr req, ThreadContext *tc, bool write);

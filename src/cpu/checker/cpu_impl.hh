@@ -44,6 +44,7 @@
 #include <list>
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"
@@ -201,9 +202,9 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
 
         // maintain $r0 semantics
         thread->setIntReg(ZeroReg, 0);
-#ifdef TARGET_ALPHA
-        thread->setFloatRegDouble(ZeroReg, 0.0);
-#endif // TARGET_ALPHA
+#if THE_ISA == ALPHA_ISA
+        thread->setFloatReg(ZeroReg, 0.0);
+#endif
 
         // Check if any recent PC changes match up with anything we
         // expect to happen.  This is mostly to check if traps or
@@ -320,7 +321,9 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                         thread->pcState(pcState);
                         instPtr = thread->decoder.decode(newMachInst,
                                                          pcState.instAddr());
-                        machInst = newMachInst;
+#if THE_ISA != X86_ISA
+                            machInst = newMachInst;
+#endif
                     } else {
                         fetchDone = false;
                         fetchOffset += sizeof(TheISA::MachInst);
@@ -476,7 +479,11 @@ Checker<Impl>::validateInst(DynInstPtr &inst)
         }
     }
 
-    MachInst mi = static_cast<MachInst>(inst->staticInst->machInst);
+
+    MachInst mi;
+#if THE_ISA != X86_ISA
+    mi = static_cast<MachInst>(inst->staticInst->machInst);
+#endif
 
     if (mi != machInst) {
         panic("%lli: Binary instructions do not match! Inst: %#x, "

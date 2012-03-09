@@ -40,6 +40,7 @@
 #include "arch/kernel_stats.hh"
 
 class EndQuiesceEvent;
+class CheckerCPU;
 namespace Kernel {
     class Statistics;
 };
@@ -75,6 +76,12 @@ class InOrderThreadContext : public ThreadContext
     /** Returns a pointer to the DTB. */
     /** @TODO: PERF: Should we bind this to a pointer in constructor? */
     TheISA::TLB *getDTBPtr() { return cpu->getDTBPtr(); }
+
+    /** Currently InOrder model does not support CheckerCPU, this is
+     *  merely here for supporting compilation of gem5 with the Checker
+     *  as a runtime option
+     */
+    CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
     Decoder *getDecoderPtr() { return cpu->getDecoderPtr(); }
 
@@ -214,6 +221,12 @@ class InOrderThreadContext : public ThreadContext
     /** Sets this thread's PC. */
     void pcState(const TheISA::PCState &val)
     { cpu->pcState(val, thread->threadId()); }
+
+    /** Needs to be implemented for future CheckerCPU support.
+     *  See O3CPU for examples on how to integrate Checker.
+     */
+    void pcStateNoRecord(const TheISA::PCState &val)
+    {}
 
     Addr instAddr()
     { return cpu->instAddr(thread->threadId()); }

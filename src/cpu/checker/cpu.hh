@@ -311,6 +311,20 @@ class CheckerCPU : public BaseCPU
         int reg_idx = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
         return thread->setMiscReg(reg_idx, val);
     }
+
+#if THE_ISA == MIPS_ISA
+    uint64_t readRegOtherThread(int misc_reg)
+    {
+        panic("MIPS MT not defined for CheckerCPU.\n");
+        return 0;
+    }
+
+    void setRegOtherThread(int misc_reg, const TheISA::MiscReg &val)
+    {
+        panic("MIPS MT not defined for CheckerCPU.\n");
+    }
+#endif
+
     /////////////////////////////////////////
 
     void recordPCChange(const TheISA::PCState &val)

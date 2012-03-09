@@ -144,6 +144,10 @@ class TLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
                          Translation *translation, Mode mode);
+    /**
+     * translateFunctional stub function for future CheckerCPU support
+     */
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
 };
 
 } // namespace AlphaISA

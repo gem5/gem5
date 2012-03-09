@@ -160,6 +160,10 @@ class TLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
                          Translation *translation, Mode mode);
+    /** Stub function for CheckerCPU compilation support.  Power ISA not
+     *  supported by Checker at the moment
+     */
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
 
     // Checkpointing
     void serialize(std::ostream &os);

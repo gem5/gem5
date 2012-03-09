@@ -114,6 +114,10 @@ namespace X86ISA
         Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
         void translateTiming(RequestPtr req, ThreadContext *tc,
                 Translation *translation, Mode mode);
+        /** Stub function for compilation support of CheckerCPU. x86 ISA does
+         *  not support Checker model at the moment
+         */
+        Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
 
         TlbEntry * insert(Addr vpn, TlbEntry &entry);
 

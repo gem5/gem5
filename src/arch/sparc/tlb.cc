@@ -841,6 +841,13 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
+Fault
+TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
+{
+    panic("Not implemented\n");
+    return NoFault;
+}
+
 Tick
 TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {

@@ -164,6 +164,10 @@ class TLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);
+    /** Stub function for compilation support with CheckerCPU. SPARC ISA
+     *  does not support the Checker model at the moment
+     */
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
