@@ -276,10 +276,11 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
         self.machine_type = machine_type
-        if convert.toMemorySize(mdesc.mem()) > self.realview.max_mem_size:
+        if convert.toMemorySize(mdesc.mem()) > int(self.realview.max_mem_size):
             print "The currently selected ARM platforms doesn't support"
             print " the amount of DRAM you've selected. Please try"
             print " another platform"
+            sys.exit(1)
 
         boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
                      'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
