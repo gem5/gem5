@@ -212,6 +212,8 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+// Only used by CBNZ, CBZ which is conditional based on
+// a register value even though the instruction is always unconditional.
 def template BranchImmRegConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           int32_t _imm,
@@ -219,14 +221,7 @@ def template BranchImmRegConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _op1)
     {
         %(constructor)s;
-        if (!(condCode == COND_AL || condCode == COND_UC)) {
-            for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-            }
-            flags[IsCondControl] = true;
-        } else {
-            flags[IsUncondControl] = true;
-        }
+        flags[IsCondControl] = true;
     }
 }};
 
