@@ -277,11 +277,14 @@ if env['TARGET_ISA'] == 'sparc':
     configs += ['t1000-simple-atomic',
                 't1000-simple-timing']
 if env['TARGET_ISA'] == 'arm':
-    configs += ['realview-simple-atomic',
+    configs += ['simple-atomic-dummychecker',
+                'o3-timing-checker',
+                'realview-simple-atomic',
                 'realview-simple-atomic-dual',
                 'realview-simple-timing',
                 'realview-simple-timing-dual',
                 'realview-o3',
+                'realview-o3-checker',
                 'realview-o3-dual']
 if env['TARGET_ISA'] == 'x86':
     configs += ['pc-simple-atomic',

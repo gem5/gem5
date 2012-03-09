@@ -1,0 +1,11 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Mar  8 2012 09:03:12
+gem5 started Mar  8 2012 09:06:54
+gem5 executing on u200540-lin
+command line: build/ARM/gem5.fast -d build/ARM/tests/fast/quick/se/00.hello/arm/linux/simple-atomic-dummychecker -re tests/run.py build/ARM/tests/fast/quick/se/00.hello/arm/linux/simple-atomic-dummychecker
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+Hello world!
+Exiting @ tick 2875500 because target called exit()
