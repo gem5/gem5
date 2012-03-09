@@ -1,1 +1,1 @@
-build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic FAILED!
+build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic passed.
