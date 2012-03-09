@@ -50,7 +50,6 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
@@ -59,6 +58,7 @@ namespace TheISA
     class TLB;
 }
 class BaseCPU;
+class CheckerCPU;
 class Checkpoint;
 class Decoder;
 class EndQuiesceEvent;
@@ -133,9 +133,7 @@ class ThreadContext
 
     virtual TheISA::TLB *getDTBPtr() = 0;
 
-#if USE_CHECKER
-    virtual BaseCPU *getCheckerCpuPtr() = 0;
-#endif
+    virtual CheckerCPU *getCheckerCpuPtr() = 0;
 
     virtual Decoder *getDecoderPtr() = 0;
 
@@ -215,9 +213,7 @@ class ThreadContext
 
     virtual void pcState(const TheISA::PCState &val) = 0;
 
-#if USE_CHECKER
     virtual void pcStateNoRecord(const TheISA::PCState &val) = 0;
-#endif
 
     virtual Addr instAddr() = 0;
 
@@ -308,9 +304,7 @@ class ProxyThreadContext : public ThreadContext
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-#if USE_CHECKER
-    BaseCPU *getCheckerCpuPtr() { return actualTC->getCheckerCpuPtr(); }
-#endif
+    CheckerCPU *getCheckerCpuPtr() { return actualTC->getCheckerCpuPtr(); }
 
     Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
@@ -392,9 +386,7 @@ class ProxyThreadContext : public ThreadContext
 
     void pcState(const TheISA::PCState &val) { actualTC->pcState(val); }
 
-#if USE_CHECKER
     void pcStateNoRecord(const TheISA::PCState &val) { actualTC->pcState(val); }
-#endif
 
     Addr instAddr() { return actualTC->instAddr(); }
     Addr nextInstAddr() { return actualTC->nextInstAddr(); }

@@ -48,7 +48,7 @@
 #include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/base.hh"
@@ -62,10 +62,6 @@
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#endif
 
 using namespace std;
 
@@ -737,11 +733,9 @@ DefaultCommit<Impl>::handleInterrupt()
         assert(!thread[0]->inSyscall);
         thread[0]->inSyscall = true;
 
-#if USE_CHECKER
         if (cpu->checker) {
             cpu->checker->handlePendingInt();
         }
-#endif
 
         // CPU will handle interrupt.
         cpu->processInterrupts(interrupt);
@@ -1143,13 +1137,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         head_inst->setCompleted();
     }
 
-#if USE_CHECKER
     // Use checker prior to updating anything due to traps or PC
     // based events.
     if (cpu->checker) {
         cpu->checker->verify(head_inst);
     }
-#endif
 
     if (inst_fault != NoFault) {
         DPRINTF(Commit, "Inst [sn:%lli] PC %s has a fault\n",
@@ -1162,12 +1154,10 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         head_inst->setCompleted();
 
-#if USE_CHECKER
         if (cpu->checker) {
             // Need to check the instruction before its fault is processed
             cpu->checker->verify(head_inst);
         }
-#endif
 
         assert(!thread[tid]->inSyscall);
 

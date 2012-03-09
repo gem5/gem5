@@ -53,6 +53,5 @@ if 'OzoneCPU' in env['CPU_MODELS']:
 
     CompoundFlag('OzoneCPUAll', [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU' ])
 
-    if env['USE_CHECKER']:
-        SimObject('OzoneChecker.py')
-        Source('checker_builder.cc')
+    SimObject('OzoneChecker.py')
+    Source('checker_builder.cc')

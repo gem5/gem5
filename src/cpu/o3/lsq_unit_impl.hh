@@ -45,6 +45,7 @@
 #include "arch/locked_mem.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "debug/Activity.hh"
@@ -52,10 +53,6 @@
 #include "debug/LSQUnit.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#endif
 
 template<class Impl>
 LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
@@ -871,11 +868,12 @@ LSQUnit<Impl>::writebackStores()
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
                 cpu->schedule(wb, curTick() + 1);
-#if USE_CHECKER
-                // Make sure to set the LLSC data for verification
-                inst->reqToVerify->setExtraData(0);
-                inst->completeAcc(data_pkt);
-#endif
+                if (cpu->checker) {
+                    // Make sure to set the LLSC data for verification
+                    // if checker is loaded
+                    inst->reqToVerify->setExtraData(0);
+                    inst->completeAcc(data_pkt);
+                }
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;
@@ -1083,11 +1081,10 @@ LSQUnit<Impl>::storePostSend(PacketPtr pkt)
         // only works so long as the checker doesn't try to
         // verify the value in memory for stores.
         storeQueue[storeWBIdx].inst->setCompleted();
-#if USE_CHECKER
+
         if (cpu->checker) {
             cpu->checker->verify(storeQueue[storeWBIdx].inst);
         }
-#endif
     }
 
     if (needsTSO) {
@@ -1174,11 +1171,9 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can
     // handle that case.
-#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->verify(storeQueue[store_idx].inst);
     }
-#endif
 }
 
 template <class Impl>

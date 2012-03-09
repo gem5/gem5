@@ -29,13 +29,9 @@
  */
 
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/ozone/lw_back_end.hh"
 #include "cpu/op_class.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#endif
 
 template <class Impl>
 void
@@ -1133,11 +1129,9 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     // Use checker prior to updating anything due to traps or PC
     // based events.
-#if USE_CHECKER
     if (checker) {
         checker->verify(inst);
     }
-#endif
 
     if (inst_fault != NoFault) {
         DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
@@ -1153,11 +1147,9 @@ LWBackEnd<Impl>::commitInst(int inst_num)
             DPRINTF(BE, "Will wait until instruction is head of commit group.\n");
             return false;
         }
-#if USE_CHECKER
         else if (checker && inst->isStore()) {
             checker->verify(inst);
         }
-#endif
 
         handleFault(inst_fault);
         return false;

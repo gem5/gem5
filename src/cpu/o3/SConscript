@@ -78,6 +78,5 @@ if 'O3CPU' in env['CPU_MODELS']:
         'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
         'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
 
-    if env['USE_CHECKER']:
-        SimObject('O3Checker.py')
-        Source('checker_builder.cc')
+    SimObject('O3Checker.py')
+    Source('checker_builder.cc')

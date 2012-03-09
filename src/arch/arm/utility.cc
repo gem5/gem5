@@ -43,7 +43,7 @@
 #include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
@@ -118,11 +118,13 @@ skipFunction(ThreadContext *tc)
 {
     TheISA::PCState newPC = tc->pcState();
     newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
-#if USE_CHECKER
-    tc->pcStateNoRecord(newPC);
-#else
-    tc->pcState(newPC);
-#endif
+
+    CheckerCPU *checker = tc->getCheckerCpuPtr();
+    if (checker) {
+        tc->pcStateNoRecord(newPC);
+    } else {
+        tc->pcState(newPC);
+    }
 }
 
 void

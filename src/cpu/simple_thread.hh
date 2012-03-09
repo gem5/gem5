@@ -51,7 +51,6 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/decode.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
@@ -66,7 +65,7 @@
 #include "sim/system.hh"
 
 class BaseCPU;
-
+class CheckerCPU;
 
 class FunctionProfile;
 class ProfileNode;
@@ -198,9 +197,7 @@ class SimpleThread : public ThreadState
 
     TheISA::TLB *getDTBPtr() { return dtb; }
 
-#if USE_CHECKER
-    BaseCPU *getCheckerCpuPtr() { return NULL; }
-#endif
+    CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
     Decoder *getDecoderPtr() { return &decoder; }
 
@@ -307,13 +304,11 @@ class SimpleThread : public ThreadState
         _pcState = val;
     }
 
-#if USE_CHECKER
     void
     pcStateNoRecord(const TheISA::PCState &val)
     {
         _pcState = val;
     }
-#endif
 
     Addr
     instAddr()

@@ -29,15 +29,19 @@
 from m5.defines import buildEnv
 from m5.params import *
 from BaseCPU import BaseCPU
-
-if buildEnv['USE_CHECKER']:
-    from DummyChecker import DummyChecker
+from DummyChecker import DummyChecker
 
 class BaseSimpleCPU(BaseCPU):
     type = 'BaseSimpleCPU'
     abstract = True
 
-    if buildEnv['USE_CHECKER']:
-        checker = Param.BaseCPU(DummyChecker(), "checker")
-        checker.itb = BaseCPU.itb
-        checker.dtb = BaseCPU.dtb
+    def addCheckerCpu(self):
+        if buildEnv['TARGET_ISA'] in ['arm']:
+            from ArmTLB import ArmTLB
+
+            self.checker = DummyChecker(workload = self.workload)
+            self.checker.itb = ArmTLB(size = self.itb.size)
+            self.checker.dtb = ArmTLB(size = self.dtb.size)
+        else:
+            print "ERROR: Checker only supported under ARM ISA!"
+            exit(1)

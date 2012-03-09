@@ -55,9 +55,10 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
+#include "cpu/checker/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
 #include "cpu/simple_thread.hh"
@@ -80,11 +81,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#include "cpu/checker/thread_context.hh"
-#endif
-
 using namespace std;
 using namespace TheISA;
 
@@ -101,7 +97,6 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
 
     tc = thread->getTC();
 
-#if USE_CHECKER
     if (p->checker) {
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<CheckerCPU *>(temp_checker);
@@ -112,7 +107,6 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     } else {
         checker = NULL;
     }
-#endif
 
     numInst = 0;
     startNumInst = 0;

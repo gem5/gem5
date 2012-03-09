@@ -129,6 +129,9 @@ def run(options, root, testsys, cpu_class):
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts
+            # Add checker cpu if selected
+            if options.checker:
+                switch_cpus[i].addCheckerCpu()
 
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
@@ -175,6 +178,11 @@ def run(options, root, testsys, cpu_class):
             # simulation period
             if options.maxinsts:
                 switch_cpus_1[i].max_insts_any_thread = options.maxinsts
+
+            # attach the checker cpu if selected
+            if options.checker:
+                switch_cpus[i].addCheckerCpu()
+                switch_cpus_1[i].addCheckerCpu()
 
         testsys.switch_cpus = switch_cpus
         testsys.switch_cpus_1 = switch_cpus_1

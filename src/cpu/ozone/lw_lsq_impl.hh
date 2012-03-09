@@ -30,7 +30,6 @@
 
 #include "base/str.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/ozone/lw_lsq.hh"
 #include "sim/fault_fwd.hh"
@@ -181,11 +180,9 @@ OzoneLWLSQ<Impl>::setCPU(OzoneCPU *cpu_ptr)
     cpu = cpu_ptr;
     dcachePort.setName(this->name() + "-dport");
 
-#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setDcachePort(&dcachePort);
     }
-#endif
 }
 
 template<class Impl>
@@ -846,11 +843,9 @@ OzoneLWLSQ<Impl>::storePostSend(PacketPtr pkt, DynInstPtr &inst)
         // only works so long as the checker doesn't try to
         // verify the value in memory for stores.
         inst->setCompleted();
-#if USE_CHECKER
         if (cpu->checker) {
             cpu->checker->verify(inst);
         }
-#endif
     }
 }
 
@@ -914,11 +909,9 @@ OzoneLWLSQ<Impl>::completeStore(DynInstPtr &inst)
     --stores;
 
     inst->setCompleted();
-#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->verify(inst);
     }
-#endif
 }
 
 template <class Impl>

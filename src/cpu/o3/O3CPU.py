@@ -31,26 +31,11 @@ from m5.params import *
 from m5.proxy import *
 from BaseCPU import BaseCPU
 from FUPool import *
-
-if buildEnv['USE_CHECKER']:
-    from O3Checker import O3Checker
+from O3Checker import O3Checker
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     activity = Param.Unsigned(0, "Initial count")
-
-    if buildEnv['USE_CHECKER']:
-        # FIXME: Shouldn't need to derefernce Parent.workload
-        #        Somewhere in the param parsing code
-        #        src/python/m5/params.py is and error that
-        #        has trouble converting the workload parameter properly.
-        checker = Param.BaseCPU(O3Checker(workload=Parent.workload[0],
-                                          exitOnError=False,
-                                          updateOnError=True,
-                                          warnOnlyOnLoadError=True),
-                                          "checker")
-        checker.itb = Parent.itb
-        checker.dtb = Parent.dtb
 
     cachePorts = Param.Unsigned(200, "Cache Ports")
 
@@ -145,3 +130,18 @@ class DerivO3CPU(BaseCPU):
 
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
                           "Enable TSO Memory model")
+
+    def addCheckerCpu(self):
+        if buildEnv['TARGET_ISA'] in ['arm']:
+            from ArmTLB import ArmTLB
+
+            self.checker = O3Checker(workload=self.workload,
+                                     exitOnError=False,
+                                     updateOnError=True,
+                                     warnOnlyOnLoadError=True)
+            self.checker.itb = ArmTLB(size = self.itb.size)
+            self.checker.dtb = ArmTLB(size = self.dtb.size)
+
+        else:
+            print "ERROR: Checker only supported under ARM ISA!"
+            exit(1)

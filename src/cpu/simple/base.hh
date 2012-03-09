@@ -48,8 +48,8 @@
 #include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/decode.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
@@ -60,10 +60,6 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#endif
 
 // forward declarations
 class Checkpoint;
@@ -128,9 +124,8 @@ class BaseSimpleCPU : public BaseCPU
      */
     ThreadContext *tc;
 
-#if USE_CHECKER
     CheckerCPU *checker;
-#endif
+
   protected:
 
     enum Status {

@@ -112,13 +112,25 @@ class CheckerCPU : public BaseCPU
 
     System *systemPtr;
 
-    void setIcachePort(Port *icache_port);
+    void setIcachePort(CpuPort *icache_port);
 
-    Port *icachePort;
+    CpuPort *icachePort;
 
-    void setDcachePort(Port *dcache_port);
+    void setDcachePort(CpuPort *dcache_port);
 
-    Port *dcachePort;
+    CpuPort *dcachePort;
+
+    CpuPort &getDataPort()
+    {
+        panic("Not supported on checker!");
+        return *dcachePort;
+    }
+
+    CpuPort &getInstPort()
+    {
+        panic("Not supported on checker!");
+        return *icachePort;
+    }
 
     virtual Port *getPort(const std::string &name, int idx)
     {
@@ -168,7 +180,12 @@ class CheckerCPU : public BaseCPU
     TheISA::TLB* getITBPtr() { return itb; }
     TheISA::TLB* getDTBPtr() { return dtb; }
 
-    virtual Counter totalInstructions() const
+    virtual Counter totalInsts() const
+    {
+        return 0;
+    }
+
+    virtual Counter totalOps() const
     {
         return 0;
     }

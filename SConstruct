@@ -845,13 +845,12 @@ sticky_vars.AddVariables(
                  False),
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
-    BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC',
-                'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', 'USE_CHECKER',
+                'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP',
                 'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK' ]
 
 ###################################################

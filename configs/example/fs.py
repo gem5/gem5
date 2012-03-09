@@ -152,8 +152,6 @@ test_sys.init_param = options.init_param
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
-CacheConfig.config_cache(options, test_sys)
-
 if bm[0]:
     mem_size = bm[0].mem()
 else:
@@ -171,6 +169,10 @@ else:
 for i in xrange(np):
     if options.fastmem:
         test_sys.cpu[i].physmem_port = test_sys.physmem.port
+    if options.checker:
+        test_sys.cpu[i].addCheckerCpu()
+
+CacheConfig.config_cache(options, test_sys)
 
 if buildEnv['TARGET_ISA'] == 'mips':
     setMipsOptions(TestCPUClass)

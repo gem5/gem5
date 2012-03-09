@@ -244,6 +244,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                 memReq = new Request(unverifiedInst->threadNumber, fetch_PC,
                                      sizeof(MachInst),
                                      0,
+                                     masterId,
                                      fetch_PC, thread->contextId(),
                                      unverifiedInst->threadNumber);
                 memReq->setVirt(0, fetch_PC, sizeof(MachInst),
@@ -399,11 +400,13 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
 
         // Take any faults here
         if (fault != NoFault) {
-            fault->invoke(tc, curStaticInst);
-            willChangePC = true;
-            newPCState = thread->pcState();
-            DPRINTF(Checker, "Fault, PC is now %s\n", newPCState);
-            curMacroStaticInst = StaticInst::nullStaticInstPtr;
+            if (FullSystem) {
+                fault->invoke(tc, curStaticInst);
+                willChangePC = true;
+                newPCState = thread->pcState();
+                DPRINTF(Checker, "Fault, PC is now %s\n", newPCState);
+                curMacroStaticInst = StaticInst::nullStaticInstPtr;
+            }
         } else {
            advancePC(fault);
         }

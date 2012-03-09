@@ -55,7 +55,6 @@
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
@@ -720,13 +719,11 @@ class FullO3CPU : public BaseO3CPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum;//[Impl::MaxThreads];
 
-#if USE_CHECKER
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
     Checker<Impl> *checker;
-#endif
 
     /** Pointer to the system. */
     System *system;

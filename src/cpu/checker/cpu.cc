@@ -52,6 +52,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "params/CheckerCPU.hh"
+#include "sim/full_system.hh"
 #include "sim/tlb.hh"
 
 using namespace std;
@@ -84,12 +85,7 @@ CheckerCPU::CheckerCPU(Params *p)
     dtb = p->dtb;
     systemPtr = NULL;
     workload = p->workload;
-    // XXX: This is a hack to get this to work some
-    thread = new SimpleThread(this, /* thread_num */ 0,
-            workload.size() ? workload[0] : NULL, itb, dtb);
-
-    tc = thread->getTC();
-    threadContexts.push_back(tc);
+    thread = NULL;
 
     updateOnError = true;
 }
@@ -103,22 +99,29 @@ CheckerCPU::setSystem(System *system)
 {
     systemPtr = system;
 
-    thread = new SimpleThread(this, 0, systemPtr, itb, dtb, false);
+    if (FullSystem) {
+        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, false);
+    } else {
+        thread = new SimpleThread(this, 0, systemPtr,
+                                  workload.size() ? workload[0] : NULL,
+                                  itb, dtb);
+    }
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
-    delete thread->kernelStats;
     thread->kernelStats = NULL;
+    // Thread should never be null after this
+    assert(thread != NULL);
 }
 
 void
-CheckerCPU::setIcachePort(Port *icache_port)
+CheckerCPU::setIcachePort(CpuPort *icache_port)
 {
     icachePort = icache_port;
 }
 
 void
-CheckerCPU::setDcachePort(Port *dcache_port)
+CheckerCPU::setDcachePort(CpuPort *dcache_port)
 {
     dcachePort = dcache_port;
 }
@@ -151,7 +154,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
     // Need to account for multiple accesses like the Atomic and TimingSimple
     while (1) {
         memReq = new Request();
-        memReq->setVirt(0, addr, size, flags, thread->pcState().instAddr());
+        memReq->setVirt(0, addr, size, flags, masterId, thread->pcState().instAddr());
 
         // translate to physical address
         fault = dtb->translateFunctional(memReq, tc, BaseTLB::Read);

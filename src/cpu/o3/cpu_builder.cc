@@ -30,7 +30,6 @@
 
 #include <string>
 
-#include "config/use_checker.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/impl.hh"
 #include "params/DerivO3CPU.hh"

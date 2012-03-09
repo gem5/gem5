@@ -29,17 +29,12 @@
 from m5.defines import buildEnv
 from m5.params import *
 from BaseCPU import BaseCPU
-
-if buildEnv['USE_CHECKER']:
-    from OzoneChecker import OzoneChecker
+from OzoneChecker import OzoneChecker
 
 class DerivOzoneCPU(BaseCPU):
     type = 'DerivOzoneCPU'
 
     numThreads = Param.Unsigned("number of HW thread contexts")
-
-    if buildEnv['USE_CHECKER']:
-        checker = Param.BaseCPU("Checker CPU")
 
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
@@ -123,3 +118,7 @@ class DerivOzoneCPU(BaseCPU):
 
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
+
+    # If the CheckerCPU is brought back to useability in the OzoneCPU, create a
+    # function here called addCheckerCpu() to create a non-NULL Checker and
+    # connect its TLBs (if needed)

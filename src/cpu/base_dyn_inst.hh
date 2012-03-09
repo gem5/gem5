@@ -54,7 +54,7 @@
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
@@ -177,10 +177,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     RequestPtr savedSreqLow;
     RequestPtr savedSreqHigh;
 
-#if USE_CHECKER
     // Need a copy of main request pointer to verify on writes.
     RequestPtr reqToVerify;
-#endif //USE_CHECKER
 
     /** @todo: Consider making this private. */
   public:
@@ -896,12 +894,13 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
             effAddr = req->getVaddr();
             effSize = size;
             effAddrValid = true;
-#if USE_CHECKER
-            if (reqToVerify != NULL) {
-                delete reqToVerify;
+
+            if (cpu->checker) {
+                if (reqToVerify != NULL) {
+                    delete reqToVerify;
+                }
+                reqToVerify = new Request(*req);
             }
-            reqToVerify = new Request(*req);
-#endif //USE_CHECKER
             fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
         } else {
             // Commit will have to clean up whatever happened.  Set this
@@ -957,12 +956,13 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         effAddr = req->getVaddr();
         effSize = size;
         effAddrValid = true;
-#if USE_CHECKER
-        if (reqToVerify != NULL) {
-            delete reqToVerify;
+
+        if (cpu->checker) {
+            if (reqToVerify != NULL) {
+                delete reqToVerify;
+            }
+            reqToVerify = new Request(*req);
         }
-        reqToVerify = new Request(*req);
-#endif // USE_CHECKER
         fault = cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
     }
 

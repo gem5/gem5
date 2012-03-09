@@ -112,7 +112,10 @@ class CheckerThreadContext : public ThreadContext
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    BaseCPU *getCheckerCpuPtr() { return checkerTC->getCpuPtr(); }
+    CheckerCPU *getCheckerCpuPtr()
+    {
+        return checkerCPU;
+    }
 
     Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
@@ -130,7 +133,6 @@ class CheckerThreadContext : public ThreadContext
     FSTranslatingPortProxy &getVirtProxy()
     { return actualTC->getVirtProxy(); }
 
-    //XXX: How does this work now?
     void initMemProxies(ThreadContext *tc)
     { actualTC->initMemProxies(tc); }
 

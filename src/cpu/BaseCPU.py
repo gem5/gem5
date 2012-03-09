@@ -214,9 +214,10 @@ class BaseCPU(MemObject):
                                        "dtb_walker_cache.mem_side"]
             else:
                 self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
+
             # Checker doesn't need its own tlb caches because it does
             # functional accesses only
-            if buildEnv['USE_CHECKER']:
+            if self.checker != NULL:
                 self._cached_ports += ["checker.itb.walker.port", \
                                        "checker.dtb.walker.port"]
 
@@ -227,3 +228,6 @@ class BaseCPU(MemObject):
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side
         self._cached_ports = ['l2cache.mem_side']
+
+    def addCheckerCpu(self):
+        pass

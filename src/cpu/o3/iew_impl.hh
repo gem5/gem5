@@ -48,7 +48,7 @@
 
 #include "arch/utility.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/timebuf.hh"
@@ -56,10 +56,6 @@
 #include "debug/Decode.hh"
 #include "debug/IEW.hh"
 #include "params/DerivO3CPU.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#endif // USE_CHECKER
 
 using namespace std;
 
@@ -299,12 +295,10 @@ DefaultIEW<Impl>::initStage()
             ldstQueue.numFreeEntries(tid);
     }
 
-// Initialize the checker's dcache port here
-#if USE_CHECKER
+    // Initialize the checker's dcache port here
     if (cpu->checker) {
         cpu->checker->setDcachePort(&cpu->getDataPort());
-     }
-#endif
+    }
 
     cpu->activateStage(O3CPU::IEWIdx);
 }

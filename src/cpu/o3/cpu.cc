@@ -45,7 +45,8 @@
 
 #include "arch/kernel_stats.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
+#include "cpu/checker/cpu.hh"
+#include "cpu/checker/thread_context.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/thread_context.hh"
@@ -62,11 +63,6 @@
 #include "sim/process.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
-
-#if USE_CHECKER
-#include "cpu/checker/cpu.hh"
-#include "cpu/checker/thread_context.hh"
-#endif
 
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/osfpal.hh"
@@ -263,7 +259,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         _status = Idle;
     }
 
-#if USE_CHECKER
     if (params->checker) {
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<Impl> *>(temp_checker);
@@ -272,7 +267,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     } else {
         checker = NULL;
     }
-#endif // USE_CHECKER
 
     if (!FullSystem) {
         thread.resize(numThreads);
@@ -438,12 +432,10 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
         // If we're using a checker, then the TC should be the
         // CheckerThreadContext.
-#if USE_CHECKER
         if (params->checker) {
             tc = new CheckerThreadContext<O3ThreadContext<Impl> >(
                 o3_tc, this->checker);
         }
-#endif
 
         o3_tc->cpu = (typename Impl::O3CPU *)(this);
         assert(o3_tc->cpu);
@@ -1207,10 +1199,10 @@ FullO3CPU<Impl>::switchOut()
     }
 
     _status = SwitchedOut;
-#if USE_CHECKER
+
     if (checker)
         checker->switchOut();
-#endif
+
     if (tickEvent.scheduled())
         tickEvent.squash();
 }

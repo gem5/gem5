@@ -44,7 +44,6 @@
 #include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 #include "debug/O3CPU.hh"
@@ -297,7 +296,6 @@ O3ThreadContext<Impl>::pcState(const TheISA::PCState &val)
     }
 }
 
-#if USE_CHECKER
 template <class Impl>
 void
 O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
@@ -309,7 +307,6 @@ O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
         cpu->squashFromTC(thread->threadId());
     }
 }
-#endif
 
 template <class Impl>
 int
