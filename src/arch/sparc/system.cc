@@ -48,13 +48,6 @@ SparcSystem::SparcSystem(Params *p)
     nvramSymtab = new SymbolTable;
     hypervisorDescSymtab = new SymbolTable;
     partitionDescSymtab = new SymbolTable;
-}
-
-void
-SparcSystem::initState()
-{
-    // Call the initialisation of the super class
-    System::initState();
 
     /**
      * Load the boot code, and hypervisor into memory.
@@ -90,26 +83,6 @@ SparcSystem::initState()
     if (partition_desc == NULL)
         fatal("Could not load partition description image %s",
                 params()->partition_desc_bin);
-
-
-    // Load reset binary into memory
-    reset->setTextBase(params()->reset_addr);
-    reset->loadSections(physProxy);
-    // Load the openboot binary
-    openboot->setTextBase(params()->openboot_addr);
-    openboot->loadSections(physProxy);
-    // Load the hypervisor binary
-    hypervisor->setTextBase(params()->hypervisor_addr);
-    hypervisor->loadSections(physProxy);
-    // Load the nvram image
-    nvram->setTextBase(params()->nvram_addr);
-    nvram->loadSections(physProxy);
-    // Load the hypervisor description image
-    hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
-    hypervisor_desc->loadSections(physProxy);
-    // Load the partition description image
-    partition_desc->setTextBase(params()->partition_desc_addr);
-    partition_desc->loadSections(physProxy);
 
     // load symbols
     if (!reset->loadGlobalSymbols(resetSymtab))
@@ -153,6 +126,33 @@ SparcSystem::initState()
 
     if (!partition_desc->loadLocalSymbols(debugSymbolTable))
         panic("could not load partition description symbols\n");
+
+}
+
+void
+SparcSystem::initState()
+{
+    // Call the initialisation of the super class
+    System::initState();
+
+    // Load reset binary into memory
+    reset->setTextBase(params()->reset_addr);
+    reset->loadSections(physProxy);
+    // Load the openboot binary
+    openboot->setTextBase(params()->openboot_addr);
+    openboot->loadSections(physProxy);
+    // Load the hypervisor binary
+    hypervisor->setTextBase(params()->hypervisor_addr);
+    hypervisor->loadSections(physProxy);
+    // Load the nvram image
+    nvram->setTextBase(params()->nvram_addr);
+    nvram->loadSections(physProxy);
+    // Load the hypervisor description image
+    hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
+    hypervisor_desc->loadSections(physProxy);
+    // Load the partition description image
+    partition_desc->setTextBase(params()->partition_desc_addr);
+    partition_desc->loadSections(physProxy);
 
 
     // @todo any fixup code over writing data in binaries on setting break

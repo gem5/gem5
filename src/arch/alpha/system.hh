@@ -62,6 +62,10 @@ class AlphaSystem : public System
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    /** Override loadState to provide a path to call setupFuncEvents()
+     */
+    virtual void loadState(Checkpoint *cp);
+
     /**
      * Set the m5AlphaAccess pointer in the console
      */
@@ -88,6 +92,12 @@ class AlphaSystem : public System
     Tick intrFreq;
 
     const Params *params() const { return (const Params *)_params; }
+
+
+    /** Setup all the function events. Must be done after init() for Alpha since
+     * fixFuncEvent() requires a function port
+     */
+    virtual void setupFuncEvents();
 
     /** Add a function-based event to PALcode. */
     template <class T>

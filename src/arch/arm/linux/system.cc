@@ -58,6 +58,40 @@ using namespace Linux;
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p)
 {
+#ifndef NDEBUG
+    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
+    if (!kernelPanicEvent)
+        panic("could not find kernel symbol \'panic\'");
+#endif
+
+    // With ARM udelay() is #defined to __udelay
+    Addr addr = 0;
+    if (kernelSymtab->findAddress("__udelay", addr)) {
+        uDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__udelay",
+                fixFuncEventAddr(addr), 1000, 0);
+    } else {
+        panic("couldn't find kernel symbol \'udelay\'");
+    }
+
+    // constant arguments to udelay() have some precomputation done ahead of
+    // time. Constant comes from code.
+    if (kernelSymtab->findAddress("__const_udelay", addr)) {
+        constUDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__const_udelay",
+                fixFuncEventAddr(addr), 1000, 107374);
+    } else {
+        panic("couldn't find kernel symbol \'udelay\'");
+    }
+
+    secDataPtrAddr = 0;
+    secDataAddr = 0;
+    penReleaseAddr = 0;
+    kernelSymtab->findAddress("__secondary_data", secDataPtrAddr);
+    kernelSymtab->findAddress("secondary_data", secDataAddr);
+    kernelSymtab->findAddress("pen_release", penReleaseAddr);
+
+    secDataPtrAddr &= ~ULL(0x7F);
+    secDataAddr &= ~ULL(0x7F);
+    penReleaseAddr &= ~ULL(0x7F);
 }
 
 bool
@@ -115,41 +149,6 @@ LinuxArmSystem::initState()
     DDUMP(Loader, boot_data, size << 2);
 
     physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
-
-#ifndef NDEBUG
-    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
-    if (!kernelPanicEvent)
-        panic("could not find kernel symbol \'panic\'");
-#endif
-
-    // With ARM udelay() is #defined to __udelay
-    Addr addr = 0;
-    if (kernelSymtab->findAddress("__udelay", addr)) {
-        uDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__udelay",
-                fixFuncEventAddr(addr), 1000, 0);
-    } else {
-        panic("couldn't find kernel symbol \'udelay\'");
-    }
-
-    // constant arguments to udelay() have some precomputation done ahead of
-    // time. Constant comes from code.
-    if (kernelSymtab->findAddress("__const_udelay", addr)) {
-        constUDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__const_udelay",
-                fixFuncEventAddr(addr), 1000, 107374);
-    } else {
-        panic("couldn't find kernel symbol \'udelay\'");
-    }
-
-    secDataPtrAddr = 0;
-    secDataAddr = 0;
-    penReleaseAddr = 0;
-    kernelSymtab->findAddress("__secondary_data", secDataPtrAddr);
-    kernelSymtab->findAddress("secondary_data", secDataAddr);
-    kernelSymtab->findAddress("pen_release", penReleaseAddr);
-
-    secDataPtrAddr &= ~ULL(0x7F);
-    secDataAddr &= ~ULL(0x7F);
-    penReleaseAddr &= ~ULL(0x7F);
 
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);

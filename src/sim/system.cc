@@ -117,6 +117,44 @@ System::System(Params *p)
     tmp_id = getMasterId("interrupt");
     assert(tmp_id == Request::intMasterId);
 
+    if (FullSystem) {
+        if (params()->kernel == "") {
+            inform("No kernel set for full system simulation. "
+                    "Assuming you know what you're doing if not SPARC ISA\n");
+        } else {
+            // Get the kernel code
+            kernel = createObjectFile(params()->kernel);
+            inform("kernel located at: %s", params()->kernel);
+
+            if (kernel == NULL)
+                fatal("Could not load kernel file %s", params()->kernel);
+
+            // setup entry points
+            kernelStart = kernel->textBase();
+            kernelEnd = kernel->bssBase() + kernel->bssSize();
+            kernelEntry = kernel->entryPoint();
+
+            // load symbols
+            if (!kernel->loadGlobalSymbols(kernelSymtab))
+                fatal("could not load kernel symbols\n");
+
+            if (!kernel->loadLocalSymbols(kernelSymtab))
+                fatal("could not load kernel local symbols\n");
+
+            if (!kernel->loadGlobalSymbols(debugSymbolTable))
+                fatal("could not load kernel symbols\n");
+
+            if (!kernel->loadLocalSymbols(debugSymbolTable))
+                fatal("could not load kernel local symbols\n");
+
+            // Loading only needs to happen once and after memory system is
+            // connected so it will happen in initState()
+        }
+    }
+
+    // increment the number of running systms
+    numSystemsRunning++;
+
 }
 
 System::~System()
@@ -232,37 +270,9 @@ System::initState()
         /**
          * Load the kernel code into memory
          */
-        if (params()->kernel == "") {
-            inform("No kernel set for full system simulation. "
-                    "Assuming you know what you're doing...\n");
-        } else {
-            // Load kernel code
-            kernel = createObjectFile(params()->kernel);
-            inform("kernel located at: %s", params()->kernel);
-
-            if (kernel == NULL)
-                fatal("Could not load kernel file %s", params()->kernel);
-
+        if (params()->kernel != "")  {
             // Load program sections into memory
             kernel->loadSections(physProxy, loadAddrMask);
-
-            // setup entry points
-            kernelStart = kernel->textBase();
-            kernelEnd = kernel->bssBase() + kernel->bssSize();
-            kernelEntry = kernel->entryPoint();
-
-            // load symbols
-            if (!kernel->loadGlobalSymbols(kernelSymtab))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(kernelSymtab))
-                fatal("could not load kernel local symbols\n");
-
-            if (!kernel->loadGlobalSymbols(debugSymbolTable))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(debugSymbolTable))
-                fatal("could not load kernel local symbols\n");
 
             DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
             DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
@@ -270,9 +280,6 @@ System::initState()
             DPRINTF(Loader, "Kernel loaded...\n");
         }
     }
-
-    // increment the number of running systms
-    numSystemsRunning++;
 
     activeCpus.clear();
 

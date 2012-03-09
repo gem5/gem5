@@ -123,6 +123,12 @@ class LinuxAlphaSystem : public AlphaSystem
     /** Grab the PCBB of the idle process when it starts */
     IdleStartEvent *idleStartEvent;
 
+  protected:
+    /** Setup all the function events. Must be done after init() for Alpha since
+     * fixFuncEvent() requires a function port
+     */
+    virtual void setupFuncEvents();
+
   public:
     typedef LinuxAlphaSystemParams Params;
     LinuxAlphaSystem(Params *p);

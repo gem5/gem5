@@ -113,6 +113,12 @@ LinuxAlphaSystem::initState()
     else
         panic("could not find dp264_mv\n");
 
+}
+
+void
+LinuxAlphaSystem::setupFuncEvents()
+{
+    AlphaSystem::setupFuncEvents();
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
     if (!kernelPanicEvent)
@@ -148,6 +154,7 @@ LinuxAlphaSystem::initState()
     // re-enable, but we should find a better way to turn it on than
     // using DTRACE(Thread), since looking at a trace flag at tick 0
     // leads to non-intuitive behavior with --trace-start.
+    Addr addr = 0;
     if (false && kernelSymtab->findAddress("alpha_switch_to", addr)) {
         printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo",
                                                addr + sizeof(MachInst) * 6);

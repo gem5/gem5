@@ -63,30 +63,6 @@ AlphaSystem::AlphaSystem(Params *p)
     pal = createObjectFile(params()->pal);
     if (pal == NULL)
         fatal("Could not load PALcode file %s", params()->pal);
-}
-
-AlphaSystem::~AlphaSystem()
-{
-    delete consoleSymtab;
-    delete console;
-    delete pal;
-#ifdef DEBUG
-    delete consolePanicEvent;
-#endif
-}
-
-void
-AlphaSystem::initState()
-{
-    // Moved from the constructor to here since it relies on the
-    // address map being resolved in the interconnect
-
-    // Call the initialisation of the super class
-    System::initState();
-
-    // Load program sections into memory
-    pal->loadSections(physProxy, loadAddrMask);
-    console->loadSections(physProxy, loadAddrMask);
 
     // load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))
@@ -107,10 +83,33 @@ AlphaSystem::initState()
     if (!pal->loadLocalSymbols(debugSymbolTable))
         panic("could not load pal symbols\n");
 
-     Addr addr = 0;
-#ifndef NDEBUG
-    consolePanicEvent = addConsoleFuncEvent<BreakPCEvent>("panic");
+
+}
+
+AlphaSystem::~AlphaSystem()
+{
+    delete consoleSymtab;
+    delete console;
+    delete pal;
+#ifdef DEBUG
+    delete consolePanicEvent;
 #endif
+}
+
+void
+AlphaSystem::initState()
+{
+     Addr addr = 0;
+
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+
+    // Call the initialisation of the super class
+    System::initState();
+
+    // Load program sections into memory
+    pal->loadSections(physProxy, loadAddrMask);
+    console->loadSections(physProxy, loadAddrMask);
 
     /**
      * Copy the osflags (kernel arguments) into the consoles
@@ -135,6 +134,29 @@ AlphaSystem::initState()
         virtProxy.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
+
+    // Setup all the function events now that we have a system and a symbol
+    // table
+    setupFuncEvents();
+}
+
+void
+AlphaSystem::loadState(Checkpoint *cp)
+{
+    System::loadState(cp);
+
+    // Setup all the function events now that we have a system and a symbol
+    // table
+    setupFuncEvents();
+
+}
+
+void
+AlphaSystem::setupFuncEvents()
+{
+#ifndef NDEBUG
+    consolePanicEvent = addConsoleFuncEvent<BreakPCEvent>("panic");
+#endif
 }
 
 /**
