@@ -156,7 +156,10 @@ class AtagCmdline : public AtagHeader
 
         delete[] storage;
         storage = new uint32_t[size()];
-
+        // Initialize the last byte of memory here beacuse it might be slightly
+        // longer than needed and mis-speculation of the NULL in the O3 CPU can
+        // change stats ever so slightly when that happens.
+        storage[size() - 1] = 0;
         strcpy((char*)&storage[2] , s.c_str());
     }
     AtagCmdline()
