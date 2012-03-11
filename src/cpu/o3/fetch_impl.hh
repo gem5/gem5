@@ -95,6 +95,10 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         fatal("numThreads (%d) is larger than compiled limit (%d),\n"
               "\tincrease MaxThreads in src/cpu/o3/impl.hh\n",
               numThreads, static_cast<int>(Impl::MaxThreads));
+    if (fetchWidth > Impl::MaxWidth)
+        fatal("fetchWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             fetchWidth, static_cast<int>(Impl::MaxWidth));
 
     // Set fetch stage's status to inactive.
     _status = Inactive;
