@@ -160,11 +160,6 @@ if options.cpu_type == "detailed" or options.cpu_type == "inorder":
             smt_idx += 1
     numThreads = len(workloads)
 
-if options.ruby:
-    if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
-        print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
-        sys.exit(1)
-
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 CPUClass.clock = '2GHz'
 CPUClass.numThreads = numThreads;
@@ -178,10 +173,6 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 for i in xrange(np):
     system.cpu[i].workload = multiprocesses[i]
 
-    if options.ruby:
-        system.cpu[i].icache_port = system.ruby._cpu_ruby_ports[i].slave
-        system.cpu[i].dcache_port = system.ruby._cpu_ruby_ports[i].slave
-
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port
 
@@ -189,14 +180,30 @@ for i in xrange(np):
         system.cpu[i].addCheckerCpu()
 
 if options.ruby:
+    if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
+        print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
+        sys.exit(1)
+
     options.use_map = True
     Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
+
+    for i in xrange(np):
+        ruby_port = system.ruby._cpu_ruby_ports[i]
+
+        # Create the interrupt controller and connect its ports to Ruby
+        system.cpu[i].createInterruptController()
+        system.cpu[i].interrupts.pio = ruby_port.master
+        system.cpu[i].interrupts.int_master = ruby_port.slave
+        system.cpu[i].interrupts.int_slave = ruby_port.master
+
+        # Connect the cpu's cache ports to Ruby
+        system.cpu[i].icache_port = ruby_port.slave
+        system.cpu[i].dcache_port = ruby_port.slave
 else:
     system.system_port = system.membus.slave
     system.physmem.port = system.membus.master
     CacheConfig.config_cache(options, system)
 
 root = Root(full_system = False, system = system)
-
 Simulation.run(options, root, system, FutureClass)
