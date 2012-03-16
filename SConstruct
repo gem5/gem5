@@ -193,7 +193,6 @@ for key,val in os.environ.iteritems():
 
 main = Environment(ENV=use_env)
 main.Decider('MD5-timestamp')
-main.SetOption('implicit_cache', 1)
 main.root = Dir(".")         # The current directory (where this file lives).
 main.srcdir = Dir("src")     # The source directory
 
