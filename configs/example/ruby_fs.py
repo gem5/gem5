@@ -54,7 +54,6 @@ from Caches import *
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
-m5_root = os.path.dirname(config_root)
 
 parser = optparse.OptionParser()
 # System options
@@ -120,11 +119,11 @@ if options.script is not None:
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
 Ruby.create_system(options, system, system.piobus, system._dma_devices)
 
-
 for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the correct ruby system ports
     #
+    cpu.createInterruptController()
     cpu.icache_port = system.ruby._cpu_ruby_ports[i].slave
     cpu.dcache_port = system.ruby._cpu_ruby_ports[i].slave
     if buildEnv['TARGET_ISA'] == "x86":
@@ -135,5 +134,4 @@ for (i, cpu) in enumerate(system.cpu):
         cpu.interrupts.int_slave = system.piobus.master
 
 root = Root(full_system = True, system = system)
-
 Simulation.run(options, root, system, FutureClass)
