@@ -124,7 +124,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     # RubyPort currently does support functional accesses.  Therefore provide
     # the piobus a direct connection to physical memory
     #
-    self.piobus.master_port = physmem.port
+    self.piobus.master = physmem.port
 
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
