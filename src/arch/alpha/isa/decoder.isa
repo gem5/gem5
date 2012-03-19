@@ -805,14 +805,14 @@ decode OPCODE default Unknown::unknown() {
             0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
         }
 
-        0xe000: decode FullSystem {
+        0xe000: decode FullSystemInt {
             0: FailUnimpl::rc_se();
             default: BasicOperate::rc({{
                 Ra = IntrFlag;
                 IntrFlag = 0;
             }}, IsNonSpeculative, IsUnverifiable);
         }
-        0xf000: decode FullSystem {
+        0xf000: decode FullSystemInt {
             0: FailUnimpl::rs_se();
             default: BasicOperate::rs({{
                 Ra = IntrFlag;
@@ -821,7 +821,7 @@ decode OPCODE default Unknown::unknown() {
         }
     }
 
-    0x00: decode FullSystem {
+    0x00: decode FullSystemInt {
         0: decode PALFUNC {
             format EmulatedCallPal {
                 0x00: halt ({{

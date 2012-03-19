@@ -58,7 +58,7 @@
 #include "sim/full_system.hh"
 #include "sim/insttracer.hh"
 
-class BaseCPUParams;
+struct BaseCPUParams;
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;

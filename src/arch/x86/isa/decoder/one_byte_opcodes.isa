@@ -394,7 +394,7 @@
                     default: Inst::RET_FAR();
                 }
                 0x4: int3();
-                0x5: decode FullSystem default int_Ib() {
+                0x5: decode FullSystemInt default int_Ib() {
                     0: decode IMMEDIATE {
                         // Really only the LSB matters, but the predecoder
                         // will sign extend it, and there's no easy way to

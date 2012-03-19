@@ -125,6 +125,7 @@ Root::loadState(Checkpoint *cp)
 }
 
 bool FullSystem;
+unsigned int FullSystemInt;
 
 Root *
 RootParams::create()
@@ -136,6 +137,7 @@ RootParams::create()
     created = true;
 
     FullSystem = full_system;
+    FullSystemInt = full_system ? 1 : 0;
 
     return new Root(this);
 }

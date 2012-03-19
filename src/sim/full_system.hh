@@ -31,6 +31,18 @@
 #ifndef __SIM_FULL_SYSTEM_HH__
 #define __SIM_FULL_SYSTEM_HH__
 
+/**
+ * The FullSystem variable can be used to determine the current mode
+ * of simulation.
+ */
 extern bool FullSystem;
+
+/**
+ * In addition to the boolean flag we make use of an unsigned int
+ * since the CPU instruction decoder makes use of the variable in
+ * switch statements. A value of 0 signifies syscall emulation, and
+ * any other value full system.
+ */
+extern unsigned int FullSystemInt;
 
 #endif // __SIM_FULL_SYSTEM_HH__
