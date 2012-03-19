@@ -181,7 +181,7 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
 void
 GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
-    int network_num)
+    int network_num, std::string vnet_type)
 {
     assert(id < m_nodes);
     assert(network_num < m_virtual_networks);
@@ -192,36 +192,8 @@ GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
     m_in_use[network_num] = true;
 }
 
-MessageBuffer*
-GarnetNetwork::getToNetQueue(NodeID id, bool ordered, int network_num,
-                             std::string vnet_type)
-{
-    checkNetworkAllocation(id, ordered, network_num);
-    return m_toNetQueues[id][network_num];
-}
-
-MessageBuffer*
-GarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
-                               std::string vnet_type)
-{
-    checkNetworkAllocation(id, ordered, network_num);
-    return m_fromNetQueues[id][network_num];
-}
-
 void
-GarnetNetwork::clearStats()
-{
-    m_ruby_start = g_eventQueue_ptr->getTime();
-}
-
-Time
-GarnetNetwork::getRubyStartTime()
-{
-    return m_ruby_start;
-}
-
-void
-GarnetNetwork::printStats(ostream& out) const
+GarnetNetwork::printLinkStats(ostream& out) const
 {
     double average_link_utilization = 0;
     vector<double> average_vc_load;
@@ -232,12 +204,11 @@ GarnetNetwork::printStats(ostream& out) const
     }
 
     out << endl;
-    out << "Network Stats" << endl;
-    out << "-------------" << endl;
-    out << endl;
     for (int i = 0; i < m_link_ptr_vector.size(); i++) {
         average_link_utilization +=
-            m_link_ptr_vector[i]->getLinkUtilization();
+            (double(m_link_ptr_vector[i]->getLinkUtilization())) /
+            (double(g_eventQueue_ptr->getTime()-m_ruby_start));
+
         vector<int> vc_load = m_link_ptr_vector[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
             assert(vc_load.size() == m_vcs_per_vnet*m_virtual_networks);
@@ -246,8 +217,8 @@ GarnetNetwork::printStats(ostream& out) const
     }
     average_link_utilization =
         average_link_utilization/m_link_ptr_vector.size();
-    out << "Average Link Utilization :: " << average_link_utilization <<
-           " flits/cycle" <<endl;
+    out << "Average Link Utilization :: " << average_link_utilization
+        << " flits/cycle" << endl;
     out << "-------------" << endl;
 
     for (int i = 0; i < m_vcs_per_vnet*m_virtual_networks; i++) {
@@ -256,23 +227,20 @@ GarnetNetwork::printStats(ostream& out) const
 
         average_vc_load[i] = (double(average_vc_load[i]) /
             (double(g_eventQueue_ptr->getTime()) - m_ruby_start));
-        out << "Average VC Load [" << i << "] = " << average_vc_load[i] <<
-               " flits/cycle" << endl;
+        out << "Average VC Load [" << i << "] = " << average_vc_load[i]
+            << " flits/cycle " << endl;
     }
     out << "-------------" << endl;
+    out << endl;
+}
 
-    out << "Total flits injected = " << m_flits_injected << endl;
-    out << "Total flits received = " << m_flits_received << endl;
-    out << "Average network latency = "
-        << ((double) m_network_latency/ (double) m_flits_received)<< endl;
-    out << "Average queueing (at source NI) latency = "
-        << ((double) m_queueing_latency/ (double) m_flits_received)<< endl;
-    out << "Average latency = "
-        << ((double)  (m_queueing_latency + m_network_latency) /
-            (double) m_flits_received)<< endl;
+void
+GarnetNetwork::printPowerStats(ostream& out) const
+{
+    out << "Network Power" << endl;
     out << "-------------" << endl;
-
-    m_topology_ptr->printStats(out);
+    out << "Orion does not work with flexible pipeline" << endl;
+    out << endl;
 }
 
 void
@@ -281,7 +249,7 @@ GarnetNetwork::printConfig(ostream& out) const
     out << endl;
     out << "Network Configuration" << endl;
     out << "---------------------" << endl;
-    out << "network: GARNET_NETWORK" << endl;
+    out << "network: Garnet Flexible Pipeline" << endl;
     out << "topology: " << m_topology_ptr->getName() << endl;
     out << endl;
 
@@ -291,10 +259,10 @@ GarnetNetwork::printConfig(ostream& out) const
             out << "active, ";
             if (m_ordered[i]) {
                 out << "ordered" << endl;
-            }                         else {
+            } else {
                 out << "unordered" << endl;
             }
-        }                 else {
+        } else {
             out << "inactive" << endl;
         }
     }

@@ -59,39 +59,14 @@ class GarnetNetwork : public BaseGarnetNetwork
     int getBufferSize() { return m_buffer_size; }
     int getNumPipeStages() {return m_number_of_pipe_stages; }
 
-    // returns the queue requested for the given component
-    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num,
-                                 std::string vnet_type);
-    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num,
-                                   std::string vnet_type);
-
-    void clearStats();
-    void printStats(std::ostream& out) const;
-    void printConfig(std::ostream& out) const;
-    void print(std::ostream& out) const;
-
-    inline void increment_injected_flits() { m_flits_injected++; }
-    inline void increment_received_flits() { m_flits_received++; }
-
-    inline void
-    increment_network_latency(Time latency)
-    {
-        m_network_latency += latency;
-    }
-
-    inline void
-    increment_queueing_latency(Time latency)
-    {
-        m_queueing_latency += latency;
-    }
-
-    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
-    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
-
-    Time getRubyStartTime();
     int getNumNodes(){ return m_nodes; }
 
     void reset();
+
+    void printLinkStats(std::ostream& out) const;
+    void printPowerStats(std::ostream& out) const;
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const;
 
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
@@ -108,7 +83,8 @@ class GarnetNetwork : public BaseGarnetNetwork
                           bool isReconfiguration);
 
   private:
-    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
+    void checkNetworkAllocation(NodeID id, bool ordered, int network_num,
+                                std::string vnet_type);
 
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);

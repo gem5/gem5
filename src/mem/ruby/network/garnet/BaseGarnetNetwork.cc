@@ -43,10 +43,6 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
         fault_model = p->fault_model;
 
     m_ruby_start = 0;
-    m_flits_received = 0;
-    m_flits_injected = 0;
-    m_network_latency = 0.0;
-    m_queueing_latency = 0.0;
 
     // Currently Garnet only supports uniform bandwidth for all
     // links and network interfaces.
@@ -77,9 +73,17 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
 
     m_in_use.resize(m_virtual_networks);
     m_ordered.resize(m_virtual_networks);
+    m_flits_received.resize(m_virtual_networks);
+    m_flits_injected.resize(m_virtual_networks);
+    m_network_latency.resize(m_virtual_networks);
+    m_queueing_latency.resize(m_virtual_networks);
     for (int i = 0; i < m_virtual_networks; i++) {
         m_in_use[i] = false;
         m_ordered[i] = false;
+        m_flits_received[i] = 0;
+        m_flits_injected[i] = 0;
+        m_network_latency[i] = 0.0;
+        m_queueing_latency[i] = 0.0;
     }
 
     for (int node = 0; node < m_nodes; node++) {
@@ -101,3 +105,87 @@ BaseGarnetNetwork::init()
 {
     Network::init();
 }
+
+MessageBuffer*
+BaseGarnetNetwork::getToNetQueue(NodeID id, bool ordered, int network_num,
+                                 string vnet_type)
+{
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
+    return m_toNetQueues[id][network_num];
+}
+
+MessageBuffer*
+BaseGarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,  
+                                   string vnet_type)
+{
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
+    return m_fromNetQueues[id][network_num];
+}
+
+void
+BaseGarnetNetwork::clearStats()
+{
+    m_ruby_start = g_eventQueue_ptr->getTime();
+}
+
+Time
+BaseGarnetNetwork::getRubyStartTime()
+{
+    return m_ruby_start;
+}
+
+void
+BaseGarnetNetwork::printStats(ostream& out) const
+{
+    out << endl;
+    out << "Network Stats" << endl;
+    out << "-------------" << endl;
+    out << endl;
+    printPerformanceStats(out);
+    printLinkStats(out);
+    printPowerStats(out);
+    m_topology_ptr->printStats(out);
+}
+
+void
+BaseGarnetNetwork::printPerformanceStats(ostream& out) const
+{
+    int total_flits_injected = 0;
+    int total_flits_received = 0;
+    int total_network_latency = 0.0;
+    int total_queueing_latency = 0.0;
+
+    for (int i = 0; i < m_virtual_networks; i++) {
+        if (!m_in_use[i])
+            continue;
+
+        out << "[Vnet " << i << "]: flits injected = "
+            << m_flits_injected[i] << endl;
+        out << "[Vnet " << i << "]: flits received = "
+            << m_flits_received[i] << endl;
+        out << "[Vnet " << i << "]: average network latency = "
+            << ((double) m_network_latency[i] / (double) m_flits_received[i])
+            << endl;
+        out << "[Vnet " << i << "]: average queueing (at source NI) latency = "
+            << ((double) m_queueing_latency[i] / (double) m_flits_received[i])
+            << endl;
+
+        out << endl;
+        total_flits_injected += m_flits_injected[i];
+        total_flits_received += m_flits_received[i];
+        total_network_latency += m_network_latency[i];
+        total_queueing_latency += m_queueing_latency[i];
+    }
+    out << "Total flits injected = " << total_flits_injected << endl;
+    out << "Total flits received = " << total_flits_received << endl;
+    out << "Average network latency = "
+        << ((double) total_network_latency/ (double) total_flits_received) << endl;
+    out << "Average queueing (at source NI) latency = "
+        << ((double) total_queueing_latency/ (double) total_flits_received) << endl;
+    out << "Average latency = "
+        << ((double)  (total_queueing_latency + total_network_latency) /
+            (double) total_flits_received)<< endl;
+    out << "-------------" << endl;
+    out << endl;
+}
+

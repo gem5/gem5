@@ -167,7 +167,7 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         }
 
         for (int i = 0; i < num_flits; i++) {
-            m_net_ptr->increment_injected_flits();
+            m_net_ptr->increment_injected_flits(vnet);
             flit_d *fl = new flit_d(i, vc, vnet, num_flits, new_msg_ptr);
             fl->set_delay(g_eventQueue_ptr->getTime() - msg_ptr->getTime());
             m_ni_buffers[vc]->insert(fl);
@@ -247,12 +247,13 @@ NetworkInterface_d::wakeup()
         creditQueue->insert(credit_flit);
         g_eventQueue_ptr->scheduleEvent(m_ni_credit_link, 1);
 
-        m_net_ptr->increment_received_flits();
+        int vnet = t_flit->get_vnet();
+        m_net_ptr->increment_received_flits(vnet);
         int network_delay = g_eventQueue_ptr->getTime() -
                             t_flit->get_enqueue_time();
         int queueing_delay = t_flit->get_delay();
-        m_net_ptr->increment_network_latency(network_delay);
-        m_net_ptr->increment_queueing_latency(queueing_delay);
+        m_net_ptr->increment_network_latency(network_delay, vnet);
+        m_net_ptr->increment_queueing_latency(queueing_delay, vnet);
         delete t_flit;
     }
 

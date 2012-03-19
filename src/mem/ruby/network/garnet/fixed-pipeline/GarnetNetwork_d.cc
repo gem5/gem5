@@ -257,49 +257,17 @@ GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
         m_vnet_type[network_num] = CTRL_VNET_; // carries only ctrl packets
 }
 
-MessageBuffer*
-GarnetNetwork_d::getToNetQueue(NodeID id, bool ordered, int network_num,
-                               string vnet_type)
-{
-    checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    return m_toNetQueues[id][network_num];
-}
-
-MessageBuffer*
-GarnetNetwork_d::getFromNetQueue(NodeID id, bool ordered, int network_num,  
-                                 string vnet_type)
-{
-    checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    return m_fromNetQueues[id][network_num];
-}
-
 void
-GarnetNetwork_d::clearStats()
-{
-    m_ruby_start = g_eventQueue_ptr->getTime();
-}
-
-Time
-GarnetNetwork_d::getRubyStartTime()
-{
-    return m_ruby_start;
-}
-
-void
-GarnetNetwork_d::printStats(ostream& out) const
+GarnetNetwork_d::printLinkStats(ostream& out) const
 {
     double average_link_utilization = 0;
     vector<double> average_vc_load;
     average_vc_load.resize(m_virtual_networks*m_vcs_per_vnet);
 
-    for (int i = 0; i < m_virtual_networks*m_vcs_per_vnet; i++)
-    {
+    for (int i = 0; i < m_virtual_networks*m_vcs_per_vnet; i++) {
         average_vc_load[i] = 0;
     }
 
-    out << endl;
-    out << "Network Stats" << endl;
-    out << "-------------" << endl;
     out << endl;
     for (int i = 0; i < m_link_ptr_vector.size(); i++) {
         average_link_utilization +=
@@ -328,18 +296,14 @@ GarnetNetwork_d::printStats(ostream& out) const
             << " flits/cycle " << endl;
     }
     out << "-------------" << endl;
+    out << endl;
+}
 
-    out << "Total flits injected = " << m_flits_injected << endl;
-    out << "Total flits received = " << m_flits_received << endl;
-    out << "Average network latency = "
-        << ((double) m_network_latency/ (double) m_flits_received)<< endl;
-    out << "Average queueing (at source NI) latency = "
-        << ((double) m_queueing_latency/ (double) m_flits_received)<< endl;
-    out << "Average latency = "
-        << ((double)  (m_queueing_latency + m_network_latency) /
-            (double) m_flits_received)<< endl;
+void
+GarnetNetwork_d::printPowerStats(ostream& out) const
+{
+    out << "Network Power" << endl;
     out << "-------------" << endl;
-
     double m_total_link_power = 0.0;
     double m_dynamic_link_power = 0.0;
     double m_static_link_power = 0.0;
@@ -368,7 +332,7 @@ GarnetNetwork_d::printStats(ostream& out) const
     out << "Router Static Power = " << m_static_router_power << " W" << endl;
     out << "Total Router Power = " << m_total_router_power << " W " <<endl;
     out << "-------------" << endl;
-    m_topology_ptr->printStats(out);
+    out << endl;
 }
 
 void
@@ -377,7 +341,7 @@ GarnetNetwork_d::printConfig(ostream& out) const
     out << endl;
     out << "Network Configuration" << endl;
     out << "---------------------" << endl;
-    out << "network: GarnetNetwork_d" << endl;
+    out << "network: Garnet Fixed Pipeline" << endl;
     out << "topology: " << m_topology_ptr->getName() << endl;
     out << endl;
 

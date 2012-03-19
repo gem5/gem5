@@ -63,14 +63,8 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     int getBuffersPerDataVC() {return m_buffers_per_data_vc; }
     int getBuffersPerCtrlVC() {return m_buffers_per_ctrl_vc; }
 
-    // returns the queue requested for the given component
-    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num,
-                                 std::string vnet_type);
-    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num,
-                                   std::string vnet_type);
-
-    void clearStats();
-    void printStats(std::ostream& out) const;
+    void printLinkStats(std::ostream& out) const;
+    void printPowerStats(std::ostream& out) const;
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
@@ -80,26 +74,6 @@ class GarnetNetwork_d : public BaseGarnetNetwork
         int vnet = vc/getVCsPerVnet();
         return m_vnet_type[vnet];
     }
-
-
-    inline void increment_injected_flits() { m_flits_injected++; }
-    inline void increment_received_flits() { m_flits_received++; }
-
-    inline void
-    increment_network_latency(Time latency)
-    {
-        m_network_latency += latency;
-    }
-
-    inline void
-    increment_queueing_latency(Time latency)
-    {
-        m_queueing_latency += latency;
-    }
-
-    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
-    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
-    Time getRubyStartTime();
 
     void reset();
 

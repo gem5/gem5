@@ -54,15 +54,49 @@ class BaseGarnetNetwork : public Network
     bool isFaultModelEnabled() {return m_enable_fault_model;}
     FaultModel* fault_model;
 
+    void increment_injected_flits(int vnet) { m_flits_injected[vnet]++; }
+    void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
+
+    void
+    increment_network_latency(Time latency, int vnet)
+    {
+        m_network_latency[vnet] += latency;
+    }
+
+    void
+    increment_queueing_latency(Time latency, int vnet)
+    {
+        m_queueing_latency[vnet] += latency;
+    }
+
+    // returns the queue requested for the given component
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num,
+                                 std::string vnet_type);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num,
+                                   std::string vnet_type);
+
+
+    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
+    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    virtual void checkNetworkAllocation(NodeID id, bool ordered,
+        int network_num, std::string vnet_type) = 0;
+
+    Time getRubyStartTime();
+    void clearStats();
+    void printStats(std::ostream& out) const;
+    void printPerformanceStats(std::ostream& out) const;
+    virtual void printLinkStats(std::ostream& out) const = 0;
+    virtual void printPowerStats(std::ostream& out) const = 0;
+
   protected:
     int m_ni_flit_size;
     int m_vcs_per_vnet;
     bool m_enable_fault_model;
 
-    int m_flits_received;
-    int m_flits_injected;
-    double m_network_latency;
-    double m_queueing_latency;
+    std::vector<int> m_flits_received;
+    std::vector<int> m_flits_injected;
+    std::vector<double> m_network_latency;
+    std::vector<double> m_queueing_latency;
 
     std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;
