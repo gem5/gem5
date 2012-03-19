@@ -1049,7 +1049,7 @@ namespace Enums {
         code.indent(2)
         for val in cls.vals:
             code('$val = ${{cls.map[val]}},')
-        code('Num_$name = ${{len(cls.vals)}},')
+        code('Num_$name = ${{len(cls.vals)}}')
         code.dedent(2)
         code('''\
     };

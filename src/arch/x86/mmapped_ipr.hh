@@ -78,6 +78,6 @@ namespace X86ISA
         xc->setMiscReg(index, gtoh(data));
         return xc->getCpuPtr()->ticks(1);
     }
-};
+}
 
 #endif // __ARCH_X86_MMAPPEDIPR_HH__

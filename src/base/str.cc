@@ -324,17 +324,17 @@ template<> \
 bool to_number<type>(const string &value, type &retval) \
 { return __to_number(value, retval); }
 
-STN(unsigned long long);
-STN(signed long long);
-STN(unsigned long);
-STN(signed long);
-STN(unsigned int);
-STN(signed int);
-STN(unsigned short);
-STN(signed short);
-STN(unsigned char);
-STN(signed char);
-STN(char);
+STN(unsigned long long)
+STN(signed long long)
+STN(unsigned long)
+STN(signed long)
+STN(unsigned int)
+STN(signed int)
+STN(unsigned short)
+STN(signed short)
+STN(unsigned char)
+STN(signed char)
+STN(char)
 
 template<>
 bool to_number<bool>(const string &value, bool &retval)

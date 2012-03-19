@@ -81,7 +81,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs       //< Max dest regs
     };
 
   public:

@@ -105,6 +105,6 @@ namespace X86ISA
         return 0;
     }
 
-};
+}
 
 #endif // __ARCH_X86_UTILITY_HH__

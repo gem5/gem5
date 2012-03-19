@@ -234,12 +234,16 @@ def template NeonEqualRegExecute {{
 }};
 
 output header {{
-    uint16_t nextBiggerType(uint8_t);
-    uint32_t nextBiggerType(uint16_t);
-    uint64_t nextBiggerType(uint32_t);
-    int16_t nextBiggerType(int8_t);
-    int32_t nextBiggerType(int16_t);
-    int64_t nextBiggerType(int32_t);
+        template <typename T>
+            struct bigger_type_t;
+
+        template<> struct bigger_type_t<uint8_t> { typedef uint16_t type; };
+        template<> struct bigger_type_t<uint16_t> { typedef uint32_t type; };
+        template<> struct bigger_type_t<uint32_t> { typedef uint64_t type; };
+
+        template<> struct bigger_type_t<int8_t> { typedef int16_t type; };
+        template<> struct bigger_type_t<int16_t> { typedef int32_t type; };
+        template<> struct bigger_type_t<int32_t> { typedef int64_t type; };
 }};
 
 def template NeonUnequalRegExecute {{
@@ -247,7 +251,7 @@ def template NeonUnequalRegExecute {{
     Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
             Trace::InstRecord *traceData) const
     {
-        typedef typeof(nextBiggerType((Element)0)) BigElement;
+        typedef typename bigger_type_t<Element>::type BigElement;
         Fault fault = NoFault;
         %(op_decl)s;
         %(op_rd)s;

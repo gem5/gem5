@@ -89,7 +89,7 @@ def template MacroDeclare {{
                 std::string
                 generateDisassembly(Addr pc, const SymbolTable *symtab) const;
             };
-        };
+        }
 }};
 
 def template MacroDisassembly {{

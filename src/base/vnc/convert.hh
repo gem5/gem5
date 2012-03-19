@@ -61,7 +61,7 @@ class VideoConvert
         bgr444,
         bgr4444,
         rgb444,
-        rgb4444,
+        rgb4444
     };
 
     // supports bpp32 RGB (bmp) and bpp16 5:6:5 mode BGR (linux)

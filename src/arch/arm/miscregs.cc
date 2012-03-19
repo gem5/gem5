@@ -499,4 +499,4 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
     return NUM_MISCREGS;
 }
 
-};
+}

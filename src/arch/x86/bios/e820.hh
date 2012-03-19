@@ -77,6 +77,6 @@ namespace X86ISA
 
         void writeTo(PortProxy& proxy, Addr countAddr, Addr addr);
     };
-};
+}
 
 #endif // __ARCH_X86_BIOS_E820_HH__

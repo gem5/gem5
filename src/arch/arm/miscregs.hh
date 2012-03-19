@@ -529,6 +529,6 @@ namespace ArmISA
       Bitfield<31>    l2rstDISABLE_monitor;
    EndBitUnion(L2CTLR)
 
-};
+}
 
 #endif // __ARCH_ARM_MISCREGS_HH__

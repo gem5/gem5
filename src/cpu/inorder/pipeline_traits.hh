@@ -77,7 +77,7 @@ namespace ThePipeline {
     //////////////////////////
     typedef ResourceSked ResSchedule;
     typedef ResourceSked* RSkedPtr;
-};
+}
 
 
 

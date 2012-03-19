@@ -182,6 +182,6 @@ getExecutingAsid(ThreadContext *tc)
     return tc->readMiscReg(MISCREG_CONTEXTIDR);
 }
 
-};
+}
 
 #endif

@@ -85,6 +85,6 @@ namespace X86ISA
         SixtyFourBitMode                // Behave as if we're in 64 bit
                                         // mode (this doesn't actually matter).
     };
-};
+}
 
 #endif // __ARCH_X86_ISATRAITS_HH__

@@ -32,6 +32,7 @@
 #define __BASE_RANGE_MAP_HH__
 
 #include <map>
+#include <utility>
 
 #include "base/range.hh"
 
@@ -95,7 +96,7 @@ class range_map
         if (intersect(r))
             return tree.end();
 
-        return tree.insert(std::make_pair<Range<T>,V>(r, d)).first;
+        return tree.insert(std::make_pair(r, d)).first;
     }
 
     size_t

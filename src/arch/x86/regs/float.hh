@@ -150,6 +150,6 @@ namespace X86ISA
     {
         return FLOATREG_FPR((top + index + 8) % 8);
     }
-};
+}
 
 #endif // __ARCH_X86_FLOATREGS_HH__

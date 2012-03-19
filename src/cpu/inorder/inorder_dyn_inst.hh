@@ -103,7 +103,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        /// Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,      /// Max dest regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs       /// Max dest regs
     };
 
   public:

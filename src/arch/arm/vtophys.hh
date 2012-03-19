@@ -45,7 +45,7 @@ namespace ArmISA {
     Addr vtophys(Addr vaddr);
     Addr vtophys(ThreadContext *tc, Addr vaddr);
     bool virtvalid(ThreadContext *tc, Addr vaddr);
-};
+}
 
 #endif // __ARCH_ARM_VTOPHYS_H__
 

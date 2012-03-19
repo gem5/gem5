@@ -53,6 +53,6 @@ namespace X86ISA
     {
         return true;
     }
-};
+}
 
 #endif // __ARCH_X86_LOCKEDMEM_HH__

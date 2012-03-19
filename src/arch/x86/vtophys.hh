@@ -50,6 +50,6 @@ namespace X86ISA
 Addr vtophys(Addr vaddr);
 Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-};
+}
 
 #endif // __ARCH_X86_VTOPHYS_HH__

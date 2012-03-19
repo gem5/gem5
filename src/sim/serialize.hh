@@ -89,6 +89,17 @@ void
 objParamIn(Checkpoint *cp, const std::string &section,
            const std::string &name, SimObject * &param);
 
+template <typename T>
+void fromInt(T &t, int i)
+{
+    t = (T)i;
+}
+
+template <typename T>
+void fromSimObject(T &t, SimObject *s)
+{
+    t = dynamic_cast<T>(s);
+}
 
 //
 // These macros are streamlined to use in serialize/unserialize
@@ -106,7 +117,7 @@ objParamIn(Checkpoint *cp, const std::string &section,
  do {                                           \
     int tmp;                                    \
     paramIn(cp, section, #scalar, tmp);         \
-    scalar = (typeof(scalar))tmp;               \
+    fromInt(scalar, tmp);                    \
   } while (0)
 
 #define SERIALIZE_ARRAY(member, size)           \
@@ -121,7 +132,7 @@ objParamIn(Checkpoint *cp, const std::string &section,
   do {                                                  \
     SimObject *sptr;                                    \
     objParamIn(cp, section, #objptr, sptr);             \
-    objptr = dynamic_cast<typeof(objptr)>(sptr);        \
+    fromSimObject(objptr, sptr);                        \
   } while (0)
 
 /*

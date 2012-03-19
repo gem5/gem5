@@ -419,6 +419,6 @@ namespace X86ISA
             return true;
         }
     };
-};
+}
 
 #endif // __ARCH_X86_FAULTS_HH__

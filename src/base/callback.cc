@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-#import "base/callback.hh"
+#include "base/callback.hh"
 
 CallbackQueue::~CallbackQueue()
 {

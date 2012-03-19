@@ -42,7 +42,7 @@
 #include "base/types.hh"
 
 // This lets us figure out what the byte order of the host system is
-#if defined(linux)
+#if defined(__linux__)
 #include <endian.h>
 // If this is a linux system, lets used the optimized definitions if they exist.
 // If one doesn't exist, we pretty much get what is listed below, so it all
@@ -65,7 +65,7 @@ enum ByteOrder {BigEndianByteOrder, LittleEndianByteOrder};
 inline uint64_t
 swap_byte64(uint64_t x)
 {
-#if defined(linux)
+#if defined(__linux__)
     return bswap_64(x);
 #elif defined(__APPLE__)
     return OSSwapInt64(x);
@@ -84,7 +84,7 @@ swap_byte64(uint64_t x)
 inline uint32_t
 swap_byte32(uint32_t x)
 {
-#if defined(linux)
+#if defined(__linux__)
     return bswap_32(x);
 #elif defined(__APPLE__)
     return OSSwapInt32(x);
@@ -98,7 +98,7 @@ swap_byte32(uint32_t x)
 inline uint16_t
 swap_byte16(uint16_t x)
 {
-#if defined(linux)
+#if defined(__linux__)
     return bswap_16(x);
 #elif defined(__APPLE__)
     return OSSwapInt16(x);

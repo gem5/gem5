@@ -222,7 +222,7 @@ output header {{
         /// this class and derived classes.  Maybe these should really
         /// live here and not in the AlphaISA namespace.
         enum DependenceTags {
-            FP_Base_DepTag = AlphaISA::FP_Base_DepTag,
+            FP_Base_DepTag = AlphaISA::FP_Base_DepTag
         };
 
         /// Constructor.

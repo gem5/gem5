@@ -70,8 +70,8 @@ class System;
 namespace TheISA {
     namespace Kernel {
         class Statistics;
-    };
-};
+    }
+}
 
 /**
  * ThreadContext is the external interface to all thread state for

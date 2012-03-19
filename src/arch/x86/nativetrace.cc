@@ -197,4 +197,4 @@ Trace::X86NativeTrace *
 X86NativeTraceParams::create()
 {
     return new Trace::X86NativeTrace(this);
-};
+}

@@ -50,7 +50,7 @@
 class EndQuiesceEvent;
 namespace Kernel {
     class Statistics;
-};
+}
 
 /**
  * Derived ThreadContext class for use with the O3CPU.  It

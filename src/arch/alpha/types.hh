@@ -48,7 +48,7 @@ enum annotes
 {
     ANNOTE_NONE = 0,
     // An impossible number for instruction annotations
-    ITOUCH_ANNOTE = 0xffffffff,
+    ITOUCH_ANNOTE = 0xffffffff
 };
 
 } // namespace AlphaISA

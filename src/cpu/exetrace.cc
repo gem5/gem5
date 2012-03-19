@@ -171,4 +171,4 @@ Trace::ExeTracer *
 ExeTracerParams::create()
 {
     return new Trace::ExeTracer(this);
-};
+}

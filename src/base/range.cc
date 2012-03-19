@@ -73,13 +73,13 @@ template<> bool \
 __parse_range(const std::string &s, type &first, type &last) \
 { return __x_parse_range(s, first, last); }
 
-RANGE_PARSE(unsigned long long);
-RANGE_PARSE(signed long long);
-RANGE_PARSE(unsigned long);
-RANGE_PARSE(signed long);
-RANGE_PARSE(unsigned int);
-RANGE_PARSE(signed int);
-RANGE_PARSE(unsigned short);
-RANGE_PARSE(signed short);
-RANGE_PARSE(unsigned char);
-RANGE_PARSE(signed char);
+RANGE_PARSE(unsigned long long)
+RANGE_PARSE(signed long long)
+RANGE_PARSE(unsigned long)
+RANGE_PARSE(signed long)
+RANGE_PARSE(unsigned int)
+RANGE_PARSE(signed int)
+RANGE_PARSE(unsigned short)
+RANGE_PARSE(signed short)
+RANGE_PARSE(unsigned char)
+RANGE_PARSE(signed char)

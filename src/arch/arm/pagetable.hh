@@ -208,6 +208,6 @@ struct TlbEntry
 
 
 
-};
+}
 #endif // __ARCH_ARM_PAGETABLE_H__
 

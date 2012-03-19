@@ -278,7 +278,7 @@ namespace X86ISA
         }
     };
 
-};
+}
 
 namespace __hash_namespace {
     template<>

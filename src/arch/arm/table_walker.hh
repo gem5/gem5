@@ -325,7 +325,7 @@ class TableWalker : public MemObject
 
     /** Queue of requests that have passed are waiting because the walker is
      * currently busy. */
-    std::list<WalkerState *> pendingQueue;;
+    std::list<WalkerState *> pendingQueue;
 
 
     /** Port to issue translation requests from */

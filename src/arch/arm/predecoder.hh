@@ -149,6 +149,6 @@ namespace ArmISA
             return thisEmi;
         }
     };
-};
+}
 
 #endif // __ARCH_ARM_PREDECODER_HH__

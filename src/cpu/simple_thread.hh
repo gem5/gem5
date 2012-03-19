@@ -73,8 +73,8 @@ class ProfileNode;
 namespace TheISA {
     namespace Kernel {
         class Statistics;
-    };
-};
+    }
+}
 
 /**
  * The SimpleThread object provides a combination of the ThreadState

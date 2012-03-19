@@ -178,6 +178,6 @@ namespace X86ISA
             index = (index - 4) | foldBit;
         return (IntRegIndex)index;
     }
-};
+}
 
 #endif // __ARCH_X86_INTREGS_HH__

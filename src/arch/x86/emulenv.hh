@@ -71,6 +71,6 @@ namespace X86ISA
         void doModRM(const ExtMachInst & machInst);
         void setSeg(const ExtMachInst & machInst);
     };
-};
+}
 
 #endif // __ARCH_X86_TYPES_HH__

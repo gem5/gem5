@@ -226,4 +226,4 @@ Trace::ArmNativeTrace *
 ArmNativeTraceParams::create()
 {
     return new Trace::ArmNativeTrace(this);
-};
+}

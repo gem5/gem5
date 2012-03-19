@@ -45,8 +45,8 @@ class ProfileNode;
 namespace TheISA {
     namespace Kernel {
         class Statistics;
-    };
-};
+    }
+}
 
 class Checkpoint;
 

@@ -430,7 +430,7 @@ class IGbE : public EtherDevice
         Addr tsoMss;
         Addr tsoTotalLen;
         Addr tsoUsedLen;
-        Addr tsoPrevSeq;;
+        Addr tsoPrevSeq;
         Addr tsoPktPayloadBytes;
         bool tsoLoadedHeader;
         bool tsoPktHasHeader;

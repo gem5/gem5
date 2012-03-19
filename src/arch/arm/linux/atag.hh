@@ -51,7 +51,7 @@ enum {
     RevTag    = 0x54410007,
     SerialTag = 0x54410006,
     CmdTag    = 0x54410009,
-    NoneTag   = 0x00000000,
+    NoneTag   = 0x00000000
 };
 
 class AtagHeader

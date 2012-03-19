@@ -70,11 +70,13 @@ Bitmap::write(std::ostream *bmp) const
         // For further information see:
         //   http://en.wikipedia.org/wiki/BMP_file_format
         Magic magic = {{'B','M'}};
-        Header header = {sizeof(VideoConvert::Rgb8888) * width * height,
-                                0, 0, 54};
-        Info info = {sizeof(Info), width, height, 1,
-                    sizeof(VideoConvert::Rgb8888) * 8, 0,
-                    sizeof(VideoConvert::Rgb8888) * width * height, 1, 1, 0, 0};
+        Header header = {
+            static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) *
+            width * height, 0, 0, 54};
+        Info info = {static_cast<uint32_t>(sizeof(Info)), width, height, 1,
+                     static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) * 8,
+                     0, static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) *
+                     width * height, 1, 1, 0, 0};
 
         char *p = headerBuffer = new char[sizeofHeaderBuffer];
         memcpy(p, &magic, sizeof(Magic));

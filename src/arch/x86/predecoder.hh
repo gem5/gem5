@@ -234,6 +234,6 @@ namespace X86ISA
             return emi;
         }
     };
-};
+}
 
 #endif // __ARCH_X86_PREDECODER_HH__

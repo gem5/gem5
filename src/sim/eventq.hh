@@ -66,7 +66,7 @@ class Event : public Serializable, public FastAlloc
     friend class EventQueue;
 
   protected:   
-    typedef short FlagsType;
+    typedef unsigned short FlagsType;
     typedef ::Flags<FlagsType> Flags;
 
     static const FlagsType PublicRead    = 0x003f; // public readable flags

@@ -384,7 +384,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         }
     }
     return NoFault;
-};
+}
 
 Fault
 TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)

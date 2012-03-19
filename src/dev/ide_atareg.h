@@ -33,7 +33,7 @@
 #ifndef _DEV_ATA_ATAREG_H_
 #define _DEV_ATA_ATAREG_H_
 
-#if defined(linux)
+#if defined(__linux__)
 #include <endian.h>
 #elif defined(__sun)
 #include <sys/isa_defs.h>

@@ -67,4 +67,4 @@ Trace::IntelTrace *
 IntelTraceParams::create()
 {
     return new Trace::IntelTrace(this);
-};
+}

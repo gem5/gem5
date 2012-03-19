@@ -119,7 +119,7 @@ enum {
     MachineBytes = 8,
     WordBytes = 4,
     HalfwordBytes = 2,
-    ByteBytes = 1,
+    ByteBytes = 1
 };
 
 // return a no-op instruction... used for instruction fetch faults

@@ -263,7 +263,7 @@ class ResourceEvent : public Event
     /// (for InOrderCPU model).
     /// check src/sim/eventq.hh for more event priorities.
     enum InOrderPriority {
-        Resource_Event_Pri = 45,
+        Resource_Event_Pri = 45
     };
 
     /** The Resource Slot that this event is servicing */

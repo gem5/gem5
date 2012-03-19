@@ -63,6 +63,6 @@ namespace X86ISA
 
         NUM_SEGMENTREGS
     };
-};
+}
 
 #endif // __ARCH_X86_SEGMENTREGS_HH__

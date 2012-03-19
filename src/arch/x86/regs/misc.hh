@@ -915,6 +915,6 @@ namespace X86ISA
         Bitfield<11> enable;
         Bitfield<8> bsp;
     EndBitUnion(LocalApicBase)
-};
+}
 
 #endif // __ARCH_X86_INTREGS_HH__
