@@ -190,7 +190,7 @@ class RealViewPBX(RealView):
     sci_fake      = AmbaFake(pio_addr=0x1000e000)
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
-    rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
+    rtc           = PL031(pio_addr=0x10017000, int_num=42)
 
 
     # Attach I/O devices that are on chip and also set the appropriate
@@ -237,7 +237,7 @@ class RealViewPBX(RealView):
        self.sci_fake.pio      = bus.master
        self.aaci_fake.pio     = bus.master
        self.mmc_fake.pio      = bus.master
-       self.rtc_fake.pio      = bus.master
+       self.rtc.pio           = bus.master
        self.flash_fake.pio    = bus.master
 
 # Reference for memory map and interrupt number
