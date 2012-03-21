@@ -112,9 +112,9 @@ def template DataRegConstructor {{
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
-                flags[IsCondControl] = true;
-            else
                 flags[IsUncondControl] = true;
+            else
+                flags[IsCondControl] = true;
         }
 
         if (%(is_ras_pop)s) {
