@@ -993,8 +993,12 @@ class SimObject(object):
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
+            if port != None:
+                port_count = len(port)
+            else:
+                port_count = 0
             setattr(cc_params, 'port_' + port_name + '_connection_count',
-                    len(port) if port != None else 0)
+                    port_count)
         self._ccParams = cc_params
         return self._ccParams
 
