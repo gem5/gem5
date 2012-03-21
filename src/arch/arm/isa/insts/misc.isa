@@ -566,8 +566,7 @@ let {{
 
     itIop = InstObjParams("it", "ItInst", "PredOp", \
             { "code" : ";",
-              "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsSerializeAfter"])
+              "predicate_test" : predicateTest }, [])
     header_output += BasicDeclare.subst(itIop)
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
