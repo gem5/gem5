@@ -63,16 +63,15 @@ class BranchImm : public PredOp
 // Conditionally Branch to a target computed with an immediate
 class BranchImmCond : public BranchImm
 {
-  protected:
-    // This will mask the condition code stored for PredOp. Ideally these two
-    // class would cooperate, but they're not set up to do that at the moment.
-    ConditionCode condCode;
-
   public:
     BranchImmCond(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   int32_t _imm, ConditionCode _condCode) :
-        BranchImm(mnem, _machInst, __opClass, _imm), condCode(_condCode)
-    {}
+        BranchImm(mnem, _machInst, __opClass, _imm)
+    {
+        // Only update if this isn't part of an IT block
+        if (!machInst.itstateMask)
+            condCode = _condCode;
+    }
 };
 
 // Branch to a target computed with a register
@@ -91,16 +90,15 @@ class BranchReg : public PredOp
 // Conditionally Branch to a target computed with a register
 class BranchRegCond : public BranchReg
 {
-  protected:
-    // This will mask the condition code stored for PredOp. Ideally these two
-    // class would cooperate, but they're not set up to do that at the moment.
-    ConditionCode condCode;
-
   public:
     BranchRegCond(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   IntRegIndex _op1, ConditionCode _condCode) :
-        BranchReg(mnem, _machInst, __opClass, _op1), condCode(_condCode)
-    {}
+        BranchReg(mnem, _machInst, __opClass, _op1)
+    {
+        // Only update if this isn't part of an IT block
+        if (!machInst.itstateMask)
+            condCode = _condCode;
+    }
 };
 
 // Branch to a target computed with two registers

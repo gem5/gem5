@@ -1040,25 +1040,13 @@ def format Thumb16SpecDataAndBx() {{
             return new MovReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
           case 0x3:
             if (bits(machInst, 7) == 0) {
-                ConditionCode condCode;
-                if(machInst.itstateMask) {
-                  condCode = (ConditionCode)(uint8_t)machInst.itstateCond;
-                } else {
-                  condCode = COND_UC;
-                }
                 return new BxReg(machInst,
                                  (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
-                                 condCode);
+                                 COND_UC);
             } else {
-                ConditionCode condCode;
-                if(machInst.itstateMask) {
-                  condCode = (ConditionCode)(uint8_t)machInst.itstateCond;
-                } else {
-                  condCode = COND_UC;
-                }
                 return new BlxReg(machInst,
                                   (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
-                                  condCode);
+                                  COND_UC);
             }
         }
     }
