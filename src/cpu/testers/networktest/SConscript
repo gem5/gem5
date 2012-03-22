@@ -32,6 +32,6 @@ Import('*')
 
 SimObject('NetworkTest.py')
 
-Source('networktest.cc', Werror=False)
+Source('networktest.cc')
 
 DebugFlag('NetworkTest')

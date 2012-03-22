@@ -151,11 +151,10 @@ class SourceFile(object):
         
 class Source(SourceFile):
     '''Add a c/c++ source file to the build'''
-    def __init__(self, source, Werror=True, swig=False, **guards):
+    def __init__(self, source, swig = False, **guards):
         '''specify the source file, and any guards'''
         super(Source, self).__init__(source, **guards)
 
-        self.Werror = Werror
         self.swig = swig
 
 class PySource(SourceFile):
@@ -844,9 +843,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
     new_env.Label = label
     new_env.Append(**kwargs)
+    # Always consider warnings errors
+    new_env.Append(CCFLAGS='-Werror')
 
     swig_env = new_env.Clone()
-    swig_env.Append(CCFLAGS='-Werror')
     if env['GCC']:
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
@@ -857,10 +857,6 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     if env['CLANG']:
         swig_env.Append(CCFLAGS=['-Wno-unused-label'])
 
-
-    werror_env = new_env.Clone()
-    werror_env.Append(CCFLAGS='-Werror')
-
     def make_obj(source, static, extra_deps = None):
         '''This function adds the specified source to the correct
         build environment, and returns the corresponding SCons Object
@@ -868,8 +864,6 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
         if source.swig:
             env = swig_env
-        elif source.Werror:
-            env = werror_env
         else:
             env = new_env
 
