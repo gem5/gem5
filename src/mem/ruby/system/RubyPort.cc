@@ -98,21 +98,18 @@ RubyPort::getPort(const std::string &if_name, int idx)
 
 RubyPort::PioPort::PioPort(const std::string &_name,
                            RubyPort *_port)
-    : SimpleTimingPort(_name, _port)
+    : QueuedPort(_name, _port, queue), queue(*_port, *this), ruby_port(_port)
 {
     DPRINTF(RubyPort, "creating port to ruby sequencer to cpu %s\n", _name);
-    ruby_port = _port;
 }
 
 RubyPort::M5Port::M5Port(const std::string &_name, RubyPort *_port,
                          RubySystem *_system, bool _access_phys_mem)
-    : SimpleTimingPort(_name, _port)
+    : QueuedPort(_name, _port, queue), queue(*_port, *this),
+      ruby_port(_port), ruby_system(_system),
+      _onRetryList(false), access_phys_mem(_access_phys_mem)
 {
     DPRINTF(RubyPort, "creating port from ruby sequcner to cpu %s\n", _name);
-    ruby_port = _port;
-    ruby_system = _system;
-    _onRetryList = false;
-    access_phys_mem = _access_phys_mem;
 }
 
 Tick
@@ -648,7 +645,7 @@ bool
 RubyPort::M5Port::sendNextCycle(PacketPtr pkt)
 {
     //minimum latency, must be > 0
-    schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
+    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 
@@ -656,7 +653,7 @@ bool
 RubyPort::PioPort::sendNextCycle(PacketPtr pkt)
 {
     //minimum latency, must be > 0
-    schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
+    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 

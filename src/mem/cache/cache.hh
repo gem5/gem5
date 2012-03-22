@@ -109,12 +109,43 @@ class Cache : public BaseCache
     };
 
     /**
+     * Override the default behaviour of sendDeferredPacket to enable
+     * the memory-side cache port to also send requests based on the
+     * current MSHR status. This queue has a pointer to our specific
+     * cache implementation and is used by the MemSidePort.
+     */
+    class MemSidePacketQueue : public PacketQueue
+    {
+
+      protected:
+
+        Cache<TagStore> &cache;
+
+      public:
+
+        MemSidePacketQueue(Cache<TagStore> &cache, Port &port,
+                           const std::string &label) :
+            PacketQueue(cache, port, label), cache(cache) { }
+
+        /**
+         * Override the normal sendDeferredPacket and do not only
+         * consider the transmit list (used for responses), but also
+         * requests.
+         */
+        virtual void sendDeferredPacket();
+
+    };
+
+    /**
      * The memory-side port extends the base cache master port with
      * access functions for functional, atomic and timing snoops.
      */
     class MemSidePort : public CacheMasterPort
     {
       private:
+
+        /** The cache-specific queue. */
+        MemSidePacketQueue _queue;
 
         // a pointer to our specific cache implementation
         Cache<TagStore> *cache;
@@ -134,11 +165,6 @@ class Cache : public BaseCache
 
         MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                     const std::string &_label);
-
-        /**
-         * Overload sendDeferredPacket of SimpleTimingPort.
-         */
-        virtual void sendDeferredPacket();
     };
 
     /** Tag and data Storage */

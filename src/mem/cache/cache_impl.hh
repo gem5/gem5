@@ -1646,7 +1646,7 @@ Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::MemSidePort::sendDeferredPacket()
+Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
     // if we have a response packet waiting we have to start with that
     if (deferredPacketReady()) {
@@ -1654,7 +1654,7 @@ Cache<TagStore>::MemSidePort::sendDeferredPacket()
         trySendTiming();
     } else {
         // check for request packets (requests & writebacks)
-        PacketPtr pkt = cache->getTimingPacket();
+        PacketPtr pkt = cache.getTimingPacket();
         if (pkt == NULL) {
             // can happen if e.g. we attempt a writeback and fail, but
             // before the retry, the writeback is eliminated because
@@ -1663,7 +1663,7 @@ Cache<TagStore>::MemSidePort::sendDeferredPacket()
         } else {
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
-            waitingOnRetry = !sendTiming(pkt);
+            waitingOnRetry = !port.sendTiming(pkt);
 
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");
@@ -1679,7 +1679,7 @@ Cache<TagStore>::MemSidePort::sendDeferredPacket()
                 // care about this packet and might override it before
                 // it gets retried
             } else {
-                cache->markInService(mshr, pkt);
+                cache.markInService(mshr, pkt);
             }
         }
     }
@@ -1688,7 +1688,7 @@ Cache<TagStore>::MemSidePort::sendDeferredPacket()
     // next send, not only looking at the response transmit list, but
     // also considering when the next MSHR is ready
     if (!waitingOnRetry) {
-        scheduleSend(cache->nextMSHRReadyTime());
+        scheduleSend(cache.nextMSHRReadyTime());
     }
 }
 
@@ -1696,6 +1696,7 @@ template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
-    : BaseCache::CacheMasterPort(_name, _cache, _label), cache(_cache)
+    : BaseCache::CacheMasterPort(_name, _cache, _queue),
+      _queue(*_cache, *this, _label), cache(_cache)
 {
 }

@@ -46,9 +46,11 @@ class AbstractController;
 class RubyPort : public MemObject
 {
   public:
-    class M5Port : public SimpleTimingPort
+    class M5Port : public QueuedPort
     {
       private:
+
+        PacketQueue queue;
         RubyPort *ruby_port;
         RubySystem* ruby_system;
         bool _onRetryList;
@@ -81,9 +83,12 @@ class RubyPort : public MemObject
 
     friend class M5Port;
 
-    class PioPort : public SimpleTimingPort
+    class PioPort : public QueuedPort
     {
       private:
+
+        PacketQueue queue;
+
         RubyPort *ruby_port;
 
       public:
@@ -93,6 +98,7 @@ class RubyPort : public MemObject
       protected:
         virtual bool recvTiming(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
+        virtual void recvFunctional(PacketPtr pkt) { }
     };
 
     friend class PioPort;

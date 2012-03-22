@@ -31,6 +31,7 @@
 #ifndef __MEM_MPORT_HH__
 #define __MEM_MPORT_HH__
 
+#include "mem/mem_object.hh"
 #include "mem/tport.hh"
 
 /*
@@ -40,26 +41,20 @@
  * the underpinnings of SimpleTimingPort, but it tweaks some of the external
  * functions.
  */
-
 class MessagePort : public SimpleTimingPort
 {
+
   public:
-    MessagePort(std::string pname, MemObject *_owner = NULL) :
-        SimpleTimingPort(pname, _owner)
+    MessagePort(const std::string &name, MemObject *owner) :
+        SimpleTimingPort(name, owner)
     {}
 
     virtual ~MessagePort()
     {}
 
-    void
-    recvFunctional(PacketPtr pkt)
-    {
-        recvAtomic(pkt);
-    }
+  protected:
 
     Tick recvAtomic(PacketPtr pkt);
-
-  protected:
 
     virtual Tick recvMessage(PacketPtr pkt) = 0;
 

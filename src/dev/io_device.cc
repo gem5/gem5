@@ -36,9 +36,10 @@
 #include "dev/io_device.hh"
 #include "sim/system.hh"
 
-PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
-    : SimpleTimingPort(dev->name() + pname, dev), device(dev)
-{ }
+PioPort::PioPort(PioDevice *dev)
+    : SimpleTimingPort(dev->name() + "-pioport", dev), device(dev)
+{
+}
 
 
 Tick
@@ -55,7 +56,7 @@ PioPort::getAddrRanges()
 
 
 PioDevice::PioDevice(const Params *p)
-    : MemObject(p), sys(p->system), pioPort(this, sys)
+    : MemObject(p), sys(p->system), pioPort(this)
 {}
 
 PioDevice::~PioDevice()

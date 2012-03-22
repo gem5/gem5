@@ -65,7 +65,7 @@ class PioPort : public SimpleTimingPort
 
   public:
 
-    PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
+    PioPort(PioDevice *dev);
 };
 
 

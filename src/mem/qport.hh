@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012 ARM Limited
- * All rights reserved
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2008 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,56 +34,68 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Andreas Hansson
  */
 
-#include "dev/x86/intdev.hh"
+#ifndef __MEM_QPORT_HH__
+#define __MEM_QPORT_HH__
 
-void
-X86ISA::IntDev::IntPort::sendMessage(ApicList apics, TriggerIntMessage message,
-                                     bool timing)
-{
-    ApicList::iterator apicIt;
-    for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
-        PacketPtr pkt = buildIntRequest(*apicIt, message);
-        if (timing) {
-            queue.schedSendTiming(pkt, curTick() + latency);
-            // The target handles cleaning up the packet in timing mode.
-        } else {
-            // ignore the latency involved in the atomic transaction
-            sendAtomic(pkt);
-            assert(pkt->isResponse());
-            // also ignore the latency in handling the response
-            recvResponse(pkt);
-            delete pkt->req;
-            delete pkt;
-        }
-    }
-}
+/**
+ * @file
+ * Declaration of the queued port.
+ */
 
-void
-X86ISA::IntDev::init()
-{
-    if (!intPort.isConnected()) {
-        panic("Int port not connected to anything!");
-    }
-    intPort.sendRangeChange();
-}
+#include "mem/packet_queue.hh"
+#include "mem/port.hh"
 
-X86ISA::IntSourcePin *
-X86IntSourcePinParams::create()
+/**
+ * A queued port is a port that has an infinite queue for outgoing
+ * packets and thus decouples the module that wants to send
+ * request/responses from the flow control (retry mechanism) of the
+ * port. A queued port can be used by both a master and a slave. The
+ * queue is a parameter to allow tailoring of the queue implementation
+ * (used in the cache).
+ */
+class QueuedPort : public Port
 {
-    return new X86ISA::IntSourcePin(this);
-}
 
-X86ISA::IntSinkPin *
-X86IntSinkPinParams::create()
-{
-    return new X86ISA::IntSinkPin(this);
-}
+  protected:
 
-X86ISA::IntLine *
-X86IntLineParams::create()
-{
-    return new X86ISA::IntLine(this);
-}
+    /** Packet queue used to store outgoing requests and responses. */
+    PacketQueue &queue;
+
+     /** This function is notification that the device should attempt to send a
+      * packet again. */
+    virtual void recvRetry() { queue.retry(); }
+
+    virtual void recvRangeChange() { }
+
+  public:
+
+    /**
+     * Create a QueuedPort with a given name, owner, and a supplied
+     * implementation of a packet queue. The external definition of
+     * the queue enables e.g. the cache to implement a specific queue
+     * behaviuor in a subclass, and provide the latter to the
+     * QueuePort constructor.
+     */
+    QueuedPort(const std::string& name, MemObject* owner, PacketQueue &queue) :
+        Port(name, owner), queue(queue)
+    { }
+
+    virtual ~QueuedPort() { }
+
+    /** Check the list of buffered packets against the supplied
+     * functional request. */
+    bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
+
+    /**
+     * Hook for draining the queued port.
+     *
+     * @param de an event which is used to signal back to the caller
+     * @returns a number indicating how many times process will be called
+     */
+    unsigned int drain(Event *de) { return queue.drain(de); }
+};
+
+#endif // __MEM_QPORT_HH__

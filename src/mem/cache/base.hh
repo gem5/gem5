@@ -64,8 +64,8 @@
 #include "mem/cache/mshr_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
+#include "mem/qport.hh"
 #include "mem/request.hh"
-#include "mem/tport.hh"
 #include "params/BaseCache.hh"
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
@@ -118,7 +118,7 @@ class BaseCache : public MemObject
      * and the sendDeferredPacket of the timing port is modified to
      * consider both the transmit list and the requests from the MSHR.
      */
-    class CacheMasterPort : public SimpleTimingPort
+    class CacheMasterPort : public QueuedPort
     {
 
       public:
@@ -131,22 +131,31 @@ class BaseCache : public MemObject
         void requestBus(RequestCause cause, Tick time)
         {
             DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
-            schedSendEvent(time);
+            queue.schedSendEvent(time);
         }
 
+        /**
+         * Schedule the transmissions of a response packet at a given
+         * point in time.
+         *
+         * @param pkt response packet
+         * @param when time to send the response
+         */
         void respond(PacketPtr pkt, Tick time) {
-            schedSendTiming(pkt, time);
+            queue.schedSendTiming(pkt, time);
         }
 
       protected:
 
         CacheMasterPort(const std::string &_name, BaseCache *_cache,
-                        const std::string &_label);
+                        PacketQueue &_queue) :
+            QueuedPort(_name, _cache, _queue)
+        { }
 
         /**
          * Memory-side port always snoops.
          *
-         * return always true
+         * @return always true
          */
         virtual bool isSnooping() { return true; }
     };
@@ -159,7 +168,7 @@ class BaseCache : public MemObject
      * incoming requests. If blocked, the port will issue a retry once
      * unblocked.
      */
-    class CacheSlavePort : public SimpleTimingPort
+    class CacheSlavePort : public QueuedPort
     {
 
       public:
@@ -170,14 +179,24 @@ class BaseCache : public MemObject
         /** Return to normal operation and accept new requests. */
         void clearBlocked();
 
+        /**
+         * Schedule the transmissions of a response packet at a given
+         * point in time.
+         *
+         * @param pkt response packet
+         * @param when time to send the response
+         */
         void respond(PacketPtr pkt, Tick time) {
-            schedSendTiming(pkt, time);
+            queue.schedSendTiming(pkt, time);
         }
 
       protected:
 
         CacheSlavePort(const std::string &_name, BaseCache *_cache,
                        const std::string &_label);
+
+        /** A normal packet queue used to store responses. */
+        PacketQueue queue;
 
         bool blocked;
 

@@ -54,18 +54,11 @@
 
 using namespace std;
 
-BaseCache::CacheMasterPort::CacheMasterPort(const std::string &_name,
-                                            BaseCache *_cache,
-                                            const std::string &_label)
-    : SimpleTimingPort(_name, _cache, _label)
-{
-}
-
 BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
-    : SimpleTimingPort(_name, _cache, _label), blocked(false),
-      mustSendRetry(false), sendRetryEvent(this)
+    : QueuedPort(_name, _cache, queue), queue(*_cache, *this, _label),
+      blocked(false), mustSendRetry(false), sendRetryEvent(this)
 {
 }
 
