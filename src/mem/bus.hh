@@ -54,14 +54,12 @@
 #include <set>
 #include <string>
 
-#include "base/hashmap.hh"
 #include "base/range.hh"
 #include "base/range_map.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
-#include "mem/request.hh"
 #include "params/Bus.hh"
 #include "sim/eventq.hh"
 
@@ -137,18 +135,6 @@ class Bus : public MemObject
 
     };
 
-    class BusFreeEvent : public Event
-    {
-        Bus * bus;
-
-      public:
-        BusFreeEvent(Bus * _bus);
-        void process();
-        const char *description() const;
-    };
-
-    /** a globally unique id for this bus. */
-    int busId;
     /** the clock speed for the bus */
     int clock;
     /** cycles of overhead per transaction */
@@ -276,13 +262,27 @@ class Bus : public MemObject
     /** Occupy the bus until until */
     void occupyBus(Tick until);
 
+    /**
+     * Release the bus after being occupied and return to an idle
+     * state where we proceed to send a retry to any potential waiting
+     * port, or drain if asked to do so.
+     */
+    void releaseBus();
+
+    /**
+     * Send a retry to the port at the head of the retryList. The
+     * caller must ensure that the list is not empty.
+     */
+    void retryWaiting();
+
     /** Ask everyone on the bus what their size is
      * @param id id of the busport that made the request
      * @return the max of all the sizes
      */
     unsigned findBlockSize(int id);
 
-    BusFreeEvent busIdle;
+    // event used to schedule a release of the bus
+    EventWrapper<Bus, &Bus::releaseBus> busIdleEvent;
 
     bool inRetry;
     std::set<int> inRecvRangeChange;
