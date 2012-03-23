@@ -352,13 +352,9 @@ Set::print(std::ostream& out) const
     }
 
     char buff[24];
-    out << "[Set (" << m_nSize << ") 0x ";
+    out << "[Set (" << m_nSize << ")";
     for (int i = m_nArrayLen - 1; i >= 0; i--) {
-#ifdef _LP64
-        sprintf(buff,"0x %016llX ", (long long)m_p_nArray[i]);
-#else
-        sprintf(buff,"%08X ", m_p_nArray[i]);
-#endif // __32BITS__
+        csprintf(buff," 0x%08X", m_p_nArray[i]);
         out << buff;
     }
     out << " ]";
