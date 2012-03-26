@@ -571,14 +571,15 @@ decode OPCODE default Unknown::unknown() {
                 }});
                 583: mffs({{ Ft_uq = FPSCR; }});
                 134: mtfsfi({{
-                    FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W)), U_FIELD);
+                    FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W_FIELD)),
+                                          U_FIELD);
                 }});
                 711: mtfsf({{
-                    if (L == 1) { FPSCR = Fb_uq; }
+                    if (L_FIELD == 1) { FPSCR = Fb_uq; }
                     else {
                         for (int i = 0; i < 8; ++i) {
                             if (bits(FLM, i) == 1) {
-                                int k = 4 * (i + (8 * (1 - W)));
+                                int k = 4 * (i + (8 * (1 - W_FIELD)));
                                 FPSCR = insertBits(FPSCR, k, k + 3,
                                                    bits(Fb_uq, k, k + 3));
                             }

@@ -75,8 +75,10 @@ def bitfield BF            <25:23>;
 
 // Fields for FPSCR manipulation instructions
 def bitfield FLM           <24:17>;
-def bitfield L             <25>;
-def bitfield W             <16>;
+// Named so to avoid conflicts with potential template typenames
+def bitfield L_FIELD       <25>;
+// Named so to avoid conflicts with range_map.hh
+def bitfield W_FIELD       <16>;
 // Named so to avoid conflicts with range.hh
 def bitfield U_FIELD       <15:12>;
 
