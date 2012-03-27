@@ -133,12 +133,12 @@ elif buildEnv['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
     test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0])
-    setWorkCountOptions(test_sys, options)
+    Simulation.setWorkCountOptions(test_sys, options)
 elif buildEnv['TARGET_ISA'] == "arm":
     test_sys = makeArmSystem(test_mem_mode,
             options.machine_type, bm[0],
             bare_metal=options.bare_metal)
-    setWorkCountOptions(test_sys, options)
+    Simulation.setWorkCountOptions(test_sys, options)
 else:
     fatal("incapable of building non-alpha or non-sparc full system!")
 

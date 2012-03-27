@@ -510,23 +510,6 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     self.intel_mp_table.base_entries = base_entries
     self.intel_mp_table.ext_entries = ext_entries
 
-def setWorkCountOptions(system, options):
-    if options.work_item_id != None:
-        system.work_item_id = options.work_item_id
-    if options.work_begin_cpu_id_exit != None:
-        system.work_begin_cpu_id_exit = options.work_begin_cpu_id_exit
-    if options.work_end_exit_count != None:
-        system.work_end_exit_count = options.work_end_exit_count
-    if options.work_end_checkpoint_count != None:
-        system.work_end_ckpt_count = options.work_end_checkpoint_count
-    if options.work_begin_exit_count != None:
-        system.work_begin_exit_count = options.work_begin_exit_count
-    if options.work_begin_checkpoint_count != None:
-        system.work_begin_ckpt_count = options.work_begin_checkpoint_count
-    if options.work_cpus_checkpoint_count != None:
-        system.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
-
-
 def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     self = LinuxX86System()
 
