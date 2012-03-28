@@ -42,10 +42,8 @@
 #
 # "m5 test.py"
 
-import os
 import optparse
 import sys
-from os.path import join as joinpath
 
 import m5
 from m5.defines import buildEnv
@@ -55,32 +53,16 @@ from m5.util import addToPath, fatal
 addToPath('../common')
 addToPath('../ruby')
 
+import Options
 import Ruby
-
 import Simulation
 import CacheConfig
 from Caches import *
 from cpu2000 import *
 
-# Get paths we might need.  It's expected this file is in m5/configs/example.
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
-m5_root = os.path.dirname(config_root)
-
 parser = optparse.OptionParser()
-
-# Benchmark options
-parser.add_option("-c", "--cmd",
-    default=joinpath(m5_root, "tests/test-progs/hello/bin/%s/linux/hello" % \
-            buildEnv['TARGET_ISA']),
-    help="The binary to run in syscall emulation mode.")
-parser.add_option("-o", "--options", default="",
-    help='The options to pass to the binary, use " " around the entire string')
-parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
-parser.add_option("--output", default="", help="Redirect stdout to a file.")
-parser.add_option("--errout", default="", help="Redirect stderr to a file.")
-
-execfile(os.path.join(config_root, "common", "Options.py"))
+Options.addCommonOptions(parser)
+Options.addSEOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -110,11 +92,14 @@ if options.bench:
         except:
             print >>sys.stderr, "Unable to find workload for %s: %s" % (buildEnv['TARGET_ISA'], app)
             sys.exit(1)
-else:
+elif options.cmd:
     process = LiveProcess()
     process.executable = options.cmd
     process.cmd = [options.cmd] + options.options.split()
     multiprocesses.append(process)
+else:
+    print >> sys.stderr, "No workload specified. Exiting!\n"
+    sys.exit(1)
 
 
 if options.input != "":

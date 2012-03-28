@@ -39,7 +39,6 @@
 # Authors: Ali Saidi
 
 import optparse
-import os
 import sys
 
 import m5
@@ -55,43 +54,11 @@ from Benchmarks import *
 import Simulation
 import CacheConfig
 from Caches import *
-
-# Get paths we might need.  It's expected this file is in m5/configs/example.
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
+import Options
 
 parser = optparse.OptionParser()
-
-# Simulation options
-parser.add_option("--timesync", action="store_true",
-        help="Prevent simulated time from getting ahead of real time")
-
-# System options
-parser.add_option("--kernel", action="store", type="string")
-parser.add_option("--script", action="store", type="string")
-parser.add_option("--frame-capture", action="store_true",
-        help="Stores changed frame buffers from the VNC server to compressed "\
-        "files in the gem5 output directory")
-
-if buildEnv['TARGET_ISA'] == "arm":
-    parser.add_option("--bare-metal", action="store_true",
-               help="Provide the raw system without the linux specific bits")
-    parser.add_option("--machine-type", action="store", type="choice",
-            choices=ArmMachineType.map.keys(), default="RealView_PBX")
-# Benchmark options
-parser.add_option("--dual", action="store_true",
-                  help="Simulate two systems attached with an ethernet link")
-parser.add_option("-b", "--benchmark", action="store", type="string",
-                  dest="benchmark",
-                  help="Specify the benchmark to run. Available benchmarks: %s"\
-                  % DefinedBenchmarks)
-
-# Metafile options
-parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
-                  help="Specify the filename to dump a pcap capture of the" \
-                  "ethernet traffic")
-
-execfile(os.path.join(config_root, "common", "Options.py"))
+Options.addCommonOptions(parser)
+Options.addFSOptions(parser)
 
 (options, args) = parser.parse_args()
 

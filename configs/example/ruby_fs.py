@@ -31,9 +31,7 @@
 #
 
 import optparse
-import os
 import sys
-from os.path import join as joinpath
 
 import m5
 from m5.defines import buildEnv
@@ -48,34 +46,15 @@ import Ruby
 from FSConfig import *
 from SysPaths import *
 from Benchmarks import *
+import Options
 import Simulation
-from Caches import *
-
-# Get paths we might need.  It's expected this file is in m5/configs/example.
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
 
 parser = optparse.OptionParser()
-# System options
-parser.add_option("--kernel", action="store", type="string")
-parser.add_option("--script", action="store", type="string")
-# Benchmark options
-parser.add_option("-b", "--benchmark", action="store", type="string",
-                  dest="benchmark",
-                  help="Specify the benchmark to run. Available benchmarks: %s"\
-                  % DefinedBenchmarks)
-parser.add_option("-o", "--options", default="",
-    help='The options to pass to the binary, use " " around the entire string')
-parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
-parser.add_option("--output", default="", help="Redirect stdout to a file.")
-parser.add_option("--errout", default="", help="Redirect stderr to a file.")
+Options.addCommonOptions(parser)
+Options.addFSOptions(parser)
 
-#
 # Add the ruby specific and protocol specific options
-#
 Ruby.define_options(parser)
-
-execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
 options.ruby = True

@@ -42,15 +42,13 @@ addToPath(config_root+'/configs/common')
 addToPath(config_root+'/configs/ruby')
 
 import Ruby
+import Options
 
 parser = optparse.OptionParser()
+Options.addCommonOptions(parser)
 
-#
 # Add the ruby specific and protocol specific options
-#
 Ruby.define_options(parser)
-
-execfile(os.path.join(config_root, "configs/common", "Options.py"))
 
 (options, args) = parser.parse_args()
 
