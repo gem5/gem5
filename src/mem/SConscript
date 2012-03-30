@@ -48,7 +48,6 @@ Source('se_translating_port_proxy.cc')
 
 if env['TARGET_ISA'] != 'no':
     SimObject('PhysicalMemory.py')
-    Source('dram.cc')
     Source('page_table.cc')
     Source('physical.cc')
 
