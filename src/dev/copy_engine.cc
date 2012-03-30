@@ -110,21 +110,26 @@ CopyEngine::CopyEngineChannel::~CopyEngineChannel()
     delete [] copyBuffer;
 }
 
-Port *
-CopyEngine::getPort(const std::string &if_name, int idx)
+MasterPort &
+CopyEngine::getMasterPort(const std::string &if_name, int idx)
 {
-    if (if_name == "dma") {
-        if (idx < chan.size())
-            return chan[idx]->getPort();
+    if (if_name != "dma") {
+        // pass it along to our super class
+        return PciDev::getMasterPort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(chan.size())) {
+            panic("CopyEngine::getMasterPort: unknown index %d\n", idx);
+        }
+
+        return chan[idx]->getMasterPort();
     }
-    return PciDev::getPort(if_name, idx);
 }
 
 
-Port *
-CopyEngine::CopyEngineChannel::getPort()
+MasterPort &
+CopyEngine::CopyEngineChannel::getMasterPort()
 {
-    return &cePort;
+    return cePort;
 }
 
 void

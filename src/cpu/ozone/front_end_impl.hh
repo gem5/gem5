@@ -59,12 +59,6 @@ FrontEnd<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 }
 
 template<class Impl>
-void
-FrontEnd<Impl>::IcachePort::recvRangeChange()
-{
-}
-
-template<class Impl>
 bool
 FrontEnd<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {

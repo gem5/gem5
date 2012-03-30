@@ -316,8 +316,6 @@ class OzoneCPU : public BaseCPU
     System *system;
     PhysicalMemory *physmem;
 
-    virtual Port *getPort(const std::string &name, int idx);
-
     FrontEnd *frontEnd;
 
     BackEnd *backEnd;

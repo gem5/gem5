@@ -53,7 +53,7 @@
 
 using namespace TheISA;
 
-SETranslatingPortProxy::SETranslatingPortProxy(Port& port, Process *p,
+SETranslatingPortProxy::SETranslatingPortProxy(MasterPort& port, Process *p,
                                            AllocType alloc)
     : PortProxy(port), pTable(p->pTable), process(p),
       allocating(alloc)

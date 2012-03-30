@@ -57,7 +57,7 @@ using namespace std;
 BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
-    : QueuedPort(_name, _cache, queue), queue(*_cache, *this, _label),
+    : QueuedSlavePort(_name, _cache, queue), queue(*_cache, *this, _label),
       blocked(false), mustSendRetry(false), sendRetryEvent(this)
 {
 }
@@ -99,7 +99,7 @@ BaseCache::CacheSlavePort::clearBlocked()
         DPRINTF(CachePort, "Cache port %s sending retry\n", name());
         mustSendRetry = false;
         // @TODO: need to find a better time (next bus cycle?)
-        owner->schedule(sendRetryEvent, curTick() + 1);
+        owner.schedule(sendRetryEvent, curTick() + 1);
     }
 }
 
@@ -108,10 +108,29 @@ void
 BaseCache::init()
 {
     if (!cpuSidePort->isConnected() || !memSidePort->isConnected())
-        panic("Cache %s not hooked up on both sides\n", name());
+        fatal("Cache ports on %s are not connected\n", name());
     cpuSidePort->sendRangeChange();
 }
 
+MasterPort &
+BaseCache::getMasterPort(const std::string &if_name, int idx)
+{
+    if (if_name == "mem_side") {
+        return *memSidePort;
+    }  else {
+        return MemObject::getMasterPort(if_name, idx);
+    }
+}
+
+SlavePort &
+BaseCache::getSlavePort(const std::string &if_name, int idx)
+{
+    if (if_name == "cpu_side") {
+        return *cpuSidePort;
+    } else {
+        return MemObject::getSlavePort(if_name, idx);
+    }
+}
 
 void
 BaseCache::regStats()

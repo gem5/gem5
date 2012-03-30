@@ -75,19 +75,19 @@ RubyDirectedTester::init()
     generator->setDirectedTester(this);
 }
 
-Port *
-RubyDirectedTester::getPort(const std::string &if_name, int idx)
+MasterPort &
+RubyDirectedTester::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name != "cpuPort") {
-        panic("RubyDirectedTester::getPort: unknown port %s requested",
-              if_name);
-    }
+        // pass it along to our super class
+        return MemObject::getMasterPort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(ports.size())) {
+            panic("RubyDirectedTester::getMasterPort: unknown index %d\n", idx);
+        }
 
-    if (idx >= static_cast<int>(ports.size())) {
-        panic("RubyDirectedTester::getPort: unknown index %d requested\n", idx);
+        return *ports[idx];
     }
-
-    return ports[idx];
 }
 
 Tick
@@ -110,7 +110,7 @@ RubyDirectedTester::CpuPort::recvTiming(PacketPtr pkt)
     return true;
 }
 
-Port*
+MasterPort*
 RubyDirectedTester::getCpuPort(int idx)
 {
     assert(idx >= 0 && idx < ports.size());

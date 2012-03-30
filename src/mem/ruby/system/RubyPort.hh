@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -46,7 +58,7 @@ class AbstractController;
 class RubyPort : public MemObject
 {
   public:
-    class M5Port : public QueuedPort
+    class M5Port : public QueuedSlavePort
     {
       private:
 
@@ -74,6 +86,7 @@ class RubyPort : public MemObject
         virtual bool recvTiming(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
         virtual void recvFunctional(PacketPtr pkt);
+        virtual AddrRangeList getAddrRanges();
 
       private:
         bool isPhysMemAddress(Addr addr);
@@ -83,7 +96,7 @@ class RubyPort : public MemObject
 
     friend class M5Port;
 
-    class PioPort : public QueuedPort
+    class PioPort : public QueuedMasterPort
     {
       private:
 
@@ -119,7 +132,8 @@ class RubyPort : public MemObject
 
     void init();
 
-    Port *getPort(const std::string &if_name, int idx);
+    MasterPort &getMasterPort(const std::string &if_name, int idx);
+    SlavePort &getSlavePort(const std::string &if_name, int idx);
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;
@@ -163,9 +177,10 @@ class RubyPort : public MemObject
 
     PioPort physMemPort;
 
-    /*! Vector of CPU Port attached to this Ruby port. */
+    /** Vector of M5 Ports attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;
-    std::vector<M5Port*> cpu_ports;
+    std::vector<M5Port*> slave_ports;
+    std::vector<PioPort*> master_ports;
 
     Event *drainEvent;
 

@@ -154,11 +154,6 @@ Walker::WalkerPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-Walker::WalkerPort::recvRangeChange()
-{
-}
-
-void
 Walker::WalkerPort::recvRetry()
 {
     walker->recvRetry();
@@ -182,13 +177,13 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
     return port.sendTiming(pkt);
 }
 
-Port *
-Walker::getPort(const std::string &if_name, int idx)
+MasterPort &
+Walker::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "port")
-        return &port;
+        return port;
     else
-        panic("No page table walker port named %s!\n", if_name);
+        return MemObject::getMasterPort(if_name, idx);
 }
 
 void

@@ -139,7 +139,7 @@ class CacheUnit : public Resource
     
   protected:
     /** Cache interface. */
-    Port *cachePort;
+    MasterPort *cachePort;
 
     bool cachePortBlocked;
 

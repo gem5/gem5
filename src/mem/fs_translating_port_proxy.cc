@@ -58,7 +58,7 @@ FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
 {
 }
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(Port &port)
+FSTranslatingPortProxy::FSTranslatingPortProxy(MasterPort &port)
     : PortProxy(port), _tc(NULL)
 {
 }

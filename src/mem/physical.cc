@@ -439,31 +439,24 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 }
 
 
-Port *
-PhysicalMemory::getPort(const std::string &if_name, int idx)
+SlavePort &
+PhysicalMemory::getSlavePort(const std::string &if_name, int idx)
 {
     if (if_name != "port") {
-        panic("PhysicalMemory::getPort: unknown port %s requested\n", if_name);
-    }
+        return MemObject::getSlavePort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(ports.size())) {
+            fatal("PhysicalMemory::getSlavePort: unknown index %d\n", idx);
+        }
 
-    if (idx >= static_cast<int>(ports.size())) {
-        panic("PhysicalMemory::getPort: unknown index %d requested\n", idx);
+        return *ports[idx];
     }
-
-    return ports[idx];
 }
 
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
     : SimpleTimingPort(_name, _memory), memory(_memory)
 { }
-
-void
-PhysicalMemory::MemoryPort::recvRangeChange()
-{
-    // memory is a slave and thus should never have to worry about its
-    // neighbours address ranges
-}
 
 AddrRangeList
 PhysicalMemory::MemoryPort::getAddrRanges()

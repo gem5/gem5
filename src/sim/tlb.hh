@@ -49,8 +49,7 @@
 #include "sim/sim_object.hh"
 
 class ThreadContext;
-class Packet;
-class Port;
+class MasterPort;
 
 class BaseTLB : public SimObject
 {
@@ -65,10 +64,16 @@ class BaseTLB : public SimObject
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
-    /** Get any port that the TLB or hardware table walker needs.
-     * This is used for migrating port connections during a takeOverFrom()
-     * call. */
-    virtual Port*  getPort() { return NULL; }
+    /**
+     * Get the table walker master port if present. This is used for
+     * migrating port connections during a CPU takeOverFrom()
+     * call. For architectures that do not have a table walker, NULL
+     * is returned, hence the use of a pointer rather than a
+     * reference.
+     *
+     * @return A pointer to the walker master port or NULL if not present
+     */
+    virtual MasterPort* getMasterPort() { return NULL; }
 
     class Translation
     {

@@ -85,11 +85,6 @@ MemTest::CpuPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-MemTest::CpuPort::recvRangeChange()
-{
-}
-
-void
 MemTest::CpuPort::recvRetry()
 {
     memtest->doRetry();
@@ -161,15 +156,15 @@ MemTest::MemTest(const Params *p)
     dmaOutstanding = false;
 }
 
-Port *
-MemTest::getPort(const std::string &if_name, int idx)
+MasterPort &
+MemTest::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "functional")
-        return &funcPort;
+        return funcPort;
     else if (if_name == "test")
-        return &cachePort;
+        return cachePort;
     else
-        panic("No Such Port\n");
+        return MemObject::getMasterPort(if_name, idx);
 }
 
 void

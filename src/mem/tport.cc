@@ -46,7 +46,7 @@
 
 SimpleTimingPort::SimpleTimingPort(const std::string& _name,
                                    MemObject* _owner) :
-    QueuedPort(_name, _owner, queue), queue(*_owner, *this)
+    QueuedSlavePort(_name, _owner, queue), queue(*_owner, *this)
 {
 }
 
@@ -63,6 +63,9 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 bool
 SimpleTimingPort::recvTiming(PacketPtr pkt)
 {
+    // the port is a slave and should hence only get timing requests
+    assert(pkt->isRequest());
+
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet

@@ -69,7 +69,7 @@ class PioPort : public SimpleTimingPort
 };
 
 
-class DmaPort : public Port
+class DmaPort : public MasterPort
 {
   protected:
     struct DmaReqState : public Packet::SenderState, public FastAlloc
@@ -148,16 +148,9 @@ class DmaPort : public Port
         panic("dma port shouldn't be used for pio access.");
     }
 
-    virtual void recvRangeChange()
-    {
-        // DMA port is a master with a single slave so there is no choice and
-        // thus no need to worry about any address changes
-    }
-
     virtual void recvRetry() ;
 
-    virtual bool isSnooping()
-    { return recvSnoops; }
+    virtual bool isSnooping() const { return recvSnoops; }
 
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();
@@ -231,7 +224,7 @@ class PioDevice : public MemObject
 
     virtual unsigned int drain(Event *de);
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual SlavePort &getSlavePort(const std::string &if_name, int idx = -1);
 
     friend class PioPort;
 
@@ -304,7 +297,8 @@ class DmaDevice : public PioDevice
 
     unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort &getMasterPort(const std::string &if_name,
+                                      int idx = -1);
 
     friend class DmaPort;
 };

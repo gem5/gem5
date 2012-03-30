@@ -45,23 +45,24 @@
 class RubyTester : public MemObject
 {
   public:
-    class CpuPort : public Port
+    class CpuPort : public MasterPort
     {
       private:
         RubyTester *tester;
 
       public:
         CpuPort(const std::string &_name, RubyTester *_tester, int _idx)
-            : Port(_name, _tester), tester(_tester), idx(_idx)
+            : MasterPort(_name, _tester), tester(_tester), idx(_idx)
         {}
 
         int idx;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
+        virtual void recvRetry()
+        { panic("%s does not expect a retry\n", name()); }
         virtual Tick recvAtomic(PacketPtr pkt);
         virtual void recvFunctional(PacketPtr pkt) { }
-        virtual void recvRangeChange() { }
     };
 
     struct SenderState : public Packet::SenderState
@@ -86,9 +87,10 @@ class RubyTester : public MemObject
     RubyTester(const Params *p);
     ~RubyTester();
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort &getMasterPort(const std::string &if_name,
+                                      int idx = -1);
 
-    Port* getCpuPort(int idx);
+    MasterPort* getCpuPort(int idx);
 
     virtual void init();
 

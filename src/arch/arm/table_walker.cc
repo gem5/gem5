@@ -91,13 +91,13 @@ TableWalker::resume()
     }
 }
 
-Port*
-TableWalker::getPort(const std::string &if_name, int idx)
+MasterPort&
+TableWalker::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
-        return &port;
+        return port;
     }
-    return NULL;
+    return MemObject::getMasterPort(if_name, idx);
 }
 
 Fault

@@ -112,10 +112,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
   public:
 
     /**
-     * Override the getPort of the BaseCPU so that we can provide a pointer
-     * to the physmemPort, unique to the Atomic CPU.
+     * Override the getMasterPort of the BaseCPU so that we can
+     * provide the physmemPort, unique to the Atomic CPU.
      */
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort &getMasterPort(const std::string &if_name,
+                                      int idx = -1);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

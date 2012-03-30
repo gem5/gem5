@@ -68,7 +68,7 @@ class FrontEnd
     /** IcachePort class.  Handles doing the communication with the
      * cache/memory.
      */
-    class IcachePort : public Port
+    class IcachePort : public MasterPort
     {
       protected:
         /** Pointer to FE. */
@@ -86,9 +86,6 @@ class FrontEnd
 
         /** Functional version of receive.  Panics. */
         virtual void recvFunctional(PacketPtr pkt);
-
-        /** Receives range change. */
-        virtual void recvRangeChange();
 
         /** Timing version of receive.  Handles setting fetch to the
          * proper status to start fetching. */

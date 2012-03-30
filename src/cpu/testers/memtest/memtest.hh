@@ -62,7 +62,8 @@ class MemTest : public MemObject
     // main simulation loop (one cycle)
     void tick();
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort &getMasterPort(const std::string &if_name,
+                                      int idx = -1);
 
     /**
      * Print state of address in memory system via PrintReq (for
@@ -84,14 +85,14 @@ class MemTest : public MemObject
 
     TickEvent tickEvent;
 
-    class CpuPort : public Port
+    class CpuPort : public MasterPort
     {
         MemTest *memtest;
 
       public:
 
         CpuPort(const std::string &_name, MemTest *_memtest)
-            : Port(_name, _memtest), memtest(_memtest)
+            : MasterPort(_name, _memtest), memtest(_memtest)
         { }
 
       protected:
@@ -101,8 +102,6 @@ class MemTest : public MemObject
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void recvFunctional(PacketPtr pkt);
-
-        virtual void recvRangeChange();
 
         virtual void recvRetry();
     };

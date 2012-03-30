@@ -117,7 +117,7 @@ class BaseCPU : public MemObject
      * both atomic and timing access is to panic and the corresponding
      * subclasses have to override these methods.
      */
-    class CpuPort : public Port
+    class CpuPort : public MasterPort
     {
       public:
 
@@ -128,7 +128,7 @@ class BaseCPU : public MemObject
          * @param _name structural owner of this port
          */
         CpuPort(const std::string& _name, MemObject* _owner) :
-            Port(_name, _owner)
+            MasterPort(_name, _owner)
         { }
 
       protected:
@@ -140,8 +140,6 @@ class BaseCPU : public MemObject
         virtual void recvRetry();
 
         void recvFunctional(PacketPtr pkt);
-
-        void recvRangeChange();
 
     };
 
@@ -172,11 +170,11 @@ class BaseCPU : public MemObject
     MasterID instMasterId() { return _instMasterId; }
 
     /**
-     * Get a port on this MemObject. This method is virtual to allow
+     * Get a master port on this MemObject. This method is virtual to allow
      * the subclasses of the BaseCPU to override it. All CPUs have a
      * data and instruction port, but the Atomic CPU (in its current
      * form) adds a port directly connected to the memory and has to
-     * override getPort.
+     * override getMasterPort.
      *
      * This method uses getDataPort and getInstPort to resolve the two
      * ports.
@@ -184,9 +182,10 @@ class BaseCPU : public MemObject
      * @param if_name the port name
      * @param idx ignored index
      *
-     * @return a pointer to the port with the given name
+     * @return a reference to the port with the given name
      */
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort &getMasterPort(const std::string &if_name,
+                                      int idx = -1);
 
 //    Tick currentTick;
     inline Tick frequency() const { return SimClock::Frequency / clock; }

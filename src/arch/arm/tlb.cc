@@ -722,10 +722,10 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     return fault;
 }
 
-Port*
-TLB::getPort()
+MasterPort*
+TLB::getMasterPort()
 {
-    return tableWalker->getPort("port");
+    return &tableWalker->getMasterPort("port");
 }
 
 

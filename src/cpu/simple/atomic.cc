@@ -65,14 +65,14 @@ AtomicSimpleCPU::TickEvent::description() const
     return "AtomicSimpleCPU tick";
 }
 
-Port *
-AtomicSimpleCPU::getPort(const string &if_name, int idx)
+MasterPort &
+AtomicSimpleCPU::getMasterPort(const string &if_name, int idx)
 {
     if (if_name == "physmem_port") {
         hasPhysMemPort = true;
-        return &physmemPort;
+        return physmemPort;
     } else {
-        return BaseCPU::getPort(if_name, idx);
+        return BaseCPU::getMasterPort(if_name, idx);
     }
 }
 
@@ -94,7 +94,7 @@ AtomicSimpleCPU::init()
     }
 
     if (hasPhysMemPort) {
-        AddrRangeList pmAddrList = physmemPort.getPeer()->getAddrRanges();
+        AddrRangeList pmAddrList = physmemPort.getSlavePort().getAddrRanges();
         physMemAddr = *pmAddrList.begin();
     }
     // Atomic doesn't do MT right now, so contextId == threadId

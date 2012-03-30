@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -299,19 +299,19 @@ BaseCPU::regStats()
         threadContexts[0]->regStats(name());
 }
 
-Port *
-BaseCPU::getPort(const string &if_name, int idx)
+MasterPort &
+BaseCPU::getMasterPort(const string &if_name, int idx)
 {
     // Get the right port based on name. This applies to all the
     // subclasses of the base CPU and relies on their implementation
     // of getDataPort and getInstPort. In all cases there methods
     // return a CpuPort pointer.
     if (if_name == "dcache_port")
-        return &getDataPort();
+        return getDataPort();
     else if (if_name == "icache_port")
-        return &getInstPort();
+        return getInstPort();
     else
-        panic("CPU %s has no port named %s\n", name(), if_name);
+        return MemObject::getMasterPort(if_name, idx);
 }
 
 Tick
@@ -381,8 +381,6 @@ BaseCPU::switchOut()
 void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    CpuPort &ic = getInstPort();
-    CpuPort &dc = getDataPort();
     assert(threadContexts.size() == oldCPU->threadContexts.size());
 
     _cpuId = oldCPU->cpuId();
@@ -407,24 +405,21 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             ThreadContext::compare(oldTC, newTC);
         */
 
-        Port  *old_itb_port, *old_dtb_port, *new_itb_port, *new_dtb_port;
-        old_itb_port = oldTC->getITBPtr()->getPort();
-        old_dtb_port = oldTC->getDTBPtr()->getPort();
-        new_itb_port = newTC->getITBPtr()->getPort();
-        new_dtb_port = newTC->getDTBPtr()->getPort();
+        MasterPort *old_itb_port = oldTC->getITBPtr()->getMasterPort();
+        MasterPort *old_dtb_port = oldTC->getDTBPtr()->getMasterPort();
+        MasterPort *new_itb_port = newTC->getITBPtr()->getMasterPort();
+        MasterPort *new_dtb_port = newTC->getDTBPtr()->getMasterPort();
 
         // Move over any table walker ports if they exist
         if (new_itb_port && !new_itb_port->isConnected()) {
             assert(old_itb_port);
-            Port *peer = old_itb_port->getPeer();;
-            new_itb_port->setPeer(peer);
-            peer->setPeer(new_itb_port);
+            SlavePort &slavePort = old_itb_port->getSlavePort();
+            new_itb_port->bind(slavePort);
         }
         if (new_dtb_port && !new_dtb_port->isConnected()) {
             assert(old_dtb_port);
-            Port *peer = old_dtb_port->getPeer();;
-            new_dtb_port->setPeer(peer);
-            peer->setPeer(new_dtb_port);
+            SlavePort &slavePort = old_dtb_port->getSlavePort();
+            new_dtb_port->bind(slavePort);
         }
 
         // Checker whether or not we have to transfer CheckerCPU
@@ -432,26 +427,25 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         CheckerCPU *oldChecker = oldTC->getCheckerCpuPtr();
         CheckerCPU *newChecker = newTC->getCheckerCpuPtr();
         if (oldChecker && newChecker) {
-            Port *old_checker_itb_port, *old_checker_dtb_port;
-            Port *new_checker_itb_port, *new_checker_dtb_port;
-
-            old_checker_itb_port = oldChecker->getITBPtr()->getPort();
-            old_checker_dtb_port = oldChecker->getDTBPtr()->getPort();
-            new_checker_itb_port = newChecker->getITBPtr()->getPort();
-            new_checker_dtb_port = newChecker->getDTBPtr()->getPort();
+            MasterPort *old_checker_itb_port =
+                oldChecker->getITBPtr()->getMasterPort();
+            MasterPort *old_checker_dtb_port =
+                oldChecker->getDTBPtr()->getMasterPort();
+            MasterPort *new_checker_itb_port =
+                newChecker->getITBPtr()->getMasterPort();
+            MasterPort *new_checker_dtb_port =
+                newChecker->getDTBPtr()->getMasterPort();
 
             // Move over any table walker ports if they exist for checker
             if (new_checker_itb_port && !new_checker_itb_port->isConnected()) {
                 assert(old_checker_itb_port);
-                Port *peer = old_checker_itb_port->getPeer();;
-                new_checker_itb_port->setPeer(peer);
-                peer->setPeer(new_checker_itb_port);
+                SlavePort &slavePort = old_checker_itb_port->getSlavePort();;
+                new_checker_itb_port->bind(slavePort);
             }
             if (new_checker_dtb_port && !new_checker_dtb_port->isConnected()) {
                 assert(old_checker_dtb_port);
-                Port *peer = old_checker_dtb_port->getPeer();;
-                new_checker_dtb_port->setPeer(peer);
-                peer->setPeer(new_checker_dtb_port);
+                SlavePort &slavePort = old_checker_dtb_port->getSlavePort();;
+                new_checker_dtb_port->bind(slavePort);
             }
         }
     }
@@ -470,16 +464,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // Connect new CPU to old CPU's memory only if new CPU isn't
     // connected to anything.  Also connect old CPU's memory to new
     // CPU.
-    if (!ic.isConnected()) {
-        Port *peer = oldCPU->getInstPort().getPeer();
-        ic.setPeer(peer);
-        peer->setPeer(&ic);
+    if (!getInstPort().isConnected()) {
+        getInstPort().bind(oldCPU->getInstPort().getSlavePort());
     }
 
-    if (!dc.isConnected()) {
-        Port *peer = oldCPU->getDataPort().getPeer();
-        dc.setPeer(peer);
-        peer->setPeer(&dc);
+    if (!getDataPort().isConnected()) {
+        getDataPort().bind(oldCPU->getDataPort().getSlavePort());
     }
 }
 
@@ -567,9 +557,4 @@ BaseCPU::CpuPort::recvFunctional(PacketPtr pkt)
     // No internal storage to update (in the general case). In the
     // long term this should never be called, but that assumed a split
     // into master/slave and request/response.
-}
-
-void
-BaseCPU::CpuPort::recvRangeChange()
-{
 }

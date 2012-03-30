@@ -218,12 +218,12 @@ class PciDev : public DmaDevice
 
     virtual unsigned int drain(Event *de);
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1)
+    virtual SlavePort &getSlavePort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "config") {
-            return &configPort;
+            return configPort;
         }
-        return DmaDevice::getPort(if_name, idx);
+        return DmaDevice::getSlavePort(if_name, idx);
     }
 
 };

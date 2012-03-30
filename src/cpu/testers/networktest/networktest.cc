@@ -82,11 +82,6 @@ NetworkTest::CpuPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-NetworkTest::CpuPort::recvRangeChange()
-{
-}
-
-void
 NetworkTest::CpuPort::recvRetry()
 {
     networktest->doRetry();
@@ -126,13 +121,13 @@ NetworkTest::NetworkTest(const Params *p)
             name(), id);
 }
 
-Port *
-NetworkTest::getPort(const std::string &if_name, int idx)
+MasterPort &
+NetworkTest::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "test")
-        return &cachePort;
+        return cachePort;
     else
-        panic("No Such Port\n");
+        return MemObject::getMasterPort(if_name, idx);
 }
 
 void

@@ -240,7 +240,7 @@ class OzoneLWLSQ {
     /** Pointer to the back-end stage. */
     BackEnd *be;
 
-    class DcachePort : public Port
+    class DcachePort : public MasterPort
     {
       protected:
         OzoneLWLSQ *lsq;
@@ -255,13 +255,10 @@ class OzoneLWLSQ {
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual void recvRangeChange();
-
         /**
          * Is a snooper due to LSQ maintenance
          */
-        virtual bool isSnooping()
-        { return true; }
+        virtual bool isSnooping() const { return true; }
 
         virtual bool recvTiming(PacketPtr pkt);
 

@@ -57,7 +57,7 @@
  * recvFunctional and recvTiming through recvAtomic. It is always a
  * slave port.
  */
-class SimpleTimingPort : public QueuedPort
+class SimpleTimingPort : public QueuedSlavePort
 {
 
   protected:

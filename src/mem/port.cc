@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
+ *          Andreas Hansson
+ *          William Wang
  */
 
 /**
@@ -33,11 +47,10 @@
  * Port object definitions.
  */
 #include "base/trace.hh"
-#include "debug/Config.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-Port::Port(const std::string &_name, MemObject *_owner)
+Port::Port(const std::string &_name, MemObject& _owner)
     : portName(_name), peer(NULL), owner(_owner)
 {
 }
@@ -46,22 +59,53 @@ Port::~Port()
 {
 }
 
-void
-Port::setPeer(Port *port)
+/**
+ * Master port
+ */
+MasterPort::MasterPort(const std::string& name, MemObject* owner)
+    : Port(name, *owner), _slavePort(NULL)
 {
-    DPRINTF(Config, "setting peer to %s\n", port->name());
+}
 
-    peer = port;
+MasterPort::~MasterPort()
+{
+}
+
+SlavePort&
+MasterPort::getSlavePort() const
+{
+    if(_slavePort == NULL)
+        panic("Cannot getSlavePort on master port %s that is not connected\n",
+              name());
+
+    return *_slavePort;
 }
 
 void
-Port::setOwner(MemObject *_owner)
+MasterPort::bind(SlavePort& slave_port)
 {
-    owner = _owner;
+    // master port keeps track of the slave port
+    _slavePort = &slave_port;
+    peer = &slave_port;
+
+    // slave port also keeps track of master port
+    _slavePort->bind(*this);
 }
 
-void
-Port::printAddr(Addr a)
+bool
+MasterPort::isConnected() const
+{
+    return _slavePort != NULL;
+}
+
+unsigned
+MasterPort::peerBlockSize() const
+{
+    return _slavePort->deviceBlockSize();
+}
+
+ void
+MasterPort::printAddr(Addr a)
 {
     Request req(a, 1, 0, Request::funcMasterId);
     Packet pkt(&req, MemCmd::PrintReq, Packet::Broadcast);
@@ -69,4 +113,45 @@ Port::printAddr(Addr a)
     pkt.senderState = &prs;
 
     sendFunctional(&pkt);
+}
+
+/**
+ * Slave port
+ */
+SlavePort::SlavePort(const std::string& name, MemObject* owner)
+    : Port(name, *owner), _masterPort(NULL)
+{
+}
+
+SlavePort::~SlavePort()
+{
+}
+
+void
+SlavePort::bind(MasterPort& master_port)
+{
+    _masterPort = &master_port;
+    peer = &master_port;
+}
+
+MasterPort&
+SlavePort::getMasterPort() const
+{
+    if (_masterPort == NULL)
+        panic("Cannot getMasterPort on slave port %s that is not connected\n",
+              name());
+
+    return *_masterPort;
+}
+
+unsigned
+SlavePort::peerBlockSize() const
+{
+    return _masterPort->deviceBlockSize();
+}
+
+bool
+SlavePort::isConnected() const
+{
+    return _masterPort != NULL;
 }

@@ -40,7 +40,6 @@
 #include "mem/cache/base.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
-#include "mem/bus.hh"
 #include "params/BaseCache.hh"
 
 // Tag Templates

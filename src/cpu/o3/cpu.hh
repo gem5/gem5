@@ -186,8 +186,7 @@ class FullO3CPU : public BaseO3CPU
          *
          * @return true since we have to snoop
          */
-        virtual bool isSnooping()
-        { return true; }
+        virtual bool isSnooping() const { return true; }
     };
 
     class TickEvent : public Event

@@ -43,17 +43,26 @@
 #include "mem/mport.hh"
 
 Tick
-MessagePort::recvAtomic(PacketPtr pkt)
+MessageSlavePort::recvAtomic(PacketPtr pkt)
 {
     if (pkt->cmd == MemCmd::MessageReq) {
         return recvMessage(pkt);
-    } else if (pkt->cmd == MemCmd::MessageResp) {
+    } else {
+        panic("%s received unexpected atomic command %s from %s.\n",
+              name(), pkt->cmd.toString(), getMasterPort().name());
+    }
+}
+
+Tick
+MessageMasterPort::recvAtomic(PacketPtr pkt)
+{
+    if (pkt->cmd == MemCmd::MessageResp) {
         // normally we would never see responses in recvAtomic, but
         // since the timing port uses recvAtomic to implement
-        // recvTiming we have to deal with both cases
+        // recvTiming we have to deal with them here
         return recvResponse(pkt);
     } else {
         panic("%s received unexpected atomic command %s from %s.\n",
-              name(), pkt->cmd.toString(), getPeer()->name());
+              name(), pkt->cmd.toString(), getSlavePort().name());
     }
 }

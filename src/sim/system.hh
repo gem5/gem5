@@ -78,7 +78,7 @@ class System : public MemObject
      * master for debug access and for non-structural entities that do
      * not have a port of their own.
      */
-    class SystemPort : public Port
+    class SystemPort : public MasterPort
     {
       public:
 
@@ -86,22 +86,16 @@ class System : public MemObject
          * Create a system port with a name and an owner.
          */
         SystemPort(const std::string &_name, MemObject *_owner)
-            : Port(_name, _owner)
+            : MasterPort(_name, _owner)
         { }
         bool recvTiming(PacketPtr pkt)
         { panic("SystemPort does not receive timing!\n"); return false; }
+        void recvRetry()
+        { panic("SystemPort does not expect retry!\n"); }
         Tick recvAtomic(PacketPtr pkt)
         { panic("SystemPort does not receive atomic!\n"); return 0; }
         void recvFunctional(PacketPtr pkt)
         { panic("SystemPort does not receive functional!\n"); }
-
-        /**
-         * The system port is a master port connected to a single
-         * slave and thus do not care about what ranges the slave
-         * covers (as there is nothing to choose from).
-         */
-        void recvRangeChange() { }
-
     };
 
     SystemPort _systemPort;
@@ -122,12 +116,12 @@ class System : public MemObject
      *
      * @return a reference to the system port we own
      */
-    Port& getSystemPort() { return _systemPort; }
+    MasterPort& getSystemPort() { return _systemPort; }
 
     /**
      * Additional function to return the Port of a memory object.
      */
-    Port *getPort(const std::string &if_name, int idx = -1);
+    MasterPort& getMasterPort(const std::string &if_name, int idx = -1);
 
     static const char *MemoryModeStrings[3];
 

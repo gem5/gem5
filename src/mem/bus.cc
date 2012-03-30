@@ -39,6 +39,7 @@
  *
  * Authors: Ali Saidi
  *          Andreas Hansson
+ *          William Wang
  */
 
 /**
@@ -72,12 +73,14 @@ Bus::Bus(const BusParams *p)
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default master
 
-    // id used to index into interfaces which is a flat vector of all
-    // ports
+    // id used to index into master and slave ports, that currently
+    // has holes to be able to use the id to index into either
     int id = 0;
     for (int i = 0; i < p->port_master_connection_count; ++i) {
         std::string portName = csprintf("%s-p%d", name(), id);
-        interfaces.push_back(new BusPort(portName, this, id));
+        BusMasterPort* bp = new BusMasterPort(portName, this, id);
+        masterPorts.push_back(bp);
+        slavePorts.push_back(NULL);
         ++id;
     }
 
@@ -86,7 +89,9 @@ Bus::Bus(const BusParams *p)
     if (p->port_default_connection_count) {
         defaultPortId = id;
         std::string portName = csprintf("%s-default", name());
-        interfaces.push_back(new BusPort(portName, this, id));
+        BusMasterPort* bp = new BusMasterPort(portName, this, id);
+        masterPorts.push_back(bp);
+        slavePorts.push_back(NULL);
         ++id;
         // this is an additional master port
         ++nbrMasterPorts;
@@ -96,44 +101,55 @@ Bus::Bus(const BusParams *p)
     // nbrMasterPorts in the vector
     for (int i = 0; i < p->port_slave_connection_count; ++i) {
         std::string portName = csprintf("%s-p%d", name(), id);
-        interfaces.push_back(new BusPort(portName, this, id));
+        BusSlavePort* bp = new BusSlavePort(portName, this, id);
+        masterPorts.push_back(NULL);
+        slavePorts.push_back(bp);
         ++id;
     }
 
     clearPortCache();
 }
 
-Port *
-Bus::getPort(const std::string &if_name, int idx)
+MasterPort &
+Bus::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "master") {
         // the master index translates directly to the interfaces
         // vector as they are stored first
-        return interfaces[idx];
-    } else if (if_name == "slave") {
-        // the slaves are stored after the masters and we must thus
-        // offset the slave index with the number of master ports
-        return interfaces[nbrMasterPorts + idx];
+        return *masterPorts[idx];
     } else  if (if_name == "default") {
-        return interfaces[defaultPortId];
+        return *masterPorts[defaultPortId];
     } else {
-        panic("No port %s %d on bus %s\n", if_name, idx, name());
+        return MemObject::getMasterPort(if_name, idx);
+    }
+}
+
+SlavePort &
+Bus::getSlavePort(const std::string &if_name, int idx)
+{
+    if (if_name == "slave") {
+        return *slavePorts[nbrMasterPorts + idx];
+    } else {
+        return MemObject::getSlavePort(if_name, idx);
     }
 }
 
 void
 Bus::init()
 {
-    std::vector<BusPort*>::iterator intIter;
+    std::vector<BusSlavePort*>::iterator intIter;
 
     // iterate over our interfaces and determine which of our neighbours
     // are snooping and add them as snoopers
-    for (intIter = interfaces.begin(); intIter != interfaces.end();
+    for (intIter = slavePorts.begin(); intIter != slavePorts.end();
          intIter++) {
-        if ((*intIter)->getPeer()->isSnooping()) {
-            DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
-                    (*intIter)->getPeer()->name());
-            snoopPorts.push_back(*intIter);
+        // since there are holes in the vector, check for NULL
+        if (*intIter != NULL) {
+            if ((*intIter)->getMasterPort().isSnooping()) {
+                DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
+                        (*intIter)->getMasterPort().name());
+                snoopPorts.push_back(*intIter);
+            }
         }
     }
 }
@@ -194,7 +210,9 @@ Bus::recvTiming(PacketPtr pkt)
     // get the source id and port
     Packet::NodeID src_id = pkt->getSrc();
 
-    BusPort *src_port = interfaces[src_id];
+    // determine the source port based on the id
+    Port *src_port = slavePorts[src_id] ?
+        (Port*) slavePorts[src_id] : (Port*) masterPorts[src_id];
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -218,14 +236,14 @@ Bus::recvTiming(PacketPtr pkt)
     int dest_id;
     Port *dest_port;
 
-    if (dest == Packet::Broadcast) {
+    if (pkt->isRequest()) {
         // the packet is a memory-mapped request and should be broadcasted to
         // our snoopers
-        assert(pkt->isRequest());
+        assert(dest == Packet::Broadcast);
 
         SnoopIter s_end = snoopPorts.end();
         for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
-            BusPort *p = *s_iter;
+            BusSlavePort *p = *s_iter;
             // we got this request from a snooping master
             // (corresponding to our own slave port that is also in
             // snoopPorts) and should not send it back to where it
@@ -241,15 +259,27 @@ Bus::recvTiming(PacketPtr pkt)
         // determine the destination based on the address and forward
         // through the corresponding master port
         dest_id = findPort(pkt->getAddr());
-        dest_port = interfaces[dest_id];
+        dest_port = masterPorts[dest_id];
     } else {
         // the packet is a response, and it should always go back to
         // the port determined by the destination field
         dest_id = dest;
         assert(dest_id != src_id); // catch infinite loops
-        assert(dest_id < interfaces.size());
-        dest_port = interfaces[dest_id];
+        dest_port = slavePorts[dest_id] ?
+            (Port*) slavePorts[dest_id] : (Port*) masterPorts[dest_id];
+
+            // a normal response from the memory system (i.e. from a
+            // connected slave) should always go back to the master
+            // that issued it through one of our slave ports, however
+            // if this is a snoop response it could go either way, for
+            // example, it could be coming from a slave port
+            // connecting an L1 with a coherent master and another L1
+            // coherent master (one of our slave ports), or coming
+            // from the L1 and going to the L2 slave port (through one
+            // of our master ports)
     }
+
+    assert(dest_port != NULL);
 
     // if this is a snoop from a slave (corresponding to our own
     // master), i.e. the memory side of the bus, then do not send it
@@ -318,8 +348,6 @@ Bus::retryWaiting()
 
     // send a retry to the port at the head of the retry list
     inRetry = true;
-    DPRINTF(Bus, "Sending a retry to %s\n",
-            retryList.front()->getPeer()->name());
 
     // note that we might have blocked on the receiving port being
     // busy (rather than the bus itself) and now call retry before the
@@ -427,7 +455,7 @@ Bus::recvAtomic(PacketPtr pkt)
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
-        BusPort *p = *s_iter;
+        BusSlavePort *p = *s_iter;
         // we could have gotten this request from a snooping master
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
@@ -464,7 +492,7 @@ Bus::recvAtomic(PacketPtr pkt)
     // master), i.e. the memory side of the bus, then do not send it
     // back to where it came from
     if (dest_id != src_id) {
-        response_latency = interfaces[dest_id]->sendAtomic(pkt);
+        response_latency = masterPorts[dest_id]->sendAtomic(pkt);
     }
 
     // if we got a response from a snooper, restore it here
@@ -504,7 +532,7 @@ Bus::recvFunctional(PacketPtr pkt)
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
-        BusPort *p = *s_iter;
+        BusSlavePort *p = *s_iter;
         // we could have gotten this request from a snooping master
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
@@ -528,7 +556,7 @@ Bus::recvFunctional(PacketPtr pkt)
         // master), i.e. the memory side of the bus, then do not send
         // it back to where it came from,
         if (dest_id != src_id) {
-            interfaces[dest_id]->sendFunctional(pkt);
+            masterPorts[dest_id]->sendFunctional(pkt);
         }
     }
 }
@@ -551,7 +579,8 @@ Bus::recvRangeChange(int id)
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
-            AddrRangeList ranges = interfaces[id]->getPeer()->getAddrRanges();
+            AddrRangeList ranges =
+                masterPorts[id]->getSlavePort().getAddrRanges();
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -560,8 +589,8 @@ Bus::recvRangeChange(int id)
         }
     } else {
 
-        assert(id < interfaces.size() && id >= 0);
-        BusPort *port = interfaces[id];
+        assert(id < masterPorts.size() && id >= 0);
+        BusMasterPort *port = masterPorts[id];
 
         // Clean out any previously existent ids
         for (PortIter portIter = portMap.begin();
@@ -572,7 +601,7 @@ Bus::recvRangeChange(int id)
                 portIter++;
         }
 
-        ranges = port->getPeer()->getAddrRanges();
+        ranges = port->getSlavePort().getAddrRanges();
 
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
@@ -580,8 +609,8 @@ Bus::recvRangeChange(int id)
             if (portMap.insert(*iter, id) == portMap.end()) {
                 int conflict_id = portMap.find(*iter)->second;
                 fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
-                      name(), interfaces[id]->getPeer()->name(),
-                      interfaces[conflict_id]->getPeer()->name());
+                      name(), masterPorts[id]->getSlavePort().name(),
+                      masterPorts[conflict_id]->getSlavePort().name());
             }
         }
     }
@@ -589,10 +618,10 @@ Bus::recvRangeChange(int id)
 
     // tell all our peers that our address range has changed.
     // Don't tell the device that caused this change, it already knows
-    std::vector<BusPort*>::const_iterator intIter;
+    std::vector<BusSlavePort*>::const_iterator intIter;
 
-    for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        if ((*intIter)->getId() != id)
+    for (intIter = slavePorts.begin(); intIter != slavePorts.end(); intIter++)
+        if (*intIter != NULL && (*intIter)->getId() != id)
             (*intIter)->sendRangeChange();
 
     inRecvRangeChange.erase(id);
@@ -640,7 +669,7 @@ Bus::getAddrRanges(int id)
 }
 
 bool
-Bus::isSnooping(int id)
+Bus::isSnooping(int id) const
 {
     // in essence, answer the question if there are snooping ports
     return !snoopPorts.empty();
@@ -656,7 +685,7 @@ Bus::findBlockSize(int id)
 
     PortIter p_end = portMap.end();
     for (PortIter p_iter = portMap.begin(); p_iter != p_end; p_iter++) {
-        unsigned tmp_bs = interfaces[p_iter->second]->peerBlockSize();
+        unsigned tmp_bs = masterPorts[p_iter->second]->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }

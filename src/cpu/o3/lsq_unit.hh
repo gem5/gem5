@@ -90,7 +90,7 @@ class LSQUnit {
     void regStats();
 
     /** Sets the pointer to the dcache port. */
-    void setDcachePort(Port *dcache_port);
+    void setDcachePort(MasterPort *dcache_port);
 
     /** Switches out LSQ unit. */
     void switchOut();
@@ -268,7 +268,7 @@ class LSQUnit {
     LSQ *lsq;
 
     /** Pointer to the dcache port.  Used only for sending. */
-    Port *dcachePort;
+    MasterPort *dcachePort;
 
     /** Derived class to hold any sender state the LSQ needs. */
     class LSQSenderState : public Packet::SenderState, public FastAlloc

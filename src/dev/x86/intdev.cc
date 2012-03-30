@@ -43,8 +43,9 @@
 #include "dev/x86/intdev.hh"
 
 void
-X86ISA::IntDev::IntPort::sendMessage(ApicList apics, TriggerIntMessage message,
-                                     bool timing)
+X86ISA::IntDev::IntMasterPort::sendMessage(ApicList apics,
+                                           TriggerIntMessage message,
+                                           bool timing)
 {
     ApicList::iterator apicIt;
     for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
@@ -67,10 +68,9 @@ X86ISA::IntDev::IntPort::sendMessage(ApicList apics, TriggerIntMessage message,
 void
 X86ISA::IntDev::init()
 {
-    if (!intPort.isConnected()) {
+    if (!intMasterPort.isConnected()) {
         panic("Int port not connected to anything!");
     }
-    intPort.sendRangeChange();
 }
 
 X86ISA::IntSourcePin *

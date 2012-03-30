@@ -92,19 +92,6 @@ Cache<TagStore>::regStats()
 }
 
 template<class TagStore>
-Port *
-Cache<TagStore>::getPort(const std::string &if_name, int idx)
-{
-    if (if_name == "cpu_side") {
-        return cpuSidePort;
-    } else if (if_name == "mem_side") {
-        return memSidePort;
-    }  else {
-        panic("Port name %s unrecognized\n", if_name);
-    }
-}
-
-template<class TagStore>
 void
 Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 {
@@ -795,7 +782,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         // continues towards the memory side
         if (fromCpuSide) {
             memSidePort->sendFunctional(pkt);
-        } else if (forwardSnoops) {
+        } else if (forwardSnoops && cpuSidePort->getMasterPort().isSnooping()) {
             // if it came from the memory side, it must be a snoop request
             // and we should only forward it if we are forwarding snoops
             cpuSidePort->sendFunctional(pkt);

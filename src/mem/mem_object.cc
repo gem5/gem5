@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
+ *          Andreas Hansson
  */
 
 #include "mem/mem_object.hh"
@@ -33,4 +46,16 @@
 MemObject::MemObject(const Params *params)
     : SimObject(params)
 {
+}
+
+MasterPort&
+MemObject::getMasterPort(const std::string& if_name, int idx)
+{
+    fatal("%s does not have any master port named %s\n", name(), if_name);
+}
+
+SlavePort&
+MemObject::getSlavePort(const std::string& if_name, int idx)
+{
+    fatal("%s does not have any slave port named %s\n", name(), if_name);
 }

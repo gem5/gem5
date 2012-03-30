@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,7 +59,7 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string &_name,
                                          int _delay, int _nack_delay,
                                          int _resp_limit,
                                          std::vector<Range<Addr> > _ranges)
-    : Port(_name, _bridge), bridge(_bridge), masterPort(_masterPort),
+    : SlavePort(_name, _bridge), bridge(_bridge), masterPort(_masterPort),
       delay(_delay), nackDelay(_nack_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), inRetry(false),
@@ -71,7 +71,7 @@ Bridge::BridgeMasterPort::BridgeMasterPort(const std::string &_name,
                                            Bridge* _bridge,
                                            BridgeSlavePort& _slavePort,
                                            int _delay, int _req_limit)
-    : Port(_name, _bridge), bridge(_bridge), slavePort(_slavePort),
+    : MasterPort(_name, _bridge), bridge(_bridge), slavePort(_slavePort),
       delay(_delay), inRetry(false), reqQueueLimit(_req_limit),
       sendEvent(*this)
 {
@@ -88,19 +88,25 @@ Bridge::Bridge(Params *p)
         panic("No support for acknowledging writes\n");
 }
 
-Port*
-Bridge::getPort(const std::string &if_name, int idx)
+MasterPort&
+Bridge::getMasterPort(const std::string &if_name, int idx)
 {
-    if (if_name == "slave")
-        return &slavePort;
-    else if (if_name == "master")
-        return &masterPort;
-    else {
-        panic("Bridge %s has no port named %s\n", name(), if_name);
-        return NULL;
-    }
+    if (if_name == "master")
+        return masterPort;
+    else
+        // pass it along to our super class
+        return MemObject::getMasterPort(if_name, idx);
 }
 
+SlavePort&
+Bridge::getSlavePort(const std::string &if_name, int idx)
+{
+    if (if_name == "slave")
+        return slavePort;
+    else
+        // pass it along to our super class
+        return MemObject::getSlavePort(if_name, idx);
+}
 
 void
 Bridge::init()
@@ -471,19 +477,6 @@ Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
     }
 
     return found;
-}
-
-/** Function called by the port when the bridge is receiving a range change.*/
-void
-Bridge::BridgeMasterPort::recvRangeChange()
-{
-    // no need to forward as the bridge has a fixed set of ranges
-}
-
-void
-Bridge::BridgeSlavePort::recvRangeChange()
-{
-    // is a slave port so do nothing
 }
 
 AddrRangeList

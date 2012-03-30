@@ -71,14 +71,13 @@ PioDevice::init()
     pioPort.sendRangeChange();
 }
 
-Port *
-PioDevice::getPort(const std::string &if_name, int idx)
+SlavePort &
+PioDevice::getSlavePort(const std::string &if_name, int idx)
 {
     if (if_name == "pio") {
-        return &pioPort;
+        return pioPort;
     }
-    panic("PioDevice %s has no port named %s\n", name(), if_name);
-    return NULL;
+    return MemObject::getSlavePort(if_name, idx);
 }
 
 unsigned int
@@ -111,7 +110,7 @@ BasicPioDevice::getAddrRanges()
 
 DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
                  bool recv_snoops)
-    : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
+    : MasterPort(dev->name() + "-dmaport", dev), device(dev), sys(s),
       masterId(s->getMasterId(dev->name())),
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
@@ -370,12 +369,12 @@ DmaDevice::~DmaDevice()
 }
 
 
-Port *
-DmaDevice::getPort(const std::string &if_name, int idx)
+MasterPort &
+DmaDevice::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "dma") {
-        return &dmaPort;
+        return dmaPort;
     }
-    return PioDevice::getPort(if_name, idx);
+    return PioDevice::getMasterPort(if_name, idx);
 }
 

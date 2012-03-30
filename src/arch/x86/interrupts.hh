@@ -189,7 +189,7 @@ class Interrupts : public BasicPioDevice, IntDev
     int initialApicId;
 
     // Port for receiving interrupts
-    IntPort intSlavePort;
+    IntSlavePort intSlavePort;
 
   public:
 
@@ -239,17 +239,20 @@ class Interrupts : public BasicPioDevice, IntDev
     AddrRangeList getAddrRanges();
     AddrRangeList getIntAddrRange();
 
-    Port *getPort(const std::string &if_name, int idx = -1)
+    MasterPort &getMasterPort(const std::string &if_name, int idx = -1)
     {
-        // a bit of an odd one since there is now two ports in the
-        // Python class we also need two ports even if they are
-        // identical
         if (if_name == "int_master") {
-            return &intPort;
-        } else if (if_name == "int_slave") {
-            return &intSlavePort;
+            return intMasterPort;
         }
-        return BasicPioDevice::getPort(if_name, idx);
+        return BasicPioDevice::getMasterPort(if_name, idx);
+    }
+
+    SlavePort &getSlavePort(const std::string &if_name, int idx = -1)
+    {
+        if (if_name == "int_slave") {
+            return intSlavePort;
+        }
+        return BasicPioDevice::getSlavePort(if_name, idx);
     }
 
     /*

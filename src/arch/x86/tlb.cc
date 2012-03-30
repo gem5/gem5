@@ -428,10 +428,10 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 
-Port *
-TLB::getPort()
+MasterPort *
+TLB::getMasterPort()
 {
-    return walker->getPort("port");
+    return &walker->getMasterPort("port");
 }
 
 } // namespace X86ISA

@@ -214,8 +214,17 @@ class TLB : public BaseTLB
 
     void regStats();
 
-    // Get the port from the table walker and return it
-    virtual Port *getPort();
+    /**
+     * Get the table walker master port. This is used for migrating
+     * port connections during a CPU takeOverFrom() call. For
+     * architectures that do not have a table walker, NULL is
+     * returned, hence the use of a pointer rather than a
+     * reference. For ARM this method will always return a valid port
+     * pointer.
+     *
+     * @return A pointer to the walker master port
+     */
+    virtual MasterPort* getMasterPort();
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

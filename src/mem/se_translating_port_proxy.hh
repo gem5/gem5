@@ -80,7 +80,7 @@ class SETranslatingPortProxy : public PortProxy
     AllocType allocating;
 
   public:
-    SETranslatingPortProxy(Port& port, Process* p, AllocType alloc);
+    SETranslatingPortProxy(MasterPort& port, Process* p, AllocType alloc);
     virtual ~SETranslatingPortProxy();
 
     bool tryReadBlob(Addr addr, uint8_t *p, int size) const;

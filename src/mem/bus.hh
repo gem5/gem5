@@ -40,6 +40,7 @@
  * Authors: Ron Dreslinski
  *          Ali Saidi
  *          Andreas Hansson
+ *          William Wang
  */
 
 /**
@@ -65,21 +66,85 @@
 
 class Bus : public MemObject
 {
-    /** Declaration of the buses port type, one will be instantiated for each
-        of the interfaces connecting to the bus. */
-    class BusPort : public Port
+    /**
+     * Declaration of the bus slave port type, one will be
+     * instantiated for each of the master interfaces connecting to
+     * the bus.
+     */
+    class BusSlavePort : public SlavePort
     {
+      private:
         /** A pointer to the bus to which this port belongs. */
         Bus *bus;
 
-        /** A id to keep track of the intercafe ID this port is connected to. */
+        /** A id to keep track of the interface ID of this port. */
         int id;
 
       public:
 
-        /** Constructor for the BusPort.*/
-        BusPort(const std::string &_name, Bus *_bus, int _id)
-            : Port(_name, _bus), bus(_bus), id(_id)
+        /** Constructor for the BusSlavePort.*/
+        BusSlavePort(const std::string &_name, Bus *_bus, int _id)
+            : SlavePort(_name, _bus), bus(_bus), id(_id)
+        { }
+
+        int getId() const { return id; }
+
+      protected:
+
+        /** When reciving a timing request from the peer port (at id),
+            pass it to the bus. */
+        virtual bool recvTiming(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTiming(pkt); }
+
+        /** When reciving a Atomic requestfrom the peer port (at id),
+            pass it to the bus. */
+        virtual Tick recvAtomic(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvAtomic(pkt); }
+
+        /** When reciving a Functional requestfrom the peer port (at id),
+            pass it to the bus. */
+        virtual void recvFunctional(PacketPtr pkt)
+        { pkt->setSrc(id); bus->recvFunctional(pkt); }
+
+        /** When reciving a retry from the peer port (at id),
+            pass it to the bus. */
+        virtual void recvRetry()
+        { bus->recvRetry(id); }
+
+        // This should return all the 'owned' addresses that are
+        // downstream from this bus, yes?  That is, the union of all
+        // the 'owned' address ranges of all the other interfaces on
+        // this bus...
+        virtual AddrRangeList getAddrRanges()
+        { return bus->getAddrRanges(id); }
+
+        // Ask the bus to ask everyone on the bus what their block size is and
+        // take the max of it. This might need to be changed a bit if we ever
+        // support multiple block sizes.
+        virtual unsigned deviceBlockSize() const
+        { return bus->findBlockSize(id); }
+
+    };
+
+    /**
+     * Declaration of the bus master port type, one will be
+     * instantiated for each of the slave interfaces connecting to the
+     * bus.
+     */
+    class BusMasterPort : public MasterPort
+    {
+      private:
+        /** A pointer to the bus to which this port belongs. */
+        Bus *bus;
+
+        /** A id to keep track of the interface ID of this port. */
+        int id;
+
+      public:
+
+        /** Constructor for the BusMasterPort.*/
+        BusMasterPort(const std::string &_name, Bus *_bus, int _id)
+            : MasterPort(_name, _bus), bus(_bus), id(_id)
         { }
 
         int getId() const { return id; }
@@ -90,7 +155,7 @@ class Bus : public MemObject
          *
          * @return a boolean that is true if this port is snooping
          */
-        virtual bool isSnooping()
+        virtual bool isSnooping() const
         { return bus->isSnooping(id); }
 
       protected:
@@ -120,13 +185,6 @@ class Bus : public MemObject
         virtual void recvRetry()
         { bus->recvRetry(id); }
 
-        // This should return all the 'owned' addresses that are
-        // downstream from this bus, yes?  That is, the union of all
-        // the 'owned' address ranges of all the other interfaces on
-        // this bus...
-        virtual AddrRangeList getAddrRanges()
-        { return bus->getAddrRanges(id); }
-
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
         // support multiple block sizes.
@@ -151,8 +209,8 @@ class Bus : public MemObject
 
     AddrRangeList defaultRange;
 
-    typedef std::vector<BusPort*>::iterator SnoopIter;
-    std::vector<BusPort*> snoopPorts;
+    typedef std::vector<BusSlavePort*>::iterator SnoopIter;
+    std::vector<BusSlavePort*> snoopPorts;
 
     /** Function called by the port when the bus is recieving a Timing
       transaction.*/
@@ -250,7 +308,7 @@ class Bus : public MemObject
      *
      * @return a boolean indicating if this port is snooping or not
      */
-    bool isSnooping(int id);
+    bool isSnooping(int id) const;
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
@@ -292,9 +350,9 @@ class Bus : public MemObject
     // interfaces vector
     unsigned int nbrMasterPorts;
 
-    /** An ordered vector of pointers to the peer port interfaces
-        connected to this bus.*/
-    std::vector<BusPort*> interfaces;
+    /** The master and slave ports of the bus */
+    std::vector<BusSlavePort*> slavePorts;
+    std::vector<BusMasterPort*> masterPorts;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
@@ -338,7 +396,8 @@ class Bus : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
+    virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
 
     virtual void init();
     virtual void startup();

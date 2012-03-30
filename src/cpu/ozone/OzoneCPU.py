@@ -36,9 +36,6 @@ class DerivOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    icache_port = Port("Instruction Port")
-    dcache_port = Port("Data Port")
-
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")
     frontEndLatency = Param.Unsigned("Front end latency")

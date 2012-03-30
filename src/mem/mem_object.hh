@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,11 +38,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Andreas Hansson
  */
 
 /**
  * @file
- * Base Memory Object declaration.
+ * MemObject declaration.
  */
 
 #ifndef __MEM_MEM_OBJECT_HH__
@@ -41,8 +54,8 @@
 #include "sim/sim_object.hh"
 
 /**
- * The base MemoryObject class, allows for an accesor function to a
- * simobj that returns the Port.
+ * The MemObject class extends the SimObject with accessor functions
+ * to get its master and slave ports.
  */
 class MemObject : public SimObject
 {
@@ -53,9 +66,27 @@ class MemObject : public SimObject
 
     MemObject(const Params *params);
 
-  public:
-    /** Additional function to return the Port of a memory object. */
-    virtual Port *getPort(const std::string &if_name, int idx = -1) = 0;
+    /**
+     * Get a master port with a given name and index.
+     *
+     * @param if_name Port name
+     * @param idx Index in the case of a VectorPort
+     *
+     * @return A reference to the given port
+     */
+    virtual MasterPort& getMasterPort(const std::string& if_name,
+                                      int idx = -1);
+
+    /**
+     * Get a slave port with a given name and index.
+     *
+     * @param if_name Port name
+     * @param idx Index in the case of a VectorPort
+     *
+     * @return A reference to the given port
+     */
+    virtual SlavePort& getSlavePort(const std::string& if_name,
+                                    int idx = -1);
 };
 
 #endif //__MEM_MEM_OBJECT_HH__

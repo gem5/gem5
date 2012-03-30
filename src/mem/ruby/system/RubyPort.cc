@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -35,26 +47,27 @@
 #include "mem/ruby/system/RubyPort.hh"
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p), pio_port(csprintf("%s-pio-port", name()), this),
-      physMemPort(csprintf("%s-physMemPort", name()), this)
+    : MemObject(p), m_version(p->version), m_controller(NULL),
+      m_mandatory_q_ptr(NULL),
+      pio_port(csprintf("%s-pio-port", name()), this),
+      m_usingRubyTester(p->using_ruby_tester), m_request_cnt(0),
+      physMemPort(csprintf("%s-physMemPort", name()), this),
+      drainEvent(NULL), physmem(p->physmem), ruby_system(p->ruby_system),
+      waitingOnSequencer(false), access_phys_mem(p->access_phys_mem)
 {
-    m_version = p->version;
     assert(m_version != -1);
 
-    physmem = p->physmem;
+    // create the slave ports based on the number of connected ports
+    for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
+        slave_ports.push_back(new M5Port(csprintf("%s-slave%d", name(), i),
+                                         this, ruby_system, access_phys_mem));
+    }
 
-    m_controller = NULL;
-    m_mandatory_q_ptr = NULL;
-
-    m_request_cnt = 0;
-
-    m_usingRubyTester = p->using_ruby_tester;
-    access_phys_mem = p->access_phys_mem;
-
-    drainEvent = NULL;
-
-    ruby_system = p->ruby_system;
-    waitingOnSequencer = false;
+    // create the master ports based on the number of connected ports
+    for (size_t i = 0; i < p->port_master_connection_count; ++i) {
+        master_ports.push_back(new PioPort(csprintf("%s-master%d", name(), i),
+                                           this));
+    }
 }
 
 void
@@ -64,52 +77,63 @@ RubyPort::init()
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
 }
 
-Port *
-RubyPort::getPort(const std::string &if_name, int idx)
+MasterPort &
+RubyPort::getMasterPort(const std::string &if_name, int idx)
 {
-    // used by the CPUs to connect the caches to the interconnect, and
-    // for the x86 case also the interrupt master
-    if (if_name == "slave") {
-        M5Port* cpuPort = new M5Port(csprintf("%s-slave%d", name(), idx),
-                                     this, ruby_system, access_phys_mem);
-        cpu_ports.push_back(cpuPort);
-        return cpuPort;
+    if (if_name == "pio_port") {
+        return pio_port;
+    }
+
+    if (if_name == "physMemPort") {
+        return physMemPort;
     }
 
     // used by the x86 CPUs to connect the interrupt PIO and interrupt slave
     // port
-    if (if_name == "master") {
-        PioPort* masterPort = new PioPort(csprintf("%s-master%d", name(), idx),
-                                          this);
+    if (if_name != "master") {
+        // pass it along to our super class
+        return MemObject::getMasterPort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(master_ports.size())) {
+            panic("RubyPort::getMasterPort: unknown index %d\n", idx);
+        }
 
-        return masterPort;
+        return *master_ports[idx];
     }
+}
 
-    if (if_name == "pio_port") {
-        return &pio_port;
+SlavePort &
+RubyPort::getSlavePort(const std::string &if_name, int idx)
+{
+    // used by the CPUs to connect the caches to the interconnect, and
+    // for the x86 case also the interrupt master
+    if (if_name != "slave") {
+        // pass it along to our super class
+        return MemObject::getSlavePort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(slave_ports.size())) {
+            panic("RubyPort::getSlavePort: unknown index %d\n", idx);
+        }
+
+        return *slave_ports[idx];
     }
-
-    if (if_name == "physMemPort") {
-        return &physMemPort;
-    }
-
-    return NULL;
 }
 
 RubyPort::PioPort::PioPort(const std::string &_name,
                            RubyPort *_port)
-    : QueuedPort(_name, _port, queue), queue(*_port, *this), ruby_port(_port)
+    : QueuedMasterPort(_name, _port, queue), queue(*_port, *this),
+      ruby_port(_port)
 {
-    DPRINTF(RubyPort, "creating port to ruby sequencer to cpu %s\n", _name);
+    DPRINTF(RubyPort, "creating master port on ruby sequencer %s\n", _name);
 }
 
 RubyPort::M5Port::M5Port(const std::string &_name, RubyPort *_port,
                          RubySystem *_system, bool _access_phys_mem)
-    : QueuedPort(_name, _port, queue), queue(*_port, *this),
+    : QueuedSlavePort(_name, _port, queue), queue(*_port, *this),
       ruby_port(_port), ruby_system(_system),
       _onRetryList(false), access_phys_mem(_access_phys_mem)
 {
-    DPRINTF(RubyPort, "creating port from ruby sequcner to cpu %s\n", _name);
+    DPRINTF(RubyPort, "creating slave port on ruby sequencer %s\n", _name);
 }
 
 Tick
@@ -549,11 +573,15 @@ RubyPort::getDrainCount(Event *de)
         DPRINTF(Config, "count after physmem check %d\n", count);
     }
 
-    for (CpuPortIter p_iter = cpu_ports.begin(); p_iter != cpu_ports.end();
-         p_iter++) {
-        M5Port* cpu_port = *p_iter;
-        count += cpu_port->drain(de);
-        DPRINTF(Config, "count after cpu port check %d\n", count);
+    for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
+        count += (*p)->drain(de);
+        DPRINTF(Config, "count after slave port check %d\n", count);
+    }
+
+    for (std::vector<PioPort*>::iterator p = master_ports.begin();
+         p != master_ports.end(); ++p) {
+        count += (*p)->drain(de);
+        DPRINTF(Config, "count after master port check %d\n", count);
     }
 
     DPRINTF(Config, "final count %d\n", count);
@@ -657,11 +685,19 @@ RubyPort::PioPort::sendNextCycle(PacketPtr pkt)
     return true;
 }
 
+AddrRangeList
+RubyPort::M5Port::getAddrRanges()
+{
+    // at the moment the assumption is that the master does not care
+    AddrRangeList ranges;
+    return ranges;
+}
+
 bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
     AddrRangeList physMemAddrList =
-        ruby_port->physMemPort.getPeer()->getAddrRanges();
+        ruby_port->physMemPort.getSlavePort().getAddrRanges();
     for (AddrRangeIter iter = physMemAddrList.begin();
          iter != physMemAddrList.end();
          iter++) {
@@ -684,9 +720,12 @@ void
 RubyPort::ruby_eviction_callback(const Address& address)
 {
     DPRINTF(RubyPort, "Sending invalidations.\n");
+    // should this really be using funcMasterId?
     Request req(address.getAddress(), 0, 0, Request::funcMasterId);
-    for (CpuPortIter it = cpu_ports.begin(); it != cpu_ports.end(); it++) {
-        Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
-        (*it)->sendNextCycle(pkt);
+    for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
+        if ((*p)->getMasterPort().isSnooping()) {
+            Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
+            (*p)->sendNextCycle(pkt);
+        }
     }
 }

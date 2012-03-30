@@ -75,12 +75,6 @@ OzoneLWLSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
 }
 
 template <class Impl>
-void
-OzoneLWLSQ<Impl>::DcachePort::recvRangeChange()
-{
-}
-
-template <class Impl>
 bool
 OzoneLWLSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
 {

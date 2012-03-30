@@ -60,11 +60,11 @@ namespace X86ISA
     {
       protected:
         // Port for accessing memory
-        class WalkerPort : public Port
+        class WalkerPort : public MasterPort
         {
           public:
             WalkerPort(const std::string &_name, Walker * _walker) :
-                  Port(_name, _walker), walker(_walker)
+                  MasterPort(_name, _walker), walker(_walker)
             {}
 
           protected:
@@ -73,9 +73,8 @@ namespace X86ISA
             bool recvTiming(PacketPtr pkt);
             Tick recvAtomic(PacketPtr pkt);
             void recvFunctional(PacketPtr pkt);
-            void recvRangeChange();
             void recvRetry();
-            bool isSnooping() { return true; }
+            bool isSnooping() const { return true; }
         };
 
         friend class WalkerPort;
@@ -166,7 +165,7 @@ namespace X86ISA
                 RequestPtr req, BaseTLB::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 Addr &pageSize, BaseTLB::Mode mode);
-        Port *getPort(const std::string &if_name, int idx = -1);
+        MasterPort &getMasterPort(const std::string &if_name, int idx = -1);
 
       protected:
         // The TLB we're supposed to load.

@@ -118,7 +118,7 @@ class BaseCache : public MemObject
      * and the sendDeferredPacket of the timing port is modified to
      * consider both the transmit list and the requests from the MSHR.
      */
-    class CacheMasterPort : public QueuedPort
+    class CacheMasterPort : public QueuedMasterPort
     {
 
       public:
@@ -149,7 +149,7 @@ class BaseCache : public MemObject
 
         CacheMasterPort(const std::string &_name, BaseCache *_cache,
                         PacketQueue &_queue) :
-            QueuedPort(_name, _cache, _queue)
+            QueuedMasterPort(_name, _cache, _queue)
         { }
 
         /**
@@ -157,7 +157,7 @@ class BaseCache : public MemObject
          *
          * @return always true
          */
-        virtual bool isSnooping() { return true; }
+        virtual bool isSnooping() const { return true; }
     };
 
     /**
@@ -168,7 +168,7 @@ class BaseCache : public MemObject
      * incoming requests. If blocked, the port will issue a retry once
      * unblocked.
      */
-    class CacheSlavePort : public QueuedPort
+    class CacheSlavePort : public QueuedSlavePort
     {
 
       public:
@@ -443,6 +443,9 @@ class BaseCache : public MemObject
     ~BaseCache() {}
 
     virtual void init();
+
+    virtual MasterPort &getMasterPort(const std::string &if_name, int idx = -1);
+    virtual SlavePort &getSlavePort(const std::string &if_name, int idx = -1);
 
     /**
      * Query block size of a cache.

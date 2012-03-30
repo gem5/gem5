@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -122,7 +122,7 @@ class Bridge : public MemObject
      * is responsible for. The slave port also has a buffer for the
      * responses not yet sent.
      */
-    class BridgeSlavePort : public Port
+    class BridgeSlavePort : public SlavePort
     {
 
       private:
@@ -244,11 +244,6 @@ class Bridge : public MemObject
             pass it to the bridge. */
         virtual void recvFunctional(PacketPtr pkt);
 
-        /**
-         * When receiving a range change on the slave side do nothing.
-         */
-        virtual void recvRangeChange();
-
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
         virtual AddrRangeList getAddrRanges();
@@ -260,7 +255,7 @@ class Bridge : public MemObject
      * responses. The master port has a buffer for the requests not
      * yet sent.
      */
-    class BridgeMasterPort : public Port
+    class BridgeMasterPort : public MasterPort
     {
 
       private:
@@ -371,11 +366,6 @@ class Bridge : public MemObject
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
         virtual void recvFunctional(PacketPtr pkt);
-
-        /**
-         * When receiving a range change, pass it through the bridge.
-         */
-        virtual void recvRangeChange();
     };
 
     /** Slave port of the bridge. */
@@ -396,8 +386,9 @@ class Bridge : public MemObject
   public:
     const Params *params() const { return _params; }
 
-    /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual MasterPort& getMasterPort(const std::string& if_name,
+                                      int idx = -1);
+    virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
 
     virtual void init();
 

@@ -92,18 +92,19 @@ RubyTester::init()
     m_checkTable_ptr = new CheckTable(m_num_cpu_sequencers, this);
 }
 
-Port *
-RubyTester::getPort(const std::string &if_name, int idx)
+MasterPort &
+RubyTester::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name != "cpuPort") {
-        panic("RubyTester::getPort: unknown port %s requested\n", if_name);
-    }
+        // pass it along to our super class
+        return MemObject::getMasterPort(if_name, idx);
+    } else {
+        if (idx >= static_cast<int>(ports.size())) {
+            panic("RubyTester::getMasterPort: unknown index %d\n", idx);
+        }
 
-    if (idx >= static_cast<int>(ports.size())) {
-        panic("RubyTester::getPort: unknown index %d requested\n", idx);
+        return *ports[idx];
     }
-
-    return ports[idx];
 }
 
 Tick
@@ -135,7 +136,7 @@ RubyTester::CpuPort::recvTiming(PacketPtr pkt)
     return true;
 }
 
-Port*
+MasterPort*
 RubyTester::getCpuPort(int idx)
 {
     assert(idx >= 0 && idx < ports.size());

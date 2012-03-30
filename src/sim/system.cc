@@ -174,11 +174,11 @@ System::init()
         panic("System port on %s is not connected.\n", name());
 }
 
-Port*
-System::getPort(const std::string &if_name, int idx)
+MasterPort&
+System::getMasterPort(const std::string &if_name, int idx)
 {
     // no need to distinguish at the moment (besides checking)
-    return &_systemPort;
+    return _systemPort;
 }
 
 void

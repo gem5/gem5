@@ -121,11 +121,11 @@ class I82094AA : public PioDevice, public IntDev
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
-    Port *getPort(const std::string &if_name, int idx = -1)
+    MasterPort &getMasterPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "int_master")
-            return &intPort;
-        return PioDevice::getPort(if_name, idx);
+            return intMasterPort;
+        return PioDevice::getMasterPort(if_name, idx);
     }
 
     void signalInterrupt(int line);

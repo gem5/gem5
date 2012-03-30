@@ -86,12 +86,12 @@ class PortProxy
   private:
 
     /** The actual physical port used by this proxy. */
-    Port &_port;
+    MasterPort &_port;
 
     void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const;
 
   public:
-    PortProxy(Port &port) : _port(port) { }
+    PortProxy(MasterPort &port) : _port(port) { }
     virtual ~PortProxy() { }
 
     /**

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -304,6 +316,9 @@ X86ISA::Interrupts::init()
     //
     BasicPioDevice::init();
     IntDev::init();
+
+    // the slave port has a range so inform the connected master
+    intSlavePort.sendRangeChange();
 }
 
 
@@ -554,7 +569,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 break;
             }
             pendingIPIs += apics.size();
-            intPort.sendMessage(apics, message, timing);
+            intMasterPort.sendMessage(apics, message, timing);
             newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
         break;

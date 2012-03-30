@@ -44,24 +44,6 @@
 
 using namespace std;
 
-/**
- * Look up a MemObject port.  Helper function for connectPorts().
- */
-Port *
-lookupPort(SimObject *so, const std::string &name, int i)
-{
-    MemObject *mo = dynamic_cast<MemObject *>(so);
-    if (mo == NULL) {
-        warn("error casting SimObject %s to MemObject", so->name());
-        return NULL;
-    }
-
-    Port *p = mo->getPort(name, i);
-    if (p == NULL)
-        warn("error looking up port %s on object %s", name, so->name());
-    return p;
-}
-
 EtherInt *
 lookupEthPort(SimObject *so, const std::string &name, int i)
 {
@@ -83,6 +65,7 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
  * The indices i1 & i2 will be -1 for regular ports, >= 0 for vector ports.
+ * SimObject1 is the master, and SimObject2 is the slave
  */
 int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
@@ -109,16 +92,20 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
             }
         }
     }
-    Port *p1 = lookupPort(o1, name1, i1);
-    Port *p2 = lookupPort(o2, name2, i2);
+    MemObject *mo1, *mo2;
+    mo1 = dynamic_cast<MemObject*>(o1);
+    mo2 = dynamic_cast<MemObject*>(o2);
 
-    if (p1 == NULL || p2 == NULL) {
-        warn("connectPorts: port lookup error");
-        return 0;
+    if(mo1 == NULL || mo2 == NULL) {
+        panic ("Error casting SimObjects %s and %s to MemObject", o1->name(),
+               o2->name());
     }
 
-    p1->setPeer(p2);
-    p2->setPeer(p1);
+    // generic master/slave port connection
+    MasterPort& masterPort = mo1->getMasterPort(name1, i1);
+    SlavePort& slavePort   = mo2->getSlavePort(name2, i2);
+
+    masterPort.bind(slavePort);
 
     return 1;
 }

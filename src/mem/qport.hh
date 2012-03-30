@@ -56,7 +56,7 @@
  * queue is a parameter to allow tailoring of the queue implementation
  * (used in the cache).
  */
-class QueuedPort : public Port
+class QueuedSlavePort : public SlavePort
 {
 
   protected:
@@ -68,7 +68,46 @@ class QueuedPort : public Port
       * packet again. */
     virtual void recvRetry() { queue.retry(); }
 
-    virtual void recvRangeChange() { }
+  public:
+
+    /**
+     * Create a QueuedPort with a given name, owner, and a supplied
+     * implementation of a packet queue. The external definition of
+     * the queue enables e.g. the cache to implement a specific queue
+     * behaviuor in a subclass, and provide the latter to the
+     * QueuePort constructor.
+     */
+    QueuedSlavePort(const std::string& name, MemObject* owner,
+                    PacketQueue &queue) :
+        SlavePort(name, owner), queue(queue)
+    { }
+
+    virtual ~QueuedSlavePort() { }
+
+    /** Check the list of buffered packets against the supplied
+     * functional request. */
+    bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
+
+    /**
+     * Hook for draining the queued port.
+     *
+     * @param de an event which is used to signal back to the caller
+     * @returns a number indicating how many times process will be called
+     */
+    unsigned int drain(Event *de) { return queue.drain(de); }
+};
+
+class QueuedMasterPort : public MasterPort
+{
+
+  protected:
+
+    /** Packet queue used to store outgoing requests and responses. */
+    PacketQueue &queue;
+
+     /** This function is notification that the device should attempt to send a
+      * packet again. */
+    virtual void recvRetry() { queue.retry(); }
 
   public:
 
@@ -79,11 +118,12 @@ class QueuedPort : public Port
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedPort(const std::string& name, MemObject* owner, PacketQueue &queue) :
-        Port(name, owner), queue(queue)
+    QueuedMasterPort(const std::string& name, MemObject* owner,
+                    PacketQueue &queue) :
+        MasterPort(name, owner), queue(queue)
     { }
 
-    virtual ~QueuedPort() { }
+    virtual ~QueuedMasterPort() { }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
