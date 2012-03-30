@@ -97,10 +97,7 @@ def create_system(options, system, piobus = None, dma_devices = []):
     # Create a port proxy for connecting the system port. This is
     # independent of the protocol and kept in the protocol-agnostic
     # part (i.e. here).
-    sys_port_proxy = RubyPortProxy(version = 0,
-                                   physMemPort = system.physmem.port,
-                                   physmem = system.physmem,
-                                   ruby_system = ruby)
+    sys_port_proxy = RubyPortProxy(ruby_system = ruby)
     # Give the system port proxy a SimObject parent without creating a
     # full-fledged controller
     system.sys_port_proxy = sys_port_proxy

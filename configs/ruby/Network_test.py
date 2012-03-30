@@ -88,8 +88,6 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
 
         cpu_seq = RubySequencer(icache = cache,
                                 dcache = cache,
-                                physMemPort = system.physmem.port,
-                                physmem = system.physmem,
                                 using_network_tester = True,
                                 ruby_system = ruby_system)
 

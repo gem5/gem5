@@ -115,12 +115,12 @@ PhysicalMemory::PhysicalMemory(const Params *p)
 void
 PhysicalMemory::init()
 {
-    if (ports.empty()) {
-        fatal("PhysicalMemory object %s is unconnected!", name());
-    }
-
-    for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
-        (*pi)->sendRangeChange();
+    for (PortIterator p = ports.begin(); p != ports.end(); ++p) {
+        if (!(*p)->isConnected()) {
+            fatal("PhysicalMemory port %s is unconnected!\n", (*p)->name());
+        } else {
+            (*p)->sendRangeChange();
+        }
     }
 }
 

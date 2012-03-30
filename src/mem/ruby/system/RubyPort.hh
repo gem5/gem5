@@ -175,8 +175,6 @@ class RubyPort : public MemObject
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
-    PioPort physMemPort;
-
     /** Vector of M5 Ports attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;
     std::vector<M5Port*> slave_ports;
@@ -184,8 +182,8 @@ class RubyPort : public MemObject
 
     Event *drainEvent;
 
-    PhysicalMemory* physmem;
     RubySystem* ruby_system;
+    System* system;
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports

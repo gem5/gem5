@@ -88,8 +88,6 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         cpu_seq = RubySequencer(version = i,
                                 icache = cache,
                                 dcache = cache,
-                                physMemPort = system.physmem.port,
-                                physmem = system.physmem,
                                 ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
@@ -142,8 +140,6 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         # Create the Ruby objects associated with the dma controller
         #
         dma_seq = DMASequencer(version = i,
-                               physMemPort = system.physmem.port,
-                               physmem = system.physmem,
                                ruby_system = ruby_system)
         
         dma_cntrl = DMA_Controller(version = i,

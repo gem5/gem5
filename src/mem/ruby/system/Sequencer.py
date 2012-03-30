@@ -38,13 +38,12 @@ class RubyPort(MemObject):
     master = VectorMasterPort("CPU master port")
     version = Param.Int(0, "")
     pio_port = MasterPort("Ruby_pio_port")
-    physmem = Param.PhysicalMemory("")
-    physMemPort = MasterPort("port to physical memory")
     using_ruby_tester = Param.Bool(False, "")
     using_network_tester = Param.Bool(False, "")
     access_phys_mem = Param.Bool(True,
         "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
+    system = Param.System(Parent.any, "system object")
 
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'

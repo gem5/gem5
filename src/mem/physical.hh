@@ -198,9 +198,11 @@ class PhysicalMemory : public MemObject
     void virtual init();
     unsigned int drain(Event *de);
 
-  protected:
     Tick doAtomicAccess(PacketPtr pkt);
     void doFunctionalAccess(PacketPtr pkt);
+
+
+  protected:
     virtual Tick calculateLatency(PacketPtr pkt);
 
   public:

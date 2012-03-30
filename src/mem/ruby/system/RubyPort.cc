@@ -45,14 +45,14 @@
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "sim/system.hh"
 
 RubyPort::RubyPort(const Params *p)
     : MemObject(p), m_version(p->version), m_controller(NULL),
       m_mandatory_q_ptr(NULL),
       pio_port(csprintf("%s-pio-port", name()), this),
       m_usingRubyTester(p->using_ruby_tester), m_request_cnt(0),
-      physMemPort(csprintf("%s-physMemPort", name()), this),
-      drainEvent(NULL), physmem(p->physmem), ruby_system(p->ruby_system),
+      drainEvent(NULL), ruby_system(p->ruby_system), system(p->system),
       waitingOnSequencer(false), access_phys_mem(p->access_phys_mem)
 {
     assert(m_version != -1);
@@ -82,10 +82,6 @@ RubyPort::getMasterPort(const std::string &if_name, int idx)
 {
     if (if_name == "pio_port") {
         return pio_port;
-    }
-
-    if (if_name == "physMemPort") {
-        return physMemPort;
     }
 
     // used by the x86 CPUs to connect the interrupt PIO and interrupt slave
@@ -471,7 +467,7 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
-        ruby_port->physMemPort.sendFunctional(pkt);
+        ruby_port->system->physmem->doFunctionalAccess(pkt);
     }
 
     // turn packet around to go back to requester if response expected
@@ -568,10 +564,6 @@ RubyPort::getDrainCount(Event *de)
         count += pio_port.drain(de);
         DPRINTF(Config, "count after pio check %d\n", count);
     }
-    if (physMemPort.isConnected()) {
-        count += physMemPort.drain(de);
-        DPRINTF(Config, "count after physmem check %d\n", count);
-    }
 
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         count += (*p)->drain(de);
@@ -654,7 +646,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
-        ruby_port->physMemPort.sendAtomic(pkt);
+        ruby_port->system->physmem->doAtomicAccess(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -696,18 +688,7 @@ RubyPort::M5Port::getAddrRanges()
 bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
-    AddrRangeList physMemAddrList =
-        ruby_port->physMemPort.getSlavePort().getAddrRanges();
-    for (AddrRangeIter iter = physMemAddrList.begin();
-         iter != physMemAddrList.end();
-         iter++) {
-        if (addr >= iter->start && addr <= iter->end) {
-            DPRINTF(RubyPort, "Request found in %#llx - %#llx range\n",
-                    iter->start, iter->end);
-            return true;
-        }
-    }
-    return false;
+    return ruby_port->system->isMemory(addr);
 }
 
 unsigned
