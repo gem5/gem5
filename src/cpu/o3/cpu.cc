@@ -639,10 +639,13 @@ FullO3CPU<Impl>::init()
 {
     BaseCPU::init();
 
-    // Set inSyscall so that the CPU doesn't squash when initially
-    // setting up registers.
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        // Set inSyscall so that the CPU doesn't squash when initially
+        // setting up registers.
         thread[tid]->inSyscall = true;
+        // Initialise the ThreadContext's memory proxies
+        thread[tid]->initMemProxies(thread[tid]->getTC());
+    }
 
     // this CPU could still be unconnected if we are restoring from a
     // checkpoint and this CPU is to be switched in, thus we can only
@@ -655,8 +658,6 @@ FullO3CPU<Impl>::init()
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());
-            // Initialise the ThreadContext's memory proxies
-            thread[tid]->initMemProxies(thread[tid]->getTC());
         }
     }
 

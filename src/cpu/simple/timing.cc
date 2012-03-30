@@ -64,6 +64,10 @@ void
 TimingSimpleCPU::init()
 {
     BaseCPU::init();
+
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
+
     if (FullSystem) {
         for (int i = 0; i < threadContexts.size(); ++i) {
             ThreadContext *tc = threadContexts[i];
@@ -71,9 +75,6 @@ TimingSimpleCPU::init()
             TheISA::initCPU(tc, _cpuId);
         }
     }
-
-    // Initialise the ThreadContext's memory proxies
-    tcBase()->initMemProxies(tcBase());
 }
 
 void

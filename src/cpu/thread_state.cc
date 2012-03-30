@@ -101,17 +101,25 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 void
 ThreadState::initMemProxies(ThreadContext *tc)
 {
-    // Note that this only refers to the port on the CPU side and can
-    // safely be done at init() time even if the CPU is not connected
-    // (i.e. due to restoring from a checkpoint and later switching
-    // in.
-    if (physProxy == NULL)
-        // this cannot be done in the constructor as the thread state
+    // The port proxies only refer to the data port on the CPU side
+    // and can safely be done at init() time even if the CPU is not
+    // connected, i.e. when restoring from a checkpoint and later
+    // switching the CPU in.
+    if (FullSystem) {
+        assert(physProxy == NULL);
+        // This cannot be done in the constructor as the thread state
         // itself is created in the base cpu constructor and the
-        // getPort is a virtual function at the moment
+        // getDataPort is a virtual function
         physProxy = new PortProxy(baseCpu->getDataPort());
-    if (virtProxy == NULL)
+
+        assert(virtProxy == NULL);
         virtProxy = new FSTranslatingPortProxy(tc);
+    } else {
+        assert(proxy == NULL);
+        proxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
+                                           process,
+                                           SETranslatingPortProxy::NextPage);
+    }
 }
 
 void
@@ -126,14 +134,4 @@ ThreadState::profileSample()
 {
     if (profile)
         profile->sample(profileNode, profilePC);
-}
-
-SETranslatingPortProxy &
-ThreadState::getMemProxy()
-{
-    if (proxy == NULL)
-        proxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
-                                           process,
-                                           SETranslatingPortProxy::NextPage);
-    return *proxy;
 }

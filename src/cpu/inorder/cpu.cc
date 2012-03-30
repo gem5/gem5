@@ -787,21 +787,20 @@ InOrderCPU::tick()
 void
 InOrderCPU::init()
 {
-    if (!deferRegistration) {
-        registerThreadContexts();
-    }
+    BaseCPU::init();
 
-    // Set inSyscall so that the CPU doesn't squash when initially
-    // setting up registers.
-    for (ThreadID tid = 0; tid < numThreads; ++tid)
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        // Set inSyscall so that the CPU doesn't squash when initially
+        // setting up registers.
         thread[tid]->inSyscall = true;
+        // Initialise the ThreadContext's memory proxies
+        thread[tid]->initMemProxies(thread[tid]->getTC());
+    }
 
     if (FullSystem) {
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());
-            // Initialise the ThreadContext's memory proxies
-            thread[tid]->initMemProxies(thread[tid]->getTC());
         }
     }
 

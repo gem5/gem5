@@ -80,6 +80,10 @@ void
 AtomicSimpleCPU::init()
 {
     BaseCPU::init();
+
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
+
     if (FullSystem) {
         ThreadID size = threadContexts.size();
         for (ThreadID i = 0; i < size; ++i) {
@@ -88,9 +92,6 @@ AtomicSimpleCPU::init()
             TheISA::initCPU(tc, tc->contextId());
         }
     }
-
-    // Initialise the ThreadContext's memory proxies
-    tcBase()->initMemProxies(tcBase());
 
     if (hasPhysMemPort) {
         AddrRangeList pmAddrList = physmemPort.getPeer()->getAddrRanges();

@@ -85,7 +85,7 @@ struct ThreadState {
      * Initialise the physical and virtual port proxies and tie them to
      * the data port of the CPU.
      *
-     * tc ThreadContext for the virtual-to-physical translation
+     * @param tc ThreadContext for the virtual-to-physical translation
      */
     void initMemProxies(ThreadContext *tc);
 
@@ -105,7 +105,7 @@ struct ThreadState {
 
     Process *getProcessPtr() { return process; }
 
-    SETranslatingPortProxy &getMemProxy();
+    SETranslatingPortProxy &getMemProxy() { return *proxy; }
 
     /** Reads the number of instructions functionally executed and
      * committed.
