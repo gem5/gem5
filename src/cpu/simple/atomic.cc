@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -39,6 +51,7 @@
 #include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "mem/physical.hh"
 #include "params/AtomicSimpleCPU.hh"
 #include "sim/faults.hh"
 #include "sim/system.hh"
@@ -65,17 +78,6 @@ AtomicSimpleCPU::TickEvent::description() const
     return "AtomicSimpleCPU tick";
 }
 
-MasterPort &
-AtomicSimpleCPU::getMasterPort(const string &if_name, int idx)
-{
-    if (if_name == "physmem_port") {
-        hasPhysMemPort = true;
-        return physmemPort;
-    } else {
-        return BaseCPU::getMasterPort(if_name, idx);
-    }
-}
-
 void
 AtomicSimpleCPU::init()
 {
@@ -93,8 +95,8 @@ AtomicSimpleCPU::init()
         }
     }
 
-    if (hasPhysMemPort) {
-        AddrRangeList pmAddrList = physmemPort.getSlavePort().getAddrRanges();
+    if (fastmem) {
+        AddrRangeList pmAddrList = system->physmem->getAddrRanges();
         physMemAddr = *pmAddrList.begin();
     }
     // Atomic doesn't do MT right now, so contextId == threadId
@@ -108,7 +110,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
-      physmemPort(name() + "-iport", this), hasPhysMemPort(false)
+      fastmem(p->fastmem)
 {
     _status = Idle;
 }
@@ -281,8 +283,8 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
             if (req->isMmappedIpr())
                 dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
             else {
-                if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
-                    dcache_latency += physmemPort.sendAtomic(&pkt);
+                if (fastmem && pkt.getAddr() == physMemAddr)
+                    dcache_latency += system->physmem->doAtomicAccess(&pkt);
                 else
                     dcache_latency += dcachePort.sendAtomic(&pkt);
             }
@@ -383,8 +385,8 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
                     dcache_latency +=
                         TheISA::handleIprWrite(thread->getTC(), &pkt);
                 } else {
-                    if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
-                        dcache_latency += physmemPort.sendAtomic(&pkt);
+                    if (fastmem && pkt.getAddr() == physMemAddr)
+                        dcache_latency += system->physmem->doAtomicAccess(&pkt);
                     else
                         dcache_latency += dcachePort.sendAtomic(&pkt);
                 }
@@ -479,8 +481,9 @@ AtomicSimpleCPU::tick()
                                                Packet::Broadcast);
                     ifetch_pkt.dataStatic(&inst);
 
-                    if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
-                        icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
+                    if (fastmem && ifetch_pkt.getAddr() == physMemAddr)
+                        icache_latency =
+                            system->physmem->doAtomicAccess(&ifetch_pkt);
                     else
                         icache_latency = icachePort.sendAtomic(&ifetch_pkt);
 

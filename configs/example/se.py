@@ -155,11 +155,15 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = PhysicalMemory(range=AddrRange("512MB")),
                 membus = Bus(), mem_mode = test_mem_mode)
 
+# Sanity check
+if options.fastmem and (options.caches or options.l2cache):
+    fatal("You cannot use fastmem in combination with caches!")
+
 for i in xrange(np):
     system.cpu[i].workload = multiprocesses[i]
 
     if options.fastmem:
-        system.cpu[0].physmem_port = system.physmem.port
+        system.cpu[0].fastmem = True
 
     if options.checker:
         system.cpu[i].addCheckerCpu()

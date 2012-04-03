@@ -170,22 +170,16 @@ class BaseCPU : public MemObject
     MasterID instMasterId() { return _instMasterId; }
 
     /**
-     * Get a master port on this MemObject. This method is virtual to allow
-     * the subclasses of the BaseCPU to override it. All CPUs have a
-     * data and instruction port, but the Atomic CPU (in its current
-     * form) adds a port directly connected to the memory and has to
-     * override getMasterPort.
-     *
-     * This method uses getDataPort and getInstPort to resolve the two
-     * ports.
+     * Get a master port on this CPU. All CPUs have a data and
+     * instruction port, and this method uses getDataPort and
+     * getInstPort of the subclasses to resolve the two ports.
      *
      * @param if_name the port name
      * @param idx ignored index
      *
      * @return a reference to the port with the given name
      */
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    MasterPort &getMasterPort(const std::string &if_name, int idx = -1);
 
 //    Tick currentTick;
     inline Tick frequency() const { return SimClock::Frequency / clock; }

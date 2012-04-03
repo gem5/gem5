@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2011 ARM Limited
+# Copyright (c) 2010-2012 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -133,9 +133,13 @@ else:
     test_sys.iobridge.slave = test_sys.iobus.master
     test_sys.iobridge.master = test_sys.membus.slave
 
+# Sanity check
+if options.fastmem and (options.caches or options.l2cache):
+    fatal("You cannot use fastmem in combination with caches!")
+
 for i in xrange(np):
     if options.fastmem:
-        test_sys.cpu[i].physmem_port = test_sys.physmem.port
+        test_sys.cpu[i].fastmem = True
     if options.checker:
         test_sys.cpu[i].addCheckerCpu()
 
@@ -160,7 +164,7 @@ if len(bm) == 2:
     drive_sys.cpu.createInterruptController()
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.fastmem:
-        drive_sys.cpu.physmem_port = drive_sys.physmem.port
+        drive_sys.cpu.fastmem = True
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
     drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
