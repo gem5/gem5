@@ -865,6 +865,10 @@ class SimObject(object):
             if isinstance(child, ptype) and not isproxy(child) and \
                not isNullPointer(child):
                 all[child] = True
+            if isSimObject(child):
+                # also add results from the child itself
+                child_all, done = child.find_all(ptype)
+                all.update(dict(zip(child_all, [done] * len(child_all))))
         # search param space
         for pname,pdesc in self._params.iteritems():
             if issubclass(pdesc.ptype, ptype):

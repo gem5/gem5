@@ -184,6 +184,8 @@ class AnyProxy(BaseProxy):
     def path(self):
         return 'any'
 
+# The AllProxy traverses the entire sub-tree (not only the children)
+# and adds all objects of a specific type
 class AllProxy(BaseProxy):
     def find(self, obj):
         return obj.find_all(self._pdesc.ptype)
