@@ -274,7 +274,6 @@ NetworkTest::generatePkt()
     }
 
     req->setThreadContext(id,0);
-    uint8_t *result = new uint8_t[8];
 
     //No need to do functional simulation
     //We just do timing simulation of the network
@@ -286,8 +285,7 @@ NetworkTest::generatePkt()
     PacketPtr pkt = new Packet(req, requestType, 0);
     pkt->setSrc(0); //Not used
     pkt->dataDynamicArray(new uint8_t[req->getSize()]);
-    NetworkTestSenderState *state = new NetworkTestSenderState(result);
-    pkt->senderState = state;
+    pkt->senderState = NULL;
 
     sendPkt(pkt);
 }
