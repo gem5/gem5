@@ -69,8 +69,8 @@ class Pc(Platform):
     # A device to catch accesses to the non-existant floppy controller.
     fake_floppy = IsaFake(pio_addr=x86IOAddress(0x3f2), pio_size=2)
 
-    def attachIO(self, bus):
-        self.south_bridge.attachIO(bus)
+    def attachIO(self, bus, dma_ports = []):
+        self.south_bridge.attachIO(bus, dma_ports)
         self.i_dont_exist.pio = bus.master
         self.behind_pci.pio = bus.master
         self.com_1.pio = bus.master

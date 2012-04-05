@@ -85,7 +85,7 @@ class SouthBridge(SimObject):
     ide.InterruptLine = 14
     ide.InterruptPin = 1
 
-    def attachIO(self, bus):
+    def attachIO(self, bus, dma_ports):
         # Route interupt signals
         self.int_lines = \
           [X86IntLine(source=self.pic1.output, sink=self.io_apic.pin(0)),
@@ -106,7 +106,8 @@ class SouthBridge(SimObject):
         self.dma1.pio = bus.master
         self.ide.pio = bus.master
         self.ide.config = bus.master
-        self.ide.dma = bus.slave
+        if dma_ports.count(self.ide.dma) == 0:
+                self.ide.dma = bus.slave
         self.keyboard.pio = bus.master
         self.pic1.pio = bus.master
         self.pic2.pio = bus.master

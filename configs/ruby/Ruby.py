@@ -76,7 +76,7 @@ def define_options(parser):
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
 
-def create_system(options, system, piobus = None, dma_devices = []):
+def create_system(options, system, piobus = None, dma_ports = []):
 
     system.ruby = RubySystem(clock = options.clock,
                              stats_filename = options.ruby_stats,
@@ -87,8 +87,7 @@ def create_system(options, system, piobus = None, dma_devices = []):
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
-             eval("%s.create_system(options, system, piobus, \
-                                    dma_devices, ruby)" \
+             eval("%s.create_system(options, system, piobus, dma_ports, ruby)"
                   % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol

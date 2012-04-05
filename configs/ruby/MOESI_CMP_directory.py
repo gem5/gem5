@@ -47,7 +47,7 @@ class L2Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, piobus, dma_devices, ruby_system):
+def create_system(options, system, piobus, dma_ports, ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_directory':
         panic("This script requires the MOESI_CMP_directory protocol to be built.")
@@ -159,7 +159,7 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
 
         cntrl_count += 1
 
-    for i, dma_device in enumerate(dma_devices):
+    for i, dma_port in enumerate(dma_ports):
         #
         # Create the Ruby objects associated with the dma controller
         #
@@ -172,12 +172,8 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
                                    ruby_system = ruby_system)
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
-        if dma_device.type == 'MemTest':
-            exec("system.dma_cntrl%d.dma_sequencer.slave = dma_device.test" % i)
-        else:
-            exec("system.dma_cntrl%d.dma_sequencer.slave = dma_device.dma" % i)
+        exec("system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
-
         cntrl_count += 1
 
     all_cntrls = l1_cntrl_nodes + \

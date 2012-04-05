@@ -134,16 +134,14 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     self.tsunami.attachIO(self.piobus)
     self.tsunami.ide.pio = self.piobus.master
     self.tsunami.ide.config = self.piobus.master
-    self.tsunami.ide.dma = self.piobus.slave
     self.tsunami.ethernet.pio = self.piobus.master
     self.tsunami.ethernet.config = self.piobus.master
-    self.tsunami.ethernet.dma = self.piobus.slave
 
     #
     # Store the dma devices for later connection to dma ruby ports.
     # Append an underscore to dma_devices to avoid the SimObjectVector check.
     #
-    self._dma_devices = [self.tsunami.ide, self.tsunami.ethernet]
+    self._dma_ports = [self.tsunami.ide.dma, self.tsunami.ethernet.dma]
 
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
@@ -408,8 +406,10 @@ def connectX86RubySystem(x86_sys):
     # the piobus a direct connection to physical memory
     #
     x86_sys.piobus.master = x86_sys.physmem.port
-
-    x86_sys.pc.attachIO(x86_sys.piobus)
+    # add the ide to the list of dma devices that later need to attach to
+    # dma controllers
+    x86_sys._dma_ports = [x86_sys.pc.south_bridge.ide.dma]
+    x86_sys.pc.attachIO(x86_sys.piobus, x86_sys._dma_ports)
 
 
 def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False):
@@ -432,9 +432,6 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     # Create and connect the busses required by each memory system
     if Ruby:
         connectX86RubySystem(self)
-        # add the ide to the list of dma devices that later need to attach to
-        # dma controllers
-        self._dma_devices = [self.pc.south_bridge.ide]
     else:
         connectX86ClassicSystem(self, numCPUs)
 

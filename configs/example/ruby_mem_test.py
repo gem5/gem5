@@ -115,13 +115,17 @@ if options.num_dmas > 0:
                      percent_functional = 0,
                      percent_uncacheable = 0,
                      progress_interval = options.progress,
-                     warn_on_failure = options.warn_on_failure) \
+                     suppress_func_warnings =
+                                        not options.suppress_func_warnings) \
              for i in xrange(options.num_dmas) ]
     system.dma_devices = dmas
 else:
     dmas = []
 
-Ruby.create_system(options, system, dma_devices = dmas)
+dma_ports = []
+for (i, dma) in enumerate(dmas):
+    dma_ports.append(dma.test)
+Ruby.create_system(options, system, dma_ports = dma_ports)
 
 #
 # The tester is most effective when randomization is turned on and

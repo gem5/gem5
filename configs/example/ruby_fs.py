@@ -96,7 +96,7 @@ if options.script is not None:
     system.readfile = options.script
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
-Ruby.create_system(options, system, system.piobus, system._dma_devices)
+Ruby.create_system(options, system, system.piobus, system._dma_ports)
 
 for (i, cpu) in enumerate(system.cpu):
     #
