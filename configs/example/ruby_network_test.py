@@ -35,6 +35,8 @@ from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
 addToPath('../ruby')
+
+import Options
 import Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
@@ -43,6 +45,7 @@ config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
 
 parser = optparse.OptionParser()
+Options.addCommonOptions(parser)
 
 parser.add_option("--synthetic", type="int", default=0,
                   help="Synthetic Traffic type. 0 = Uniform Random,\
