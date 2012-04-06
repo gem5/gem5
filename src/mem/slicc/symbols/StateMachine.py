@@ -499,6 +499,13 @@ $c_ident::$c_ident(const Params *p)
                 code('''
 m_${{seq}}_ptr->setController(this);
     ''')
+
+        else:
+            for seq in sequencers:
+                code('''
+m_${{seq}}_ptr->setController(this);
+    ''')
+
         #
         # For the DMA controller, pass the sequencer a pointer to the
         # controller.
