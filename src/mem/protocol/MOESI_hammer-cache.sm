@@ -1481,6 +1481,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   transition(SR, {Load, Ifetch}, S) {
     h_load_hit;
     k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
   }
 
   transition({S, SR}, Store, SM) {
@@ -1525,6 +1526,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   transition(OR, {Load, Ifetch}, O) {
     h_load_hit;
     k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
   }
 
   transition({O, OR}, Store, OM) {
@@ -1569,14 +1571,26 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from Modified
-  transition({MM, MMR}, {Load, Ifetch}, MM) {
+  transition({MM, M}, {Load, Ifetch}) {
     h_load_hit;
     k_popMandatoryQueue;
   }
 
-  transition({MM, MMR}, Store, MM) {
+  transition(MM, Store) {
     hh_store_hit;
     k_popMandatoryQueue;
+  }
+
+  transition(MMR, {Load, Ifetch}, MM) {
+    h_load_hit;
+    k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(MMR, Store, MM) {
+    hh_store_hit;
+    k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
   }
 
   transition({MM, M, MMR, MR}, Flush_line, MM_F) {
@@ -1630,14 +1644,21 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
  
   // Transitions from Dirty Exclusive
-  transition({M, MR}, {Load, Ifetch}, M) {
-    h_load_hit;
+  transition(M, Store, MM) {
+    hh_store_hit;
     k_popMandatoryQueue;
   }
 
-  transition({M, MR}, Store, MM) {
+  transition(MR, {Load, Ifetch}, M) {
+    h_load_hit;
+    k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
+  }
+
+  transition(MR, Store, MM) {
     hh_store_hit;
     k_popMandatoryQueue;
+    ka_wakeUpAllDependents;
   }
 
   transition(M, L2_Replacement, MI) {

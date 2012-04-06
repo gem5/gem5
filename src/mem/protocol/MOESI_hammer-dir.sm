@@ -542,6 +542,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
+    check_allocate(TBEs);
     peek(requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
       set_tbe(TBEs[address]);
@@ -551,6 +552,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(vd_allocateDmaRequestInTBE, "vd", desc="Record Data in TBE") {
+    check_allocate(TBEs);
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
       set_tbe(TBEs[address]);
@@ -1258,6 +1260,8 @@ machine(Directory, "AMD Hammer-like protocol")
     peek(unblockNetwork_in, ResponseMsg) {
       assert(in_msg.Dirty == false);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Control);
+      DPRINTF(RubySlicc, "%s\n", in_msg.DataBlk);
+      DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
 
       // NOTE: The following check would not be valid in a real
       // implementation.  We include the data in the "dataless"
