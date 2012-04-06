@@ -129,6 +129,13 @@ class RubySystem : public SimObject
     void registerAbstractController(AbstractController*);
     void registerSparseMemory(SparseMemory*);
 
+    bool eventQueueEmpty() { return eventq->empty(); }
+    void enqueueRubyEvent(Tick tick)
+    {
+        RubyEvent* e = new RubyEvent(this);
+        schedule(e, tick);
+    }
+
   private:
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);

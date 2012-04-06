@@ -144,7 +144,7 @@ operator<<(ostream& out, const MemoryControl& obj)
 
 // CONSTRUCTOR
 MemoryControl::MemoryControl(const Params *p)
-    : SimObject(p)
+    : SimObject(p), m_event(this)
 {
     m_mem_bus_cycle_multiplier = p->mem_bus_cycle_multiplier;
     m_banks_per_rank = p->banks_per_rank;
@@ -204,7 +204,6 @@ MemoryControl::init()
     m_refresh_count = 1;
     m_need_refresh = 0;
     m_refresh_bank = 0;
-    m_awakened = 0;
     m_idleCount = 0;
     m_ageCounter = 0;
 
@@ -253,16 +252,17 @@ MemoryControl::enqueueMemRef(MemoryNode& memRef)
     physical_address_t addr = memRef.m_addr;
     int bank = getBank(addr);
 
-    DPRINTF(RubyMemory, "New memory request%7d: %#08x %c arrived at %10d bank = %3x\n",
+    DPRINTF(RubyMemory,
+            "New memory request%7d: %#08x %c arrived at %10d bank = %3x sched %c\n",
             m_msg_counter, addr, memRef.m_is_mem_read ? 'R':'W',
             memRef.m_time * g_eventQueue_ptr->getClock(),
-            bank);
+            bank, m_event.scheduled() ? 'Y':'N');
 
     m_profiler_ptr->profileMemReq(bank);
     m_input_queue.push_back(memRef);
-    if (!m_awakened) {
-        g_eventQueue_ptr->scheduleEvent(this, 1);
-        m_awakened = 1;
+
+    if (!m_event.scheduled()) {
+        schedule(m_event, curTick() + 1);
     }
 }
 
@@ -289,8 +289,9 @@ MemoryControl::peekNode()
 {
     assert(isReady());
     MemoryNode req = m_response_queue.front();
-    DPRINTF(RubyMemory, "Peek: memory request%7d: %#08x %c\n",
-            req.m_msg_counter, req.m_addr, req.m_is_mem_read ? 'R':'W');
+    DPRINTF(RubyMemory, "Peek: memory request%7d: %#08x %c sched %c\n",
+            req.m_msg_counter, req.m_addr, req.m_is_mem_read ? 'R':'W',
+            m_event.scheduled() ? 'Y':'N');
 
     return req;
 }
@@ -513,9 +514,9 @@ MemoryControl::issueRequest(int bank)
     m_bankQueues[bank].pop_front();
 
     DPRINTF(RubyMemory, "Mem issue request%7d: %#08x %c "
-            "bank=%3x\n", req.m_msg_counter, req.m_addr,
+            "bank=%3x sched %c\n", req.m_msg_counter, req.m_addr,
             req.m_is_mem_read? 'R':'W',
-            bank);
+            bank, m_event.scheduled() ? 'Y':'N');
 
     if (req.m_msgptr) {  // don't enqueue L3 writebacks
         enqueueToDirectory(req, m_mem_ctl_latency + m_mem_fixed_delay);
@@ -642,19 +643,28 @@ MemoryControl::executeCycle()
     }
 }
 
+unsigned int
+MemoryControl::drain(Event *de)
+{
+    DPRINTF(RubyMemory, "MemoryController drain\n");
+    if(m_event.scheduled()) {
+        deschedule(m_event);
+    }
+    return 0;
+}
+
 // wakeup:  This function is called once per memory controller clock cycle.
 void
 MemoryControl::wakeup()
 {
+    DPRINTF(RubyMemory, "MemoryController wakeup\n");
     // execute everything
     executeCycle();
 
     m_idleCount--;
-    if (m_idleCount <= 0) {
-        m_awakened = 0;
-    } else {
-        // Reschedule ourselves so that we run every memory cycle:
-        g_eventQueue_ptr->scheduleEvent(this, m_mem_bus_cycle_multiplier);
+    if (m_idleCount > 0) {
+        assert(!m_event.scheduled());
+        schedule(m_event, curTick() + m_mem_bus_cycle_multiplier);
     }
 }
 

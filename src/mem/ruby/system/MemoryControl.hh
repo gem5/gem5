@@ -54,11 +54,14 @@ class MemoryControl :
     public SimObject, public Consumer, public AbstractMemOrCache
 {
   public:
+
     typedef RubyMemoryControlParams Params;
     MemoryControl(const Params *p);
     void init();
 
     ~MemoryControl();
+
+    unsigned int drain(Event *de);
 
     void wakeup();
 
@@ -90,6 +93,19 @@ class MemoryControl :
     int getDimmsPerChannel() { return m_dimms_per_channel; }
 
   private:
+    class MemCntrlEvent : public Event
+    {
+      public:
+        MemCntrlEvent(MemoryControl* _mem_cntrl)
+        {
+            mem_cntrl = _mem_cntrl;
+        }
+      private:
+        void process() { mem_cntrl->wakeup(); }
+
+        MemoryControl* mem_cntrl;
+    };
+
     void enqueueToDirectory(MemoryNode req, int latency);
     int getBank(physical_address_t addr);
     int getRank(int bank);
@@ -107,7 +123,6 @@ class MemoryControl :
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
     std::string m_description;
     int m_msg_counter;
-    int m_awakened;
 
     int m_mem_bus_cycle_multiplier;
     int m_banks_per_rank;
@@ -159,6 +174,8 @@ class MemoryControl :
     int m_idleCount;          // watchdog timer for shutting down
 
     MemCntrlProfiler* m_profiler_ptr;
+
+    MemCntrlEvent m_event;
 };
 
 #endif // __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__

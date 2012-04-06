@@ -33,11 +33,12 @@
 
 #include "base/intmath.hh"
 #include "base/output.hh"
-#include "debug/RubySystem.hh"
+#include "debug/RubyCacheTrace.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
+#include "sim/eventq.hh"
 #include "sim/simulate.hh"
 
 using namespace std;
@@ -224,6 +225,7 @@ RubySystem::serialize(std::ostream &os)
         }
     }
 
+    DPRINTF(RubyCacheTrace, "Recording Cache Trace\n");
     // Create the CacheRecorder and record the cache trace
     m_cache_recorder = new CacheRecorder(NULL, 0, sequencer_map);
 
@@ -231,15 +233,19 @@ RubySystem::serialize(std::ostream &os)
         m_abs_cntrl_vec[cntrl]->recordCacheTrace(cntrl, m_cache_recorder);
     }
 
+    DPRINTF(RubyCacheTrace, "Cache Trace Complete\n");
     // save the current tick value
     Tick curtick_original = curTick();
     // save the event queue head
     Event* eventq_head = eventq->replaceHead(NULL);
+    DPRINTF(RubyCacheTrace, "Recording current tick %ld and event queue\n",
+            curtick_original);
 
     // Schedule an event to start cache cooldown
-    RubyEvent* e = new RubyEvent(this);
-    schedule(e,curTick());
+    DPRINTF(RubyCacheTrace, "Starting cache flush\n");
+    enqueueRubyEvent(curTick());
     simulate();
+    DPRINTF(RubyCacheTrace, "Cache flush complete\n");
 
     // Restore eventq head
     eventq_head = eventq->replaceHead(eventq_head);
@@ -378,8 +384,7 @@ RubySystem::startup()
         curTick(0);
 
         // Schedule an event to start cache warmup
-        RubyEvent* e = new RubyEvent(this);
-        schedule(e,curTick());
+        enqueueRubyEvent(curTick());
         simulate();
 
         delete m_cache_recorder;

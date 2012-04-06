@@ -28,6 +28,7 @@
 
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
+#include "debug/RubyCacheTrace.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/System.hh"
@@ -398,7 +399,7 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
         }
     }
 
-    DPRINTF(RubyCache, "%s: %lli blocks of %lli total blocks"
+    DPRINTF(RubyCacheTrace, "%s: %lli blocks of %lli total blocks"
             "recorded %.2f%% \n", name().c_str(), warmedUpBlocks,
             (uint64)m_cache_num_sets * (uint64)m_cache_assoc,
             (float(warmedUpBlocks)/float(totalBlocks))*100.0);

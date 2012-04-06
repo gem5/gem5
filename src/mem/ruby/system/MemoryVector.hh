@@ -30,6 +30,7 @@
 #define __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
 
 #include "base/trace.hh"
+#include "debug/RubyCacheTrace.hh"
 #include "mem/ruby/common/Address.hh"
 
 class DirectoryMemory;
@@ -184,6 +185,8 @@ MemoryVector::collatePages(uint8* &raw_data)
     memcpy(raw_data, &m_num_pages, sizeof(uint32));
     data_size = sizeof(uint32);
 
+    DPRINTF(RubyCacheTrace, "collating %d pages\n", m_num_pages);
+
     for (uint32 i = 0;i < m_num_pages; ++i)
     {
         if (m_pages[i] == 0) {
@@ -216,6 +219,8 @@ MemoryVector::populatePages(uint8* raw_data)
     memcpy(&num_pages, raw_data, sizeof(uint32));
     data_size = sizeof(uint32);
     assert(num_pages == m_num_pages);
+
+    DPRINTF(RubyCacheTrace, "Populating %d pages\n", num_pages);
 
     for (uint32 i = 0;i < m_num_pages; ++i)
     {
