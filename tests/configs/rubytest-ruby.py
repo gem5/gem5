@@ -74,7 +74,7 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 # create the tester and system, including ruby
 #
 tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
-                    wakeup_frequency = 10)
+                    wakeup_frequency = 10, num_cpus = options.num_cpus)
 
 system = System(tester = tester, physmem = SimpleMemory())
 
@@ -90,9 +90,12 @@ system.ruby.randomization = True
 
 for ruby_port in system.ruby._cpu_ruby_ports:
     #
-    # Tie the ruby tester ports to the ruby cpu ports
+    # Tie the ruby tester ports to the ruby cpu read and write ports
     #
-    tester.cpuPort = ruby_port.slave
+    if ruby_port.support_data_reqs:
+         tester.cpuDataPort = ruby_port.slave
+    if ruby_port.support_inst_reqs:
+         tester.cpuInstPort = ruby_port.slave
 
     #
     # Tell the sequencer this is the ruby tester so that it

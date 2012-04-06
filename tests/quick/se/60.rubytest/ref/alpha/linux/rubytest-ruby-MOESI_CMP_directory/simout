@@ -1,10 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 03:47:36
-gem5 started Jan 23 2012 04:22:16
-gem5 executing on zizzer
-command line: build/ALPHA_SE_MOESI_CMP_directory/gem5.opt -d build/ALPHA_SE_MOESI_CMP_directory/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_SE_MOESI_CMP_directory/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_directory
+gem5 compiled Apr  6 2012 15:48:19
+gem5 started Apr  6 2012 15:57:35
+gem5 executing on sc2b0605
+command line: build/ALPHA_MOESI_CMP_directory/gem5.opt -d build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
+print getting inst port 0
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 371241 because Ruby Tester completed
+Exiting @ tick 357561 because Ruby Tester completed
