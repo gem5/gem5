@@ -493,7 +493,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(oc_sendBlockAck, "oc", desc="Send block ack to the owner") {
     peek(requestQueue_in, RequestMsg) {
-      if ((probe_filter_enabled || full_bit_dir_enabled) && (in_msg.Requestor == cache_entry.Owner)) {
+        if (((probe_filter_enabled || full_bit_dir_enabled) && (in_msg.Requestor == cache_entry.Owner)) || machineCount(MachineType:L1Cache) == 1) {
         enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:BLOCK_ACK;
@@ -1033,7 +1033,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(nofc_forwardRequestConditionalOwner, "nofc", desc="Forward request to one or more nodes if the requestor is not the owner") {
-    assert(machineCount(MachineType:L1Cache) > 1);
+   if (machineCount(MachineType:L1Cache) > 1) {
 
      if (probe_filter_enabled || full_bit_dir_enabled) {
        peek(requestQueue_in, RequestMsg) {
@@ -1065,7 +1065,7 @@ machine(Directory, "AMD Hammer-like protocol")
         }
       }
      }
-
+   }
   }
 
   action(f_forwardWriteFromDma, "fw", desc="Forward requests") {

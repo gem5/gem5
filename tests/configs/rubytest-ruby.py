@@ -65,10 +65,16 @@ options.l1i_assoc=2
 options.l2_assoc=2
 options.l3_assoc=2
 
+# Turn on flush check for the hammer protocol
+check_flush = False
+if buildEnv['PROTOCOL'] == 'MOESI_hammer':
+    check_flush = True
+
 #
 # create the tester and system, including ruby
 #
-tester = RubyTester(checks_to_complete = 100, wakeup_frequency = 10)
+tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
+                    wakeup_frequency = 10)
 
 system = System(tester = tester, physmem = SimpleMemory())
 
