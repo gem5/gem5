@@ -45,6 +45,9 @@ from m5.objects import *
 from m5.defines import buildEnv
 
 def define_options(parser):
+    # By default, ruby uses the simple timing cpu
+    parser.set_defaults(cpu_type="timing")
+
     # ruby network options
     parser.add_option("--topology", type="string", default="Crossbar",
                  help="check src/mem/ruby/network/topologies for complete set")
