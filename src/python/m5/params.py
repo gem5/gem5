@@ -639,6 +639,11 @@ class Bool(ParamValue):
     def __str__(self):
         return str(self.value)
 
+    # implement truth value testing for Bool parameters so that these params
+    # evaluate correctly during the python configuration phase
+    def __nonzero__(self):
+        return bool(self.value)
+
     def ini_str(self):
         if self.value:
             return 'true'
