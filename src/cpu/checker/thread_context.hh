@@ -121,8 +121,6 @@ class CheckerThreadContext : public ThreadContext
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
-    PhysicalMemory *getPhysMemPtr() { return actualTC->getPhysMemPtr(); }
-
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 

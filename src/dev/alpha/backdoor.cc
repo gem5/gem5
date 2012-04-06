@@ -92,7 +92,7 @@ AlphaBackdoor::startup()
     alphaAccess->kernStart = system->getKernelStart();
     alphaAccess->kernEnd = system->getKernelEnd();
     alphaAccess->entryPoint = system->getKernelEntry();
-    alphaAccess->mem_size = system->physmem->size();
+    alphaAccess->mem_size = system->memSize();
     alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
     Tsunami *tsunami = dynamic_cast<Tsunami *>(params()->platform);
     if (!tsunami)

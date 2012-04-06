@@ -28,7 +28,7 @@
 
 from m5.params import *
 
-from PhysicalMemory import *
+from SimpleMemory import SimpleMemory
 from System import System
 
 class SparcSystem(System):
@@ -38,20 +38,20 @@ class SparcSystem(System):
     _hypervisor_desc_base = 0x1f12080000
     _partition_desc_base = 0x1f12000000
     # ROM for OBP/Reset/Hypervisor
-    rom = Param.PhysicalMemory(
-        PhysicalMemory(range=AddrRange(_rom_base, size='8MB')),
+    rom = Param.SimpleMemory(
+        SimpleMemory(range=AddrRange(_rom_base, size='8MB')),
             "Memory to hold the ROM data")
     # nvram
-    nvram = Param.PhysicalMemory(
-        PhysicalMemory(range=AddrRange(_nvram_base, size='8kB')),
+    nvram = Param.SimpleMemory(
+        SimpleMemory(range=AddrRange(_nvram_base, size='8kB')),
         "Memory to hold the nvram data")
     # hypervisor description
-    hypervisor_desc = Param.PhysicalMemory(
-        PhysicalMemory(range=AddrRange(_hypervisor_desc_base, size='8kB')),
+    hypervisor_desc = Param.SimpleMemory(
+        SimpleMemory(range=AddrRange(_hypervisor_desc_base, size='8kB')),
         "Memory to hold the hypervisor description")
     # partition description
-    partition_desc = Param.PhysicalMemory(
-        PhysicalMemory(range=AddrRange(_partition_desc_base, size='8kB')),
+    partition_desc = Param.SimpleMemory(
+        SimpleMemory(range=AddrRange(_partition_desc_base, size='8kB')),
         "Memory to hold the partition description")
 
     reset_addr = Param.Addr(_rom_base, "Address to load ROM at")

@@ -331,7 +331,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         //    to forward the snoop up the hierarchy after the current
         //    transaction completes.
         
-        // Actual target device (typ. PhysicalMemory) will delete the
+        // Actual target device (typ. a memory) will delete the
         // packet on reception, so we need to save a copy here.
         PacketPtr cp_pkt = new Packet(pkt, true);
         targets->add(cp_pkt, curTick(), _order, Target::FromSnoop,

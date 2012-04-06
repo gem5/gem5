@@ -125,9 +125,14 @@ LinuxArmSystem::initState()
     ac->pagesize(8192);
     ac->rootdev(0);
 
+    AddrRangeList atagRanges = physmem.getConfAddrRanges();
+    if (atagRanges.size() != 1) {
+        fatal("Expected a single ATAG memory entry but got %d\n",
+              atagRanges.size());
+    }
     AtagMem *am = new AtagMem;
-    am->memSize(params()->physmem->size());
-    am->memStart(params()->physmem->start());
+    am->memSize(atagRanges.begin()->size());
+    am->memStart(atagRanges.begin()->start);
 
     AtagCmdline *ad = new AtagCmdline;
     ad->cmdline(params()->boot_osflags);

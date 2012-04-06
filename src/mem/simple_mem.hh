@@ -11,6 +11,9 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -34,88 +37,78 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Andreas Hansson
+ * Authors: Ron Dreslinski
+ *          Andreas Hansson
  */
-
-#ifndef __PHYSICAL_MEMORY_HH__
-#define __PHYSICAL_MEMORY_HH__
-
-#include "base/range_map.hh"
-#include "mem/abstract_mem.hh"
-#include "mem/packet.hh"
 
 /**
- * The physical memory encapsulates all memories in the system and
- * provides basic functionality for accessing those memories without
- * going through the memory system and interconnect.
+ * @file
+ * SimpleMemory declaration
  */
-class PhysicalMemory
+
+#ifndef __SIMPLE_MEMORY_HH__
+#define __SIMPLE_MEMORY_HH__
+
+#include "mem/abstract_mem.hh"
+#include "mem/tport.hh"
+#include "params/SimpleMemory.hh"
+
+/**
+ * The simple memory is a basic multi-ported memory with an infinite
+ * throughput and a fixed latency, potentially with a variance added
+ * to it. It uses a SimpleTimingPort to implement the timing accesses.
+ */
+class SimpleMemory : public AbstractMemory
 {
 
   private:
 
-    // Global address map
-    range_map<Addr, AbstractMemory* > addrMap;
+    class MemoryPort : public SimpleTimingPort
+    {
+        SimpleMemory& memory;
 
-    // a mutable cache for the last range that matched an address
-    mutable Range<Addr> rangeCache;
+      public:
 
-    // All address-mapped memories
-    std::vector<AbstractMemory*> memories;
+        MemoryPort(const std::string& _name, SimpleMemory& _memory);
 
-    // The total memory size
-    uint64_t size;
+      protected:
 
-    // Prevent copying
-    PhysicalMemory(const PhysicalMemory&);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-    // Prevent assignment
-    PhysicalMemory& operator=(const PhysicalMemory&);
+        virtual void recvFunctional(PacketPtr pkt);
+
+        virtual AddrRangeList getAddrRanges();
+
+    };
+
+    std::vector<MemoryPort*> ports;
+
+    Tick lat;
+    Tick lat_var;
 
   public:
 
-    /**
-     * Create a physical memory object, wrapping a number of memories.
-     */
-    PhysicalMemory(const std::vector<AbstractMemory*>& _memories);
+    typedef SimpleMemoryParams Params;
+    SimpleMemory(const Params *p);
+    virtual ~SimpleMemory() { }
 
-    /**
-     * Nothing to destruct.
-     */
-    ~PhysicalMemory() { }
+    unsigned int drain(Event* de);
 
-    /**
-     * Check if a physical address is within a range of a memory that
-     * is part of the global address map.
-     *
-     * @param addr A physical address
-     * @return Whether the address corresponds to a memory
-     */
-    bool isMemAddr(Addr addr) const;
+    virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
+    virtual void init();
 
-    /**
-     * Get the memory ranges for all memories that are to be reported
-     * to the configuration table.
-     *
-     * @return All configuration table memory ranges
-     */
-    AddrRangeList getConfAddrRanges() const;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
-    /**
-     * Get the total physical memory size.
-     *
-     * @return The sum of all memory sizes
-     */
-    uint64_t totalSize() const { return size; }
+  protected:
 
-    /**
-     *
-     */
-    void access(PacketPtr pkt);
-    void functionalAccess(PacketPtr pkt);
+    Tick doAtomicAccess(PacketPtr pkt);
+    void doFunctionalAccess(PacketPtr pkt);
+    virtual Tick calculateLatency(PacketPtr pkt);
+
 };
 
-
-
-
-#endif //__PHYSICAL_MEMORY_HH__
+#endif //__SIMPLE_MEMORY_HH__

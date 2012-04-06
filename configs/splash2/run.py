@@ -197,7 +197,7 @@ else:
 # ----------------------
 # Create a system, and add system wide objects
 # ----------------------
-system = System(cpu = cpus, physmem = PhysicalMemory(),
+system = System(cpu = cpus, physmem = SimpleMemory(),
                 membus = Bus(clock = busFrequency))
 
 system.toL2bus = Bus(clock = busFrequency)

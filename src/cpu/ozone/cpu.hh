@@ -60,7 +60,6 @@ class Checkpoint;
 class EndQuiesceEvent;
 class MemoryController;
 class MemObject;
-class PhysicalMemory;
 class Process;
 class Request;
 
@@ -106,8 +105,6 @@ class OzoneCPU : public BaseCPU
         TheISA::TLB * getDTBPtr() { return cpu->dtb; }
 
         System *getSystemPtr() { return cpu->system; }
-
-        PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
 
         TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }
@@ -314,7 +311,6 @@ class OzoneCPU : public BaseCPU
     TheISA::TLB *itb;
     TheISA::TLB *dtb;
     System *system;
-    PhysicalMemory *physmem;
 
     FrontEnd *frontEnd;
 

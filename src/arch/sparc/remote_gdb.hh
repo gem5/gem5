@@ -40,7 +40,6 @@
 
 class System;
 class ThreadContext;
-class PhysicalMemory;
 
 namespace SparcISA
 {

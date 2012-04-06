@@ -70,7 +70,7 @@ cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 options.num_cpus = nb_cores
 
 # system simulated
-system = System(cpu = cpus, physmem = PhysicalMemory())
+system = System(cpu = cpus, physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

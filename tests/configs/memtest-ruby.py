@@ -77,8 +77,8 @@ options.num_cpus = nb_cores
  
 # system simulated
 system = System(cpu = cpus,
-                funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory())
+                funcmem = SimpleMemory(in_addr_map = False),
+                physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

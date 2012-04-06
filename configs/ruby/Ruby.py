@@ -172,9 +172,10 @@ def create_system(options, system, piobus = None, dma_ports = []):
         total_mem_size.value += dir_cntrl.directory.size.value
         dir_cntrl.directory.numa_high_bit = numa_bit
         
-    physmem_size = long(system.physmem.range.second) - \
-                     long(system.physmem.range.first) + 1
-    assert(total_mem_size.value == physmem_size)
+    phys_mem_size = 0
+    for mem in system.memories.unproxy(system):
+        phys_mem_size += long(mem.range.second) - long(mem.range.first) + 1
+    assert(total_mem_size.value == phys_mem_size)
 
     ruby_profiler = RubyProfiler(ruby_system = ruby,
                                  num_of_sequencers = len(cpu_sequencers))

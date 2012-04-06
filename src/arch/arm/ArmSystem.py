@@ -56,8 +56,6 @@ class ArmSystem(System):
     # 0x0 Revision
     midr_regval = Param.UInt32(0x350fc000, "MIDR value")
     boot_loader = Param.String("", "File that contains the boot loader code if any")
-    boot_loader_mem = Param.PhysicalMemory(NULL,
-                          "Memory object that boot loader is to be loaded into")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
     flags_addr = Param.Addr(0, "Address of the flags register for MP booting")
 
@@ -67,5 +65,3 @@ class LinuxArmSystem(ArmSystem):
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
     atags_addr = Param.Addr(0x100, "Address where default atags structure should be written")
-
-

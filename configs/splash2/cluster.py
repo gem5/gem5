@@ -211,8 +211,8 @@ else:
 # ----------------------
 # Create a system, and add system wide objects
 # ----------------------
-system = System(cpu = all_cpus, l1_ = all_l1s, l1bus_ = all_l1buses, physmem = PhysicalMemory(),
-                membus = Bus(clock = busFrequency))
+system = System(cpu = all_cpus, l1_ = all_l1s, l1bus_ = all_l1buses,
+                physmem = SimpleMemory(), membus = Bus(clock = busFrequency))
 
 system.toL2bus = Bus(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)

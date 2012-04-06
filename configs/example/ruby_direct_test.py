@@ -83,11 +83,11 @@ else:
     sys.exit(1)
 
 #
-# Create the M5 system.  Note that the PhysicalMemory Object isn't
+# Create the M5 system.  Note that the Memory Object isn't
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(physmem = PhysicalMemory())
+system = System(physmem = SimpleMemory())
 
 #
 # Create the ruby random tester

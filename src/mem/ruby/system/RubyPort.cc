@@ -467,7 +467,7 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
-        ruby_port->system->physmem->doFunctionalAccess(pkt);
+        ruby_port->system->getPhysMem().functionalAccess(pkt);
     }
 
     // turn packet around to go back to requester if response expected
@@ -646,7 +646,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
-        ruby_port->system->physmem->doAtomicAccess(pkt);
+        ruby_port->system->getPhysMem().access(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -688,7 +688,7 @@ RubyPort::M5Port::getAddrRanges()
 bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
-    return ruby_port->system->isMemory(addr);
+    return ruby_port->system->isMemAddr(addr);
 }
 
 unsigned

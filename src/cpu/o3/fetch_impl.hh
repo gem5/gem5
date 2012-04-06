@@ -60,7 +60,6 @@
 #include "debug/Activity.hh"
 #include "debug/Fetch.hh"
 #include "mem/packet.hh"
-#include "mem/request.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
@@ -602,7 +601,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         // Check that we're not going off into random memory
         // If we have, just wait around for commit to squash something and put
         // us on the right track
-        if (!cpu->system->isMemory(mem_req->getPaddr())) {
+        if (!cpu->system->isMemAddr(mem_req->getPaddr())) {
             warn("Address %#x is outside of physical memory, stopping fetch\n",
                     mem_req->getPaddr());
             fetchStatus[tid] = NoGoodAddr;

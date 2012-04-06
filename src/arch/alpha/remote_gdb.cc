@@ -166,7 +166,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
     do  {
         if (IsK0Seg(va)) {
-            if (va < (K0SegBase + pmem->size())) {
+            if (va < (K0SegBase + system->memSize())) {
                 DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;

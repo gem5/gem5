@@ -140,8 +140,8 @@ for scale in treespec[:-2]:
      prototypes.insert(0, next)
 
 # system simulated
-system = System(funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(latency = "100ns"))
+system = System(funcmem = SimpleMemory(in_addr_map = False),
+                physmem = SimpleMemory(latency = "100ns"))
 
 def make_level(spec, prototypes, attach_obj, attach_port):
      fanout = spec[0]

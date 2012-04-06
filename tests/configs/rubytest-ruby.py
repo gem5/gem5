@@ -70,7 +70,7 @@ options.l3_assoc=2
 #
 tester = RubyTester(checks_to_complete = 100, wakeup_frequency = 10)
 
-system = System(tester = tester, physmem = PhysicalMemory())
+system = System(tester = tester, physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

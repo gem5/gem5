@@ -59,13 +59,13 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "mem/physical.hh"
 #include "params/System.hh"
 
 class BaseCPU;
 class BaseRemoteGDB;
 class GDBListener;
 class ObjectFile;
-class PhysicalMemory;
 class Platform;
 class ThreadContext;
 
@@ -138,7 +138,6 @@ class System : public MemObject
      */
     void setMemoryMode(Enums::MemoryMode mode);
 
-    PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
 
     std::vector<ThreadContext *> threadContexts;
@@ -158,14 +157,6 @@ class System : public MemObject
     /** Return number of running (non-halted) thread contexts in
      * system.  These threads could be Active or Suspended. */
     int numRunningContexts();
-
-    /** List to store ranges of memories in this system */
-    AddrRangeList memRanges;
-
-    /** check if an address points to valid system memory
-     * and thus we can fetch instructions out of it
-     */
-    bool isMemory(const Addr addr) const;
 
     Addr pagePtr;
 
@@ -208,13 +199,28 @@ class System : public MemObject
         return nextPID++;
     }
 
+    /** Get a pointer to access the physical memory of the system */
+    PhysicalMemory& getPhysMem() { return physmem; }
+
     /** Amount of physical memory that is still free */
-    Addr freeMemSize();
+    Addr freeMemSize() const;
 
     /** Amount of physical memory that exists */
-    Addr memSize();
+    Addr memSize() const;
+
+    /**
+     * Check if a physical address is within a range of a memory that
+     * is part of the global address map.
+     *
+     * @param addr A physical address
+     * @return Whether the address corresponds to a memory
+     */
+    bool isMemAddr(Addr addr) const;
 
   protected:
+
+    PhysicalMemory physmem;
+
     Enums::MemoryMode memoryMode;
     uint64_t workItemsBegin;
     uint64_t workItemsEnd;

@@ -33,7 +33,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from PhysicalMemory import *
+from SimpleMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
@@ -52,9 +52,9 @@ class System(MemObject):
       void setMemoryMode(Enums::MemoryMode mode);
 ''')
 
-    physmem = Param.PhysicalMemory("Physical Memory")
+    memories = VectorParam.AbstractMemory(Self.all,
+                                          "All memories in the system")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
-    memories = VectorParam.PhysicalMemory(Self.all, "All memories is the system")
     work_item_id = Param.Int(-1, "specific work item id")
     num_work_ids = Param.Int(16, "Number of distinct work item types")
     work_begin_cpu_id_exit = Param.Int(-1,

@@ -95,10 +95,6 @@ AtomicSimpleCPU::init()
         }
     }
 
-    if (fastmem) {
-        AddrRangeList pmAddrList = system->physmem->getAddrRanges();
-        physMemAddr = *pmAddrList.begin();
-    }
     // Atomic doesn't do MT right now, so contextId == threadId
     ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
     data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
@@ -283,8 +279,8 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
             if (req->isMmappedIpr())
                 dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
             else {
-                if (fastmem && pkt.getAddr() == physMemAddr)
-                    dcache_latency += system->physmem->doAtomicAccess(&pkt);
+                if (fastmem && system->isMemAddr(pkt.getAddr()))
+                    system->getPhysMem().access(&pkt);
                 else
                     dcache_latency += dcachePort.sendAtomic(&pkt);
             }
@@ -385,8 +381,8 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
                     dcache_latency +=
                         TheISA::handleIprWrite(thread->getTC(), &pkt);
                 } else {
-                    if (fastmem && pkt.getAddr() == physMemAddr)
-                        dcache_latency += system->physmem->doAtomicAccess(&pkt);
+                    if (fastmem && system->isMemAddr(pkt.getAddr()))
+                        system->getPhysMem().access(&pkt);
                     else
                         dcache_latency += dcachePort.sendAtomic(&pkt);
                 }
@@ -481,9 +477,8 @@ AtomicSimpleCPU::tick()
                                                Packet::Broadcast);
                     ifetch_pkt.dataStatic(&inst);
 
-                    if (fastmem && ifetch_pkt.getAddr() == physMemAddr)
-                        icache_latency =
-                            system->physmem->doAtomicAccess(&ifetch_pkt);
+                    if (fastmem && system->isMemAddr(ifetch_pkt.getAddr()))
+                        system->getPhysMem().access(&ifetch_pkt);
                     else
                         icache_latency = icachePort.sendAtomic(&ifetch_pkt);
 

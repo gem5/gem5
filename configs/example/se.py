@@ -152,7 +152,7 @@ CPUClass.numThreads = numThreads;
 np = options.num_cpus
 
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = PhysicalMemory(range=AddrRange("512MB")),
+                physmem = SimpleMemory(range=AddrRange("512MB")),
                 membus = Bus(), mem_mode = test_mem_mode)
 
 # Sanity check

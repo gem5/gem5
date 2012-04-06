@@ -114,10 +114,6 @@ class InOrderThreadContext : public ThreadContext
 
     void setNextMicroPC(uint64_t val) { };
 
-    /** Returns a pointer to physical memory. */
-    PhysicalMemory *getPhysMemPtr()
-    { assert(0); return 0; /*return cpu->physmem;*/ }
-
     /** Returns a pointer to this thread's kernel statistics. */
     TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }

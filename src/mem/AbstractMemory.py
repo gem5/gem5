@@ -1,5 +1,5 @@
-# Copyright (c) 2011 ARM Limited
-# All rights reserved
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -9,6 +9,9 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
+#
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,19 +36,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Geoffrey Blake
+# Authors: Nathan Binkert
+#          Andreas Hansson
 
-import m5
-from m5.objects import *
+from m5.params import *
+from MemObject import MemObject
 
-system = System(cpu = AtomicSimpleCPU(cpu_id=0),
-                physmem = SimpleMemory(),
-                membus = Bus())
-system.system_port = system.membus.slave
-system.physmem.port = system.membus.master
-system.cpu.addCheckerCpu()
-system.cpu.createInterruptController()
-system.cpu.connectAllPorts(system.membus)
-system.cpu.clock = '2GHz'
+class AbstractMemory(MemObject):
+    type = 'AbstractMemory'
+    abstract = True
+    range = Param.AddrRange(AddrRange('128MB'), "Address range")
+    file = Param.String('', "Memory-mapped file")
+    null = Param.Bool(False, "Do not store data, always return zero")
+    zero = Param.Bool(False, "Initialize memory with zeros")
 
-root = Root(full_system = False, system = system)
+    # All memories are passed to the global physical memory, and
+    # certain memories may be excluded from the global address map,
+    # e.g. by the testers that use shadow memories as a reference
+    in_addr_map = Param.Bool(True, "Memory part of the global address map")
+
+    # Should the bootloader include this memory when passing
+    # configuration information about the physical memory layout to
+    # the kernel, e.g. using ATAG or ACPI
+    conf_table_reported = Param.Bool(False, "Report to configuration table")

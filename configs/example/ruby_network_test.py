@@ -103,7 +103,7 @@ cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
 
 # create the desired simulated system
 system = System(cpu = cpus,
-                physmem = PhysicalMemory())
+                physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

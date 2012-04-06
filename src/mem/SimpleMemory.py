@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -25,17 +37,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Andreas Hansson
 
 from m5.params import *
-from m5.proxy import *
-from MemObject import *
+from AbstractMemory import *
 
-class PhysicalMemory(MemObject):
-    type = 'PhysicalMemory'
-    port = VectorSlavePort("the access port")
-    range = Param.AddrRange(AddrRange('128MB'), "Device Address")
-    file = Param.String('', "memory mapped file")
-    latency = Param.Latency('30ns', "latency of an access")
-    latency_var = Param.Latency('0ns', "access variablity")
-    zero = Param.Bool(False, "zero initialize memory")
-    null = Param.Bool(False, "do not store data, always return zero")
+class SimpleMemory(AbstractMemory):
+    type = 'SimpleMemory'
+    port = VectorSlavePort("Slave ports")
+    latency = Param.Latency('30ns', "Request to response latency")
+    latency_var = Param.Latency('0ns', "Request to response latency variance")

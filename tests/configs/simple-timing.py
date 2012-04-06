@@ -44,7 +44,7 @@ cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
                               MyL1Cache(size = '256kB'),
                               MyCache(size = '2MB', latency='10ns'))
 system = System(cpu = cpu,
-                physmem = PhysicalMemory(),
+                physmem = SimpleMemory(),
                 membus = Bus())
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master

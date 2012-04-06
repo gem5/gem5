@@ -105,8 +105,8 @@ cpus = [ MemTest(atomic = False,
          for i in xrange(options.num_cpus) ]
 
 system = System(cpu = cpus,
-                funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory())
+                funcmem = SimpleMemory(in_addr_map = False),
+                physmem = SimpleMemory())
 
 if options.num_dmas > 0:
     dmas = [ MemTest(atomic = False,

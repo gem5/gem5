@@ -56,8 +56,8 @@ nb_cores = 8
 cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(),
+system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
+                physmem = SimpleMemory(),
                 membus = Bus(clock="500GHz", width=16))
 
 # l2cache & bus

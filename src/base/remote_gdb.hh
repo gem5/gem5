@@ -42,7 +42,6 @@
 
 class System;
 class ThreadContext;
-class PhysicalMemory;
 
 class GDBListener;
 
@@ -131,7 +130,6 @@ class BaseRemoteGDB
     bool attached;
 
     System *system;
-    PhysicalMemory *pmem;
     ThreadContext *context;
 
   protected:

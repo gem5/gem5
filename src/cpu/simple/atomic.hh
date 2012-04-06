@@ -110,8 +110,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     bool dcache_access;
     Tick dcache_latency;
 
-    Range<Addr> physMemAddr;
-
   protected:
 
     /** Return a reference to the data port. */

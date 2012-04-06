@@ -66,7 +66,7 @@ options.l3_assoc=2
 options.num_cpus = 1
 
 cpu = TimingSimpleCPU(cpu_id=0)
-system = System(cpu = cpu, physmem = PhysicalMemory())
+system = System(cpu = cpu, physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

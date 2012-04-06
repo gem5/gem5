@@ -55,8 +55,9 @@ nb_cores = 4
 cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, physmem = PhysicalMemory(range = AddrRange('1024MB')), membus =
-Bus())
+system = System(cpu = cpus,
+                physmem = SimpleMemory(range = AddrRange('1024MB')),
+                membus = Bus())
 
 # l2cache & bus
 system.toL2Bus = Bus()

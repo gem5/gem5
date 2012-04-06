@@ -254,7 +254,7 @@ BaseRemoteGDB::Event::process(int revent)
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize)
     : event(NULL), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
-      system(_system), pmem(_system->physmem), context(c),
+      system(_system), context(c),
       gdbregs(cacheSize)
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());

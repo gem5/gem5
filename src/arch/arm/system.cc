@@ -55,9 +55,6 @@ using namespace Linux;
 ArmSystem::ArmSystem(Params *p)
     : System(p), bootldr(NULL)
 {
-    if ((p->boot_loader == "") != (p->boot_loader_mem == NULL))
-        fatal("If boot_loader is specifed, memory to load it must be also.\n");
-
     if (p->boot_loader != "") {
         bootldr = createObjectFile(p->boot_loader);
 

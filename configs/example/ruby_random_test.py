@@ -92,11 +92,11 @@ tester = RubyTester(check_flush = check_flush,
                     wakeup_frequency = options.wakeup_freq)
 
 #
-# Create the M5 system.  Note that the PhysicalMemory Object isn't
+# Create the M5 system.  Note that the Memory Object isn't
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(tester = tester, physmem = PhysicalMemory())
+system = System(tester = tester, physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
 

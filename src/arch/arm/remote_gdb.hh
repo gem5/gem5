@@ -37,7 +37,6 @@
 
 class System;
 class ThreadContext;
-class PhysicalMemory;
 
 namespace ArmISA
 {

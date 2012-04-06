@@ -186,7 +186,6 @@ typedef enum DmaState {
     Dma_Transfer
 } DmaState_t;
 
-class PhysicalMemory;
 class IdeController;
 
 /**

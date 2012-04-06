@@ -73,7 +73,6 @@ int System::numSystemsRunning = 0;
 
 System::System(Params *p)
     : MemObject(p), _systemPort("system_port", this),
-      physmem(p->physmem),
       _numContexts(0),
       pagePtr(0),
       init_param(p->init_param),
@@ -81,6 +80,7 @@ System::System(Params *p)
       virtProxy(_systemPort),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
+      physmem(p->memories),
       memoryMode(p->mem_mode),
       workItemsBegin(0),
       workItemsEnd(0),
@@ -91,16 +91,6 @@ System::System(Params *p)
 {
     // add self to global system list
     systemList.push_back(this);
-
-    /** Keep track of all memories we can execute code out of
-     * in our system
-     */
-    for (int x = 0; x < p->memories.size(); x++) {
-        if (!p->memories[x])
-            continue;
-        memRanges.push_back(RangeSize(p->memories[x]->start(),
-                                      p->memories[x]->size()));
-    }
 
     if (FullSystem) {
         kernelSymtab = new SymbolTable;
@@ -308,32 +298,27 @@ System::allocPhysPages(int npages)
 {
     Addr return_addr = pagePtr << LogVMPageSize;
     pagePtr += npages;
-    if (pagePtr > physmem->size())
+    if (pagePtr > physmem.totalSize())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
 
 Addr
-System::memSize()
+System::memSize() const
 {
-    return physmem->size();
+    return physmem.totalSize();
 }
 
 Addr
-System::freeMemSize()
+System::freeMemSize() const
 {
-   return physmem->size() - (pagePtr << LogVMPageSize);
+   return physmem.totalSize() - (pagePtr << LogVMPageSize);
 }
 
 bool
-System::isMemory(const Addr addr) const
+System::isMemAddr(Addr addr) const
 {
-    std::list<Range<Addr> >::const_iterator i;
-    for (i = memRanges.begin(); i != memRanges.end(); i++) {
-        if (*i == addr)
-            return true;
-    }
-    return false;
+    return physmem.isMemAddr(addr);
 }
 
 void

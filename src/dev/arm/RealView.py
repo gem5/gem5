@@ -49,7 +49,7 @@ from Ide import *
 from Platform import Platform
 from Terminal import Terminal
 from Uart import Uart
-from PhysicalMemory import *
+from SimpleMemory import SimpleMemory
 
 class AmbaDevice(BasicPioDevice):
     type = 'AmbaDevice'
@@ -146,10 +146,11 @@ class RealView(Platform):
     max_mem_size = Param.Addr('256MB', "Maximum amount of RAM supported by platform")
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'), size = '64MB'), zero = True)
+        self.nvmem = SimpleMemory(range = AddrRange(Addr('2GB'),
+                                                    size = '64MB'),
+                                  zero = True)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot.arm')
-        cur_sys.boot_loader_mem = self.nvmem
 
 
 # Reference for memory map and interrupt number
@@ -438,7 +439,8 @@ class VExpress_EMM(RealView):
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
                             BAR1 = 0x1C1A0100, BAR1Size = '4096B',
                             BAR0LegacyIO = True, BAR1LegacyIO = True)
-    vram           = PhysicalMemory(range = AddrRange(0x18000000, size='32MB'), zero = True)
+    vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
+                                  zero = True)
     rtc            = PL031(pio_addr=0x1C170000, int_num=36)
 
     l2x0_fake      = IsaFake(pio_addr=0x2C100000, pio_size=0xfff)
@@ -453,10 +455,10 @@ class VExpress_EMM(RealView):
     mmc_fake       = AmbaFake(pio_addr=0x1c050000)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = PhysicalMemory(range = AddrRange(0, size = '64MB'), zero = True)
+        self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'),
+                                  zero = True)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot_emm.arm')
-        cur_sys.boot_loader_mem = self.nvmem
         cur_sys.atags_addr = 0x80000100
 
     # Attach I/O devices that are on chip and also set the appropriate
