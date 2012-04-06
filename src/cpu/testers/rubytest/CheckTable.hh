@@ -43,7 +43,7 @@ class RubyTester;
 class CheckTable
 {
   public:
-    CheckTable(int _num_cpu_sequencers, RubyTester* _tester);
+    CheckTable(int _num_writers, int _num_readers, RubyTester* _tester);
     ~CheckTable();
 
     Check* getRandomCheck();
@@ -66,7 +66,8 @@ class CheckTable
     std::vector<Check*> m_check_vector;
     m5::hash_map<Address, Check*> m_lookup_map;
 
-    int m_num_cpu_sequencers;
+    int m_num_writers;
+    int m_num_readers;
     RubyTester* m_tester_ptr;
 };
 

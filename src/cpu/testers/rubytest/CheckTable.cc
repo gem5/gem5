@@ -32,8 +32,9 @@
 #include "cpu/testers/rubytest/CheckTable.hh"
 #include "debug/RubyTest.hh"
 
-CheckTable::CheckTable(int _num_cpu_sequencers, RubyTester* _tester)
-    : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)
+CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
+    : m_num_writers(_num_writers), m_num_readers(_num_readers),
+      m_tester_ptr(_tester)
 {
     physical_address_t physical = 0;
     Address address;
@@ -94,7 +95,7 @@ CheckTable::addCheck(const Address& address)
     }
 
     Check* check_ptr = new Check(address, Address(100 + m_check_vector.size()),
-                                 m_num_cpu_sequencers, m_tester_ptr);
+                                 m_num_writers, m_num_readers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
         // Insert it once per byte
         m_lookup_map[Address(address.getAddress() + i)] = check_ptr;

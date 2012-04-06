@@ -36,8 +36,9 @@
 typedef RubyTester::SenderState SenderState;
 
 Check::Check(const Address& address, const Address& pc,
-             int _num_cpu_sequencers, RubyTester* _tester)
-    : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)
+             int _num_writers, int _num_readers, RubyTester* _tester)
+    : m_num_writers(_num_writers), m_num_readers(_num_readers),
+      m_tester_ptr(_tester)
 {
     m_status = TesterStatus_Idle;
 
@@ -80,9 +81,9 @@ Check::initiatePrefetch()
 {
     DPRINTF(RubyTest, "initiating prefetch\n");
 
-    int index = random() % m_num_cpu_sequencers;
+    int index = random() % m_num_readers;
     RubyTester::CpuPort* port =
-        safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getCpuPort(index));
+      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getReadableCpuPort(index));
 
     Request::Flags flags;
     flags.set(Request::PREFETCH);
@@ -93,8 +94,8 @@ Check::initiatePrefetch()
     if ((random() & 0x7) != 0) {
         cmd = MemCmd::ReadReq;
 
-        // 50% chance that the request will be an instruction fetch
-        if ((random() & 0x1) == 0) {
+        // if necessary, make the request an instruction fetch
+        if (port->type == RubyTester::CpuPort::InstOnly) {
             flags.set(Request::INST_FETCH);
         }
     } else {
@@ -135,9 +136,9 @@ Check::initiateFlush()
 
     DPRINTF(RubyTest, "initiating Flush\n");
 
-    int index = random() % m_num_cpu_sequencers;
+    int index = random() % m_num_writers;
     RubyTester::CpuPort* port =
-        safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getCpuPort(index));
+      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getWritableCpuPort(index));
 
     Request::Flags flags;
 
@@ -166,9 +167,9 @@ Check::initiateAction()
     DPRINTF(RubyTest, "initiating Action\n");
     assert(m_status == TesterStatus_Idle);
 
-    int index = random() % m_num_cpu_sequencers;
+    int index = random() % m_num_writers;
     RubyTester::CpuPort* port =
-        safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getCpuPort(index));
+      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getWritableCpuPort(index));
 
     Request::Flags flags;
 
@@ -231,14 +232,14 @@ Check::initiateCheck()
     DPRINTF(RubyTest, "Initiating Check\n");
     assert(m_status == TesterStatus_Ready);
 
-    int index = random() % m_num_cpu_sequencers;
+    int index = random() % m_num_readers;
     RubyTester::CpuPort* port =
-        safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getCpuPort(index));
+      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getReadableCpuPort(index));
 
     Request::Flags flags;
 
-    // 50% chance that the request will be an instruction fetch
-    if ((random() & 0x1) == 0) {
+    // If necessary, make the request an instruction fetch
+    if (port->type == RubyTester::CpuPort::InstOnly) {
         flags.set(Request::INST_FETCH);
     }
 
@@ -363,7 +364,7 @@ Check::pickInitiatingNode()
 {
     assert(m_status == TesterStatus_Idle || m_status == TesterStatus_Ready);
     m_status = TesterStatus_Idle;
-    m_initiatingNode = (random() % m_num_cpu_sequencers);
+    m_initiatingNode = (random() % m_num_writers);
     DPRINTF(RubyTest, "picked initiating node %d\n", m_initiatingNode);
     m_store_count = 0;
 }

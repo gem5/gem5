@@ -89,7 +89,8 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 
 tester = RubyTester(check_flush = check_flush,
                     checks_to_complete = options.checks,
-                    wakeup_frequency = options.wakeup_freq)
+                    wakeup_frequency = options.wakeup_freq,
+                    num_cpus = options.num_cpus)
 
 #
 # Create the M5 system.  Note that the Memory Object isn't
@@ -110,9 +111,12 @@ system.ruby.randomization = True
 
 for ruby_port in system.ruby._cpu_ruby_ports:
     #
-    # Tie the ruby tester ports to the ruby cpu ports
+    # Tie the ruby tester ports to the ruby cpu read and write ports
     #
-    tester.cpuPort = ruby_port.slave
+    if ruby_port.support_data_reqs:
+         tester.cpuDataPort = ruby_port.slave
+    if ruby_port.support_inst_reqs:
+         tester.cpuInstPort = ruby_port.slave
 
     #
     # Tell each sequencer this is the ruby tester so that it

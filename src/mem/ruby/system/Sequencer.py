@@ -44,6 +44,9 @@ class RubyPort(MemObject):
         "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
     system = Param.System(Parent.any, "system object")
+    support_data_reqs = Param.Bool(True, "data cache requests supported")
+    support_inst_reqs = Param.Bool(True, "inst cache requests supported")
+
 
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'

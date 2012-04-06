@@ -53,17 +53,37 @@
 RubyTester::RubyTester(const Params *p)
   : MemObject(p), checkStartEvent(this),
     _masterId(p->system->getMasterId(name())),
+    m_num_cpus(p->num_cpus),
     m_checks_to_complete(p->checks_to_complete),
     m_deadlock_threshold(p->deadlock_threshold),
     m_wakeup_frequency(p->wakeup_frequency),
-    m_check_flush(p->check_flush)
+    m_check_flush(p->check_flush),
+    m_num_inst_ports(p->port_cpuInstPort_connection_count)
 {
     m_checks_completed = 0;
 
-    // create the ports
-    for (int i = 0; i < p->port_cpuPort_connection_count; ++i) {
-        ports.push_back(new CpuPort(csprintf("%s-port%d", name(), i),
-                                    this, i));
+    //
+    // Create the requested inst and data ports and place them on the
+    // appropriate read and write port lists.  The reason for the subtle
+    // difference between inst and data ports vs. read and write ports is
+    // from the tester's perspective, it only needs to know whether a port
+    // supports reads (checks) or writes (actions).  Meanwhile, the protocol
+    // controllers have data ports (support read and writes) or inst ports
+    // (support only reads).
+    // Note: the inst ports are the lowest elements of the readPort vector,
+    // then the data ports are added to the readPort vector
+    //
+    for (int i = 0; i < p->port_cpuInstPort_connection_count; ++i) {
+        readPorts.push_back(new CpuPort(csprintf("%s-instPort%d", name(), i),
+                                        this, i,
+                                        RubyTester::CpuPort::InstOnly));
+    }
+    for (int i = 0; i < p->port_cpuDataPort_connection_count; ++i) {
+        CpuPort *port = NULL;
+        port = new CpuPort(csprintf("%s-dataPort%d", name(), i), this, i,
+                           RubyTester::CpuPort::DataOnly);
+        readPorts.push_back(port);
+        writePorts.push_back(port);
     }
 
     // add the check start event to the event queue
@@ -73,37 +93,57 @@ RubyTester::RubyTester(const Params *p)
 RubyTester::~RubyTester()
 {
     delete m_checkTable_ptr;
-    for (int i = 0; i < ports.size(); i++)
-        delete ports[i];
+    // Only delete the readPorts since the writePorts are just a subset
+    for (int i = 0; i < readPorts.size(); i++)
+        delete readPorts[i];
 }
 
 void
 RubyTester::init()
 {
-    assert(ports.size() > 0);
+    assert(writePorts.size() > 0 && readPorts.size() > 0);
 
-    m_last_progress_vector.resize(ports.size());
+    m_last_progress_vector.resize(m_num_cpus);
     for (int i = 0; i < m_last_progress_vector.size(); i++) {
         m_last_progress_vector[i] = 0;
     }
 
-    m_num_cpu_sequencers = ports.size();
+    m_num_writers = writePorts.size();
+    m_num_readers = readPorts.size();
 
-    m_checkTable_ptr = new CheckTable(m_num_cpu_sequencers, this);
+    m_checkTable_ptr = new CheckTable(m_num_writers, m_num_readers, this);
 }
 
 MasterPort &
 RubyTester::getMasterPort(const std::string &if_name, int idx)
 {
-    if (if_name != "cpuPort") {
+    if (if_name != "cpuInstPort" && if_name != "cpuDataPort") {
         // pass it along to our super class
         return MemObject::getMasterPort(if_name, idx);
     } else {
-        if (idx >= static_cast<int>(ports.size())) {
-            panic("RubyTester::getMasterPort: unknown index %d\n", idx);
+        if (if_name == "cpuInstPort") {
+            printf("print getting inst port %d\n", idx);
+            if (idx > m_num_inst_ports) {
+                panic("RubyTester::getMasterPort: unknown inst port idx %d\n",
+                      idx);
+            }
+            //
+            // inst ports directly map to the lowest readPort elements
+            //
+            return *readPorts[idx];
+        } else {
+            assert(if_name == "cpuDataPort");
+            //
+            // add the inst port offset to translate to the correct read port
+            // index
+            //
+            int read_idx = idx + m_num_inst_ports;
+            if (read_idx >= static_cast<int>(readPorts.size())) {
+                panic("RubyTester::getMasterPort: unknown data port idx %d\n",
+                      idx);
+            }
+            return *readPorts[read_idx];
         }
-
-        return *ports[idx];
     }
 }
 
@@ -137,11 +177,19 @@ RubyTester::CpuPort::recvTiming(PacketPtr pkt)
 }
 
 MasterPort*
-RubyTester::getCpuPort(int idx)
+RubyTester::getReadableCpuPort(int idx)
 {
-    assert(idx >= 0 && idx < ports.size());
+    assert(idx >= 0 && idx < readPorts.size());
 
-    return ports[idx];
+    return readPorts[idx];
+}
+
+MasterPort*
+RubyTester::getWritableCpuPort(int idx)
+{
+    assert(idx >= 0 && idx < writePorts.size());
+
+    return writePorts[idx];
 }
 
 void

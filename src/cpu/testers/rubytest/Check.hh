@@ -46,8 +46,8 @@ const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
 class Check
 {
   public:
-    Check(const Address& address, const Address& pc, int _num_cpu_sequencer,
-          RubyTester* _tester);
+    Check(const Address& address, const Address& pc, int _num_writers,
+          int _num_readers, RubyTester* _tester);
 
     void initiate(); // Does Action or Check or nether
     void performCallback(NodeID proc, SubBlock* data);
@@ -74,7 +74,8 @@ class Check
     Address m_address;
     Address m_pc;
     RubyAccessMode m_access_mode;
-    int m_num_cpu_sequencers;
+    int m_num_writers;
+    int m_num_readers;
     RubyTester* m_tester_ptr;
 };
 
