@@ -122,7 +122,6 @@ RubyTester::getMasterPort(const std::string &if_name, int idx)
         return MemObject::getMasterPort(if_name, idx);
     } else {
         if (if_name == "cpuInstPort") {
-            printf("print getting inst port %d\n", idx);
             if (idx > m_num_inst_ports) {
                 panic("RubyTester::getMasterPort: unknown inst port idx %d\n",
                       idx);
