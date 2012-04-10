@@ -901,7 +901,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         test_sources = Source.get(**flags)
         test_objs = [ make_obj(s, static=True) for s in test_sources ]
         testname = "unittest/%s.%s" % (test.target, label)
-        new_env.Program(testname, main_objs + test_objs + static_objs)
+        new_env.Program(testname, test_objs + static_objs)
 
     progname = exename
     if strip:
