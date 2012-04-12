@@ -162,7 +162,9 @@ class MessageBuffer
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
     std::vector<MessageBufferNode> m_prio_heap;
     
-    typedef m5::hash_map< Address, std::list<MsgPtr> > StallMsgMapType;
+    // use a std::map for the stalled messages as this container is
+    // sorted and ensures a well-defined iteration order
+    typedef std::map< Address, std::list<MsgPtr> > StallMsgMapType;
     typedef std::vector<MsgPtr>::iterator MsgListIter;
 
     StallMsgMapType m_stall_msg_map;

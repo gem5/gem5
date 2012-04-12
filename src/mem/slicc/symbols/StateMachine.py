@@ -324,7 +324,7 @@ MachineID m_machineID;
 bool m_is_blocking;
 std::map<Address, MessageBuffer*> m_block_map;
 typedef std::vector<MessageBuffer*> MsgVecType;
-typedef m5::hash_map< Address, MsgVecType* > WaitingBufType;
+typedef std::map< Address, MsgVecType* > WaitingBufType;
 WaitingBufType m_waiting_buffers;
 int m_max_in_port_rank;
 int m_cur_in_port_rank;

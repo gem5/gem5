@@ -33,7 +33,6 @@
 #include <iostream>
 #include <string>
 
-#include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 
@@ -74,7 +73,10 @@ class TimerTable
     TimerTable& operator=(const TimerTable& obj);
 
     // Data Members (m_prefix)
-    typedef m5::hash_map<Address, Time> AddressMap;
+
+    // use a std::map for the address map as this container is sorted
+    // and ensures a well-defined iteration order
+    typedef std::map<Address, Time> AddressMap;
     AddressMap m_map;
     mutable bool m_next_valid;
     mutable Time m_next_time; // Only valid if m_next_valid is true
