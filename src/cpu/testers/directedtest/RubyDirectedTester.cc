@@ -90,13 +90,6 @@ RubyDirectedTester::getMasterPort(const std::string &if_name, int idx)
     }
 }
 
-Tick
-RubyDirectedTester::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    panic("RubyDirectedTester::CpuPort::recvAtomic() not implemented!\n");
-    return 0;
-}
-
 bool
 RubyDirectedTester::CpuPort::recvTiming(PacketPtr pkt)
 {

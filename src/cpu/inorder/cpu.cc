@@ -90,16 +90,13 @@ InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit) :
 bool
 InOrderCPU::CachePort::recvTiming(Packet *pkt)
 {
+    assert(pkt->isResponse());
+
     if (pkt->isError())
         DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
                 pkt->getAddr());
-    else if (pkt->isResponse())
+    else
         cacheUnit->processCacheCompletion(pkt);
-    else {
-        //@note: depending on consistency model, update here
-        DPRINTF(InOrderCachePort, "Received snoop pkt %x,Ignoring\n",
-                pkt->getAddr());
-    }
 
     return true;
 }

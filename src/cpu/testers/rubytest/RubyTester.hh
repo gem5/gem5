@@ -78,8 +78,6 @@ class RubyTester : public MemObject
         virtual bool recvTiming(PacketPtr pkt);
         virtual void recvRetry()
         { panic("%s does not expect a retry\n", name()); }
-        virtual Tick recvAtomic(PacketPtr pkt);
-        virtual void recvFunctional(PacketPtr pkt) { }
     };
 
     struct SenderState : public Packet::SenderState

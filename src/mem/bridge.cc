@@ -412,28 +412,9 @@ Bridge::BridgeSlavePort::recvRetry()
 }
 
 Tick
-Bridge::BridgeMasterPort::recvAtomic(PacketPtr pkt)
-{
-    // master port should never receive any atomic access (panic only
-    // works once the other side, i.e. the busses, respects this)
-    //
-    //panic("Master port on %s got a recvAtomic\n", bridge->name());
-    return 0;
-}
-
-Tick
 Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 {
     return delay + masterPort.sendAtomic(pkt);
-}
-
-void
-Bridge::BridgeMasterPort::recvFunctional(PacketPtr pkt)
-{
-    // master port should never receive any functional access (panic
-    // only works once the other side, i.e. the busses, respect this)
-
-    // panic("Master port on %s got a recvFunctional\n", bridge->name());
 }
 
 void

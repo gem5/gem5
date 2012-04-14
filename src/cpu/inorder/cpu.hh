@@ -174,6 +174,9 @@ class InOrderCPU : public BaseCPU
 
         /** Handles doing a retry of a failed timing request. */
         void recvRetry();
+
+        /** Ignoring snoops for now. */
+        bool recvTimingSnoop(PacketPtr pkt) { return true; }
     };
 
     /** Define TickEvent for the CPU */

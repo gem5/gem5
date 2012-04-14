@@ -92,10 +92,6 @@ class System : public MemObject
         { panic("SystemPort does not receive timing!\n"); return false; }
         void recvRetry()
         { panic("SystemPort does not expect retry!\n"); }
-        Tick recvAtomic(PacketPtr pkt)
-        { panic("SystemPort does not receive atomic!\n"); return 0; }
-        void recvFunctional(PacketPtr pkt)
-        { panic("SystemPort does not receive functional!\n"); }
     };
 
     SystemPort _systemPort;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -718,7 +718,8 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse() && !pkt->wasNacked()) {
+    assert(pkt->isResponse());
+    if (!pkt->wasNacked()) {
         DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick());
@@ -729,7 +730,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
             tickEvent.schedule(pkt, next_tick);
 
         return true;
-    } else if (pkt->wasNacked()) {
+    } else {
         assert(cpu->_status == IcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {
@@ -737,7 +738,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
             cpu->ifetch_pkt = pkt;
         }
     }
-    //Snooping a Coherence Request, do nothing
+
     return true;
 }
 
@@ -838,7 +839,8 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse() && !pkt->wasNacked()) {
+    assert(pkt->isResponse());
+    if (!pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick());
 
@@ -858,8 +860,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
         }
 
         return true;
-    }
-    else if (pkt->wasNacked()) {
+    } else  {
         assert(cpu->_status == DcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {
@@ -867,7 +868,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
             cpu->dcache_pkt = pkt;
         }
     }
-    //Snooping a Coherence Request, do nothing
+
     return true;
 }
 

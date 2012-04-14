@@ -71,8 +71,13 @@ namespace X86ISA
             Walker *walker;
 
             bool recvTiming(PacketPtr pkt);
-            Tick recvAtomic(PacketPtr pkt);
-            void recvFunctional(PacketPtr pkt);
+
+            /**
+             * Snooping a coherence request, do nothing.
+             */
+            bool recvTimingSnoop(PacketPtr pkt) { return true; }
+            Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
+            void recvFunctionalSnoop(PacketPtr pkt) { }
             void recvRetry();
             bool isSnooping() const { return true; }
         };

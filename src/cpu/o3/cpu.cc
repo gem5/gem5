@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -89,14 +89,12 @@ template<class Impl>
 bool
 FullO3CPU<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
+    assert(pkt->isResponse());
     DPRINTF(O3CPU, "Fetch unit received timing\n");
-    if (pkt->isResponse()) {
-        // We shouldn't ever get a block in ownership state
-        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+    // We shouldn't ever get a block in ownership state
+    assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+    fetch->processCacheCompletion(pkt);
 
-        fetch->processCacheCompletion(pkt);
-    }
-    //else Snooped a coherence request, just return
     return true;
 }
 
@@ -111,7 +109,16 @@ template <class Impl>
 bool
 FullO3CPU<Impl>::DcachePort::recvTiming(PacketPtr pkt)
 {
+    assert(pkt->isResponse());
     return lsq->recvTiming(pkt);
+}
+
+template <class Impl>
+bool
+FullO3CPU<Impl>::DcachePort::recvTimingSnoop(PacketPtr pkt)
+{
+    assert(pkt->isRequest());
+    return lsq->recvTimingSnoop(pkt);
 }
 
 template <class Impl>

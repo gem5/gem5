@@ -104,7 +104,19 @@ MasterPort::peerBlockSize() const
     return _slavePort->deviceBlockSize();
 }
 
- void
+Tick
+MasterPort::sendAtomic(PacketPtr pkt)
+{
+    return _slavePort->recvAtomic(pkt);
+}
+
+void
+MasterPort::sendFunctional(PacketPtr pkt)
+{
+    return _slavePort->recvFunctional(pkt);
+}
+
+void
 MasterPort::printAddr(Addr a)
 {
     Request req(a, 1, 0, Request::funcMasterId);
@@ -154,4 +166,16 @@ bool
 SlavePort::isConnected() const
 {
     return _masterPort != NULL;
+}
+
+Tick
+SlavePort::sendAtomicSnoop(PacketPtr pkt)
+{
+    return _masterPort->recvAtomicSnoop(pkt);
+}
+
+void
+SlavePort::sendFunctionalSnoop(PacketPtr pkt)
+{
+    return _masterPort->recvFunctionalSnoop(pkt);
 }

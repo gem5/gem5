@@ -358,14 +358,6 @@ class Bridge : public MemObject
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
         virtual void recvRetry();
-
-        /** When receiving a Atomic requestfrom the peer port,
-            pass it to the bridge. */
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        /** When receiving a Functional request from the peer port,
-            pass it to the bridge. */
-        virtual void recvFunctional(PacketPtr pkt);
     };
 
     /** Slave port of the bridge. */

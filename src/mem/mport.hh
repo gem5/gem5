@@ -82,11 +82,7 @@ class MessageMasterPort : public QueuedMasterPort
     virtual ~MessageMasterPort()
     {}
 
-    void recvFunctional(PacketPtr pkt) { assert(false); }
-
-    Tick recvAtomic(PacketPtr pkt);
-
-    bool recvTiming(PacketPtr pkt) { recvAtomic(pkt); return true; }
+    bool recvTiming(PacketPtr pkt) { recvResponse(pkt); return true; }
 
   protected:
 

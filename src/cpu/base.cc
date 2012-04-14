@@ -534,27 +534,20 @@ BaseCPU::traceFunctionsInternal(Addr pc)
 bool
 BaseCPU::CpuPort::recvTiming(PacketPtr pkt)
 {
-    panic("BaseCPU doesn't expect recvTiming callback!");
+    panic("BaseCPU doesn't expect recvTiming!\n");
     return true;
 }
 
 void
 BaseCPU::CpuPort::recvRetry()
 {
-    panic("BaseCPU doesn't expect recvRetry callback!");
-}
-
-Tick
-BaseCPU::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    panic("BaseCPU doesn't expect recvAtomic callback!");
-    return curTick();
+    panic("BaseCPU doesn't expect recvRetry!\n");
 }
 
 void
-BaseCPU::CpuPort::recvFunctional(PacketPtr pkt)
+BaseCPU::CpuPort::recvFunctionalSnoop(PacketPtr pkt)
 {
-    // No internal storage to update (in the general case). In the
-    // long term this should never be called, but that assumed a split
-    // into master/slave and request/response.
+    // No internal storage to update (in the general case). A CPU with
+    // internal storage, e.g. an LSQ that should be part of the
+    // coherent memory has to check against stored data.
 }

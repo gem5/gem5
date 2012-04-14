@@ -91,25 +91,35 @@ class Bus : public MemObject
 
       protected:
 
-        /** When reciving a timing request from the peer port (at id),
-            pass it to the bus. */
+        /**
+         * When receiving a timing request, pass it to the bus.
+         */
         virtual bool recvTiming(PacketPtr pkt)
         { pkt->setSrc(id); return bus->recvTiming(pkt); }
 
-        /** When reciving a Atomic requestfrom the peer port (at id),
-            pass it to the bus. */
+        /**
+         * When receiving a timing snoop response, pass it to the bus.
+         */
+        virtual bool recvTimingSnoop(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingSnoop(pkt); }
+
+        /**
+         * When receiving an atomic request, pass it to the bus.
+         */
         virtual Tick recvAtomic(PacketPtr pkt)
         { pkt->setSrc(id); return bus->recvAtomic(pkt); }
 
-        /** When reciving a Functional requestfrom the peer port (at id),
-            pass it to the bus. */
+        /**
+         * When receiving a functional request, pass it to the bus.
+         */
         virtual void recvFunctional(PacketPtr pkt)
         { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
-        /** When reciving a retry from the peer port (at id),
-            pass it to the bus. */
+        /**
+         * When receiving a retry, pass it to the bus.
+         */
         virtual void recvRetry()
-        { bus->recvRetry(id); }
+        { panic("Bus slave ports always succeed and should never retry.\n"); }
 
         // This should return all the 'owned' addresses that are
         // downstream from this bus, yes?  That is, the union of all
@@ -160,20 +170,29 @@ class Bus : public MemObject
 
       protected:
 
-        /** When reciving a timing request from the peer port (at id),
-            pass it to the bus. */
+        /**
+         * When receiving a timing response, pass it to the bus.
+         */
         virtual bool recvTiming(PacketPtr pkt)
         { pkt->setSrc(id); return bus->recvTiming(pkt); }
 
-        /** When reciving a Atomic requestfrom the peer port (at id),
-            pass it to the bus. */
-        virtual Tick recvAtomic(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvAtomic(pkt); }
+        /**
+         * When receiving a timing snoop request, pass it to the bus.
+         */
+        virtual bool recvTimingSnoop(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingSnoop(pkt); }
 
-        /** When reciving a Functional requestfrom the peer port (at id),
-            pass it to the bus. */
-        virtual void recvFunctional(PacketPtr pkt)
-        { pkt->setSrc(id); bus->recvFunctional(pkt); }
+        /**
+         * When receiving an atomic snoop request, pass it to the bus.
+         */
+        virtual Tick recvAtomicSnoop(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvAtomicSnoop(pkt); }
+
+        /**
+         * When receiving a functional snoop request, pass it to the bus.
+         */
+        virtual void recvFunctionalSnoop(PacketPtr pkt)
+        { pkt->setSrc(id); bus->recvFunctionalSnoop(pkt); }
 
         /** When reciving a range change from the peer port (at id),
             pass it to the bus. */
@@ -212,17 +231,90 @@ class Bus : public MemObject
     typedef std::vector<BusSlavePort*>::iterator SnoopIter;
     std::vector<BusSlavePort*> snoopPorts;
 
+    /**
+     * Store the outstanding requests so we can determine which ones
+     * we generated and which ones were merely forwarded. This is used
+     * in the coherent bus when coherency responses come back.
+     */
+    std::set<RequestPtr> outstandingReq;
+
     /** Function called by the port when the bus is recieving a Timing
       transaction.*/
     bool recvTiming(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a timing
+        snoop transaction.*/
+    bool recvTimingSnoop(PacketPtr pkt);
+
+    /**
+     * Forward a timing packet to our snoopers, potentially excluding
+     * one of the connected coherent masters to avoid sending a packet
+     * back to where it came from.
+     *
+     * @param pkt Packet to forward
+     * @param exclude_slave_port_id Id of slave port to exclude
+     */
+    void forwardTiming(PacketPtr pkt, int exclude_slave_port_id);
+
+    /**
+     * Determine if the bus is to be considered occupied when being
+     * presented with a packet from a specific port. If so, the port
+     * in question is also added to the retry list.
+     *
+     * @param pkt Incoming packet
+     * @param port Source port on the bus presenting the packet
+     *
+     * @return True if the bus is to be considered occupied
+     */
+    bool isOccupied(PacketPtr pkt, Port* port);
+
+    /**
+     * Deal with a destination port accepting a packet by potentially
+     * removing the source port from the retry list (if retrying) and
+     * occupying the bus accordingly.
+     *
+     * @param busy_time Time to spend as a result of a successful send
+     */
+    void succeededTiming(Tick busy_time);
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
     Tick recvAtomic(PacketPtr pkt);
 
+    /** Function called by the port when the bus is recieving an
+        atomic snoop transaction.*/
+    Tick recvAtomicSnoop(PacketPtr pkt);
+
+    /**
+     * Forward an atomic packet to our snoopers, potentially excluding
+     * one of the connected coherent masters to avoid sending a packet
+     * back to where it came from.
+     *
+     * @param pkt Packet to forward
+     * @param exclude_slave_port_id Id of slave port to exclude
+     *
+     * @return a pair containing the snoop response and snoop latency
+     */
+    std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
+                                          int exclude_slave_port_id);
+
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
     void recvFunctional(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a functional
+        snoop transaction.*/
+    void recvFunctionalSnoop(PacketPtr pkt);
+
+    /**
+     * Forward a functional packet to our snoopers, potentially
+     * excluding one of the connected coherent masters to avoid
+     * sending a packet back to where it came from.
+     *
+     * @param pkt Packet to forward
+     * @param exclude_slave_port_id Id of slave port to exclude
+     */
+    void forwardFunctional(PacketPtr pkt, int exclude_slave_port_id);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
@@ -344,11 +436,6 @@ class Bus : public MemObject
 
     bool inRetry;
     std::set<int> inRecvRangeChange;
-
-    // keep track of the number of master ports (not counting the
-    // default master) since we need this as an offset into the
-    // interfaces vector
-    unsigned int nbrMasterPorts;
 
     /** The master and slave ports of the bus */
     std::vector<BusSlavePort*> slavePorts;

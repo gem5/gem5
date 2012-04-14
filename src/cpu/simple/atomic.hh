@@ -91,7 +91,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual Tick recvAtomic(PacketPtr pkt)
+        virtual Tick recvAtomicSnoop(PacketPtr pkt)
         {
             // Snooping a coherence request, just return
             return 0;

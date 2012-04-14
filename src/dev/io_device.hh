@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -135,17 +147,25 @@ class DmaPort : public MasterPort
     bool recvSnoops;
 
     virtual bool recvTiming(PacketPtr pkt);
-    virtual Tick recvAtomic(PacketPtr pkt)
-    {
-        if (recvSnoops) return 0;
 
-        panic("dma port shouldn't be used for pio access."); M5_DUMMY_RETURN
+    virtual bool recvTimingSnoop(PacketPtr pkt)
+    {
+        if (!recvSnoops)
+            panic("%s was not expecting a snoop\n", name());
+        return true;
     }
-    virtual void recvFunctional(PacketPtr pkt)
-    {
-        if (recvSnoops) return;
 
-        panic("dma port shouldn't be used for pio access.");
+    virtual Tick recvAtomicSnoop(PacketPtr pkt)
+    {
+        if (!recvSnoops)
+            panic("%s was not expecting a snoop\n", name());
+        return 0;
+    }
+
+    virtual void recvFunctionalSnoop(PacketPtr pkt)
+    {
+        if (!recvSnoops)
+            panic("%s was not expecting a snoop\n", name());
     }
 
     virtual void recvRetry() ;

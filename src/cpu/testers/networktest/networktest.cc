@@ -53,32 +53,9 @@ int TESTER_NETWORK=0;
 bool
 NetworkTest::CpuPort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse()) {
-        networktest->completeRequest(pkt);
-    } else {
-        // must be snoop upcall
-        assert(pkt->isRequest());
-        assert(pkt->getDest() == Packet::Broadcast);
-    }
+    assert(pkt->isResponse());
+    networktest->completeRequest(pkt);
     return true;
-}
-
-Tick
-NetworkTest::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    panic("NetworkTest doesn't expect recvAtomic call!");
-    // Will not be used
-    assert(pkt->isRequest());
-    assert(pkt->getDest() == Packet::Broadcast);
-    return curTick();
-}
-
-void
-NetworkTest::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    panic("NetworkTest doesn't expect recvFunctional call!");
-    // Will not be used
-    return;
 }
 
 void

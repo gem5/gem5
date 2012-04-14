@@ -299,6 +299,8 @@ class LSQ {
      */
     bool recvTiming(PacketPtr pkt);
 
+    bool recvTimingSnoop(PacketPtr pkt);
+
     /** The CPU pointer. */
     O3CPU *cpu;
 

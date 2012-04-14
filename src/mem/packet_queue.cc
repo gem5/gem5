@@ -104,7 +104,7 @@ PacketQueue::schedSendEvent(Tick when)
 }
 
 void
-PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
+PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
 {
     assert(when > curTick());
 
@@ -114,14 +114,14 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
         // note that currently we ignore a potentially outstanding retry
         // and could in theory put a new packet at the head of the
         // transmit list before retrying the existing packet
-        transmitList.push_front(DeferredPacket(when, pkt));
+        transmitList.push_front(DeferredPacket(when, pkt, send_as_snoop));
         schedSendEvent(when);
         return;
     }
 
     // list is non-empty and this belongs at the end
     if (when >= transmitList.back().tick) {
-        transmitList.push_back(DeferredPacket(when, pkt));
+        transmitList.push_back(DeferredPacket(when, pkt, send_as_snoop));
         return;
     }
 
@@ -130,7 +130,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
     ++i; // already checked for insertion at front
     while (i != transmitList.end() && when >= i->tick)
         ++i;
-    transmitList.insert(i, DeferredPacket(when, pkt));
+    transmitList.insert(i, DeferredPacket(when, pkt, send_as_snoop));
 }
 
 void PacketQueue::trySendTiming()
@@ -143,7 +143,10 @@ void PacketQueue::trySendTiming()
     transmitList.pop_front();
 
     // attempt to send the packet and remember the outcome
-    waitingOnRetry = !port.sendTiming(dp.pkt);
+    if (!dp.sendAsSnoop)
+        waitingOnRetry = !port.sendTiming(dp.pkt);
+    else
+        waitingOnRetry = !port.sendTimingSnoop(dp.pkt);
 
     if (waitingOnRetry) {
         // put the packet back at the front of the list (packet should

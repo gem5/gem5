@@ -70,8 +70,9 @@ class PacketQueue
       public:
         Tick tick;      ///< The tick when the packet is ready to transmit
         PacketPtr pkt;  ///< Pointer to the packet to transmit
-        DeferredPacket(Tick t, PacketPtr p)
-            : tick(t), pkt(p)
+        bool sendAsSnoop; ///< Should it be sent as a snoop or not
+        DeferredPacket(Tick t, PacketPtr p, bool send_as_snoop)
+            : tick(t), pkt(p), sendAsSnoop(send_as_snoop)
         {}
     };
 
@@ -196,8 +197,9 @@ class PacketQueue
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
+     * @param send_as_snoop Send the packet as a snoop or not
      */
-    void schedSendTiming(PacketPtr pkt, Tick when);
+    void schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop = false);
 
     /**
      * Used by a port to notify the queue that a retry was received
@@ -215,4 +217,4 @@ class PacketQueue
     unsigned int drain(Event *de);
 };
 
-#endif // __MEM_TPORT_HH__
+#endif // __MEM_PACKET_QUEUE_HH__

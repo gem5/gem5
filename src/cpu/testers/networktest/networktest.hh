@@ -94,10 +94,6 @@ class NetworkTest : public MemObject
 
         virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-
         virtual void recvRetry();
     };
 

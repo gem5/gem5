@@ -133,13 +133,6 @@ RubyPort::M5Port::M5Port(const std::string &_name, RubyPort *_port,
 }
 
 Tick
-RubyPort::PioPort::recvAtomic(PacketPtr pkt)
-{
-    panic("RubyPort::PioPort::recvAtomic() not implemented!\n");
-    return 0;
-}
-
-Tick
 RubyPort::M5Port::recvAtomic(PacketPtr pkt)
 {
     panic("RubyPort::M5Port::recvAtomic() not implemented!\n");
@@ -662,10 +655,11 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 }
 
 bool
-RubyPort::M5Port::sendNextCycle(PacketPtr pkt)
+RubyPort::M5Port::sendNextCycle(PacketPtr pkt, bool send_as_snoop)
 {
     //minimum latency, must be > 0
-    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
+    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()),
+                          send_as_snoop);
     return true;
 }
 
@@ -706,7 +700,8 @@ RubyPort::ruby_eviction_callback(const Address& address)
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         if ((*p)->getMasterPort().isSnooping()) {
             Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
-            (*p)->sendNextCycle(pkt);
+            // send as a snoop request
+            (*p)->sendNextCycle(pkt, true);
         }
     }
 }

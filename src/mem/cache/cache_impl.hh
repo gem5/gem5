@@ -785,7 +785,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         } else if (forwardSnoops && cpuSidePort->getMasterPort().isSnooping()) {
             // if it came from the memory side, it must be a snoop request
             // and we should only forward it if we are forwarding snoops
-            cpuSidePort->sendFunctional(pkt);
+            cpuSidePort->sendFunctionalSnoop(pkt);
         }
     }
 }
@@ -1178,24 +1178,23 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         // rewritten to be relative to cpu-side bus (if any)
         bool alreadyResponded = pkt->memInhibitAsserted();
         if (is_timing) {
-            Packet *snoopPkt = new Packet(pkt, true);  // clear flags
-            snoopPkt->setExpressSnoop();
-            snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
-            cpuSidePort->sendTiming(snoopPkt);
-            if (snoopPkt->memInhibitAsserted()) {
+            Packet snoopPkt(pkt, true);  // clear flags
+            snoopPkt.setExpressSnoop();
+            snoopPkt.senderState = new ForwardResponseRecord(pkt, this);
+            cpuSidePort->sendTimingSnoop(&snoopPkt);
+            if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache
                 assert(!alreadyResponded);
                 pkt->assertMemInhibit();
             } else {
-                delete snoopPkt->senderState;
+                delete snoopPkt.senderState;
             }
-            if (snoopPkt->sharedAsserted()) {
+            if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();
             }
-            delete snoopPkt;
         } else {
-            int origSrc = pkt->getSrc();
-            cpuSidePort->sendAtomic(pkt);
+            Packet::NodeID origSrc = pkt->getSrc();
+            cpuSidePort->sendAtomicSnoop(pkt);
             if (!alreadyResponded && pkt->memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache:
                 // forward response to original requester
@@ -1335,6 +1334,16 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
     handleSnoop(pkt, blk, true, false, false);
 }
 
+template<class TagStore>
+bool
+Cache<TagStore>::CpuSidePort::recvTimingSnoop(PacketPtr pkt)
+{
+    // Express snoop responses from master to slave, e.g., from L1 to L2
+    assert(pkt->isResponse());
+
+    cache->timingAccess(pkt);
+    return true;
+}
 
 template<class TagStore>
 Tick
@@ -1483,7 +1492,7 @@ Cache<TagStore>::getTimingPacket()
             PacketPtr snoop_pkt = new Packet(tgt_pkt, true);
             snoop_pkt->setExpressSnoop();
             snoop_pkt->senderState = mshr;
-            cpuSidePort->sendTiming(snoop_pkt);
+            cpuSidePort->sendTimingSnoop(snoop_pkt);
 
             if (snoop_pkt->memInhibitAsserted()) {
                 markInService(mshr, snoop_pkt);
@@ -1550,8 +1559,9 @@ template<class TagStore>
 bool
 Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
-    // illegal to block responses... can lead to deadlock
-    if (pkt->isRequest() && !pkt->memInhibitAsserted() && blocked) {
+    assert(pkt->isRequest());
+    // always let inhibited requests through even if blocked
+    if (!pkt->memInhibitAsserted() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
@@ -1603,17 +1613,25 @@ Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
     if (pkt->wasNacked())
         panic("Need to implement cache resending nacked packets!\n");
 
-    if (pkt->isResponse()) {
-        cache->handleResponse(pkt);
-    } else {
-        cache->snoopTiming(pkt);
-    }
+    assert(pkt->isResponse());
+    cache->handleResponse(pkt);
+    return true;
+}
+
+// Express snooping requests to memside port
+template<class TagStore>
+bool
+Cache<TagStore>::MemSidePort::recvTimingSnoop(PacketPtr pkt)
+{
+    // handle snooping requests
+    assert(pkt->isRequest());
+    cache->snoopTiming(pkt);
     return true;
 }
 
 template<class TagStore>
 Tick
-Cache<TagStore>::MemSidePort::recvAtomic(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     // atomic snoop
@@ -1622,7 +1640,7 @@ Cache<TagStore>::MemSidePort::recvAtomic(PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     // functional snoop (note that in contrast to atomic we don't have

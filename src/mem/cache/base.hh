@@ -142,7 +142,7 @@ class BaseCache : public MemObject
          * @param when time to send the response
          */
         void respond(PacketPtr pkt, Tick time) {
-            queue.schedSendTiming(pkt, time);
+            queue.schedSendTiming(pkt, time, true);
         }
 
       protected:

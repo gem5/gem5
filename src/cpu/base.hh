@@ -135,11 +135,9 @@ class BaseCPU : public MemObject
 
         virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(PacketPtr pkt);
-
         virtual void recvRetry();
 
-        void recvFunctional(PacketPtr pkt);
+        virtual void recvFunctionalSnoop(PacketPtr pkt);
 
     };
 

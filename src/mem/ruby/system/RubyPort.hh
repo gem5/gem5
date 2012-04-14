@@ -71,7 +71,7 @@ class RubyPort : public MemObject
       public:
         M5Port(const std::string &_name, RubyPort *_port,
                RubySystem*_system, bool _access_phys_mem);
-        bool sendNextCycle(PacketPtr pkt);
+        bool sendNextCycle(PacketPtr pkt, bool send_as_snoop = false);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
         unsigned deviceBlockSize() const;
@@ -110,8 +110,6 @@ class RubyPort : public MemObject
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt);
-        virtual void recvFunctional(PacketPtr pkt) { }
     };
 
     friend class PioPort;

@@ -153,6 +153,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
+        /**
+         * Snooping a coherence request, do nothing.
+         */
+        virtual bool recvTimingSnoop(PacketPtr pkt) { return true; }
+
         TimingSimpleCPU* cpu;
 
         struct TickEvent : public Event

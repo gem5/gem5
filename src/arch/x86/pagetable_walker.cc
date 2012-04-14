@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -110,47 +122,32 @@ Walker::WalkerPort::recvTiming(PacketPtr pkt)
 bool
 Walker::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse() || pkt->wasNacked()) {
-        WalkerSenderState * senderState =
-                dynamic_cast<WalkerSenderState *>(pkt->senderState);
-        pkt->senderState = senderState->saved;
-        WalkerState * senderWalk = senderState->senderWalk;
-        bool walkComplete = senderWalk->recvPacket(pkt);
-        delete senderState;
-        if (walkComplete) {
-            std::list<WalkerState *>::iterator iter;
-            for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-                WalkerState * walkerState = *(iter);
-                if (walkerState == senderWalk) {
-                    iter = currStates.erase(iter);
-                    break;
-                }
-            }
-            delete senderWalk;
-            // Since we block requests when another is outstanding, we
-            // need to check if there is a waiting request to be serviced
-            if (currStates.size()) {
-                WalkerState * newState = currStates.front();
-                if (!newState->wasStarted())
-                    newState->startWalk();
+    assert(pkt->isResponse());
+    WalkerSenderState * senderState =
+        dynamic_cast<WalkerSenderState *>(pkt->senderState);
+    pkt->senderState = senderState->saved;
+    WalkerState * senderWalk = senderState->senderWalk;
+    bool walkComplete = senderWalk->recvPacket(pkt);
+    delete senderState;
+    if (walkComplete) {
+        std::list<WalkerState *>::iterator iter;
+        for (iter = currStates.begin(); iter != currStates.end(); iter++) {
+            WalkerState * walkerState = *(iter);
+            if (walkerState == senderWalk) {
+                iter = currStates.erase(iter);
+                break;
             }
         }
-    } else {
-        DPRINTF(PageTableWalker, "Received strange packet\n");
+        delete senderWalk;
+        // Since we block requests when another is outstanding, we
+        // need to check if there is a waiting request to be serviced
+        if (currStates.size()) {
+            WalkerState * newState = currStates.front();
+            if (!newState->wasStarted())
+                newState->startWalk();
+        }
     }
     return true;
-}
-
-Tick
-Walker::WalkerPort::recvAtomic(PacketPtr pkt)
-{
-    return 0;
-}
-
-void
-Walker::WalkerPort::recvFunctional(PacketPtr pkt)
-{
-    return;
 }
 
 void
@@ -572,7 +569,8 @@ Walker::WalkerState::setupWalk(Addr vaddr)
 bool
 Walker::WalkerState::recvPacket(PacketPtr pkt)
 {
-    if (pkt->isResponse() && !pkt->wasNacked()) {
+    assert(pkt->isResponse());
+    if (!pkt->wasNacked()) {
         assert(inflight);
         assert(state == Waiting);
         assert(!read);
@@ -615,7 +613,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
             }
             return true;
         }
-    } else if (pkt->wasNacked()) {
+    } else {
         DPRINTF(PageTableWalker, "Request was nacked. Entering retry state\n");
         pkt->reinitNacked();
         if (!walker->sendTiming(this, pkt)) {

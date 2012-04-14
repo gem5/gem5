@@ -99,9 +99,11 @@ class MemTest : public MemObject
 
         virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(PacketPtr pkt);
+        virtual bool recvTimingSnoop(PacketPtr pkt) { return true; }
 
-        virtual void recvFunctional(PacketPtr pkt);
+        virtual Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
+
+        virtual void recvFunctionalSnoop(PacketPtr pkt) { }
 
         virtual void recvRetry();
     };

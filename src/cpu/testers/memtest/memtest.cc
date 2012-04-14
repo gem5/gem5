@@ -55,33 +55,9 @@ int TESTER_ALLOCATOR=0;
 bool
 MemTest::CpuPort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse()) {
-        memtest->completeRequest(pkt);
-    } else {
-        // must be snoop upcall
-        assert(pkt->isRequest());
-        assert(pkt->getDest() == Packet::Broadcast);
-    }
+    assert(pkt->isResponse());
+    memtest->completeRequest(pkt);
     return true;
-}
-
-Tick
-MemTest::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    // must be snoop upcall
-    assert(pkt->isRequest());
-    assert(pkt->getDest() == Packet::Broadcast);
-    return curTick();
-}
-
-void
-MemTest::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    //Do nothing if we see one come through
-//    if (curTick() != 0)//Supress warning durring initialization
-//        warn("Functional Writes not implemented in MemTester\n");
-    //Need to find any response values that intersect and update
-    return;
 }
 
 void

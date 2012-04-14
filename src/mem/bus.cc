@@ -57,7 +57,6 @@ Bus::Bus(const BusParams *p)
     : MemObject(p), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
       drainEvent(NULL), busIdleEvent(this), inRetry(false),
-      nbrMasterPorts(p->port_master_connection_count),
       defaultPortId(INVALID_PORT_ID), useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
@@ -71,40 +70,28 @@ Bus::Bus(const BusParams *p)
         fatal("Number of header cycles must be positive\n");
 
     // create the ports based on the size of the master and slave
-    // vector ports, and the presence of the default master
-
-    // id used to index into master and slave ports, that currently
-    // has holes to be able to use the id to index into either
-    int id = 0;
+    // vector ports, and the presence of the default port, the ports
+    // are enumerated starting from zero
     for (int i = 0; i < p->port_master_connection_count; ++i) {
-        std::string portName = csprintf("%s-p%d", name(), id);
-        BusMasterPort* bp = new BusMasterPort(portName, this, id);
+        std::string portName = csprintf("%s-p%d", name(), i);
+        BusMasterPort* bp = new BusMasterPort(portName, this, i);
         masterPorts.push_back(bp);
-        slavePorts.push_back(NULL);
-        ++id;
     }
 
-    // see if we have a default master connected and if so add the
-    // port
+    // see if we have a default slave device connected and if so add
+    // our corresponding master port
     if (p->port_default_connection_count) {
-        defaultPortId = id;
+        defaultPortId = masterPorts.size();
         std::string portName = csprintf("%s-default", name());
-        BusMasterPort* bp = new BusMasterPort(portName, this, id);
+        BusMasterPort* bp = new BusMasterPort(portName, this, defaultPortId);
         masterPorts.push_back(bp);
-        slavePorts.push_back(NULL);
-        ++id;
-        // this is an additional master port
-        ++nbrMasterPorts;
     }
 
-    // note that the first slave port is now stored on index
-    // nbrMasterPorts in the vector
+    // create the slave ports, once again starting at zero
     for (int i = 0; i < p->port_slave_connection_count; ++i) {
-        std::string portName = csprintf("%s-p%d", name(), id);
-        BusSlavePort* bp = new BusSlavePort(portName, this, id);
-        masterPorts.push_back(NULL);
+        std::string portName = csprintf("%s-p%d", name(), i);
+        BusSlavePort* bp = new BusSlavePort(portName, this, i);
         slavePorts.push_back(bp);
-        ++id;
     }
 
     clearPortCache();
@@ -113,9 +100,8 @@ Bus::Bus(const BusParams *p)
 MasterPort &
 Bus::getMasterPort(const std::string &if_name, int idx)
 {
-    if (if_name == "master") {
-        // the master index translates directly to the interfaces
-        // vector as they are stored first
+    if (if_name == "master" && idx < masterPorts.size()) {
+        // the master port index translates directly to the vector position
         return *masterPorts[idx];
     } else  if (if_name == "default") {
         return *masterPorts[defaultPortId];
@@ -127,8 +113,9 @@ Bus::getMasterPort(const std::string &if_name, int idx)
 SlavePort &
 Bus::getSlavePort(const std::string &if_name, int idx)
 {
-    if (if_name == "slave") {
-        return *slavePorts[nbrMasterPorts + idx];
+    if (if_name == "slave" && idx < slavePorts.size()) {
+        // the slave port index translates directly to the vector position
+        return *slavePorts[idx];
     } else {
         return MemObject::getSlavePort(if_name, idx);
     }
@@ -137,19 +124,15 @@ Bus::getSlavePort(const std::string &if_name, int idx)
 void
 Bus::init()
 {
-    std::vector<BusSlavePort*>::iterator intIter;
+    std::vector<BusSlavePort*>::iterator p;
 
-    // iterate over our interfaces and determine which of our neighbours
-    // are snooping and add them as snoopers
-    for (intIter = slavePorts.begin(); intIter != slavePorts.end();
-         intIter++) {
-        // since there are holes in the vector, check for NULL
-        if (*intIter != NULL) {
-            if ((*intIter)->getMasterPort().isSnooping()) {
-                DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
-                        (*intIter)->getMasterPort().name());
-                snoopPorts.push_back(*intIter);
-            }
+    // iterate over our slave ports and determine which of our
+    // neighbouring master ports are snooping and add them as snoopers
+    for (p = slavePorts.begin(); p != slavePorts.end(); ++p) {
+        if ((*p)->getMasterPort().isSnooping()) {
+            DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
+                    (*p)->getMasterPort().name());
+            snoopPorts.push_back(*p);
         }
     }
 }
@@ -200,27 +183,36 @@ void Bus::occupyBus(Tick until)
             curTick(), tickNextIdle);
 }
 
-/** Function called by the port when the bus is receiving a Timing
- * transaction.*/
+bool
+Bus::isOccupied(PacketPtr pkt, Port* port)
+{
+    // first we see if the next idle tick is in the future, next the
+    // bus is considered occupied if there are ports on the retry list
+    // and we are not in a retry with the current port
+    if (tickNextIdle > curTick() ||
+        (!retryList.empty() && !(inRetry && port == retryList.front()))) {
+        addToRetryList(port);
+        return true;
+    }
+    return false;
+}
+
 bool
 Bus::recvTiming(PacketPtr pkt)
 {
-    // called for both requests and responses
-
-    // get the source id and port
+    // get the source id
     Packet::NodeID src_id = pkt->getSrc();
 
-    // determine the source port based on the id
-    Port *src_port = slavePorts[src_id] ?
-        (Port*) slavePorts[src_id] : (Port*) masterPorts[src_id];
+    // determine the source port based on the id and direction
+    Port *src_port = NULL;
+    if (pkt->isRequest())
+        src_port = slavePorts[src_id];
+    else
+        src_port = masterPorts[src_id];
 
-    // If the bus is busy, or other devices are in line ahead of the current
-    // one, put this device on the retry list.
-    if (!pkt->isExpressSnoop() &&
-        (tickNextIdle > curTick() ||
-         (!retryList.empty() && (!inRetry || src_port != retryList.front()))))
-    {
-        addToRetryList(src_port);
+    // test if the bus should be considered occupied for the current
+    // packet, and exclude express snoops from the check
+    if (!pkt->isExpressSnoop() && isOccupied(pkt, src_port)) {
         DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x BUSY\n",
                 src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -232,89 +224,196 @@ Bus::recvTiming(PacketPtr pkt)
     Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
-    Packet::NodeID dest = pkt->getDest();
-    int dest_id;
-    Port *dest_port;
-
+    // decide what to do based on the direction
     if (pkt->isRequest()) {
         // the packet is a memory-mapped request and should be broadcasted to
         // our snoopers
-        assert(dest == Packet::Broadcast);
+        assert(pkt->getDest() == Packet::Broadcast);
 
-        SnoopIter s_end = snoopPorts.end();
-        for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
-            BusSlavePort *p = *s_iter;
-            // we got this request from a snooping master
-            // (corresponding to our own slave port that is also in
-            // snoopPorts) and should not send it back to where it
-            // came from
-            if (p->getId() != src_id) {
-                // cache is not allowed to refuse snoop
-                bool success M5_VAR_USED = p->sendTiming(pkt);
-                assert(success);
-            }
+        // forward to all snoopers but the source
+        forwardTiming(pkt, src_id);
+
+        // remember if we add an outstanding req so we can undo it if
+        // necessary, if the packet needs a response, we should add it
+        // as outstanding and express snoops never fail so there is
+        // not need to worry about them
+        bool add_outstanding = !pkt->isExpressSnoop() && pkt->needsResponse();
+
+        // keep track that we have an outstanding request packet
+        // matching this request, this is used by the coherency
+        // mechanism in determining what to do with snoop responses
+        // (in recvTimingSnoop)
+        if (add_outstanding) {
+            // we should never have an exsiting request outstanding
+            assert(outstandingReq.find(pkt->req) == outstandingReq.end());
+            outstandingReq.insert(pkt->req);
         }
 
-        // since it is a request, similar to functional and atomic,
-        // determine the destination based on the address and forward
-        // through the corresponding master port
-        dest_id = findPort(pkt->getAddr());
-        dest_port = masterPorts[dest_id];
-    } else {
-        // the packet is a response, and it should always go back to
-        // the port determined by the destination field
-        dest_id = dest;
-        assert(dest_id != src_id); // catch infinite loops
-        dest_port = slavePorts[dest_id] ?
-            (Port*) slavePorts[dest_id] : (Port*) masterPorts[dest_id];
+        // since it is a normal request, determine the destination
+        // based on the address and attempt to send the packet
+        bool success = masterPorts[findPort(pkt->getAddr())]->sendTiming(pkt);
 
-            // a normal response from the memory system (i.e. from a
-            // connected slave) should always go back to the master
-            // that issued it through one of our slave ports, however
-            // if this is a snoop response it could go either way, for
-            // example, it could be coming from a slave port
-            // connecting an L1 with a coherent master and another L1
-            // coherent master (one of our slave ports), or coming
-            // from the L1 and going to the L2 slave port (through one
-            // of our master ports)
-    }
-
-    assert(dest_port != NULL);
-
-    // if this is a snoop from a slave (corresponding to our own
-    // master), i.e. the memory side of the bus, then do not send it
-    // back to where it came from
-    if (dest_id != src_id) {
-        // send to actual target
-        if (!dest_port->sendTiming(pkt))  {
-            // Packet not successfully sent. Leave or put it on the retry list.
-            // illegal to block responses... can lead to deadlock
-            assert(!pkt->isResponse());
-            // It's also illegal to force a transaction to retry after
-            // someone else has committed to respond.
+        if (!success)  {
+            // inhibited packets should never be forced to retry
             assert(!pkt->memInhibitAsserted());
-            DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
+
+            // if it was added as outstanding and the send failed, then
+            // erase it again
+            if (add_outstanding)
+                outstandingReq.erase(pkt->req);
+
+            DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x RETRY\n",
                     src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+
             addToRetryList(src_port);
             occupyBus(headerFinishTime);
+
             return false;
         }
-        // send OK, fall through... pkt may have been deleted by
-        // target at this point, so it should *not* be referenced
-        // again.  We'll set it to NULL here just to be safe.
-        pkt = NULL;
+    } else {
+        // the packet is a normal response to a request that we should
+        // have seen passing through the bus
+        assert(outstandingReq.find(pkt->req) != outstandingReq.end());
+
+        // remove it as outstanding
+        outstandingReq.erase(pkt->req);
+
+        // send the packet to the destination through one of our slave
+        // ports, as determined by the destination field
+        bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTiming(pkt);
+
+        // currently it is illegal to block responses... can lead to
+        // deadlock
+        assert(success);
     }
 
-    occupyBus(packetFinishTime);
+    succeededTiming(packetFinishTime);
 
-    // Packet was successfully sent.
-    // Also take care of retries
+    return true;
+}
+
+bool
+Bus::recvTimingSnoop(PacketPtr pkt)
+{
+    // get the source id
+    Packet::NodeID src_id = pkt->getSrc();
+
+    if (pkt->isRequest()) {
+        DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x\n",
+                src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+
+        // the packet is an express snoop request and should be
+        // broadcasted to our snoopers
+        assert(pkt->getDest() == Packet::Broadcast);
+        assert(pkt->isExpressSnoop());
+
+        // forward to all snoopers
+        forwardTiming(pkt, INVALID_PORT_ID);
+
+        // a snoop request came from a connected slave device (one of
+        // our master ports), and if it is not coming from the slave
+        // device responsible for the address range something is
+        // wrong, hence there is nothing further to do as the packet
+        // would be going back to where it came from
+        assert(src_id == findPort(pkt->getAddr()));
+
+        // this is an express snoop and is never forced to retry
+        assert(!inRetry);
+
+        return true;
+    } else {
+        // determine the source port based on the id
+        SlavePort* src_port = slavePorts[src_id];
+
+        if (isOccupied(pkt, src_port)) {
+            DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x BUSY\n",
+                    src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+            return false;
+        }
+
+        DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x\n",
+                src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+
+        // get the destination from the packet
+        Packet::NodeID dest = pkt->getDest();
+
+        // responses are never express snoops
+        assert(!pkt->isExpressSnoop());
+
+        calcPacketTiming(pkt);
+        Tick packetFinishTime = pkt->finishTime;
+
+        // determine if the response is from a snoop request we
+        // created as the result of a normal request (in which case it
+        // should be in the outstandingReq), or if we merely forwarded
+        // someone else's snoop request
+        if (outstandingReq.find(pkt->req) == outstandingReq.end()) {
+            // this is a snoop response to a snoop request we
+            // forwarded, e.g. coming from the L1 and going to the L2
+            // this should be forwarded as a snoop response
+            bool success M5_VAR_USED = masterPorts[dest]->sendTimingSnoop(pkt);
+            assert(success);
+        } else {
+            // we got a snoop response on one of our slave ports,
+            // i.e. from a coherent master connected to the bus, and
+            // since we created the snoop request as part of
+            // recvTiming, this should now be a normal response again
+            outstandingReq.erase(pkt->req);
+
+            // this is a snoop response from a coherent master, with a
+            // destination field set on its way through the bus as
+            // request, hence it should never go back to where the
+            // snoop response came from, but instead to where the
+            // original request came from
+            assert(src_id != dest);
+
+            // as a normal response, it should go back to a master
+            // through one of our slave ports
+            bool success M5_VAR_USED = slavePorts[dest]->sendTiming(pkt);
+
+            // currently it is illegal to block responses... can lead
+            // to deadlock
+            assert(success);
+        }
+
+        succeededTiming(packetFinishTime);
+
+        return true;
+    }
+}
+
+void
+Bus::succeededTiming(Tick busy_time)
+{
+    // occupy the bus accordingly
+    occupyBus(busy_time);
+
+    // if a retrying port succeeded, also take it off the retry list
     if (inRetry) {
-        DPRINTF(Bus, "Remove retry from list %d\n", src_id);
+        DPRINTF(Bus, "Remove retry from list %s\n",
+                retryList.front()->name());
         retryList.pop_front();
         inRetry = false;
     }
-    return true;
+}
+
+void
+Bus::forwardTiming(PacketPtr pkt, int exclude_slave_port_id)
+{
+    SnoopIter s_end = snoopPorts.end();
+    for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
+        BusSlavePort *p = *s_iter;
+        // we could have gotten this request from a snooping master
+        // (corresponding to our own slave port that is also in
+        // snoopPorts) and should not send it back to where it came
+        // from
+        if (exclude_slave_port_id == INVALID_PORT_ID ||
+            p->getId() != exclude_slave_port_id) {
+            // cache is not allowed to refuse snoop
+            bool success M5_VAR_USED = p->sendTimingSnoop(pkt);
+            assert(success);
+        }
+    }
 }
 
 void
@@ -430,9 +529,6 @@ Bus::findPort(Addr addr)
           name());
 }
 
-
-/** Function called by the port when the bus is receiving a Atomic
- * transaction.*/
 Tick
 Bus::recvAtomic(PacketPtr pkt)
 {
@@ -443,12 +539,59 @@ Bus::recvAtomic(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
-    // the packet may be changed by another bus on snoops, record the
-    // source id here
-    Packet::NodeID src_id = pkt->getSrc();
+    // forward to all snoopers but the source
+    std::pair<MemCmd, Tick> snoop_result = forwardAtomic(pkt, pkt->getSrc());
+    MemCmd snoop_response_cmd = snoop_result.first;
+    Tick snoop_response_latency = snoop_result.second;
 
-    // record the original command to enable us to restore it between
-    // snoops so that additional snoops can take place properly
+    // even if we had a snoop response, we must continue and also
+    // perform the actual request at the destination
+    int dest_id = findPort(pkt->getAddr());
+
+    // forward the request to the appropriate destination
+    Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
+
+    // if we got a response from a snooper, restore it here
+    if (snoop_response_cmd != MemCmd::InvalidCmd) {
+        // no one else should have responded
+        assert(!pkt->isResponse());
+        pkt->cmd = snoop_response_cmd;
+        response_latency = snoop_response_latency;
+    }
+
+    pkt->finishTime = curTick() + response_latency;
+    return response_latency;
+}
+
+Tick
+Bus::recvAtomicSnoop(PacketPtr pkt)
+{
+    DPRINTF(Bus, "recvAtomicSnoop: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+
+    // we should always see a request routed based on the address
+    assert(pkt->getDest() == Packet::Broadcast);
+    assert(pkt->isRequest());
+
+    // forward to all snoopers
+    std::pair<MemCmd, Tick> snoop_result = forwardAtomic(pkt, INVALID_PORT_ID);
+    MemCmd snoop_response_cmd = snoop_result.first;
+    Tick snoop_response_latency = snoop_result.second;
+
+    if (snoop_response_cmd != MemCmd::InvalidCmd)
+        pkt->cmd = snoop_response_cmd;
+
+    pkt->finishTime = curTick() + snoop_response_latency;
+    return snoop_response_latency;
+}
+
+std::pair<MemCmd, Tick>
+Bus::forwardAtomic(PacketPtr pkt, int exclude_slave_port_id)
+{
+    // the packet may be changed on snoops, record the original source
+    // and command to enable us to restore it between snoops so that
+    // additional snoops can take place properly
+    Packet::NodeID orig_src_id = pkt->getSrc();
     MemCmd orig_cmd = pkt->cmd;
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
@@ -460,8 +603,9 @@ Bus::recvAtomic(PacketPtr pkt)
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (p->getId() != src_id) {
-            Tick latency = p->sendAtomic(pkt);
+        if (exclude_slave_port_id == INVALID_PORT_ID ||
+            p->getId() != exclude_slave_port_id) {
+            Tick latency = p->sendAtomicSnoop(pkt);
             // in contrast to a functional access, we have to keep on
             // going as all snoopers must be updated even if we get a
             // response
@@ -476,41 +620,17 @@ Bus::recvAtomic(PacketPtr pkt)
                 snoop_response_latency = latency;
                 // restore original packet state for remaining snoopers
                 pkt->cmd = orig_cmd;
-                pkt->setSrc(src_id);
+                pkt->setSrc(orig_src_id);
                 pkt->setDest(Packet::Broadcast);
             }
         }
     }
 
-    // even if we had a snoop response, we must continue and also
-    // perform the actual request at the destination
-    int dest_id = findPort(pkt->getAddr());
-
-    Tick response_latency = 0;
-
-    // if this is a snoop from a slave (corresponding to our own
-    // master), i.e. the memory side of the bus, then do not send it
-    // back to where it came from
-    if (dest_id != src_id) {
-        response_latency = masterPorts[dest_id]->sendAtomic(pkt);
-    }
-
-    // if we got a response from a snooper, restore it here
-    if (snoop_response_cmd != MemCmd::InvalidCmd) {
-        // no one else should have responded
-        assert(!pkt->isResponse());
-        assert(pkt->cmd == orig_cmd);
-        pkt->cmd = snoop_response_cmd;
-        response_latency = snoop_response_latency;
-    }
-
-    // why do we have this packet field and the return value both???
-    pkt->finishTime = curTick() + response_latency;
-    return response_latency;
+    // the packet is restored as part of the loop and any potential
+    // snoop response is part of the returned pair
+    return std::make_pair(snoop_response_cmd, snoop_response_latency);
 }
 
-/** Function called by the port when the bus is receiving a Functional
- * transaction.*/
 void
 Bus::recvFunctional(PacketPtr pkt)
 {
@@ -526,10 +646,40 @@ Bus::recvFunctional(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
-    // the packet may be changed by another bus on snoops, record the
-    // source id here
-    Packet::NodeID src_id = pkt->getSrc();
+    // forward to all snoopers but the source
+    forwardFunctional(pkt, pkt->getSrc());
 
+    // there is no need to continue if the snooping has found what we
+    // were looking for and the packet is already a response
+    if (!pkt->isResponse()) {
+        int dest_id = findPort(pkt->getAddr());
+
+        masterPorts[dest_id]->sendFunctional(pkt);
+    }
+}
+
+void
+Bus::recvFunctionalSnoop(PacketPtr pkt)
+{
+    if (!pkt->isPrint()) {
+        // don't do DPRINTFs on PrintReq as it clutters up the output
+        DPRINTF(Bus,
+                "recvFunctionalSnoop: packet src %d dest %d addr 0x%x cmd %s\n",
+                pkt->getSrc(), pkt->getDest(), pkt->getAddr(),
+                pkt->cmdString());
+    }
+
+    // we should always see a request routed based on the address
+    assert(pkt->getDest() == Packet::Broadcast);
+    assert(pkt->isRequest());
+
+    // forward to all snoopers
+    forwardFunctional(pkt, INVALID_PORT_ID);
+}
+
+void
+Bus::forwardFunctional(PacketPtr pkt, int exclude_slave_port_id)
+{
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
         BusSlavePort *p = *s_iter;
@@ -537,26 +687,13 @@ Bus::recvFunctional(PacketPtr pkt)
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (p->getId() != src_id) {
-            p->sendFunctional(pkt);
+        if (exclude_slave_port_id == INVALID_PORT_ID ||
+            p->getId() != exclude_slave_port_id)
+            p->sendFunctionalSnoop(pkt);
 
-            // if we get a response we are done
-            if (pkt->isResponse()) {
-                break;
-            }
-        }
-    }
-
-    // there is no need to continue if the snooping has found what we
-    // were looking for and the packet is already a response
-    if (!pkt->isResponse()) {
-        int dest_id = findPort(pkt->getAddr());
-
-        // if this is a snoop from a slave (corresponding to our own
-        // master), i.e. the memory side of the bus, then do not send
-        // it back to where it came from,
-        if (dest_id != src_id) {
-            masterPorts[dest_id]->sendFunctional(pkt);
+        // if we get a response we are done
+        if (pkt->isResponse()) {
+            break;
         }
     }
 }
@@ -621,8 +758,7 @@ Bus::recvRangeChange(int id)
     std::vector<BusSlavePort*>::const_iterator intIter;
 
     for (intIter = slavePorts.begin(); intIter != slavePorts.end(); intIter++)
-        if (*intIter != NULL && (*intIter)->getId() != id)
-            (*intIter)->sendRangeChange();
+        (*intIter)->sendRangeChange();
 
     inRecvRangeChange.erase(id);
 }

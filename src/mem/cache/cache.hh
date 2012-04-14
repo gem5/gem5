@@ -90,6 +90,8 @@ class Cache : public BaseCache
 
       protected:
 
+        virtual bool recvTimingSnoop(PacketPtr pkt);
+
         virtual bool recvTiming(PacketPtr pkt);
 
         virtual Tick recvAtomic(PacketPtr pkt);
@@ -152,11 +154,13 @@ class Cache : public BaseCache
 
       protected:
 
+        virtual bool recvTimingSnoop(PacketPtr pkt);
+
         virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(PacketPtr pkt);
+        virtual Tick recvAtomicSnoop(PacketPtr pkt);
 
-        virtual void recvFunctional(PacketPtr pkt);
+        virtual void recvFunctionalSnoop(PacketPtr pkt);
 
         virtual unsigned deviceBlockSize() const
         { return cache->getBlockSize(); }

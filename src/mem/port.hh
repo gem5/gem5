@@ -115,28 +115,35 @@ class Port
     /** These functions are protected because they should only be
      * called by a peer port, never directly by any outside object. */
 
-    /** Called to recive a timing call from the peer port. */
+    /**
+     * Receive a timing request or response packet from the peer port.
+     */
     virtual bool recvTiming(PacketPtr pkt) = 0;
 
-    /** Called to recive a atomic call from the peer port. */
-    virtual Tick recvAtomic(PacketPtr pkt) = 0;
-
-    /** Called to recive a functional call from the peer port. */
-    virtual void recvFunctional(PacketPtr pkt) = 0;
+    /**
+     * Receive a timing snoop request or snoop response packet from
+     * the peer port.
+     */
+    virtual bool recvTimingSnoop(PacketPtr pkt)
+    {
+        panic("%s was not expecting a timing snoop\n", name());
+        return false;
+    }
 
     /**
-     * Called by a peer port if sendTiming was unsuccesful, and had to
-     * wait.
+     * Called by a peer port if sendTiming or sendTimingSnoop was
+     * unsuccesful, and had to wait.
      */
     virtual void recvRetry() = 0;
 
   public:
 
     /**
-     * Attempt to send a timing packet to the peer port by calling its
-     * receive function. If the send does not succeed, as indicated by
-     * the return value, then the sender must wait for a recvRetry at
-     * which point it can re-issue a sendTiming.
+     * Attempt to send a timing request or response packet to the peer
+     * port by calling its receive function. If the send does not
+     * succeed, as indicated by the return value, then the sender must
+     * wait for a recvRetry at which point it can re-issue a
+     * sendTiming.
      *
      * @param pkt Packet to send.
      *
@@ -145,30 +152,23 @@ class Port
     bool sendTiming(PacketPtr pkt) { return peer->recvTiming(pkt); }
 
     /**
-     * Send a retry to a peer port that previously attempted a sendTiming
-     * which was unsuccessful.
+     * Attempt to send a timing snoop request or snoop response packet
+     * to the peer port by calling its receive function. If the send
+     * does not succeed, as indicated by the return value, then the
+     * sender must wait for a recvRetry at which point it can re-issue
+     * a sendTimingSnoop.
+     *
+     * @param pkt Packet to send.
+     *
+     * @return If the send was succesful or not.
+    */
+    bool sendTimingSnoop(PacketPtr pkt) { return peer->recvTimingSnoop(pkt); }
+
+    /**
+     * Send a retry to a peer port that previously attempted a
+     * sendTiming or sendTimingSnoop which was unsuccessful.
      */
     void sendRetry() { return peer->recvRetry(); }
-
-    /**
-     * Send an atomic packet, where the data is moved and the state
-     * is updated in zero time, without interleaving with other
-     * memory accesses.
-     *
-     * @param pkt Packet to send.
-     *
-     * @return Estimated latency of access.
-     */
-    Tick sendAtomic(PacketPtr pkt) { return peer->recvAtomic(pkt); }
-
-    /**
-     * Send a functional packet, where the data is instantly updated
-     * everywhere in the memory system, without affecting the current
-     * state of any block or moving the block.
-     *
-     * @param pkt Packet to send.
-     */
-    void sendFunctional(PacketPtr pkt) { return peer->recvFunctional(pkt); }
 
 };
 
@@ -196,6 +196,43 @@ class MasterPort : public Port
     void bind(SlavePort& slave_port);
     SlavePort& getSlavePort() const;
     bool isConnected() const;
+
+    /**
+     * Send an atomic request packet, where the data is moved and the
+     * state is updated in zero time, without interleaving with other
+     * memory accesses.
+     *
+     * @param pkt Packet to send.
+     *
+     * @return Estimated latency of access.
+     */
+    Tick sendAtomic(PacketPtr pkt);
+
+    /**
+     * Send a functional request packet, where the data is instantly
+     * updated everywhere in the memory system, without affecting the
+     * current state of any block or moving the block.
+     *
+     * @param pkt Packet to send.
+     */
+    void sendFunctional(PacketPtr pkt);
+
+    /**
+     * Receive an atomic snoop request packet from the slave port.
+     */
+    virtual Tick recvAtomicSnoop(PacketPtr pkt)
+    {
+        panic("%s was not expecting an atomic snoop\n", name());
+        return 0;
+    }
+
+    /**
+     * Receive a functional snoop request packet from the slave port.
+     */
+    virtual void recvFunctionalSnoop(PacketPtr pkt)
+    {
+        panic("%s was not expecting a functional snoop\n", name());
+    }
 
     /**
      * Called to receive an address range change from the peer slave
@@ -255,6 +292,36 @@ class SlavePort : public Port
     void bind(MasterPort& master_port);
     MasterPort& getMasterPort() const;
     bool isConnected() const;
+
+    /**
+     * Send an atomic snoop request packet, where the data is moved
+     * and the state is updated in zero time, without interleaving
+     * with other memory accesses.
+     *
+     * @param pkt Snoop packet to send.
+     *
+     * @return Estimated latency of access.
+     */
+    Tick sendAtomicSnoop(PacketPtr pkt);
+
+    /**
+     * Send a functional snoop request packet, where the data is
+     * instantly updated everywhere in the memory system, without
+     * affecting the current state of any block or moving the block.
+     *
+     * @param pkt Snoop packet to send.
+     */
+    void sendFunctionalSnoop(PacketPtr pkt);
+
+    /**
+     * Receive an atomic request packet from the master port.
+     */
+    virtual Tick recvAtomic(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a functional request packet from the master port.
+     */
+    virtual void recvFunctional(PacketPtr pkt) = 0;
 
     /**
      * Called by a peer port in order to determine the block size of
