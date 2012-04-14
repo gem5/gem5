@@ -252,8 +252,8 @@ class CacheReqPacket : public Packet
 {
   public:
     CacheReqPacket(CacheRequest *_req,
-                   Command _cmd, short _dest, int _idx = 0)
-        : Packet(&(*_req->memReq), _cmd, _dest), cacheReq(_req),
+                   Command _cmd, int _idx = 0)
+        : Packet(&(*_req->memReq), _cmd), cacheReq(_req),
           instIdx(_idx), hasSlot(false), reqData(NULL), memReq(NULL)
     {
 

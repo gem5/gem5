@@ -270,7 +270,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
             Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
-            PacketPtr pkt = new Packet(req, cmd, Packet::Broadcast);
+            PacketPtr pkt = new Packet(req, cmd);
 
             // Increment the data pointer on a write
             if (data)

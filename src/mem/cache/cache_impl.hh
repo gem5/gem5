@@ -352,7 +352,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 class ForwardResponseRecord : public Packet::SenderState, public FastAlloc
 {
     Packet::SenderState *prevSenderState;
-    int prevSrc;
+    Packet::NodeID prevSrc;
 #ifndef NDEBUG
     BaseCache *cache;
 #endif
@@ -606,7 +606,7 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
     }
-    PacketPtr pkt = new Packet(cpu_pkt->req, cmd, Packet::Broadcast, blkSize);
+    PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
     pkt->allocate();
     return pkt;
@@ -1002,7 +1002,7 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
                 Request::wbMasterId);
-    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
+    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
     if (blk->isWritable()) {
         writeback->setSupplyExclusive();
     }

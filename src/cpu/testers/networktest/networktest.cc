@@ -259,8 +259,7 @@ NetworkTest::generatePkt()
             "Generated packet with destination %d, embedded in address %x\n",
             destination, req->getPaddr());
 
-    PacketPtr pkt = new Packet(req, requestType, 0);
-    pkt->setSrc(0); //Not used
+    PacketPtr pkt = new Packet(req, requestType);
     pkt->dataDynamicArray(new uint8_t[req->getSize()]);
     pkt->senderState = NULL;
 

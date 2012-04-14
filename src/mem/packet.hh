@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -317,10 +329,6 @@ class Packet : public FastAlloc, public Printable
     /// The time at which the first chunk of the packet will be transmitted
     Tick firstWordTime;
 
-    /// The special destination address indicating that the packet
-    /// should be routed based on its address.
-    static const NodeID Broadcast = -1;
-
     /**
      * A virtual base opaque structure used to hold state associated
      * with the packet but specific to the sending device (e.g., an
@@ -478,6 +486,8 @@ class Packet : public FastAlloc, public Printable
     NodeID getDest() const     { assert(flags.isSet(VALID_DST)); return dest; }
     /// Accessor function to set the destination index of the packet.
     void setDest(NodeID _dest) { dest = _dest; flags.set(VALID_DST); }
+    /// Reset destination field, e.g. to turn a response into a request again.
+    void clearDest() { flags.clear(VALID_DST); }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
@@ -513,9 +523,9 @@ class Packet : public FastAlloc, public Printable
      * not be valid. The command and destination addresses must be
      * supplied.
      */
-    Packet(Request *_req, MemCmd _cmd, NodeID _dest)
-        :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), bytesValidStart(0), bytesValidEnd(0),
+    Packet(Request *_req, MemCmd _cmd)
+        :  cmd(_cmd), req(_req), data(NULL),
+           bytesValidStart(0), bytesValidEnd(0),
            time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -533,9 +543,9 @@ class Packet : public FastAlloc, public Printable
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(Request *_req, MemCmd _cmd, NodeID _dest, int _blkSize)
-        :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), bytesValidStart(0), bytesValidEnd(0),
+    Packet(Request *_req, MemCmd _cmd, int _blkSize)
+        :  cmd(_cmd), req(_req), data(NULL),
+           bytesValidStart(0), bytesValidEnd(0),
            time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -659,7 +669,7 @@ class Packet : public FastAlloc, public Printable
         assert(wasNacked());
         cmd = origCmd;
         assert(needsResponse());
-        setDest(Broadcast);
+        clearDest();
     }
 
     void

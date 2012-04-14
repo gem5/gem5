@@ -814,7 +814,6 @@ CacheUnit::buildDataPacket(CacheRequest *cache_req)
 
     cache_req->dataPkt = new CacheReqPacket(cache_req,
                                             cache_req->pktCmd,
-                                            Packet::Broadcast,
                                             cache_req->instIdx);
     DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x\n",
             cache_req->getSlot(),
@@ -1035,8 +1034,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                                        cpu->dataMasterId(),
                                        0);
 
-            split_pkt = new Packet(cache_req->memReq, cache_req->pktCmd,
-                                   Packet::Broadcast);
+            split_pkt = new Packet(cache_req->memReq, cache_req->pktCmd);
             split_pkt->dataStatic(inst->splitMemData);
 
             DPRINTF(InOrderCachePort, "Completing Split Access.\n");

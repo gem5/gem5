@@ -170,9 +170,9 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
         if (fault == NoFault &&
             !memReq->getFlags().isSet(Request::NO_ACCESS)) {
             PacketPtr pkt = new Packet(memReq,
-                              memReq->isLLSC() ?
-                              MemCmd::LoadLockedReq : MemCmd::ReadReq,
-                              Packet::Broadcast);
+                                       memReq->isLLSC() ?
+                                       MemCmd::LoadLockedReq :
+                                       MemCmd::ReadReq);
 
             pkt->dataStatic(data);
 

@@ -281,9 +281,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                         break;
                     }
                 } else {
-                    PacketPtr pkt = new Packet(memReq,
-                                               MemCmd::ReadReq,
-                                               Packet::Broadcast);
+                    PacketPtr pkt = new Packet(memReq, MemCmd::ReadReq);
 
                     pkt->dataStatic(&machInst);
                     icachePort->sendFunctional(pkt);

@@ -355,7 +355,7 @@ TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr req, bool read)
             cmd = MemCmd::SwapReq;
         }
     }
-    pkt = new Packet(req, cmd, Packet::Broadcast);
+    pkt = new Packet(req, cmd);
 }
 
 void
@@ -376,8 +376,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     buildPacket(pkt2, req2, read);
 
     req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags(), dataMasterId());
-    PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand(),
-                               Packet::Broadcast);
+    PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand());
 
     pkt->dataDynamicArray<uint8_t>(data);
     pkt1->dataStatic<uint8_t>(data);
@@ -578,7 +577,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
     if (fault == NoFault) {
         DPRINTF(SimpleCPU, "Sending fetch for addr %#x(pa: %#x)\n",
                 req->getVaddr(), req->getPaddr());
-        ifetch_pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        ifetch_pkt = new Packet(req, MemCmd::ReadReq);
         ifetch_pkt->dataStatic(&inst);
         DPRINTF(SimpleCPU, " -- pkt addr: %#x\n", ifetch_pkt->getAddr());
 

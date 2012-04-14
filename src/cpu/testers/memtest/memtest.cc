@@ -328,8 +328,7 @@ MemTest::tick()
                 id, do_functional ? "functional " : "", req->getPaddr(),
                 blockAddr(req->getPaddr()), *result);
 
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
-        pkt->setSrc(0);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataDynamicArray(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
@@ -360,8 +359,7 @@ MemTest::tick()
                 do_functional ? "functional " : "", req->getPaddr(),
                 blockAddr(req->getPaddr()), data & 0xff);
 
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
-        pkt->setSrc(0);
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
         pkt->dataDynamicArray(pkt_data);
         memcpy(pkt_data, &data, req->getSize());

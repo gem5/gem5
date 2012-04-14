@@ -235,7 +235,7 @@ TableWalker::processWalk()
         f = currState->fault;
     } else {
         RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag, masterId);
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
         port.sendFunctional(pkt);
         doL1Descriptor();
@@ -578,8 +578,9 @@ TableWalker::doL1Descriptor()
                     currState->tc->getCpuPtr()->ticks(1));
             doL2Descriptor();
         } else {
-            RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0, masterId);
-            PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0,
+                                         masterId);
+            PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
             pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
             port.sendFunctional(pkt);
             doL2Descriptor();

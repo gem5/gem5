@@ -577,7 +577,7 @@ OzoneLWLSQ<Impl>::writebackStores()
         MemCmd command =
             req->isSwap() ? MemCmd::SwapReq :
             (req->isLLSC() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
-        PacketPtr data_pkt = new Packet(req, command, Packet::Broadcast);
+        PacketPtr data_pkt = new Packet(req, command);
         data_pkt->dataStatic(inst->memData);
 
         LSQSenderState *state = new LSQSenderState;

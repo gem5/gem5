@@ -108,7 +108,7 @@ Check::initiatePrefetch()
             m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
     req->setThreadContext(index, 0);
 
-    PacketPtr pkt = new Packet(req, cmd, port->idx);
+    PacketPtr pkt = new Packet(req, cmd);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
@@ -149,7 +149,7 @@ Check::initiateFlush()
 
     cmd = MemCmd::FlushReq;
 
-    PacketPtr pkt = new Packet(req, cmd, port->idx);
+    PacketPtr pkt = new Packet(req, cmd);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
@@ -191,7 +191,7 @@ Check::initiateAction()
     cmd = MemCmd::WriteReq;
     // }
 
-    PacketPtr pkt = new Packet(req, cmd, port->idx);
+    PacketPtr pkt = new Packet(req, cmd);
     uint8_t* writeData = new uint8_t;
     *writeData = m_value + m_store_count;
     pkt->dataDynamic(writeData);
@@ -248,7 +248,7 @@ Check::initiateCheck()
                                m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
 
     req->setThreadContext(index, 0);
-    PacketPtr pkt = new Packet(req, MemCmd::ReadReq, port->idx);
+    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     uint8_t* dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamicArray(dataArray);
 

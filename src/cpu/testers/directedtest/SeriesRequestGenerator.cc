@@ -67,7 +67,7 @@ SeriesRequestGenerator::initiate()
     } else {
         cmd = MemCmd::ReadReq;
     }
-    PacketPtr pkt = new Packet(req, cmd, m_active_node);
+    PacketPtr pkt = new Packet(req, cmd);
     uint8_t* dummyData = new uint8_t;
     *dummyData = 0;
     pkt->dataDynamic(dummyData);

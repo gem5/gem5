@@ -477,8 +477,7 @@ FrontEnd<Impl>::fetchCacheLine()
 #endif
 
         // Build packet here.
-        PacketPtr data_pkt = new Packet(memReq,
-                                        Packet::ReadReq, Packet::Broadcast);
+        PacketPtr data_pkt = new Packet(memReq, Packet::ReadReq);
         data_pkt->dataStatic(cacheData);
 
         if (!icachePort.sendTiming(data_pkt)) {

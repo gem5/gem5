@@ -823,13 +823,13 @@ LSQUnit<Impl>::writebackStores()
         if (!TheISA::HasUnalignedMemAcc || !storeQueue[storeWBIdx].isSplit) {
 
             // Build a single data packet if the store isn't split.
-            data_pkt = new Packet(req, command, Packet::Broadcast);
+            data_pkt = new Packet(req, command);
             data_pkt->dataStatic(inst->memData);
             data_pkt->senderState = state;
         } else {
             // Create two packets if the store is split in two.
-            data_pkt = new Packet(sreqLow, command, Packet::Broadcast);
-            snd_data_pkt = new Packet(sreqHigh, command, Packet::Broadcast);
+            data_pkt = new Packet(sreqLow, command);
+            snd_data_pkt = new Packet(sreqHigh, command);
 
             data_pkt->dataStatic(inst->memData);
             snd_data_pkt->dataStatic(inst->memData + sreqLow->getSize());

@@ -68,13 +68,13 @@ InvalidateGenerator::initiate()
         cmd = MemCmd::ReadReq;
         port = safe_cast<RubyDirectedTester::CpuPort*>(m_directed_tester->
                                                getCpuPort(m_active_read_node));
-        pkt = new Packet(req, cmd, m_active_read_node);
+        pkt = new Packet(req, cmd);
     } else if (m_status == InvalidateGeneratorStatus_Inv_Waiting) {
         DPRINTF(DirectedTest, "initiating invalidating write\n");
         cmd = MemCmd::WriteReq;
         port = safe_cast<RubyDirectedTester::CpuPort*>(m_directed_tester->
                                                getCpuPort(m_active_inv_node));
-        pkt = new Packet(req, cmd, m_active_inv_node);
+        pkt = new Packet(req, cmd);
     } else {
         panic("initiate was unexpectedly called\n");
     }

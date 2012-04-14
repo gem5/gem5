@@ -91,7 +91,7 @@ class Bridge : public MemObject
         PacketPtr pkt;
         bool nackedHere;
         Packet::SenderState *origSenderState;
-        short origSrc;
+        Packet::NodeID origSrc;
         bool expectResponse;
 
         PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)

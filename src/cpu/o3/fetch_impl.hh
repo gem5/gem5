@@ -611,8 +611,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         }
 
         // Build packet here.
-        PacketPtr data_pkt = new Packet(mem_req,
-                                        MemCmd::ReadReq, Packet::Broadcast);
+        PacketPtr data_pkt = new Packet(mem_req, MemCmd::ReadReq);
         data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
 
         cacheDataPC[tid] = block_PC;

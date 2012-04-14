@@ -82,7 +82,7 @@ namespace X86ISA
         RequestPtr req = new Request(x86InterruptAddress(id, offset),
                                      size, Request::UNCACHEABLE,
                                      Request::intMasterId);
-        PacketPtr pkt = new Packet(req, MemCmd::MessageReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, MemCmd::MessageReq);
         pkt->allocate();
         return pkt;
     }

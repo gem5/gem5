@@ -571,7 +571,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
                     (*sq_it).inst->seqNum, inst->seqNum, req->getVaddr(),
                     *(inst->memData));
 
-            PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            PacketPtr data_pkt = new Packet(req, Packet::ReadReq);
             data_pkt->dataStatic(inst->memData);
 
             WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
@@ -635,8 +635,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     PacketPtr data_pkt =
         new Packet(req,
                    (req->isLLSC() ?
-                    MemCmd::LoadLockedReq : Packet::ReadReq),
-                   Packet::Broadcast);
+                    MemCmd::LoadLockedReq : Packet::ReadReq));
     data_pkt->dataStatic(inst->memData);
 
     LSQSenderState *state = new LSQSenderState;

@@ -77,7 +77,7 @@ CacheRecorder::enqueueNextFlushRequest()
                                    RubySystem::getBlockSizeBytes(),0,
                                    Request::funcMasterId);
         MemCmd::Command requestType = MemCmd::FlushReq;
-        Packet *pkt = new Packet(req, requestType, -1);
+        Packet *pkt = new Packet(req, requestType);
 
         Sequencer* m_sequencer_ptr = m_seq_map[rec->m_cntrl_id];
         assert(m_sequencer_ptr != NULL);
@@ -113,7 +113,7 @@ CacheRecorder::enqueueNextFetchRequest()
                     RubySystem::getBlockSizeBytes(),0, Request::funcMasterId);
         }
 
-        Packet *pkt = new Packet(req, requestType, -1);
+        Packet *pkt = new Packet(req, requestType);
         pkt->dataStatic(traceRecord->m_data);
 
         Sequencer* m_sequencer_ptr = m_seq_map[traceRecord->m_cntrl_id];

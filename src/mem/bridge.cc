@@ -144,9 +144,8 @@ Bridge::BridgeMasterPort::recvTiming(PacketPtr pkt)
 
     // all checks are done when the request is accepted on the slave
     // side, so we are guaranteed to have space for the response
-
-    DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr());
+    DPRINTF(BusBridge, "recvTiming: response %s addr 0x%x\n",
+            pkt->cmdString(), pkt->getAddr());
 
     DPRINTF(BusBridge, "Request queue size: %d\n", requestQueue.size());
 
@@ -161,8 +160,9 @@ Bridge::BridgeSlavePort::recvTiming(PacketPtr pkt)
     // should only see requests on the slave side
     assert(pkt->isRequest());
 
-    DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr());
+
+    DPRINTF(BusBridge, "recvTiming: request %s addr 0x%x\n",
+            pkt->cmdString(), pkt->getAddr());
 
     DPRINTF(BusBridge, "Response queue size: %d outresp: %d\n",
             responseQueue.size(), outstandingResponses);
@@ -277,6 +277,9 @@ Bridge::BridgeSlavePort::queueForSendTiming(PacketPtr pkt)
     // from original request
     buf->fixResponse(pkt);
 
+    // the bridge assumes that at least one bus has set the
+    // destination field of the packet
+    assert(pkt->isDestValid());
     DPRINTF(BusBridge, "response, new dest %d\n", pkt->getDest());
     delete buf;
 
@@ -304,8 +307,8 @@ Bridge::BridgeMasterPort::trySend()
 
     PacketPtr pkt = buf->pkt;
 
-    DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
-            buf->origSrc, pkt->getDest(), pkt->getAddr());
+    DPRINTF(BusBridge, "trySend: origSrc %d addr 0x%x\n",
+            buf->origSrc, pkt->getAddr());
 
     // If the send was successful, make sure sender state was set to NULL
     // otherwise we could get a NACK back of a packet that didn't expect a

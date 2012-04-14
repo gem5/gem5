@@ -213,24 +213,21 @@ Bus::recvTiming(PacketPtr pkt)
     // test if the bus should be considered occupied for the current
     // packet, and exclude express snoops from the check
     if (!pkt->isExpressSnoop() && isOccupied(pkt, src_port)) {
-        DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x BUSY\n",
-                src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+        DPRINTF(Bus, "recvTiming: src %s %s 0x%x BUSY\n",
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x\n",
-            src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+    DPRINTF(Bus, "recvTiming: src %s %s 0x%x\n",
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
     // decide what to do based on the direction
     if (pkt->isRequest()) {
-        // the packet is a memory-mapped request and should be broadcasted to
-        // our snoopers
-        assert(pkt->getDest() == Packet::Broadcast);
-
-        // forward to all snoopers but the source
+        // the packet is a memory-mapped request and should be
+        // broadcasted to our snoopers but the source
         forwardTiming(pkt, src_id);
 
         // remember if we add an outstanding req so we can undo it if
@@ -262,8 +259,8 @@ Bus::recvTiming(PacketPtr pkt)
             if (add_outstanding)
                 outstandingReq.erase(pkt->req);
 
-            DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x RETRY\n",
-                    src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+            DPRINTF(Bus, "recvTiming: src %s %s 0x%x RETRY\n",
+                    src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             addToRetryList(src_port);
             occupyBus(headerFinishTime);
@@ -299,12 +296,11 @@ Bus::recvTimingSnoop(PacketPtr pkt)
     Packet::NodeID src_id = pkt->getSrc();
 
     if (pkt->isRequest()) {
-        DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x\n",
-                src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+        DPRINTF(Bus, "recvTimingSnoop: src %d %s 0x%x\n",
+                src_id, pkt->cmdString(), pkt->getAddr());
 
         // the packet is an express snoop request and should be
         // broadcasted to our snoopers
-        assert(pkt->getDest() == Packet::Broadcast);
         assert(pkt->isExpressSnoop());
 
         // forward to all snoopers
@@ -326,13 +322,13 @@ Bus::recvTimingSnoop(PacketPtr pkt)
         SlavePort* src_port = slavePorts[src_id];
 
         if (isOccupied(pkt, src_port)) {
-            DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x BUSY\n",
-                    src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+            DPRINTF(Bus, "recvTimingSnoop: src %s %s 0x%x BUSY\n",
+                    src_port->name(), pkt->cmdString(), pkt->getAddr());
             return false;
         }
 
-        DPRINTF(Bus, "recvTimingSnoop: src %d dst %d %s 0x%x\n",
-                src_id, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
+        DPRINTF(Bus, "recvTimingSnoop: src %s %s 0x%x\n",
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // get the destination from the packet
         Packet::NodeID dest = pkt->getDest();
@@ -532,11 +528,11 @@ Bus::findPort(Addr addr)
 Tick
 Bus::recvAtomic(PacketPtr pkt)
 {
-    DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+    DPRINTF(Bus, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
+            slavePorts[pkt->getSrc()]->name(), pkt->getAddr(),
+            pkt->cmdString());
 
     // we should always see a request routed based on the address
-    assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
     // forward to all snoopers but the source
@@ -566,11 +562,11 @@ Bus::recvAtomic(PacketPtr pkt)
 Tick
 Bus::recvAtomicSnoop(PacketPtr pkt)
 {
-    DPRINTF(Bus, "recvAtomicSnoop: packet src %d dest %d addr 0x%x cmd %s\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+    DPRINTF(Bus, "recvAtomicSnoop: packet src %s addr 0x%x cmd %s\n",
+            masterPorts[pkt->getSrc()]->name(), pkt->getAddr(),
+            pkt->cmdString());
 
     // we should always see a request routed based on the address
-    assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
     // forward to all snoopers
@@ -621,7 +617,7 @@ Bus::forwardAtomic(PacketPtr pkt, int exclude_slave_port_id)
                 // restore original packet state for remaining snoopers
                 pkt->cmd = orig_cmd;
                 pkt->setSrc(orig_src_id);
-                pkt->setDest(Packet::Broadcast);
+                pkt->clearDest();
             }
         }
     }
@@ -637,13 +633,12 @@ Bus::recvFunctional(PacketPtr pkt)
     if (!pkt->isPrint()) {
         // don't do DPRINTFs on PrintReq as it clutters up the output
         DPRINTF(Bus,
-                "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
-                pkt->getSrc(), pkt->getDest(), pkt->getAddr(),
+                "recvFunctional: packet src %s addr 0x%x cmd %s\n",
+                slavePorts[pkt->getSrc()]->name(), pkt->getAddr(),
                 pkt->cmdString());
     }
 
     // we should always see a request routed based on the address
-    assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
     // forward to all snoopers but the source
@@ -664,13 +659,12 @@ Bus::recvFunctionalSnoop(PacketPtr pkt)
     if (!pkt->isPrint()) {
         // don't do DPRINTFs on PrintReq as it clutters up the output
         DPRINTF(Bus,
-                "recvFunctionalSnoop: packet src %d dest %d addr 0x%x cmd %s\n",
-                pkt->getSrc(), pkt->getDest(), pkt->getAddr(),
+                "recvFunctionalSnoop: packet src %s addr 0x%x cmd %s\n",
+                masterPorts[pkt->getSrc()]->name(), pkt->getAddr(),
                 pkt->cmdString());
     }
 
     // we should always see a request routed based on the address
-    assert(pkt->getDest() == Packet::Broadcast);
     assert(pkt->isRequest());
 
     // forward to all snoopers
