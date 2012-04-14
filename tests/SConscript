@@ -38,6 +38,9 @@ Import('env')
 
 env['DIFFOUT'] = File('diff-out')
 
+# get the termcap from the environment
+termcap = env['TERMCAP']
+
 # Dict that accumulates lists of tests by category (quick, medium, long)
 env.Tests = {}
 
@@ -171,7 +174,26 @@ def run_test_string(target, source, env):
 testAction = env.Action(run_test, run_test_string)
 
 def print_test(target, source, env):
-    print '***** ' + contents(source[0])
+    # print the status with colours to make it easier to see what
+    # passed and what failed
+    line = contents(source[0])
+
+    # split the line to words and get the last one
+    words = line.split()
+    status = words[-1]
+
+    # if the test failed make it red, if it passed make it green, and
+    # skip the punctuation
+    if status == "FAILED!":
+        status = termcap.Red + status[:-1] + termcap.Normal + status[-1]
+    elif status == "passed.":
+        status = termcap.Green + status[:-1] + termcap.Normal + status[-1]
+
+    # put it back in the list and join with space
+    words[-1] = status
+    line = " ".join(words)
+
+    print '***** ' + line
     return 0
 
 printAction = env.Action(print_test, strfunction = None)

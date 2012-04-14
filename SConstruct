@@ -120,6 +120,7 @@ extra_python_paths = [
 sys.path[1:1] = extra_python_paths
 
 from m5.util import compareVersions, readCommand
+from m5.util.terminal import get_termcap
 
 help_texts = {
     "options" : "",
@@ -169,14 +170,7 @@ AddLocalOption('--update-ref', dest='update_ref', action='store_true',
 AddLocalOption('--verbose', dest='verbose', action='store_true',
                help='Print full tool command lines')
 
-use_colors = GetOption('use_colors')
-if use_colors:
-    from m5.util.terminal import termcap
-elif use_colors is None:
-    # option unspecified; default behavior is to use colors iff isatty
-    from m5.util.terminal import tty_termcap as termcap
-else:
-    from m5.util.terminal import no_termcap as termcap
+termcap = get_termcap(GetOption('use_colors'))
 
 ########################################################################
 #
@@ -462,6 +456,8 @@ class Transform(object):
 
 Export('Transform')
 
+# enable the regression script to use the termcap
+main['TERMCAP'] = termcap
 
 if GetOption('verbose'):
     def MakeAction(action, string, *args, **kwargs):

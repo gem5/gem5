@@ -93,6 +93,15 @@ if sys.stdout.isatty():
 else:
     tty_termcap = no_termcap
 
+def get_termcap(use_colors = None):
+    if use_colors:
+        return termcap
+    elif use_colors is None:
+        # option unspecified; default behavior is to use colors iff isatty
+        return tty_termcap
+    else:
+        return no_termcap
+
 def test_termcap(obj):
     for c_name in color_names:
         c_str = getattr(obj, c_name)
