@@ -47,7 +47,6 @@
 
 // C++ includes
 #include <string>
-using namespace std;
 
 // GEM5 includes
 #include "params/FaultModel.hh"
@@ -112,7 +111,7 @@ class FaultModel : public SimObject
                        int number_of_buff_per_data_vc, 
                        int number_of_buff_per_ctrl_vc);
 
-    string fault_type_to_string(int fault_type_index);
+    std::string fault_type_to_string(int fault_type_index);
  
     // the following 2 functions are called at runtime, to get the probability 
     // of each fault type (fault_vector) or the aggregate fault probability 
@@ -134,9 +133,9 @@ class FaultModel : public SimObject
     void print(void);
 
   private:
-    vector <system_conf> configurations;
-    vector <system_conf> routers;
-    vector <int> temperature_weights;
+    std::vector <system_conf> configurations;
+    std::vector <system_conf> routers;
+    std::vector <int> temperature_weights;
 };
 
 #endif //  __MEM_RUBY_NETWORK_FAULT_MODEL_HH__

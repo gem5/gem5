@@ -486,7 +486,7 @@ CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
 main['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
 main['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
-main['CLANG'] = CXX_V and CXX_V.find('clang') >= 0
+main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['SUNCC'] + main['ICC'] + main['CLANG'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
@@ -496,7 +496,6 @@ if main['GCC']:
     main.Append(CCFLAGS=['-pipe'])
     main.Append(CCFLAGS=['-fno-strict-aliasing'])
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    main.Append(CXXFLAGS=['-Wno-deprecated'])
     # Read the GCC version to check for versions with bugs
     # Note CCVERSION doesn't work here because it is run with the CC
     # before we override it from the command line
@@ -506,6 +505,8 @@ if main['GCC']:
        not compareVersions(gcc_version, '4.4.2'):
         print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
         main.Append(CCFLAGS=['-fno-tree-vectorize'])
+    if compareVersions(gcc_version, '4.6') >= 0:
+        main.Append(CXXFLAGS=['-std=c++0x'])
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
 elif main['SUNCC']:
@@ -533,6 +534,12 @@ elif main['CLANG']:
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
     main.Append(CCFLAGS=['-Wno-tautological-compare'])
     main.Append(CCFLAGS=['-Wno-self-assign'])
+    # Ruby makes frequent use of extraneous parantheses in the printing
+    # of if-statements
+    main.Append(CCFLAGS=['-Wno-parentheses'])
+
+    if compareVersions(clang_version, "3") >= 0:
+        main.Append(CXXFLAGS=['-std=c++0x'])
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'

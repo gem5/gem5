@@ -285,7 +285,7 @@ let {{
             //           OF = SF = AF = 0
             ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
                                         ZFBit | PFBit | CFBit);
-            if (isnan(FpSrcReg1) || isnan(FpSrcReg2))
+            if (std::isnan(FpSrcReg1) || std::isnan(FpSrcReg2))
                 ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
             else if(FpSrcReg1 < FpSrcReg2)
                 ccFlagBits = ccFlagBits | CFBit;

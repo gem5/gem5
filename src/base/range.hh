@@ -316,7 +316,13 @@ template <class T, class U>
 inline bool
 operator<(const Range<T> &range, const U &pos)
 {
-    return range.end < pos;
+  // with -std=gnu++0x, gcc and clang get confused when range.end is
+  // compared to pos using the operator "<", and the parser expects it
+  // to be the opening bracket for a template parameter,
+  // i.e. range.end<pos>(...);, the reason seems to be the range-type
+  // iteration introduced in c++11 where begin and end are members
+  // that return iterators
+    return operator<(range.end, pos);
 }
 
 /**

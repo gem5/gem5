@@ -98,7 +98,7 @@ class TlbMap
         if (intersect(r))
             return tree.end();
 
-        return tree.insert(std::make_pair<TlbRange,TlbEntry*>(r, d)).first;
+        return tree.insert(std::make_pair(r, d)).first;
     }
 
     size_t

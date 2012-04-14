@@ -33,6 +33,8 @@
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 
+using namespace std;
+
 BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     : Network(p)
 {

@@ -44,7 +44,6 @@
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-using namespace std;
 
 namespace SparcISA
 {

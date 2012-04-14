@@ -40,8 +40,6 @@
 
 #include "mem/ruby/network/orion/Type.hh"
 
-using namespace std;
-
 class OrionConfig;
 
 class TechParameter

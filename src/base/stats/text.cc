@@ -166,7 +166,7 @@ ValueToString(Result value, int precision)
 {
     stringstream val;
 
-    if (!isnan(value)) {
+    if (!std::isnan(value)) {
         if (precision != -1)
             val.precision(precision);
         else if (value == rint(value))
@@ -211,15 +211,15 @@ void
 ScalarPrint::operator()(ostream &stream) const
 {
     if ((flags.isSet(nozero) && value == 0.0) ||
-        (flags.isSet(nonan) && isnan(value)))
+        (flags.isSet(nonan) && std::isnan(value)))
         return;
 
     stringstream pdfstr, cdfstr;
 
-    if (!isnan(pdf))
+    if (!std::isnan(pdf))
         ccprintf(pdfstr, "%.2f%%", pdf * 100.0);
 
-    if (!isnan(cdf))
+    if (!std::isnan(cdf))
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
     ccprintf(stream, "%-40s %12s %10s %10s", name,

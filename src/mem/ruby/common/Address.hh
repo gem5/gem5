@@ -31,6 +31,7 @@
 
 #include <cassert>
 #include <iomanip>
+#include <iostream>
 
 #include "base/hashmap.hh"
 #include "mem/ruby/common/TypeDefines.hh"
@@ -201,8 +202,7 @@ Address::shiftLowOrderBits(int number) const
     return (m_address >> number);
 }
 
-class Address;
-namespace __hash_namespace {
+__hash_namespace_begin
 template <> struct hash<Address>
 {
     size_t
@@ -211,7 +211,7 @@ template <> struct hash<Address>
         return (size_t)s.getAddress();
     }
 };
-} // namespace __hash_namespace
+__hash_namespace_end
 
 namespace std {
 template <> struct equal_to<Address>

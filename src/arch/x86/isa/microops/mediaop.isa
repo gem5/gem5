@@ -1404,7 +1404,7 @@ let {{
                 }
 
                 uint64_t resBits = 0;
-                bool nanop = isnan(arg1) || isnan(arg2);
+                bool nanop = std::isnan(arg1) || std::isnan(arg2);
                 switch (ext & mask(3)) {
                   case 0:
                     if (arg1 == arg2 && !nanop)
@@ -1492,7 +1492,7 @@ let {{
             //           OF = SF = AF = 0
             ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
                                         ZFBit | PFBit | CFBit);
-            if (isnan(arg1) || isnan(arg2))
+            if (std::isnan(arg1) || std::isnan(arg2))
                 ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
             else if(arg1 < arg2)
                 ccFlagBits = ccFlagBits | CFBit;

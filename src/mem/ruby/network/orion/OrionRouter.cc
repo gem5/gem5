@@ -43,6 +43,8 @@
 #include "mem/ruby/network/orion/OrionConfig.hh"
 #include "OrionRouter.hh"
 
+using namespace std;
+
 OrionRouter::OrionRouter(
     uint32_t num_in_port_,
     uint32_t num_out_port_,

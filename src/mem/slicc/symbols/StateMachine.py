@@ -408,6 +408,9 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
  * Created by slicc definition of Module "${{self.short}}"
  */
 
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <cassert>
 #include <sstream>
 #include <string>
@@ -989,6 +992,9 @@ $c_ident::${{action.ident}}(const Address& addr)
         code('''
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
+
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <cassert>
 

@@ -37,11 +37,8 @@
  * Proceedings of the 48th Design Automation Conference (DAC'11)
  */
 
-// C includes
-#include <assert.h>
-#include <stdio.h>
-
 // C++ includes
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -49,6 +46,8 @@
 // GEM5 includes
 #include "FaultModel.hh"
 #include "base/misc.hh" 
+
+using namespace std;
 
 #define MAX(a,b) ((a > b) ? (a) : (b))
 

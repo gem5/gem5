@@ -37,8 +37,6 @@
 
 #include "mem/ruby/network/orion/Type.hh"
 
-using namespace std;
-
 class TechParameter;
 
 class OrionConfig
@@ -56,12 +54,12 @@ class OrionConfig
     void set_in_buf_num_set(uint32_t in_buf_num_set_);
     void set_flit_width(uint32_t flit_width_);
 
-    void read_file(const string& filename_);
-    void print_config(ostream& out_);
+    void read_file(const std::string& filename_);
+    void print_config(std::ostream& out_);
 
   public:
     template<class T>
-    T get(const string& key_) const;
+    T get(const std::string& key_) const;
     const TechParameter* get_tech_param_ptr() const { return m_tech_param_ptr; }
     uint32_t get_num_in_port() const { return m_num_in_port; }
     uint32_t get_num_out_port() const { return m_num_out_port; }
@@ -71,7 +69,7 @@ class OrionConfig
     uint32_t get_flit_width() const { return m_flit_width; }
 
   private:
-    map<string, string> m_params_map;
+    std::map<std::string, std::string> m_params_map;
 
     TechParameter* m_tech_param_ptr;
     uint32_t m_num_in_port;
@@ -84,28 +82,28 @@ class OrionConfig
   protected:
     struct key_not_found
     {
-      string m_key;
-      key_not_found(const string& key_ = string()) : m_key(key_)
+      std::string m_key;
+      key_not_found(const std::string& key_ = string()) : m_key(key_)
       {}
     };
     template<class T>
-    static T string_as_T(const string& str_);
+    static T string_as_T(const std::string& str_);
     template<class T>
-    static string T_as_string(const T& t_);
+    static std::string T_as_string(const T& t_);
 
   private:
-    static string ms_param_name[];
+    static std::string ms_param_name[];
 };
 
 template<class T>
 T OrionConfig::get(const string& key_) const
 {
-    map<string, string>::const_iterator it;
+    std::map<std::string, std::string>::const_iterator it;
 
     it = m_params_map.find(key_);
     if (it == m_params_map.end()) 
     {
-        cerr << key_ << " NOT FOUND!" << endl;
+        std::cerr << key_ << " NOT FOUND!" << std::endl;
         throw key_not_found(key_);
     }
     return string_as_T<T>(it->second);
@@ -140,7 +138,8 @@ inline bool OrionConfig::string_as_T<bool>(const string& str_)
     }
     else
     {
-        cerr << "Invalid bool value: '" << str_ << "'. Treated as FALSE." << endl;
+        std::cerr << "Invalid bool value: '" << str_ <<
+          "'. Treated as FALSE." << std::endl;
         ret = false;
     }
     return ret;

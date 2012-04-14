@@ -45,6 +45,8 @@
 // Allows use of times() library call, which determines virtual runtime
 #include <sys/resource.h>
 #include <sys/times.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <fstream>

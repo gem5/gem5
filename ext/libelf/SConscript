@@ -32,6 +32,8 @@ import os, subprocess
 
 Import('main')
 
+from m5.util import compareVersions
+
 elf_files = []
 def ElfFile(filename):
     elf_files.append(File(filename))
@@ -91,9 +93,11 @@ ElfFile('libelf_msize.c')
 
 m4env = main.Clone()
 if m4env['GCC']:
-    major,minor,dot = [int(x) for x in m4env['GCC_VERSION'].split('.')]
-    if major >= 4:
+    if compareVersions(m4env['GCC_VERSION'], '4') >= 0:
         m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
+    if compareVersions(m4env['GCC_VERSION'], '4.6') >= 0:
+        m4env.Append(CCFLAGS=['-Wno-unused-but-set-variable',
+                              '-Wno-implicit-function-declaration'])
 if m4env['CLANG']:
     m4env.Append(CCFLAGS=['-Wno-initializer-overrides', '-Wno-pointer-sign'])
 m4env.Append(CCFLAGS=['-Wno-implicit'])

@@ -188,7 +188,6 @@ PerfectCacheMemory<ENTRY>::changePermission(const Address& address,
     Address line_address = address;
     line_address.makeLineAddress();
     PerfectCacheLineState<ENTRY>& line_state = m_map[line_address];
-    AccessPermission old_perm = line_state.m_permission;
     line_state.m_permission = new_perm;
 }
 

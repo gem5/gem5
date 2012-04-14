@@ -70,7 +70,7 @@ using namespace AlphaISA;
 }};
 
 output exec {{
-#include <math.h>
+#include <cmath>
 
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"

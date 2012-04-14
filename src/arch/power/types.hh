@@ -89,7 +89,7 @@ typedef GenericISA::SimplePCState<MachInst> PCState;
 
 } // PowerISA namespace
 
-namespace __hash_namespace {
+__hash_namespace_begin
 
 template<>
 struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
@@ -98,6 +98,6 @@ struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
     };
 };
 
-} // namespace __hash_namespace
+__hash_namespace_end
 
 #endif // __ARCH_POWER_TYPES_HH__

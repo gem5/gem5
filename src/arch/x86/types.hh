@@ -280,7 +280,7 @@ namespace X86ISA
 
 }
 
-namespace __hash_namespace {
+__hash_namespace_begin
     template<>
     struct hash<X86ISA::ExtMachInst> {
         size_t operator()(const X86ISA::ExtMachInst &emi) const {
@@ -298,7 +298,7 @@ namespace __hash_namespace {
                     emi.stackSize ^ emi.dispSize;
         };
     };
-}
+__hash_namespace_end
 
 // These two functions allow ExtMachInst to be used with SERIALIZE_SCALAR
 // and UNSERIALIZE_SCALAR.

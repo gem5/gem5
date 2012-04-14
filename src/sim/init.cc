@@ -113,7 +113,7 @@ initSignals()
 EmbeddedPython *EmbeddedPython::importer = NULL;
 PyObject *EmbeddedPython::importerModule = NULL;
 EmbeddedPython::EmbeddedPython(const char *filename, const char *abspath,
-    const char *modpath, const char *code, int zlen, int len)
+    const char *modpath, const unsigned char *code, int zlen, int len)
     : filename(filename), abspath(abspath), modpath(modpath), code(code),
       zlen(zlen), len(len)
 {

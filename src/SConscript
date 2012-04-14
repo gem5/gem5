@@ -791,7 +791,7 @@ def embedPyFile(target, source, env):
 
 namespace {
 
-const char data_${sym}[] = {
+const uint8_t data_${sym}[] = {
 ''')
     code.indent()
     step = 16
@@ -852,7 +852,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
         swig_env.Append(CCFLAGS='-Wno-unused-label')
-        if compareVersions(env['GCC_VERSION'], '4.6.0') != -1:
+        if compareVersions(env['GCC_VERSION'], '4.6') >= 0:
             swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
     if env['CLANG']:
         swig_env.Append(CCFLAGS=['-Wno-unused-label'])
@@ -931,7 +931,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
 # Debug binary
 ccflags = {}
-if env['GCC'] or env['CLANG']:
+if env['GCC']:
     if sys.platform == 'sunos5':
         ccflags['debug'] = '-gstabs+'
     else:
@@ -949,6 +949,11 @@ elif env['ICC']:
     ccflags['opt'] = '-g -O'
     ccflags['fast'] = '-fast'
     ccflags['prof'] = '-fast -g -pg'
+elif env['CLANG']:
+    ccflags['debug'] = '-g -O0'
+    ccflags['opt'] = '-g -O3'
+    ccflags['fast'] = '-O3'
+    ccflags['prof'] = '-O3 -g -pg'
 else:
     print 'Unknown compiler, please fix compiler options'
     Exit(1)
