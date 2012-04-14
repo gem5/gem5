@@ -82,8 +82,7 @@ Check::initiatePrefetch()
     DPRINTF(RubyTest, "initiating prefetch\n");
 
     int index = random() % m_num_readers;
-    RubyTester::CpuPort* port =
-      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getReadableCpuPort(index));
+    MasterPort* port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
     flags.set(Request::PREFETCH);
@@ -95,7 +94,7 @@ Check::initiatePrefetch()
         cmd = MemCmd::ReadReq;
 
         // if necessary, make the request an instruction fetch
-        if (port->type == RubyTester::CpuPort::InstOnly) {
+        if (m_tester_ptr->isInstReadableCpuPort(index)) {
             flags.set(Request::INST_FETCH);
         }
     } else {
@@ -137,8 +136,7 @@ Check::initiateFlush()
     DPRINTF(RubyTest, "initiating Flush\n");
 
     int index = random() % m_num_writers;
-    RubyTester::CpuPort* port =
-      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getWritableCpuPort(index));
+    MasterPort* port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
@@ -168,8 +166,7 @@ Check::initiateAction()
     assert(m_status == TesterStatus_Idle);
 
     int index = random() % m_num_writers;
-    RubyTester::CpuPort* port =
-      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getWritableCpuPort(index));
+    MasterPort* port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
@@ -233,13 +230,12 @@ Check::initiateCheck()
     assert(m_status == TesterStatus_Ready);
 
     int index = random() % m_num_readers;
-    RubyTester::CpuPort* port =
-      safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getReadableCpuPort(index));
+    MasterPort* port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
 
     // If necessary, make the request an instruction fetch
-    if (port->type == RubyTester::CpuPort::InstOnly) {
+    if (m_tester_ptr->isInstReadableCpuPort(index)) {
         flags.set(Request::INST_FETCH);
     }
 

@@ -56,23 +56,12 @@ class RubyTester : public MemObject
         // only instruction or data requests, not both.  However, for those
         // RubyPorts that support both types of requests, separate InstOnly
         // and DataOnly CpuPorts will map to that RubyPort
-        //
-        enum Type
-        {
-            // Port supports only instruction requests
-            InstOnly,
-            // Port supports only data requests
-            DataOnly
-        };
 
-        CpuPort(const std::string &_name, RubyTester *_tester, int _idx,
-                Type _type)
-            : MasterPort(_name, _tester), tester(_tester), idx(_idx),
-              type(_type)
+        CpuPort(const std::string &_name, RubyTester *_tester, int _idx)
+            : MasterPort(_name, _tester), tester(_tester), idx(_idx)
         {}
 
         int idx;
-        Type type;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
@@ -104,6 +93,8 @@ class RubyTester : public MemObject
 
     virtual MasterPort &getMasterPort(const std::string &if_name,
                                       int idx = -1);
+
+    bool isInstReadableCpuPort(int idx);
 
     MasterPort* getReadableCpuPort(int idx);
     MasterPort* getWritableCpuPort(int idx);
@@ -154,8 +145,8 @@ class RubyTester : public MemObject
 
     int m_num_cpus;
     uint64 m_checks_completed;
-    std::vector<CpuPort*> writePorts;
-    std::vector<CpuPort*> readPorts;
+    std::vector<MasterPort*> writePorts;
+    std::vector<MasterPort*> readPorts;
     uint64 m_checks_to_complete;
     int m_deadlock_threshold;
     int m_num_writers;

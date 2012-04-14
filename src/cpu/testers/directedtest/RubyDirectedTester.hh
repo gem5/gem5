@@ -113,7 +113,7 @@ class RubyDirectedTester : public MemObject
     RubyDirectedTester& operator=(const RubyDirectedTester& obj);
 
     uint64 m_requests_completed;
-    std::vector<CpuPort*> ports;
+    std::vector<MasterPort*> ports;
     uint64 m_requests_to_complete;
     DirectedGenerator* generator;
 };

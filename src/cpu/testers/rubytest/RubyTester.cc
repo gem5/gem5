@@ -75,13 +75,11 @@ RubyTester::RubyTester(const Params *p)
     //
     for (int i = 0; i < p->port_cpuInstPort_connection_count; ++i) {
         readPorts.push_back(new CpuPort(csprintf("%s-instPort%d", name(), i),
-                                        this, i,
-                                        RubyTester::CpuPort::InstOnly));
+                                        this, i));
     }
     for (int i = 0; i < p->port_cpuDataPort_connection_count; ++i) {
-        CpuPort *port = NULL;
-        port = new CpuPort(csprintf("%s-dataPort%d", name(), i), this, i,
-                           RubyTester::CpuPort::DataOnly);
+        CpuPort *port = new CpuPort(csprintf("%s-dataPort%d", name(), i),
+                                    this, i);
         readPorts.push_back(port);
         writePorts.push_back(port);
     }
@@ -166,6 +164,12 @@ RubyTester::CpuPort::recvTiming(PacketPtr pkt)
     delete pkt->req;
     delete pkt;
     return true;
+}
+
+bool
+RubyTester::isInstReadableCpuPort(int idx)
+{
+    return idx < m_num_inst_ports;
 }
 
 MasterPort*

@@ -52,9 +52,7 @@ SeriesRequestGenerator::initiate()
     DPRINTF(DirectedTest, "initiating request\n");
     assert(m_status == SeriesRequestGeneratorStatus_Thinking);
 
-    RubyDirectedTester::CpuPort* port =
-        safe_cast<RubyDirectedTester::CpuPort*>(m_directed_tester->
-                                              getCpuPort(m_active_node));
+    MasterPort* port = m_directed_tester->getCpuPort(m_active_node);
 
     Request::Flags flags;
 
