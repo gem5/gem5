@@ -48,6 +48,7 @@ UnitTest('rangemaptest', 'rangemaptest.cc')
 UnitTest('rangemultimaptest', 'rangemultimaptest.cc')
 UnitTest('refcnttest', 'refcnttest.cc')
 UnitTest('strnumtest', 'strnumtest.cc')
+UnitTest('trietest', 'trietest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', skip_lib=True)
 stattest_swig = SwigSource('m5.internal', 'stattest.i', skip_lib=True)
