@@ -82,7 +82,7 @@ namespace X86ISA
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags,
                 OpClass __opClass) :
-        X86MicroopBase(machInst, mnem, _instMnem, setFlags, __opClass),
+        X86MicroopBase(_machInst, mnem, _instMnem, setFlags, __opClass),
                 scale(_scale), index(_index.idx), base(_base.idx),
                 disp(_disp), segment(_segment.idx),
                 data(_data.idx),
