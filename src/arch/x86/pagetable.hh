@@ -46,8 +46,16 @@
 #include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "base/trie.hh"
 
 class Checkpoint;
+
+namespace X86ISA
+{
+    struct TlbEntry;
+}
+
+typedef Trie<Addr, X86ISA::TlbEntry> TlbEntryTrie;
 
 namespace X86ISA
 {
@@ -72,8 +80,8 @@ namespace X86ISA
 
         // The beginning of the virtual page this entry maps.
         Addr vaddr;
-        // The size of the page this entry represents.
-        Addr size;
+        // The size of the page this represents, in address bits.
+        unsigned logBytes;
 
         // Read permission is always available, assuming it isn't blocked by
         // other mechanisms.
@@ -91,6 +99,10 @@ namespace X86ISA
         bool patBit;
         // Whether or not memory on this page can be executed.
         bool noExec;
+        // A sequence number to keep track of LRU.
+        uint64_t lruSeq;
+
+        TlbEntryTrie::Handle trieHandle;
 
         TlbEntry(Addr asn, Addr _vaddr, Addr _paddr);
         TlbEntry() {}

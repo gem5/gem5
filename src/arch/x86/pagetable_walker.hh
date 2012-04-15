@@ -132,7 +132,7 @@ namespace X86ISA
             void initState(ThreadContext * _tc, BaseTLB::Mode _mode,
                            bool _isTiming = false);
             Fault startWalk();
-            Fault startFunctional(Addr &addr, Addr &pageSize);
+            Fault startFunctional(Addr &addr, unsigned &logBytes);
             bool recvPacket(PacketPtr pkt);
             bool isRetrying();
             bool wasStarted();
@@ -169,7 +169,7 @@ namespace X86ISA
         Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
                 RequestPtr req, BaseTLB::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
-                Addr &pageSize, BaseTLB::Mode mode);
+                unsigned &logBytes, BaseTLB::Mode mode);
         MasterPort &getMasterPort(const std::string &if_name, int idx = -1);
 
       protected:

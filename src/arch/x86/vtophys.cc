@@ -61,12 +61,13 @@ namespace X86ISA
     vtophys(ThreadContext *tc, Addr vaddr)
     {
         Walker *walker = tc->getDTBPtr()->getWalker();
-        Addr size;
+        unsigned logBytes;
         Addr addr = vaddr;
-        Fault fault = walker->startFunctional(tc, addr, size, BaseTLB::Read);
+        Fault fault = walker->startFunctional(
+                tc, addr, logBytes, BaseTLB::Read);
         if (fault != NoFault)
             panic("vtophys page walk returned fault\n");
-        Addr masked_addr = vaddr & (size - 1);
+        Addr masked_addr = vaddr & mask(logBytes);
         Addr paddr = addr | masked_addr;
         DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
         return paddr;

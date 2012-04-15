@@ -54,12 +54,12 @@
 #include "arch/x86/tlb.hh"
 #include "arch/x86/vtophys.hh"
 #include "base/bitfield.hh"
+#include "base/trie.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/PageTableWalker.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "sim/system.hh"
 
 namespace X86ISA {
 
@@ -106,11 +106,11 @@ Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(ThreadContext * _tc, Addr &addr, Addr &pageSize,
+Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
               BaseTLB::Mode _mode)
 {
     funcState.initState(_tc, _mode);
-    return funcState.startFunctional(addr, pageSize);
+    return funcState.startFunctional(addr, logBytes);
 }
 
 bool
@@ -224,7 +224,7 @@ Walker::WalkerState::startWalk()
 }
 
 Fault
-Walker::WalkerState::startFunctional(Addr &addr, Addr &pageSize)
+Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
 {
     Fault fault = NoFault;
     assert(started == false);
@@ -241,7 +241,7 @@ Walker::WalkerState::startFunctional(Addr &addr, Addr &pageSize)
         state = nextState;
         nextState = Ready;
     } while(read);
-    pageSize = entry.size;
+    logBytes = entry.logBytes;
     addr = entry.paddr;
 
     return fault;
@@ -311,14 +311,14 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         if (!pte.ps) {
             // 4 KB page
-            entry.size = 4 * (1 << 10);
+            entry.logBytes = 12;
             nextRead =
                 ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl1 * dataSize;
             nextState = LongPTE;
             break;
         } else {
             // 2 MB page
-            entry.size = 2 * (1 << 20);
+            entry.logBytes = 21;
             entry.paddr = (uint64_t)pte & (mask(31) << 21);
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
@@ -373,13 +373,13 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         if (!pte.ps) {
             // 4 KB page
-            entry.size = 4 * (1 << 10);
+            entry.logBytes = 12;
             nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael1 * dataSize;
             nextState = PAEPTE;
             break;
         } else {
             // 2 MB page
-            entry.size = 2 * (1 << 20);
+            entry.logBytes = 21;
             entry.paddr = (uint64_t)pte & (mask(31) << 21);
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
@@ -423,14 +423,14 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         if (!pte.ps) {
             // 4 KB page
-            entry.size = 4 * (1 << 10);
+            entry.logBytes = 12;
             nextRead =
                 ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * dataSize;
             nextState = PTE;
             break;
         } else {
             // 4 MB page
-            entry.size = 4 * (1 << 20);
+            entry.logBytes = 21;
             entry.paddr = bits(pte, 20, 13) << 32 | bits(pte, 31, 22) << 22;
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
@@ -453,7 +453,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             break;
         }
         // 4 KB page
-        entry.size = 4 * (1 << 10);
+        entry.logBytes = 12;
         nextRead = ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * dataSize;
         nextState = PTE;
         break;

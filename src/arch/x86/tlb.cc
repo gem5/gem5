@@ -60,16 +60,39 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size)
+TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size),
+    lruSeq(0)
 {
+    if (!size)
+        fatal("TLBs must have a non-zero size.\n");
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
 
-    for (int x = 0; x < size; x++)
+    for (int x = 0; x < size; x++) {
+        tlb[x].trieHandle = NULL;
         freeList.push_back(&tlb[x]);
+    }
 
     walker = p->walker;
     walker->setTLB(this);
+}
+
+void
+TLB::evictLRU()
+{
+    // Find the entry with the lowest (and hence least recently updated)
+    // sequence number.
+
+    unsigned lru = 0;
+    for (unsigned i = 1; i < size; i++) {
+        if (tlb[i].lruSeq < tlb[lru].lruSeq)
+            lru = i;
+    }
+
+    assert(tlb[lru].trieHandle);
+    trie.remove(tlb[lru].trieHandle);
+    tlb[lru].trieHandle = NULL;
+    freeList.push_back(&tlb[lru]);
 }
 
 TlbEntry *
@@ -78,57 +101,38 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     //TODO Deal with conflicting entries
 
     TlbEntry *newEntry = NULL;
-    if (!freeList.empty()) {
-        newEntry = freeList.front();
-        freeList.pop_front();
-    } else {
-        newEntry = entryList.back();
-        entryList.pop_back();
-    }
-    *newEntry = entry;
-    newEntry->vaddr = vpn;
-    entryList.push_front(newEntry);
-    return newEntry;
-}
+    if (freeList.empty())
+        evictLRU();
+    newEntry = freeList.front();
+    freeList.pop_front();
 
-TLB::EntryList::iterator
-TLB::lookupIt(Addr va, bool update_lru)
-{
-    //TODO make this smarter at some point
-    EntryList::iterator entry;
-    for (entry = entryList.begin(); entry != entryList.end(); entry++) {
-        if ((*entry)->vaddr <= va && (*entry)->vaddr + (*entry)->size > va) {
-            DPRINTF(TLB, "Matched vaddr %#x to entry starting at %#x "
-                    "with size %#x.\n", va, (*entry)->vaddr, (*entry)->size);
-            if (update_lru) {
-                entryList.push_front(*entry);
-                entryList.erase(entry);
-                entry = entryList.begin();
-            }
-            break;
-        }
-    }
-    return entry;
+    *newEntry = entry;
+    newEntry->lruSeq = nextSeq();
+    newEntry->vaddr = vpn;
+    newEntry->trieHandle =
+        trie.insert(vpn, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
+    return newEntry;
 }
 
 TlbEntry *
 TLB::lookup(Addr va, bool update_lru)
 {
-    EntryList::iterator entry = lookupIt(va, update_lru);
-    if (entry == entryList.end())
-        return NULL;
-    else
-        return *entry;
+    TlbEntry *entry = trie.lookup(va);
+    if (entry && update_lru)
+        entry->lruSeq = nextSeq();
+    return entry;
 }
 
 void
 TLB::invalidateAll()
 {
     DPRINTF(TLB, "Invalidating all entries.\n");
-    while (!entryList.empty()) {
-        TlbEntry *entry = entryList.front();
-        entryList.pop_front();
-        freeList.push_back(entry);
+    for (unsigned i = 0; i < size; i++) {
+        if (tlb[i].trieHandle) {
+            trie.remove(tlb[i].trieHandle);
+            tlb[i].trieHandle = NULL;
+            freeList.push_back(&tlb[i]);
+        }
     }
 }
 
@@ -142,13 +146,11 @@ void
 TLB::invalidateNonGlobal()
 {
     DPRINTF(TLB, "Invalidating all non global entries.\n");
-    EntryList::iterator entryIt;
-    for (entryIt = entryList.begin(); entryIt != entryList.end();) {
-        if (!(*entryIt)->global) {
-            freeList.push_back(*entryIt);
-            entryList.erase(entryIt++);
-        } else {
-            entryIt++;
+    for (unsigned i = 0; i < size; i++) {
+        if (tlb[i].trieHandle && !tlb[i].global) {
+            trie.remove(tlb[i].trieHandle);
+            tlb[i].trieHandle = NULL;
+            freeList.push_back(&tlb[i]);
         }
     }
 }
@@ -156,10 +158,11 @@ TLB::invalidateNonGlobal()
 void
 TLB::demapPage(Addr va, uint64_t asn)
 {
-    EntryList::iterator entry = lookupIt(va, false);
-    if (entry != entryList.end()) {
-        freeList.push_back(*entry);
-        entryList.erase(entry);
+    TlbEntry *entry = trie.lookup(va);
+    if (entry) {
+        trie.remove(entry->trieHandle);
+        entry->trieHandle = NULL;
+        freeList.push_back(entry);
     }
 }
 
@@ -345,7 +348,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 return new PageFault(vaddr, true, Write, inUser, false);
             }
 
-            Addr paddr = entry->paddr | (vaddr & (entry->size-1));
+            Addr paddr = entry->paddr | (vaddr & mask(entry->logBytes));
             DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
             req->setPaddr(paddr);
             if (entry->uncacheable)

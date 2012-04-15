@@ -45,8 +45,8 @@ namespace X86ISA
 {
 
 TlbEntry::TlbEntry(Addr asn, Addr _vaddr, Addr _paddr) :
-    paddr(_paddr), vaddr(_vaddr), size(PageBytes), writable(true), user(true),
-    uncacheable(false), global(false), patBit(0), noExec(false)
+    paddr(_paddr), vaddr(_vaddr), logBytes(PageShift), writable(true),
+    user(true), uncacheable(false), global(false), patBit(0), noExec(false)
 {}
 
 void
@@ -54,13 +54,14 @@ TlbEntry::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(paddr);
     SERIALIZE_SCALAR(vaddr);
-    SERIALIZE_SCALAR(size);
+    SERIALIZE_SCALAR(logBytes);
     SERIALIZE_SCALAR(writable);
     SERIALIZE_SCALAR(user);
     SERIALIZE_SCALAR(uncacheable);
     SERIALIZE_SCALAR(global);
     SERIALIZE_SCALAR(patBit);
     SERIALIZE_SCALAR(noExec);
+    SERIALIZE_SCALAR(lruSeq);
 }
 
 void
@@ -68,13 +69,14 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(paddr);
     UNSERIALIZE_SCALAR(vaddr);
-    UNSERIALIZE_SCALAR(size);
+    UNSERIALIZE_SCALAR(logBytes);
     UNSERIALIZE_SCALAR(writable);
     UNSERIALIZE_SCALAR(user);
     UNSERIALIZE_SCALAR(uncacheable);
     UNSERIALIZE_SCALAR(global);
     UNSERIALIZE_SCALAR(patBit);
     UNSERIALIZE_SCALAR(noExec);
+    UNSERIALIZE_SCALAR(lruSeq);
 }
 
 }

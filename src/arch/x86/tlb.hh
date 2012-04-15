@@ -46,6 +46,7 @@
 
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/pagetable.hh"
+#include "base/trie.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
@@ -103,6 +104,9 @@ namespace X86ISA
         EntryList freeList;
         EntryList entryList;
 
+        TlbEntryTrie trie;
+        uint64_t lruSeq;
+
         Fault translateInt(RequestPtr req, ThreadContext *tc);
 
         Fault translate(RequestPtr req, ThreadContext *tc,
@@ -110,6 +114,14 @@ namespace X86ISA
                 bool &delayedResponse, bool timing);
 
       public:
+
+        void evictLRU();
+
+        uint64_t
+        nextSeq()
+        {
+            return ++lruSeq;
+        }
 
         Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
         void translateTiming(RequestPtr req, ThreadContext *tc,
