@@ -148,10 +148,10 @@ class Trie
 
     /**
      * Method which looks up the Handle corresponding to a particular key. This
-     * is useful if you want to delete the Node corresponding to a key since
-     * the "remove" function takes a Node as its argument.
+     * is useful if you want to delete the Handle corresponding to a key since
+     * the "remove" function takes a Handle as its argument.
      * @param key The key to look up.
-     * @return The first Node matching this key, or NULL if none was found.
+     * @return The first Handle matching this key, or NULL if none was found.
      */
     Handle
     lookupHandle(Key key)
@@ -178,7 +178,7 @@ class Trie
      * @param key The key which can later be used to look up this value.
      * @param width How many bits of the key (from msb) should be used.
      * @param val A pointer to the value to store in the trie.
-     * @return A pointer to the Node which holds this value.
+     * @return A Handle corresponding to this value.
      */
     Handle
     insert(Key key, unsigned width, Value *val)
@@ -274,7 +274,7 @@ class Trie
 
     /**
      * Method to delete a value from the trie.
-     * @param node A pointer to the Node to remove.
+     * @param node A Handle to remove.
      * @return The Value pointer from the removed entry.
      */
     Value *
