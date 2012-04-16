@@ -71,7 +71,7 @@ if options.benchmark:
         print "Valid benchmarks are: %s" % DefinedBenchmarks
         sys.exit(1)
 else:
-    bm = [SysConfig()]
+    bm = [SysConfig(disk=options.disk_image, mem=options.mem_size)]
 
 # Check for timing mode because ruby does not support atomic accesses
 if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):

@@ -171,3 +171,11 @@ def addFSOptions(parser):
     parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
                       help="Specify the filename to dump a pcap capture of the" \
                       "ethernet traffic")
+
+    # Disk Image Options
+    parser.add_option("--disk-image", action="store", type="string", default=None,
+                      help="Path to the disk image to use.")
+
+    # Memory Size Options
+    parser.add_option("--mem-size", action="store", type="string", default=None,
+                      help="Path to the disk image to use.")

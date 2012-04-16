@@ -86,9 +86,9 @@ if options.benchmark:
         sys.exit(1)
 else:
     if options.dual:
-        bm = [SysConfig(), SysConfig()]
+        bm = [SysConfig(disk=options.disk_image, mem=options.mem_size), SysConfig(disk=options.disk_image, mem=options.mem_size)]
     else:
-        bm = [SysConfig()]
+        bm = [SysConfig(disk=options.disk_image, mem=options.mem_size)]
 
 np = options.num_cpus
 
