@@ -114,6 +114,9 @@ X86System::initState()
 {
     System::initState();
 
+    if (!kernel)
+        fatal("No kernel to load.\n");
+
     if (kernel->getArch() == ObjectFile::I386)
         fatal("Loading a 32 bit x86 kernel is not supported.\n");
 
