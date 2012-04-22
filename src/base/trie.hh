@@ -31,6 +31,8 @@
 #ifndef __BASE_TRIE_HH__
 #define __BASE_TRIE_HH__
 
+#include <cassert>
+
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
