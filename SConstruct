@@ -572,7 +572,7 @@ if len(swig_version) < 3 or \
     print 'Error determining SWIG version.'
     Exit(1)
 
-min_swig_version = '1.3.28'
+min_swig_version = '1.3.34'
 if compareVersions(swig_version[2], min_swig_version) < 0:
     print 'Error: SWIG version', min_swig_version, 'or newer required.'
     print '       Installed version:', swig_version[2]
