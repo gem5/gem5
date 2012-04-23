@@ -32,7 +32,7 @@
 #ifndef __ARCH_MIPS_REGISTERS_HH__
 #define __ARCH_MIPS_REGISTERS_HH__
 
-#include "arch/mips/max_inst_regs.hh"
+#include "arch/mips/generated/max_inst_regs.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
 

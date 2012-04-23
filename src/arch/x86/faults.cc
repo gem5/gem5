@@ -40,7 +40,7 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/decoder.hh"
+#include "arch/x86/generated/decoder.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/isa_traits.hh"
 #include "base/trace.hh"

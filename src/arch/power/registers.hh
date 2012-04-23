@@ -31,7 +31,7 @@
 #ifndef __ARCH_POWER_REGISTERS_HH__
 #define __ARCH_POWER_REGISTERS_HH__
 
-#include "arch/power/max_inst_regs.hh"
+#include "arch/power/generated/max_inst_regs.hh"
 #include "arch/power/miscregs.hh"
 
 namespace PowerISA {

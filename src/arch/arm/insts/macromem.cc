@@ -43,7 +43,7 @@
 #include <sstream>
 
 #include "arch/arm/insts/macromem.hh"
-#include "arch/arm/decoder.hh"
+#include "arch/arm/generated/decoder.hh"
 
 using namespace std;
 using namespace ArmISAInst;

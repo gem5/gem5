@@ -32,7 +32,7 @@
 #ifndef __ARCH_SPARC_REGISTERS_HH__
 #define __ARCH_SPARC_REGISTERS_HH__
 
-#include "arch/sparc/max_inst_regs.hh"
+#include "arch/sparc/generated/max_inst_regs.hh"
 #include "arch/sparc/miscregs.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "base/types.hh"

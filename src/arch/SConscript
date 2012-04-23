@@ -29,6 +29,7 @@
 # Authors: Steve Reinhardt
 
 import sys
+import os
 
 Import('*')
 
@@ -107,7 +108,7 @@ def isa_desc_emitter(target, source, env):
     # Add in the CPU models.
     source += [ Value(m) for m in cpu_models ]
 
-    return target, source
+    return [os.path.join("generated", t) for t in target], source
 
 ARCH_DIR = Dir('.')
 

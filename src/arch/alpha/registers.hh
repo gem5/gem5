@@ -31,8 +31,8 @@
 #ifndef __ARCH_ALPHA_REGISTERS_HH__
 #define __ARCH_ALPHA_REGISTERS_HH__
 
+#include "arch/alpha/generated/max_inst_regs.hh"
 #include "arch/alpha/ipr.hh"
-#include "arch/alpha/max_inst_regs.hh"
 #include "base/types.hh"
 
 namespace AlphaISA {
