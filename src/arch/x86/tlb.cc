@@ -98,11 +98,16 @@ TLB::evictLRU()
 TlbEntry *
 TLB::insert(Addr vpn, TlbEntry &entry)
 {
-    //TODO Deal with conflicting entries
+    // If somebody beat us to it, just use that existing entry.
+    TlbEntry *newEntry = trie.lookup(vpn);
+    if (newEntry) {
+        assert(newEntry->vaddr = vpn);
+        return newEntry;
+    }
 
-    TlbEntry *newEntry = NULL;
     if (freeList.empty())
         evictLRU();
+
     newEntry = freeList.front();
     freeList.pop_front();
 
@@ -110,7 +115,7 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     newEntry->lruSeq = nextSeq();
     newEntry->vaddr = vpn;
     newEntry->trieHandle =
-        trie.insert(vpn, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
+    trie.insert(vpn, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
     return newEntry;
 }
 
