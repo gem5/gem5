@@ -66,10 +66,6 @@ Sequencer::Sequencer(const Params *p)
 
     m_outstanding_count = 0;
 
-    m_deadlock_threshold = 0;
-    m_instCache_ptr = NULL;
-    m_dataCache_ptr = NULL;
-
     m_instCache_ptr = p->icache;
     m_dataCache_ptr = p->dcache;
     m_max_outstanding_requests = p->max_outstanding_requests;
