@@ -95,8 +95,9 @@
 #define hash_set unordered_set
 #define hash_multiset unordered_multiset
 
-// these versions also have an existing hash function for strings
-#define HAVE_STRING_HASH 1
+// these versions also have an existing hash function for strings and
+// 64-bit integer types
+#define HAVE_HASH_FUNCTIONS 1
 
 #if HAVE_STD_UNORDERED_MAP
 
@@ -152,6 +153,11 @@ namespace m5 {
 //
 
 __hash_namespace_begin
+
+// if the hash functions for 64-bit integer types and strings are not
+// already available, then declare them here
+#if !defined(HAVE_HASH_FUNCTIONS)
+
 #if !defined(__LP64__) && !defined(__alpha__) && !defined(__SUNPRO_CC)
     template<>
     struct hash<uint64_t> {
@@ -168,9 +174,6 @@ __hash_namespace_begin
     };
 #endif
 
-// if the hash functions for strings are not already defined, then
-// declare them here
-#if !defined(HAVE_STRING_HASH)
     template<>
     struct hash<std::string> {
         size_t operator()(const std::string &s) const {
