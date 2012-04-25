@@ -218,8 +218,7 @@ class Bus : public MemObject
 
     AddrRangeList defaultRange;
 
-    typedef std::vector<BusSlavePort*>::iterator SnoopIter;
-    std::vector<BusSlavePort*> snoopPorts;
+    std::vector<SlavePort*> snoopPorts;
 
     /**
      * Store the outstanding requests so we can determine which ones
@@ -428,8 +427,11 @@ class Bus : public MemObject
     std::set<Port::PortId> inRecvRangeChange;
 
     /** The master and slave ports of the bus */
-    std::vector<BusSlavePort*> slavePorts;
-    std::vector<BusMasterPort*> masterPorts;
+    std::vector<SlavePort*> slavePorts;
+    std::vector<MasterPort*> masterPorts;
+
+    typedef std::vector<SlavePort*>::iterator SlavePortIter;
+    typedef std::vector<SlavePort*>::const_iterator SlavePortConstIter;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
