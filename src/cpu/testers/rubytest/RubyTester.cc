@@ -156,7 +156,7 @@ RubyTester::CpuPort::recvTiming(PacketPtr pkt)
     // pop the sender state from the packet
     pkt->senderState = senderState->saved;
 
-    tester->hitCallback(idx, subblock);
+    tester->hitCallback(id, subblock);
 
     // Now that the tester has completed, delete the senderState
     // (includes sublock) and the packet, then return

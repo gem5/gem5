@@ -77,17 +77,12 @@ class Bus : public MemObject
         /** A pointer to the bus to which this port belongs. */
         Bus *bus;
 
-        /** A id to keep track of the interface ID of this port. */
-        int id;
-
       public:
 
         /** Constructor for the BusSlavePort.*/
-        BusSlavePort(const std::string &_name, Bus *_bus, int _id)
-            : SlavePort(_name, _bus), bus(_bus), id(_id)
+        BusSlavePort(const std::string &_name, Bus *_bus, Port::PortId _id)
+            : SlavePort(_name, _bus, _id), bus(_bus)
         { }
-
-        int getId() const { return id; }
 
       protected:
 
@@ -147,17 +142,12 @@ class Bus : public MemObject
         /** A pointer to the bus to which this port belongs. */
         Bus *bus;
 
-        /** A id to keep track of the interface ID of this port. */
-        int id;
-
       public:
 
         /** Constructor for the BusMasterPort.*/
-        BusMasterPort(const std::string &_name, Bus *_bus, int _id)
-            : MasterPort(_name, _bus), bus(_bus), id(_id)
+        BusMasterPort(const std::string &_name, Bus *_bus, Port::PortId _id)
+            : MasterPort(_name, _bus, _id), bus(_bus)
         { }
-
-        int getId() const { return id; }
 
         /**
          * Determine if this port should be considered a snooper. This
@@ -254,7 +244,7 @@ class Bus : public MemObject
      * @param pkt Packet to forward
      * @param exclude_slave_port_id Id of slave port to exclude
      */
-    void forwardTiming(PacketPtr pkt, int exclude_slave_port_id);
+    void forwardTiming(PacketPtr pkt, Port::PortId exclude_slave_port_id);
 
     /**
      * Determine if the bus is to be considered occupied when being
@@ -296,7 +286,7 @@ class Bus : public MemObject
      * @return a pair containing the snoop response and snoop latency
      */
     std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
-                                          int exclude_slave_port_id);
+                                          Port::PortId exclude_slave_port_id);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
@@ -314,14 +304,14 @@ class Bus : public MemObject
      * @param pkt Packet to forward
      * @param exclude_slave_port_id Id of slave port to exclude
      */
-    void forwardFunctional(PacketPtr pkt, int exclude_slave_port_id);
+    void forwardFunctional(PacketPtr pkt, Port::PortId exclude_slave_port_id);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry(int id);
+    void recvRetry(Port::PortId id);
 
     /** Function called by the port when the bus is recieving a range change.*/
-    void recvRangeChange(int id);
+    void recvRangeChange(Port::PortId id);
 
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
@@ -333,7 +323,7 @@ class Bus : public MemObject
     // Cache for the findPort function storing recently used ports from portMap
     struct PortCache {
         bool valid;
-        int  id;
+        Port::PortId id;
         Addr start;
         Addr end;
     };
@@ -356,7 +346,7 @@ class Bus : public MemObject
             return portCache[2].id;
         }
 
-        return INVALID_PORT_ID;
+        return Port::INVALID_PORT_ID;
     }
 
     // Clears the earliest entry of the cache and inserts a new port entry
@@ -391,7 +381,7 @@ class Bus : public MemObject
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges(int id);
+    AddrRangeList getAddrRanges(Port::PortId id);
 
     /**
      * Determine if the bus port is snooping or not.
@@ -400,7 +390,7 @@ class Bus : public MemObject
      *
      * @return a boolean indicating if this port is snooping or not
      */
-    bool isSnooping(int id) const;
+    bool isSnooping(Port::PortId id) const;
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
@@ -429,13 +419,13 @@ class Bus : public MemObject
      * @param id id of the busport that made the request
      * @return the max of all the sizes
      */
-    unsigned findBlockSize(int id);
+    unsigned findBlockSize(Port::PortId id);
 
     // event used to schedule a release of the bus
     EventWrapper<Bus, &Bus::releaseBus> busIdleEvent;
 
     bool inRetry;
-    std::set<int> inRecvRangeChange;
+    std::set<Port::PortId> inRecvRangeChange;
 
     /** The master and slave ports of the bus */
     std::vector<BusSlavePort*> slavePorts;
@@ -466,9 +456,6 @@ class Bus : public MemObject
 
     /** Port that handles requests that don't match any of the interfaces.*/
     short defaultPortId;
-
-    /** A symbolic name for a port id that denotes no port. */
-    static const short INVALID_PORT_ID = -1;
 
     /** If true, use address range provided by default device.  Any
        address not handled by another port and not in default device's

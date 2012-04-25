@@ -54,11 +54,9 @@ class RubyDirectedTester : public MemObject
 
       public:
         CpuPort(const std::string &_name, RubyDirectedTester *_tester,
-                uint32_t _idx)
-            : MasterPort(_name, _tester), tester(_tester), idx(_idx)
+                Port::PortId _id)
+            : MasterPort(_name, _tester, _id), tester(_tester)
         {}
-
-        uint32_t idx;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);

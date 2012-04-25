@@ -50,8 +50,8 @@
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-Port::Port(const std::string &_name, MemObject& _owner)
-    : portName(_name), peer(NULL), owner(_owner)
+Port::Port(const std::string &_name, MemObject& _owner, PortId _id)
+    : portName(_name), id(_id), peer(NULL), owner(_owner)
 {
 }
 
@@ -62,8 +62,8 @@ Port::~Port()
 /**
  * Master port
  */
-MasterPort::MasterPort(const std::string& name, MemObject* owner)
-    : Port(name, *owner), _slavePort(NULL)
+MasterPort::MasterPort(const std::string& name, MemObject* owner, PortId _id)
+    : Port(name, *owner, _id), _slavePort(NULL)
 {
 }
 
@@ -130,8 +130,8 @@ MasterPort::printAddr(Addr a)
 /**
  * Slave port
  */
-SlavePort::SlavePort(const std::string& name, MemObject* owner)
-    : Port(name, *owner), _masterPort(NULL)
+SlavePort::SlavePort(const std::string& name, MemObject* owner, PortId id)
+    : Port(name, *owner, id), _masterPort(NULL)
 {
 }
 

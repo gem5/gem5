@@ -57,11 +57,9 @@ class RubyTester : public MemObject
         // RubyPorts that support both types of requests, separate InstOnly
         // and DataOnly CpuPorts will map to that RubyPort
 
-        CpuPort(const std::string &_name, RubyTester *_tester, int _idx)
-            : MasterPort(_name, _tester), tester(_tester), idx(_idx)
+        CpuPort(const std::string &_name, RubyTester *_tester, PortId _id)
+            : MasterPort(_name, _tester, _id), tester(_tester)
         {}
-
-        int idx;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);

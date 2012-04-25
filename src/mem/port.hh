@@ -79,12 +79,26 @@ class MemObject;
 class Port
 {
 
+  public:
+
+    /** A type name for the port identifier. */
+    typedef int PortId;
+
+    /** A symbolic name for the absence of a port id. */
+    static const PortId INVALID_PORT_ID = -1;
+
   private:
 
     /** Descriptive name (for DPRINTF output) */
     std::string portName;
 
   protected:
+
+    /**
+     * A numeric identifier to distinguish ports in a vector, and set
+     * to INVALID_PORT_ID in case this port is not part of a vector.
+     */
+    const PortId id;
 
     /** A pointer to the peer port.  */
     Port* peer;
@@ -97,8 +111,9 @@ class Port
      *
      * @param _name Port name including the owners name
      * @param _owner The MemObject that is the structural owner of this port
+     * @param _id A port identifier for vector ports
      */
-    Port(const std::string& _name, MemObject& _owner);
+    Port(const std::string& _name, MemObject& _owner, PortId _id);
 
     /**
      * Virtual destructor due to inheritance.
@@ -109,6 +124,9 @@ class Port
 
     /** Return port name (for DPRINTF). */
     const std::string name() const { return portName; }
+
+    /** Get the port id. */
+    PortId getId() const { return id; }
 
   protected:
 
@@ -190,7 +208,8 @@ class MasterPort : public Port
 
   public:
 
-    MasterPort(const std::string& name, MemObject* owner);
+    MasterPort(const std::string& name, MemObject* owner,
+               PortId id = INVALID_PORT_ID);
     virtual ~MasterPort();
 
     void bind(SlavePort& slave_port);
@@ -286,7 +305,8 @@ class SlavePort : public Port
 
   public:
 
-    SlavePort(const std::string& name, MemObject* owner);
+    SlavePort(const std::string& name, MemObject* owner,
+              PortId id = INVALID_PORT_ID);
     virtual ~SlavePort();
 
     void bind(MasterPort& master_port);
