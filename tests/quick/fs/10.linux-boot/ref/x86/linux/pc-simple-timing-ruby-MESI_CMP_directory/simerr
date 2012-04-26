@@ -1,0 +1,11 @@
+warn: Sockets disabled, not accepting terminal connections
+warn: Reading current count from inactive timer.
+warn: Sockets disabled, not accepting gdb connections
+warn: Don't know what interrupt to clear for console.
+warn: instruction 'fxsave' unimplemented
+warn: instruction 'wbinvd' unimplemented
+warn: instruction 'wbinvd' unimplemented
+hack: Assuming logical destinations are 1 << id.
+warn: Tried to clear PCI interrupt 14
+warn: Unknown mouse command 0xe1.
+hack: be nice to actually delete the event here

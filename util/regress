@@ -47,7 +47,7 @@ add_option('--builds',
            'MIPS,' \
            'POWER,' \
            'SPARC,' \
-           'X86,' \
+           'X86, X86_MESI_CMP_directory' \
            'ARM',
            help="comma-separated build targets to test (default: '%default')")
 add_option('--modes',
