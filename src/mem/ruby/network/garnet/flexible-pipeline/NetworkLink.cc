@@ -110,9 +110,7 @@ NetworkLink::getVcLoad()
 double
 NetworkLink::getLinkUtilization()
 {
-    Time m_ruby_start = m_net_ptr->getRubyStartTime();
-    return (double(m_link_utilized)) /
-           (double(g_eventQueue_ptr->getTime()-m_ruby_start));
+    return (double(m_link_utilized));
 }
 
 bool
