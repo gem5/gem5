@@ -198,7 +198,7 @@ def macroop IMUL_R_P_I
 {
     rdip t7
     limm t1, imm
-    ld t2, seg, riprel
+    ld t2, seg, riprel, disp
     mul1s t2, t1, flags=(OF,CF)
     mulel reg
     muleh t0
