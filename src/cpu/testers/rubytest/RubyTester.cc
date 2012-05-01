@@ -145,7 +145,7 @@ RubyTester::getMasterPort(const std::string &if_name, int idx)
 }
 
 bool
-RubyTester::CpuPort::recvTiming(PacketPtr pkt)
+RubyTester::CpuPort::recvTimingResp(PacketPtr pkt)
 {
     // retrieve the subblock and call hitCallback
     RubyTester::SenderState* senderState =

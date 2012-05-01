@@ -417,7 +417,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             Packet *snoopPkt = new Packet(pkt, true);  // clear flags
             snoopPkt->setExpressSnoop();
             snoopPkt->assertMemInhibit();
-            memSidePort->sendTiming(snoopPkt);
+            memSidePort->sendTimingReq(snoopPkt);
             // main memory will delete snoopPkt
         }
         // since we're the official target but we aren't responding,
@@ -1181,7 +1181,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             Packet snoopPkt(pkt, true);  // clear flags
             snoopPkt.setExpressSnoop();
             snoopPkt.senderState = new ForwardResponseRecord(pkt, this);
-            cpuSidePort->sendTimingSnoop(&snoopPkt);
+            cpuSidePort->sendTimingSnoopReq(&snoopPkt);
             if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache
                 assert(!alreadyResponded);
@@ -1336,11 +1336,9 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
 
 template<class TagStore>
 bool
-Cache<TagStore>::CpuSidePort::recvTimingSnoop(PacketPtr pkt)
+Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     // Express snoop responses from master to slave, e.g., from L1 to L2
-    assert(pkt->isResponse());
-
     cache->timingAccess(pkt);
     return true;
 }
@@ -1492,7 +1490,7 @@ Cache<TagStore>::getTimingPacket()
             PacketPtr snoop_pkt = new Packet(tgt_pkt, true);
             snoop_pkt->setExpressSnoop();
             snoop_pkt->senderState = mshr;
-            cpuSidePort->sendTimingSnoop(snoop_pkt);
+            cpuSidePort->sendTimingSnoopReq(snoop_pkt);
 
             if (snoop_pkt->memInhibitAsserted()) {
                 markInService(mshr, snoop_pkt);
@@ -1557,9 +1555,8 @@ Cache<TagStore>::CpuSidePort::getAddrRanges()
 
 template<class TagStore>
 bool
-Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
+Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     // always let inhibited requests through even if blocked
     if (!pkt->memInhibitAsserted() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
@@ -1575,7 +1572,6 @@ template<class TagStore>
 Tick
 Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     // atomic request
     return cache->atomicAccess(pkt);
 }
@@ -1584,7 +1580,6 @@ template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     // functional request
     cache->functionalAccess(pkt, true);
 }
@@ -1605,7 +1600,7 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
 
 template<class TagStore>
 bool
-Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
     // this needs to be fixed so that the cache updates the mshr and sends the
     // packet back out on the link, but it probably won't happen so until this
@@ -1613,27 +1608,23 @@ Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
     if (pkt->wasNacked())
         panic("Need to implement cache resending nacked packets!\n");
 
-    assert(pkt->isResponse());
     cache->handleResponse(pkt);
     return true;
 }
 
 // Express snooping requests to memside port
 template<class TagStore>
-bool
-Cache<TagStore>::MemSidePort::recvTimingSnoop(PacketPtr pkt)
+void
+Cache<TagStore>::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     // handle snooping requests
-    assert(pkt->isRequest());
     cache->snoopTiming(pkt);
-    return true;
 }
 
 template<class TagStore>
 Tick
 Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     // atomic snoop
     return cache->snoopAtomic(pkt);
 }
@@ -1642,7 +1633,6 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     // functional snoop (note that in contrast to atomic we don't have
     // a specific functionalSnoop method, as they have the same
     // behaviour regardless)
@@ -1668,7 +1658,7 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
         } else {
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
-            waitingOnRetry = !port.sendTiming(pkt);
+            waitingOnRetry = !masterPort.sendTimingReq(pkt);
 
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");

@@ -107,13 +107,29 @@ MasterPort::peerBlockSize() const
 Tick
 MasterPort::sendAtomic(PacketPtr pkt)
 {
+    assert(pkt->isRequest());
     return _slavePort->recvAtomic(pkt);
 }
 
 void
 MasterPort::sendFunctional(PacketPtr pkt)
 {
+    assert(pkt->isRequest());
     return _slavePort->recvFunctional(pkt);
+}
+
+bool
+MasterPort::sendTimingReq(PacketPtr pkt)
+{
+    assert(pkt->isRequest());
+    return _slavePort->recvTimingReq(pkt);
+}
+
+bool
+MasterPort::sendTimingSnoopResp(PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+    return _slavePort->recvTimingSnoopResp(pkt);
 }
 
 void
@@ -171,11 +187,27 @@ SlavePort::isConnected() const
 Tick
 SlavePort::sendAtomicSnoop(PacketPtr pkt)
 {
+    assert(pkt->isRequest());
     return _masterPort->recvAtomicSnoop(pkt);
 }
 
 void
 SlavePort::sendFunctionalSnoop(PacketPtr pkt)
 {
+    assert(pkt->isRequest());
     return _masterPort->recvFunctionalSnoop(pkt);
+}
+
+bool
+SlavePort::sendTimingResp(PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+    return _masterPort->recvTimingResp(pkt);
+}
+
+void
+SlavePort::sendTimingSnoopReq(PacketPtr pkt)
+{
+    assert(pkt->isRequest());
+    _masterPort->recvTimingSnoopReq(pkt);
 }

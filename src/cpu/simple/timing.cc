@@ -234,7 +234,7 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
         new IprEvent(pkt, this, nextCycle(curTick() + delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
-    } else if (!dcachePort.sendTiming(pkt)) {
+    } else if (!dcachePort.sendTimingReq(pkt)) {
         _status = DcacheRetry;
         dcache_pkt = pkt;
     } else {
@@ -449,7 +449,7 @@ TimingSimpleCPU::handleWritePacket()
         new IprEvent(dcache_pkt, this, nextCycle(curTick() + delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
-    } else if (!dcachePort.sendTiming(dcache_pkt)) {
+    } else if (!dcachePort.sendTimingReq(dcache_pkt)) {
         _status = DcacheRetry;
     } else {
         _status = DcacheWaitResponse;
@@ -581,7 +581,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
         ifetch_pkt->dataStatic(&inst);
         DPRINTF(SimpleCPU, " -- pkt addr: %#x\n", ifetch_pkt->getAddr());
 
-        if (!icachePort.sendTiming(ifetch_pkt)) {
+        if (!icachePort.sendTimingReq(ifetch_pkt)) {
             // Need to wait for retry
             _status = IcacheRetry;
         } else {
@@ -715,9 +715,8 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 }
 
 bool
-TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
+TimingSimpleCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     if (!pkt->wasNacked()) {
         DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
         // delay processing of returned data until next CPU clock edge
@@ -732,7 +731,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
     } else {
         assert(cpu->_status == IcacheWaitResponse);
         pkt->reinitNacked();
-        if (!sendTiming(pkt)) {
+        if (!sendTimingReq(pkt)) {
             cpu->_status = IcacheRetry;
             cpu->ifetch_pkt = pkt;
         }
@@ -749,7 +748,7 @@ TimingSimpleCPU::IcachePort::recvRetry()
     assert(cpu->ifetch_pkt != NULL);
     assert(cpu->_status == IcacheRetry);
     PacketPtr tmp = cpu->ifetch_pkt;
-    if (sendTiming(tmp)) {
+    if (sendTimingReq(tmp)) {
         cpu->_status = IcacheWaitResponse;
         cpu->ifetch_pkt = NULL;
     }
@@ -836,9 +835,8 @@ TimingSimpleCPU::completeDrain()
 }
 
 bool
-TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
+TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     if (!pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick());
@@ -862,7 +860,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
     } else  {
         assert(cpu->_status == DcacheWaitResponse);
         pkt->reinitNacked();
-        if (!sendTiming(pkt)) {
+        if (!sendTimingReq(pkt)) {
             cpu->_status = DcacheRetry;
             cpu->dcache_pkt = pkt;
         }
@@ -896,7 +894,7 @@ TimingSimpleCPU::DcachePort::recvRetry()
             dynamic_cast<SplitMainSenderState *>(big_pkt->senderState);
         assert(main_send_state);
 
-        if (sendTiming(tmp)) {
+        if (sendTimingReq(tmp)) {
             // If we were able to send without retrying, record that fact
             // and try sending the other fragment.
             send_state->clearFromParent();
@@ -914,7 +912,7 @@ TimingSimpleCPU::DcachePort::recvRetry()
                 cpu->dcache_pkt = NULL;
             }
         }
-    } else if (sendTiming(tmp)) {
+    } else if (sendTimingReq(tmp)) {
         cpu->_status = DcacheWaitResponse;
         // memory system takes ownership of packet
         cpu->dcache_pkt = NULL;

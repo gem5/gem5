@@ -53,9 +53,8 @@ using namespace std;
 int TESTER_ALLOCATOR=0;
 
 bool
-MemTest::CpuPort::recvTiming(PacketPtr pkt)
+MemTest::CpuPort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     memtest->completeRequest(pkt);
     return true;
 }
@@ -72,7 +71,7 @@ MemTest::sendPkt(PacketPtr pkt) {
         cachePort.sendAtomic(pkt);
         completeRequest(pkt);
     }
-    else if (!cachePort.sendTiming(pkt)) {
+    else if (!cachePort.sendTimingReq(pkt)) {
         DPRINTF(MemTest, "accessRetry setting to true\n");
 
         //
@@ -379,7 +378,7 @@ MemTest::tick()
 void
 MemTest::doRetry()
 {
-    if (cachePort.sendTiming(retryPkt)) {
+    if (cachePort.sendTimingReq(retryPkt)) {
         DPRINTF(MemTest, "accessRetry setting to false\n");
         accessRetry = false;
         retryPkt = NULL;

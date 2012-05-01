@@ -873,7 +873,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
             tid, inst->seqNum, cache_req->dataPkt->getAddr());
 
     if (do_access) {
-        if (!cachePort->sendTiming(cache_req->dataPkt)) {
+        if (!cachePort->sendTimingReq(cache_req->dataPkt)) {
             DPRINTF(InOrderCachePort,
                     "[tid:%i] [sn:%i] cannot access cache, because port "
                     "is blocked. now waiting to retry request\n", tid, 

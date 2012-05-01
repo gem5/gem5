@@ -148,8 +148,8 @@ class FullO3CPU : public BaseO3CPU
 
         /** Timing version of receive.  Handles setting fetch to the
          * proper status to start fetching. */
-        virtual bool recvTiming(PacketPtr pkt);
-        virtual bool recvTimingSnoop(PacketPtr pkt) { return true; }
+        virtual bool recvTimingResp(PacketPtr pkt);
+        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
         /** Handles doing a retry of a failed fetch. */
         virtual void recvRetry();
@@ -176,8 +176,8 @@ class FullO3CPU : public BaseO3CPU
         /** Timing version of receive.  Handles writing back and
          * completing the load or store that has returned from
          * memory. */
-        virtual bool recvTiming(PacketPtr pkt);
-        virtual bool recvTimingSnoop(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
+        virtual void recvTimingSnoopReq(PacketPtr pkt);
 
         /** Handles doing a retry of the previous send. */
         virtual void recvRetry();

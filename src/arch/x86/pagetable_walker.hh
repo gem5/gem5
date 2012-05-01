@@ -70,12 +70,12 @@ namespace X86ISA
           protected:
             Walker *walker;
 
-            bool recvTiming(PacketPtr pkt);
+            bool recvTimingResp(PacketPtr pkt);
 
             /**
              * Snooping a coherence request, do nothing.
              */
-            bool recvTimingSnoop(PacketPtr pkt) { return true; }
+            void recvTimingSnoopReq(PacketPtr pkt) { }
             Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
             void recvFunctionalSnoop(PacketPtr pkt) { }
             void recvRetry();
@@ -179,7 +179,7 @@ namespace X86ISA
         MasterID masterId;
 
         // Functions for dealing with packets.
-        bool recvTiming(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt);
         void recvRetry();
         bool sendTiming(WalkerState * sendingState, PacketPtr pkt);
 

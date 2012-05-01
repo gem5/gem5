@@ -198,90 +198,65 @@ Bus::isOccupied(PacketPtr pkt, Port* port)
 }
 
 bool
-Bus::recvTiming(PacketPtr pkt)
+Bus::recvTimingReq(PacketPtr pkt)
 {
-    // get the source id
-    Packet::NodeID src_id = pkt->getSrc();
-
-    // determine the source port based on the id and direction
-    Port *src_port = NULL;
-    if (pkt->isRequest())
-        src_port = slavePorts[src_id];
-    else
-        src_port = masterPorts[src_id];
+    // determine the source port based on the id
+    SlavePort *src_port = slavePorts[pkt->getSrc()];
 
     // test if the bus should be considered occupied for the current
     // packet, and exclude express snoops from the check
     if (!pkt->isExpressSnoop() && isOccupied(pkt, src_port)) {
-        DPRINTF(Bus, "recvTiming: src %s %s 0x%x BUSY\n",
+        DPRINTF(Bus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(Bus, "recvTiming: src %s %s 0x%x\n",
+    DPRINTF(Bus, "recvTimingReq: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
-    // decide what to do based on the direction
-    if (pkt->isRequest()) {
-        // the packet is a memory-mapped request and should be
-        // broadcasted to our snoopers but the source
-        forwardTiming(pkt, src_id);
+    // the packet is a memory-mapped request and should be
+    // broadcasted to our snoopers but the source
+    forwardTiming(pkt, pkt->getSrc());
 
-        // remember if we add an outstanding req so we can undo it if
-        // necessary, if the packet needs a response, we should add it
-        // as outstanding and express snoops never fail so there is
-        // not need to worry about them
-        bool add_outstanding = !pkt->isExpressSnoop() && pkt->needsResponse();
+    // remember if we add an outstanding req so we can undo it if
+    // necessary, if the packet needs a response, we should add it
+    // as outstanding and express snoops never fail so there is
+    // not need to worry about them
+    bool add_outstanding = !pkt->isExpressSnoop() && pkt->needsResponse();
 
-        // keep track that we have an outstanding request packet
-        // matching this request, this is used by the coherency
-        // mechanism in determining what to do with snoop responses
-        // (in recvTimingSnoop)
-        if (add_outstanding) {
-            // we should never have an exsiting request outstanding
-            assert(outstandingReq.find(pkt->req) == outstandingReq.end());
-            outstandingReq.insert(pkt->req);
-        }
+    // keep track that we have an outstanding request packet
+    // matching this request, this is used by the coherency
+    // mechanism in determining what to do with snoop responses
+    // (in recvTimingSnoop)
+    if (add_outstanding) {
+        // we should never have an exsiting request outstanding
+        assert(outstandingReq.find(pkt->req) == outstandingReq.end());
+        outstandingReq.insert(pkt->req);
+    }
 
-        // since it is a normal request, determine the destination
-        // based on the address and attempt to send the packet
-        bool success = masterPorts[findPort(pkt->getAddr())]->sendTiming(pkt);
+    // since it is a normal request, determine the destination
+    // based on the address and attempt to send the packet
+    bool success = masterPorts[findPort(pkt->getAddr())]->sendTimingReq(pkt);
 
-        if (!success)  {
-            // inhibited packets should never be forced to retry
-            assert(!pkt->memInhibitAsserted());
+    if (!success)  {
+        // inhibited packets should never be forced to retry
+        assert(!pkt->memInhibitAsserted());
 
-            // if it was added as outstanding and the send failed, then
-            // erase it again
-            if (add_outstanding)
-                outstandingReq.erase(pkt->req);
+        // if it was added as outstanding and the send failed, then
+        // erase it again
+        if (add_outstanding)
+            outstandingReq.erase(pkt->req);
 
-            DPRINTF(Bus, "recvTiming: src %s %s 0x%x RETRY\n",
-                    src_port->name(), pkt->cmdString(), pkt->getAddr());
+        DPRINTF(Bus, "recvTimingReq: src %s %s 0x%x RETRY\n",
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-            addToRetryList(src_port);
-            occupyBus(headerFinishTime);
+        addToRetryList(src_port);
+        occupyBus(headerFinishTime);
 
-            return false;
-        }
-    } else {
-        // the packet is a normal response to a request that we should
-        // have seen passing through the bus
-        assert(outstandingReq.find(pkt->req) != outstandingReq.end());
-
-        // remove it as outstanding
-        outstandingReq.erase(pkt->req);
-
-        // send the packet to the destination through one of our slave
-        // ports, as determined by the destination field
-        bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTiming(pkt);
-
-        // currently it is illegal to block responses... can lead to
-        // deadlock
-        assert(success);
+        return false;
     }
 
     succeededTiming(packetFinishTime);
@@ -290,93 +265,131 @@ Bus::recvTiming(PacketPtr pkt)
 }
 
 bool
-Bus::recvTimingSnoop(PacketPtr pkt)
+Bus::recvTimingResp(PacketPtr pkt)
 {
-    // get the source id
-    Packet::NodeID src_id = pkt->getSrc();
+    // determine the source port based on the id
+    MasterPort *src_port = masterPorts[pkt->getSrc()];
 
-    if (pkt->isRequest()) {
-        DPRINTF(Bus, "recvTimingSnoop: src %d %s 0x%x\n",
-                src_id, pkt->cmdString(), pkt->getAddr());
-
-        // the packet is an express snoop request and should be
-        // broadcasted to our snoopers
-        assert(pkt->isExpressSnoop());
-
-        // forward to all snoopers
-        forwardTiming(pkt, Port::INVALID_PORT_ID);
-
-        // a snoop request came from a connected slave device (one of
-        // our master ports), and if it is not coming from the slave
-        // device responsible for the address range something is
-        // wrong, hence there is nothing further to do as the packet
-        // would be going back to where it came from
-        assert(src_id == findPort(pkt->getAddr()));
-
-        // this is an express snoop and is never forced to retry
-        assert(!inRetry);
-
-        return true;
-    } else {
-        // determine the source port based on the id
-        SlavePort* src_port = slavePorts[src_id];
-
-        if (isOccupied(pkt, src_port)) {
-            DPRINTF(Bus, "recvTimingSnoop: src %s %s 0x%x BUSY\n",
-                    src_port->name(), pkt->cmdString(), pkt->getAddr());
-            return false;
-        }
-
-        DPRINTF(Bus, "recvTimingSnoop: src %s %s 0x%x\n",
+    // test if the bus should be considered occupied for the current
+    // packet
+    if (isOccupied(pkt, src_port)) {
+        DPRINTF(Bus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
-
-        // get the destination from the packet
-        Packet::NodeID dest = pkt->getDest();
-
-        // responses are never express snoops
-        assert(!pkt->isExpressSnoop());
-
-        calcPacketTiming(pkt);
-        Tick packetFinishTime = pkt->finishTime;
-
-        // determine if the response is from a snoop request we
-        // created as the result of a normal request (in which case it
-        // should be in the outstandingReq), or if we merely forwarded
-        // someone else's snoop request
-        if (outstandingReq.find(pkt->req) == outstandingReq.end()) {
-            // this is a snoop response to a snoop request we
-            // forwarded, e.g. coming from the L1 and going to the L2
-            // this should be forwarded as a snoop response
-            bool success M5_VAR_USED = masterPorts[dest]->sendTimingSnoop(pkt);
-            assert(success);
-        } else {
-            // we got a snoop response on one of our slave ports,
-            // i.e. from a coherent master connected to the bus, and
-            // since we created the snoop request as part of
-            // recvTiming, this should now be a normal response again
-            outstandingReq.erase(pkt->req);
-
-            // this is a snoop response from a coherent master, with a
-            // destination field set on its way through the bus as
-            // request, hence it should never go back to where the
-            // snoop response came from, but instead to where the
-            // original request came from
-            assert(src_id != dest);
-
-            // as a normal response, it should go back to a master
-            // through one of our slave ports
-            bool success M5_VAR_USED = slavePorts[dest]->sendTiming(pkt);
-
-            // currently it is illegal to block responses... can lead
-            // to deadlock
-            assert(success);
-        }
-
-        succeededTiming(packetFinishTime);
-
-        return true;
+        return false;
     }
+
+    DPRINTF(Bus, "recvTimingResp: src %s %s 0x%x\n",
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
+
+    calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->finishTime;
+
+    // the packet is a normal response to a request that we should
+    // have seen passing through the bus
+    assert(outstandingReq.find(pkt->req) != outstandingReq.end());
+
+    // remove it as outstanding
+    outstandingReq.erase(pkt->req);
+
+    // send the packet to the destination through one of our slave
+    // ports, as determined by the destination field
+    bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTimingResp(pkt);
+
+    // currently it is illegal to block responses... can lead to
+    // deadlock
+    assert(success);
+
+    succeededTiming(packetFinishTime);
+
+    return true;
 }
+
+void
+Bus::recvTimingSnoopReq(PacketPtr pkt)
+{
+    DPRINTF(Bus, "recvTimingSnoopReq: src %s %s 0x%x\n",
+            masterPorts[pkt->getSrc()]->name(), pkt->cmdString(),
+            pkt->getAddr());
+
+    // we should only see express snoops from caches
+    assert(pkt->isExpressSnoop());
+
+    // forward to all snoopers
+    forwardTiming(pkt, Port::INVALID_PORT_ID);
+
+    // a snoop request came from a connected slave device (one of
+    // our master ports), and if it is not coming from the slave
+    // device responsible for the address range something is
+    // wrong, hence there is nothing further to do as the packet
+    // would be going back to where it came from
+    assert(pkt->getSrc() == findPort(pkt->getAddr()));
+
+    // this is an express snoop and is never forced to retry
+    assert(!inRetry);
+}
+
+bool
+Bus::recvTimingSnoopResp(PacketPtr pkt)
+{
+    // determine the source port based on the id
+    SlavePort* src_port = slavePorts[pkt->getSrc()];
+
+    if (isOccupied(pkt, src_port)) {
+        DPRINTF(Bus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
+        return false;
+    }
+
+    DPRINTF(Bus, "recvTimingSnoop: src %s %s 0x%x\n",
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
+
+    // get the destination from the packet
+    Packet::NodeID dest = pkt->getDest();
+
+    // responses are never express snoops
+    assert(!pkt->isExpressSnoop());
+
+    calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->finishTime;
+
+    // determine if the response is from a snoop request we
+    // created as the result of a normal request (in which case it
+    // should be in the outstandingReq), or if we merely forwarded
+    // someone else's snoop request
+    if (outstandingReq.find(pkt->req) == outstandingReq.end()) {
+        // this is a snoop response to a snoop request we
+        // forwarded, e.g. coming from the L1 and going to the L2
+        // this should be forwarded as a snoop response
+        bool success M5_VAR_USED = masterPorts[dest]->sendTimingSnoopResp(pkt);
+        assert(success);
+    } else {
+        // we got a snoop response on one of our slave ports,
+        // i.e. from a coherent master connected to the bus, and
+        // since we created the snoop request as part of
+        // recvTiming, this should now be a normal response again
+        outstandingReq.erase(pkt->req);
+
+        // this is a snoop response from a coherent master, with a
+        // destination field set on its way through the bus as
+        // request, hence it should never go back to where the
+        // snoop response came from, but instead to where the
+        // original request came from
+        assert(pkt->getSrc() != dest);
+
+        // as a normal response, it should go back to a master
+        // through one of our slave ports
+        bool success M5_VAR_USED = slavePorts[dest]->sendTimingResp(pkt);
+
+        // currently it is illegal to block responses... can lead
+        // to deadlock
+        assert(success);
+    }
+
+    succeededTiming(packetFinishTime);
+
+    return true;
+}
+
 
 void
 Bus::succeededTiming(Tick busy_time)
@@ -405,8 +418,7 @@ Bus::forwardTiming(PacketPtr pkt, int exclude_slave_port_id)
         if (exclude_slave_port_id == Port::INVALID_PORT_ID ||
             p->getId() != exclude_slave_port_id) {
             // cache is not allowed to refuse snoop
-            bool success M5_VAR_USED = p->sendTimingSnoop(pkt);
-            assert(success);
+            p->sendTimingSnoopReq(pkt);
         }
     }
 }
@@ -531,9 +543,6 @@ Bus::recvAtomic(PacketPtr pkt)
             slavePorts[pkt->getSrc()]->name(), pkt->getAddr(),
             pkt->cmdString());
 
-    // we should always see a request routed based on the address
-    assert(pkt->isRequest());
-
     // forward to all snoopers but the source
     std::pair<MemCmd, Tick> snoop_result = forwardAtomic(pkt, pkt->getSrc());
     MemCmd snoop_response_cmd = snoop_result.first;
@@ -564,9 +573,6 @@ Bus::recvAtomicSnoop(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomicSnoop: packet src %s addr 0x%x cmd %s\n",
             masterPorts[pkt->getSrc()]->name(), pkt->getAddr(),
             pkt->cmdString());
-
-    // we should always see a request routed based on the address
-    assert(pkt->isRequest());
 
     // forward to all snoopers
     std::pair<MemCmd, Tick> snoop_result =
@@ -637,9 +643,6 @@ Bus::recvFunctional(PacketPtr pkt)
                 pkt->cmdString());
     }
 
-    // we should always see a request routed based on the address
-    assert(pkt->isRequest());
-
     // forward to all snoopers but the source
     forwardFunctional(pkt, pkt->getSrc());
 
@@ -662,9 +665,6 @@ Bus::recvFunctionalSnoop(PacketPtr pkt)
                 masterPorts[pkt->getSrc()]->name(), pkt->getAddr(),
                 pkt->cmdString());
     }
-
-    // we should always see a request routed based on the address
-    assert(pkt->isRequest());
 
     // forward to all snoopers
     forwardFunctional(pkt, Port::INVALID_PORT_ID);

@@ -97,9 +97,9 @@ class MemTest : public MemObject
 
       protected:
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
-        virtual bool recvTimingSnoop(PacketPtr pkt) { return true; }
+        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
         virtual Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
 

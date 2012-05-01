@@ -73,8 +73,7 @@ class MemObject;
  * opposite role.
  *
  * Each port has a name and an owner, and enables three basic types of
- * accesses to the peer port: sendFunctional, sendAtomic and
- * sendTiming.
+ * accesses to the peer port: functional, atomic and timing.
  */
 class Port
 {
@@ -130,61 +129,18 @@ class Port
 
   protected:
 
-    /** These functions are protected because they should only be
-     * called by a peer port, never directly by any outside object. */
-
     /**
-     * Receive a timing request or response packet from the peer port.
-     */
-    virtual bool recvTiming(PacketPtr pkt) = 0;
-
-    /**
-     * Receive a timing snoop request or snoop response packet from
-     * the peer port.
-     */
-    virtual bool recvTimingSnoop(PacketPtr pkt)
-    {
-        panic("%s was not expecting a timing snoop\n", name());
-        return false;
-    }
-
-    /**
-     * Called by a peer port if sendTiming or sendTimingSnoop was
-     * unsuccesful, and had to wait.
+     * Called by a peer port if sendTimingReq, sendTimingResp or
+     * sendTimingSnoopResp was unsuccesful, and had to wait.
      */
     virtual void recvRetry() = 0;
 
   public:
 
     /**
-     * Attempt to send a timing request or response packet to the peer
-     * port by calling its receive function. If the send does not
-     * succeed, as indicated by the return value, then the sender must
-     * wait for a recvRetry at which point it can re-issue a
-     * sendTiming.
-     *
-     * @param pkt Packet to send.
-     *
-     * @return If the send was succesful or not.
-    */
-    bool sendTiming(PacketPtr pkt) { return peer->recvTiming(pkt); }
-
-    /**
-     * Attempt to send a timing snoop request or snoop response packet
-     * to the peer port by calling its receive function. If the send
-     * does not succeed, as indicated by the return value, then the
-     * sender must wait for a recvRetry at which point it can re-issue
-     * a sendTimingSnoop.
-     *
-     * @param pkt Packet to send.
-     *
-     * @return If the send was succesful or not.
-    */
-    bool sendTimingSnoop(PacketPtr pkt) { return peer->recvTimingSnoop(pkt); }
-
-    /**
      * Send a retry to a peer port that previously attempted a
-     * sendTiming or sendTimingSnoop which was unsuccessful.
+     * sendTimingReq, sendTimingResp or sendTimingSnoopResp which was
+     * unsuccessful.
      */
     void sendRetry() { return peer->recvRetry(); }
 
@@ -201,6 +157,8 @@ class SlavePort;
  */
 class MasterPort : public Port
 {
+
+    friend class SlavePort;
 
   private:
 
@@ -237,30 +195,28 @@ class MasterPort : public Port
     void sendFunctional(PacketPtr pkt);
 
     /**
-     * Receive an atomic snoop request packet from the slave port.
-     */
-    virtual Tick recvAtomicSnoop(PacketPtr pkt)
-    {
-        panic("%s was not expecting an atomic snoop\n", name());
-        return 0;
-    }
+     * Attempt to send a timing request to the slave port by calling
+     * its corresponding receive function. If the send does not
+     * succeed, as indicated by the return value, then the sender must
+     * wait for a recvRetry at which point it can re-issue a
+     * sendTimingReq.
+     *
+     * @param pkt Packet to send.
+     *
+     * @return If the send was succesful or not.
+    */
+    bool sendTimingReq(PacketPtr pkt);
 
     /**
-     * Receive a functional snoop request packet from the slave port.
+     * Attempt to send a timing snoop response packet to the slave
+     * port by calling its corresponding receive function. If the send
+     * does not succeed, as indicated by the return value, then the
+     * sender must wait for a recvRetry at which point it can re-issue
+     * a sendTimingSnoopResp.
+     *
+     * @param pkt Packet to send.
      */
-    virtual void recvFunctionalSnoop(PacketPtr pkt)
-    {
-        panic("%s was not expecting a functional snoop\n", name());
-    }
-
-    /**
-     * Called to receive an address range change from the peer slave
-     * port. the default implementation ignored the change and does
-     * nothing. Override this function in a derived class if the owner
-     * needs to be aware of he laesddress ranges, e.g. in an
-     * interconnect component like a bus.
-     */
-    virtual void recvRangeChange() { }
+    bool sendTimingSnoopResp(PacketPtr pkt);
 
     /**
      * Determine if this master port is snooping or not. The default
@@ -288,6 +244,47 @@ class MasterPort : public Port
      * that address throughout the memory system.  For debugging.
      */
     void printAddr(Addr a);
+
+  protected:
+
+    /**
+     * Receive an atomic snoop request packet from the slave port.
+     */
+    virtual Tick recvAtomicSnoop(PacketPtr pkt)
+    {
+        panic("%s was not expecting an atomic snoop request\n", name());
+        return 0;
+    }
+
+    /**
+     * Receive a functional snoop request packet from the slave port.
+     */
+    virtual void recvFunctionalSnoop(PacketPtr pkt)
+    {
+        panic("%s was not expecting a functional snoop request\n", name());
+    }
+
+    /**
+     * Receive a timing response from the slave port.
+     */
+    virtual bool recvTimingResp(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a timing snoop request from the slave port.
+     */
+    virtual void recvTimingSnoopReq(PacketPtr pkt)
+    {
+        panic("%s was not expecting a timing snoop request\n", name());
+    }
+
+    /**
+     * Called to receive an address range change from the peer slave
+     * port. the default implementation ignored the change and does
+     * nothing. Override this function in a derived class if the owner
+     * needs to be aware of he laesddress ranges, e.g. in an
+     * interconnect component like a bus.
+     */
+    virtual void recvRangeChange() { }
 };
 
 /**
@@ -298,6 +295,8 @@ class MasterPort : public Port
  */
 class SlavePort : public Port
 {
+
+    friend class MasterPort;
 
   private:
 
@@ -334,14 +333,26 @@ class SlavePort : public Port
     void sendFunctionalSnoop(PacketPtr pkt);
 
     /**
-     * Receive an atomic request packet from the master port.
-     */
-    virtual Tick recvAtomic(PacketPtr pkt) = 0;
+     * Attempt to send a timing response to the master port by calling
+     * its corresponding receive function. If the send does not
+     * succeed, as indicated by the return value, then the sender must
+     * wait for a recvRetry at which point it can re-issue a
+     * sendTimingResp.
+     *
+     * @param pkt Packet to send.
+     *
+     * @return If the send was succesful or not.
+    */
+    bool sendTimingResp(PacketPtr pkt);
 
     /**
-     * Receive a functional request packet from the master port.
+     * Attempt to send a timing snoop request packet to the master port
+     * by calling its corresponding receive function. Snoop requests
+     * always succeed and hence no return value is needed.
+     *
+     * @param pkt Packet to send.
      */
-    virtual void recvFunctional(PacketPtr pkt) = 0;
+    void sendTimingSnoopReq(PacketPtr pkt);
 
     /**
      * Called by a peer port in order to determine the block size of
@@ -367,6 +378,32 @@ class SlavePort : public Port
      * @return a list of ranges responded to
      */
     virtual AddrRangeList getAddrRanges() = 0;
+
+  protected:
+
+    /**
+     * Receive an atomic request packet from the master port.
+     */
+    virtual Tick recvAtomic(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a functional request packet from the master port.
+     */
+    virtual void recvFunctional(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a timing request from the master port.
+     */
+    virtual bool recvTimingReq(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a timing snoop response from the master port.
+     */
+    virtual bool recvTimingSnoopResp(PacketPtr pkt)
+    {
+        panic("%s was not expecting a timing snoop response\n", name());
+    }
+
 };
 
 #endif //__MEM_PORT_HH__

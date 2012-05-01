@@ -801,7 +801,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             state->mainPkt = data_pkt;
         }
 
-        if (!dcachePort->sendTiming(fst_data_pkt)) {
+        if (!dcachePort->sendTimingReq(fst_data_pkt)) {
             // Delete state and data packet because a load retry
             // initiates a pipeline restart; it does not retry.
             delete state;
@@ -830,7 +830,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             // The first packet will return in completeDataAccess and be
             // handled there.
             ++usedPorts;
-            if (!dcachePort->sendTiming(snd_data_pkt)) {
+            if (!dcachePort->sendTimingReq(snd_data_pkt)) {
 
                 // The main packet will be deleted in completeDataAccess.
                 delete snd_data_pkt->req;

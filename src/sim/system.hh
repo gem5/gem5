@@ -88,7 +88,7 @@ class System : public MemObject
         SystemPort(const std::string &_name, MemObject *_owner)
             : MasterPort(_name, _owner)
         { }
-        bool recvTiming(PacketPtr pkt)
+        bool recvTimingResp(PacketPtr pkt)
         { panic("SystemPort does not receive timing!\n"); return false; }
         void recvRetry()
         { panic("SystemPort does not expect retry!\n"); }

@@ -1180,7 +1180,7 @@ template <class Impl>
 bool
 LSQUnit<Impl>::sendStore(PacketPtr data_pkt)
 {
-    if (!dcachePort->sendTiming(data_pkt)) {
+    if (!dcachePort->sendTimingReq(data_pkt)) {
         // Need to handle becoming blocked on a store.
         isStoreBlocked = true;
         ++lsqCacheBlocked;
@@ -1203,7 +1203,7 @@ LSQUnit<Impl>::recvRetry()
         LSQSenderState *state =
             dynamic_cast<LSQSenderState *>(retryPkt->senderState);
 
-        if (dcachePort->sendTiming(retryPkt)) {
+        if (dcachePort->sendTimingReq(retryPkt)) {
             // Don't finish the store unless this is the last packet.
             if (!TheISA::HasUnalignedMemAcc || !state->pktToSend ||
                     state->pendingPacket == retryPkt) {

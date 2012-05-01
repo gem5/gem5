@@ -297,9 +297,9 @@ class LSQ {
      *
      * @param pkt Response packet from the memory sub-system
      */
-    bool recvTiming(PacketPtr pkt);
+    bool recvTimingResp(PacketPtr pkt);
 
-    bool recvTimingSnoop(PacketPtr pkt);
+    void recvTimingSnoopReq(PacketPtr pkt);
 
     /** The CPU pointer. */
     O3CPU *cpu;

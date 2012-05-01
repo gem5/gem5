@@ -62,7 +62,7 @@ class RubyTester : public MemObject
         {}
 
       protected:
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
         virtual void recvRetry()
         { panic("%s does not expect a retry\n", name()); }
     };

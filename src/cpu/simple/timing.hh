@@ -156,7 +156,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         /**
          * Snooping a coherence request, do nothing.
          */
-        virtual bool recvTimingSnoop(PacketPtr pkt) { return true; }
+        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
         TimingSimpleCPU* cpu;
 
@@ -185,7 +185,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvRetry();
 
@@ -212,7 +212,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvRetry();
 

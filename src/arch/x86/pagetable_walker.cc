@@ -114,15 +114,14 @@ Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
 }
 
 bool
-Walker::WalkerPort::recvTiming(PacketPtr pkt)
+Walker::WalkerPort::recvTimingResp(PacketPtr pkt)
 {
-    return walker->recvTiming(pkt);
+    return walker->recvTimingResp(pkt);
 }
 
 bool
-Walker::recvTiming(PacketPtr pkt)
+Walker::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     WalkerSenderState * senderState =
         dynamic_cast<WalkerSenderState *>(pkt->senderState);
     pkt->senderState = senderState->saved;
@@ -171,7 +170,7 @@ Walker::recvRetry()
 bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
 {
     pkt->senderState = new WalkerSenderState(sendingState, pkt->senderState);
-    return port.sendTiming(pkt);
+    return port.sendTimingReq(pkt);
 }
 
 MasterPort &

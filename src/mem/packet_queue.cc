@@ -46,9 +46,8 @@
 
 using namespace std;
 
-PacketQueue::PacketQueue(EventManager& _em, Port& _port,
-                         const std::string _label)
-    : em(_em), label(_label), sendEvent(this), drainEvent(NULL), port(_port),
+PacketQueue::PacketQueue(EventManager& _em, const std::string& _label)
+    : em(_em), sendEvent(this), drainEvent(NULL), label(_label),
       waitingOnRetry(false)
 {
 }
@@ -142,11 +141,10 @@ void PacketQueue::trySendTiming()
     DeferredPacket dp = transmitList.front();
     transmitList.pop_front();
 
-    // attempt to send the packet and remember the outcome
-    if (!dp.sendAsSnoop)
-        waitingOnRetry = !port.sendTiming(dp.pkt);
-    else
-        waitingOnRetry = !port.sendTimingSnoop(dp.pkt);
+    // use the appropriate implementation of sendTiming based on the
+    // type of port associated with the queue, and whether the packet
+    // is to be sent as a snoop or not
+    waitingOnRetry = !sendTiming(dp.pkt, dp.sendAsSnoop);
 
     if (waitingOnRetry) {
         // put the packet back at the front of the list (packet should
@@ -205,4 +203,34 @@ PacketQueue::drain(Event *de)
         return 0;
     drainEvent = de;
     return 1;
+}
+
+MasterPacketQueue::MasterPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                                     const std::string _label)
+    : PacketQueue(_em, _label), masterPort(_masterPort)
+{
+}
+
+bool
+MasterPacketQueue::sendTiming(PacketPtr pkt, bool send_as_snoop)
+{
+    // attempt to send the packet and return according to the outcome
+    if (!send_as_snoop)
+        return masterPort.sendTimingReq(pkt);
+    else
+        return masterPort.sendTimingSnoopResp(pkt);
+}
+
+SlavePacketQueue::SlavePacketQueue(EventManager& _em, SlavePort& _slavePort,
+                                   const std::string _label)
+    : PacketQueue(_em, _label), slavePort(_slavePort)
+{
+}
+
+bool
+SlavePacketQueue::sendTiming(PacketPtr pkt, bool send_as_snoop)
+{
+    // we should never have queued snoop requests
+    assert(!send_as_snoop);
+    return slavePort.sendTimingResp(pkt);
 }

@@ -51,9 +51,8 @@ using namespace std;
 int TESTER_NETWORK=0;
 
 bool
-NetworkTest::CpuPort::recvTiming(PacketPtr pkt)
+NetworkTest::CpuPort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     networktest->completeRequest(pkt);
     return true;
 }
@@ -67,7 +66,7 @@ NetworkTest::CpuPort::recvRetry()
 void
 NetworkTest::sendPkt(PacketPtr pkt)
 {
-    if (!cachePort.sendTiming(pkt)) {
+    if (!cachePort.sendTimingReq(pkt)) {
         retryPkt = pkt; // RubyPort will retry sending
     }
     numPacketsSent++;
@@ -269,7 +268,7 @@ NetworkTest::generatePkt()
 void
 NetworkTest::doRetry()
 {
-    if (cachePort.sendTiming(retryPkt)) {
+    if (cachePort.sendTimingReq(retryPkt)) {
         retryPkt = NULL;
     }
 }

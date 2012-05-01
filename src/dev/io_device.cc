@@ -131,9 +131,8 @@ DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
 { }
 
 bool
-DmaPort::recvTiming(PacketPtr pkt)
+DmaPort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     if (pkt->wasNacked()) {
         DPRINTF(DMA, "Received nacked %s addr %#x\n",
                 pkt->cmdString(), pkt->getAddr());
@@ -234,7 +233,7 @@ DmaPort::recvRetry()
         PacketPtr pkt = transmitList.front();
         DPRINTF(DMA, "Retry on %s addr %#x\n",
                 pkt->cmdString(), pkt->getAddr());
-        result = sendTiming(pkt);
+        result = sendTimingReq(pkt);
         if (result) {
             DPRINTF(DMA, "-- Done\n");
             transmitList.pop_front();
@@ -320,7 +319,7 @@ DmaPort::sendDma()
 
         bool result;
         do {
-            result = sendTiming(pkt);
+            result = sendTimingReq(pkt);
             if (result) {
                 transmitList.pop_front();
                 DPRINTF(DMA, "-- Done\n");

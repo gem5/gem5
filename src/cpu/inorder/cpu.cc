@@ -88,10 +88,8 @@ InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit) :
 { }
 
 bool
-InOrderCPU::CachePort::recvTiming(Packet *pkt)
+InOrderCPU::CachePort::recvTimingResp(Packet *pkt)
 {
-    assert(pkt->isResponse());
-
     if (pkt->isError())
         DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
                 pkt->getAddr());

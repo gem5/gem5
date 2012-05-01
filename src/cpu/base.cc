@@ -532,7 +532,7 @@ BaseCPU::traceFunctionsInternal(Addr pc)
 }
 
 bool
-BaseCPU::CpuPort::recvTiming(PacketPtr pkt)
+BaseCPU::CpuPort::recvTimingResp(PacketPtr pkt)
 {
     panic("BaseCPU doesn't expect recvTiming!\n");
     return true;

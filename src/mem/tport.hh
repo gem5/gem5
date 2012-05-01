@@ -54,7 +54,7 @@
 
 /**
  * The simple timing port uses a queued port to implement
- * recvFunctional and recvTiming through recvAtomic. It is always a
+ * recvFunctional and recvTimingReq through recvAtomic. It is always a
  * slave port.
  */
 class SimpleTimingPort : public QueuedSlavePort
@@ -63,13 +63,13 @@ class SimpleTimingPort : public QueuedSlavePort
   protected:
 
     /** The packet queue used to store outgoing responses. */
-    PacketQueue queue;
+    SlavePacketQueue queue;
 
     /** Implemented using recvAtomic(). */
     void recvFunctional(PacketPtr pkt);
 
     /** Implemented using recvAtomic(). */
-    bool recvTiming(PacketPtr pkt);
+    bool recvTimingReq(PacketPtr pkt);
 
     virtual Tick recvAtomic(PacketPtr pkt) = 0;
 
@@ -77,7 +77,7 @@ class SimpleTimingPort : public QueuedSlavePort
 
     /**
      * Create a new SimpleTimingPort that relies on a packet queue to
-     * hold responses, and implements recvTiming and recvFunctional
+     * hold responses, and implements recvTimingReq and recvFunctional
      * through calls to recvAtomic. Once a request arrives, it is
      * passed to recvAtomic, and in the case of a timing access any
      * response is scheduled to be sent after the delay of the atomic

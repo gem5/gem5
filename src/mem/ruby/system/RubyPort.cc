@@ -141,13 +141,11 @@ RubyPort::M5Port::recvAtomic(PacketPtr pkt)
 
 
 bool
-RubyPort::PioPort::recvTiming(PacketPtr pkt)
+RubyPort::PioPort::recvTimingResp(PacketPtr pkt)
 {
     // In FS mode, ruby memory will receive pio responses from devices
     // and it must forward these responses back to the particular CPU.
     DPRINTF(RubyPort,  "Pio response for address %#x\n", pkt->getAddr());
-
-    assert(pkt->isResponse());
 
     // First we must retrieve the request port from the sender State
     RubyPort::SenderState *senderState =
@@ -159,24 +157,23 @@ RubyPort::PioPort::recvTiming(PacketPtr pkt)
     pkt->senderState = senderState->saved;
     delete senderState;
 
-    port->sendTiming(pkt);
+    port->sendTimingResp(pkt);
 
     return true;
 }
 
 bool
-RubyPort::M5Port::recvTiming(PacketPtr pkt)
+RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(RubyPort,
             "Timing access caught for address %#x\n", pkt->getAddr());
 
-    //dsm: based on SimpleTimingPort::recvTiming(pkt);
+    //dsm: based on SimpleTimingPort::recvTimingReq(pkt);
 
     // The received packets should only be M5 requests, which should never
     // get nacked.  There used to be code to hanldle nacks here, but
     // I'm pretty sure it didn't work correctly with the drain code,
     // so that would need to be fixed if we ever added it back.
-    assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
         warn("memInhibitAsserted???");

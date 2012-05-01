@@ -89,14 +89,14 @@ class Bus : public MemObject
         /**
          * When receiving a timing request, pass it to the bus.
          */
-        virtual bool recvTiming(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTiming(pkt); }
+        virtual bool recvTimingReq(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingReq(pkt); }
 
         /**
          * When receiving a timing snoop response, pass it to the bus.
          */
-        virtual bool recvTimingSnoop(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingSnoop(pkt); }
+        virtual bool recvTimingSnoopResp(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingSnoopResp(pkt); }
 
         /**
          * When receiving an atomic request, pass it to the bus.
@@ -163,14 +163,14 @@ class Bus : public MemObject
         /**
          * When receiving a timing response, pass it to the bus.
          */
-        virtual bool recvTiming(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTiming(pkt); }
+        virtual bool recvTimingResp(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingResp(pkt); }
 
         /**
          * When receiving a timing snoop request, pass it to the bus.
          */
-        virtual bool recvTimingSnoop(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingSnoop(pkt); }
+        virtual void recvTimingSnoopReq(PacketPtr pkt)
+        { pkt->setSrc(id); return bus->recvTimingSnoopReq(pkt); }
 
         /**
          * When receiving an atomic snoop request, pass it to the bus.
@@ -228,12 +228,20 @@ class Bus : public MemObject
     std::set<RequestPtr> outstandingReq;
 
     /** Function called by the port when the bus is recieving a Timing
-      transaction.*/
-    bool recvTiming(PacketPtr pkt);
+      request packet.*/
+    bool recvTimingReq(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a Timing
+      response packet.*/
+    bool recvTimingResp(PacketPtr pkt);
 
     /** Function called by the port when the bus is recieving a timing
-        snoop transaction.*/
-    bool recvTimingSnoop(PacketPtr pkt);
+        snoop request.*/
+    void recvTimingSnoopReq(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a timing
+        snoop response.*/
+    bool recvTimingSnoopResp(PacketPtr pkt);
 
     /**
      * Forward a timing packet to our snoopers, potentially excluding

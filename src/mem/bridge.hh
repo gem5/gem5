@@ -230,7 +230,7 @@ class Bridge : public MemObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingReq(PacketPtr pkt);
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
@@ -353,7 +353,7 @@ class Bridge : public MemObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */

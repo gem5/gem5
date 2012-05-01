@@ -146,13 +146,12 @@ class DmaPort : public MasterPort
     /** Port accesses a cache which requires snooping */
     bool recvSnoops;
 
-    virtual bool recvTiming(PacketPtr pkt);
+    virtual bool recvTimingResp(PacketPtr pkt);
 
-    virtual bool recvTimingSnoop(PacketPtr pkt)
+    virtual void recvTimingSnoopReq(PacketPtr pkt)
     {
         if (!recvSnoops)
             panic("%s was not expecting a snoop\n", name());
-        return true;
     }
 
     virtual Tick recvAtomicSnoop(PacketPtr pkt)

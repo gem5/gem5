@@ -148,7 +148,7 @@ class BaseCache : public MemObject
       protected:
 
         CacheMasterPort(const std::string &_name, BaseCache *_cache,
-                        PacketQueue &_queue) :
+                        MasterPacketQueue &_queue) :
             QueuedMasterPort(_name, _cache, _queue)
         { }
 
@@ -196,7 +196,7 @@ class BaseCache : public MemObject
                        const std::string &_label);
 
         /** A normal packet queue used to store responses. */
-        PacketQueue queue;
+        SlavePacketQueue queue;
 
         bool blocked;
 

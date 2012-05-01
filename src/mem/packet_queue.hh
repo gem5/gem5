@@ -86,9 +86,6 @@ class PacketQueue
     /** The manager which is used for the event queue */
     EventManager& em;
 
-    /** Label to use for print request packets label stack. */
-    const std::string label;
-
     /** This function attempts to send deferred packets.  Scheduled to
      * be called in the future via SendEvent. */
     void processSendEvent();
@@ -104,8 +101,8 @@ class PacketQueue
 
   protected:
 
-    /** The port used to send the packets. */
-    Port& port;
+    /** Label to use for print request packets label stack. */
+    const std::string label;
 
     /** Remember whether we're awaiting a retry from the bus. */
     bool waitingOnRetry;
@@ -135,6 +132,11 @@ class PacketQueue
     void trySendTiming();
 
     /**
+     *
+     */
+    virtual bool sendTiming(PacketPtr pkt, bool send_as_snoop) = 0;
+
+    /**
      * Based on the transmit list, or the provided time, schedule a
      * send event if there are packets to send. If we are idle and
      * asked to drain then do so.
@@ -152,31 +154,28 @@ class PacketQueue
      */
     virtual void recvRangeChange() { }
 
-  public:
-
     /**
-     * Create a packet queue, linked to an event manager, a port used
-     * to send the packets, and potentially give it a label that will
-     * be used for functional print request packets.
+     * Create a packet queue, linked to an event manager, and a label
+     * that will be used for functional print request packets.
      *
      * @param _em Event manager used for scheduling this queue
-     * @param _port Port used to send the packets
      * @param _label Label to push on the label stack for print request packets
      */
-    PacketQueue(EventManager& _em, Port& _port,
-                const std::string _label = "PacketQueue");
+    PacketQueue(EventManager& _em, const std::string& _label);
 
     /**
      * Virtual desctructor since the class may be used as a base class.
      */
     virtual ~PacketQueue();
 
+  public:
+
     /**
-     * Provide a name to simplify debugging. Base it on the port.
+     * Provide a name to simplify debugging.
      *
      * @return A complete name, appended to module and port
      */
-    const std::string name() const { return port.name() + "-queue"; }
+    virtual const std::string name() const = 0;
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
@@ -215,6 +214,65 @@ class PacketQueue
      * @return A number indicating how many times process will be called
      */
     unsigned int drain(Event *de);
+};
+
+class MasterPacketQueue : public PacketQueue
+{
+
+  protected:
+
+    MasterPort& masterPort;
+
+  public:
+
+    /**
+     * Create a master packet queue, linked to an event manager, a
+     * master port, and a label that will be used for functional print
+     * request packets.
+     *
+     * @param _em Event manager used for scheduling this queue
+     * @param _masterPort Master port used to send the packets
+     * @param _label Label to push on the label stack for print request packets
+     */
+    MasterPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                      const std::string _label = "MasterPacketQueue");
+
+    virtual ~MasterPacketQueue() { }
+
+    const std::string name() const
+    { return masterPort.name() + "-" + label; }
+
+    bool sendTiming(PacketPtr pkt, bool send_as_snoop);
+};
+
+class SlavePacketQueue : public PacketQueue
+{
+
+  protected:
+
+    SlavePort& slavePort;
+
+  public:
+
+    /**
+     * Create a slave packet queue, linked to an event manager, a
+     * slave port, and a label that will be used for functional print
+     * request packets.
+     *
+     * @param _em Event manager used for scheduling this queue
+     * @param _slavePort Slave port used to send the packets
+     * @param _label Label to push on the label stack for print request packets
+     */
+    SlavePacketQueue(EventManager& _em, SlavePort& _slavePort,
+                     const std::string _label = "SlavePacketQueue");
+
+    virtual ~SlavePacketQueue() { }
+
+    const std::string name() const
+    { return slavePort.name() + "-" + label; }
+
+    bool sendTiming(PacketPtr pkt, bool send_as_snoop);
+
 };
 
 #endif // __MEM_PACKET_QUEUE_HH__

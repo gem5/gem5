@@ -621,7 +621,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         fetchedCacheLines++;
 
         // Access the cache.
-        if (!cpu->getInstPort().sendTiming(data_pkt)) {
+        if (!cpu->getInstPort().sendTimingReq(data_pkt)) {
             assert(retryPkt == NULL);
             assert(retryTid == InvalidThreadID);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
@@ -1356,7 +1356,7 @@ DefaultFetch<Impl>::recvRetry()
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
 
-        if (cpu->getInstPort().sendTiming(retryPkt)) {
+        if (cpu->getInstPort().sendTimingReq(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;
             retryPkt = NULL;
             retryTid = InvalidThreadID;

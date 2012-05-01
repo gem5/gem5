@@ -62,7 +62,7 @@ class QueuedSlavePort : public SlavePort
   protected:
 
     /** Packet queue used to store outgoing requests and responses. */
-    PacketQueue &queue;
+    SlavePacketQueue &queue;
 
      /** This function is notification that the device should attempt to send a
       * packet again. */
@@ -78,7 +78,7 @@ class QueuedSlavePort : public SlavePort
      * QueuePort constructor.
      */
     QueuedSlavePort(const std::string& name, MemObject* owner,
-                    PacketQueue &queue) :
+                    SlavePacketQueue &queue) :
         SlavePort(name, owner), queue(queue)
     { }
 
@@ -103,7 +103,7 @@ class QueuedMasterPort : public MasterPort
   protected:
 
     /** Packet queue used to store outgoing requests and responses. */
-    PacketQueue &queue;
+    MasterPacketQueue &queue;
 
      /** This function is notification that the device should attempt to send a
       * packet again. */
@@ -119,7 +119,7 @@ class QueuedMasterPort : public MasterPort
      * QueuePort constructor.
      */
     QueuedMasterPort(const std::string& name, MemObject* owner,
-                    PacketQueue &queue) :
+                     MasterPacketQueue &queue) :
         MasterPort(name, owner), queue(queue)
     { }
 

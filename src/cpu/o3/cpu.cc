@@ -87,9 +87,8 @@ BaseO3CPU::regStats()
 
 template<class Impl>
 bool
-FullO3CPU<Impl>::IcachePort::recvTiming(PacketPtr pkt)
+FullO3CPU<Impl>::IcachePort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     DPRINTF(O3CPU, "Fetch unit received timing\n");
     // We shouldn't ever get a block in ownership state
     assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
@@ -107,18 +106,16 @@ FullO3CPU<Impl>::IcachePort::recvRetry()
 
 template <class Impl>
 bool
-FullO3CPU<Impl>::DcachePort::recvTiming(PacketPtr pkt)
+FullO3CPU<Impl>::DcachePort::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
-    return lsq->recvTiming(pkt);
+    return lsq->recvTimingResp(pkt);
 }
 
 template <class Impl>
-bool
-FullO3CPU<Impl>::DcachePort::recvTimingSnoop(PacketPtr pkt)
+void
+FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
-    return lsq->recvTimingSnoop(pkt);
+    lsq->recvTimingSnoopReq(pkt);
 }
 
 template <class Impl>

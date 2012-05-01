@@ -114,7 +114,7 @@ Check::initiatePrefetch()
     pkt->senderState =
         new SenderState(m_address, req->getSize(), pkt->senderState);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "successfully initiated prefetch.\n");
     } else {
         // If the packet did not issue, must delete
@@ -154,7 +154,7 @@ Check::initiateFlush()
     pkt->senderState =
         new SenderState(m_address, req->getSize(), pkt->senderState);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating Flush - successful\n");
     }
 }
@@ -201,7 +201,7 @@ Check::initiateAction()
     pkt->senderState =
         new SenderState(writeAddr, req->getSize(), pkt->senderState);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating action - successful\n");
         DPRINTF(RubyTest, "status before action update: %s\n",
                 (TesterStatus_to_string(m_status)).c_str());
@@ -253,7 +253,7 @@ Check::initiateCheck()
     pkt->senderState =
         new SenderState(m_address, req->getSize(), pkt->senderState);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating check - successful\n");
         DPRINTF(RubyTest, "status before check update: %s\n",
                 TesterStatus_to_string(m_status).c_str());

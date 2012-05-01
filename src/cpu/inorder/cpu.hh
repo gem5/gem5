@@ -170,13 +170,13 @@ class InOrderCPU : public BaseCPU
       protected:
 
         /** Timing version of receive */
-        bool recvTiming(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt);
 
         /** Handles doing a retry of a failed timing request. */
         void recvRetry();
 
         /** Ignoring snoops for now. */
-        bool recvTimingSnoop(PacketPtr pkt) { return true; }
+        void recvTimingSnoopReq(PacketPtr pkt) { }
     };
 
     /** Define TickEvent for the CPU */

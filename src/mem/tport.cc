@@ -53,7 +53,6 @@ SimpleTimingPort::SimpleTimingPort(const std::string& _name,
 void
 SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     if (!queue.checkFunctional(pkt)) {
         // do an atomic access and throw away the returned latency
         recvAtomic(pkt);
@@ -61,11 +60,8 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 }
 
 bool
-SimpleTimingPort::recvTiming(PacketPtr pkt)
+SimpleTimingPort::recvTimingReq(PacketPtr pkt)
 {
-    // the port is a slave and should hence only get timing requests
-    assert(pkt->isRequest());
-
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet

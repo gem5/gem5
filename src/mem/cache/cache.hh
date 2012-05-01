@@ -90,9 +90,9 @@ class Cache : public BaseCache
 
       protected:
 
-        virtual bool recvTimingSnoop(PacketPtr pkt);
+        virtual bool recvTimingSnoopResp(PacketPtr pkt);
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingReq(PacketPtr pkt);
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
@@ -116,7 +116,7 @@ class Cache : public BaseCache
      * current MSHR status. This queue has a pointer to our specific
      * cache implementation and is used by the MemSidePort.
      */
-    class MemSidePacketQueue : public PacketQueue
+    class MemSidePacketQueue : public MasterPacketQueue
     {
 
       protected:
@@ -125,9 +125,9 @@ class Cache : public BaseCache
 
       public:
 
-        MemSidePacketQueue(Cache<TagStore> &cache, Port &port,
+        MemSidePacketQueue(Cache<TagStore> &cache, MasterPort &port,
                            const std::string &label) :
-            PacketQueue(cache, port, label), cache(cache) { }
+            MasterPacketQueue(cache, port, label), cache(cache) { }
 
         /**
          * Override the normal sendDeferredPacket and do not only
@@ -154,9 +154,9 @@ class Cache : public BaseCache
 
       protected:
 
-        virtual bool recvTimingSnoop(PacketPtr pkt);
+        virtual void recvTimingSnoopReq(PacketPtr pkt);
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual Tick recvAtomicSnoop(PacketPtr pkt);
 

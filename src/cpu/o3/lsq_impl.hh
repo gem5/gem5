@@ -319,9 +319,8 @@ LSQ<Impl>::recvRetry()
 
 template <class Impl>
 bool
-LSQ<Impl>::recvTiming(PacketPtr pkt)
+LSQ<Impl>::recvTimingResp(PacketPtr pkt)
 {
-    assert(pkt->isResponse());
     if (pkt->isError())
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
@@ -330,10 +329,9 @@ LSQ<Impl>::recvTiming(PacketPtr pkt)
 }
 
 template <class Impl>
-bool
-LSQ<Impl>::recvTimingSnoop(PacketPtr pkt)
+void
+LSQ<Impl>::recvTimingSnoopReq(PacketPtr pkt)
 {
-    assert(pkt->isRequest());
     DPRINTF(LSQ, "received pkt for addr:%#x %s\n", pkt->getAddr(),
             pkt->cmdString());
 
@@ -345,9 +343,6 @@ LSQ<Impl>::recvTimingSnoop(PacketPtr pkt)
             thread[tid].checkSnoop(pkt);
         }
     }
-
-    // to provide stronger consistency model
-    return true;
 }
 
 template<class Impl>

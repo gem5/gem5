@@ -133,7 +133,7 @@ class BaseCPU : public MemObject
 
       protected:
 
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvRetry();
 

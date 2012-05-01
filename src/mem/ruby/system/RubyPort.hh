@@ -62,7 +62,7 @@ class RubyPort : public MemObject
     {
       private:
 
-        PacketQueue queue;
+        SlavePacketQueue queue;
         RubyPort *ruby_port;
         RubySystem* ruby_system;
         bool _onRetryList;
@@ -83,7 +83,7 @@ class RubyPort : public MemObject
         { _onRetryList = newVal; }
 
       protected:
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingReq(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
         virtual void recvFunctional(PacketPtr pkt);
         virtual AddrRangeList getAddrRanges();
@@ -100,7 +100,7 @@ class RubyPort : public MemObject
     {
       private:
 
-        PacketQueue queue;
+        MasterPacketQueue queue;
 
         RubyPort *ruby_port;
 
@@ -109,7 +109,7 @@ class RubyPort : public MemObject
         bool sendNextCycle(PacketPtr pkt);
 
       protected:
-        virtual bool recvTiming(PacketPtr pkt);
+        virtual bool recvTimingResp(PacketPtr pkt);
     };
 
     friend class PioPort;

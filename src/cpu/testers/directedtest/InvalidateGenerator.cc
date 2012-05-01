@@ -80,7 +80,7 @@ InvalidateGenerator::initiate()
     *dummyData = 0;
     pkt->dataDynamic(dummyData);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(DirectedTest, "initiating request - successful\n");
         if (m_status == InvalidateGeneratorStatus_Load_Waiting) {
             m_status = InvalidateGeneratorStatus_Load_Pending;

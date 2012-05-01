@@ -70,7 +70,7 @@ SeriesRequestGenerator::initiate()
     *dummyData = 0;
     pkt->dataDynamic(dummyData);
 
-    if (port->sendTiming(pkt)) {
+    if (port->sendTimingReq(pkt)) {
         DPRINTF(DirectedTest, "initiating request - successful\n");
         m_status = SeriesRequestGeneratorStatus_Request_Pending;
         return true;

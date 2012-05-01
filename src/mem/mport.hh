@@ -82,12 +82,12 @@ class MessageMasterPort : public QueuedMasterPort
     virtual ~MessageMasterPort()
     {}
 
-    bool recvTiming(PacketPtr pkt) { recvResponse(pkt); return true; }
+    bool recvTimingResp(PacketPtr pkt) { recvResponse(pkt); return true; }
 
   protected:
 
     /** A packet queue for outgoing packets. */
-    PacketQueue queue;
+    MasterPacketQueue queue;
 
     // Accept and ignore responses.
     virtual Tick recvResponse(PacketPtr pkt)

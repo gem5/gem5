@@ -137,11 +137,8 @@ Bridge::BridgeMasterPort::reqQueueFull()
 }
 
 bool
-Bridge::BridgeMasterPort::recvTiming(PacketPtr pkt)
+Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 {
-    // should only see responses on the master side
-    assert(pkt->isResponse());
-
     // all checks are done when the request is accepted on the slave
     // side, so we are guaranteed to have space for the response
     DPRINTF(BusBridge, "recvTiming: response %s addr 0x%x\n",
@@ -155,12 +152,8 @@ Bridge::BridgeMasterPort::recvTiming(PacketPtr pkt)
 }
 
 bool
-Bridge::BridgeSlavePort::recvTiming(PacketPtr pkt)
+Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
 {
-    // should only see requests on the slave side
-    assert(pkt->isRequest());
-
-
     DPRINTF(BusBridge, "recvTiming: request %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
@@ -318,7 +311,7 @@ Bridge::BridgeMasterPort::trySend()
     if (!buf->expectResponse)
         pkt->senderState = NULL;
 
-    if (sendTiming(pkt)) {
+    if (sendTimingReq(pkt)) {
         // send successful
         requestQueue.pop_front();
         // we no longer own packet, so it's not safe to look at it
@@ -365,7 +358,7 @@ Bridge::BridgeSlavePort::trySend()
     // no need to worry about the sender state since we are not
     // modifying it
 
-    if (sendTiming(pkt)) {
+    if (sendTimingResp(pkt)) {
         DPRINTF(BusBridge, "  successful\n");
         // send successful
         responseQueue.pop_front();

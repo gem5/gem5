@@ -91,7 +91,7 @@ RubyDirectedTester::getMasterPort(const std::string &if_name, int idx)
 }
 
 bool
-RubyDirectedTester::CpuPort::recvTiming(PacketPtr pkt)
+RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
 {
     tester->hitCallback(id, pkt->getAddr());
     
