@@ -178,4 +178,4 @@ def addFSOptions(parser):
 
     # Memory Size Options
     parser.add_option("--mem-size", action="store", type="string", default=None,
-                      help="Path to the disk image to use.")
+                      help="Specify the physical memory size (single memory)")
