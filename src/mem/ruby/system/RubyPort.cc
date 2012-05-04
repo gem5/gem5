@@ -698,7 +698,7 @@ RubyPort::ruby_eviction_callback(const Address& address)
         if ((*p)->getMasterPort().isSnooping()) {
             Packet *pkt = new Packet(&req, MemCmd::InvalidationReq);
             // send as a snoop request
-            (*p)->sendNextCycle(pkt, true);
+            (*p)->sendTimingSnoopReq(pkt);
         }
     }
 }
