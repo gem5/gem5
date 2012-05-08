@@ -217,9 +217,12 @@ Bus::recvTimingReq(PacketPtr pkt)
     Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
-    // the packet is a memory-mapped request and should be
-    // broadcasted to our snoopers but the source
-    forwardTiming(pkt, pkt->getSrc());
+    // uncacheable requests need never be snooped
+    if (!pkt->req->isUncacheable()) {
+        // the packet is a memory-mapped request and should be
+        // broadcasted to our snoopers but the source
+        forwardTiming(pkt, pkt->getSrc());
+    }
 
     // remember if we add an outstanding req so we can undo it if
     // necessary, if the packet needs a response, we should add it
@@ -543,10 +546,17 @@ Bus::recvAtomic(PacketPtr pkt)
             slavePorts[pkt->getSrc()]->name(), pkt->getAddr(),
             pkt->cmdString());
 
-    // forward to all snoopers but the source
-    std::pair<MemCmd, Tick> snoop_result = forwardAtomic(pkt, pkt->getSrc());
-    MemCmd snoop_response_cmd = snoop_result.first;
-    Tick snoop_response_latency = snoop_result.second;
+    MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
+    Tick snoop_response_latency = 0;
+
+    // uncacheable requests need never be snooped
+    if (!pkt->req->isUncacheable()) {
+        // forward to all snoopers but the source
+        std::pair<MemCmd, Tick> snoop_result =
+            forwardAtomic(pkt, pkt->getSrc());
+        snoop_response_cmd = snoop_result.first;
+        snoop_response_latency = snoop_result.second;
+    }
 
     // even if we had a snoop response, we must continue and also
     // perform the actual request at the destination
@@ -643,8 +653,11 @@ Bus::recvFunctional(PacketPtr pkt)
                 pkt->cmdString());
     }
 
-    // forward to all snoopers but the source
-    forwardFunctional(pkt, pkt->getSrc());
+    // uncacheable requests need never be snooped
+    if (!pkt->req->isUncacheable()) {
+        // forward to all snoopers but the source
+        forwardFunctional(pkt, pkt->getSrc());
+    }
 
     // there is no need to continue if the snooping has found what we
     // were looking for and the packet is already a response
