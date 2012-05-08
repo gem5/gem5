@@ -178,7 +178,7 @@ termcap = get_termcap(GetOption('use_colors'))
 #
 ########################################################################
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
-                 'PYTHONPATH', 'RANLIB' ])
+                 'PYTHONPATH', 'RANLIB', 'SWIG' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
@@ -348,6 +348,7 @@ global_vars = Variables(global_vars_file, args=ARGUMENTS)
 global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
+    ('SWIG', 'SWIG tool', environ.get('SWIG', main['SWIG'])),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
