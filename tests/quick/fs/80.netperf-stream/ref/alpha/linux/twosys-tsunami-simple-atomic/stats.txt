@@ -4,11 +4,11 @@ sim_seconds                                  0.200001                       # Nu
 sim_ticks                                200000789468                       # Number of ticks simulated
 final_tick                               4300236018046                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                              238054601                       # Simulator instruction rate (inst/s)
-host_op_rate                                238047910                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                           174152914765                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 476544                       # Number of bytes of host memory used
-host_seconds                                     1.15                       # Real time elapsed on the host
+host_inst_rate                              158529438                       # Simulator instruction rate (inst/s)
+host_op_rate                                158527026                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                           115976612682                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 480288                       # Number of bytes of host memory used
+host_seconds                                     1.72                       # Real time elapsed on the host
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_ops                                     273374833                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read                   19104208                       # Number of bytes read from this memory
@@ -395,10 +395,10 @@ sim_seconds                                  0.000001                       # Nu
 sim_ticks                                      785978                       # Number of ticks simulated
 final_tick                               4300236804024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                           826237832724                       # Simulator instruction rate (inst/s)
-host_op_rate                             785322914063                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2155916043                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 476544                       # Number of bytes of host memory used
+host_inst_rate                           518678770918                       # Simulator instruction rate (inst/s)
+host_op_rate                             495238879650                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1368243673                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 480288                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_ops                                     273374833                       # Number of ops (including micro ops) simulated
@@ -483,10 +483,10 @@ testsys.cpu.kern.mode_switch::idle                  0                       # nu
 testsys.cpu.kern.mode_good::kernel                  0                      
 testsys.cpu.kern.mode_good::user                    0                      
 testsys.cpu.kern.mode_good::idle                    0                      
-testsys.cpu.kern.mode_switch_good::kernel     no_value                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::user      no_value                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::idle      no_value                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::total     no_value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::user           nan                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::idle           nan                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::total          nan                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_ticks::kernel                 0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
@@ -496,30 +496,30 @@ testsys.tsunami.ethernet.descDMAWrites              0                       # Nu
 testsys.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
 testsys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
 testsys.tsunami.ethernet.postedSwi                  0                       # number of software interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedSwi        no_value                       # average number of Swi's coalesced into each post
+testsys.tsunami.ethernet.coalescedSwi             nan                       # average number of Swi's coalesced into each post
 testsys.tsunami.ethernet.totalSwi                   0                       # total number of Swi written to ISR
 testsys.tsunami.ethernet.postedRxIdle               0                       # number of rxIdle interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedRxIdle     no_value                       # average number of RxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxIdle          nan                       # average number of RxIdle's coalesced into each post
 testsys.tsunami.ethernet.totalRxIdle                0                       # total number of RxIdle written to ISR
 testsys.tsunami.ethernet.postedRxOk                 0                       # number of RxOk interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedRxOk       no_value                       # average number of RxOk's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOk            nan                       # average number of RxOk's coalesced into each post
 testsys.tsunami.ethernet.totalRxOk                  0                       # total number of RxOk written to ISR
 testsys.tsunami.ethernet.postedRxDesc               0                       # number of RxDesc interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedRxDesc     no_value                       # average number of RxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxDesc          nan                       # average number of RxDesc's coalesced into each post
 testsys.tsunami.ethernet.totalRxDesc                0                       # total number of RxDesc written to ISR
 testsys.tsunami.ethernet.postedTxOk                 0                       # number of TxOk interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedTxOk       no_value                       # average number of TxOk's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxOk            nan                       # average number of TxOk's coalesced into each post
 testsys.tsunami.ethernet.totalTxOk                  0                       # total number of TxOk written to ISR
 testsys.tsunami.ethernet.postedTxIdle               0                       # number of TxIdle interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedTxIdle     no_value                       # average number of TxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxIdle          nan                       # average number of TxIdle's coalesced into each post
 testsys.tsunami.ethernet.totalTxIdle                0                       # total number of TxIdle written to ISR
 testsys.tsunami.ethernet.postedTxDesc               0                       # number of TxDesc interrupts posted to CPU
-testsys.tsunami.ethernet.coalescedTxDesc     no_value                       # average number of TxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxDesc          nan                       # average number of TxDesc's coalesced into each post
 testsys.tsunami.ethernet.totalTxDesc                0                       # total number of TxDesc written to ISR
 testsys.tsunami.ethernet.postedRxOrn                0                       # number of RxOrn posted to CPU
-testsys.tsunami.ethernet.coalescedRxOrn      no_value                       # average number of RxOrn's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOrn           nan                       # average number of RxOrn's coalesced into each post
 testsys.tsunami.ethernet.totalRxOrn                 0                       # total number of RxOrn written to ISR
-testsys.tsunami.ethernet.coalescedTotal      no_value                       # average number of interrupts coalesced into each post
+testsys.tsunami.ethernet.coalescedTotal           nan                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.postedInterrupts            0                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
 drivesys.physmem.bytes_read                         0                       # Number of bytes read from this memory
@@ -603,10 +603,10 @@ drivesys.cpu.kern.mode_switch::idle                 0                       # nu
 drivesys.cpu.kern.mode_good::kernel                 0                      
 drivesys.cpu.kern.mode_good::user                   0                      
 drivesys.cpu.kern.mode_good::idle                   0                      
-drivesys.cpu.kern.mode_switch_good::kernel     no_value                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::user     no_value                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::idle     no_value                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::total     no_value                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::user          nan                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::idle          nan                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::total          nan                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_ticks::kernel                0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::user                  0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::idle                  0                       # number of ticks spent at the given mode
@@ -616,30 +616,30 @@ drivesys.tsunami.ethernet.descDMAWrites             0                       # Nu
 drivesys.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
 drivesys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
 drivesys.tsunami.ethernet.postedSwi                 0                       # number of software interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedSwi       no_value                       # average number of Swi's coalesced into each post
+drivesys.tsunami.ethernet.coalescedSwi            nan                       # average number of Swi's coalesced into each post
 drivesys.tsunami.ethernet.totalSwi                  0                       # total number of Swi written to ISR
 drivesys.tsunami.ethernet.postedRxIdle              0                       # number of rxIdle interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedRxIdle     no_value                       # average number of RxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxIdle          nan                       # average number of RxIdle's coalesced into each post
 drivesys.tsunami.ethernet.totalRxIdle               0                       # total number of RxIdle written to ISR
 drivesys.tsunami.ethernet.postedRxOk                0                       # number of RxOk interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedRxOk      no_value                       # average number of RxOk's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOk           nan                       # average number of RxOk's coalesced into each post
 drivesys.tsunami.ethernet.totalRxOk                 0                       # total number of RxOk written to ISR
 drivesys.tsunami.ethernet.postedRxDesc              0                       # number of RxDesc interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedRxDesc     no_value                       # average number of RxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxDesc          nan                       # average number of RxDesc's coalesced into each post
 drivesys.tsunami.ethernet.totalRxDesc               0                       # total number of RxDesc written to ISR
 drivesys.tsunami.ethernet.postedTxOk                0                       # number of TxOk interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedTxOk      no_value                       # average number of TxOk's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxOk           nan                       # average number of TxOk's coalesced into each post
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
 drivesys.tsunami.ethernet.postedTxIdle              0                       # number of TxIdle interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedTxIdle     no_value                       # average number of TxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxIdle          nan                       # average number of TxIdle's coalesced into each post
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
-drivesys.tsunami.ethernet.coalescedTxDesc     no_value                       # average number of TxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxDesc          nan                       # average number of TxDesc's coalesced into each post
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.postedRxOrn               0                       # number of RxOrn posted to CPU
-drivesys.tsunami.ethernet.coalescedRxOrn     no_value                       # average number of RxOrn's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOrn          nan                       # average number of RxOrn's coalesced into each post
 drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
-drivesys.tsunami.ethernet.coalescedTotal     no_value                       # average number of interrupts coalesced into each post
+drivesys.tsunami.ethernet.coalescedTotal          nan                       # average number of interrupts coalesced into each post
 drivesys.tsunami.ethernet.postedInterrupts            0                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
 

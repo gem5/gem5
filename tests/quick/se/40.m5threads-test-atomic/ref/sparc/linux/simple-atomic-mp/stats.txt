@@ -4,11 +4,11 @@ sim_seconds                                  0.000088                       # Nu
 sim_ticks                                    87713500                       # Number of ticks simulated
 final_tick                                   87713500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1664146                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1664073                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              215483439                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1139232                       # Number of bytes of host memory used
-host_seconds                                     0.41                       # Real time elapsed on the host
+host_inst_rate                                 523852                       # Simulator instruction rate (inst/s)
+host_op_rate                                   523839                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               67834135                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1149444                       # Number of bytes of host memory used
+host_seconds                                     1.29                       # Real time elapsed on the host
 sim_insts                                      677340                       # Number of instructions simulated
 sim_ops                                        677340                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                       35776                       # Number of bytes read from this memory
@@ -77,8 +77,8 @@ system.cpu0.icache.blocked_cycles::no_mshrs            0                       #
 system.cpu0.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu0.icache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu0.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu0.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu0.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
@@ -130,8 +130,8 @@ system.cpu0.dcache.blocked_cycles::no_mshrs            0                       #
 system.cpu0.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu0.dcache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu0.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu0.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu0.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu0.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.dcache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.dcache.writebacks::writebacks            6                       # number of writebacks
@@ -193,8 +193,8 @@ system.cpu1.icache.blocked_cycles::no_mshrs            0                       #
 system.cpu1.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu1.icache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu1.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu1.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu1.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu1.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
@@ -246,8 +246,8 @@ system.cpu1.dcache.blocked_cycles::no_mshrs            0                       #
 system.cpu1.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu1.dcache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu1.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu1.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu1.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu1.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.dcache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.dcache.writebacks::writebacks            1                       # number of writebacks
@@ -309,8 +309,8 @@ system.cpu2.icache.blocked_cycles::no_mshrs            0                       #
 system.cpu2.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu2.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu2.icache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu2.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu2.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu2.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu2.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu2.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu2.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
@@ -362,8 +362,8 @@ system.cpu2.dcache.blocked_cycles::no_mshrs            0                       #
 system.cpu2.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu2.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu2.dcache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu2.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu2.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu2.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu2.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu2.dcache.fast_writes                      0                       # number of fast writes performed
 system.cpu2.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.dcache.writebacks::writebacks            1                       # number of writebacks
@@ -425,8 +425,8 @@ system.cpu3.icache.blocked_cycles::no_mshrs            0                       #
 system.cpu3.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu3.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu3.icache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu3.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu3.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu3.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu3.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu3.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu3.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
@@ -478,8 +478,8 @@ system.cpu3.dcache.blocked_cycles::no_mshrs            0                       #
 system.cpu3.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu3.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu3.dcache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu3.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu3.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu3.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu3.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu3.dcache.fast_writes                      0                       # number of fast writes performed
 system.cpu3.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.dcache.writebacks::writebacks            1                       # number of writebacks
@@ -653,8 +653,8 @@ system.l2c.blocked_cycles::no_mshrs                 0                       # nu
 system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
 system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
-system.l2c.avg_blocked_cycles::no_mshrs      no_value                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.l2c.fast_writes                              0                       # number of fast writes performed
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate

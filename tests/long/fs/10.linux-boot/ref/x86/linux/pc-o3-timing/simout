@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 22 2012 22:41:43
-gem5 started Apr 22 2012 23:27:12
-gem5 executing on burrito
+gem5 compiled May  8 2012 15:05:30
+gem5 started May  8 2012 16:05:33
+gem5 executing on piton
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing -re tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing
 warning: add_child('terminal'): child 'terminal' already has parent
 Global frequency set at 1000000000000 ticks per second

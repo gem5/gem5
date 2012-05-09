@@ -4,11 +4,11 @@ sim_seconds                                  0.000020                       # Nu
 sim_ticks                                    19775000                       # Number of ticks simulated
 final_tick                                   19775000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 108846                       # Simulator instruction rate (inst/s)
-host_op_rate                                   108810                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              369151681                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 210376                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                                  83973                       # Simulator instruction rate (inst/s)
+host_op_rate                                    83956                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              284866754                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 214812                       # Number of bytes of host memory used
+host_seconds                                     0.07                       # Real time elapsed on the host
 sim_insts                                        5827                       # Number of instructions simulated
 sim_ops                                          5827                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                       29120                       # Number of bytes read from this memory
@@ -42,30 +42,6 @@ system.cpu.workload.num_syscalls                    8                       # Nu
 system.cpu.numCycles                            39551                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.contextSwitches                          1                       # Number of context switches
-system.cpu.threadCycles                          9142                       # Total Number of Cycles A Thread Was Active in CPU (Per-Thread)
-system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode
-system.cpu.timesIdled                             404                       # Number of times that the entire CPU went into an idle state and unscheduled itself
-system.cpu.idleCycles                           34183                       # Number of cycles cpu's stages were not processed
-system.cpu.runCycles                             5368                       # Number of cycles cpu stages are processed.
-system.cpu.activity                         13.572350                       # Percentage of cycles cpu is active
-system.cpu.comLoads                              1164                       # Number of Load instructions committed
-system.cpu.comStores                              925                       # Number of Store instructions committed
-system.cpu.comBranches                            916                       # Number of Branches instructions committed
-system.cpu.comNops                                657                       # Number of Nop instructions committed
-system.cpu.comNonSpec                              10                       # Number of Non-Speculative instructions committed
-system.cpu.comInts                               2155                       # Number of Integer instructions committed
-system.cpu.comFloats                                0                       # Number of Floating Point instructions committed
-system.cpu.committedInsts                        5827                       # Number of Instructions committed (Per-Thread)
-system.cpu.committedOps                          5827                       # Number of Ops committed (Per-Thread)
-system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions committed (Per-Thread)
-system.cpu.committedInsts_total                  5827                       # Number of Instructions committed (Total)
-system.cpu.cpi                               6.787541                       # CPI: Cycles Per Instruction (Per-Thread)
-system.cpu.smt_cpi                           no_value                       # CPI: Total SMT-CPI
-system.cpu.cpi_total                         6.787541                       # CPI: Total CPI of All Threads
-system.cpu.ipc                               0.147329                       # IPC: Instructions Per Cycle (Per-Thread)
-system.cpu.smt_ipc                           no_value                       # IPC: Total SMT-IPC
-system.cpu.ipc_total                         0.147329                       # IPC: Total IPC of All Threads
 system.cpu.branch_predictor.lookups              1152                       # Number of BP lookups
 system.cpu.branch_predictor.condPredicted          851                       # Number of conditional branches predicted
 system.cpu.branch_predictor.condIncorrect          605                       # Number of conditional branches incorrect
@@ -92,6 +68,30 @@ system.cpu.execution_unit.mispredictPct     65.065502                       # Pe
 system.cpu.execution_unit.executions             3155                       # Number of Instructions Executed.
 system.cpu.mult_div_unit.multiplies                 3                       # Number of Multipy Operations Executed
 system.cpu.mult_div_unit.divides                    1                       # Number of Divide Operations Executed
+system.cpu.contextSwitches                          1                       # Number of context switches
+system.cpu.threadCycles                          9142                       # Total Number of Cycles A Thread Was Active in CPU (Per-Thread)
+system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode
+system.cpu.timesIdled                             404                       # Number of times that the entire CPU went into an idle state and unscheduled itself
+system.cpu.idleCycles                           34183                       # Number of cycles cpu's stages were not processed
+system.cpu.runCycles                             5368                       # Number of cycles cpu stages are processed.
+system.cpu.activity                         13.572350                       # Percentage of cycles cpu is active
+system.cpu.comLoads                              1164                       # Number of Load instructions committed
+system.cpu.comStores                              925                       # Number of Store instructions committed
+system.cpu.comBranches                            916                       # Number of Branches instructions committed
+system.cpu.comNops                                657                       # Number of Nop instructions committed
+system.cpu.comNonSpec                              10                       # Number of Non-Speculative instructions committed
+system.cpu.comInts                               2155                       # Number of Integer instructions committed
+system.cpu.comFloats                                0                       # Number of Floating Point instructions committed
+system.cpu.committedInsts                        5827                       # Number of Instructions committed (Per-Thread)
+system.cpu.committedOps                          5827                       # Number of Ops committed (Per-Thread)
+system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions committed (Per-Thread)
+system.cpu.committedInsts_total                  5827                       # Number of Instructions committed (Total)
+system.cpu.cpi                               6.787541                       # CPI: Cycles Per Instruction (Per-Thread)
+system.cpu.smt_cpi                                nan                       # CPI: Total SMT-CPI
+system.cpu.cpi_total                         6.787541                       # CPI: Total CPI of All Threads
+system.cpu.ipc                               0.147329                       # IPC: Instructions Per Cycle (Per-Thread)
+system.cpu.smt_ipc                                nan                       # IPC: Total SMT-IPC
+system.cpu.ipc_total                         0.147329                       # IPC: Total IPC of All Threads
 system.cpu.stage0.idleCycles                    35911                       # Number of cycles 0 instructions are processed.
 system.cpu.stage0.runCycles                      3640                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage0.utilization                9.203307                       # Percentage of cycles stage was utilized (processing insts).
@@ -150,7 +150,7 @@ system.cpu.icache.blocked_cycles::no_mshrs            0                       # 
 system.cpu.icache.blocked_cycles::no_targets        29000                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_targets               1                       # number of cycles access was blocked
-system.cpu.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu.icache.avg_blocked_cycles::no_targets        29000                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
@@ -232,7 +232,7 @@ system.cpu.dcache.blocked_cycles::no_mshrs            0                       # 
 system.cpu.dcache.blocked_cycles::no_targets      1153500                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_targets              23                       # number of cycles access was blocked
-system.cpu.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu.dcache.avg_blocked_cycles::no_targets 50152.173913                       # average number of cycles each access was blocked
 system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
 system.cpu.dcache.cache_copies                      0                       # number of cache copies performed
@@ -337,8 +337,8 @@ system.cpu.l2cache.blocked_cycles::no_mshrs            0                       #
 system.cpu.l2cache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu.l2cache.blocked::no_mshrs                0                       # number of cycles access was blocked
 system.cpu.l2cache.blocked::no_targets              0                       # number of cycles access was blocked
-system.cpu.l2cache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu.l2cache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu.l2cache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.l2cache.fast_writes                      0                       # number of fast writes performed
 system.cpu.l2cache.cache_copies                     0                       # number of cache copies performed
 system.cpu.l2cache.ReadReq_mshr_misses::cpu.inst          317                       # number of ReadReq MSHR misses

@@ -4,11 +4,11 @@ sim_seconds                                  1.899401                       # Nu
 sim_ticks                                1899401490000                       # Number of ticks simulated
 final_tick                               1899401490000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 189434                       # Simulator instruction rate (inst/s)
-host_op_rate                                   189434                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6363739723                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 296196                       # Number of bytes of host memory used
-host_seconds                                   298.47                       # Real time elapsed on the host
+host_inst_rate                                  69911                       # Simulator instruction rate (inst/s)
+host_op_rate                                    69911                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2348556801                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 300512                       # Number of bytes of host memory used
+host_seconds                                   808.75                       # Real time elapsed on the host
 sim_insts                                    56540749                       # Number of instructions simulated
 sim_ops                                      56540749                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                    30421696                       # Number of bytes read from this memory
@@ -178,8 +178,8 @@ system.l2c.blocked_cycles::no_mshrs                 0                       # nu
 system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
 system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
-system.l2c.avg_blocked_cycles::no_mshrs      no_value                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.l2c.fast_writes                              0                       # number of fast writes performed
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.writebacks::writebacks              122679                       # number of writebacks
@@ -339,7 +339,7 @@ system.iocache.blocked_cycles::no_targets            0                       # n
 system.iocache.blocked::no_mshrs                10454                       # number of cycles access was blocked
 system.iocache.blocked::no_targets                  0                       # number of cycles access was blocked
 system.iocache.avg_blocked_cycles::no_mshrs  6179.172374                       # average number of cycles each access was blocked
-system.iocache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.iocache.fast_writes                          0                       # number of fast writes performed
 system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.writebacks::writebacks           41520                       # number of writebacks
@@ -691,30 +691,30 @@ system.tsunami.ethernet.descDMAWrites               0                       # Nu
 system.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
 system.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
 system.tsunami.ethernet.postedSwi                   0                       # number of software interrupts posted to CPU
-system.tsunami.ethernet.coalescedSwi         no_value                       # average number of Swi's coalesced into each post
+system.tsunami.ethernet.coalescedSwi              nan                       # average number of Swi's coalesced into each post
 system.tsunami.ethernet.totalSwi                    0                       # total number of Swi written to ISR
 system.tsunami.ethernet.postedRxIdle                0                       # number of rxIdle interrupts posted to CPU
-system.tsunami.ethernet.coalescedRxIdle      no_value                       # average number of RxIdle's coalesced into each post
+system.tsunami.ethernet.coalescedRxIdle           nan                       # average number of RxIdle's coalesced into each post
 system.tsunami.ethernet.totalRxIdle                 0                       # total number of RxIdle written to ISR
 system.tsunami.ethernet.postedRxOk                  0                       # number of RxOk interrupts posted to CPU
-system.tsunami.ethernet.coalescedRxOk        no_value                       # average number of RxOk's coalesced into each post
+system.tsunami.ethernet.coalescedRxOk             nan                       # average number of RxOk's coalesced into each post
 system.tsunami.ethernet.totalRxOk                   0                       # total number of RxOk written to ISR
 system.tsunami.ethernet.postedRxDesc                0                       # number of RxDesc interrupts posted to CPU
-system.tsunami.ethernet.coalescedRxDesc      no_value                       # average number of RxDesc's coalesced into each post
+system.tsunami.ethernet.coalescedRxDesc           nan                       # average number of RxDesc's coalesced into each post
 system.tsunami.ethernet.totalRxDesc                 0                       # total number of RxDesc written to ISR
 system.tsunami.ethernet.postedTxOk                  0                       # number of TxOk interrupts posted to CPU
-system.tsunami.ethernet.coalescedTxOk        no_value                       # average number of TxOk's coalesced into each post
+system.tsunami.ethernet.coalescedTxOk             nan                       # average number of TxOk's coalesced into each post
 system.tsunami.ethernet.totalTxOk                   0                       # total number of TxOk written to ISR
 system.tsunami.ethernet.postedTxIdle                0                       # number of TxIdle interrupts posted to CPU
-system.tsunami.ethernet.coalescedTxIdle      no_value                       # average number of TxIdle's coalesced into each post
+system.tsunami.ethernet.coalescedTxIdle           nan                       # average number of TxIdle's coalesced into each post
 system.tsunami.ethernet.totalTxIdle                 0                       # total number of TxIdle written to ISR
 system.tsunami.ethernet.postedTxDesc                0                       # number of TxDesc interrupts posted to CPU
-system.tsunami.ethernet.coalescedTxDesc      no_value                       # average number of TxDesc's coalesced into each post
+system.tsunami.ethernet.coalescedTxDesc           nan                       # average number of TxDesc's coalesced into each post
 system.tsunami.ethernet.totalTxDesc                 0                       # total number of TxDesc written to ISR
 system.tsunami.ethernet.postedRxOrn                 0                       # number of RxOrn posted to CPU
-system.tsunami.ethernet.coalescedRxOrn       no_value                       # average number of RxOrn's coalesced into each post
+system.tsunami.ethernet.coalescedRxOrn            nan                       # average number of RxOrn's coalesced into each post
 system.tsunami.ethernet.totalRxOrn                  0                       # total number of RxOrn written to ISR
-system.tsunami.ethernet.coalescedTotal       no_value                       # average number of interrupts coalesced into each post
+system.tsunami.ethernet.coalescedTotal            nan                       # average number of interrupts coalesced into each post
 system.tsunami.ethernet.postedInterrupts            0                       # number of posts to CPU
 system.tsunami.ethernet.droppedPackets              0                       # number of packets dropped
 system.cpu0.icache.replacements                923652                       # number of replacements
@@ -761,7 +761,7 @@ system.cpu0.icache.blocked_cycles::no_targets            0                      
 system.cpu0.icache.blocked::no_mshrs              111                       # number of cycles access was blocked
 system.cpu0.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu0.icache.avg_blocked_cycles::no_mshrs 10234.225225                       # average number of cycles each access was blocked
-system.cpu0.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.writebacks::writebacks          196                       # number of writebacks
@@ -1275,7 +1275,7 @@ system.cpu1.icache.blocked_cycles::no_targets            0                      
 system.cpu1.icache.blocked::no_mshrs               38                       # number of cycles access was blocked
 system.cpu1.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.icache.avg_blocked_cycles::no_mshrs  9513.157895                       # average number of cycles each access was blocked
-system.cpu1.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu1.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.writebacks::writebacks           52                       # number of writebacks
@@ -1379,7 +1379,7 @@ system.cpu1.dcache.blocked_cycles::no_targets            0                      
 system.cpu1.dcache.blocked::no_mshrs             8713                       # number of cycles access was blocked
 system.cpu1.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.dcache.avg_blocked_cycles::no_mshrs 13052.272237                       # average number of cycles each access was blocked
-system.cpu1.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu1.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.dcache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.dcache.writebacks::writebacks       116478                       # number of writebacks
@@ -1522,8 +1522,8 @@ system.cpu0.kern.mode_good::user                 1162
 system.cpu0.kern.mode_good::idle                    0                      
 system.cpu0.kern.mode_switch_good::kernel     0.162038                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good::idle      no_value                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good::total     no_value                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::idle           nan                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::total          nan                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_ticks::kernel      1897616401500     99.91%     99.91% # number of ticks spent at the given mode
 system.cpu0.kern.mode_ticks::user          1784230000      0.09%    100.00% # number of ticks spent at the given mode
 system.cpu0.kern.mode_ticks::idle                   0      0.00%    100.00% # number of ticks spent at the given mode

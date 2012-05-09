@@ -4,11 +4,11 @@ sim_seconds                                  1.116889                       # Nu
 sim_ticks                                  2233777512                       # Number of ticks simulated
 final_tick                                 2233777512                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                4520258                       # Simulator instruction rate (inst/s)
-host_op_rate                                  4522035                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                4531400                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 500812                       # Number of bytes of host memory used
-host_seconds                                   492.96                       # Real time elapsed on the host
+host_inst_rate                                1707325                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1707996                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                1711534                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 511008                       # Number of bytes of host memory used
+host_seconds                                  1305.13                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.hypervisor_desc.bytes_read               16792                       # Number of bytes read from this memory
@@ -19,15 +19,23 @@ system.hypervisor_desc.num_writes                   0                       # Nu
 system.hypervisor_desc.num_other                    0                       # Number of other requests responded to by this memory
 system.hypervisor_desc.bw_read                  15035                       # Total read bandwidth from this memory (bytes/s)
 system.hypervisor_desc.bw_total                 15035                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bytes_read                         1128688                       # Number of bytes read from this memory
-system.rom.bytes_inst_read                     432296                       # Number of instructions bytes read from this memory
-system.rom.bytes_written                            0                       # Number of bytes written to this memory
-system.rom.num_reads                           195123                       # Number of read requests responded to by this memory
-system.rom.num_writes                               0                       # Number of write requests responded to by this memory
-system.rom.num_other                                0                       # Number of other requests responded to by this memory
-system.rom.bw_read                            1010564                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_inst_read                        387054                       # Instruction read bandwidth from this memory (bytes/s)
-system.rom.bw_total                           1010564                       # Total bandwidth to/from this memory (bytes/s)
+system.nvram.bytes_read                           284                       # Number of bytes read from this memory
+system.nvram.bytes_inst_read                        0                       # Number of instructions bytes read from this memory
+system.nvram.bytes_written                         92                       # Number of bytes written to this memory
+system.nvram.num_reads                            284                       # Number of read requests responded to by this memory
+system.nvram.num_writes                            92                       # Number of write requests responded to by this memory
+system.nvram.num_other                              0                       # Number of other requests responded to by this memory
+system.nvram.bw_read                              254                       # Total read bandwidth from this memory (bytes/s)
+system.nvram.bw_write                              82                       # Write bandwidth from this memory (bytes/s)
+system.nvram.bw_total                             337                       # Total bandwidth to/from this memory (bytes/s)
+system.partition_desc.bytes_read                 4846                       # Number of bytes read from this memory
+system.partition_desc.bytes_inst_read               0                       # Number of instructions bytes read from this memory
+system.partition_desc.bytes_written                 0                       # Number of bytes written to this memory
+system.partition_desc.num_reads                   608                       # Number of read requests responded to by this memory
+system.partition_desc.num_writes                    0                       # Number of write requests responded to by this memory
+system.partition_desc.num_other                     0                       # Number of other requests responded to by this memory
+system.partition_desc.bw_read                    4339                       # Total read bandwidth from this memory (bytes/s)
+system.partition_desc.bw_total                   4339                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem2.bytes_read                 9813991967                       # Number of bytes read from this memory
 system.physmem2.bytes_inst_read            8318106840                       # Number of instructions bytes read from this memory
 system.physmem2.bytes_written               897268422                       # Number of bytes written to this memory
@@ -38,15 +46,15 @@ system.physmem2.bw_read                    8786901931                       # To
 system.physmem2.bw_inst_read               7447569684                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem2.bw_write                    803364182                       # Write bandwidth from this memory (bytes/s)
 system.physmem2.bw_total                   9590266113                       # Total bandwidth to/from this memory (bytes/s)
-system.nvram.bytes_read                           284                       # Number of bytes read from this memory
-system.nvram.bytes_inst_read                        0                       # Number of instructions bytes read from this memory
-system.nvram.bytes_written                         92                       # Number of bytes written to this memory
-system.nvram.num_reads                            284                       # Number of read requests responded to by this memory
-system.nvram.num_writes                            92                       # Number of write requests responded to by this memory
-system.nvram.num_other                              0                       # Number of other requests responded to by this memory
-system.nvram.bw_read                              254                       # Total read bandwidth from this memory (bytes/s)
-system.nvram.bw_write                              82                       # Write bandwidth from this memory (bytes/s)
-system.nvram.bw_total                             337                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bytes_read                         1128688                       # Number of bytes read from this memory
+system.rom.bytes_inst_read                     432296                       # Number of instructions bytes read from this memory
+system.rom.bytes_written                            0                       # Number of bytes written to this memory
+system.rom.num_reads                           195123                       # Number of read requests responded to by this memory
+system.rom.num_writes                               0                       # Number of write requests responded to by this memory
+system.rom.num_other                                0                       # Number of other requests responded to by this memory
+system.rom.bw_read                            1010564                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_inst_read                        387054                       # Instruction read bandwidth from this memory (bytes/s)
+system.rom.bw_total                           1010564                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read                   709825348                       # Number of bytes read from this memory
 system.physmem.bytes_inst_read              612291324                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written                 15400223                       # Number of bytes written to this memory
@@ -57,14 +65,6 @@ system.physmem.bw_read                      635538091                       # To
 system.physmem.bw_inst_read                 548211557                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_write                      13788502                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_total                     649326593                       # Total bandwidth to/from this memory (bytes/s)
-system.partition_desc.bytes_read                 4846                       # Number of bytes read from this memory
-system.partition_desc.bytes_inst_read               0                       # Number of instructions bytes read from this memory
-system.partition_desc.bytes_written                 0                       # Number of bytes written to this memory
-system.partition_desc.num_reads                   608                       # Number of read requests responded to by this memory
-system.partition_desc.num_writes                    0                       # Number of write requests responded to by this memory
-system.partition_desc.num_other                     0                       # Number of other requests responded to by this memory
-system.partition_desc.bw_read                    4339                       # Total read bandwidth from this memory (bytes/s)
-system.partition_desc.bw_total                   4339                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed

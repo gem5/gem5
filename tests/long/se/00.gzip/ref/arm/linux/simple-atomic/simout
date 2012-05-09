@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 17 2012 11:46:05
-gem5 started Mar 17 2012 16:54:39
-gem5 executing on u200540-lin
-command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/se/00.gzip/arm/linux/simple-atomic -re tests/run.py build/ARM/tests/fast/long/se/00.gzip/arm/linux/simple-atomic
+gem5 compiled May  8 2012 15:17:37
+gem5 started May  8 2012 16:21:51
+gem5 executing on piton
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/00.gzip/arm/linux/simple-atomic -re tests/run.py build/ARM/tests/opt/long/se/00.gzip/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init

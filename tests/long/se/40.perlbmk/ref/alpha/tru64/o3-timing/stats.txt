@@ -4,11 +4,11 @@ sim_seconds                                  0.645508                       # Nu
 sim_ticks                                645508416000                       # Number of ticks simulated
 final_tick                               645508416000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 197220                       # Simulator instruction rate (inst/s)
-host_op_rate                                   197220                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               69832178                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 217536                       # Number of bytes of host memory used
-host_seconds                                  9243.71                       # Real time elapsed on the host
+host_inst_rate                                 101635                       # Simulator instruction rate (inst/s)
+host_op_rate                                   101635                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               35987047                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 222212                       # Number of bytes of host memory used
+host_seconds                                 17937.24                       # Real time elapsed on the host
 sim_insts                                  1823043370                       # Number of instructions simulated
 sim_ops                                    1823043370                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                    94795136                       # Number of bytes read from this memory
@@ -367,8 +367,8 @@ system.cpu.icache.blocked_cycles::no_mshrs            0                       # 
 system.cpu.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_targets               0                       # number of cycles access was blocked
-system.cpu.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
 system.cpu.icache.ReadReq_mshr_hits::cpu.inst         1356                       # number of ReadReq MSHR hits
@@ -586,7 +586,7 @@ system.cpu.l2cache.blocked_cycles::no_targets            0                      
 system.cpu.l2cache.blocked::no_mshrs               11                       # number of cycles access was blocked
 system.cpu.l2cache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu.l2cache.avg_blocked_cycles::no_mshrs  3681.818182                       # average number of cycles each access was blocked
-system.cpu.l2cache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.l2cache.fast_writes                      0                       # number of fast writes performed
 system.cpu.l2cache.cache_copies                     0                       # number of cache copies performed
 system.cpu.l2cache.writebacks::writebacks        66898                       # number of writebacks

@@ -4,22 +4,13 @@ sim_seconds                                  2.332317                       # Nu
 sim_ticks                                2332316587000                       # Number of ticks simulated
 final_tick                               2332316587000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1994377                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2575566                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            78489486028                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 377288                       # Number of bytes of host memory used
-host_seconds                                    29.72                       # Real time elapsed on the host
+host_inst_rate                                 864582                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1116533                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            34025972839                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 383900                       # Number of bytes of host memory used
+host_seconds                                    68.55                       # Real time elapsed on the host
 sim_insts                                    59262896                       # Number of instructions simulated
 sim_ops                                      76532951                       # Number of ops (including micro ops) simulated
-system.realview.nvmem.bytes_read                   20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read              20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_written                 0                       # Number of bytes written to this memory
-system.realview.nvmem.num_reads                     5                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_writes                    0                       # Number of write requests responded to by this memory
-system.realview.nvmem.num_other                     0                       # Number of other requests responded to by this memory
-system.realview.nvmem.bw_read                       9                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read                  9                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total                      9                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read                   122663536                       # Number of bytes read from this memory
 system.physmem.bytes_inst_read                 941280                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written                  9577800                       # Number of bytes written to this memory
@@ -30,6 +21,15 @@ system.physmem.bw_read                       52593004                       # To
 system.physmem.bw_inst_read                    403582                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_write                       4106561                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_total                      56699565                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bytes_read                   20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read              20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_written                 0                       # Number of bytes written to this memory
+system.realview.nvmem.num_reads                     5                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_writes                    0                       # Number of write requests responded to by this memory
+system.realview.nvmem.num_other                     0                       # Number of other requests responded to by this memory
+system.realview.nvmem.bw_read                       9                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read                  9                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total                      9                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                        116822                       # number of replacements
 system.l2c.tagsinuse                     24240.388395                       # Cycle average of tags in use
 system.l2c.total_refs                         1520830                       # Total number of references to valid blocks.
@@ -126,8 +126,8 @@ system.l2c.blocked_cycles::no_mshrs                 0                       # nu
 system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
 system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
-system.l2c.avg_blocked_cycles::no_mshrs      no_value                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.l2c.fast_writes                              0                       # number of fast writes performed
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.writebacks::writebacks              102531                       # number of writebacks
@@ -239,8 +239,8 @@ system.cpu.icache.blocked_cycles::no_mshrs            0                       # 
 system.cpu.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.icache.blocked::no_targets               0                       # number of cycles access was blocked
-system.cpu.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
 system.cpu.icache.writebacks::writebacks        44721                       # number of writebacks
@@ -298,8 +298,8 @@ system.cpu.dcache.blocked_cycles::no_mshrs            0                       # 
 system.cpu.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_targets               0                       # number of cycles access was blocked
-system.cpu.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.cpu.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.cpu.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.cpu.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
 system.cpu.dcache.cache_copies                      0                       # number of cache copies performed
 system.cpu.dcache.writebacks::writebacks       559892                       # number of writebacks
@@ -309,14 +309,14 @@ system.iocache.replacements                         0                       # nu
 system.iocache.tagsinuse                            0                       # Cycle average of tags in use
 system.iocache.total_refs                           0                       # Total number of references to valid blocks.
 system.iocache.sampled_refs                         0                       # Sample count of references to valid blocks.
-system.iocache.avg_refs                      no_value                       # Average number of references to valid blocks.
+system.iocache.avg_refs                           nan                       # Average number of references to valid blocks.
 system.iocache.warmup_cycle                         0                       # Cycle when the warmup percentage was hit.
 system.iocache.blocked_cycles::no_mshrs             0                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                    0                       # number of cycles access was blocked
 system.iocache.blocked::no_targets                  0                       # number of cycles access was blocked
-system.iocache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
-system.iocache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.iocache.fast_writes                          0                       # number of fast writes performed
 system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.no_allocate_misses                   0                       # Number of misses that were no-allocate

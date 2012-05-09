@@ -7,8 +7,8 @@ RubySystem config:
   cycle_period: 1
   block_size_bytes: 64
   block_size_bits: 6
-  memory_size_bytes: 134217728
-  memory_size_bits: 27
+  memory_size_bytes: 268435456
+  memory_size_bits: 28
 
 Network Configuration
 ---------------------
@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jan/23/2012 04:26:05
+Real time: May/08/2012 15:42:43
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 233
-Elapsed_time_in_minutes: 3.88333
-Elapsed_time_in_hours: 0.0647222
-Elapsed_time_in_days: 0.00269676
+Elapsed_time_in_seconds: 365
+Elapsed_time_in_minutes: 6.08333
+Elapsed_time_in_hours: 0.101389
+Elapsed_time_in_days: 0.00422454
 
-Virtual_time_in_seconds: 232.61
-Virtual_time_in_minutes: 3.87683
-Virtual_time_in_hours:   0.0646139
-Virtual_time_in_days:    0.00269225
+Virtual_time_in_seconds: 361.58
+Virtual_time_in_minutes: 6.02633
+Virtual_time_in_hours:   0.100439
+Virtual_time_in_days:    0.00418495
 
 Ruby_current_time: 19400856
 Ruby_start_time: 0
 Ruby_cycles: 19400856
 
-mbytes_resident: 42.1172
-mbytes_total: 339.848
-resident_ratio: 0.12393
+mbytes_resident: 60.2344
+mbytes_total: 361.566
+resident_ratio: 0.166593
 
 ruby_cycles_executed: [ 19400857 19400857 19400857 19400857 19400857 19400857 19400857 19400857 ]
 
@@ -116,13 +116,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 232
+user_time: 361
 system_time: 0
-page_reclaims: 11111
+page_reclaims: 15956
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 192
+block_outputs: 448
 
 Network Stats
 -------------
