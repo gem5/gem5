@@ -176,7 +176,7 @@ ValueToString(Result value, int precision)
         val.setf(ios::fixed);
         val << value;
     } else {
-        val << "no_value";
+        val << "nan";
     }
 
     return val.str();
