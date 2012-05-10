@@ -370,6 +370,12 @@ class Cache : public BaseCache
      * Find next request ready time from among possible sources.
      */
     Tick nextMSHRReadyTime();
+
+    /** serialize the state of the caches
+     * We currently don't support checkpointing cache state, so this panics.
+     */
+    virtual void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 #endif // __CACHE_HH__

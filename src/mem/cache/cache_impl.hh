@@ -1539,6 +1539,35 @@ Cache<TagStore>::nextMSHRReadyTime()
     return nextReady;
 }
 
+template<class TagStore>
+void
+Cache<TagStore>::serialize(std::ostream &os)
+{
+    warn("*** Creating checkpoints with caches is not supported. ***\n");
+    warn("    Remove any caches before taking checkpoints\n");
+    warn("    This checkpoint will not restore correctly and dirty data in "
+         "the cache will be lost!\n");
+
+    // Since we don't write back the data dirty in the caches to the physical
+    // memory if caches exist in the system we won't be able to restore
+    // from the checkpoint as any data dirty in the caches will be lost.
+
+    bool bad_checkpoint = true;
+    SERIALIZE_SCALAR(bad_checkpoint);
+}
+
+template<class TagStore>
+void
+Cache<TagStore>::unserialize(Checkpoint *cp, const std::string &section)
+{
+    bool bad_checkpoint;
+    UNSERIALIZE_SCALAR(bad_checkpoint);
+    if (bad_checkpoint) {
+        fatal("Restoring from checkpoints with caches is not supported in the "
+              "classic memory system. Please remove any caches before taking "
+              "checkpoints.\n");
+    }
+}
 
 ///////////////
 //
