@@ -1923,12 +1923,12 @@ IGbE::TxDescCache::pktComplete()
         igbe->anBegin("TXS", "Desc Writeback");
         DPRINTF(EthernetDesc, "WTHRESH == 0, writing back descriptor\n");
         writeback(0);
-    } else if (igbe->regs.txdctl.gran() && igbe->regs.txdctl.wthresh() >=
+    } else if (!igbe->regs.txdctl.gran() && igbe->regs.txdctl.wthresh() <=
                descInBlock(usedCache.size())) {
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         igbe->anBegin("TXS", "Desc Writeback");
         writeback((igbe->cacheBlockSize()-1)>>4);
-    } else if (igbe->regs.txdctl.wthresh() >= usedCache.size()) {
+    } else if (igbe->regs.txdctl.wthresh() <= usedCache.size()) {
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         igbe->anBegin("TXS", "Desc Writeback");
         writeback((igbe->cacheBlockSize()-1)>>4);
