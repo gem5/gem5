@@ -185,9 +185,10 @@ Pl011::write(PacketPtr pkt)
 
         term->out(data & 0xFF);
 
+        //raw interrupt is set regardless of imsc.txim
+        rawInt.txim = 1;
         if (imsc.txim) {
             DPRINTF(Uart, "TX int enabled, scheduling interruptt\n");
-            rawInt.txim = 1;
             if (!intEvent.scheduled())
                 schedule(intEvent, curTick() + intDelay);
         }
