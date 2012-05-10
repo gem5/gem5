@@ -140,7 +140,7 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
     bool foundNull = false;
     while ((dst - start + 1) < maxlen && !foundNull) {
         vp.readBlob(vaddr++, (uint8_t*)dst, 1);
-        if (dst == '\0')
+        if (*dst == '\0')
             foundNull = true;
         dst++;
     }
