@@ -89,6 +89,8 @@ def parse_options():
         help="Dump configuration output file [Default: %default]")
     option("--json-config", metavar="FILE", default="config.json",
         help="Create JSON output of the configuration [Default: %default]")
+    option("--dot-config", metavar="FILE", default="config.dot",
+        help="Create DOT & pdf outputs of the configuration [Default: %default]")
 
     # Debugging options
     group("Debugging Options")

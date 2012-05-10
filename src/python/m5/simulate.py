@@ -32,6 +32,12 @@ import atexit
 import os
 import sys
 
+try:
+    import pydot
+except:
+    pydot = False
+
+
 # import the SWIG-wrapped main C++ functions
 import internal
 import core
@@ -82,6 +88,8 @@ def instantiate(ckpt_dir=None):
         except ImportError:
             pass
 
+    if pydot:
+        doDot(root)
 
     # Initialize the global statistics
     stats.initSimStats()
@@ -113,14 +121,16 @@ def instantiate(ckpt_dir=None):
     stats.reset()
 
 def doDot(root):
+    from m5 import options
     dot = pydot.Dot()
-    instance.outputDot(dot)
+    root.outputDot(dot)
     dot.orientation = "portrait"
     dot.size = "8.5,11"
     dot.ranksep="equally"
     dot.rank="samerank"
-    dot.write("config.dot")
-    dot.write_ps("config.ps")
+    dot_filename = os.path.join(options.outdir, options.dot_config)
+    dot.write(dot_filename)
+    dot.write_pdf(dot_filename + ".pdf")
 
 need_resume = []
 need_startup = True

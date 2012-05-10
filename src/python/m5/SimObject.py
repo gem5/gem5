@@ -1061,47 +1061,42 @@ class SimObject(object):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
 
     # generate output file for 'dot' to display as a pretty graph.
-    # this code is currently broken.
     def outputDot(self, dot):
-        label = "{%s|" % self.path
-        if isSimObject(self.realtype):
+        if isRoot(self):
+            label = "{root|"
+        else:
+            label = "{%s|" % self._name
+
+        if isSimObject(self._base):
             label +=  '%s|' % self.type
 
-        if self.children:
-            # instantiate children in same order they were added for
-            # backward compatibility (else we can end up with cpu1
-            # before cpu0).
-            for c in self.children:
-                dot.add_edge(pydot.Edge(self.path,c.path, style="bold"))
+        if self._children:
+            for c in self._children:
+                child = self._children[c]
+                if isSimObjectVector(child):
+                    for obj in child:
+                        dot.add_edge(pydot.Edge(self.path(), obj.path(), style="bold"))
+                else:
+                    dot.add_edge(pydot.Edge(self.path(), child.path(), style="bold"))
 
-        simobjs = []
-        for param in self.params:
-            try:
-                if param.value is None:
-                    raise AttributeError, 'Parameter with no value'
+        for param in self._params.keys():
+            value = self._values.get(param)
+            if value != None:
+                ini_str_value = self._values[param].ini_str()
+                label += '%s = %s\\n' % (param, re.sub(':', '-', ini_str_value))
 
-                value = param.value
-                string = param.string(value)
-            except Exception, e:
-                msg = 'exception in %s:%s\n%s' % (self.name, param.name, e)
-                e.args = (msg, )
-                raise
-
-            if isSimObject(param.ptype) and string != "Null":
-                simobjs.append(string)
-            else:
-                label += '%s = %s\\n' % (param.name, string)
-
-        for so in simobjs:
-            label += "|<%s> %s" % (so, so)
-            dot.add_edge(pydot.Edge("%s:%s" % (self.path, so), so,
-                                    tailport="w"))
         label += '}'
-        dot.add_node(pydot.Node(self.path,shape="Mrecord",label=label))
+
+        dot.add_node(pydot.Node(self.path(), shape="Mrecord",label=label))
 
         # recursively dump out children
-        for c in self.children:
-            c.outputDot(dot)
+        for c in self._children:
+            child = self._children[c]
+            if isSimObjectVector(child):
+                for obj in child:
+                    obj.outputDot(dot)
+            else:
+                child.outputDot(dot)
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
