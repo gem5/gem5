@@ -75,7 +75,7 @@ SimpleDisk::read(Addr addr, baddr_t block, int count) const
     DPRINTF(SimpleDisk, "read  block=%#x len=%d\n", (uint64_t)block, count);
     DDUMP(SimpleDiskData, data, count);
 
-    delete data;
+    delete [] data;
 }
 
 void
