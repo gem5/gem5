@@ -41,14 +41,26 @@
  *          Ali Saidi
  *          Chander Sudanthi
  */
+.syntax unified
+#ifdef __thumb__
+.thumb
+#endif
 
 #define m5_op 0xEE
 
 #include "m5ops.h"
 
+#ifdef __thumb__
+#define INST(op, ra, rb, func)                          \
+        .short (((op) << 8) | (func));                  \
+        .short (((ra) << 12) | (0x1 << 8) | (0x1 << 4) | (rb))
+/*               m5ops           m5func         */
+/*                ra         coproc 1       op=1       rb   */
+#else
 #define INST(op, ra, rb, func) \
         .long (((op) << 24) | ((func) << 16) | ((ra) << 12) | (0x1 << 8) | (0x1 << 4) | (rb))
 /*               m5ops           m5func             ra         coproc 1       op=1       rb   */
+#endif
 
 #define LEAF(func)    \
         .globl  func; \
