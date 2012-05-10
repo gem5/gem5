@@ -1231,7 +1231,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
     operator[](off_type index)
     {
         off_type offset = index * y;
-        assert (index >= 0 && offset + index < size());
+        assert (index >= 0 && offset + y <= size());
         return Proxy(this->self(), offset, y);
     }
 
