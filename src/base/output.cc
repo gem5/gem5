@@ -160,7 +160,7 @@ OutputDirectory::create(const string &name, bool binary)
 
     string filename = resolve(name);
     ios_base::openmode mode =
-        ios::trunc | binary ?  ios::binary : (ios::openmode)0;
+        ios::trunc | (binary ? ios::binary : (ios::openmode)0);
     file = openFile(filename, mode);
 
     return file;
