@@ -114,10 +114,12 @@ LinuxArmSystem::initState()
     ArmSystem::initState();
 
     // Load symbols at physical address, we might not want
-    // to do this perminately, for but early bootup work
-    // it is helpfulp.
-    kernel->loadGlobalSymbols(kernelSymtab, loadAddrMask);
-    kernel->loadGlobalSymbols(debugSymbolTable, loadAddrMask);
+    // to do this permanently, for but early bootup work
+    // it is helpful.
+    if (params()->early_kernel_symbols) {
+        kernel->loadGlobalSymbols(kernelSymtab, loadAddrMask);
+        kernel->loadGlobalSymbols(debugSymbolTable, loadAddrMask);
+    }
 
     // Setup boot data structure
     AtagCore *ac = new AtagCore;

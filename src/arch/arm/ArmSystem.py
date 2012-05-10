@@ -65,3 +65,4 @@ class LinuxArmSystem(ArmSystem):
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
     atags_addr = Param.Addr(0x100, "Address where default atags structure should be written")
+    early_kernel_symbols = Param.Bool(False, "enable early kernel symbol tables before MMU")
