@@ -237,7 +237,7 @@ class UnitTest(object):
     '''Create a UnitTest'''
 
     all = []
-    def __init__(self, target, *sources):
+    def __init__(self, target, *sources, **kwargs):
         '''Specify the target name and any sources.  Sources that are
         not SourceFiles are evalued with Source().  All files are
         guarded with a guard of the same name as the UnitTest
@@ -252,6 +252,7 @@ class UnitTest(object):
 
         self.sources = srcs
         self.target = target
+        self.main = kwargs.get('main', False)
         UnitTest.all.append(self)
 
 # Children should have access
@@ -906,6 +907,8 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         flags = { test.target : True }
         test_sources = Source.get(**flags)
         test_objs = [ make_obj(s, static=True) for s in test_sources ]
+        if test.main:
+            test_objs += main_objs
         testname = "unittest/%s.%s" % (test.target, label)
         new_env.Program(testname, test_objs + static_objs)
 
