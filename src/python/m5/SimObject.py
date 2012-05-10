@@ -44,11 +44,6 @@
 import sys
 from types import FunctionType, MethodType, ModuleType
 
-try:
-    import pydot
-except:
-    pydot = False
-
 import m5
 from m5.util import *
 
@@ -1059,44 +1054,6 @@ class SimObject(object):
 
     def takeOverFrom(self, old_cpu):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
-
-    # generate output file for 'dot' to display as a pretty graph.
-    def outputDot(self, dot):
-        if isRoot(self):
-            label = "{root|"
-        else:
-            label = "{%s|" % self._name
-
-        if isSimObject(self._base):
-            label +=  '%s|' % self.type
-
-        if self._children:
-            for c in self._children:
-                child = self._children[c]
-                if isSimObjectVector(child):
-                    for obj in child:
-                        dot.add_edge(pydot.Edge(self.path(), obj.path(), style="bold"))
-                else:
-                    dot.add_edge(pydot.Edge(self.path(), child.path(), style="bold"))
-
-        for param in self._params.keys():
-            value = self._values.get(param)
-            if value != None:
-                ini_str_value = self._values[param].ini_str()
-                label += '%s = %s\\n' % (param, re.sub(':', '-', ini_str_value))
-
-        label += '}'
-
-        dot.add_node(pydot.Node(self.path(), shape="Mrecord",label=label))
-
-        # recursively dump out children
-        for c in self._children:
-            child = self._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    obj.outputDot(dot)
-            else:
-                child.outputDot(dot)
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
