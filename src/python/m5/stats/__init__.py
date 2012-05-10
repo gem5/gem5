@@ -82,6 +82,8 @@ def enable():
         stats_dict[stat.name] = stat
         stat.enable()
 
+    internal.stats.enable();
+
 def prepare():
     '''Prepare all stats for data access.  This must be done before
     dumping and serialization.'''

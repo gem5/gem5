@@ -146,6 +146,8 @@ void schedStatEvent(bool dump, bool reset,
                     Tick when = curTick(), Tick repeat = 0);
 
 void processResetQueue();
+void enable();
+bool enabled();
 
 std::list<Info *> &statsList();
 

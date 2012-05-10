@@ -410,10 +410,11 @@ System::getMasterId(std::string master_name)
         }
     }
 
-    // todo: Check if stats are enabled yet
-    // I just don't know a good way to do it
+    // Verify that the statistics haven't been enabled yet
+    // Otherwise objects will have sized their stat buckets and
+    // they will be too small
 
-    if (false)
+    if (Stats::enabled())
         fatal("Can't request a masterId after regStats(). \
                 You must do so in init().\n");
 

@@ -3126,6 +3126,8 @@ sum(Temp val)
 /** Dump all statistics data to the registered outputs */
 void dump();
 void reset();
+void enable();
+bool enabled();
 
 /**
  * Register a callback that should be called whenever statistics are
