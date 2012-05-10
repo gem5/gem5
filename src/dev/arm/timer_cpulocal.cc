@@ -291,7 +291,7 @@ CpuLocalTimer::Timer::timerAtZero()
     bool old_pending = pendingIntTimer;
     if (timerControl.intEnable)
         pendingIntTimer = true;
-    if (pendingIntTimer && ~old_pending) {
+    if (pendingIntTimer && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
         parent->gic->sendPPInt(intNumTimer, cpuNum);
     }
@@ -322,7 +322,7 @@ CpuLocalTimer::Timer::watchdogAtZero()
         //XXX: Should we ever support a true watchdog reset?
     }
 
-    if (pendingIntWatchdog && ~old_pending) {
+    if (pendingIntWatchdog && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
         parent->gic->sendPPInt(intNumWatchdog, cpuNum);
     }

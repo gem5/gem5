@@ -191,7 +191,7 @@ PL031::counterMatch()
     rawInt = true;
     bool old_pending = pendingInt;
     pendingInt = maskInt & rawInt;
-    if (pendingInt && ~old_pending) {
+    if (pendingInt && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
         gic->sendInt(intNum);
     }

@@ -205,7 +205,7 @@ Sp804::Timer::counterAtZero()
     bool old_pending = pendingInt;
     if (control.intEnable)
         pendingInt = true;
-    if (pendingInt && ~old_pending) {
+    if (pendingInt && !old_pending) {
         DPRINTF(Timer, "-- Causing interrupt\n");
         parent->gic->sendInt(intNum);
     }
