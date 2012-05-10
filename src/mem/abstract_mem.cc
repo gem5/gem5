@@ -390,6 +390,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
     } else if (pkt->isPrint()) {
         Packet::PrintReqState *prs =
             dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
+        assert(prs);
         // Need to call printLabels() explicitly since we're not going
         // through printObj().
         prs->printLabels();
