@@ -516,11 +516,11 @@ EventQueue::deschedule(Event *event)
     event->flags.clear(Event::Squashed);
     event->flags.clear(Event::Scheduled);
 
-    if (event->flags.isSet(Event::AutoDelete))
-        delete event;
-
     if (DTRACE(Event))
         event->trace("descheduled");
+
+    if (event->flags.isSet(Event::AutoDelete))
+        delete event;
 }
 
 inline void

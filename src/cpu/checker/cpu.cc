@@ -264,13 +264,14 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
          * enabled.  This is left as future work for the Checker: LSQ snooping
          * and memory validation after stores have committed.
          */
+        bool was_prefetch = memReq->isPrefetch();
 
         delete memReq;
 
         //If we don't need to access a second cache line, stop now.
         if (fault != NoFault || secondAddr <= addr)
         {
-            if (fault != NoFault && memReq->isPrefetch()) {
+            if (fault != NoFault && was_prefetch) {
               fault = NoFault;
             }
             break;
