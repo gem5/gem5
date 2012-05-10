@@ -1294,8 +1294,10 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
                 pkt->getAddr());
 
         //Look through writebacks for any non-uncachable writes, use that
-        for (int i = 0; i < writebacks.size(); i++) {
-            mshr = writebacks[i];
+        if (writebacks.size()) {
+            // We should only ever find a single match
+            assert(writebacks.size() == 1);
+            mshr = writebacks[0];
             assert(!mshr->isUncacheable());
             assert(mshr->getNumTargets() == 1);
             PacketPtr wb_pkt = mshr->getTarget()->pkt;
@@ -1321,16 +1323,14 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
                 markInService(mshr);
                 delete wb_pkt;
             }
-
-            // If this was a shared writeback, there may still be
-            // other shared copies above that require invalidation.
-            // We could be more selective and return here if the
-            // request is non-exclusive or if the writeback is
-            // exclusive.
-            break;
-        }
+        } // writebacks.size()
     }
 
+    // If this was a shared writeback, there may still be
+    // other shared copies above that require invalidation.
+    // We could be more selective and return here if the
+    // request is non-exclusive or if the writeback is
+    // exclusive.
     handleSnoop(pkt, blk, true, false, false);
 }
 
