@@ -182,7 +182,7 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             pfRemovedMSHR++;
             delete (*iter)->req;
             delete (*iter);
-            pf.erase(iter);
+            iter = pf.erase(iter);
             if (pf.empty())
                 cache->deassertMemSideBusRequest(BaseCache::Request_PF);
         }
@@ -194,15 +194,17 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
         // Needed for serial calculators like GHB
         if (serialSquash) {
             iter = pf.end();
-            iter--;
+            if (iter != pf.begin())
+                iter--;
             while (!pf.empty() && ((*iter)->time >= time)) {
                 pfSquashed++;
                 DPRINTF(HWPrefetch, "Squashing old prefetch addr: 0x%x\n",
                         (*iter)->getAddr());
                 delete (*iter)->req;
                 delete (*iter);
-                pf.erase(iter);
-                iter--;
+                iter = pf.erase(iter);
+                if (iter != pf.begin())
+                    iter--;
             }
             if (pf.empty())
                 cache->deassertMemSideBusRequest(BaseCache::Request_PF);

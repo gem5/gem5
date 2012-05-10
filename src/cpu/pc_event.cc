@@ -56,13 +56,18 @@ PCEventQueue::remove(PCEvent *event)
 {
     int removed = 0;
     range_t range = equal_range(event);
-    for (iterator i = range.first; i != range.second; ++i) {
+    iterator i = range.first;
+    while (i != range.second &&
+           i != pc_map.end()) {
         if (*i == event) {
             DPRINTF(PCEvent, "PC based event removed at %#x: %s\n",
                     event->pc(), event->descr());
-            pc_map.erase(i);
+            i = pc_map.erase(i);
             ++removed;
+        } else {
+            i++;
         }
+
     }
 
     return removed > 0;
