@@ -392,6 +392,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 7:
                     return MISCREG_PMCEID1;
                 }
+                break;
               case 13:
                 switch (opc2) {
                   case 0:
@@ -401,6 +402,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 2:
                     return MISCREG_PMXEVCNTR;
                 }
+                break;
               case 14:
                 switch (opc2) {
                   case 0:
@@ -410,6 +412,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                   case 2:
                     return MISCREG_PMINTENCLR;
                 }
+                break;
             }
         } else if (opc1 == 1) {
             switch (crm) {
@@ -422,6 +425,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                          crn,crm, opc1,opc2);
                     break;
                 }
+                break;
               default:
                 return MISCREG_L2LATENCY;
             }

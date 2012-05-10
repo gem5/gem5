@@ -161,10 +161,18 @@ print(std::ostream &os, int verbosity, const std::string &prefix) const
     for (ConstIterator i = begin(); i != end_i; ++i) {
         const char *s;
         switch (i->source) {
-          case Target::FromCPU: s = "FromCPU";
-          case Target::FromSnoop: s = "FromSnoop";
-          case Target::FromPrefetcher: s = "FromPrefetcher";
-          default: s = "";
+          case Target::FromCPU:
+            s = "FromCPU";
+            break;
+          case Target::FromSnoop:
+            s = "FromSnoop";
+            break;
+          case Target::FromPrefetcher:
+            s = "FromPrefetcher";
+            break;
+          default:
+            s = "";
+            break;
         }
         ccprintf(os, "%s%s: ", prefix, s);
         i->pkt->print(os, verbosity, "");
