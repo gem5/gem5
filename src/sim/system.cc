@@ -298,7 +298,7 @@ System::allocPhysPages(int npages)
 {
     Addr return_addr = pagePtr << LogVMPageSize;
     pagePtr += npages;
-    if (pagePtr > physmem.totalSize())
+    if ((pagePtr << LogVMPageSize) > physmem.totalSize())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
