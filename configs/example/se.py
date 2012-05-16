@@ -166,7 +166,7 @@ for i in xrange(np):
         system.cpu[i].workload = multiprocesses[i]
 
     if options.fastmem:
-        system.cpu[0].fastmem = True
+        system.cpu[i].fastmem = True
 
     if options.checker:
         system.cpu[i].addCheckerCpu()
