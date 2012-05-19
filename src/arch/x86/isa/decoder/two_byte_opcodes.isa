@@ -669,7 +669,7 @@
                     }
                     // repne (0xF2)
                     0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x4: WarnUnimpl::haddps_Vo_Wo();
+                        0x4: HADDPS(Vo,Wo);
                         0x5: WarnUnimpl::hsubps_Vo_Wo();
                         default: UD2();
                     }

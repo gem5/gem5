@@ -36,7 +36,42 @@
 # Authors: Gabe Black
 
 microcode = '''
-# HADDPS
+def macroop HADDPS_XMM_XMM {
+    shuffle ufp1, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp2, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp3, xmmlm, xmmhm, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmmlm, xmmhm, ext=((1 << 0) | (3 << 2)), size=4
+
+    maddf xmml, ufp1, ufp2, size=4
+    maddf xmmh, ufp3, ufp4, size=4
+};
+
+def macroop HADDPS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT+8", dataSize=8
+
+    shuffle ufp3, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp5, ufp1, ufp2, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp6, ufp1, ufp2, ext=((1 << 0) | (3 << 2)), size=4
+
+    maddf xmml, ufp3, ufp4, size=4
+    maddf xmmh, ufp5, ufp6, size=4
+};
+
+def macroop HADDPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT+8", dataSize=8
+
+    shuffle ufp3, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp4, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
+    shuffle ufp5, ufp1, ufp2, ext=((0 << 0) | (2 << 2)), size=4
+    shuffle ufp6, ufp1, ufp2, ext=((1 << 0) | (3 << 2)), size=4
+
+    maddf xmml, ufp3, ufp4, size=4
+    maddf xmmh, ufp5, ufp6, size=4
+};
 
 def macroop HADDPD_XMM_XMM {
     maddf ufp1, xmmh , xmml, size=8, ext=Scalar
