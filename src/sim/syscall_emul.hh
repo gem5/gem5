@@ -1004,6 +1004,9 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     // int offset = p->getSyscallArg(tc, index);
 
+    if (length > 0x100000000ULL)
+        warn("mmap length argument %#x is unreasonably large.\n", length);
+
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         Process::FdMap *fd_map = p->sim_fd_obj(tgt_fd);
         if (!fd_map || fd_map->fd < 0) {
