@@ -172,7 +172,8 @@ let {{
     iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
             {"code": "nuIP = target;",
              "else_code": "nuIP = nuIP;",
-             "cond_test": "checkCondition(ccFlagBits, cc)",
+             "cond_test": "checkCondition(ccFlagBits | cfofBits | \
+                                          ecfBit | ezfBit, cc)",
              "cond_control_flag_init": "flags[IsCondControl] = true"})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)
@@ -189,7 +190,8 @@ let {{
 
     iop = InstObjParams("eret", "EretFlags", "SeqOpBase",
             {"code": "", "else_code": "",
-             "cond_test": "checkCondition(ccFlagBits, cc)",
+             "cond_test": "checkCondition(ccFlagBits | cfofBits | \
+                                          ecfBit | ezfBit, cc)",
              "cond_control_flag_init": ""})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)

@@ -46,7 +46,7 @@ namespace X86ISA
 {
     const int NumMicroIntRegs = 16;
 
-    const int NumPseudoIntRegs = 1;
+    const int NumPseudoIntRegs = 4;
     //1. The condition code bits of the rflags register.
     const int NumImplicitIntRegs = 6;
     //1. The lower part of the result of multiplication.

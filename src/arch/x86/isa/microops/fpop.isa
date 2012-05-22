@@ -215,7 +215,8 @@ let {{
                     spm, SetStatus, dataSize)
         code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
-        cond_check = "checkCondition(ccFlagBits, src2)"
+        cond_check = "checkCondition(ccFlagBits | cfofBits | ecfBit | ezfBit, \
+                                     src2)"
 
     class Xorfp(FpOp):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;'
@@ -283,12 +284,15 @@ let {{
             // Less than      0  0  1
             // Equal          1  0  0
             //           OF = SF = AF = 0
-            ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
-                                        ZFBit | PFBit | CFBit);
-            if (std::isnan(FpSrcReg1) || std::isnan(FpSrcReg2))
-                ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
+            ccFlagBits = ccFlagBits & ~(SFBit | AFBit | ZFBit | PFBit);
+            cfofBits = cfofBits & ~(OFBit | CFBit);
+
+            if (std::isnan(FpSrcReg1) || std::isnan(FpSrcReg2)) {
+                ccFlagBits = ccFlagBits | (ZFBit | PFBit);
+                cfofBits = cfofBits | CFBit;
+            }
             else if(FpSrcReg1 < FpSrcReg2)
-                ccFlagBits = ccFlagBits | CFBit;
+                cfofBits = cfofBits | CFBit;
             else if(FpSrcReg1 == FpSrcReg2)
                 ccFlagBits = ccFlagBits | ZFBit;
         '''

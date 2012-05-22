@@ -438,26 +438,42 @@ let {{
         flag_code = '''
             //Don't have genFlags handle the OF or CF bits
             uint64_t mask = CFBit | ECFBit | OFBit;
-            ccFlagBits = genFlags(ccFlagBits, ext & ~mask, result, psrc1, op2);
+            uint64_t newFlags = genFlags(ccFlagBits | ezfBit, ext & ~mask,
+                                  result, psrc1, op2);
+            ezfBit = newFlags & EZFBit;
+            ccFlagBits = newFlags & ccFlagMask;
+
             //If a logic microop wants to set these, it wants to set them to 0.
-            ccFlagBits &= ~(CFBit & ext);
-            ccFlagBits &= ~(ECFBit & ext);
-            ccFlagBits &= ~(OFBit & ext);
+            cfofBits = cfofBits & ~((CFBit | OFBit) & ext);
+            ecfBit = ecfBit & ~(ECFBit & ext);
         '''
 
     class FlagRegOp(RegOp):
         abstract = True
-        flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, op2);"
+        flag_code = '''
+            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | ecfBit |
+                                  ezfBit, ext, result, psrc1, op2);
+            cfofBits = newFlags & cfofMask;
+            ecfBit = newFlags & ECFBit;
+            ezfBit = newFlags & EZFBit;
+            ccFlagBits = newFlags & ccFlagMask;
+        '''
 
     class SubRegOp(RegOp):
         abstract = True
-        flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, ~op2, true);"
+        flag_code = '''
+            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | ecfBit |
+                                  ezfBit, ext, result, psrc1, ~op2, true);
+            cfofBits = newFlags & cfofMask;
+            ecfBit = newFlags & ECFBit;
+            ezfBit = newFlags & EZFBit;
+            ccFlagBits = newFlags & ccFlagMask;
+        '''
 
     class CondRegOp(RegOp):
         abstract = True
-        cond_check = "checkCondition(ccFlagBits, ext)"
+        cond_check = "checkCondition(ccFlagBits | cfofBits | ecfBit | ezfBit, \
+                                     ext)"
         cond_control_flag_init = "flags[IsCondControl] = flags[IsControl];"
 
     class RdRegOp(RegOp):
@@ -484,21 +500,21 @@ let {{
 
     class Adc(FlagRegOp):
         code = '''
-            CCFlagBits flags = ccFlagBits;
+            CCFlagBits flags = cfofBits;
             DestReg = merge(DestReg, result = (psrc1 + op2 + flags.cf), dataSize);
             '''
         big_code = '''
-            CCFlagBits flags = ccFlagBits;
+            CCFlagBits flags = cfofBits;
             DestReg = result = (psrc1 + op2 + flags.cf) & mask(dataSize * 8);
             '''
 
     class Sbb(SubRegOp):
         code = '''
-            CCFlagBits flags = ccFlagBits;
+            CCFlagBits flags = cfofBits;
             DestReg = merge(DestReg, result = (psrc1 - op2 - flags.cf), dataSize);
             '''
         big_code = '''
-            CCFlagBits flags = ccFlagBits;
+            CCFlagBits flags = cfofBits;
             DestReg = result = (psrc1 - op2 - flags.cf) & mask(dataSize * 8);
             '''
 
@@ -536,9 +552,11 @@ let {{
         flag_code = '''
             if ((-ProdHi & mask(dataSize * 8)) !=
                     bits(ProdLow, dataSize * 8 - 1)) {
-                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
+                cfofBits = cfofBits | (ext & (CFBit | OFBit));
+                ecfBit = ecfBit | (ext & ECFBit);
             } else {
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
             }
         '''
 
@@ -557,9 +575,11 @@ let {{
             '''
         flag_code = '''
             if (ProdHi) {
-                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
+                cfofBits = cfofBits | (ext & (CFBit | OFBit));
+                ecfBit = ecfBit | (ext & ECFBit);
             } else {
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
             }
         '''
 
@@ -658,9 +678,9 @@ let {{
         big_code = divCode % "DestReg = remaining & mask(dataSize * 8);"
         flag_code = '''
             if (remaining == 0)
-                ccFlagBits = ccFlagBits | (ext & EZFBit);
+                ezfBit = ezfBit | (ext & EZFBit);
             else
-                ccFlagBits = ccFlagBits & ~(ext & EZFBit);
+                ezfBit = ezfBit & ~(ext & EZFBit);
         '''
 
     class Divq(RdRegOp):
@@ -691,22 +711,31 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 int CFBits = 0;
                 //Figure out if we -would- set the CF bits if requested.
                 if (shiftAmt <= dataSize * 8 &&
                         bits(SrcReg1, dataSize * 8 - shiftAmt)) {
                     CFBits = 1;
                 }
+
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && CFBits)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                if ((ext & (CFBit | ECFBit)) && CFBits) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (CFBits ^ bits(DestReg, dataSize * 8 - 1)))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                        ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -729,19 +758,26 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 //If some combination of the CF bits need to be set, set them.
                 if ((ext & (CFBit | ECFBit)) && 
                         shiftAmt <= dataSize * 8 &&
                         bits(SrcReg1, shiftAmt - 1)) {
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
                 }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && bits(SrcReg1, dataSize * 8 - 1))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                        ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -766,17 +802,23 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 //If some combination of the CF bits need to be set, set them.
                 uint8_t effectiveShift =
                     (shiftAmt <= dataSize * 8) ? shiftAmt : (dataSize * 8);
                 if ((ext & (CFBit | ECFBit)) &&
                         bits(SrcReg1, effectiveShift - 1)) {
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
                 }
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                        ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -797,19 +839,27 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 //Find the most and second most significant bits of the result.
                 int msb = bits(DestReg, dataSize * 8 - 1);
                 int smsb = bits(DestReg, dataSize * 8 - 2);
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && msb)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                if ((ext & (CFBit | ECFBit)) && msb) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (msb ^ smsb))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                        ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -819,7 +869,7 @@ let {{
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
             if (realShiftAmt) {
-                CCFlagBits flags = ccFlagBits;
+                CCFlagBits flags = cfofBits;
                 uint64_t top = flags.cf << (dataSize * 8 - realShiftAmt);
                 if (realShiftAmt > 1)
                     top |= psrc1 << (dataSize * 8 - realShiftAmt + 1);
@@ -831,24 +881,30 @@ let {{
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
-                int origCFBit = (ccFlagBits & CFBit) ? 1 : 0;
+                int origCFBit = (cfofBits & CFBit) ? 1 : 0;
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (origCFBit ^
                                       bits(SrcReg1, dataSize * 8 - 1))) {
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
                 }
                 //If some combination of the CF bits need to be set, set them.
                 if ((ext & (CFBit | ECFBit)) &&
                         (realShiftAmt == 0) ? origCFBit :
                         bits(SrcReg1, realShiftAmt - 1)) {
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
                 }
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                    ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -870,19 +926,27 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 //The CF bits, if set, would be set to the lsb of the result.
                 int lsb = DestReg & 0x1;
                 int msb = bits(DestReg, dataSize * 8 - 1);
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && lsb)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                if ((ext & (CFBit | ECFBit)) && lsb) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (msb ^ lsb))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                    ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -892,7 +956,7 @@ let {{
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
             if (realShiftAmt) {
-                CCFlagBits flags = ccFlagBits;
+                CCFlagBits flags = cfofBits;
                 uint64_t top = psrc1 << realShiftAmt;
                 uint64_t bottom = flags.cf << (realShiftAmt - 1);
                 if(shiftAmt > 1)
@@ -906,22 +970,30 @@ let {{
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
-                int origCFBit = (ccFlagBits & CFBit) ? 1 : 0;
+                int origCFBit = (cfofBits & CFBit) ? 1 : 0;
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+
                 int msb = bits(DestReg, dataSize * 8 - 1);
                 int CFBits = bits(SrcReg1, dataSize * 8 - realShiftAmt);
                 //If some combination of the CF bits need to be set, set them.
                 if ((ext & (CFBit | ECFBit)) && 
-                        (realShiftAmt == 0) ? origCFBit : CFBits)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                        (realShiftAmt == 0) ? origCFBit : CFBits) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (msb ^ CFBits))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                    ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -949,8 +1021,10 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
                 int CFBits = 0;
+
                 //Figure out if we -would- set the CF bits if requested.
                 if ((realShiftAmt == 0 &&
                         bits(DoubleBits, 0)) ||
@@ -960,16 +1034,23 @@ let {{
                      bits(DoubleBits, 2 * dataBits - realShiftAmt))) {
                     CFBits = 1;
                 }
+
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && CFBits)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                if ((ext & (CFBit | ECFBit)) && CFBits) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (bits(SrcReg1, dataBits - 1) ^
                                       bits(result, dataBits - 1)))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                        ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -1003,8 +1084,10 @@ let {{
             if (shiftAmt) {
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit | OFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
                 int CFBits = 0;
+
                 //If some combination of the CF bits need to be set, set them.
                 if ((realShiftAmt == 0 &&
                             bits(DoubleBits, dataBits - 1)) ||
@@ -1014,16 +1097,23 @@ let {{
                          bits(DoubleBits, realShiftAmt - dataBits - 1))) {
                     CFBits = 1;
                 }
+
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && CFBits)
-                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                if ((ext & (CFBit | ECFBit)) && CFBits) {
+                    cfofBits = cfofBits | (ext & CFBit);
+                    ecfBit = ecfBit | (ext & ECFBit);
+                }
+
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (bits(SrcReg1, dataBits - 1) ^
                                       bits(result, dataBits - 1)))
-                    ccFlagBits = ccFlagBits | OFBit;
+                    cfofBits = cfofBits | OFBit;
+
                 //Use the regular mechanisms to calculate the other flags.
-                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
-                        DestReg, psrc1, op2);
+                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                      ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
+                ezfBit = newFlags & EZFBit;
+                ccFlagBits = newFlags & ccFlagMask;
             }
         '''
 
@@ -1035,14 +1125,25 @@ let {{
         else_code = "NRIP = NRIP;"
 
     class Wruflags(WrRegOp):
-        code = 'ccFlagBits = psrc1 ^ op2'
+        code = '''
+            uint64_t newFlags = psrc1 ^ op2;
+            cfofBits = newFlags & cfofMask;
+            ecfBit = newFlags & ECFBit;
+            ezfBit = newFlags & EZFBit;
+            ccFlagBits = newFlags & ccFlagMask;
+        '''
 
     class Wrflags(WrRegOp):
         code = '''
             MiscReg newFlags = psrc1 ^ op2;
             MiscReg userFlagMask = 0xDD5;
+
             // Get only the user flags
-            ccFlagBits = newFlags & userFlagMask;
+            ccFlagBits = newFlags & ccFlagMask;
+            cfofBits = newFlags & cfofMask;
+            ecfBit = 0;
+            ezfBit = 0;
+
             // Get everything else
             nccFlagBits = newFlags & ~userFlagMask;
         '''
@@ -1051,24 +1152,26 @@ let {{
         code = 'DestReg = NRIP - CSBase;'
 
     class Ruflags(RdRegOp):
-        code = 'DestReg = ccFlagBits'
+        code = 'DestReg = ccFlagBits | cfofBits | ecfBit | ezfBit;'
 
     class Rflags(RdRegOp):
-        code = 'DestReg = ccFlagBits | nccFlagBits'
+        code = '''
+            DestReg = ccFlagBits | cfofBits | ecfBit | ezfBit | nccFlagBits;
+            '''
 
     class Ruflag(RegOp):
         code = '''
-            int flag = bits(ccFlagBits, imm8);
+            int flag = bits(ccFlagBits | cfofBits | ecfBit | ezfBit, imm8);
             DestReg = merge(DestReg, flag, dataSize);
-            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
-                                       (ccFlagBits & ~EZFBit);
+            ezfBit = (flag == 0) ? EZFBit : 0;
             '''
+
         big_code = '''
-            int flag = bits(ccFlagBits, imm8);
+            int flag = bits(ccFlagBits | cfofBits | ecfBit | ezfBit, imm8);
             DestReg = flag & mask(dataSize * 8);
-            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
-                                       (ccFlagBits & ~EZFBit);
+            ezfBit = (flag == 0) ? EZFBit : 0;
             '''
+
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Ruflag, self).__init__(dest, \
@@ -1077,20 +1180,24 @@ let {{
     class Rflag(RegOp):
         code = '''
             MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits) & flagMask;
+            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits |
+                             ecfBit | ezfBit) & flagMask;
+
             int flag = bits(flags, imm8);
             DestReg = merge(DestReg, flag, dataSize);
-            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
-                                       (ccFlagBits & ~EZFBit);
+            ezfBit = (flag == 0) ? EZFBit : 0;
             '''
+
         big_code = '''
             MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits) & flagMask;
+            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits |
+                             ecfBit | ezfBit) & flagMask;
+
             int flag = bits(flags, imm8);
             DestReg = flag & mask(dataSize * 8);
-            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
-                                       (ccFlagBits & ~EZFBit);
+            ezfBit = (flag == 0) ? EZFBit : 0;
             '''
+
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Rflag, self).__init__(dest, \
@@ -1106,6 +1213,7 @@ let {{
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
             DestReg = merge(DestReg, val, dataSize);
             '''
+
         big_code = '''
             IntReg val = psrc1;
             // Mask the bit position so that it wraps.
@@ -1115,13 +1223,19 @@ let {{
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
             DestReg = val & mask(dataSize * 8);
             '''
+
         flag_code = '''
-            if (!sign_bit)
-                ccFlagBits = ccFlagBits &
-                    ~(ext & (CFBit | ECFBit | ZFBit | EZFBit));
-            else
-                ccFlagBits = ccFlagBits |
-                    (ext & (CFBit | ECFBit | ZFBit | EZFBit));
+            if (!sign_bit) {
+                ccFlagBits = ccFlagBits & ~(ext & (ZFBit));
+                cfofBits = cfofBits & ~(ext & (CFBit));
+                ecfBit = ecfBit & ~(ext & ECFBit);
+                ezfBit = ezfBit & ~(ext & EZFBit);
+            } else {
+                ccFlagBits = ccFlagBits | (ext & (ZFBit));
+                cfofBits = cfofBits | (ext & (CFBit));
+                ecfBit = ecfBit | (ext & ECFBit);
+                ezfBit = ezfBit | (ext & EZFBit);
+            }
             '''
 
     class Zext(RegOp):
@@ -1403,9 +1517,13 @@ let {{
         '''
         flag_code = '''
             // Check for a NULL selector and set ZF,EZF appropriately.
-            ccFlagBits = ccFlagBits & ~(ext & (ZFBit | EZFBit));
-            if (!selector.si && !selector.ti)
-                ccFlagBits = ccFlagBits | (ext & (ZFBit | EZFBit));
+            ccFlagBits = ccFlagBits & ~(ext & ZFBit);
+            ezfBit = ezfBit & ~(ext & EZFBit);
+
+            if (!selector.si && !selector.ti) {
+                ccFlagBits = ccFlagBits | (ext & ZFBit);
+                ezfBit = ezfBit | (ext & EZFBit);
+            }
         '''
 
     class Wrdh(RegOp):

@@ -181,7 +181,8 @@ let {{
 
     iop = InstObjParams("fault", "MicroFaultFlags", "MicroFaultBase",
             {"code": "",
-             "cond_test": "checkCondition(ccFlagBits, cc)"})
+             "cond_test": "checkCondition(ccFlagBits | cfofBits | \
+                                          ecfBit | ezfBit, cc)"})
     exec_output = MicroFaultExecute.subst(iop)
     header_output = MicroFaultDeclare.subst(iop)
     decoder_output = MicroFaultConstructor.subst(iop)
