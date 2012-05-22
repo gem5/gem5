@@ -35,7 +35,6 @@ if env['PROTOCOL'] == 'None':
 
 Source('Address.cc')
 Source('DataBlock.cc')
-Source('Driver.cc')
 Source('Global.cc')
 Source('Histogram.cc')
 Source('NetDest.cc')
