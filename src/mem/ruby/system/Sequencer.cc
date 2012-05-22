@@ -220,7 +220,9 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 
     // See if we should schedule a deadlock check
     if (deadlockCheckEvent.scheduled() == false) {
-        schedule(deadlockCheckEvent, m_deadlock_threshold + curTick());
+        schedule(deadlockCheckEvent,
+                 m_deadlock_threshold * g_eventQueue_ptr->getClock()
+                 + curTick());
     }
 
     Address line_addr(pkt->getAddr());
