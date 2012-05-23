@@ -98,11 +98,11 @@ MemCmd::commandInfo[] =
     /* HardPFResp */
     { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
             InvalidCmd, "HardPFResp" },
-    /* WriteInvalidateReq */
+    /* WriteInvalidateReq (currently unused, see packet.hh) */
     { SET6(IsWrite, NeedsExclusive, IsInvalidate,
            IsRequest, HasData, NeedsResponse),
             WriteInvalidateResp, "WriteInvalidateReq" },
-    /* WriteInvalidateResp */
+    /* WriteInvalidateResp (currently unused, see packet.hh) */
     { SET3(IsWrite, NeedsExclusive, IsResponse),
             InvalidCmd, "WriteInvalidateResp" },
     /* UpgradeReq */
