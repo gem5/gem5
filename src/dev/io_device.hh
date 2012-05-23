@@ -44,18 +44,12 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
-#include "base/fast_alloc.hh"
 #include "mem/mem_object.hh"
-#include "mem/packet.hh"
 #include "mem/tport.hh"
 #include "params/BasicPioDevice.hh"
-#include "params/DmaDevice.hh"
 #include "params/PioDevice.hh"
-#include "sim/sim_object.hh"
 
-class Event;
 class PioDevice;
-class DmaDevice;
 class System;
 
 /**
@@ -78,91 +72,6 @@ class PioPort : public SimpleTimingPort
   public:
 
     PioPort(PioDevice *dev);
-};
-
-
-class DmaPort : public MasterPort
-{
-  protected:
-    struct DmaReqState : public Packet::SenderState, public FastAlloc
-    {
-        /** Event to call on the device when this transaction (all packets)
-         * complete. */
-        Event *completionEvent;
-
-        /** Where we came from for some sanity checking. */
-        Port *outPort;
-
-        /** Total number of bytes that this transaction involves. */
-        Addr totBytes;
-
-        /** Number of bytes that have been acked for this transaction. */
-        Addr numBytes;
-
-        /** Amount to delay completion of dma by */
-        Tick delay;
-
-
-        DmaReqState(Event *ce, Port *p, Addr tb, Tick _delay)
-            : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0),
-              delay(_delay)
-        {}
-    };
-
-    MemObject *device;
-    std::list<PacketPtr> transmitList;
-
-    /** The system that device/port are in. This is used to select which mode
-     * we are currently operating in. */
-    System *sys;
-
-    /** Id for all requests */
-    MasterID masterId;
-
-    /** Number of outstanding packets the dma port has. */
-    int pendingCount;
-
-    /** If a dmaAction is in progress. */
-    int actionInProgress;
-
-    /** If we need to drain, keep the drain event around until we're done
-     * here.*/
-    Event *drainEvent;
-
-    /** time to wait between sending another packet, increases as NACKs are
-     * recived, decreases as responses are recived. */
-    Tick backoffTime;
-
-    /** Minimum time that device should back off for after failed sendTiming */
-    Tick minBackoffDelay;
-
-    /** Maximum time that device should back off for after failed sendTiming */
-    Tick maxBackoffDelay;
-
-    /** If the port is currently waiting for a retry before it can send whatever
-     * it is that it's sending. */
-    bool inRetry;
-
-    virtual bool recvTimingResp(PacketPtr pkt);
-
-    virtual void recvRetry() ;
-
-    void queueDma(PacketPtr pkt, bool front = false);
-    void sendDma();
-
-    /** event to give us a kick every time we backoff time is reached. */
-    EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
-
-  public:
-    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff);
-
-    void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data, Tick delay, Request::Flags flag = 0);
-
-    bool dmaPending() { return pendingCount > 0; }
-
-    unsigned cacheBlockSize() const { return peerBlockSize(); }
-    unsigned int drain(Event *de);
 };
 
 /**
@@ -254,48 +163,5 @@ class BasicPioDevice : public PioDevice
     virtual AddrRangeList getAddrRanges();
 
 };
-
-class DmaDevice : public PioDevice
-{
-   protected:
-    DmaPort dmaPort;
-
-  public:
-    typedef DmaDeviceParams Params;
-    DmaDevice(const Params *p);
-    virtual ~DmaDevice();
-
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
-                  Tick delay = 0)
-    {
-        dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
-    }
-
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
-                 Tick delay = 0)
-    {
-        dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
-    }
-
-    bool dmaPending() { return dmaPort.dmaPending(); }
-
-    virtual void init();
-
-    virtual unsigned int drain(Event *de);
-
-    unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
-
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
-
-    friend class DmaPort;
-};
-
 
 #endif // __DEV_IO_DEVICE_HH__

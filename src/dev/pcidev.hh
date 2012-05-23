@@ -39,7 +39,7 @@
 
 #include <cstring>
 
-#include "dev/io_device.hh"
+#include "dev/dma_device.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 #include "params/PciDevice.hh"

@@ -51,6 +51,7 @@
 
 #include "base/range.hh"
 #include "dev/arm/gic.hh"
+#include "dev/dma_device.hh"
 #include "dev/io_device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
