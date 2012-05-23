@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,7 +51,6 @@
 #include "sim/eventq.hh"
 #include "sim/fault_fwd.hh"
 
-class DmaPort;
 class ThreadContext;
 
 namespace ArmISA {
@@ -260,6 +259,40 @@ class TableWalker : public MemObject
 
     };
 
+  protected:
+
+    /**
+     * A snooping DMA port that currently does nothing besides
+     * extending the DMA port to accept snoops without complaining.
+     */
+    class SnoopingDmaPort : public DmaPort
+    {
+
+      protected:
+
+        virtual void recvTimingSnoopReq(PacketPtr pkt)
+        { }
+
+        virtual Tick recvAtomicSnoop(PacketPtr pkt)
+        { return 0; }
+
+        virtual void recvFunctionalSnoop(PacketPtr pkt)
+        { }
+
+        virtual bool isSnooping() const { return true; }
+
+      public:
+
+        /**
+         * A snooping DMA port merely calls the construtor of the DMA
+         * port.
+         */
+        SnoopingDmaPort(MemObject *dev, System *s, Tick min_backoff,
+                        Tick max_backoff) :
+            DmaPort(dev, s, min_backoff, max_backoff)
+        { }
+    };
+
     struct WalkerState //: public SimObject
     {
         /** Thread context that we're doing the walk for */
@@ -329,7 +362,7 @@ class TableWalker : public MemObject
 
 
     /** Port to issue translation requests from */
-    DmaPort port;
+    SnoopingDmaPort port;
 
     /** TLB that is initiating these table walks */
     TLB *tlb;

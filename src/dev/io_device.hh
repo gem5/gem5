@@ -143,33 +143,9 @@ class DmaPort : public MasterPort
      * it is that it's sending. */
     bool inRetry;
 
-    /** Port accesses a cache which requires snooping */
-    bool recvSnoops;
-
     virtual bool recvTimingResp(PacketPtr pkt);
 
-    virtual void recvTimingSnoopReq(PacketPtr pkt)
-    {
-        if (!recvSnoops)
-            panic("%s was not expecting a snoop\n", name());
-    }
-
-    virtual Tick recvAtomicSnoop(PacketPtr pkt)
-    {
-        if (!recvSnoops)
-            panic("%s was not expecting a snoop\n", name());
-        return 0;
-    }
-
-    virtual void recvFunctionalSnoop(PacketPtr pkt)
-    {
-        if (!recvSnoops)
-            panic("%s was not expecting a snoop\n", name());
-    }
-
     virtual void recvRetry() ;
-
-    virtual bool isSnooping() const { return recvSnoops; }
 
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();
@@ -178,8 +154,7 @@ class DmaPort : public MasterPort
     EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
 
   public:
-    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
-            bool recv_snoops = false);
+    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag = 0);

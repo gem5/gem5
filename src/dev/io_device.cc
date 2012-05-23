@@ -120,13 +120,12 @@ BasicPioDevice::getAddrRanges()
 }
 
 
-DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
-                 bool recv_snoops)
-    : MasterPort(dev->name() + "-dmaport", dev), device(dev), sys(s),
+DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff)
+    : MasterPort(dev->name() + "-dma", dev), device(dev), sys(s),
       masterId(s->getMasterId(dev->name())),
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
-      maxBackoffDelay(max_backoff), inRetry(false), recvSnoops(recv_snoops),
+      maxBackoffDelay(max_backoff), inRetry(false),
       backoffEvent(this)
 { }
 
