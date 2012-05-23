@@ -1379,9 +1379,8 @@ class PortRef(object):
             # reference to plain VectorPort is implicit append
             other = other._get_next()
         if self.peer and not proxy.isproxy(self.peer):
-            print "warning: overwriting port", self, \
-                  "value", self.peer, "with", other
-            self.peer.peer = None
+            fatal("Port %s is already connected to %s, cannot connect %s\n",
+                  self, self.peer, other);
         self.peer = other
         if proxy.isproxy(other):
             other.set_param_desc(PortParamDesc())
