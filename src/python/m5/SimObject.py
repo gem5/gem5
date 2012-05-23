@@ -931,6 +931,10 @@ class SimObject(object):
             d.type = self.type
         if hasattr(self, 'cxx_class'):
             d.cxx_class = self.cxx_class
+        # Add the name and path of this object to be able to link to
+        # the stats
+        d.name = self.get_name()
+        d.path = self.path()
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
@@ -949,15 +953,18 @@ class SimObject(object):
                     pass
 
         for n in sorted(self._children.keys()):
-            d[self._children[n].get_name()] =  self._children[n].get_config_as_dict()
+            child = self._children[n]
+            # Use the name of the attribute (and not get_name()) as
+            # the key in the JSON dictionary to capture the hierarchy
+            # in the Python code that assembled this system
+            d[n] = child.get_config_as_dict()
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
             if port != None:
-                # Might want to actually make this reference the object
-                # in the future, although execing the string problem would
-                # get some of the way there
-                d[port_name] = port.ini_str()
+                # Represent each port with a dictionary containing the
+                # prominent attributes
+                d[port_name] = port.get_config_as_dict()
 
         return d
 

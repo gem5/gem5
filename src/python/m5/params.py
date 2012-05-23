@@ -1363,6 +1363,10 @@ class PortRef(object):
     def ini_str(self):
         return str(self.peer)
 
+    # for config.json
+    def get_config_as_dict(self):
+        return {'role' : self.role, 'peer' : str(self.peer)}
+
     def __getattr__(self, attr):
         if attr == 'peerObj':
             # shorthand for proxies
@@ -1479,6 +1483,11 @@ class VectorPortRef(object):
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
         return ' '.join([el.ini_str() for el in self.elements])
+
+    # for config.json
+    def get_config_as_dict(self):
+        return {'role' : self.role,
+                'peer' : [el.ini_str() for el in self.elements]}
 
     def __getitem__(self, key):
         if not isinstance(key, int):
