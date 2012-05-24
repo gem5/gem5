@@ -341,12 +341,6 @@ class Cache : public BaseCache
     void markInService(MSHR *mshr, PacketPtr pkt = 0);
 
     /**
-     * Perform the given writeback request.
-     * @param pkt The writeback request.
-     */
-    void doWriteback(PacketPtr pkt);
-
-    /**
      * Return whether there are any outstanding misses.
      */
     bool outstandingMisses() const
