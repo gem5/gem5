@@ -48,45 +48,8 @@ class DecodeCache
     /// Hash of decoded instructions.
     typedef m5::hash_map<ExtMachInst, StaticInstPtr> InstMap;
     InstMap instMap;
-
-    /// A table of instructions which are already been decoded, indexed by
-    /// page offset.
-    class DecodePage
-    {
-      protected:
-        StaticInstPtr instructions[TheISA::PageBytes];
-
-        // A helper function to compute the index of an address in the table.
-        Addr offset(Addr addr) { return addr & (TheISA::PageBytes - 1); }
-
-      public:
-        /// Decode the given instruction. First attempt to find it in the
-        /// table, then in the generic decode cache, and finally call the
-        /// actual decode function.
-        ///
-        /// @param mach_inst The predecoded instruction to decode.
-        /// @param addr The address the instruction came from.
-        /// @param cache A cache of already decoded instructions.
-        /// @retval The decoded instruction object.
-        StaticInstPtr
-        decode(const ExtMachInst &mach_inst, Addr addr, InstMap &instMap)
-        {
-            StaticInstPtr si = instructions[offset(addr)];
-            if (si && (si->machInst == mach_inst)) {
-                return si;
-            }
-
-            InstMap::iterator iter = instMap.find(mach_inst);
-            if (iter != instMap.end()) {
-                si = iter->second;
-            } else {
-                si = decodeInstFunc(mach_inst);
-                instMap[mach_inst] = si;
-            }
-
-            instructions[offset(addr)] = si;
-            return si;
-        }
+    struct DecodePage {
+        StaticInstPtr insts[TheISA::PageBytes];
     };
 
     /// A store of DecodePages. Basically a slightly smarter hash_map.
@@ -107,6 +70,14 @@ class DecodeCache
             recent[0] = recentest;
         }
 
+        void
+        addPage(Addr addr, DecodePage *page)
+        {
+            Addr page_addr = addr & ~(TheISA::PageBytes - 1);
+            typename PageMap::value_type to_insert(page_addr, page);
+            update(pageMap.insert(to_insert).first);
+        }
+
       public:
         /// Constructor
         DecodePages()
@@ -119,7 +90,7 @@ class DecodeCache
         /// actually look in the hash_map.
         /// @param addr The address to look up.
         DecodePage *
-        findPage(Addr addr)
+        getPage(Addr addr)
         {
             Addr page_addr = addr & ~(TheISA::PageBytes - 1);
 
@@ -142,16 +113,10 @@ class DecodeCache
                 return it->second;
             }
 
-            // Didn't find it so return NULL.
-            return NULL;
-        }
-
-        void
-        addPage(Addr addr, DecodePage *page)
-        {
-            Addr page_addr = addr & ~(TheISA::PageBytes - 1);
-            typename PageMap::value_type to_insert(page_addr, page);
-            update(pageMap.insert(to_insert).first);
+            // Didn't find an existing page, so add a new one.
+            DecodePage *newPage = new DecodePage;
+            addPage(page_addr, newPage);
+            return newPage;
         }
     } decodePages;
 
@@ -163,16 +128,26 @@ class DecodeCache
     decode(ExtMachInst mach_inst, Addr addr)
     {
         // Try to find a matching address based table of instructions.
-        DecodePage *page = decodePages.findPage(addr);
-        if (!page) {
-            // Nothing was found, so create a new one.
-            page = new DecodePage;
-            decodePages.addPage(addr, page);
-        }
+        DecodePage *page = decodePages.getPage(addr);
 
         // Use the table to decode the instruction. It will fall back to other
         // mechanisms if it needs to.
-        return page->decode(mach_inst, addr, instMap);
+        Addr offset = addr & (TheISA::PageBytes - 1);
+        StaticInstPtr si = page->insts[offset];
+        if (si && (si->machInst == mach_inst))
+            return si;
+
+        InstMap::iterator iter = instMap.find(mach_inst);
+        if (iter != instMap.end()) {
+            si = iter->second;
+            page->insts[offset] = si;
+            return si;
+        }
+
+        si = decodeInstFunc(mach_inst);
+        instMap[mach_inst] = si;
+        page->insts[offset] = si;
+        return si;
     }
 };
 
