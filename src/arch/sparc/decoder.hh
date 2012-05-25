@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Google
+ * Copyright (c) 2012 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,17 @@
  * Authors: Gabe Black
  */
 
-#include "cpu/decode.hh"
+#ifndef __ARCH_SPARC_DECODER_HH__
+#define __ARCH_SPARC_DECODER_HH__
 
-DecodeCache<TheISA::decodeInst> Decoder::cache;
+#include "arch/generic/decoder.hh"
+
+namespace SparcISA
+{
+
+class Decoder : public GenericISA::Decoder
+{};
+
+} // namespace SparcISA
+
+#endif // __ARCH_SPARC_DECODER_HH__

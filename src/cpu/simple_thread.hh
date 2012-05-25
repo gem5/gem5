@@ -44,6 +44,7 @@
 #ifndef __CPU_SIMPLE_THREAD_HH__
 #define __CPU_SIMPLE_THREAD_HH__
 
+#include "arch/decoder.hh"
 #include "arch/isa.hh"
 #include "arch/isa_traits.hh"
 #include "arch/registers.hh"
@@ -51,7 +52,6 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "cpu/decode.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "debug/FloatRegs.hh"
@@ -128,7 +128,7 @@ class SimpleThread : public ThreadState
     TheISA::TLB *itb;
     TheISA::TLB *dtb;
 
-    Decoder decoder;
+    TheISA::Decoder decoder;
 
     // constructor: initialize SimpleThread from given process structure
     // FS
@@ -199,7 +199,7 @@ class SimpleThread : public ThreadState
 
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
-    Decoder *getDecoderPtr() { return &decoder; }
+    TheISA::Decoder *getDecoderPtr() { return &decoder; }
 
     System *getSystemPtr() { return system; }
 

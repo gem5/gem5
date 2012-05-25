@@ -42,13 +42,13 @@
 #include <cstdio>
 #include <iomanip>
 
+#include "arch/sparc/decoder.hh"
 #include "arch/sparc/predecoder.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/utility.hh"
 #include "arch/tlb.hh"
 #include "base/socket.hh"
 #include "cpu/base.hh"
-#include "cpu/decode.hh"
 #include "cpu/legiontrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"

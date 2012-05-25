@@ -1772,7 +1772,7 @@ InOrderCPU::getDTBPtr()
     return resPool->getDataUnit()->tlb();
 }
 
-Decoder *
+TheISA::Decoder *
 InOrderCPU::getDecoderPtr()
 {
     return &resPool->getInstUnit()->decoder;

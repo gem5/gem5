@@ -135,9 +135,9 @@
 
 #include <string>
 
+#include "arch/mips/decoder.hh"
 #include "arch/mips/remote_gdb.hh"
 #include "arch/mips/vtophys.hh"
-#include "cpu/decode.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"

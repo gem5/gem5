@@ -342,7 +342,7 @@ class InOrderCPU : public BaseCPU
     TheISA::TLB *getITBPtr();
     TheISA::TLB *getDTBPtr();
 
-    Decoder *getDecoderPtr();
+    TheISA::Decoder *getDecoderPtr();
 
     /** Accessor Type for the SkedCache */
     typedef uint32_t SkedID;

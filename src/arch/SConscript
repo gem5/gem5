@@ -44,6 +44,7 @@ Import('*')
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
+        decoder.hh
         interrupts.hh
         isa.hh
         isa_traits.hh

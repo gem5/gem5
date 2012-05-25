@@ -134,6 +134,7 @@
 
 #include <string>
 
+#include "arch/arm/decoder.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/registers.hh"
 #include "arch/arm/remote_gdb.hh"
@@ -143,7 +144,6 @@
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "cpu/decode.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"

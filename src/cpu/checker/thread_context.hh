@@ -55,6 +55,7 @@ namespace TheISA {
     namespace Kernel {
         class Statistics;
     };
+    class Decoder;
 };
 
 /**
@@ -117,7 +118,7 @@ class CheckerThreadContext : public ThreadContext
         return checkerCPU;
     }
 
-    Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
+    TheISA::Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 

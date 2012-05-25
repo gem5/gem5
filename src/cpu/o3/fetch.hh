@@ -44,11 +44,11 @@
 #ifndef __CPU_O3_FETCH_HH__
 #define __CPU_O3_FETCH_HH__
 
+#include "arch/decoder.hh"
 #include "arch/predecoder.hh"
 #include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
-#include "cpu/decode.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
@@ -340,7 +340,7 @@ class DefaultFetch
     }
 
     /** The decoder. */
-    Decoder decoder;
+    TheISA::Decoder decoder;
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,

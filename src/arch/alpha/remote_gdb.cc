@@ -122,6 +122,7 @@
 #include <string>
 
 
+#include "arch/alpha/decoder.hh"
 #include "arch/alpha/kgdb.h"
 #include "arch/alpha/regredir.hh"
 #include "arch/alpha/remote_gdb.hh"
@@ -131,7 +132,6 @@
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "cpu/decode.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GDBAcc.hh"

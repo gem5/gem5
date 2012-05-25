@@ -55,12 +55,12 @@
 // DTB pointers.
 namespace TheISA
 {
+    class Decoder;
     class TLB;
 }
 class BaseCPU;
 class CheckerCPU;
 class Checkpoint;
-class Decoder;
 class EndQuiesceEvent;
 class SETranslatingPortProxy;
 class FSTranslatingPortProxy;
@@ -135,7 +135,7 @@ class ThreadContext
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;
 
-    virtual Decoder *getDecoderPtr() = 0;
+    virtual TheISA::Decoder *getDecoderPtr() = 0;
 
     virtual System *getSystemPtr() = 0;
 
@@ -306,7 +306,7 @@ class ProxyThreadContext : public ThreadContext
 
     CheckerCPU *getCheckerCpuPtr() { return actualTC->getCheckerCpuPtr(); }
 
-    Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
+    TheISA::Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 

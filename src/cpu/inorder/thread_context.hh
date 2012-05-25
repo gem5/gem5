@@ -83,7 +83,7 @@ class InOrderThreadContext : public ThreadContext
      */
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
-    Decoder *getDecoderPtr() { return cpu->getDecoderPtr(); }
+    TheISA::Decoder *getDecoderPtr() { return cpu->getDecoderPtr(); }
 
     System *getSystemPtr() { return cpu->system; }
 

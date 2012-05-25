@@ -85,7 +85,7 @@ class O3ThreadContext : public ThreadContext
 
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
-    Decoder *getDecoderPtr() { return &cpu->fetch.decoder; }
+    TheISA::Decoder *getDecoderPtr() { return &cpu->fetch.decoder; }
 
     /** Returns a pointer to this CPU. */
     virtual BaseCPU *getCpuPtr() { return cpu; }
