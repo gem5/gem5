@@ -37,9 +37,11 @@
 #include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 
-typedef StaticInstPtr (*DecodeInstFunc)(TheISA::ExtMachInst);
+namespace TheISA
+{
+    class Decoder;
+}
 
-template <DecodeInstFunc decodeInstFunc>
 class DecodeCache
 {
   private:
@@ -63,92 +65,26 @@ class DecodeCache
 
         /// Update the small cache of recent lookups.
         /// @param recentest The most recent result;
-        void
-        update(PageIt recentest)
-        {
-            recent[1] = recent[0];
-            recent[0] = recentest;
-        }
-
-        void
-        addPage(Addr addr, DecodePage *page)
-        {
-            Addr page_addr = addr & ~(TheISA::PageBytes - 1);
-            typename PageMap::value_type to_insert(page_addr, page);
-            update(pageMap.insert(to_insert).first);
-        }
+        void update(PageIt recentest);
+        void addPage(Addr addr, DecodePage *page);
 
       public:
         /// Constructor
-        DecodePages()
-        {
-            recent[0] = recent[1] = pageMap.end();
-        }
+        DecodePages();
 
         /// Attempt to find the DecodePage which goes with a particular
         /// address. First check the small cache of recent results, then
         /// actually look in the hash_map.
         /// @param addr The address to look up.
-        DecodePage *
-        getPage(Addr addr)
-        {
-            Addr page_addr = addr & ~(TheISA::PageBytes - 1);
-
-            // Check against recent lookups.
-            if (recent[0] != pageMap.end()) {
-                if (recent[0]->first == page_addr)
-                    return recent[0]->second;
-                if (recent[1] != pageMap.end() &&
-                        recent[1]->first == page_addr) {
-                    update(recent[1]);
-                    // recent[1] has just become recent[0].
-                    return recent[0]->second;
-                }
-            }
-
-            // Actually look in the has_map.
-            PageIt it = pageMap.find(page_addr);
-            if (it != pageMap.end()) {
-                update(it);
-                return it->second;
-            }
-
-            // Didn't find an existing page, so add a new one.
-            DecodePage *newPage = new DecodePage;
-            addPage(page_addr, newPage);
-            return newPage;
-        }
+        DecodePage *getPage(Addr addr);
     } decodePages;
 
   public:
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(ExtMachInst mach_inst, Addr addr)
-    {
-        // Try to find a matching address based table of instructions.
-        DecodePage *page = decodePages.getPage(addr);
-
-        // Use the table to decode the instruction. It will fall back to other
-        // mechanisms if it needs to.
-        Addr offset = addr & (TheISA::PageBytes - 1);
-        StaticInstPtr si = page->insts[offset];
-        if (si && (si->machInst == mach_inst))
-            return si;
-
-        InstMap::iterator iter = instMap.find(mach_inst);
-        if (iter != instMap.end()) {
-            si = iter->second;
-            page->insts[offset] = si;
-            return si;
-        }
-
-        si = decodeInstFunc(mach_inst);
-        instMap[mach_inst] = si;
-        page->insts[offset] = si;
-        return si;
-    }
+    StaticInstPtr decode(TheISA::Decoder * const decoder,
+            ExtMachInst mach_inst, Addr addr);
 };
 
 #endif // __CPU_DECODE_CACHE_HH__

@@ -43,7 +43,6 @@
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
 
 namespace LittleEndianGuest {}
 
@@ -68,8 +67,6 @@ namespace X86ISA
     const int PageBytes = 1ULL << PageShift;
 
     const int BranchPredAddrShiftAmt = 0;
-
-    StaticInstPtr decodeInst(ExtMachInst);
 
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Google
+ * Copyright (c) 2012 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,11 @@
  * Authors: Gabe Black
  */
 
-#include "arch/generic/decoder.hh"
+#include "arch/mips/decoder.hh"
 
-namespace GenericISA
+namespace MipsISA
 {
 
-DecodeCache<TheISA::decodeInst> Decoder::defaultCache;
+DecodeCache Decoder::defaultCache;
 
 }

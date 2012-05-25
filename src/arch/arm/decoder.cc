@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Google
+ * Copyright (c) 2011 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,35 +28,11 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_POWER_DECODER_HH__
-#define __ARCH_POWER_DECODER_HH__
+#include "arch/arm/decoder.hh"
 
-#include "arch/types.hh"
-#include "cpu/decode_cache.hh"
-#include "cpu/static_inst_fwd.hh"
-
-namespace PowerISA
+namespace ArmISA
 {
 
-class Decoder
-{
-  protected:
-    /// A cache of decoded instruction objects.
-    static DecodeCache defaultCache;
+DecodeCache Decoder::defaultCache;
 
-  public:
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
-
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(ExtMachInst mach_inst, Addr addr)
-    {
-        return defaultCache.decode(this, mach_inst, addr);
-    }
-};
-
-} // namespace PowerISA
-
-#endif // __ARCH_POWER_DECODER_HH__
+}

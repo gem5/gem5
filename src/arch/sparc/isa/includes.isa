@@ -51,6 +51,7 @@ output header {{
 output decoder {{
 #include <algorithm>
 
+#include "arch/sparc/decoder.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"

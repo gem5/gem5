@@ -32,6 +32,7 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'alpha':
+    Source('decoder.cc')
     Source('ev5.cc')
     Source('faults.cc')
     Source('freebsd/system.cc')

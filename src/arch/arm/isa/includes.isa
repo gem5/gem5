@@ -63,6 +63,7 @@ output header {{
 }};
 
 output decoder {{
+#include "arch/arm/decoder.hh"
 #include "arch/arm/faults.hh"
 #include "arch/arm/intregs.hh"
 #include "arch/arm/isa_traits.hh"

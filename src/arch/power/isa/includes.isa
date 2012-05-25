@@ -58,6 +58,7 @@ output decoder {{
 #include <fenv.h>
 #endif
 
+#include "arch/power/decoder.hh"
 #include "arch/power/faults.hh"
 #include "arch/power/isa_traits.hh"
 #include "arch/power/utility.hh"

@@ -47,6 +47,7 @@ output header {{
 output decoder {{
 #include <cmath>
 
+#include "arch/mips/decoder.hh"
 #include "arch/mips/dsp.hh"
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"

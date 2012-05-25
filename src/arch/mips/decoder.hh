@@ -31,13 +31,31 @@
 #ifndef __ARCH_MIPS_DECODER_HH__
 #define __ARCH_MIPS_DECODER_HH__
 
-#include "arch/generic/decoder.hh"
+#include "arch/types.hh"
+#include "cpu/decode_cache.hh"
+#include "cpu/static_inst_fwd.hh"
 
 namespace MipsISA
 {
 
-class Decoder : public GenericISA::Decoder
-{};
+class Decoder
+{
+  protected:
+    /// A cache of decoded instruction objects.
+    static DecodeCache defaultCache;
+
+  public:
+    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+
+    /// Decode a machine instruction.
+    /// @param mach_inst The binary instruction to decode.
+    /// @retval A pointer to the corresponding StaticInst object.
+    StaticInstPtr
+    decode(ExtMachInst mach_inst, Addr addr)
+    {
+        return defaultCache.decode(this, mach_inst, addr);
+    }
+};
 
 } // namespace MipsISA
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Google
+ * Copyright (c) 2011 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,11 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_GENERIC_DECODER_HH__
-#define __ARCH_GENERIC_DECODER_HH__
+#include "arch/x86/decoder.hh"
 
-#include "arch/isa_traits.hh"
-#include "arch/types.hh"
-#include "config/the_isa.hh"
-#include "cpu/decode_cache.hh"
-#include "cpu/static_inst.hh"
-
-namespace GenericISA
+namespace X86ISA
 {
 
-/// The decoder class. This class doesn't do much of anything now, but in the
-/// future it will be redefinable per ISA and allow more interesting behavior.
-class Decoder
-{
-  protected:
-    /// A cache of decoded instruction objects.
-    static DecodeCache<TheISA::decodeInst> defaultCache;
+DecodeCache Decoder::defaultCache;
 
-  public:
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(TheISA::ExtMachInst mach_inst, Addr addr)
-    {
-        return defaultCache.decode(mach_inst, addr);
-    }
-};
-
-} // namespace GenericISA
-
-#endif // __ARCH_GENERIC_DECODER_HH__
+}

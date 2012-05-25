@@ -33,6 +33,7 @@ Import('*')
 
 if env['TARGET_ISA'] == 'sparc':
     Source('asi.cc')
+    Source('decoder.cc')
     Source('faults.cc')
     Source('interrupts.cc')
     Source('isa.cc')
