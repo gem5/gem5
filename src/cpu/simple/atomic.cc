@@ -465,12 +465,12 @@ AtomicSimpleCPU::tick()
             dcache_access = false; // assume no dcache access
 
             if (needToFetch) {
-                // This is commented out because the predecoder would act like
+                // This is commented out because the decoder would act like
                 // a tiny cache otherwise. It wouldn't be flushed when needed
                 // like the I cache. It should be flushed, and when that works
                 // this code should be uncommented.
                 //Fetch more instruction memory if necessary
-                //if(predecoder.needMoreBytes())
+                //if(decoder.needMoreBytes())
                 //{
                     icache_access = true;
                     Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq);

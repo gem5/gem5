@@ -41,6 +41,69 @@ namespace PowerISA
 class Decoder
 {
   protected:
+    ThreadContext * tc;
+
+    // The extended machine instruction being generated
+    ExtMachInst emi;
+    bool instDone;
+
+  public:
+    Decoder(ThreadContext * _tc) : tc(_tc), instDone(false)
+    {
+    }
+
+    ThreadContext *
+    getTC()
+    {
+        return tc;
+    }
+
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
+
+    void
+    process()
+    {
+    }
+
+    void
+    reset()
+    {
+        instDone = false;
+    }
+
+    // Use this to give data to the predecoder. This should be used
+    // when there is control flow.
+    void
+    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    {
+        emi = inst;
+        instDone = true;
+    }
+
+    // Use this to give data to the predecoder. This should be used
+    // when instructions are executed in order.
+    void
+    moreBytes(MachInst machInst)
+    {
+        moreBytes(0, 0, machInst);
+    }
+
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
+
+    bool
+    instReady()
+    {
+        return instDone;
+    }
+  protected:
     /// A cache of decoded instruction objects.
     static DecodeCache defaultCache;
 
@@ -54,6 +117,15 @@ class Decoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         return defaultCache.decode(this, mach_inst, addr);
+    }
+
+    StaticInstPtr
+    decode(PowerISA::PCState &nextPC)
+    {
+        if (!instDone)
+            return NULL;
+        instDone = false;
+        return decode(emi, nextPC.instAddr());
     }
 };
 

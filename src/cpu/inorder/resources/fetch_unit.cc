@@ -34,7 +34,6 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
-#include "arch/predecoder.hh"
 #include "arch/utility.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
@@ -60,7 +59,7 @@ FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
       instSize(sizeof(TheISA::MachInst)), fetchBuffSize(params->fetchBuffSize)
 {
     for (int tid = 0; tid < MaxThreads; tid++)
-        predecoder[tid] = new Predecoder(NULL);
+        decoder[tid] = new Decoder(NULL);
 }
 
 FetchUnit::~FetchUnit()
@@ -92,7 +91,6 @@ void
 FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
                           DynInstPtr inst)
 {
-    ExtMachInst ext_inst;
     Addr block_addr = cacheBlockAlign(inst->getMemAddr());
     Addr fetch_addr = inst->getMemAddr();
     unsigned fetch_offset = (fetch_addr - block_addr) / instSize;
@@ -111,13 +109,11 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
     MachInst mach_inst =
         TheISA::gtoh(fetchInsts[fetch_offset]);
 
-    predecoder[tid]->setTC(cpu->thread[tid]->getTC());
-    predecoder[tid]->moreBytes(instPC, inst->instAddr(), mach_inst);
-    assert(predecoder[tid]->extMachInstReady());
-    ext_inst = predecoder[tid]->getExtMachInst(instPC);
-
+    decoder[tid]->setTC(cpu->thread[tid]->getTC());
+    decoder[tid]->moreBytes(instPC, inst->instAddr(), mach_inst);
+    assert(decoder[tid]->instReady());
+    inst->setStaticInst(decoder[tid]->decode(instPC));
     inst->pcState(instPC);
-    inst->setStaticInst(decoder.decode(ext_inst, instPC.instAddr()));
 }
 
 void
@@ -582,7 +578,7 @@ void
 FetchUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     //@todo: per thread?
-    predecoder[tid]->reset();
+    decoder[tid]->reset();
 
     //@todo: squash using dummy inst seq num
     squash(NULL, NumStages - 1, 0, tid);

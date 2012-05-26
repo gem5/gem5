@@ -64,11 +64,6 @@ class CheckerCPU;
 class ThreadContext;
 class System;
 
-namespace TheISA
-{
-    class Predecoder;
-}
-
 class CPUProgressEvent : public Event
 {
   protected:
@@ -257,7 +252,6 @@ class BaseCPU : public MemObject
 
   protected:
     std::vector<ThreadContext *> threadContexts;
-    std::vector<TheISA::Predecoder *> predecoders;
 
     Trace::InstTracer * tracer;
 

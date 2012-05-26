@@ -73,6 +73,7 @@ using namespace AlphaISA;
 output exec {{
 #include <cmath>
 
+#include "arch/alpha/decoder.hh"
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"
 #include "arch/generic/memhelpers.hh"

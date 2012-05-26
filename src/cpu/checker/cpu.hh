@@ -47,7 +47,6 @@
 #include <map>
 #include <queue>
 
-#include "arch/predecoder.hh"
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "cpu/base.hh"
@@ -155,9 +154,6 @@ class CheckerCPU : public BaseCPU
     // ISAs like ARM can have multiple destination registers to check,
     // keep them all in a std::queue
     std::queue<Result> result;
-
-    // current instruction
-    TheISA::MachInst machInst;
 
     // Pointer to the one memory request.
     RequestPtr memReq;
@@ -401,8 +397,7 @@ class Checker : public CheckerCPU
 
   public:
     Checker(Params *p)
-        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL),
-          predecoder(NULL)
+        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
     { }
 
     void switchOut();
@@ -434,7 +429,6 @@ class Checker : public CheckerCPU
     bool updateThisCycle;
 
     DynInstPtr unverifiedInst;
-    TheISA::Predecoder predecoder;
 
     std::list<DynInstPtr> instList;
     typedef typename std::list<DynInstPtr>::iterator InstListIt;

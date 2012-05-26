@@ -396,7 +396,7 @@
                 0x4: int3();
                 0x5: decode FullSystemInt default int_Ib() {
                     0: decode IMMEDIATE {
-                        // Really only the LSB matters, but the predecoder
+                        // Really only the LSB matters, but the decoder
                         // will sign extend it, and there's no easy way to
                         // specify only checking the first byte.
                         -0x80: SyscallInst::int80('xc->syscall(Rax)',

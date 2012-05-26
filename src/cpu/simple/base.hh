@@ -45,8 +45,6 @@
 #ifndef __CPU_SIMPLE_BASE_HH__
 #define __CPU_SIMPLE_BASE_HH__
 
-#include "arch/decoder.hh"
-#include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
@@ -71,7 +69,6 @@ namespace TheISA
 {
     class DTB;
     class ITB;
-    class Predecoder;
 }
 
 namespace Trace {
@@ -153,9 +150,6 @@ class BaseSimpleCPU : public BaseCPU
 
     // current instruction
     TheISA::MachInst inst;
-
-    // The predecoder
-    TheISA::Predecoder predecoder;
 
     StaticInstPtr curStaticInst;
     StaticInstPtr curMacroStaticInst;

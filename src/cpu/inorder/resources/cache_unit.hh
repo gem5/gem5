@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 
-#include "arch/predecoder.hh"
 #include "arch/tlb.hh"
 #include "base/hashmap.hh"
 #include "config/the_isa.hh"

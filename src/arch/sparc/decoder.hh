@@ -31,15 +31,82 @@
 #ifndef __ARCH_SPARC_DECODER_HH__
 #define __ARCH_SPARC_DECODER_HH__
 
+#include "arch/sparc/registers.hh"
 #include "arch/types.hh"
 #include "cpu/decode_cache.hh"
 #include "cpu/static_inst_fwd.hh"
+#include "cpu/thread_context.hh"
+
+class ThreadContext;
 
 namespace SparcISA
 {
 
 class Decoder
 {
+  protected:
+    ThreadContext * tc;
+    // The extended machine instruction being generated
+    ExtMachInst emi;
+    bool instDone;
+
+  public:
+    Decoder(ThreadContext * _tc) : tc(_tc), instDone(false)
+    {}
+
+    ThreadContext *
+    getTC()
+    {
+        return tc;
+    }
+
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
+
+    void process() {}
+
+    void
+    reset()
+    {
+        instDone = false;
+    }
+
+    // Use this to give data to the predecoder. This should be used
+    // when there is control flow.
+    void
+    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    {
+        emi = inst;
+        // The I bit, bit 13, is used to figure out where the ASI
+        // should come from. Use that in the ExtMachInst. This is
+        // slightly redundant, but it removes the need to put a condition
+        // into all the execute functions
+        if (inst & (1 << 13)) {
+            emi |= (static_cast<ExtMachInst>(
+                        tc->readMiscRegNoEffect(MISCREG_ASI))
+                    << (sizeof(MachInst) * 8));
+        } else {
+            emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
+                    << (sizeof(MachInst) * 8));
+        }
+        instDone = true;
+    }
+
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
+
+    bool
+    instReady()
+    {
+        return instDone;
+    }
+
   protected:
     /// A cache of decoded instruction objects.
     static DecodeCache defaultCache;
@@ -54,6 +121,15 @@ class Decoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         return defaultCache.decode(this, mach_inst, addr);
+    }
+
+    StaticInstPtr
+    decode(SparcISA::PCState &nextPC)
+    {
+        if (!instDone)
+            return NULL;
+        instDone = false;
+        return decode(emi, nextPC.instAddr());
     }
 };
 

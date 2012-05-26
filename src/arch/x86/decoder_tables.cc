@@ -37,7 +37,7 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/predecoder.hh"
+#include "arch/x86/decoder.hh"
 #include "arch/x86/types.hh"
 
 namespace X86ISA
@@ -58,7 +58,7 @@ namespace X86ISA
 
     //This table identifies whether a byte is a prefix, and if it is,
     //which prefix it is.
-    const uint8_t Predecoder::Prefixes[256] =
+    const uint8_t Decoder::Prefixes[256] =
     {    //LSB
 // MSB   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F
 /*   0*/ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0,
@@ -80,7 +80,7 @@ namespace X86ISA
     };
 
     //This table identifies whether a particular opcode uses the ModRM byte
-    const uint8_t Predecoder::UsesModRM[2][256] =
+    const uint8_t Decoder::UsesModRM[2][256] =
     {//For one byte instructions
         {    //LSB
 //     MSB   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F
@@ -147,7 +147,7 @@ namespace X86ISA
         PO = Pointer
     };
 
-    const uint8_t Predecoder::SizeTypeToSize[3][10] =
+    const uint8_t Decoder::SizeTypeToSize[3][10] =
     {
 //       noimm byte word dword qword oword vword zword enter pointer
         {0,    1,   2,   4,    8,    16,   2,    2,    3,    4      }, //16 bit
@@ -159,7 +159,7 @@ namespace X86ISA
     //number of bytes in the instruction, and the second is the meaningful
     //byte of the opcode. I didn't use the NI constant here for the sake
     //of clarity.
-    const uint8_t Predecoder::ImmediateType[2][256] =
+    const uint8_t Decoder::ImmediateType[2][256] =
     {//For one byte instructions
         {    //LSB
 //     MSB   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F

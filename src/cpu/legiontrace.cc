@@ -43,7 +43,6 @@
 #include <iomanip>
 
 #include "arch/sparc/decoder.hh"
-#include "arch/sparc/predecoder.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/utility.hh"
 #include "arch/tlb.hh"
@@ -146,7 +145,6 @@ Trace::LegionTraceRecord::dump()
 {
     ostream &outs = Trace::output();
 
-    static TheISA::Predecoder predecoder(NULL);
     // Compare
     bool compared = false;
     bool diffPC   = false;
@@ -423,15 +421,14 @@ Trace::LegionTraceRecord::dump()
                          << staticInst->disassemble(m5Pc, debugSymbolTable)
                          << endl;
 
-                    predecoder.setTC(thread);
-                    predecoder.moreBytes(m5Pc, m5Pc, shared_data->instruction);
+                    TheISA::Decoder *decoder = thread->getDecoderPtr();
+                    decoder->setTC(thread);
+                    decoder->moreBytes(m5Pc, m5Pc, shared_data->instruction);
 
-                    assert(predecoder.extMachInstReady());
+                    assert(decoder->instReady());
 
                     PCState tempPC = pc;
-                    StaticInstPtr legionInst =
-                        thread->getDecoderPtr()->decode(
-                                predecoder.getExtMachInst(tempPC), lgnPc);
+                    StaticInstPtr legionInst = decoder->decode(tempPC);
                     outs << setfill(' ') << setw(15)
                          << " Legion Inst: "
                          << "0x" << setw(8) << setfill('0') << hex

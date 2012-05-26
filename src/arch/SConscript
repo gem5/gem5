@@ -54,7 +54,6 @@ isa_switch_hdrs = Split('''
         mmapped_ipr.hh
         mt.hh
         process.hh
-        predecoder.hh
         registers.hh
         remote_gdb.hh
         stacktrace.hh

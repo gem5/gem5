@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "arch/decoder.hh"
-#include "arch/predecoder.hh"
 #include "arch/tlb.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
@@ -89,7 +88,7 @@ class FetchUnit : public CacheUnit
 
     void trap(Fault fault, ThreadID tid, DynInstPtr inst);
 
-    TheISA::Decoder decoder;
+    TheISA::Decoder *decoder[ThePipeline::MaxThreads];
 
   private:
     void squashCacheRequest(CacheReqPtr req_ptr);
@@ -128,8 +127,6 @@ class FetchUnit : public CacheUnit
     int instSize;
 
     int fetchBuffSize;
-
-    TheISA::Predecoder *predecoder[ThePipeline::MaxThreads];
 
     /** Valid Cache Blocks*/
     std::list<FetchBlock*> fetchBuffer;

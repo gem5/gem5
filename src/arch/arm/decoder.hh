@@ -31,15 +31,95 @@
 #ifndef __ARCH_ARM_DECODER_HH__
 #define __ARCH_ARM_DECODER_HH__
 
-#include "arch/types.hh"
+#include <cassert>
+
+#include "arch/arm/miscregs.hh"
+#include "arch/arm/types.hh"
+#include "base/types.hh"
 #include "cpu/decode_cache.hh"
-#include "cpu/static_inst_fwd.hh"
+
+class ThreadContext;
 
 namespace ArmISA
 {
 
 class Decoder
 {
+  protected:
+    ThreadContext * tc;
+    //The extended machine instruction being generated
+    ExtMachInst emi;
+    MachInst data;
+    bool bigThumb;
+    bool instDone;
+    bool outOfBytes;
+    int offset;
+    bool foundIt;
+    ITSTATE itBits;
+
+  public:
+    void reset()
+    {
+        bigThumb = false;
+        offset = 0;
+        emi = 0;
+        instDone = false;
+        outOfBytes = true;
+        foundIt = false;
+    }
+
+    Decoder(ThreadContext * _tc) : tc(_tc), data(0)
+    {
+        reset();
+    }
+
+    ThreadContext * getTC()
+    {
+        return tc;
+    }
+
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
+
+    void process();
+
+    //Use this to give data to the decoder. This should be used
+    //when there is control flow.
+    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
+
+    //Use this to give data to the decoder. This should be used
+    //when instructions are executed in order.
+    void moreBytes(MachInst machInst)
+    {
+        moreBytes(0, 0, machInst);
+    }
+
+    inline void consumeBytes(int numBytes)
+    {
+        offset += numBytes;
+        assert(offset <= sizeof(MachInst));
+        if (offset == sizeof(MachInst))
+            outOfBytes = true;
+    }
+
+    bool needMoreBytes() const
+    {
+        return outOfBytes;
+    }
+
+    bool instReady() const
+    {
+        return instDone;
+    }
+
+    int getInstSize() const
+    {
+        return (!emi.thumb || emi.bigThumb) ? 4 : 2;
+    }
+
   protected:
     /// A cache of decoded instruction objects.
     static DecodeCache defaultCache;
@@ -54,6 +134,25 @@ class Decoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         return defaultCache.decode(this, mach_inst, addr);
+    }
+
+    StaticInstPtr
+    decode(ArmISA::PCState &nextPC)
+    {
+        if (!instDone)
+            return NULL;
+
+        assert(instDone);
+        ExtMachInst thisEmi = emi;
+        nextPC.npc(nextPC.pc() + getInstSize());
+        if (foundIt)
+            nextPC.nextItstate(itBits);
+        thisEmi.itstate = nextPC.itstate();
+        nextPC.size(getInstSize());
+        emi = 0;
+        instDone = false;
+        foundIt = false;
+        return decode(thisEmi, nextPC.instAddr());
     }
 };
 

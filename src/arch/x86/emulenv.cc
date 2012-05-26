@@ -53,7 +53,7 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
         index = machInst.sib.index | (machInst.rex.x << 3);
         base = machInst.sib.base | (machInst.rex.b << 3);
         //In this special case, we don't use a base. The displacement also
-        //changes, but that's managed by the predecoder.
+        //changes, but that's managed by the decoder.
         if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
             base = NUM_INTREGS;
         //In -this- special case, we don't use an index.

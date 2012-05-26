@@ -73,7 +73,6 @@ template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
-      predecoder(NULL),
       numInst(0),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
@@ -132,6 +131,9 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
 
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
+
+    for (int i = 0; i < Impl::MaxThreads; i++)
+        decoder[i] = new TheISA::Decoder(NULL);
 }
 
 template <class Impl>
@@ -660,7 +662,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         DPRINTF(Fetch, "[tid:%i]: Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
         DynInstPtr instruction = buildInst(tid,
-                decoder.decode(TheISA::NoopMachInst, fetchPC.instAddr()),
+                decoder[tid]->decode(TheISA::NoopMachInst, fetchPC.instAddr()),
                 NULL, fetchPC, fetchPC, false);
 
         instruction->setPredTarg(fetchPC);
@@ -693,7 +695,7 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
         macroop[tid] = squashInst->macroop;
     else
         macroop[tid] = NULL;
-    predecoder.reset();
+    decoder[tid]->reset();
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -1193,8 +1195,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
-        // in the predecoder.
-        bool needMem = !inRom && !curMacroop && !predecoder.extMachInstReady();
+        // in the decoder.
+        bool needMem = !inRom && !curMacroop &&
+            !decoder[tid]->instReady();
         fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
         Addr block_PC = icacheBlockAlignPC(fetchAddr);
 
@@ -1222,10 +1225,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             }
             MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
 
-            predecoder.setTC(cpu->thread[tid]->getTC());
-            predecoder.moreBytes(thisPC, fetchAddr, inst);
+            decoder[tid]->setTC(cpu->thread[tid]->getTC());
+            decoder[tid]->moreBytes(thisPC, fetchAddr, inst);
 
-            if (predecoder.needMoreBytes()) {
+            if (decoder[tid]->needMoreBytes()) {
                 blkOffset++;
                 fetchAddr += instSize;
                 pcOffset += instSize;
@@ -1236,11 +1239,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // the memory we've processed so far.
         do {
             if (!(curMacroop || inRom)) {
-                if (predecoder.extMachInstReady()) {
-                    ExtMachInst extMachInst =
-                        predecoder.getExtMachInst(thisPC);
-                    staticInst =
-                        decoder.decode(extMachInst, thisPC.instAddr());
+                if (decoder[tid]->instReady()) {
+                    staticInst = decoder[tid]->decode(thisPC);
 
                     // Increment stat of fetched instructions.
                     ++fetchedInsts;
@@ -1311,7 +1311,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 status_change = true;
                 break;
             }
-        } while ((curMacroop || predecoder.extMachInstReady()) &&
+        } while ((curMacroop || decoder[tid]->instReady()) &&
                  numInst < fetchWidth);
     }
 

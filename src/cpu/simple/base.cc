@@ -85,7 +85,7 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
-    : BaseCPU(p), traceData(NULL), thread(NULL), predecoder(NULL)
+    : BaseCPU(p), traceData(NULL), thread(NULL)
 {
     if (FullSystem)
         thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
@@ -332,7 +332,7 @@ BaseSimpleCPU::checkForInterrupts()
             fetchOffset = 0;
             interrupts->updateIntrInfo(tc);
             interrupt->invoke(tc);
-            predecoder.reset();
+            thread->decoder.reset();
         }
     }
 }
@@ -378,23 +378,24 @@ BaseSimpleCPU::preExecute()
         //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
 
+        TheISA::Decoder *decoder = &(thread->decoder);
+
         //Predecode, ie bundle up an ExtMachInst
         //This should go away once the constructor can be set up properly
-        predecoder.setTC(thread->getTC());
+        decoder->setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
         Addr fetchPC = (pcState.instAddr() & PCMask) + fetchOffset;
-        //if(predecoder.needMoreBytes())
-            predecoder.moreBytes(pcState, fetchPC, inst);
+        //if(decoder->needMoreBytes())
+            decoder->moreBytes(pcState, fetchPC, inst);
         //else
-        //    predecoder.process();
+        //    decoder->process();
 
-        //If an instruction is ready, decode it. Otherwise, we'll have to
+        //Decode an instruction if one is ready. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
-        if (predecoder.extMachInstReady()) {
+        instPtr = decoder->decode(pcState);
+        if (instPtr) {
             stayAtPC = false;
-            ExtMachInst machInst = predecoder.getExtMachInst(pcState);
             thread->pcState(pcState);
-            instPtr = thread->decoder.decode(machInst, pcState.instAddr());
         } else {
             stayAtPC = true;
             fetchOffset += sizeof(MachInst);
@@ -505,7 +506,7 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         fault->invoke(tc, curStaticInst);
-        predecoder.reset();
+        thread->decoder.reset();
     } else {
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())

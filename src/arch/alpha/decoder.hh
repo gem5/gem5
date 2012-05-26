@@ -34,12 +34,69 @@
 #include "arch/types.hh"
 #include "cpu/decode_cache.hh"
 #include "cpu/static_inst_fwd.hh"
+#include "sim/full_system.hh"
 
 namespace AlphaISA
 {
 
 class Decoder
 {
+  protected:
+    ThreadContext *tc;
+
+    // The extended machine instruction being generated
+    ExtMachInst ext_inst;
+    bool instDone;
+
+  public:
+    Decoder(ThreadContext * _tc) : tc(_tc), instDone(false)
+    {}
+
+    ThreadContext *
+    getTC()
+    {
+        return tc;
+    }
+
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
+
+    void
+    process()
+    { }
+
+    void
+    reset()
+    {
+        instDone = false;
+    }
+
+    // Use this to give data to the predecoder. This should be used
+    // when there is control flow.
+    void
+    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    {
+        ext_inst = inst;
+        instDone = true;
+        if (FullSystem)
+            ext_inst |= (static_cast<ExtMachInst>(pc.pc() & 0x1) << 32);
+    }
+
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
+
+    bool
+    instReady()
+    {
+        return instDone;
+    }
+
   protected:
     /// A cache of decoded instruction objects.
     static DecodeCache defaultCache;
@@ -54,6 +111,15 @@ class Decoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         return defaultCache.decode(this, mach_inst, addr);
+    }
+
+    StaticInstPtr
+    decode(AlphaISA::PCState &nextPC)
+    {
+        if (!instDone)
+            return NULL;
+        instDone = false;
+        return decode(ext_inst, nextPC.instAddr());
     }
 };
 

@@ -45,7 +45,6 @@
 #define __CPU_O3_FETCH_HH__
 
 #include "arch/decoder.hh"
-#include "arch/predecoder.hh"
 #include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
@@ -340,7 +339,7 @@ class DefaultFetch
     }
 
     /** The decoder. */
-    TheISA::Decoder decoder;
+    TheISA::Decoder *decoder[Impl::MaxThreads];
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
@@ -397,9 +396,6 @@ class DefaultFetch
 
     /** BPredUnit. */
     BPredUnit branchPred;
-
-    /** Predecoder. */
-    TheISA::Predecoder predecoder;
 
     TheISA::PCState pc[Impl::MaxThreads];
 

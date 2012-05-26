@@ -45,6 +45,7 @@ Import('*')
 if env['TARGET_ISA'] == 'x86':
     Source('cpuid.cc')
     Source('decoder.cc')
+    Source('decoder_tables.cc')
     Source('emulenv.cc')
     Source('faults.cc')
     Source('insts/badmicroop.cc')
@@ -63,8 +64,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('nativetrace.cc')
     Source('pagetable.cc')
     Source('pagetable_walker.cc')
-    Source('predecoder.cc')
-    Source('predecoder_tables.cc')
     Source('process.cc')
     Source('remote_gdb.cc')
     Source('stacktrace.cc')
@@ -83,7 +82,7 @@ if env['TARGET_ISA'] == 'x86':
     DebugFlag('LocalApic', "Local APIC debugging")
     DebugFlag('PageTableWalker', \
               "Page table walker state machine debugging")
-    DebugFlag('Predecoder', "Predecoder debug output")
+    DebugFlag('Decoder', "Decoder debug output")
     DebugFlag('X86', "Generic X86 ISA debugging")
 
     python_files = (

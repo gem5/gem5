@@ -1773,9 +1773,9 @@ InOrderCPU::getDTBPtr()
 }
 
 TheISA::Decoder *
-InOrderCPU::getDecoderPtr()
+InOrderCPU::getDecoderPtr(unsigned tid)
 {
-    return &resPool->getInstUnit()->decoder;
+    return resPool->getInstUnit()->decoder[tid];
 }
 
 Fault
