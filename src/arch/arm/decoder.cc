@@ -38,7 +38,7 @@
 namespace ArmISA
 {
 
-DecodeCache Decoder::defaultCache;
+GenericISA::BasicDecodeCache Decoder::defaultCache;
 
 void
 Decoder::process()

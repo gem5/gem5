@@ -31,10 +31,10 @@
 #ifndef __ARCH_SPARC_DECODER_HH__
 #define __ARCH_SPARC_DECODER_HH__
 
+#include "arch/generic/decode_cache.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/types.hh"
-#include "cpu/decode_cache.hh"
-#include "cpu/static_inst_fwd.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
 class ThreadContext;
@@ -109,7 +109,7 @@ class Decoder
 
   protected:
     /// A cache of decoded instruction objects.
-    static DecodeCache defaultCache;
+    static GenericISA::BasicDecodeCache defaultCache;
 
   public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);

@@ -40,7 +40,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/decode_cache.hh"
-#include "cpu/static_inst_fwd.hh"
+#include "cpu/static_inst.hh"
 #include "debug/Decoder.hh"
 
 class ThreadContext;
@@ -218,8 +218,9 @@ class Decoder
     }
 
   protected:
-    /// A cache of decoded instruction objects.
-    static DecodeCache defaultCache;
+    /// Caching for decoded instruction objects.
+    static DecodeCache::InstMap instMap;
+    static DecodeCache::AddrMap<StaticInstPtr> decodePages;
 
   public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -227,11 +228,7 @@ class Decoder
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(ExtMachInst mach_inst, Addr addr)
-    {
-        return defaultCache.decode(this, mach_inst, addr);
-    }
+    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
     StaticInstPtr
     decode(X86ISA::PCState &nextPC)

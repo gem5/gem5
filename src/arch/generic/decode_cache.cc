@@ -28,86 +28,32 @@
  * Authors: Gabe Black
  */
 
+#include "arch/generic/decode_cache.hh"
 #include "arch/decoder.hh"
-#include "arch/isa_traits.hh"
 #include "arch/types.hh"
-#include "base/hashmap.hh"
 #include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 
-void
-DecodeCache::DecodePages::update(PageIt recentest)
+namespace GenericISA
 {
-    recent[1] = recent[0];
-    recent[0] = recentest;
-}
-
-void
-DecodeCache::DecodePages::addPage(Addr addr, DecodePage *page)
-{
-    Addr page_addr = addr & ~(TheISA::PageBytes - 1);
-    typename PageMap::value_type to_insert(page_addr, page);
-    update(pageMap.insert(to_insert).first);
-}
-
-DecodeCache::DecodePages::DecodePages()
-{
-    recent[0] = recent[1] = pageMap.end();
-}
-
-DecodeCache::DecodePage *
-DecodeCache::DecodePages::getPage(Addr addr)
-{
-    Addr page_addr = addr & ~(TheISA::PageBytes - 1);
-
-    // Check against recent lookups.
-    if (recent[0] != pageMap.end()) {
-        if (recent[0]->first == page_addr)
-            return recent[0]->second;
-        if (recent[1] != pageMap.end() &&
-                recent[1]->first == page_addr) {
-            update(recent[1]);
-            // recent[1] has just become recent[0].
-            return recent[0]->second;
-        }
-    }
-
-    // Actually look in the has_map.
-    PageIt it = pageMap.find(page_addr);
-    if (it != pageMap.end()) {
-        update(it);
-        return it->second;
-    }
-
-    // Didn't find an existing page, so add a new one.
-    DecodePage *newPage = new DecodePage;
-    addPage(page_addr, newPage);
-    return newPage;
-}
 
 StaticInstPtr
-DecodeCache::decode(TheISA::Decoder *decoder,
-        ExtMachInst mach_inst, Addr addr)
+BasicDecodeCache::decode(TheISA::Decoder *decoder,
+        TheISA::ExtMachInst mach_inst, Addr addr)
 {
-    // Try to find a matching address based table of instructions.
-    DecodePage *page = decodePages.getPage(addr);
-
-    // Use the table to decode the instruction. It will fall back to other
-    // mechanisms if it needs to.
-    Addr offset = addr & (TheISA::PageBytes - 1);
-    StaticInstPtr si = page->insts[offset];
+    StaticInstPtr &si = decodePages.lookup(addr);
     if (si && (si->machInst == mach_inst))
         return si;
 
-    InstMap::iterator iter = instMap.find(mach_inst);
+    DecodeCache::InstMap::iterator iter = instMap.find(mach_inst);
     if (iter != instMap.end()) {
         si = iter->second;
-        page->insts[offset] = si;
         return si;
     }
 
     si = decoder->decodeInst(mach_inst);
     instMap[mach_inst] = si;
-    page->insts[offset] = si;
     return si;
 }
+
+} // namespace GenericISA

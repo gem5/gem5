@@ -33,6 +33,6 @@
 namespace SparcISA
 {
 
-DecodeCache Decoder::defaultCache;
+GenericISA::BasicDecodeCache Decoder::defaultCache;
 
 }

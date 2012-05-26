@@ -408,6 +408,25 @@ Decoder::State Decoder::doImmediateState()
     return nextState;
 }
 
-DecodeCache Decoder::defaultCache;
+DecodeCache::InstMap Decoder::instMap;
+DecodeCache::AddrMap<StaticInstPtr> Decoder::decodePages;
+
+StaticInstPtr
+Decoder::decode(ExtMachInst mach_inst, Addr addr)
+{
+    StaticInstPtr &si = decodePages.lookup(addr);
+    if (si && (si->machInst == mach_inst))
+        return si;
+
+    DecodeCache::InstMap::iterator iter = instMap.find(mach_inst);
+    if (iter != instMap.end()) {
+        si = iter->second;
+        return si;
+    }
+
+    si = decodeInst(mach_inst);
+    instMap[mach_inst] = si;
+    return si;
+}
 
 }

@@ -35,8 +35,9 @@
 
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
+#include "arch/generic/decode_cache.hh"
 #include "base/types.hh"
-#include "cpu/decode_cache.hh"
+#include "cpu/static_inst.hh"
 
 class ThreadContext;
 
@@ -122,7 +123,7 @@ class Decoder
 
   protected:
     /// A cache of decoded instruction objects.
-    static DecodeCache defaultCache;
+    static GenericISA::BasicDecodeCache defaultCache;
 
   public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);

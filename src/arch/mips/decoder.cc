@@ -33,6 +33,6 @@
 namespace MipsISA
 {
 
-DecodeCache Decoder::defaultCache;
+GenericISA::BasicDecodeCache Decoder::defaultCache;
 
 }
