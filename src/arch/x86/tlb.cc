@@ -289,7 +289,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                     return new GeneralProtection(0);
             }
         }
-        if (m5Reg.mode != LongMode ||
+        if (m5Reg.submode != SixtyFourBitMode ||
                 (flags & (AddrSizeFlagBit << FlagShift)))
             vaddr &= mask(32);
         // If paging is enabled, do the translation.
