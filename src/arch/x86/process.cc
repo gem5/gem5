@@ -132,7 +132,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
-    _gdtStart = ULL(0x100000000);
+    _gdtStart = ULL(0xffffd000);
     _gdtSize = VMPageSize;
 
     vsyscallPage.base = 0xffffe000ULL;
@@ -140,7 +140,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
     vsyscallPage.vsyscallOffset = 0x400;
     vsyscallPage.vsysexitOffset = 0x410;
 
-    stack_base = vsyscallPage.base;
+    stack_base = _gdtStart;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
