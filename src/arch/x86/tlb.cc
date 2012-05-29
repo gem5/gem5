@@ -269,15 +269,10 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             }
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
-            // This assumes we're not in 64 bit mode. If we were, the default
-            // address size is 64 bits, overridable to 32.
-            int size = 32;
             bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
-            SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
-            if ((csAttr.defaultSize && sizeOverride) ||
-                    (!csAttr.defaultSize && !sizeOverride))
-                size = 16;
-            Addr offset = bits(vaddr - base, size-1, 0);
+            int logSize = sizeOverride ? m5Reg.altAddr : m5Reg.defAddr;
+            int size = (1 << logSize) * 8;
+            Addr offset = bits(vaddr - base, size - 1, 0);
             Addr endOffset = offset + req->getSize() - 1;
             if (expandDown) {
                 DPRINTF(TLB, "Checking an expand down segment.\n");
