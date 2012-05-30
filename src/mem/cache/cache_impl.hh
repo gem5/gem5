@@ -1193,14 +1193,12 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
                 pkt->assertShared();
             }
         } else {
-            PortID origSrc = pkt->getSrc();
             cpuSidePort->sendAtomicSnoop(pkt);
             if (!alreadyResponded && pkt->memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache:
                 // forward response to original requester
                 assert(pkt->isResponse());
             }
-            pkt->setSrc(origSrc);
         }
     }
 

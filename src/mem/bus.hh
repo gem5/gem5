@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,25 +91,25 @@ class Bus : public MemObject
          * When receiving a timing request, pass it to the bus.
          */
         virtual bool recvTimingReq(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingReq(pkt); }
+        { return bus->recvTimingReq(pkt, id); }
 
         /**
          * When receiving a timing snoop response, pass it to the bus.
          */
         virtual bool recvTimingSnoopResp(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingSnoopResp(pkt); }
+        { return bus->recvTimingSnoopResp(pkt, id); }
 
         /**
          * When receiving an atomic request, pass it to the bus.
          */
         virtual Tick recvAtomic(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvAtomic(pkt); }
+        { return bus->recvAtomic(pkt, id); }
 
         /**
          * When receiving a functional request, pass it to the bus.
          */
         virtual void recvFunctional(PacketPtr pkt)
-        { pkt->setSrc(id); bus->recvFunctional(pkt); }
+        { bus->recvFunctional(pkt, id); }
 
         /**
          * When receiving a retry, pass it to the bus.
@@ -122,13 +122,13 @@ class Bus : public MemObject
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
         virtual AddrRangeList getAddrRanges()
-        { return bus->getAddrRanges(id); }
+        { return bus->getAddrRanges(); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
         // support multiple block sizes.
         virtual unsigned deviceBlockSize() const
-        { return bus->findBlockSize(id); }
+        { return bus->findBlockSize(); }
 
     };
 
@@ -157,7 +157,7 @@ class Bus : public MemObject
          * @return a boolean that is true if this port is snooping
          */
         virtual bool isSnooping() const
-        { return bus->isSnooping(id); }
+        { return bus->isSnooping(); }
 
       protected:
 
@@ -165,25 +165,25 @@ class Bus : public MemObject
          * When receiving a timing response, pass it to the bus.
          */
         virtual bool recvTimingResp(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingResp(pkt); }
+        { return bus->recvTimingResp(pkt, id); }
 
         /**
          * When receiving a timing snoop request, pass it to the bus.
          */
         virtual void recvTimingSnoopReq(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvTimingSnoopReq(pkt); }
+        { return bus->recvTimingSnoopReq(pkt, id); }
 
         /**
          * When receiving an atomic snoop request, pass it to the bus.
          */
         virtual Tick recvAtomicSnoop(PacketPtr pkt)
-        { pkt->setSrc(id); return bus->recvAtomicSnoop(pkt); }
+        { return bus->recvAtomicSnoop(pkt, id); }
 
         /**
          * When receiving a functional snoop request, pass it to the bus.
          */
         virtual void recvFunctionalSnoop(PacketPtr pkt)
-        { pkt->setSrc(id); bus->recvFunctionalSnoop(pkt); }
+        { bus->recvFunctionalSnoop(pkt, id); }
 
         /** When reciving a range change from the peer port (at id),
             pass it to the bus. */
@@ -193,13 +193,13 @@ class Bus : public MemObject
         /** When reciving a retry from the peer port (at id),
             pass it to the bus. */
         virtual void recvRetry()
-        { bus->recvRetry(id); }
+        { bus->recvRetry(); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
         // support multiple block sizes.
         virtual unsigned deviceBlockSize() const
-        { return bus->findBlockSize(id); }
+        { return bus->findBlockSize(); }
 
     };
 
@@ -230,19 +230,19 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a Timing
       request packet.*/
-    bool recvTimingReq(PacketPtr pkt);
+    bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
 
     /** Function called by the port when the bus is recieving a Timing
       response packet.*/
-    bool recvTimingResp(PacketPtr pkt);
+    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a timing
         snoop request.*/
-    void recvTimingSnoopReq(PacketPtr pkt);
+    void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a timing
         snoop response.*/
-    bool recvTimingSnoopResp(PacketPtr pkt);
+    bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
 
     /**
      * Forward a timing packet to our snoopers, potentially excluding
@@ -277,11 +277,11 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
-    Tick recvAtomic(PacketPtr pkt);
+    Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
 
     /** Function called by the port when the bus is recieving an
         atomic snoop transaction.*/
-    Tick recvAtomicSnoop(PacketPtr pkt);
+    Tick recvAtomicSnoop(PacketPtr pkt, PortID master_port_id);
 
     /**
      * Forward an atomic packet to our snoopers, potentially excluding
@@ -298,11 +298,11 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
-    void recvFunctional(PacketPtr pkt);
+    void recvFunctional(PacketPtr pkt, PortID slave_port_id);
 
     /** Function called by the port when the bus is recieving a functional
         snoop transaction.*/
-    void recvFunctionalSnoop(PacketPtr pkt);
+    void recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id);
 
     /**
      * Forward a functional packet to our snoopers, potentially
@@ -316,10 +316,14 @@ class Bus : public MemObject
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry(PortID id);
+    void recvRetry();
 
-    /** Function called by the port when the bus is recieving a range change.*/
-    void recvRangeChange(PortID id);
+    /**
+     * Function called by the port when the bus is recieving a range change.
+     *
+     * @param master_port_id id of the port that received the change
+     */
+    void recvRangeChange(PortID master_port_id);
 
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
@@ -383,22 +387,18 @@ class Bus : public MemObject
     }
 
     /**
-     * Return the address ranges this port is responsible for.
-     *
-     * @param id id of the bus port that made the request
+     * Return the address ranges the bus is responsible for.
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges(PortID id);
+    AddrRangeList getAddrRanges();
 
     /**
      * Determine if the bus port is snooping or not.
      *
-     * @param id id of the bus port that made the request
-     *
      * @return a boolean indicating if this port is snooping or not
      */
-    bool isSnooping(PortID id) const;
+    bool isSnooping() const;
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
@@ -423,11 +423,12 @@ class Bus : public MemObject
      */
     void retryWaiting();
 
-    /** Ask everyone on the bus what their size is
-     * @param id id of the busport that made the request
+    /**
+     * Ask everyone on the bus what their size is
+     *
      * @return the max of all the sizes
      */
-    unsigned findBlockSize(PortID id);
+    unsigned findBlockSize();
 
     // event used to schedule a release of the bus
     EventWrapper<Bus, &Bus::releaseBus> busIdleEvent;
