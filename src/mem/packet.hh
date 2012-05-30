@@ -295,19 +295,26 @@ class Packet : public FastAlloc, public Printable
     unsigned size;
 
     /**
-     * Device address (e.g., bus ID) of the source of the
-     * transaction. The source is not responsible for setting this
-     * field; it is set implicitly by the interconnect when the packet
-     * is first sent.
+     * Source port identifier set on a request packet to enable
+     * appropriate routing of the responses. The source port
+     * identifier is set by any multiplexing component, e.g. a bus, as
+     * the timing responses need this information to be routed back to
+     * the appropriate port at a later point in time. The field can be
+     * updated (over-written) as the request packet passes through
+     * additional multiplexing components, and it is their
+     * responsibility to remember the original source port identifier,
+     * for example by using an appropriate sender state. The latter is
+     * done in the cache and bridge.
      */
     NodeID src;
 
     /**
-     * Device address (e.g., bus ID) of the destination of the
-     * transaction. The special value Broadcast indicates that the
-     * packet should be routed based on its address. This field is
-     * initialized in the constructor and is thus always valid (unlike
-     * addr, size, and src).
+     * Destination port identifier that is present on all response
+     * packets that passed through a multiplexing component as a
+     * request packet. The source port identifier is turned into a
+     * destination port identifier when the packet is turned into a
+     * response, and the destination is used, e.g. by the bus, to
+     * select the appropriate path through the interconnect.
      */
     NodeID dest;
 
@@ -527,8 +534,7 @@ class Packet : public FastAlloc, public Printable
     /**
      * Constructor.  Note that a Request object must be constructed
      * first, but the Requests's physical address and size fields need
-     * not be valid. The command and destination addresses must be
-     * supplied.
+     * not be valid. The command must be supplied.
      */
     Packet(Request *_req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(NULL),
@@ -620,9 +626,10 @@ class Packet : public FastAlloc, public Printable
 
     /**
      * Take a request packet and modify it in place to be suitable for
-     * returning as a response to that request.  The source and
-     * destination fields are *not* modified, as is appropriate for
-     * atomic accesses.
+     * returning as a response to that request. The source field is
+     * turned into the destination, and subsequently cleared. Note
+     * that the latter is not necessary for atomic requests, but
+     * causes no harm as neither field is valid.
      */
     void
     makeResponse()
