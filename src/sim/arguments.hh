@@ -137,7 +137,7 @@ class Arguments
     template <class T>
     operator T *() {
         T *buf = (T *)data->alloc(sizeof(T));
-        CopyData(tc, buf, getArg(sizeof(T)), sizeof(T));
+        CopyOut(tc, buf, getArg(sizeof(T)), sizeof(T));
         return buf;
     }
 
