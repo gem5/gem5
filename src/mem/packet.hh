@@ -41,6 +41,7 @@
  * Authors: Ron Dreslinski
  *          Steve Reinhardt
  *          Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
@@ -231,7 +232,6 @@ class Packet : public FastAlloc, public Printable
   public:
     typedef uint32_t FlagsType;
     typedef ::Flags<FlagsType> Flags;
-    typedef short NodeID;
 
   private:
     static const FlagsType PUBLIC_FLAGS           = 0x00000000;
@@ -250,9 +250,6 @@ class Packet : public FastAlloc, public Printable
     /// Are the 'addr' and 'size' fields valid?
     static const FlagsType VALID_ADDR             = 0x00000100;
     static const FlagsType VALID_SIZE             = 0x00000200;
-    /// Is the 'src' field valid? 
-    static const FlagsType VALID_SRC              = 0x00000400;
-    static const FlagsType VALID_DST              = 0x00000800;
     /// Is the data pointer set to a value that shouldn't be freed
     /// when the packet is destroyed?
     static const FlagsType STATIC_DATA            = 0x00001000;
@@ -306,7 +303,7 @@ class Packet : public FastAlloc, public Printable
      * for example by using an appropriate sender state. The latter is
      * done in the cache and bridge.
      */
-    NodeID src;
+    PortID src;
 
     /**
      * Destination port identifier that is present on all response
@@ -316,7 +313,7 @@ class Packet : public FastAlloc, public Printable
      * response, and the destination is used, e.g. by the bus, to
      * select the appropriate path through the interconnect.
      */
-    NodeID dest;
+    PortID dest;
 
     /**
      * The original value of the command field.  Only valid when the
@@ -487,21 +484,21 @@ class Packet : public FastAlloc, public Printable
     bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
-    bool isSrcValid() { return flags.isSet(VALID_SRC); }
+    bool isSrcValid() const { return src != InvalidPortID; }
     /// Accessor function to get the source index of the packet.
-    NodeID getSrc() const    { assert(flags.isSet(VALID_SRC)); return src; }
+    PortID getSrc() const { assert(isSrcValid()); return src; }
     /// Accessor function to set the source index of the packet.
-    void setSrc(NodeID _src) { src = _src; flags.set(VALID_SRC); }
+    void setSrc(PortID _src) { src = _src; }
     /// Reset source field, e.g. to retransmit packet on different bus.
-    void clearSrc() { flags.clear(VALID_SRC); }
+    void clearSrc() { src = InvalidPortID; }
 
-    bool isDestValid() { return flags.isSet(VALID_DST); }
+    bool isDestValid() const { return dest != InvalidPortID; }
     /// Accessor function for the destination index of the packet.
-    NodeID getDest() const     { assert(flags.isSet(VALID_DST)); return dest; }
+    PortID getDest() const { assert(isDestValid()); return dest; }
     /// Accessor function to set the destination index of the packet.
-    void setDest(NodeID _dest) { dest = _dest; flags.set(VALID_DST); }
+    void setDest(PortID _dest) { dest = _dest; }
     /// Reset destination field, e.g. to turn a response into a request again.
-    void clearDest() { flags.clear(VALID_DST); }
+    void clearDest() { dest = InvalidPortID; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
@@ -538,6 +535,7 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(NULL),
+           src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            time(curTick()), senderState(NULL)
     {
@@ -558,6 +556,7 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(NULL),
+           src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            time(curTick()), senderState(NULL)
     {
@@ -586,7 +585,7 @@ class Packet : public FastAlloc, public Printable
         if (!clearFlags)
             flags.set(pkt->flags & COPY_FLAGS);
 
-        flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE|VALID_SRC|VALID_DST));
+        flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
         flags.set(pkt->flags & STATIC_DATA);
 
     }
@@ -644,8 +643,7 @@ class Packet : public FastAlloc, public Printable
         flags.clear(EXPRESS_SNOOP);
 
         dest = src;
-        flags.set(VALID_DST, flags.isSet(VALID_SRC));
-        flags.clear(VALID_SRC);
+        clearSrc();
     }
 
     void

@@ -91,7 +91,7 @@ class Bridge : public MemObject
       public:
 
         Packet::SenderState *origSenderState;
-        Packet::NodeID origSrc;
+        PortID origSrc;
 
         RequestState(PacketPtr _pkt)
             : origSenderState(_pkt->senderState),

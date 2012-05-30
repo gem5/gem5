@@ -352,7 +352,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 class ForwardResponseRecord : public Packet::SenderState, public FastAlloc
 {
     Packet::SenderState *prevSenderState;
-    Packet::NodeID prevSrc;
+    PortID prevSrc;
 #ifndef NDEBUG
     BaseCache *cache;
 #endif
@@ -1193,7 +1193,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
                 pkt->assertShared();
             }
         } else {
-            Packet::NodeID origSrc = pkt->getSrc();
+            PortID origSrc = pkt->getSrc();
             cpuSidePort->sendAtomicSnoop(pkt);
             if (!alreadyResponded && pkt->memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache:

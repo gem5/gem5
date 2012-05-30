@@ -54,7 +54,7 @@ class RubyDirectedTester : public MemObject
 
       public:
         CpuPort(const std::string &_name, RubyDirectedTester *_tester,
-                Port::PortId _id)
+                PortID _id)
             : MasterPort(_name, _tester, _id), tester(_tester)
         {}
 

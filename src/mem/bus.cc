@@ -57,7 +57,7 @@ Bus::Bus(const BusParams *p)
     : MemObject(p), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
       drainEvent(NULL), busIdleEvent(this), inRetry(false),
-      defaultPortId(Port::INVALID_PORT_ID),
+      defaultPortID(InvalidPortID),
       useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
@@ -82,9 +82,9 @@ Bus::Bus(const BusParams *p)
     // see if we have a default slave device connected and if so add
     // our corresponding master port
     if (p->port_default_connection_count) {
-        defaultPortId = masterPorts.size();
+        defaultPortID = masterPorts.size();
         std::string portName = csprintf("%s-default", name());
-        MasterPort* bp = new BusMasterPort(portName, this, defaultPortId);
+        MasterPort* bp = new BusMasterPort(portName, this, defaultPortID);
         masterPorts.push_back(bp);
     }
 
@@ -105,7 +105,7 @@ Bus::getMasterPort(const std::string &if_name, int idx)
         // the master port index translates directly to the vector position
         return *masterPorts[idx];
     } else  if (if_name == "default") {
-        return *masterPorts[defaultPortId];
+        return *masterPorts[defaultPortID];
     } else {
         return MemObject::getMasterPort(if_name, idx);
     }
@@ -318,7 +318,7 @@ Bus::recvTimingSnoopReq(PacketPtr pkt)
     assert(pkt->isExpressSnoop());
 
     // forward to all snoopers
-    forwardTiming(pkt, Port::INVALID_PORT_ID);
+    forwardTiming(pkt, InvalidPortID);
 
     // a snoop request came from a connected slave device (one of
     // our master ports), and if it is not coming from the slave
@@ -347,7 +347,7 @@ Bus::recvTimingSnoopResp(PacketPtr pkt)
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // get the destination from the packet
-    Packet::NodeID dest = pkt->getDest();
+    PortID dest = pkt->getDest();
 
     // responses are never express snoops
     assert(!pkt->isExpressSnoop());
@@ -410,7 +410,7 @@ Bus::succeededTiming(Tick busy_time)
 }
 
 void
-Bus::forwardTiming(PacketPtr pkt, int exclude_slave_port_id)
+Bus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
 {
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
@@ -418,7 +418,7 @@ Bus::forwardTiming(PacketPtr pkt, int exclude_slave_port_id)
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (exclude_slave_port_id == Port::INVALID_PORT_ID ||
+        if (exclude_slave_port_id == InvalidPortID ||
             p->getId() != exclude_slave_port_id) {
             // cache is not allowed to refuse snoop
             p->sendTimingSnoopReq(pkt);
@@ -481,7 +481,7 @@ Bus::retryWaiting()
 }
 
 void
-Bus::recvRetry(Port::PortId id)
+Bus::recvRetry(PortID id)
 {
     // we got a retry from a peer that we tried to send something to
     // and failed, but we sent it on the account of someone else, and
@@ -500,14 +500,12 @@ Bus::recvRetry(Port::PortId id)
     }
 }
 
-int
+PortID
 Bus::findPort(Addr addr)
 {
     /* An interval tree would be a better way to do this. --ali. */
-    int dest_id;
-
-    dest_id = checkPortCache(addr);
-    if (dest_id != Port::INVALID_PORT_ID)
+    PortID dest_id = checkPortCache(addr);
+    if (dest_id != InvalidPortID)
         return dest_id;
 
     // Check normal port ranges
@@ -524,13 +522,13 @@ Bus::findPort(Addr addr)
         for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
             if (*i == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
-                return defaultPortId;
+                return defaultPortID;
             }
         }
-    } else if (defaultPortId != Port::INVALID_PORT_ID) {
+    } else if (defaultPortID != InvalidPortID) {
         DPRINTF(Bus, "Unable to find destination for addr %#llx, "
                 "will use default port\n", addr);
-        return defaultPortId;
+        return defaultPortID;
     }
 
     // we should use the range for the default port and it did not
@@ -560,7 +558,7 @@ Bus::recvAtomic(PacketPtr pkt)
 
     // even if we had a snoop response, we must continue and also
     // perform the actual request at the destination
-    int dest_id = findPort(pkt->getAddr());
+    PortID dest_id = findPort(pkt->getAddr());
 
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
@@ -586,7 +584,7 @@ Bus::recvAtomicSnoop(PacketPtr pkt)
 
     // forward to all snoopers
     std::pair<MemCmd, Tick> snoop_result =
-        forwardAtomic(pkt, Port::INVALID_PORT_ID);
+        forwardAtomic(pkt, InvalidPortID);
     MemCmd snoop_response_cmd = snoop_result.first;
     Tick snoop_response_latency = snoop_result.second;
 
@@ -598,12 +596,12 @@ Bus::recvAtomicSnoop(PacketPtr pkt)
 }
 
 std::pair<MemCmd, Tick>
-Bus::forwardAtomic(PacketPtr pkt, int exclude_slave_port_id)
+Bus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
 {
     // the packet may be changed on snoops, record the original source
     // and command to enable us to restore it between snoops so that
     // additional snoops can take place properly
-    Packet::NodeID orig_src_id = pkt->getSrc();
+    PortID orig_src_id = pkt->getSrc();
     MemCmd orig_cmd = pkt->cmd;
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
@@ -614,7 +612,7 @@ Bus::forwardAtomic(PacketPtr pkt, int exclude_slave_port_id)
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (exclude_slave_port_id == Port::INVALID_PORT_ID ||
+        if (exclude_slave_port_id == InvalidPortID ||
             p->getId() != exclude_slave_port_id) {
             Tick latency = p->sendAtomicSnoop(pkt);
             // in contrast to a functional access, we have to keep on
@@ -662,7 +660,7 @@ Bus::recvFunctional(PacketPtr pkt)
     // there is no need to continue if the snooping has found what we
     // were looking for and the packet is already a response
     if (!pkt->isResponse()) {
-        int dest_id = findPort(pkt->getAddr());
+        PortID dest_id = findPort(pkt->getAddr());
 
         masterPorts[dest_id]->sendFunctional(pkt);
     }
@@ -680,11 +678,11 @@ Bus::recvFunctionalSnoop(PacketPtr pkt)
     }
 
     // forward to all snoopers
-    forwardFunctional(pkt, Port::INVALID_PORT_ID);
+    forwardFunctional(pkt, InvalidPortID);
 }
 
 void
-Bus::forwardFunctional(PacketPtr pkt, int exclude_slave_port_id)
+Bus::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
 {
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
@@ -692,7 +690,7 @@ Bus::forwardFunctional(PacketPtr pkt, int exclude_slave_port_id)
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (exclude_slave_port_id == Port::INVALID_PORT_ID ||
+        if (exclude_slave_port_id == InvalidPortID ||
             p->getId() != exclude_slave_port_id)
             p->sendFunctionalSnoop(pkt);
 
@@ -705,7 +703,7 @@ Bus::forwardFunctional(PacketPtr pkt, int exclude_slave_port_id)
 
 /** Function called by the port when the bus is receiving a range change.*/
 void
-Bus::recvRangeChange(Port::PortId id)
+Bus::recvRangeChange(PortID id)
 {
     AddrRangeList ranges;
     AddrRangeIter iter;
@@ -717,7 +715,7 @@ Bus::recvRangeChange(Port::PortId id)
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
     clearPortCache();
-    if (id == defaultPortId) {
+    if (id == defaultPortID) {
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
@@ -749,7 +747,7 @@ Bus::recvRangeChange(Port::PortId id)
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
                     iter->start, iter->end, id);
             if (portMap.insert(*iter, id) == portMap.end()) {
-                int conflict_id = portMap.find(*iter)->second;
+                PortID conflict_id = portMap.find(*iter)->second;
                 fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
                       name(), masterPorts[id]->getSlavePort().name(),
                       masterPorts[conflict_id]->getSlavePort().name());
@@ -768,7 +766,7 @@ Bus::recvRangeChange(Port::PortId id)
 }
 
 AddrRangeList
-Bus::getAddrRanges(Port::PortId id)
+Bus::getAddrRanges(PortID id)
 {
     AddrRangeList ranges;
 
@@ -809,14 +807,14 @@ Bus::getAddrRanges(Port::PortId id)
 }
 
 bool
-Bus::isSnooping(Port::PortId id) const
+Bus::isSnooping(PortID id) const
 {
     // in essence, answer the question if there are snooping ports
     return !snoopPorts.empty();
 }
 
 unsigned
-Bus::findBlockSize(Port::PortId id)
+Bus::findBlockSize(PortID id)
 {
     if (cachedBlockSizeValid)
         return cachedBlockSize;

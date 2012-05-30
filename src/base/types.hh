@@ -97,6 +97,12 @@ const Addr MaxAddr = (Addr)-1;
 typedef int16_t ThreadID;
 const ThreadID InvalidThreadID = (ThreadID)-1;
 
+/**
+ * Port index/ID type, and a symbolic name for an invalid port id.
+ */
+typedef int16_t PortID;
+const PortID InvalidPortID = (PortID)-1;
+
 class FaultBase;
 template <class T> class RefCountingPtr;
 typedef RefCountingPtr<FaultBase> Fault;
