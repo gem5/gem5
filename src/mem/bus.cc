@@ -184,7 +184,7 @@ void Bus::occupyBus(Tick until)
 }
 
 bool
-Bus::isOccupied(PacketPtr pkt, Port* port)
+Bus::isOccupied(Port* port)
 {
     // first we see if the next idle tick is in the future, next the
     // bus is considered occupied if there are ports on the retry list
@@ -204,8 +204,8 @@ Bus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     SlavePort *src_port = slavePorts[slave_port_id];
 
     // test if the bus should be considered occupied for the current
-    // packet, and exclude express snoops from the check
-    if (!pkt->isExpressSnoop() && isOccupied(pkt, src_port)) {
+    // port, and exclude express snoops from the check
+    if (!pkt->isExpressSnoop() && isOccupied(src_port)) {
         DPRINTF(Bus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -277,8 +277,8 @@ Bus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     MasterPort *src_port = masterPorts[master_port_id];
 
     // test if the bus should be considered occupied for the current
-    // packet
-    if (isOccupied(pkt, src_port)) {
+    // port
+    if (isOccupied(src_port)) {
         DPRINTF(Bus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -343,7 +343,9 @@ Bus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // determine the source port based on the id
     SlavePort* src_port = slavePorts[slave_port_id];
 
-    if (isOccupied(pkt, src_port)) {
+    // test if the bus should be considered occupied for the current
+    // port
+    if (isOccupied(src_port)) {
         DPRINTF(Bus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;

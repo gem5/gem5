@@ -259,12 +259,11 @@ class Bus : public MemObject
      * presented with a packet from a specific port. If so, the port
      * in question is also added to the retry list.
      *
-     * @param pkt Incoming packet
      * @param port Source port on the bus presenting the packet
      *
      * @return True if the bus is to be considered occupied
      */
-    bool isOccupied(PacketPtr pkt, Port* port);
+    bool isOccupied(Port* port);
 
     /**
      * Deal with a destination port accepting a packet by potentially
