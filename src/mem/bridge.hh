@@ -81,29 +81,22 @@ class Bridge : public MemObject
   protected:
 
     /**
-     * A packet buffer stores packets along with their sender state
-     * and scheduled time for transmission.
+     * A bridge request state stores packets along with their sender
+     * state and original source. It has enough information to also
+     * restore the response once it comes back to the bridge.
      */
-    class PacketBuffer : public Packet::SenderState, public FastAlloc {
+    class RequestState : public Packet::SenderState, public FastAlloc
+    {
 
       public:
-        Tick ready;
-        PacketPtr pkt;
-        bool nackedHere;
+
         Packet::SenderState *origSenderState;
         Packet::NodeID origSrc;
-        bool expectResponse;
 
-        PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
-            : ready(t), pkt(_pkt), nackedHere(nack),
-              origSenderState(_pkt->senderState),
-              origSrc(nack ? _pkt->getDest() : _pkt->getSrc() ),
-              expectResponse(_pkt->needsResponse() && !nack)
-
-        {
-            if (!pkt->isResponse() && !nack)
-                pkt->senderState = this;
-        }
+        RequestState(PacketPtr _pkt)
+            : origSenderState(_pkt->senderState),
+              origSrc(_pkt->getSrc())
+        { }
 
         void fixResponse(PacketPtr pkt)
         {
@@ -111,6 +104,44 @@ class Bridge : public MemObject
             pkt->setDest(origSrc);
             pkt->senderState = origSenderState;
         }
+    };
+
+    /**
+     * A deferred request stores a packet along with its scheduled
+     * transmission time, and whether we can expect to see a response
+     * or not.
+     */
+    class DeferredRequest
+    {
+
+      public:
+
+        Tick ready;
+        PacketPtr pkt;
+        bool expectResponse;
+
+        DeferredRequest(PacketPtr _pkt, Tick t)
+            : ready(t), pkt(_pkt), expectResponse(_pkt->needsResponse())
+        { }
+    };
+
+    /**
+     * A deferred response stores a packet along with its scheduled
+     * transmission time. It also contains information of whether the
+     * bridge NACKed the packet to be able to correctly maintain
+     * counters of outstanding responses.
+     */
+    class DeferredResponse {
+
+      public:
+
+        Tick ready;
+        PacketPtr pkt;
+        bool nackedHere;
+
+        DeferredResponse(PacketPtr _pkt, Tick t, bool nack = false)
+            : ready(t), pkt(_pkt), nackedHere(nack)
+        { }
     };
 
     // Forward declaration to allow the slave port to have a pointer
@@ -150,7 +181,7 @@ class Bridge : public MemObject
          * queue for a specified delay to model the processing delay
          * of the bridge.
          */
-        std::list<PacketBuffer*> responseQueue;
+        std::list<DeferredResponse> responseQueue;
 
         /** Counter to track the outstanding responses. */
         unsigned int outstandingResponses;
@@ -277,7 +308,7 @@ class Bridge : public MemObject
          * queue for a specified delay to model the processing delay
          * of the bridge.
          */
-        std::list<PacketBuffer*> requestQueue;
+        std::list<DeferredRequest> requestQueue;
 
         /** If we're waiting for a retry to happen. */
         bool inRetry;
