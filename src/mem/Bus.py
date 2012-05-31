@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -25,22 +37,36 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Andreas Hansson
 
-from m5.defines import buildEnv
-from m5.params import *
-from m5.proxy import *
 from MemObject import MemObject
+from m5.params import *
 
-class Bus(MemObject):
-    type = 'Bus'
+class BaseBus(MemObject):
+    type = 'BaseBus'
+    abstract = True
     slave = VectorSlavePort("vector port for connecting masters")
     master = VectorMasterPort("vector port for connecting slaves")
-    bus_id = Param.Int(0, "blah")
     clock = Param.Clock("1GHz", "bus clock speed")
     header_cycles = Param.Int(1, "cycles of overhead per transaction")
     width = Param.Int(64, "bus width (bytes)")
-    block_size = Param.Int(64, "The default block size if one isn't set by a device attached to the bus.")
-    default = MasterPort("Default port for requests that aren't handled " \
-                             "by a device.")
-    use_default_range = \
-            Param.Bool(False, "Query default port device for legal range.")
+    block_size = Param.Int(64, "The default block size if not set by " \
+                               "any connected module")
+
+    # The default port can be left unconnected, or be used to connect
+    # a default slave port
+    default = MasterPort("Port for connecting an optional default slave")
+
+    # The default port can be used unconditionally, or based on
+    # address range, in which case it may overlap with other
+    # ports. The default range is always checked first, thus creating
+    # a two-level hierarchical lookup. This is useful e.g. for the PCI
+    # bus configuration.
+    use_default_range = Param.Bool(False, "Perform address mapping for " \
+                                       "the default port")
+
+class NoncoherentBus(BaseBus):
+    type = 'NoncoherentBus'
+
+class CoherentBus(BaseBus):
+    type = 'CoherentBus'

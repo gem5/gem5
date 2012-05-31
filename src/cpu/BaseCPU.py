@@ -47,7 +47,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from Bus import Bus
+from Bus import CoherentBus
 from InstTracer import InstTracer
 from ExeTracer import ExeTracer
 from MemObject import MemObject
@@ -223,7 +223,7 @@ class BaseCPU(MemObject):
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
-        self.toL2Bus = Bus()
+        self.toL2Bus = CoherentBus()
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side

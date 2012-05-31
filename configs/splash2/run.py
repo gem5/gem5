@@ -198,9 +198,9 @@ else:
 # Create a system, and add system wide objects
 # ----------------------
 system = System(cpu = cpus, physmem = SimpleMemory(),
-                membus = Bus(clock = busFrequency))
+                membus = CoherentBus(clock = busFrequency))
 
-system.toL2bus = Bus(clock = busFrequency)
+system.toL2bus = CoherentBus(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)
 
 # ----------------------

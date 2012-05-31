@@ -45,7 +45,7 @@
 
 /**
  * @file
- * Declaration of a bus object.
+ * Declaration of an abstract bus base class.
  */
 
 #ifndef __MEM_BUS_HH__
@@ -53,155 +53,26 @@
 
 #include <list>
 #include <set>
-#include <string>
 
 #include "base/range.hh"
 #include "base/range_map.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
-#include "mem/packet.hh"
-#include "mem/port.hh"
-#include "params/Bus.hh"
-#include "sim/eventq.hh"
+#include "params/BaseBus.hh"
 
-class Bus : public MemObject
+/**
+ * The base bus contains the common elements of the non-coherent and
+ * coherent bus. It is an abstract class that does not have any of the
+ * functionality relating to the actual reception and transmission of
+ * packets, as this is left for the subclasses.
+ *
+ * The BaseBus is responsible for the basic flow control (busy or
+ * not), the administration of retries, and the address decoding.
+ */
+class BaseBus : public MemObject
 {
 
-    /**
-     * Declaration of the bus slave port type, one will be
-     * instantiated for each of the master interfaces connecting to
-     * the bus.
-     */
-    class BusSlavePort : public SlavePort
-    {
-      private:
-        /** A pointer to the bus to which this port belongs. */
-        Bus *bus;
-
-      public:
-
-        /** Constructor for the BusSlavePort.*/
-        BusSlavePort(const std::string &_name, Bus *_bus, PortID _id)
-            : SlavePort(_name, _bus, _id), bus(_bus)
-        { }
-
-      protected:
-
-        /**
-         * When receiving a timing request, pass it to the bus.
-         */
-        virtual bool recvTimingReq(PacketPtr pkt)
-        { return bus->recvTimingReq(pkt, id); }
-
-        /**
-         * When receiving a timing snoop response, pass it to the bus.
-         */
-        virtual bool recvTimingSnoopResp(PacketPtr pkt)
-        { return bus->recvTimingSnoopResp(pkt, id); }
-
-        /**
-         * When receiving an atomic request, pass it to the bus.
-         */
-        virtual Tick recvAtomic(PacketPtr pkt)
-        { return bus->recvAtomic(pkt, id); }
-
-        /**
-         * When receiving a functional request, pass it to the bus.
-         */
-        virtual void recvFunctional(PacketPtr pkt)
-        { bus->recvFunctional(pkt, id); }
-
-        /**
-         * When receiving a retry, pass it to the bus.
-         */
-        virtual void recvRetry()
-        { panic("Bus slave ports always succeed and should never retry.\n"); }
-
-        // This should return all the 'owned' addresses that are
-        // downstream from this bus, yes?  That is, the union of all
-        // the 'owned' address ranges of all the other interfaces on
-        // this bus...
-        virtual AddrRangeList getAddrRanges()
-        { return bus->getAddrRanges(); }
-
-        // Ask the bus to ask everyone on the bus what their block size is and
-        // take the max of it. This might need to be changed a bit if we ever
-        // support multiple block sizes.
-        virtual unsigned deviceBlockSize() const
-        { return bus->findBlockSize(); }
-
-    };
-
-    /**
-     * Declaration of the bus master port type, one will be
-     * instantiated for each of the slave interfaces connecting to the
-     * bus.
-     */
-    class BusMasterPort : public MasterPort
-    {
-      private:
-        /** A pointer to the bus to which this port belongs. */
-        Bus *bus;
-
-      public:
-
-        /** Constructor for the BusMasterPort.*/
-        BusMasterPort(const std::string &_name, Bus *_bus, PortID _id)
-            : MasterPort(_name, _bus, _id), bus(_bus)
-        { }
-
-        /**
-         * Determine if this port should be considered a snooper. This
-         * is determined by the bus.
-         *
-         * @return a boolean that is true if this port is snooping
-         */
-        virtual bool isSnooping() const
-        { return bus->isSnooping(); }
-
-      protected:
-
-        /**
-         * When receiving a timing response, pass it to the bus.
-         */
-        virtual bool recvTimingResp(PacketPtr pkt)
-        { return bus->recvTimingResp(pkt, id); }
-
-        /**
-         * When receiving a timing snoop request, pass it to the bus.
-         */
-        virtual void recvTimingSnoopReq(PacketPtr pkt)
-        { return bus->recvTimingSnoopReq(pkt, id); }
-
-        /**
-         * When receiving an atomic snoop request, pass it to the bus.
-         */
-        virtual Tick recvAtomicSnoop(PacketPtr pkt)
-        { return bus->recvAtomicSnoop(pkt, id); }
-
-        /**
-         * When receiving a functional snoop request, pass it to the bus.
-         */
-        virtual void recvFunctionalSnoop(PacketPtr pkt)
-        { bus->recvFunctionalSnoop(pkt, id); }
-
-        /** When reciving a range change from the peer port (at id),
-            pass it to the bus. */
-        virtual void recvRangeChange()
-        { bus->recvRangeChange(id); }
-
-        /** When reciving a retry from the peer port (at id),
-            pass it to the bus. */
-        virtual void recvRetry()
-        { bus->recvRetry(); }
-
-        // Ask the bus to ask everyone on the bus what their block size is and
-        // take the max of it. This might need to be changed a bit if we ever
-        // support multiple block sizes.
-        virtual unsigned deviceBlockSize() const
-        { return bus->findBlockSize(); }
-
-    };
+  protected:
 
     /** the clock speed for the bus */
     int clock;
@@ -218,41 +89,6 @@ class Bus : public MemObject
     range_map<Addr, PortID> portMap;
 
     AddrRangeList defaultRange;
-
-    std::vector<SlavePort*> snoopPorts;
-
-    /**
-     * Store the outstanding requests so we can determine which ones
-     * we generated and which ones were merely forwarded. This is used
-     * in the coherent bus when coherency responses come back.
-     */
-    std::set<RequestPtr> outstandingReq;
-
-    /** Function called by the port when the bus is recieving a Timing
-      request packet.*/
-    bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the bus is recieving a Timing
-      response packet.*/
-    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
-
-    /** Function called by the port when the bus is recieving a timing
-        snoop request.*/
-    void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
-
-    /** Function called by the port when the bus is recieving a timing
-        snoop response.*/
-    bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
-
-    /**
-     * Forward a timing packet to our snoopers, potentially excluding
-     * one of the connected coherent masters to avoid sending a packet
-     * back to where it came from.
-     *
-     * @param pkt Packet to forward
-     * @param exclude_slave_port_id Id of slave port to exclude
-     */
-    void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id);
 
     /**
      * Determine if the bus is to be considered occupied when being
@@ -273,45 +109,6 @@ class Bus : public MemObject
      * @param busy_time Time to spend as a result of a successful send
      */
     void succeededTiming(Tick busy_time);
-
-    /** Function called by the port when the bus is recieving a Atomic
-      transaction.*/
-    Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the bus is recieving an
-        atomic snoop transaction.*/
-    Tick recvAtomicSnoop(PacketPtr pkt, PortID master_port_id);
-
-    /**
-     * Forward an atomic packet to our snoopers, potentially excluding
-     * one of the connected coherent masters to avoid sending a packet
-     * back to where it came from.
-     *
-     * @param pkt Packet to forward
-     * @param exclude_slave_port_id Id of slave port to exclude
-     *
-     * @return a pair containing the snoop response and snoop latency
-     */
-    std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
-                                          PortID exclude_slave_port_id);
-
-    /** Function called by the port when the bus is recieving a Functional
-        transaction.*/
-    void recvFunctional(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the bus is recieving a functional
-        snoop transaction.*/
-    void recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id);
-
-    /**
-     * Forward a functional packet to our snoopers, potentially
-     * excluding one of the connected coherent masters to avoid
-     * sending a packet back to where it came from.
-     *
-     * @param pkt Packet to forward
-     * @param exclude_slave_port_id Id of slave port to exclude
-     */
-    void forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
@@ -392,13 +189,6 @@ class Bus : public MemObject
      */
     AddrRangeList getAddrRanges();
 
-    /**
-     * Determine if the bus port is snooping or not.
-     *
-     * @return a boolean indicating if this port is snooping or not
-     */
-    bool isSnooping() const;
-
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
      * Returns the tick at which the packet header is completed (which
@@ -430,7 +220,7 @@ class Bus : public MemObject
     unsigned findBlockSize();
 
     // event used to schedule a release of the bus
-    EventWrapper<Bus, &Bus::releaseBus> busIdleEvent;
+    EventWrapper<BaseBus, &BaseBus::releaseBus> busIdleEvent;
 
     bool inRetry;
     std::set<PortID> inRecvRangeChange;
@@ -439,8 +229,11 @@ class Bus : public MemObject
     std::vector<SlavePort*> slavePorts;
     std::vector<MasterPort*> masterPorts;
 
+    /** Convenience typedefs. */
     typedef std::vector<SlavePort*>::iterator SlavePortIter;
+    typedef std::vector<MasterPort*>::iterator MasterPortIter;
     typedef std::vector<SlavePort*>::const_iterator SlavePortConstIter;
+    typedef std::vector<MasterPort*>::const_iterator MasterPortConstIter;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
@@ -478,18 +271,20 @@ class Bus : public MemObject
     unsigned cachedBlockSize;
     bool cachedBlockSizeValid;
 
+    BaseBus(const BaseBusParams *p);
+
+    virtual ~BaseBus();
+
   public:
 
     /** A function used to return the port associated with this bus object. */
     virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
     virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
 
-    virtual void init();
     virtual void startup();
 
     unsigned int drain(Event *de);
 
-    Bus(const BusParams *p);
 };
 
 #endif //__MEM_BUS_HH__

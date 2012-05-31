@@ -56,10 +56,10 @@ nb_cores = 4
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, physmem = SimpleMemory(), membus = Bus())
+system = System(cpu = cpus, physmem = SimpleMemory(), membus = CoherentBus())
 
 # l2cache & bus
-system.toL2Bus = Bus()
+system.toL2Bus = CoherentBus()
 system.l2c = L2(size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 

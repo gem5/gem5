@@ -37,9 +37,11 @@ SimObject('MemObject.py')
 
 Source('bridge.cc')
 Source('bus.cc')
+Source('coherent_bus.cc')
 Source('comm_monitor.cc')
 Source('mem_object.cc')
 Source('mport.cc')
+Source('noncoherent_bus.cc')
 Source('packet.cc')
 Source('port.cc')
 Source('packet_queue.cc')
@@ -56,8 +58,13 @@ if env['TARGET_ISA'] != 'no':
     Source('page_table.cc')
     Source('physical.cc')
 
-DebugFlag('Bus')
+DebugFlag('BaseBus')
 DebugFlag('BusAddrRanges')
+DebugFlag('CoherentBus')
+DebugFlag('NoncoherentBus')
+CompoundFlag('Bus', ['BaseBus', 'BusAddrRanges', 'CoherentBus',
+                     'NoncoherentBus'])
+
 DebugFlag('BusBridge')
 DebugFlag('CommMonitor')
 DebugFlag('LLSC')

@@ -76,7 +76,7 @@ system.iocache.mem_side = system.membus.slave
 
 system.cpu = cpu
 #create the l1/l2 bus
-system.toL2Bus = Bus()
+system.toL2Bus = CoherentBus()
 
 #connect up the l2 cache
 system.l2c = L2(size='4MB', assoc=8)

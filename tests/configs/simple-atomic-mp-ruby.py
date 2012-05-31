@@ -37,7 +37,7 @@ import ruby_config
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
+system = System(cpu = cpus, physmem = ruby_memory, membus = CoherentBus())
 
 # add L1 caches
 for cpu in cpus:

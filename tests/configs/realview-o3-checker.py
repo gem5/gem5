@@ -83,7 +83,7 @@ system = FSConfig.makeArmSystem('timing', "RealView_PBX", None, False)
 
 system.cpu = cpu
 #create the l1/l2 bus
-system.toL2Bus = Bus()
+system.toL2Bus = CoherentBus()
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave

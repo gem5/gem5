@@ -58,10 +58,10 @@ cpus = [ MemTest() for i in xrange(nb_cores) ]
 # system simulated
 system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
                 physmem = SimpleMemory(),
-                membus = Bus(clock="500GHz", width=16))
+                membus = CoherentBus(clock="500GHz", width=16))
 
 # l2cache & bus
-system.toL2Bus = Bus(clock="500GHz", width=16)
+system.toL2Bus = CoherentBus(clock="500GHz", width=16)
 system.l2c = L2(size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 

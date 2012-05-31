@@ -50,7 +50,7 @@ class CowIdeDisk(IdeDisk):
     def childImage(self, ci):
         self.image.child.image_file = ci
 
-class MemBus(Bus):
+class MemBus(CoherentBus):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
 
@@ -67,8 +67,8 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = Bus(bus_id=0)
-    self.membus = MemBus(bus_id=1)
+    self.iobus = NoncoherentBus()
+    self.membus = MemBus()
     # By default the bridge responds to all addresses above the I/O
     # base address (including the PCI config space)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns',
@@ -117,7 +117,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
 
     # Create pio bus to connect all device pio ports to rubymem's pio port
-    self.piobus = Bus(bus_id=0)
+    self.piobus = NoncoherentBus()
 
     #
     # Pio functional accesses from devices need direct access to memory
@@ -172,8 +172,8 @@ def makeSparcSystem(mem_mode, mdesc = None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = Bus(bus_id=0)
-    self.membus = MemBus(bus_id=1)
+    self.iobus = NoncoherentBus()
+    self.membus = MemBus()
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
@@ -237,8 +237,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         mdesc = SysConfig()
 
     self.readfile = mdesc.script()
-    self.iobus = Bus(bus_id=0)
-    self.membus = MemBus(bus_id=1)
+    self.iobus = NoncoherentBus()
+    self.membus = MemBus()
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.bridge.master = self.iobus.slave
@@ -320,8 +320,8 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = Bus(bus_id=0)
-    self.membus = MemBus(bus_id=1)
+    self.iobus = NoncoherentBus()
+    self.membus = MemBus()
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = SimpleMemory(range = AddrRange('1GB'))
     self.bridge.master = self.iobus.slave
@@ -363,11 +363,11 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     interrupts_address_space_base = 0xa000000000000000
     APIC_range_size = 1 << 12;
 
-    x86_sys.membus = MemBus(bus_id=1)
+    x86_sys.membus = MemBus()
     x86_sys.physmem.port = x86_sys.membus.master
 
     # North Bridge
-    x86_sys.iobus = Bus(bus_id=0)
+    x86_sys.iobus = NoncoherentBus()
     x86_sys.bridge = Bridge(delay='50ns', nack_delay='4ns')
     x86_sys.bridge.master = x86_sys.iobus.slave
     x86_sys.bridge.slave = x86_sys.membus.master
@@ -402,7 +402,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
 
 def connectX86RubySystem(x86_sys):
     # North Bridge
-    x86_sys.piobus = Bus(bus_id=0)
+    x86_sys.piobus = NoncoherentBus()
 
     #
     # Pio functional accesses from devices need direct access to memory
