@@ -174,6 +174,16 @@ class Template(object):
             if operands.readPC or operands.setPC:
                 myDict['op_decl'] += 'TheISA::PCState __parserAutoPCState;\n'
 
+            # In case there are predicated register reads and write, declare
+            # the variables for register indicies. It is being assumed that
+            # all the operands in the OperandList are also in the
+            # SubOperandList and in the same order. Otherwise, it is
+            # expected that predication would not be used for the operands.
+            if operands.predRead:
+                myDict['op_decl'] += 'uint8_t _sourceIndex = 0;\n'
+            if operands.predWrite:
+                myDict['op_decl'] += 'uint8_t M5_VAR_USED _destIndex = 0;\n'
+
             is_src = lambda op: op.is_src
             is_dest = lambda op: op.is_dest
 
@@ -453,21 +463,23 @@ class Operand(object):
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
     # register index enumeration that hasn't been performed yet at the
-    # time of __init__().
-    def finalize(self):
+    # time of __init__(). The register index enumeration is affected
+    # by predicated register reads/writes. Hence, we forward the flags
+    # that indicate whether or not predication is in use.
+    def finalize(self, predRead, predWrite):
         self.flags = self.getFlags()
-        self.constructor = self.makeConstructor()
+        self.constructor = self.makeConstructor(predRead, predWrite)
         self.op_decl = self.makeDecl()
 
         if self.is_src:
-            self.op_rd = self.makeRead()
+            self.op_rd = self.makeRead(predRead)
             self.op_src_decl = self.makeDecl()
         else:
             self.op_rd = ''
             self.op_src_decl = ''
 
         if self.is_dest:
-            self.op_wb = self.makeWrite()
+            self.op_wb = self.makeWrite(predWrite)
             self.op_dest_decl = self.makeDecl()
         else:
             self.op_wb = ''
@@ -494,6 +506,12 @@ class Operand(object):
     def isPCPart(self):
         return self.isPCState() and self.reg_spec
 
+    def hasReadPred(self):
+        return self.read_predicate != None
+
+    def hasWritePred(self):
+        return self.write_predicate != None
+
     def getFlags(self):
         # note the empty slice '[:]' gives us a copy of self.flags[0]
         # instead of a reference to it
@@ -516,35 +534,68 @@ class IntRegOperand(Operand):
     def isIntReg(self):
         return 1
 
-    def makeConstructor(self):
-        c = ''
-        if self.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s;' % \
-                 (self.src_reg_idx, self.reg_spec)
-        if self.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s;' % \
-                 (self.dest_reg_idx, self.reg_spec)
-        return c
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
 
-    def makeRead(self):
+        if self.is_src:
+            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s;' % (self.reg_spec)
+            if self.hasReadPred():
+                c_src = '\n\tif (%s) {%s\n\t}' % \
+                        (self.read_predicate, c_src)
+
+        if self.is_dest:
+            c_dest = '\n\t_destRegIdx[_numDestRegs++] = %s;' % \
+                    (self.reg_spec)
+            c_dest += '\n\t_numIntDestRegs++;'
+            if self.hasWritePred():
+                c_dest = '\n\tif (%s) {%s\n\t}' % \
+                         (self.write_predicate, c_dest)
+
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error('Attempt to read integer register as FP')
         if self.read_code != None:
             return self.buildReadCode('readIntRegOperand')
-        int_reg_val = 'xc->readIntRegOperand(this, %d)' % self.src_reg_idx
+
+        int_reg_val = ''
+        if predRead:
+            int_reg_val = 'xc->readIntRegOperand(this, _sourceIndex++)'
+            if self.hasReadPred():
+                int_reg_val = '(%s) ? %s : 0' % \
+                              (self.read_predicate, int_reg_val)
+        else:
+            int_reg_val = 'xc->readIntRegOperand(this, %d)' % self.src_reg_idx
+
         return '%s = %s;\n' % (self.base_name, int_reg_val)
 
-    def makeWrite(self):
+    def makeWrite(self, predWrite):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error('Attempt to write integer register as FP')
         if self.write_code != None:
             return self.buildWriteCode('setIntRegOperand')
+
+        if predWrite:
+            wp = 'true'
+            if self.hasWritePred():
+                wp = self.write_predicate
+
+            wcond = 'if (%s)' % (wp)
+            windex = '_destIndex++'
+        else:
+            wcond = ''
+            windex = '%d' % self.dest_reg_idx
+
         wb = '''
+        %s
         {
             %s final_val = %s;
-            xc->setIntRegOperand(this, %d, final_val);\n
+            xc->setIntRegOperand(this, %s, final_val);\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (self.ctype, self.base_name, self.dest_reg_idx)
+        }''' % (wcond, self.ctype, self.base_name, windex)
+
         return wb
 
 class FloatRegOperand(Operand):
@@ -554,17 +605,23 @@ class FloatRegOperand(Operand):
     def isFloatReg(self):
         return 1
 
-    def makeConstructor(self):
-        c = ''
-        if self.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s + FP_Base_DepTag;' % \
-                 (self.src_reg_idx, self.reg_spec)
-        if self.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s + FP_Base_DepTag;' % \
-                 (self.dest_reg_idx, self.reg_spec)
-        return c
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
 
-    def makeRead(self):
+        if self.is_src:
+            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + FP_Base_DepTag;' % \
+                    (self.reg_spec)
+
+        if self.is_dest:
+            c_dest = \
+              '\n\t_destRegIdx[_numDestRegs++] = %s + FP_Base_DepTag;' % \
+              (self.reg_spec)
+            c_dest += '\n\t_numFPDestRegs++;'
+
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             func = 'readFloatRegOperand'
@@ -572,22 +629,35 @@ class FloatRegOperand(Operand):
             func = 'readFloatRegOperandBits'
         if self.read_code != None:
             return self.buildReadCode(func)
-        return '%s = xc->%s(this, %d);\n' % \
-            (self.base_name, func, self.src_reg_idx)
 
-    def makeWrite(self):
+        if predRead:
+            rindex = '_sourceIndex++'
+        else:
+            rindex = '%d' % self.src_reg_idx
+
+        return '%s = xc->%s(this, %s);\n' % \
+            (self.base_name, func, rindex)
+
+    def makeWrite(self, predWrite):
         if (self.ctype == 'float' or self.ctype == 'double'):
             func = 'setFloatRegOperand'
         else:
             func = 'setFloatRegOperandBits'
         if self.write_code != None:
             return self.buildWriteCode(func)
+
+        if predWrite:
+            wp = '_destIndex++'
+        else:
+            wp = '%d' % self.dest_reg_idx
+        wp = 'xc->%s(this, %s, final_val);' % (func, wp)
+
         wb = '''
         {
             %s final_val = %s;
-            xc->%s(this, %d, final_val);\n
+            %s\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (self.ctype, self.base_name, func, self.dest_reg_idx)
+        }''' % (self.ctype, self.base_name, wp)
         return wb
 
 class ControlRegOperand(Operand):
@@ -597,41 +667,60 @@ class ControlRegOperand(Operand):
     def isControlReg(self):
         return 1
 
-    def makeConstructor(self):
-        c = ''
-        if self.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
-                 (self.src_reg_idx, self.reg_spec)
-        if self.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
-                 (self.dest_reg_idx, self.reg_spec)
-        return c
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
 
-    def makeRead(self):
+        if self.is_src:
+            c_src = \
+              '\n\t_srcRegIdx[_numSrcRegs++] = %s + Ctrl_Base_DepTag;' % \
+              (self.reg_spec)
+
+        if self.is_dest:
+            c_dest = \
+              '\n\t_destRegIdx[_numDestRegs++] = %s + Ctrl_Base_DepTag;' % \
+              (self.reg_spec)
+
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error('Attempt to read control register as FP')
         if self.read_code != None:
             return self.buildReadCode('readMiscRegOperand')
-        return '%s = xc->readMiscRegOperand(this, %s);\n' % \
-            (self.base_name, self.src_reg_idx)
 
-    def makeWrite(self):
+        if predRead:
+            rindex = '_sourceIndex++'
+        else:
+            rindex = '%d' % self.src_reg_idx
+
+        return '%s = xc->readMiscRegOperand(this, %s);\n' % \
+            (self.base_name, rindex)
+
+    def makeWrite(self, predWrite):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error('Attempt to write control register as FP')
         if self.write_code != None:
             return self.buildWriteCode('setMiscRegOperand')
+
+        if predWrite:
+            windex = '_destIndex++'
+        else:
+            windex = '%d' % self.dest_reg_idx
+
         wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
-             (self.dest_reg_idx, self.base_name)
+             (windex, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
               self.base_name
+
         return wb
 
 class MemOperand(Operand):
     def isMem(self):
         return 1
 
-    def makeConstructor(self):
+    def makeConstructor(self, predRead, predWrite):
         return ''
 
     def makeDecl(self):
@@ -640,21 +729,21 @@ class MemOperand(Operand):
         # Declare memory data variable.
         return '%s %s = 0;\n' % (self.ctype, self.base_name)
 
-    def makeRead(self):
+    def makeRead(self, predRead):
         if self.read_code != None:
             return self.buildReadCode()
         return ''
 
-    def makeWrite(self):
+    def makeWrite(self, predWrite):
         if self.write_code != None:
             return self.buildWriteCode()
         return ''
 
 class PCStateOperand(Operand):
-    def makeConstructor(self):
+    def makeConstructor(self, predRead, predWrite):
         return ''
 
-    def makeRead(self):
+    def makeRead(self, predRead):
         if self.reg_spec:
             # A component of the PC state.
             return '%s = __parserAutoPCState.%s();\n' % \
@@ -663,7 +752,7 @@ class PCStateOperand(Operand):
             # The whole PC state itself.
             return '%s = xc->pcState();\n' % self.base_name
 
-    def makeWrite(self):
+    def makeWrite(self, predWrite):
         if self.reg_spec:
             # A component of the PC state.
             return '__parserAutoPCState.%s(%s);\n' % \
@@ -728,6 +817,12 @@ class OperandList(object):
         self.numIntDestRegs = 0
         self.numMiscDestRegs = 0
         self.memOperand = None
+
+        # Flags to keep track if one or more operands are to be read/written
+        # conditionally.
+        self.predRead = False
+        self.predWrite = False
+
         for op_desc in self.items:
             if op_desc.isReg():
                 if op_desc.is_src:
@@ -746,16 +841,23 @@ class OperandList(object):
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
+
+            # Check if this operand has read/write predication. If true, then
+            # the microop will dynamically index source/dest registers.
+            self.predRead = self.predRead or op_desc.hasReadPred()
+            self.predWrite = self.predWrite or op_desc.hasWritePred()
+
         if parser.maxInstSrcRegs < self.numSrcRegs:
             parser.maxInstSrcRegs = self.numSrcRegs
         if parser.maxInstDestRegs < self.numDestRegs:
             parser.maxInstDestRegs = self.numDestRegs
         if parser.maxMiscDestRegs < self.numMiscDestRegs:
             parser.maxMiscDestRegs = self.numMiscDestRegs
+
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
         for op_desc in self.items:
-            op_desc.finalize()
+            op_desc.finalize(self.predRead, self.predWrite)
 
     def __len__(self):
         return len(self.items)
@@ -845,21 +947,34 @@ class SubOperandList(OperandList):
         # Whether this instruction manipulates the whole PC or parts of it.
         # Mixing the two is a bad idea and flagged as an error.
         self.pcPart = None
+
+        # Flags to keep track if one or more operands are to be read/written
+        # conditionally.
+        self.predRead = False
+        self.predWrite = False
+
         for op_desc in self.items:
             if op_desc.isPCPart():
                 self.readPC = True
                 if op_desc.is_dest:
                     self.setPC = True
+
             if op_desc.isPCState():
                 if self.pcPart is not None:
                     if self.pcPart and not op_desc.isPCPart() or \
                             not self.pcPart and op_desc.isPCPart():
                         error("Mixed whole and partial PC state operands.")
                 self.pcPart = op_desc.isPCPart()
+
             if op_desc.isMem():
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
+
+            # Check if this operand has read/write predication. If true, then
+            # the microop will dynamically index source/dest registers.
+            self.predRead = self.predRead or op_desc.hasReadPred()
+            self.predWrite = self.predWrite or op_desc.hasWritePred()
 
 # Regular expression object to match C++ strings
 stringRE = re.compile(r'"([^"\\]|\\.)*"')
@@ -907,15 +1022,18 @@ class InstObjParams(object):
         self.snippets = snippets
 
         self.operands = OperandList(parser, compositeCode)
-        self.constructor = self.operands.concatAttrStrings('constructor')
-        self.constructor += \
-                 '\n\t_numSrcRegs = %d;' % self.operands.numSrcRegs
-        self.constructor += \
-                 '\n\t_numDestRegs = %d;' % self.operands.numDestRegs
-        self.constructor += \
-                 '\n\t_numFPDestRegs = %d;' % self.operands.numFPDestRegs
-        self.constructor += \
-                 '\n\t_numIntDestRegs = %d;' % self.operands.numIntDestRegs
+
+        # The header of the constructor declares the variables to be used
+        # in the body of the constructor.
+        header = ''
+        header += '\n\t_numSrcRegs = 0;'
+        header += '\n\t_numDestRegs = 0;'
+        header += '\n\t_numFPDestRegs = 0;'
+        header += '\n\t_numIntDestRegs = 0;'
+
+        self.constructor = header + \
+                           self.operands.concatAttrStrings('constructor')
+
         self.flags = self.operands.concatAttrLists('flags')
 
         # Make a basic guess on the operand class (function unit type).
@@ -1795,19 +1913,16 @@ StaticInstPtr
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
         for op_name, val in user_dict.iteritems():
-            base_cls_name, dflt_ext, reg_spec, flags, sort_pri = val[:5]
-            if len(val) > 5:
-                read_code = val[5]
-            else:
-                read_code = None
-            if len(val) > 6:
-                write_code = val[6]
-            else:
-                write_code = None
-            if len(val) > 7:
-                error(lineno,
-                      'error: too many attributes for operand "%s"' %
+
+            # Check if extra attributes have been specified.
+            if len(val) > 9:
+                error(lineno, 'error: too many attributes for operand "%s"' %
                       base_cls_name)
+
+            # Pad val with None in case optional args are missing
+            val += (None, None, None, None)
+            base_cls_name, dflt_ext, reg_spec, flags, sort_pri, \
+            read_code, write_code, read_predicate, write_predicate = val[:9]
 
             # Canonical flag structure is a triple of lists, where each list
             # indicates the set of flags implied by this operand always, when
@@ -1829,16 +1944,19 @@ StaticInstPtr
                 (uncond_flags, src_flags, dest_flags) = flags
                 flags = (makeList(uncond_flags),
                          makeList(src_flags), makeList(dest_flags))
+
             # Accumulate attributes of new operand class in tmp_dict
             tmp_dict = {}
             attrList = ['reg_spec', 'flags', 'sort_pri',
-                        'read_code', 'write_code']
+                        'read_code', 'write_code',
+                        'read_predicate', 'write_predicate']
             if dflt_ext:
                 dflt_ctype = self.operandTypeMap[dflt_ext]
                 attrList.extend(['dflt_ctype', 'dflt_ext'])
             for attr in attrList:
                 tmp_dict[attr] = eval(attr)
             tmp_dict['base_name'] = op_name
+
             # New class name will be e.g. "IntReg_Ra"
             cls_name = base_cls_name + '_' + op_name
             # Evaluate string arg to get class object.  Note that the
