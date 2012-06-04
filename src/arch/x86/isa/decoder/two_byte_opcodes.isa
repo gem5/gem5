@@ -721,12 +721,19 @@
                 0x1: pop_fs();
                 0x2: CPUIDInst::CPUID({{
                     CpuidResult result;
-                    success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
+                    bool success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
                         bits(Rcx, 31, 0), result);
-                    Rax = result.rax;
-                    Rbx = result.rbx;
-                    Rcx = result.rcx;
-                    Rdx = result.rdx;
+                    if (success) {
+                        Rax = result.rax;
+                        Rbx = result.rbx;
+                        Rcx = result.rcx;
+                        Rdx = result.rdx;
+                    } else {
+                        Rax = Rax;
+                        Rbx = Rbx;
+                        Rcx = Rcx;
+                        Rdx = Rdx;
+                    }
                     }});
                 0x3: Inst::BT(Ev,Gv);
                 0x4: Inst::SHLD(Ev,Gv,Ib);

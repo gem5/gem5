@@ -73,13 +73,10 @@ def template CPUIDExecute {{
     {
         // If the CPUID instruction used a valid function number, this will
         // be set to true. Otherwise, the instruction does nothing.
-        bool success;
         %(op_decl)s;
         %(op_rd)s;
         %(code)s;
-        if (success) {
-            %(op_wb)s;
-        }
+        %(op_wb)s;
         return NoFault;
     }
 }};
