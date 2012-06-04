@@ -4,11 +4,11 @@ sim_seconds                                  0.067388                       # Nu
 sim_ticks                                 67388458000                       # Number of ticks simulated
 final_tick                                67388458000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  49866                       # Simulator instruction rate (inst/s)
-host_op_rate                                    87805                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               21269638                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 411868                       # Number of bytes of host memory used
-host_seconds                                  3168.29                       # Real time elapsed on the host
+host_inst_rate                                  74550                       # Simulator instruction rate (inst/s)
+host_op_rate                                   131270                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               31798513                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 385908                       # Number of bytes of host memory used
+host_seconds                                  2119.23                       # Real time elapsed on the host
 sim_insts                                   157988582                       # Number of instructions simulated
 sim_ops                                     278192519                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                     3907520                       # Number of bytes read from this memory
@@ -81,8 +81,8 @@ system.cpu.rename.IQFullEvents                   3712                       # Nu
 system.cpu.rename.LSQFullEvents              23187560                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.FullRegisterEvents            79157                       # Number of times there has been no free registers
 system.cpu.rename.RenamedOperands           414755881                       # Number of destination operands rename has renamed
-system.cpu.rename.RenameLookups            1009935088                       # Number of register rename lookups that rename has made
-system.cpu.rename.int_rename_lookups       1009932388                       # Number of integer rename lookups
+system.cpu.rename.RenameLookups            1009935094                       # Number of register rename lookups that rename has made
+system.cpu.rename.int_rename_lookups       1009932394                       # Number of integer rename lookups
 system.cpu.rename.fp_rename_lookups              2700                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps             341010940                       # Number of HB maps that are committed
 system.cpu.rename.UndoneMaps                 73744941                       # Number of HB maps that are undone due to squashing
@@ -284,7 +284,7 @@ system.cpu.cpi                               0.853080                       # CP
 system.cpu.cpi_total                         0.853080                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               1.172223                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         1.172223                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                705322543                       # number of integer regfile reads
+system.cpu.int_regfile_reads                705322547                       # number of integer regfile reads
 system.cpu.int_regfile_writes               373244258                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                       361                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                      193                       # number of floating regfile writes

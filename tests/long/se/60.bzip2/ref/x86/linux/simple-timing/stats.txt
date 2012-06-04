@@ -4,11 +4,11 @@ sim_seconds                                  5.923548                       # Nu
 sim_ticks                                5923548078000                       # Number of ticks simulated
 final_tick                               5923548078000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 557700                       # Simulator instruction rate (inst/s)
-host_op_rate                                   868947                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1098229805                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 274380                       # Number of bytes of host memory used
-host_seconds                                  5393.72                       # Real time elapsed on the host
+host_inst_rate                                 747861                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1165236                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1472697488                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 248420                       # Number of bytes of host memory used
+host_seconds                                  4022.24                       # Real time elapsed on the host
 sim_insts                                  3008081057                       # Number of instructions simulated
 sim_ops                                    4686862651                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                   173910080                       # Number of bytes read from this memory
@@ -33,7 +33,7 @@ system.cpu.num_func_calls                           0                       # nu
 system.cpu.num_conditional_control_insts    182173305                       # number of instructions that are conditional controls
 system.cpu.num_int_insts                   4686862580                       # number of integer instructions
 system.cpu.num_fp_insts                             0                       # number of float instructions
-system.cpu.num_int_register_reads         14165752762                       # number of times the integer registers were read
+system.cpu.num_int_register_reads         14165752766                       # number of times the integer registers were read
 system.cpu.num_int_register_writes         6716691823                       # number of times the integer registers were written
 system.cpu.num_fp_register_reads                    0                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                   0                       # number of times the floating registers were written
