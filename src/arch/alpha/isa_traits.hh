@@ -123,8 +123,7 @@ enum {
 };
 
 // return a no-op instruction... used for instruction fetch faults
-// Alpha UNOP (ldq_u r31,0(r0))
-const ExtMachInst NoopMachInst = 0x2ffe0000;
+const extern StaticInstPtr NoopStaticInst;
 
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;

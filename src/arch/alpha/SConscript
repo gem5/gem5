@@ -40,6 +40,7 @@ if env['TARGET_ISA'] == 'alpha':
     Source('interrupts.cc')
     Source('ipr.cc')
     Source('isa.cc')
+    Source('isa_traits.cc')
     Source('kernel_stats.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')

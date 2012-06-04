@@ -143,7 +143,7 @@ enum mode_type
 };
 
 // return a no-op instruction... used for instruction fetch faults
-const ExtMachInst NoopMachInst = 0x00000000;
+const extern StaticInstPtr NoopStaticInst;
 
 const int LogVMPageSize = 13;       // 8K bytes
 const int VMPageSize = (1 << LogVMPageSize);

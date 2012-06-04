@@ -1,15 +1,6 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2012 Google
  * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,42 +28,12 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_ISATRAITS_HH__
-#define __ARCH_X86_ISATRAITS_HH__
-
-#include "arch/x86/types.hh"
+#include "arch/x86/generated/decoder.hh"
 #include "arch/x86/x86_traits.hh"
-#include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
-
-namespace LittleEndianGuest {}
 
 namespace X86ISA
 {
-    //This makes sure the little endian version of certain functions
-    //are used.
-    using namespace LittleEndianGuest;
 
-    // X86 does not have a delay slot
-#define ISA_HAS_DELAY_SLOT 0
+const StaticInstPtr NoopStaticInst = new X86ISAInst::NOP(NoopMachInst);
 
-    // X86 NOP (XCHG rAX, rAX)
-    //XXX This needs to be set to an intermediate instruction struct
-    //which encodes this instruction
-
-    //4k. This value is not constant on x86.
-    const int LogVMPageSize = 12;
-    const int VMPageSize = (1 << LogVMPageSize);
-
-    const int PageShift = 12;
-    const int PageBytes = 1ULL << PageShift;
-
-    const int BranchPredAddrShiftAmt = 0;
-
-    // Memory accesses can be unaligned
-    const bool HasUnalignedMemAcc = true;
-
-    extern const StaticInstPtr NoopStaticInst;
 }
-
-#endif // __ARCH_X86_ISATRAITS_HH__

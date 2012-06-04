@@ -40,6 +40,7 @@ if env['TARGET_ISA'] == 'mips':
     Source('idle_event.cc')
     Source('interrupts.cc')
     Source('isa.cc')
+    Source('isa_traits.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
     Source('linux/system.cc')
