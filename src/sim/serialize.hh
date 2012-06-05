@@ -52,10 +52,10 @@ class SimObject;
 
 /** The current version of the checkpoint format.
  * This should be incremented by 1 and only 1 for every new version, where a new
- * version is defined as a checkpoint created before this version wont work on
+ * version is defined as a checkpoint created before this version won't work on
  * the current version until the checkpoint format is updated. Adding a new
  * SimObject shouldn't cause the version number to increase, only changes to
- * existing objects such as serializing/unserializing more stote, changing sizes
+ * existing objects such as serializing/unserializing more state, changing sizes
  * of serialized arrays, etc. */
 static const uint64_t gem5CheckpointVersion = 0x0000000000000001;
 

@@ -38,6 +38,25 @@
 # Authors: Ali Saidi
 #
 
+# This python code is used to migrate checkpoints that were created in one
+# version of the simulator to newer version. As features are added or bugs are
+# fixed some of the state that needs to be checkpointed can change. If you have
+# many historic checkpoints that you use, manually editing them to fix them is
+# both time consuming and error-prone.
+
+# This script provides a way to migrate checkpoints to the newer repository in
+# a programatic way. It can be imported into another script or used on the
+# command line. From the command line the script will either migrate every
+# checkpoint it finds recursively (-r option) or a single checkpoint. When a
+# change is made to the gem5 repository that breaks previous checkpoints a
+# from_N() method should be implemented here and the gem5CheckpointVersion
+# variable in src/sim/serialize.hh should be incremented. For each version
+# between the checkpoints current version and the new version the from_N()
+# method will be run, passing in a ConfigParser object which contains the open
+# file. As these operations can be isa specific the method can verify the isa
+# and use regexes to find the correct sections that need to be updated.
+
+
 import ConfigParser
 import sys, os
 import os.path as osp
