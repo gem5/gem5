@@ -212,6 +212,7 @@ Pl050::processCommand(uint8_t byte)
         // fall through
       case Disable:
       case Enable:
+      case SetDefaults:
         rxQueue.push_back(Ack);
         break;
       case StatusRequest:
