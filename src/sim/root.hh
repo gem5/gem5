@@ -111,6 +111,10 @@ class Root : public SimObject
     /** Schedule the timesync event at initState() when not unserializing
      */
     void initState();
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
 #endif // __SIM_ROOT_HH__
