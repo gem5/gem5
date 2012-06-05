@@ -68,7 +68,7 @@ TimingSimpleCPU::init()
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
-    if (FullSystem) {
+    if (FullSystem && !params()->defer_registration) {
         for (int i = 0; i < threadContexts.size(); ++i) {
             ThreadContext *tc = threadContexts[i];
             // initialize CPU, including PC

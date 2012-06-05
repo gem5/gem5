@@ -86,7 +86,7 @@ AtomicSimpleCPU::init()
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
-    if (FullSystem) {
+    if (FullSystem && !params()->defer_registration) {
         ThreadID size = threadContexts.size();
         for (ThreadID i = 0; i < size; ++i) {
             ThreadContext *tc = threadContexts[i];

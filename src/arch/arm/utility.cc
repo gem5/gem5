@@ -47,7 +47,6 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
-#include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
 namespace ArmISA {
@@ -56,10 +55,8 @@ void
 initCPU(ThreadContext *tc, int cpuId)
 {
     // Reset CP15?? What does that mean -- ali
-    
+
     // FPEXC.EN = 0
-    if (tc->getCpuPtr()->params()->defer_registration)
-       return;
 
     static Fault reset = new Reset;
     reset->invoke(tc);
