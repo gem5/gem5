@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  8 2012 15:05:42
-gem5 started May  8 2012 15:49:18
-gem5 executing on piton
+gem5 compiled Jun  4 2012 12:01:47
+gem5 started Jun  4 2012 15:02:43
+gem5 executing on zizzer
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing -re tests/run.py build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sav
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sv2

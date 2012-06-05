@@ -1,3 +1,4 @@
+warn: CoherentBus system.membus has no snooping ports attached!
 warn: Sockets disabled, not accepting gdb connections
 warn: ignoring syscall time(4026528248, 4026527848, ...)
 warn: ignoring syscall time(1375098, 4026527400, ...)

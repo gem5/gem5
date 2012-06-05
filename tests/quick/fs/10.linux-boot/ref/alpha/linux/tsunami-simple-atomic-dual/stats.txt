@@ -4,23 +4,50 @@ sim_seconds                                  1.870336                       # Nu
 sim_ticks                                1870335522500                       # Number of ticks simulated
 final_tick                               1870335522500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1989571                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1989570                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            58921958204                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 298304                       # Number of bytes of host memory used
-host_seconds                                    31.74                       # Real time elapsed on the host
+host_inst_rate                                2870976                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2870973                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            85025108641                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 298608                       # Number of bytes of host memory used
+host_seconds                                    22.00                       # Real time elapsed on the host
 sim_insts                                    63154034                       # Number of instructions simulated
 sim_ops                                      63154034                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read                    72297472                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read                 995008                       # Number of instructions bytes read from this memory
-system.physmem.bytes_written                 10452352                       # Number of bytes written to this memory
-system.physmem.num_reads                      1129648                       # Number of read requests responded to by this memory
-system.physmem.num_writes                      163318                       # Number of write requests responded to by this memory
-system.physmem.num_other                            0                       # Number of other requests responded to by this memory
-system.physmem.bw_read                       38654814                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read                    531994                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write                       5588490                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total                      44243304                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bytes_read::cpu0.inst           855168                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.data         67882688                       # Number of bytes read from this memory
+system.physmem.bytes_read::tsunami.ide        2649600                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.inst           139840                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.data           770176                       # Number of bytes read from this memory
+system.physmem.bytes_read::total             72297472                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu0.inst       855168                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::cpu1.inst       139840                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total          995008                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written::writebacks     10452352                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          10452352                       # Number of bytes written to this memory
+system.physmem.num_reads::cpu0.inst             13362                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.data           1060667                       # Number of read requests responded to by this memory
+system.physmem.num_reads::tsunami.ide           41400                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.inst              2185                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.data             12034                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total               1129648                       # Number of read requests responded to by this memory
+system.physmem.num_writes::writebacks          163318                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total               163318                       # Number of write requests responded to by this memory
+system.physmem.bw_read::cpu0.inst              457227                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.data            36294391                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::tsunami.ide           1416644                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.inst               74767                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.data              411785                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total                38654814                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu0.inst         457227                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu1.inst          74767                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total             531994                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::writebacks           5588490                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total                5588490                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::writebacks           5588490                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.inst             457227                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.data           36294391                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::tsunami.ide          1416644                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.inst              74767                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.data             411785                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total               44243304                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                       1051788                       # number of replacements
 system.l2c.tagsinuse                     34117.721410                       # Cycle average of tags in use
 system.l2c.total_refs                         2341203                       # Total number of references to valid blocks.
@@ -118,20 +145,26 @@ system.l2c.ReadReq_miss_rate::cpu0.inst      0.015099                       # mi
 system.l2c.ReadReq_miss_rate::cpu0.data      0.557511                       # miss rate for ReadReq accesses
 system.l2c.ReadReq_miss_rate::cpu1.inst      0.021085                       # miss rate for ReadReq accesses
 system.l2c.ReadReq_miss_rate::cpu1.data      0.061193                       # miss rate for ReadReq accesses
+system.l2c.ReadReq_miss_rate::total          0.353588                       # miss rate for ReadReq accesses
 system.l2c.UpgradeReq_miss_rate::cpu0.data     0.947961                       # miss rate for UpgradeReq accesses
 system.l2c.UpgradeReq_miss_rate::cpu1.data     0.935644                       # miss rate for UpgradeReq accesses
+system.l2c.UpgradeReq_miss_rate::total       0.945615                       # miss rate for UpgradeReq accesses
 system.l2c.SCUpgradeReq_miss_rate::cpu0.data     0.812500                       # miss rate for SCUpgradeReq accesses
 system.l2c.SCUpgradeReq_miss_rate::cpu1.data     0.918182                       # miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_miss_rate::total     0.873684                       # miss rate for SCUpgradeReq accesses
 system.l2c.ReadExReq_miss_rate::cpu0.data     0.416750                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_miss_rate::cpu1.data     0.410237                       # miss rate for ReadExReq accesses
+system.l2c.ReadExReq_miss_rate::total        0.416240                       # miss rate for ReadExReq accesses
 system.l2c.demand_miss_rate::cpu0.inst       0.015099                       # miss rate for demand accesses
 system.l2c.demand_miss_rate::cpu0.data       0.537413                       # miss rate for demand accesses
 system.l2c.demand_miss_rate::cpu1.inst       0.021085                       # miss rate for demand accesses
 system.l2c.demand_miss_rate::cpu1.data       0.196117                       # miss rate for demand accesses
+system.l2c.demand_miss_rate::total           0.359923                       # miss rate for demand accesses
 system.l2c.overall_miss_rate::cpu0.inst      0.015099                       # miss rate for overall accesses
 system.l2c.overall_miss_rate::cpu0.data      0.537413                       # miss rate for overall accesses
 system.l2c.overall_miss_rate::cpu1.inst      0.021085                       # miss rate for overall accesses
 system.l2c.overall_miss_rate::cpu1.data      0.196117                       # miss rate for overall accesses
+system.l2c.overall_miss_rate::total          0.359923                       # miss rate for overall accesses
 system.l2c.blocked_cycles::no_mshrs                 0                       # number of cycles access was blocked
 system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
@@ -169,9 +202,13 @@ system.iocache.demand_accesses::total           41727                       # nu
 system.iocache.overall_accesses::tsunami.ide        41727                       # number of overall (read+write) accesses
 system.iocache.overall_accesses::total          41727                       # number of overall (read+write) accesses
 system.iocache.ReadReq_miss_rate::tsunami.ide            1                       # miss rate for ReadReq accesses
+system.iocache.ReadReq_miss_rate::total             1                       # miss rate for ReadReq accesses
 system.iocache.WriteReq_miss_rate::tsunami.ide            1                       # miss rate for WriteReq accesses
+system.iocache.WriteReq_miss_rate::total            1                       # miss rate for WriteReq accesses
 system.iocache.demand_miss_rate::tsunami.ide            1                       # miss rate for demand accesses
+system.iocache.demand_miss_rate::total              1                       # miss rate for demand accesses
 system.iocache.overall_miss_rate::tsunami.ide            1                       # miss rate for overall accesses
+system.iocache.overall_miss_rate::total             1                       # miss rate for overall accesses
 system.iocache.blocked_cycles::no_mshrs             0                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                    0                       # number of cycles access was blocked
@@ -275,6 +312,7 @@ system.cpu0.kern.ipl_used::21                       1                       # fr
 system.cpu0.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.ipl_used::31                0.684617                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.ipl_used::total             0.808753                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.syscall::2                         6      2.65%      2.65% # number of syscalls executed
 system.cpu0.kern.syscall::3                        19      8.41%     11.06% # number of syscalls executed
 system.cpu0.kern.syscall::4                         2      0.88%     11.95% # number of syscalls executed
@@ -333,7 +371,7 @@ system.cpu0.kern.mode_good::idle                    0
 system.cpu0.kern.mode_switch_good::kernel     0.163165                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_switch_good::idle           nan                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good::total          nan                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::total     0.280640                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_ticks::kernel      1869378305000     99.95%     99.95% # number of ticks spent at the given mode
 system.cpu0.kern.mode_ticks::user           957009000      0.05%    100.00% # number of ticks spent at the given mode
 system.cpu0.kern.mode_ticks::idle                   0      0.00%    100.00% # number of ticks spent at the given mode
@@ -397,8 +435,11 @@ system.cpu0.icache.demand_accesses::total     57230132                       # n
 system.cpu0.icache.overall_accesses::cpu0.inst     57230132                       # number of overall (read+write) accesses
 system.cpu0.icache.overall_accesses::total     57230132                       # number of overall (read+write) accesses
 system.cpu0.icache.ReadReq_miss_rate::cpu0.inst     0.015464                       # miss rate for ReadReq accesses
+system.cpu0.icache.ReadReq_miss_rate::total     0.015464                       # miss rate for ReadReq accesses
 system.cpu0.icache.demand_miss_rate::cpu0.inst     0.015464                       # miss rate for demand accesses
+system.cpu0.icache.demand_miss_rate::total     0.015464                       # miss rate for demand accesses
 system.cpu0.icache.overall_miss_rate::cpu0.inst     0.015464                       # miss rate for overall accesses
+system.cpu0.icache.overall_miss_rate::total     0.015464                       # miss rate for overall accesses
 system.cpu0.icache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
 system.cpu0.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
@@ -456,11 +497,17 @@ system.cpu0.dcache.demand_accesses::total     14729930                       # n
 system.cpu0.dcache.overall_accesses::cpu0.data     14729930                       # number of overall (read+write) accesses
 system.cpu0.dcache.overall_accesses::total     14729930                       # number of overall (read+write) accesses
 system.cpu0.dcache.ReadReq_miss_rate::cpu0.data     0.187444                       # miss rate for ReadReq accesses
+system.cpu0.dcache.ReadReq_miss_rate::total     0.187444                       # miss rate for ReadReq accesses
 system.cpu0.dcache.WriteReq_miss_rate::cpu0.data     0.049753                       # miss rate for WriteReq accesses
+system.cpu0.dcache.WriteReq_miss_rate::total     0.049753                       # miss rate for WriteReq accesses
 system.cpu0.dcache.LoadLockedReq_miss_rate::cpu0.data     0.085817                       # miss rate for LoadLockedReq accesses
+system.cpu0.dcache.LoadLockedReq_miss_rate::total     0.085817                       # miss rate for LoadLockedReq accesses
 system.cpu0.dcache.StoreCondReq_miss_rate::cpu0.data     0.003753                       # miss rate for StoreCondReq accesses
+system.cpu0.dcache.StoreCondReq_miss_rate::total     0.003753                       # miss rate for StoreCondReq accesses
 system.cpu0.dcache.demand_miss_rate::cpu0.data     0.133711                       # miss rate for demand accesses
+system.cpu0.dcache.demand_miss_rate::total     0.133711                       # miss rate for demand accesses
 system.cpu0.dcache.overall_miss_rate::cpu0.data     0.133711                       # miss rate for overall accesses
+system.cpu0.dcache.overall_miss_rate::total     0.133711                       # miss rate for overall accesses
 system.cpu0.dcache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
 system.cpu0.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
@@ -548,6 +595,7 @@ system.cpu1.kern.ipl_used::0                 0.999032                       # fr
 system.cpu1.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.ipl_used::31                0.551247                       # fraction of swpipl calls that actually changed the ipl
+system.cpu1.kern.ipl_used::total             0.730422                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.syscall::2                         2      2.00%      2.00% # number of syscalls executed
 system.cpu1.kern.syscall::3                        11     11.00%     13.00% # number of syscalls executed
 system.cpu1.kern.syscall::4                         2      2.00%     15.00% # number of syscalls executed
@@ -593,7 +641,7 @@ system.cpu1.kern.mode_good::idle                   32
 system.cpu1.kern.mode_switch_good::kernel     0.592449                       # fraction of useful protection mode switches
 system.cpu1.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 system.cpu1.kern.mode_switch_good::idle      0.015640                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_switch_good::total     1.608089                       # fraction of useful protection mode switches
+system.cpu1.kern.mode_switch_good::total     0.334518                       # fraction of useful protection mode switches
 system.cpu1.kern.mode_ticks::kernel        1373917500      0.07%      0.07% # number of ticks spent at the given mode
 system.cpu1.kern.mode_ticks::user           508289000      0.03%      0.10% # number of ticks spent at the given mode
 system.cpu1.kern.mode_ticks::idle        1868002549000     99.90%    100.00% # number of ticks spent at the given mode
@@ -626,8 +674,11 @@ system.cpu1.icache.demand_accesses::total      5935766                       # n
 system.cpu1.icache.overall_accesses::cpu1.inst      5935766                       # number of overall (read+write) accesses
 system.cpu1.icache.overall_accesses::total      5935766                       # number of overall (read+write) accesses
 system.cpu1.icache.ReadReq_miss_rate::cpu1.inst     0.017459                       # miss rate for ReadReq accesses
+system.cpu1.icache.ReadReq_miss_rate::total     0.017459                       # miss rate for ReadReq accesses
 system.cpu1.icache.demand_miss_rate::cpu1.inst     0.017459                       # miss rate for demand accesses
+system.cpu1.icache.demand_miss_rate::total     0.017459                       # miss rate for demand accesses
 system.cpu1.icache.overall_miss_rate::cpu1.inst     0.017459                       # miss rate for overall accesses
+system.cpu1.icache.overall_miss_rate::total     0.017459                       # miss rate for overall accesses
 system.cpu1.icache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
 system.cpu1.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
@@ -685,11 +736,17 @@ system.cpu1.dcache.demand_accesses::total      1884270                       # n
 system.cpu1.dcache.overall_accesses::cpu1.data      1884270                       # number of overall (read+write) accesses
 system.cpu1.dcache.overall_accesses::total      1884270                       # number of overall (read+write) accesses
 system.cpu1.dcache.ReadReq_miss_rate::cpu1.data     0.036187                       # miss rate for ReadReq accesses
+system.cpu1.dcache.ReadReq_miss_rate::total     0.036187                       # miss rate for ReadReq accesses
 system.cpu1.dcache.WriteReq_miss_rate::cpu1.data     0.035266                       # miss rate for WriteReq accesses
+system.cpu1.dcache.WriteReq_miss_rate::total     0.035266                       # miss rate for WriteReq accesses
 system.cpu1.dcache.LoadLockedReq_miss_rate::cpu1.data     0.078511                       # miss rate for LoadLockedReq accesses
+system.cpu1.dcache.LoadLockedReq_miss_rate::total     0.078511                       # miss rate for LoadLockedReq accesses
 system.cpu1.dcache.StoreCondReq_miss_rate::cpu1.data     0.044784                       # miss rate for StoreCondReq accesses
+system.cpu1.dcache.StoreCondReq_miss_rate::total     0.044784                       # miss rate for StoreCondReq accesses
 system.cpu1.dcache.demand_miss_rate::cpu1.data     0.035829                       # miss rate for demand accesses
+system.cpu1.dcache.demand_miss_rate::total     0.035829                       # miss rate for demand accesses
 system.cpu1.dcache.overall_miss_rate::cpu1.data     0.035829                       # miss rate for overall accesses
+system.cpu1.dcache.overall_miss_rate::total     0.035829                       # miss rate for overall accesses
 system.cpu1.dcache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
 system.cpu1.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked

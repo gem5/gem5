@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  8 2012 15:17:37
-gem5 started May  8 2012 17:02:03
-gem5 executing on piton
+gem5 compiled Jun  4 2012 12:14:06
+gem5 started Jun  4 2012 18:53:41
+gem5 executing on zizzer
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/70.twolf/arm/linux/simple-atomic -re tests/run.py build/ARM/tests/opt/long/se/70.twolf/arm/linux/simple-atomic
 Couldn't unlink  build/ARM/tests/opt/long/se/70.twolf/arm/linux/simple-atomic/smred.sav
 Couldn't unlink  build/ARM/tests/opt/long/se/70.twolf/arm/linux/simple-atomic/smred.sv2

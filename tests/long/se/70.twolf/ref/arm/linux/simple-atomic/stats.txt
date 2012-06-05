@@ -4,23 +4,35 @@ sim_seconds                                  0.103107                       # Nu
 sim_ticks                                103106771000                       # Number of ticks simulated
 final_tick                               103106771000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1081638                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1184289                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              647201988                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 224040                       # Number of bytes of host memory used
-host_seconds                                   159.31                       # Real time elapsed on the host
+host_inst_rate                                2060024                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2255526                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1232622542                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 224496                       # Number of bytes of host memory used
+host_seconds                                    83.65                       # Real time elapsed on the host
 sim_insts                                   172317417                       # Number of instructions simulated
 sim_ops                                     188670900                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read                   869973902                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read              759440240                       # Number of instructions bytes read from this memory
-system.physmem.bytes_written                 45252940                       # Number of bytes written to this memory
-system.physmem.num_reads                    219482514                       # Number of read requests responded to by this memory
-system.physmem.num_writes                    12386694                       # Number of write requests responded to by this memory
-system.physmem.num_other                            0                       # Number of other requests responded to by this memory
-system.physmem.bw_read                     8437602047                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read                7365570977                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write                     438893969                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total                    8876496016                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bytes_read::cpu.inst         759440240                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu.data         110533662                       # Number of bytes read from this memory
+system.physmem.bytes_read::total            869973902                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu.inst    759440240                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total       759440240                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written::cpu.data       45252940                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          45252940                       # Number of bytes written to this memory
+system.physmem.num_reads::cpu.inst          189860060                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu.data           29622454                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total             219482514                       # Number of read requests responded to by this memory
+system.physmem.num_writes::cpu.data          12386694                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total             12386694                       # Number of write requests responded to by this memory
+system.physmem.bw_read::cpu.inst           7365570977                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu.data           1072031070                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total              8437602047                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu.inst      7365570977                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total         7365570977                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu.data           438893969                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total              438893969                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu.inst          7365570977                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu.data          1510925039                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total             8876496016                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
 system.cpu.dtb.read_hits                            0                       # DTB read hits

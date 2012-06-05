@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  8 2012 15:36:31
-gem5 started May  8 2012 15:36:56
-gem5 executing on piton
+gem5 compiled Jun  4 2012 11:50:11
+gem5 started Jun  4 2012 13:52:53
+gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/70.twolf/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA/tests/opt/long/se/70.twolf/alpha/tru64/inorder-timing
 Couldn't unlink  build/ALPHA/tests/opt/long/se/70.twolf/alpha/tru64/inorder-timing/smred.sav
 Couldn't unlink  build/ALPHA/tests/opt/long/se/70.twolf/alpha/tru64/inorder-timing/smred.sv2

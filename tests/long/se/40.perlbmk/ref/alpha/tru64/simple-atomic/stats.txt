@@ -4,23 +4,35 @@ sim_seconds                                  1.004711                       # Nu
 sim_ticks                                1004710587000                       # Number of ticks simulated
 final_tick                               1004710587000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2020056                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2020056                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1010246097                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 211516                       # Number of bytes of host memory used
-host_seconds                                   994.52                       # Real time elapsed on the host
+host_inst_rate                                3539563                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3539563                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1770163280                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 211940                       # Number of bytes of host memory used
+host_seconds                                   567.58                       # Real time elapsed on the host
 sim_insts                                  2008987605                       # Number of instructions simulated
 sim_ops                                    2008987605                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read                 11607100996                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read             8037684280                       # Number of instructions bytes read from this memory
-system.physmem.bytes_written               1586125963                       # Number of bytes written to this memory
-system.physmem.num_reads                   2520491096                       # Number of read requests responded to by this memory
-system.physmem.num_writes                   210794896                       # Number of write requests responded to by this memory
-system.physmem.num_other                            0                       # Number of other requests responded to by this memory
-system.physmem.bw_read                    11552681087                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read                7999999586                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write                    1578689409                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total                   13131370496                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bytes_read::cpu.inst        8037684280                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu.data        3569416716                       # Number of bytes read from this memory
+system.physmem.bytes_read::total          11607100996                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu.inst   8037684280                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total      8037684280                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written::cpu.data     1586125963                       # Number of bytes written to this memory
+system.physmem.bytes_written::total        1586125963                       # Number of bytes written to this memory
+system.physmem.num_reads::cpu.inst         2009421070                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu.data          511070026                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total            2520491096                       # Number of read requests responded to by this memory
+system.physmem.num_writes::cpu.data         210794896                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total            210794896                       # Number of write requests responded to by this memory
+system.physmem.bw_read::cpu.inst           7999999586                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu.data           3552681501                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total             11552681087                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu.inst      7999999586                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total         7999999586                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu.data          1578689409                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total             1578689409                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu.inst          7999999586                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu.data          5131370910                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total            13131370496                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv

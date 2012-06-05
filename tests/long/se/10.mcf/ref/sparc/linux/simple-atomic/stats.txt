@@ -4,23 +4,37 @@ sim_seconds                                  0.122216                       # Nu
 sim_ticks                                122215830000                       # Number of ticks simulated
 final_tick                               122215830000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1503519                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1503581                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              753629165                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 346024                       # Number of bytes of host memory used
-host_seconds                                   162.17                       # Real time elapsed on the host
+host_inst_rate                                2951739                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2951861                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1479540198                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 346528                       # Number of bytes of host memory used
+host_seconds                                    82.60                       # Real time elapsed on the host
 sim_insts                                   243825163                       # Number of instructions simulated
 sim_ops                                     243835278                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read                  1306360053                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read              977686044                       # Number of instructions bytes read from this memory
-system.physmem.bytes_written                 91606089                       # Number of bytes written to this memory
-system.physmem.num_reads                    326641945                       # Number of read requests responded to by this memory
-system.physmem.num_writes                    22901951                       # Number of write requests responded to by this memory
-system.physmem.num_other                         3886                       # Number of other requests responded to by this memory
-system.physmem.bw_read                    10688959466                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read                7999667834                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write                     749543566                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total                   11438503032                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bytes_read::cpu.inst         977686044                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu.data         328674009                       # Number of bytes read from this memory
+system.physmem.bytes_read::total           1306360053                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu.inst    977686044                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total       977686044                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written::cpu.data       91606089                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          91606089                       # Number of bytes written to this memory
+system.physmem.num_reads::cpu.inst          244421511                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu.data           82220434                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total             326641945                       # Number of read requests responded to by this memory
+system.physmem.num_writes::cpu.data          22901951                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total             22901951                       # Number of write requests responded to by this memory
+system.physmem.num_other::cpu.data               3886                       # Number of other requests responded to by this memory
+system.physmem.num_other::total                  3886                       # Number of other requests responded to by this memory
+system.physmem.bw_read::cpu.inst           7999667834                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu.data           2689291633                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total             10688959466                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu.inst      7999667834                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total         7999667834                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu.data           749543566                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total              749543566                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu.inst          7999667834                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu.data          3438835198                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total            11438503032                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.workload.num_syscalls                  443                       # Number of system calls
 system.cpu.numCycles                        244431661                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
