@@ -661,7 +661,8 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 
         DPRINTF(Fetch, "[tid:%i]: Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
-        DynInstPtr instruction = buildInst(tid, TheISA::NoopStaticInst,
+        DynInstPtr instruction = buildInst(tid,
+                decoder[tid]->decode(TheISA::NoopMachInst, fetchPC.instAddr()),
                 NULL, fetchPC, fetchPC, false);
 
         instruction->setPredTarg(fetchPC);

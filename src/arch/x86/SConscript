@@ -57,7 +57,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('insts/static_inst.cc')
     Source('interrupts.cc')
     Source('isa.cc')
-    Source('isa_traits.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
     Source('linux/syscalls.cc')

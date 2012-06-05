@@ -50,7 +50,7 @@ using namespace BigEndianGuest;
 #define ISA_HAS_DELAY_SLOT 1
 
 // SPARC NOP (sethi %(hi(0), g0)
-extern const StaticInstPtr NoopStaticInst;
+const MachInst NoopMachInst = 0x01000000;
 
 // 8K. This value is implmentation specific; and should probably
 // be somewhere else.

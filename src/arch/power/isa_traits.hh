@@ -66,7 +66,8 @@ const int VMPageSize = (1 << LogVMPageSize);
 
 const int MachineBytes = 4;
 
-const extern StaticInstPtr NoopStaticInst;
+// This is ori 0, 0, 0
+const ExtMachInst NoopMachInst = 0x60000000;
 
 // Memory accesses can be unaligned
 const bool HasUnalignedMemAcc = true;

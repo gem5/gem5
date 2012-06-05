@@ -43,7 +43,6 @@
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/types.hh"
-#include "cpu/static_inst_fwd.hh"
 
 namespace LittleEndianGuest {}
 
@@ -72,7 +71,17 @@ namespace X86ISA
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;
 
-    extern const StaticInstPtr NoopStaticInst;
+    const ExtMachInst NoopMachInst = {
+        0x0,                            // No legacy prefixes.
+        0x0,                            // No rex prefix.
+        { 1, 0x0, 0x0, 0x90 },          // One opcode byte, 0x90.
+        0x0, 0x0,                       // No modrm or sib.
+        0, 0,                           // No immediate or displacement.
+        8, 8, 8,                        // All sizes are 8.
+        0,                              // Displacement size is 0.
+        SixtyFourBitMode                // Behave as if we're in 64 bit
+                                        // mode (this doesn't actually matter).
+    };
 }
 
 #endif // __ARCH_X86_ISATRAITS_HH__
