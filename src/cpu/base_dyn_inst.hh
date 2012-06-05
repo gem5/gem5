@@ -51,7 +51,6 @@
 #include <queue>
 
 #include "arch/utility.hh"
-#include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -73,7 +72,7 @@
  */
 
 template <class Impl>
-class BaseDynInst : public FastAlloc, public RefCounted
+class BaseDynInst : public RefCounted
 {
   public:
     // Typedef for the CPU.

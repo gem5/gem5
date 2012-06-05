@@ -50,7 +50,6 @@
  * Cache definitions.
  */
 
-#include "base/fast_alloc.hh"
 #include "base/misc.hh"
 #include "base/range.hh"
 #include "base/types.hh"
@@ -349,7 +348,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 }
 
 
-class ForwardResponseRecord : public Packet::SenderState, public FastAlloc
+class ForwardResponseRecord : public Packet::SenderState
 {
     Packet::SenderState *prevSenderState;
     PortID prevSrc;

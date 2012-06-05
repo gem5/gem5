@@ -41,7 +41,6 @@
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
-#include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
@@ -271,7 +270,7 @@ class LSQUnit {
     MasterPort *dcachePort;
 
     /** Derived class to hold any sender state the LSQ needs. */
-    class LSQSenderState : public Packet::SenderState, public FastAlloc
+    class LSQSenderState : public Packet::SenderState
     {
       public:
         /** Default constructor. */

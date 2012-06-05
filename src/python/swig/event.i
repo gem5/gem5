@@ -73,7 +73,6 @@
 %include <std_string.i>
 %include <stdint.i>
 
-%import "base/fast_alloc.hh"
 %import "sim/serialize.hh"
 
 %include "base/types.hh"

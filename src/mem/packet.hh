@@ -58,7 +58,6 @@
 
 #include "base/cast.hh"
 #include "base/compiler.hh"
-#include "base/fast_alloc.hh"
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/printable.hh"
@@ -227,7 +226,7 @@ class MemCmd
  * ultimate destination and back, possibly being conveyed by several
  * different Packets along the way.)
  */
-class Packet : public FastAlloc, public Printable
+class Packet : public Printable
 {
   public:
     typedef uint32_t FlagsType;
@@ -358,7 +357,7 @@ class Packet : public FastAlloc, public Printable
      * Object used to maintain state of a PrintReq.  The senderState
      * field of a PrintReq should always be of this type.
      */
-    class PrintReqState : public SenderState, public FastAlloc
+    class PrintReqState : public SenderState
     {
       private:
         /**

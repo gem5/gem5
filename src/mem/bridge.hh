@@ -55,7 +55,6 @@
 #include <queue>
 #include <string>
 
-#include "base/fast_alloc.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
@@ -85,7 +84,7 @@ class Bridge : public MemObject
      * state and original source. It has enough information to also
      * restore the response once it comes back to the bridge.
      */
-    class RequestState : public Packet::SenderState, public FastAlloc
+    class RequestState : public Packet::SenderState
     {
 
       public:

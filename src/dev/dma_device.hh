@@ -50,7 +50,7 @@
 class DmaPort : public MasterPort
 {
   protected:
-    struct DmaReqState : public Packet::SenderState, public FastAlloc
+    struct DmaReqState : public Packet::SenderState
     {
         /** Event to call on the device when this transaction (all packets)
          * complete. */

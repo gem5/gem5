@@ -33,7 +33,6 @@
 
 #include <set>
 
-#include "base/fast_alloc.hh"
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
@@ -99,7 +98,7 @@ class NetworkTest : public MemObject
 
     CpuPort cachePort;
 
-    class NetworkTestSenderState : public Packet::SenderState, public FastAlloc
+    class NetworkTestSenderState : public Packet::SenderState
     {
       public:
         /** Constructor. */

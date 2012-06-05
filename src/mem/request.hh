@@ -42,7 +42,6 @@
 #include <cassert>
 #include <climits>
 
-#include "base/fast_alloc.hh"
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
@@ -53,7 +52,7 @@ class Request;
 typedef Request* RequestPtr;
 typedef uint16_t MasterID;
 
-class Request : public FastAlloc
+class Request
 {
   public:
     typedef uint32_t FlagsType;
@@ -229,7 +228,7 @@ class Request : public FastAlloc
         setThreadContext(cid, tid);
     }
 
-    ~Request() {}  // for FastAlloc
+    ~Request() {}
 
     /**
      * Set up CPU and thread numbers.

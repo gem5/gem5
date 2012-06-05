@@ -40,7 +40,6 @@ Source('callback.cc')
 Source('circlebuf.cc')
 Source('cprintf.cc')
 Source('debug.cc')
-Source('fast_alloc.cc')
 if env['USE_FENV']:
     Source('fenv.c')
 Source('hostinfo.cc')

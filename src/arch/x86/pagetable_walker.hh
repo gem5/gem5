@@ -44,7 +44,6 @@
 
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
-#include "base/fast_alloc.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
@@ -86,7 +85,7 @@ namespace X86ISA
         WalkerPort port;
 
         // State to track each walk of the page table
-        class WalkerState : public FastAlloc
+        class WalkerState
         {
           private:
             enum State {

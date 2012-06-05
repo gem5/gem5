@@ -34,7 +34,6 @@
 
 #include <set>
 
-#include "base/fast_alloc.hh"
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
@@ -112,7 +111,7 @@ class MemTest : public MemObject
     CpuPort funcPort;
     PortProxy funcProxy;
 
-    class MemTestSenderState : public Packet::SenderState, public FastAlloc
+    class MemTestSenderState : public Packet::SenderState
     {
       public:
         /** Constructor. */

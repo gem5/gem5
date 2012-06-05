@@ -833,11 +833,6 @@ sticky_vars.AddVariables(
     ListVariable('CPU_MODELS', 'CPU models',
                  sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
                  sorted(CpuModel.list)),
-    BoolVariable('NO_FAST_ALLOC', 'Disable fast object allocator', False),
-    BoolVariable('FORCE_FAST_ALLOC',
-                 'Enable fast object allocator, even for gem5.debug', False),
-    BoolVariable('FAST_ALLOC_STATS', 'Enable fast object allocator statistics',
-                 False),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
                  False),
     BoolVariable('SS_COMPATIBLE_FP',
@@ -852,8 +847,7 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC',
-                'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP',
+export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP',
                 'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK' ]
 
 ###################################################

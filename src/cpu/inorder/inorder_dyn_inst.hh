@@ -41,7 +41,6 @@
 #include "arch/mt.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
-#include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
@@ -73,7 +72,7 @@
 class ResourceRequest;
 class Packet;
 
-class InOrderDynInst : public FastAlloc, public RefCounted
+class InOrderDynInst : public RefCounted
 {
   public:
     // Binary machine instruction type.

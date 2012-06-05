@@ -42,7 +42,6 @@
 #include <iosfwd>
 #include <string>
 
-#include "base/fast_alloc.hh"
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -61,7 +60,7 @@ extern EventQueue mainEventQueue;
  *
  * Caution, the order of members is chosen to maximize data packing.
  */
-class Event : public Serializable, public FastAlloc
+class Event : public Serializable
 {
     friend class EventQueue;
 
