@@ -749,6 +749,14 @@ have_posix_clock = \
     conf.CheckLibWithHeader('rt', 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
 
+if conf.CheckLib('tcmalloc_minimal'):
+    have_tcmalloc = True
+else:
+    have_tcmalloc = False
+    print termcap.Yellow + termcap.Bold + \
+          "You can get a 12% performance improvement by installing tcmalloc "\
+          "(google-perftools package on Ubuntu or RedHat)." + termcap.Normal
+
 if not have_posix_clock:
     print "Can't find library for POSIX clocks."
 
@@ -1010,6 +1018,9 @@ for variant_path in variant_paths:
 
     if env['USE_SSE2']:
         env.Append(CCFLAGS=['-msse2'])
+
+    if have_tcmalloc:
+        env.Append(LIBS=['tcmalloc_minimal'])
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
