@@ -317,114 +317,10 @@ class RealViewEB(RealView):
        self.flash_fake.pio    = bus.master
        self.smcreg_fake.pio   = bus.master
 
-class VExpress_ELT(RealView):
-    max_mem_size = '2GB'
-    pci_cfg_base = 0xD0000000
-    elba_uart = Pl011(pio_addr=0xE0009000, int_num=42)
-    uart = Pl011(pio_addr=0xFF009000, int_num=121)
-    realview_io = RealViewCtrl(proc_id0=0x0C000222, pio_addr=0xFF000000)
-    gic = Gic(dist_addr=0xE0201000, cpu_addr=0xE0200100)
-    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0xE0200600)
-    v2m_timer0 = Sp804(int_num0=120, int_num1=120, pio_addr=0xFF011000)
-    v2m_timer1 = Sp804(int_num0=121, int_num1=121, pio_addr=0xFF012000)
-    elba_timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0xE0011000, clock0='50MHz', clock1='50MHz')
-    elba_timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0xE0012000, clock0='50MHz', clock1='50MHz')
-    clcd   = Pl111(pio_addr=0xE0022000, int_num=46)   # CLCD interrupt no. unknown
-    kmi0   = Pl050(pio_addr=0xFF006000, int_num=124)
-    kmi1   = Pl050(pio_addr=0xFF007000, int_num=125)
-    elba_kmi0   = Pl050(pio_addr=0xE0006000, int_num=52)
-    elba_kmi1   = Pl050(pio_addr=0xE0007000, int_num=53)
-    a9scu  = A9SCU(pio_addr=0xE0200000)
-    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
-                            io_shift = 2, ctrl_offset = 2, Command = 0x1,
-                            BAR0 = 0xFF01A000, BAR0Size = '256B',
-                            BAR1 = 0xFF01A100, BAR1Size = '4096B',
-                            BAR0LegacyIO = True, BAR1LegacyIO = True)
-
-    pciconfig = PciConfigAll()
-    ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
-                          InterruptLine=1, InterruptPin=1)
-
-    ide = IdeController(disks = [], pci_bus=0, pci_dev=1, pci_func=0,
-                        InterruptLine=2, InterruptPin=2)
-
-    l2x0_fake      = IsaFake(pio_addr=0xE0202000, pio_size=0xfff)
-    dmac_fake      = AmbaFake(pio_addr=0xE0020000)
-    uart1_fake     = AmbaFake(pio_addr=0xE000A000)
-    uart2_fake     = AmbaFake(pio_addr=0xE000B000)
-    uart3_fake     = AmbaFake(pio_addr=0xE000C000)
-    smc_fake       = AmbaFake(pio_addr=0xEC000000)
-    sp810_fake     = AmbaFake(pio_addr=0xFF001000, ignore_access=True)
-    watchdog_fake  = AmbaFake(pio_addr=0xE0010000)
-    aaci_fake      = AmbaFake(pio_addr=0xFF004000)
-    elba_aaci_fake = AmbaFake(pio_addr=0xE0004000)
-    mmc_fake       = AmbaFake(pio_addr=0xE0005000) # not sure if we need this
-    rtc_fake       = AmbaFake(pio_addr=0xE0017000, amba_id=0x41031)
-    spsc_fake      = IsaFake(pio_addr=0xE001B000, pio_size=0x2000)
-    lan_fake       = IsaFake(pio_addr=0xFA000000, pio_size=0xffff)
-    usb_fake       = IsaFake(pio_addr=0xFB000000, pio_size=0x1ffff)
-
-
-    # Attach I/O devices that are on chip and also set the appropriate
-    # ranges for the bridge
-    def attachOnChipIO(self, bus, bridge):
-       self.gic.pio = bus.master
-       self.a9scu.pio = bus.master
-       self.local_cpu_timer.pio = bus.master
-       # Bridge ranges based on excluding what is part of on-chip I/O
-       # (gic, a9scu)
-       bridge.ranges = [AddrRange(self.pci_cfg_base, self.a9scu.pio_addr - 1),
-                        AddrRange(self.l2x0_fake.pio_addr, Addr.max)]
-
-    # Attach I/O devices to specified bus object.  Can't do this
-    # earlier, since the bus object itself is typically defined at the
-    # System level.
-    def attachIO(self, bus):
-       self.elba_uart.pio       = bus.master
-       self.uart.pio            = bus.master
-       self.realview_io.pio     = bus.master
-       self.v2m_timer0.pio      = bus.master
-       self.v2m_timer1.pio      = bus.master
-       self.elba_timer0.pio     = bus.master
-       self.elba_timer1.pio     = bus.master
-       self.clcd.pio            = bus.master
-       self.clcd.dma            = bus.slave
-       self.kmi0.pio            = bus.master
-       self.kmi1.pio            = bus.master
-       self.elba_kmi0.pio       = bus.master
-       self.elba_kmi1.pio       = bus.master
-       self.cf_ctrl.pio         = bus.master
-       self.cf_ctrl.config      = bus.master
-       self.cf_ctrl.dma         = bus.slave
-       self.ide.pio             = bus.master
-       self.ide.config          = bus.master
-       self.ide.dma             = bus.slave
-       self.ethernet.pio        = bus.master
-       self.ethernet.config     = bus.master
-       self.ethernet.dma        = bus.slave
-       self.pciconfig.pio       = bus.default
-       bus.use_default_range    = True
-
-       self.l2x0_fake.pio       = bus.master
-       self.dmac_fake.pio       = bus.master
-       self.uart1_fake.pio      = bus.master
-       self.uart2_fake.pio      = bus.master
-       self.uart3_fake.pio      = bus.master
-       self.smc_fake.pio        = bus.master
-       self.sp810_fake.pio      = bus.master
-       self.watchdog_fake.pio   = bus.master
-       self.aaci_fake.pio       = bus.master
-       self.elba_aaci_fake.pio  = bus.master
-       self.mmc_fake.pio        = bus.master
-       self.rtc_fake.pio        = bus.master
-       self.spsc_fake.pio       = bus.master
-       self.lan_fake.pio        = bus.master
-       self.usb_fake.pio        = bus.master
-
-
 class VExpress_EMM(RealView):
     mem_start_addr = '2GB'
     max_mem_size = '2GB'
+    pci_cfg_base = 0x30000000
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, pio_addr=0x1C010000)
     gic = Gic(dist_addr=0x2C001000, cpu_addr=0x2C002000)
@@ -439,6 +335,15 @@ class VExpress_EMM(RealView):
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
                             BAR1 = 0x1C1A0100, BAR1Size = '4096B',
                             BAR0LegacyIO = True, BAR1LegacyIO = True)
+
+    pciconfig = PciConfigAll(size='256MB')
+    ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
+                          InterruptLine=1, InterruptPin=1)
+
+    ide = IdeController(disks = [], pci_bus=0, pci_dev=1, pci_func=0,
+                        InterruptLine=2, InterruptPin=2)
+
+
     vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
                                   zero = True)
     rtc            = PL031(pio_addr=0x1C170000, int_num=36)
@@ -491,6 +396,13 @@ class VExpress_EMM(RealView):
        self.rtc.pio             = bus.master
        bus.use_default_range    = True
        self.vram.port           = bus.master
+       self.ide.pio             = bus.master
+       self.ide.config          = bus.master
+       self.ide.dma             = bus.slave
+       self.ethernet.pio        = bus.master
+       self.ethernet.config     = bus.master
+       self.ethernet.dma        = bus.slave
+       self.pciconfig.pio       = bus.default
 
        self.l2x0_fake.pio       = bus.master
        self.uart1_fake.pio      = bus.master
