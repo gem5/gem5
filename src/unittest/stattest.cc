@@ -94,27 +94,37 @@ struct StatTest
     Histogram h12;
     SparseHistogram sh1;
 
+    Vector s19;
+    Vector s20;
+
     Formula f1;
     Formula f2;
     Formula f3;
     Formula f4;
     Formula f5;
+    Formula f6;
 
     void run();
     void init();
 };
 
-StatTest __stattest;
+StatTest &
+__stattest()
+{
+    static StatTest st;
+    return st;
+}
+
 void
 stattest_init()
 {
-    __stattest.init();
+    __stattest().init();
 }
 
 void
 stattest_run()
 {
-    __stattest.run();
+    __stattest().run();
 }
 
 void
@@ -352,6 +362,24 @@ StatTest::init()
         .desc("this is formula 4")
         ;
 
+    s19
+        .init(2)
+        .name("Stat19")
+        .desc("this is statistic 19 for vector op testing")
+        .flags(total | nozero | nonan)
+    ;
+    s20
+        .init(2)
+        .name("Stat20")
+        .desc("this is statistic 20 for vector op testing")
+        .flags(total | nozero | nonan)
+    ;
+
+    f6
+        .name("vector_op_test_formula")
+        .desc("The total stat should equal 1")
+        .flags(total |nozero |nonan)
+        ;
 
     f1 = s1 + s2;
     f2 = (-s1) / (-s2) * (-s3 + ULL(100) + s4);
@@ -359,6 +387,7 @@ StatTest::init()
     f4 += constant(10.0);
     f4 += s5[3];
     f5 = constant(1);
+    f6 = s19/s20;
 }
 
 void
@@ -634,4 +663,10 @@ StatTest::run()
     for (int i = 0; i < 1000; i++) {
         sh1.sample(random() % 10000);
     }
+
+    s19[0] = 1;
+    s19[1] = 100000;
+    s20[0] = 100000;
+    s20[1] = 1;
+
 }
