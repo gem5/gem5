@@ -71,6 +71,13 @@ processResetQueue()
     resetQueue.process();
 }
 
+inline void
+processDumpQueue()
+{
+    extern CallbackQueue dumpQueue;
+    dumpQueue.process();
+}
+
 inline char *
 PCC(const char *string)
 {
@@ -146,6 +153,7 @@ void schedStatEvent(bool dump, bool reset,
                     Tick when = curTick(), Tick repeat = 0);
 
 void processResetQueue();
+void processDumpQueue();
 void enable();
 bool enabled();
 

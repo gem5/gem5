@@ -103,6 +103,8 @@ def dump():
         return
     lastDump = curTick
 
+    internal.stats.processDumpQueue()
+
     prepare()
 
     for output in outputList:

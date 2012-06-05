@@ -3135,6 +3135,12 @@ bool enabled();
  */
 void registerResetCallback(Callback *cb);
 
+/**
+ * Register a callback that should be called whenever statistics are
+ * about to be dumped
+ */
+void registerDumpCallback(Callback *cb);
+
 std::list<Info *> &statsList();
 
 } // namespace Stats
