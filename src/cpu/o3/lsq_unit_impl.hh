@@ -465,7 +465,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
 
-        if (!ld_inst->effAddrValid || ld_inst->uncacheable()) {
+        if (!ld_inst->effAddrValid() || ld_inst->uncacheable()) {
             incrLdIdx(load_idx);
             continue;
         }
@@ -475,7 +475,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
                     ld_inst->seqNum, load_addr, invalidate_addr);
 
         if (load_addr == invalidate_addr) {
-            if (ld_inst->possibleLoadViolation) {
+            if (ld_inst->possibleLoadViolation()) {
                 DPRINTF(LSQUnit, "Conflicting load at addr %#x [sn:%lli]\n",
                         ld_inst->physEffAddr, pkt->getAddr(), ld_inst->seqNum);
 
@@ -485,7 +485,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
                 // If a older load checks this and it's true
                 // then we might have missed the snoop
                 // in which case we need to invalidate to be sure
-                ld_inst->hitExternalSnoop = true;
+                ld_inst->hitExternalSnoop(true);
             }
         }
         incrLdIdx(load_idx);
@@ -507,7 +507,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
      */
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
-        if (!ld_inst->effAddrValid || ld_inst->uncacheable()) {
+        if (!ld_inst->effAddrValid() || ld_inst->uncacheable()) {
             incrLdIdx(load_idx);
             continue;
         }
@@ -521,7 +521,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
                 // If this load is to the same block as an external snoop
                 // invalidate that we've observed then the load needs to be
                 // squashed as it could have newer data
-                if (ld_inst->hitExternalSnoop) {
+                if (ld_inst->hitExternalSnoop()) {
                     if (!memDepViolator ||
                             ld_inst->seqNum < memDepViolator->seqNum) {
                         DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] "
@@ -540,7 +540,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 
                 // Otherwise, mark the load has a possible load violation
                 // and if we see a snoop before it's commited, we need to squash
-                ld_inst->possibleLoadViolation = true;
+                ld_inst->possibleLoadViolation(true);
                 DPRINTF(LSQUnit, "Found possible load violaiton at addr: %#x"
                         " between instructions [sn:%lli] and [sn:%lli]\n",
                         inst_eff_addr1, inst->seqNum, ld_inst->seqNum);
@@ -610,7 +610,7 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     } else if (!loadBlocked()) {
-        assert(inst->effAddrValid);
+        assert(inst->effAddrValid());
         int load_idx = inst->lqIdx;
         incrLdIdx(load_idx);
 
@@ -857,9 +857,9 @@ LSQUnit<Impl>::writebackStores()
             // Disable recording the result temporarily.  Writing to
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
-            inst->recordResult = false;
+            inst->recordResult(false);
             bool success = TheISA::handleLockedWrite(inst.get(), req);
-            inst->recordResult = true;
+            inst->recordResult(true);
 
             if (!success) {
                 // Instantly complete this store.

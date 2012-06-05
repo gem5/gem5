@@ -40,6 +40,9 @@ namespace AlphaISA {
 using AlphaISAInst::MaxInstSrcRegs;
 using AlphaISAInst::MaxInstDestRegs;
 
+// Locked read/write flags are can't be detected by the ISA parser
+const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
+
 typedef uint8_t RegIndex;
 typedef uint64_t IntReg;
 

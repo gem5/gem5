@@ -98,17 +98,202 @@ class BaseDynInst : public RefCounted
         MaxInstDestRegs = TheISA::MaxInstDestRegs       /// Max dest regs
     };
 
+    union Result {
+        uint64_t integer;
+        double dbl;
+        void set(uint64_t i) { integer = i; }
+        void set(double d) { dbl = d; }
+        void get(uint64_t& i) { i = integer; }
+        void get(double& d) { d = dbl; }
+    };
+
+  protected:
+    enum Status {
+        IqEntry,                 /// Instruction is in the IQ
+        RobEntry,                /// Instruction is in the ROB
+        LsqEntry,                /// Instruction is in the LSQ
+        Completed,               /// Instruction has completed
+        ResultReady,             /// Instruction has its result
+        CanIssue,                /// Instruction can issue and execute
+        Issued,                  /// Instruction has issued
+        Executed,                /// Instruction has executed
+        CanCommit,               /// Instruction can commit
+        AtCommit,                /// Instruction has reached commit
+        Committed,               /// Instruction has committed
+        Squashed,                /// Instruction is squashed
+        SquashedInIQ,            /// Instruction is squashed in the IQ
+        SquashedInLSQ,           /// Instruction is squashed in the LSQ
+        SquashedInROB,           /// Instruction is squashed in the ROB
+        RecoverInst,             /// Is a recover instruction
+        BlockingInst,            /// Is a blocking instruction
+        ThreadsyncWait,          /// Is a thread synchronization instruction
+        SerializeBefore,         /// Needs to serialize on
+                                 /// instructions ahead of it
+        SerializeAfter,          /// Needs to serialize instructions behind it
+        SerializeHandled,        /// Serialization has been handled
+        NumStatus
+    };
+
+    enum Flags {
+        TranslationStarted,
+        TranslationCompleted,
+        PossibleLoadViolation,
+        HitExternalSnoop,
+        EffAddrValid,
+        RecordResult,
+        Predicate,
+        PredTaken,
+        /** Whether or not the effective address calculation is completed.
+         *  @todo: Consider if this is necessary or not.
+         */
+        EACalcDone,
+        IsUncacheable,
+        ReqMade,
+        MemOpDone,
+        MaxFlags
+    };
+
+  public:
+    /** The sequence number of the instruction. */
+    InstSeqNum seqNum;
+
     /** The StaticInst used by this BaseDynInst. */
     StaticInstPtr staticInst;
+
+    /** Pointer to the Impl's CPU object. */
+    ImplCPU *cpu;
+
+    /** Pointer to the thread state. */
+    ImplState *thread;
+
+    /** The kind of fault this instruction has generated. */
+    Fault fault;
+
+    /** InstRecord that tracks this instructions. */
+    Trace::InstRecord *traceData;
+
+  protected:
+    /** The result of the instruction; assumes an instruction can have many
+     *  destination registers.
+     */
+    std::queue<Result> instResult;
+
+    /** PC state for this instruction. */
+    TheISA::PCState pc;
+
+    /* An amalgamation of a lot of boolean values into one */
+    std::bitset<MaxFlags> instFlags;
+
+    /** The status of this BaseDynInst.  Several bits can be set. */
+    std::bitset<NumStatus> status;
+
+     /** Whether or not the source register is ready.
+     *  @todo: Not sure this should be here vs the derived class.
+     */
+    std::bitset<MaxInstSrcRegs> _readySrcRegIdx;
+
+  public:
+    /** The thread this instruction is from. */
+    ThreadID threadNumber;
+
+    /** Iterator pointing to this BaseDynInst in the list of all insts. */
+    ListIt instListIt;
+
+    ////////////////////// Branch Data ///////////////
+    /** Predicted PC state after this instruction. */
+    TheISA::PCState predPC;
+
+    /** The Macroop if one exists */
     StaticInstPtr macroop;
+
+    /** How many source registers are ready. */
+    uint8_t readyRegs;
+
+  public:
+    /////////////////////// Load Store Data //////////////////////
+    /** The effective virtual address (lds & stores only). */
+    Addr effAddr;
+
+    /** The effective physical address. */
+    Addr physEffAddr;
+
+    /** The memory request flags (from translation). */
+    unsigned memReqFlags;
+
+    /** data address space ID, for loads & stores. */
+    short asid;
+
+    /** The size of the request */
+    uint8_t effSize;
+
+    /** Pointer to the data for the memory access. */
+    uint8_t *memData;
+
+    /** Load queue index. */
+    int16_t lqIdx;
+
+    /** Store queue index. */
+    int16_t sqIdx;
+
+
+    /////////////////////// TLB Miss //////////////////////
+    /**
+     * Saved memory requests (needed when the DTB address translation is
+     * delayed due to a hw page table walk).
+     */
+    RequestPtr savedReq;
+    RequestPtr savedSreqLow;
+    RequestPtr savedSreqHigh;
+
+    /////////////////////// Checker //////////////////////
+    // Need a copy of main request pointer to verify on writes.
+    RequestPtr reqToVerify;
+
+  private:
+    /** Instruction effective address.
+     *  @todo: Consider if this is necessary or not.
+     */
+    Addr instEffAddr;
+
+  protected:
+    /** Flattened register index of the destination registers of this
+     *  instruction.
+     */
+    TheISA::RegIndex _flatDestRegIdx[TheISA::MaxInstDestRegs];
+
+    /** Physical register index of the destination registers of this
+     *  instruction.
+     */
+    PhysRegIndex _destRegIdx[TheISA::MaxInstDestRegs];
+
+    /** Physical register index of the source registers of this
+     *  instruction.
+     */
+    PhysRegIndex _srcRegIdx[TheISA::MaxInstSrcRegs];
+
+    /** Physical register index of the previous producers of the
+     *  architected destinations.
+     */
+    PhysRegIndex _prevDestRegIdx[TheISA::MaxInstDestRegs];
+
+
+  public:
+    /** Records changes to result? */
+    void recordResult(bool f) { instFlags[RecordResult] = f; }
+
+    /** Is the effective virtual address valid. */
+    bool effAddrValid() const { return instFlags[EffAddrValid]; }
+
+    /** Whether or not the memory operation is done. */
+    bool memOpDone() const { return instFlags[MemOpDone]; }
+    void memOpDone(bool f) { instFlags[MemOpDone] = f; }
+
 
     ////////////////////////////////////////////
     //
     // INSTRUCTION EXECUTION
     //
     ////////////////////////////////////////////
-    /** InstRecord that tracks this instructions. */
-    Trace::InstRecord *traceData;
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
@@ -141,23 +326,27 @@ class BaseDynInst : public RefCounted
     void finishTranslation(WholeTranslationState *state);
 
     /** True if the DTB address translation has started. */
-    bool translationStarted;
+    bool translationStarted() const { return instFlags[TranslationStarted]; }
+    void translationStarted(bool f) { instFlags[TranslationStarted] = f; }
 
     /** True if the DTB address translation has completed. */
-    bool translationCompleted;
+    bool translationCompleted() const { return instFlags[TranslationCompleted]; }
+    void translationCompleted(bool f) { instFlags[TranslationCompleted] = f; }
 
     /** True if this address was found to match a previous load and they issued
      * out of order. If that happend, then it's only a problem if an incoming
      * snoop invalidate modifies the line, in which case we need to squash.
      * If nothing modified the line the order doesn't matter.
      */
-    bool possibleLoadViolation;
+    bool possibleLoadViolation() const { return instFlags[PossibleLoadViolation]; }
+    void possibleLoadViolation(bool f) { instFlags[PossibleLoadViolation] = f; }
 
     /** True if the address hit a external snoop while sitting in the LSQ.
      * If this is true and a older instruction sees it, this instruction must
      * reexecute
      */
-    bool hitExternalSnoop;
+    bool hitExternalSnoop() const { return instFlags[HitExternalSnoop]; }
+    void hitExternalSnoop(bool f) { instFlags[HitExternalSnoop] = f; }
 
     /**
      * Returns true if the DTB address translation is being delayed due to a hw
@@ -165,158 +354,13 @@ class BaseDynInst : public RefCounted
      */
     bool isTranslationDelayed() const
     {
-        return (translationStarted && !translationCompleted);
+        return (translationStarted() && !translationCompleted());
     }
 
-    /**
-     * Saved memory requests (needed when the DTB address translation is
-     * delayed due to a hw page table walk).
-     */
-    RequestPtr savedReq;
-    RequestPtr savedSreqLow;
-    RequestPtr savedSreqHigh;
-
-    // Need a copy of main request pointer to verify on writes.
-    RequestPtr reqToVerify;
-
-    /** @todo: Consider making this private. */
   public:
-    /** The sequence number of the instruction. */
-    InstSeqNum seqNum;
-
-    enum Status {
-        IqEntry,                 /// Instruction is in the IQ
-        RobEntry,                /// Instruction is in the ROB
-        LsqEntry,                /// Instruction is in the LSQ
-        Completed,               /// Instruction has completed
-        ResultReady,             /// Instruction has its result
-        CanIssue,                /// Instruction can issue and execute
-        Issued,                  /// Instruction has issued
-        Executed,                /// Instruction has executed
-        CanCommit,               /// Instruction can commit
-        AtCommit,                /// Instruction has reached commit
-        Committed,               /// Instruction has committed
-        Squashed,                /// Instruction is squashed
-        SquashedInIQ,            /// Instruction is squashed in the IQ
-        SquashedInLSQ,           /// Instruction is squashed in the LSQ
-        SquashedInROB,           /// Instruction is squashed in the ROB
-        RecoverInst,             /// Is a recover instruction
-        BlockingInst,            /// Is a blocking instruction
-        ThreadsyncWait,          /// Is a thread synchronization instruction
-        SerializeBefore,         /// Needs to serialize on
-                                 /// instructions ahead of it
-        SerializeAfter,          /// Needs to serialize instructions behind it
-        SerializeHandled,        /// Serialization has been handled
-        NumStatus
-    };
-
-    /** The status of this BaseDynInst.  Several bits can be set. */
-    std::bitset<NumStatus> status;
-
-    /** The thread this instruction is from. */
-    ThreadID threadNumber;
-
-    /** data address space ID, for loads & stores. */
-    short asid;
-
-    /** How many source registers are ready. */
-    unsigned readyRegs;
-
-    /** Pointer to the Impl's CPU object. */
-    ImplCPU *cpu;
-
-    /** Pointer to the thread state. */
-    ImplState *thread;
-
-    /** The kind of fault this instruction has generated. */
-    Fault fault;
-
-    /** Pointer to the data for the memory access. */
-    uint8_t *memData;
-
-    /** The effective virtual address (lds & stores only). */
-    Addr effAddr;
-
-    /** The size of the request */
-    Addr effSize;
-
-    /** Is the effective virtual address valid. */
-    bool effAddrValid;
-
-    /** The effective physical address. */
-    Addr physEffAddr;
-
-    /** The memory request flags (from translation). */
-    unsigned memReqFlags;
-
-    union Result {
-        uint64_t integer;
-        double dbl;
-        void set(uint64_t i) { integer = i; }
-        void set(double d) { dbl = d; }
-        void get(uint64_t& i) { i = integer; }
-        void get(double& d) { d = dbl; }
-    };
-
-    /** The result of the instruction; assumes an instruction can have many
-     *  destination registers.
-     */
-    std::queue<Result> instResult;
-
-    /** Records changes to result? */
-    bool recordResult;
-
-    /** Did this instruction execute, or is it predicated false */
-    bool predicate;
-
-  protected:
-    /** PC state for this instruction. */
-    TheISA::PCState pc;
-
-    /** Predicted PC state after this instruction. */
-    TheISA::PCState predPC;
-
-    /** If this is a branch that was predicted taken */
-    bool predTaken;
-
-  public:
-
 #ifdef DEBUG
     void dumpSNList();
 #endif
-
-    /** Whether or not the source register is ready.
-     *  @todo: Not sure this should be here vs the derived class.
-     */
-    bool _readySrcRegIdx[MaxInstSrcRegs];
-
-  protected:
-    /** Flattened register index of the destination registers of this
-     *  instruction.
-     */
-    TheISA::RegIndex _flatDestRegIdx[TheISA::MaxInstDestRegs];
-
-    /** Flattened register index of the source registers of this
-     *  instruction.
-     */
-    TheISA::RegIndex _flatSrcRegIdx[TheISA::MaxInstSrcRegs];
-
-    /** Physical register index of the destination registers of this
-     *  instruction.
-     */
-    PhysRegIndex _destRegIdx[TheISA::MaxInstDestRegs];
-
-    /** Physical register index of the source registers of this
-     *  instruction.
-     */
-    PhysRegIndex _srcRegIdx[TheISA::MaxInstSrcRegs];
-
-    /** Physical register index of the previous producers of the
-     *  architected destinations.
-     */
-    PhysRegIndex _prevDestRegIdx[TheISA::MaxInstDestRegs];
-
-  public:
 
     /** Returns the physical register index of the i'th destination
      *  register.
@@ -329,6 +373,7 @@ class BaseDynInst : public RefCounted
     /** Returns the physical register index of the i'th source register. */
     PhysRegIndex renamedSrcRegIdx(int idx) const
     {
+        assert(TheISA::MaxInstSrcRegs > idx);
         return _srcRegIdx[idx];
     }
 
@@ -338,12 +383,6 @@ class BaseDynInst : public RefCounted
     TheISA::RegIndex flattenedDestRegIdx(int idx) const
     {
         return _flatDestRegIdx[idx];
-    }
-
-    /** Returns the flattened register index of the i'th source register */
-    TheISA::RegIndex flattenedSrcRegIdx(int idx) const
-    {
-        return _flatSrcRegIdx[idx];
     }
 
     /** Returns the physical register index of the previous physical register
@@ -372,13 +411,6 @@ class BaseDynInst : public RefCounted
     void renameSrcReg(int idx, PhysRegIndex renamed_src)
     {
         _srcRegIdx[idx] = renamed_src;
-    }
-
-    /** Flattens a source architectural register index into a logical index.
-     */
-    void flattenSrcReg(int idx, TheISA::RegIndex flattened_src)
-    {
-        _flatSrcRegIdx[idx] = flattened_src;
     }
 
     /** Flattens a destination architectural register index into a logical
@@ -457,12 +489,12 @@ class BaseDynInst : public RefCounted
     /** Returns whether the instruction was predicted taken or not. */
     bool readPredTaken()
     {
-        return predTaken;
+        return instFlags[PredTaken];
     }
 
     void setPredTaken(bool predicted_taken)
     {
-        predTaken = predicted_taken;
+        instFlags[PredTaken] = predicted_taken;
     }
 
     /** Returns whether the instruction mispredicted. */
@@ -588,7 +620,7 @@ class BaseDynInst : public RefCounted
     template <class T>
     void setResult(T t)
     {
-        if (recordResult) {
+        if (instFlags[RecordResult]) {
             Result instRes;
             instRes.set(t);
             instResult.push(instRes);
@@ -774,12 +806,12 @@ class BaseDynInst : public RefCounted
 
     bool readPredicate()
     {
-        return predicate;
+        return instFlags[Predicate];
     }
 
     void setPredicate(bool val)
     {
-        predicate = val;
+        instFlags[Predicate] = val;
 
         if (traceData) {
             traceData->setPredicate(val);
@@ -798,54 +830,24 @@ class BaseDynInst : public RefCounted
     /** Returns the thread context. */
     ThreadContext *tcBase() { return thread->getTC(); }
 
-  private:
-    /** Instruction effective address.
-     *  @todo: Consider if this is necessary or not.
-     */
-    Addr instEffAddr;
-
-    /** Whether or not the effective address calculation is completed.
-     *  @todo: Consider if this is necessary or not.
-     */
-    bool eaCalcDone;
-
-    /** Is this instruction's memory access uncacheable. */
-    bool isUncacheable;
-
-    /** Has this instruction generated a memory request. */
-    bool reqMade;
-
   public:
     /** Sets the effective address. */
-    void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
+    void setEA(Addr &ea) { instEffAddr = ea; instFlags[EACalcDone] = true; }
 
     /** Returns the effective address. */
     const Addr &getEA() const { return instEffAddr; }
 
     /** Returns whether or not the eff. addr. calculation has been completed. */
-    bool doneEACalc() { return eaCalcDone; }
+    bool doneEACalc() { return instFlags[EACalcDone]; }
 
     /** Returns whether or not the eff. addr. source registers are ready. */
     bool eaSrcsReady();
 
-    /** Whether or not the memory operation is done. */
-    bool memOpDone;
-
     /** Is this instruction's memory access uncacheable. */
-    bool uncacheable() { return isUncacheable; }
+    bool uncacheable() { return instFlags[IsUncacheable]; }
 
     /** Has this instruction generated a memory request. */
-    bool hasRequest() { return reqMade; }
-
-  public:
-    /** Load queue index. */
-    int16_t lqIdx;
-
-    /** Store queue index. */
-    int16_t sqIdx;
-
-    /** Iterator pointing to this BaseDynInst in the list of all insts. */
-    ListIt instListIt;
+    bool hasRequest() { return instFlags[ReqMade]; }
 
     /** Returns iterator to this instruction in the list of all insts. */
     ListIt &getInstListIt() { return instListIt; }
@@ -868,12 +870,12 @@ Fault
 BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
                            unsigned size, unsigned flags)
 {
-    reqMade = true;
+    instFlags[ReqMade] = true;
     Request *req = NULL;
     Request *sreqLow = NULL;
     Request *sreqHigh = NULL;
 
-    if (reqMade && translationStarted) {
+    if (instFlags[ReqMade] && translationStarted()) {
         req = savedReq;
         sreqLow = savedSreqLow;
         sreqHigh = savedSreqHigh;
@@ -888,11 +890,11 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
         initiateTranslation(req, sreqLow, sreqHigh, NULL, BaseTLB::Read);
     }
 
-    if (translationCompleted) {
+    if (translationCompleted()) {
         if (fault == NoFault) {
             effAddr = req->getVaddr();
             effSize = size;
-            effAddrValid = true;
+            instFlags[EffAddrValid] = true;
 
             if (cpu->checker) {
                 if (reqToVerify != NULL) {
@@ -931,12 +933,12 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         traceData->setAddr(addr);
     }
 
-    reqMade = true;
+    instFlags[ReqMade] = true;
     Request *req = NULL;
     Request *sreqLow = NULL;
     Request *sreqHigh = NULL;
 
-    if (reqMade && translationStarted) {
+    if (instFlags[ReqMade] && translationStarted()) {
         req = savedReq;
         sreqLow = savedSreqLow;
         sreqHigh = savedSreqHigh;
@@ -951,10 +953,10 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         initiateTranslation(req, sreqLow, sreqHigh, res, BaseTLB::Write);
     }
 
-    if (fault == NoFault && translationCompleted) {
+    if (fault == NoFault && translationCompleted()) {
         effAddr = req->getVaddr();
         effSize = size;
-        effAddrValid = true;
+        instFlags[EffAddrValid] = true;
 
         if (cpu->checker) {
             if (reqToVerify != NULL) {
@@ -991,7 +993,7 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
                                        RequestPtr sreqHigh, uint64_t *res,
                                        BaseTLB::Mode mode)
 {
-    translationStarted = true;
+    translationStarted(true);
 
     if (!TheISA::HasUnalignedMemAcc || sreqLow == NULL) {
         WholeTranslationState *state =
@@ -1001,7 +1003,7 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
         DataTranslation<BaseDynInstPtr> *trans =
             new DataTranslation<BaseDynInstPtr>(this, state);
         cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
-        if (!translationCompleted) {
+        if (!translationCompleted()) {
             // Save memory requests.
             savedReq = state->mainReq;
             savedSreqLow = state->sreqLow;
@@ -1019,7 +1021,7 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
 
         cpu->dtb->translateTiming(sreqLow, thread->getTC(), stransLow, mode);
         cpu->dtb->translateTiming(sreqHigh, thread->getTC(), stransHigh, mode);
-        if (!translationCompleted) {
+        if (!translationCompleted()) {
             // Save memory requests.
             savedReq = state->mainReq;
             savedSreqLow = state->sreqLow;
@@ -1034,8 +1036,7 @@ BaseDynInst<Impl>::finishTranslation(WholeTranslationState *state)
 {
     fault = state->getFault();
 
-    if (state->isUncacheable())
-        isUncacheable = true;
+    instFlags[IsUncacheable] = state->isUncacheable();
 
     if (fault == NoFault) {
         physEffAddr = state->getPaddr();
@@ -1051,7 +1052,7 @@ BaseDynInst<Impl>::finishTranslation(WholeTranslationState *state)
     }
     delete state;
 
-    translationCompleted = true;
+    translationCompleted(true);
 }
 
 #endif // __CPU_BASE_DYN_INST_HH__

@@ -60,13 +60,12 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
                                StaticInstPtr _macroop,
                                TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(_staticInst), macroop(_macroop), traceData(NULL), cpu(cpu)
+  : staticInst(_staticInst), cpu(cpu), traceData(NULL), macroop(_macroop)
 {
     seqNum = seq_num;
 
     pc = _pc;
     predPC = _predPC;
-    predTaken = false;
 
     initVars();
 }
@@ -74,7 +73,7 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
                                StaticInstPtr _macroop)
-    : staticInst(_staticInst), macroop(_macroop), traceData(NULL)
+    : staticInst(_staticInst), traceData(NULL), macroop(_macroop)
 {
     seqNum = 0;
     initVars();
@@ -86,25 +85,14 @@ BaseDynInst<Impl>::initVars()
 {
     memData = NULL;
     effAddr = 0;
-    effAddrValid = false;
     physEffAddr = 0;
-
-    translationStarted = false;
-    translationCompleted = false;
-    possibleLoadViolation = false;
-    hitExternalSnoop  = false;
-
-    isUncacheable = false;
-    reqMade = false;
     readyRegs = 0;
-
-    recordResult = true;
 
     status.reset();
 
-    eaCalcDone = false;
-    memOpDone = false;
-    predicate = true;
+    instFlags.reset();
+    instFlags[RecordResult] = true;
+    instFlags[Predicate] = true;
 
     lqIdx = -1;
     sqIdx = -1;

@@ -96,15 +96,14 @@ struct DefaultIEWDefaultCommit {
     int size;
 
     DynInstPtr insts[Impl::MaxWidth];
+    DynInstPtr mispredictInst[Impl::MaxThreads];
+    Addr mispredPC[Impl::MaxThreads];
+    InstSeqNum squashedSeqNum[Impl::MaxThreads];
+    TheISA::PCState pc[Impl::MaxThreads];
 
     bool squash[Impl::MaxThreads];
     bool branchMispredict[Impl::MaxThreads];
-    DynInstPtr mispredictInst[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
-    Addr mispredPC[Impl::MaxThreads];
-    TheISA::PCState pc[Impl::MaxThreads];
-    InstSeqNum squashedSeqNum[Impl::MaxThreads];
-
     bool includeSquashInst[Impl::MaxThreads];
 };
 
@@ -122,21 +121,17 @@ template<class Impl>
 struct TimeBufStruct {
     typedef typename Impl::DynInstPtr DynInstPtr;
     struct decodeComm {
-        bool squash;
-        bool predIncorrect;
         uint64_t branchAddr;
-
         InstSeqNum doneSeqNum;
-
-        // @todo: Might want to package this kind of branch stuff into a single
-        // struct as it is used pretty frequently.
-        bool branchMispredict;
         DynInstPtr mispredictInst;
-        bool branchTaken;
+        DynInstPtr squashInst;
         Addr mispredPC;
         TheISA::PCState nextPC;
-        DynInstPtr squashInst;
         unsigned branchCount;
+        bool squash;
+        bool predIncorrect;
+        bool branchMispredict;
+        bool branchTaken;
     };
 
     decodeComm decodeInfo[Impl::MaxThreads];

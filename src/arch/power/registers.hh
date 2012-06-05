@@ -38,6 +38,7 @@ namespace PowerISA {
 
 using PowerISAInst::MaxInstSrcRegs;
 using PowerISAInst::MaxInstDestRegs;
+using PowerISAInst::MaxMiscDestRegs;
 
 typedef uint8_t RegIndex;
 

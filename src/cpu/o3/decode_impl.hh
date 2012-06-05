@@ -709,7 +709,7 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         --insts_available;
 
 #if TRACING_ON
-        inst->decodeTick = curTick();
+        inst->decodeTick = curTick() - inst->fetchTick;
 #endif
 
         // Ensure that if it was predicted as a branch, it really is a

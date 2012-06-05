@@ -75,8 +75,9 @@ BaseO3DynInst<Impl>::initVars()
 
     for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
         this->_srcRegIdx[i] = this->staticInst->srcRegIdx(i);
-        this->_readySrcRegIdx[i] = 0;
     }
+
+    this->_readySrcRegIdx.reset();
 
     _numDestMiscRegs = 0;
 

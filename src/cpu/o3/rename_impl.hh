@@ -692,7 +692,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         ++renamed_insts;
 
 #if TRACING_ON
-        inst->renameTick = curTick();
+        inst->renameTick = curTick() - inst->fetchTick;
 #endif
 
         // Put instruction in rename queue.
@@ -996,8 +996,6 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
         } else {
             panic("Reg index is out of bound: %d.", src_reg);
         }
-
-        inst->flattenSrcReg(src_idx, flat_src_reg);
 
         // Look up the source registers to get the phys. register they've
         // been renamed to, and set the sources to those registers.

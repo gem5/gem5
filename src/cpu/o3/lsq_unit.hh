@@ -275,28 +275,28 @@ class LSQUnit {
       public:
         /** Default constructor. */
         LSQSenderState()
-            : noWB(false), isSplit(false), pktToSend(false), outstanding(1),
-              mainPkt(NULL), pendingPacket(NULL)
-        { }
+            : mainPkt(NULL), pendingPacket(NULL), outstanding(1),
+              noWB(false), isSplit(false), pktToSend(false)
+          { }
 
         /** Instruction who initiated the access to memory. */
         DynInstPtr inst;
+        /** The main packet from a split load, used during writeback. */
+        PacketPtr mainPkt;
+        /** A second packet from a split store that needs sending. */
+        PacketPtr pendingPacket;
+        /** The LQ/SQ index of the instruction. */
+        uint8_t idx;
+        /** Number of outstanding packets to complete. */
+        uint8_t outstanding;
         /** Whether or not it is a load. */
         bool isLoad;
-        /** The LQ/SQ index of the instruction. */
-        int idx;
         /** Whether or not the instruction will need to writeback. */
         bool noWB;
         /** Whether or not this access is split in two. */
         bool isSplit;
         /** Whether or not there is a packet that needs sending. */
         bool pktToSend;
-        /** Number of outstanding packets to complete. */
-        int outstanding;
-        /** The main packet from a split load, used during writeback. */
-        PacketPtr mainPkt;
-        /** A second packet from a split store that needs sending. */
-        PacketPtr pendingPacket;
 
         /** Completes a packet and returns whether the access is finished. */
         inline bool complete() { return --outstanding == 0; }
@@ -342,7 +342,8 @@ class LSQUnit {
         {
             std::memset(data, 0, sizeof(data));
         }
-
+        /** The store data. */
+        char data[16];
         /** The store instruction. */
         DynInstPtr inst;
         /** The request for the store. */
@@ -351,9 +352,7 @@ class LSQUnit {
         RequestPtr sreqLow;
         RequestPtr sreqHigh;
         /** The size of the store. */
-        int size;
-        /** The store data. */
-        char data[16];
+        uint8_t size;
         /** Whether or not the store is split into two requests. */
         bool isSplit;
         /** Whether or not the store can writeback. */
@@ -593,9 +592,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         // Disable recording the result temporarily.  Writing to misc
         // regs normally updates the result, but this is not the
         // desired behavior when handling store conditionals.
-        load_inst->recordResult = false;
+        load_inst->recordResult(false);
         TheISA::handleLockedRead(load_inst.get(), req);
-        load_inst->recordResult = true;
+        load_inst->recordResult(true);
     }
 
     if (req->isMmappedIpr()) {
@@ -651,7 +650,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         else if (storeQueue[store_idx].inst->uncacheable())
             continue;
 
-        assert(storeQueue[store_idx].inst->effAddrValid);
+        assert(storeQueue[store_idx].inst->effAddrValid());
 
         // Check if the store data is within the lower and upper bounds of
         // addresses that the request needs.

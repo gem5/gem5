@@ -42,6 +42,7 @@ namespace SparcISA
 
 using SparcISAInst::MaxInstSrcRegs;
 using SparcISAInst::MaxInstDestRegs;
+using SparcISAInst::MaxMiscDestRegs;
 
 typedef uint64_t IntReg;
 typedef uint64_t MiscReg;

@@ -55,6 +55,7 @@ namespace ArmISA {
 const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
     ArmISAInst::MaxInstSrcRegs;
 using ArmISAInst::MaxInstDestRegs;
+using ArmISAInst::MaxMiscDestRegs;
 
 typedef uint16_t  RegIndex;
 

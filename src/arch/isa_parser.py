@@ -726,6 +726,7 @@ class OperandList(object):
         self.numDestRegs = 0
         self.numFPDestRegs = 0
         self.numIntDestRegs = 0
+        self.numMiscDestRegs = 0
         self.memOperand = None
         for op_desc in self.items:
             if op_desc.isReg():
@@ -739,6 +740,8 @@ class OperandList(object):
                         self.numFPDestRegs += 1
                     elif op_desc.isIntReg():
                         self.numIntDestRegs += 1
+                    elif op_desc.isControlReg():
+                        self.numMiscDestRegs += 1
             elif op_desc.isMem():
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
@@ -747,6 +750,8 @@ class OperandList(object):
             parser.maxInstSrcRegs = self.numSrcRegs
         if parser.maxInstDestRegs < self.numDestRegs:
             parser.maxInstDestRegs = self.numDestRegs
+        if parser.maxMiscDestRegs < self.numMiscDestRegs:
+            parser.maxMiscDestRegs = self.numMiscDestRegs
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
         for op_desc in self.items:
@@ -1001,6 +1006,7 @@ namespace %(namespace)s {
 
     const int MaxInstSrcRegs = %(MaxInstSrcRegs)d;
     const int MaxInstDestRegs = %(MaxInstDestRegs)d;
+    const int MaxMiscDestRegs = %(MaxMiscDestRegs)d;
 
 } // namespace %(namespace)s
 
@@ -1036,6 +1042,7 @@ class ISAParser(Grammar):
 
         self.maxInstSrcRegs = 0
         self.maxInstDestRegs = 0
+        self.maxMiscDestRegs = 0
 
     #####################################################################
     #
@@ -1990,6 +1997,7 @@ StaticInstPtr
         # value of the globals.
         MaxInstSrcRegs = self.maxInstSrcRegs
         MaxInstDestRegs = self.maxInstDestRegs
+        MaxMiscDestRegs = self.maxMiscDestRegs
         # max_inst_regs.hh
         self.update_if_needed('max_inst_regs.hh',
                               max_inst_regs_template % vars())

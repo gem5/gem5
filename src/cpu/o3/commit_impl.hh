@@ -1244,11 +1244,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
              head_inst->microPC(),
              head_inst->seqNum,
              head_inst->staticInst->disassemble(head_inst->instAddr()));
-    DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", head_inst->decodeTick);
-    DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", head_inst->renameTick);
-    DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", head_inst->dispatchTick);
-    DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", head_inst->issueTick);
-    DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", head_inst->completeTick);
+    DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", head_inst->fetchTick + head_inst->decodeTick);
+    DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", head_inst->fetchTick + head_inst->renameTick);
+    DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", head_inst->fetchTick + head_inst->dispatchTick);
+    DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", head_inst->fetchTick + head_inst->issueTick);
+    DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", head_inst->fetchTick + head_inst->completeTick);
     DPRINTFR(O3PipeView, "O3PipeView:retire:%llu\n", curTick());
 #endif
 

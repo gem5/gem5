@@ -206,9 +206,9 @@ class BPredUnit
         PredictorHistory(const InstSeqNum &seq_num, Addr instPC,
                          bool pred_taken, void *bp_history,
                          ThreadID _tid)
-            : seqNum(seq_num), pc(instPC), RASTarget(0), RASIndex(0),
-              tid(_tid), predTaken(pred_taken), usedRAS(0),
-              wasCall(0), wasReturn(0), validBTB(0), bpHistory(bp_history)
+            : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
+              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0),
+              wasCall(0), wasReturn(0), validBTB(0)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -220,6 +220,12 @@ class BPredUnit
 
         /** The PC associated with the sequence number. */
         Addr pc;
+
+        /** Pointer to the history object passed back from the branch
+         * predictor.  It is used to update or restore state of the
+         * branch predictor.
+         */
+        void *bpHistory;
 
         /** The RAS target (only valid if a return). */
         TheISA::PCState RASTarget;
@@ -243,11 +249,6 @@ class BPredUnit
         bool wasReturn;
         /** Whether or not the instruction had a valid BTB entry. */
         bool validBTB;
-        /** Pointer to the history object passed back from the branch
-         * predictor.  It is used to update or restore state of the
-         * branch predictor.
-         */
-        void *bpHistory;
     };
 
     typedef std::list<PredictorHistory> History;

@@ -859,7 +859,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             ++total_issued;
 
 #if TRACING_ON
-            issuing_inst->issueTick = curTick();
+            issuing_inst->issueTick = curTick() - issuing_inst->fetchTick;
 #endif
 
             if (!issuing_inst->isMemRef()) {
@@ -1054,8 +1054,8 @@ InstructionQueue<Impl>::rescheduleMemInst(DynInstPtr &resched_inst)
     DPRINTF(IQ, "Rescheduling mem inst [sn:%lli]\n", resched_inst->seqNum);
 
     // Reset DTB translation state
-    resched_inst->translationStarted = false;
-    resched_inst->translationCompleted = false;
+    resched_inst->translationStarted(false);
+    resched_inst->translationCompleted(false);
 
     resched_inst->clearCanIssue();
     memDepUnit[resched_inst->threadNumber].reschedule(resched_inst);
@@ -1079,7 +1079,7 @@ InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 
     ++freeEntries;
 
-    completed_inst->memOpDone = true;
+    completed_inst->memOpDone(true);
 
     memDepUnit[tid].completed(completed_inst);
     count[tid]--;
@@ -1098,7 +1098,7 @@ InstructionQueue<Impl>::getDeferredMemInstToExecute()
 {
     for (ListIt it = deferredMemInsts.begin(); it != deferredMemInsts.end();
          ++it) {
-        if ((*it)->translationCompleted || (*it)->isSquashed()) {
+        if ((*it)->translationCompleted() || (*it)->isSquashed()) {
             DynInstPtr ret = *it;
             deferredMemInsts.erase(it);
             return ret;
@@ -1165,7 +1165,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
 
         if (!squashed_inst->isIssued() ||
             (squashed_inst->isMemRef() &&
-             !squashed_inst->memOpDone)) {
+             !squashed_inst->memOpDone())) {
 
             DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %s squashed.\n",
                     tid, squashed_inst->seqNum, squashed_inst->pcState());
@@ -1456,7 +1456,7 @@ InstructionQueue<Impl>::dumpInsts()
                     ++valid_num;
                     cprintf("Count:%i\n", valid_num);
                 } else if ((*inst_list_it)->isMemRef() &&
-                           !(*inst_list_it)->memOpDone) {
+                           !(*inst_list_it)->memOpDone()) {
                     // Loads that have not been marked as executed
                     // still count towards the total instructions.
                     ++valid_num;
@@ -1473,7 +1473,7 @@ InstructionQueue<Impl>::dumpInsts()
                     (*inst_list_it)->isSquashed());
 
             if ((*inst_list_it)->isMemRef()) {
-                cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone);
+                cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone());
             }
 
             cprintf("\n");
@@ -1498,7 +1498,7 @@ InstructionQueue<Impl>::dumpInsts()
                 ++valid_num;
                 cprintf("Count:%i\n", valid_num);
             } else if ((*inst_list_it)->isMemRef() &&
-                       !(*inst_list_it)->memOpDone) {
+                       !(*inst_list_it)->memOpDone()) {
                 // Loads that have not been marked as executed
                 // still count towards the total instructions.
                 ++valid_num;
@@ -1515,7 +1515,7 @@ InstructionQueue<Impl>::dumpInsts()
                 (*inst_list_it)->isSquashed());
 
         if ((*inst_list_it)->isMemRef()) {
-            cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone);
+            cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone());
         }
 
         cprintf("\n");

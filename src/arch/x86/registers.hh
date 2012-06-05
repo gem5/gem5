@@ -49,6 +49,7 @@ namespace X86ISA
 {
 using X86ISAInst::MaxInstSrcRegs;
 using X86ISAInst::MaxInstDestRegs;
+using X86ISAInst::MaxMiscDestRegs;
 const int NumMiscArchRegs = NUM_MISCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
 

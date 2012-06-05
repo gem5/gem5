@@ -107,26 +107,28 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void initVars();
 
   protected:
+    /** Values to be written to the destination misc. registers. */
+    MiscReg _destMiscRegVal[TheISA::MaxMiscDestRegs];
+
     /** Indexes of the destination misc. registers. They are needed to defer
      * the write accesses to the misc. registers until the commit stage, when
      * the instruction is out of its speculative state.
      */
-    int _destMiscRegIdx[MaxInstDestRegs];
-    /** Values to be written to the destination misc. registers. */
-    MiscReg _destMiscRegVal[MaxInstDestRegs];
+    short _destMiscRegIdx[TheISA::MaxMiscDestRegs];
+
     /** Number of destination misc. registers. */
-    int _numDestMiscRegs;
+    uint8_t _numDestMiscRegs;
+
 
   public:
-
 #if TRACING_ON
     /** Tick records used for the pipeline activity viewer. */
     Tick fetchTick;
-    Tick decodeTick;
-    Tick renameTick;
-    Tick dispatchTick;
-    Tick issueTick;
-    Tick completeTick;
+    uint32_t decodeTick;
+    uint32_t renameTick;
+    uint32_t dispatchTick;
+    uint32_t issueTick;
+    uint32_t completeTick;
 #endif
 
     /** Reads a misc. register, including any side-effects the read
@@ -145,6 +147,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         /** Writes to misc. registers are recorded and deferred until the
          * commit stage, when updateMiscRegs() is called.
          */
+        assert(_numDestMiscRegs < TheISA::MaxMiscDestRegs);
         _destMiscRegIdx[_numDestMiscRegs] = misc_reg;
         _destMiscRegVal[_numDestMiscRegs] = val;
         _numDestMiscRegs++;

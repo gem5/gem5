@@ -1152,7 +1152,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
         ++iewDispatchedInsts;
 
 #if TRACING_ON
-        inst->dispatchTick = curTick();
+        inst->dispatchTick = curTick() - inst->fetchTick;
 #endif
     }
 
@@ -1617,7 +1617,7 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     iewExecutedInsts++;
 
 #if TRACING_ON
-    inst->completeTick = curTick();
+    inst->completeTick = curTick() - inst->fetchTick;
 #endif
 
     //
