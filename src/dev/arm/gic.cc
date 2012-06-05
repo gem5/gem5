@@ -193,12 +193,12 @@ Gic::readDistributor(PacketPtr pkt)
             pkt->set<uint8_t>(int_p[int_num]);
             break;
           case 2:
-            assert((int_num + 1) < (SGI_MAX + PPI_MAX));
+            assert((int_num + 1) < INT_LINES_MAX);
             pkt->set<uint16_t>(int_p[int_num] |
                                int_p[int_num+1] << 8);
             break;
           case 4:
-            assert((int_num + 3) < (SGI_MAX + PPI_MAX));
+            assert((int_num + 3) < INT_LINES_MAX);
             pkt->set<uint32_t>(int_p[int_num] |
                                int_p[int_num+1] << 8 |
                                int_p[int_num+2] << 16 |
