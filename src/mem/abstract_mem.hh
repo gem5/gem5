@@ -53,6 +53,9 @@
 #include "params/AbstractMemory.hh"
 #include "sim/stats.hh"
 
+
+class System;
+
 /**
  * An abstract memory represents a contiguous block of physical
  * memory, with an associated address range, and also provides basic
@@ -140,17 +143,17 @@ class AbstractMemory : public MemObject
     }
 
     /** Number of total bytes read from this memory */
-    Stats::Scalar bytesRead;
+    Stats::Vector bytesRead;
     /** Number of instruction bytes read from this memory */
-    Stats::Scalar bytesInstRead;
+    Stats::Vector bytesInstRead;
     /** Number of bytes written to this memory */
-    Stats::Scalar bytesWritten;
+    Stats::Vector bytesWritten;
     /** Number of read requests */
-    Stats::Scalar numReads;
+    Stats::Vector numReads;
     /** Number of write requests */
-    Stats::Scalar numWrites;
+    Stats::Vector numWrites;
     /** Number of other requests */
-    Stats::Scalar numOther;
+    Stats::Vector numOther;
     /** Read bandwidth from this memory */
     Stats::Formula bwRead;
     /** Read bandwidth from this memory */
@@ -159,6 +162,13 @@ class AbstractMemory : public MemObject
     Stats::Formula bwWrite;
     /** Total bandwidth from this memory */
     Stats::Formula bwTotal;
+
+    /** Pointor to the System object.
+     * This is used for getting the number of masters in the system which is
+     * needed when registering stats
+     */
+    System *_system;
+
 
   private:
 
@@ -174,6 +184,19 @@ class AbstractMemory : public MemObject
 
     AbstractMemory(const Params* p);
     virtual ~AbstractMemory();
+
+    /** read the system pointer
+     * Implemented for completeness with the setter
+     * @return pointer to the system object */
+    System* system() const { return _system; }
+
+    /** Set the system pointer on this memory
+     * This can't be done via a python parameter because the system needs
+     * pointers to all the memories and the reverse would create a cycle in the
+     * object graph. An init() this is set.
+     * @param sys system pointer to set
+     */
+    void system(System *sys) { _system = sys; }
 
     const Params *
     params() const

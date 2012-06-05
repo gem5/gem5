@@ -145,6 +145,9 @@ System::System(Params *p)
     // increment the number of running systms
     numSystemsRunning++;
 
+    // Set back pointers to the system in all memories
+    for (int x = 0; x < params()->memories.size(); x++)
+        params()->memories[x]->system(this);
 }
 
 System::~System()
