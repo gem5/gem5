@@ -55,6 +55,7 @@ class ArmSystem(System):
     # 0xc00 Primary part number ("c" or higher implies ARM v7)
     # 0x0 Revision
     midr_regval = Param.UInt32(0x350fc000, "MIDR value")
+    multi_proc = Param.Bool(True, "Multiprocessor system?")
     boot_loader = Param.String("", "File that contains the boot loader code if any")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
     flags_addr = Param.Addr(0, "Address of the flags register for MP booting")

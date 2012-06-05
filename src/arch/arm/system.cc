@@ -53,7 +53,7 @@ using namespace std;
 using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
-    : System(p), bootldr(NULL)
+    : System(p), bootldr(NULL), multiProc(p->multi_proc)
 {
     if (p->boot_loader != "") {
         bootldr = createObjectFile(p->boot_loader);
@@ -107,10 +107,8 @@ ArmSystem::initState()
     }
 
     for (int i = 0; i < threadContexts.size(); i++) {
-        if (p->midr_regval) {
-            threadContexts[i]->setMiscReg(ArmISA::MISCREG_MIDR,
-                                          p->midr_regval);
-        }
+        threadContexts[i]->setMiscReg(ArmISA::MISCREG_MIDR,
+                                      p->midr_regval);
     }
 }
 

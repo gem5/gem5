@@ -39,6 +39,7 @@
  */
 
 #include "arch/arm/isa.hh"
+#include "arch/arm/system.hh"
 #include "cpu/checker/cpu.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
@@ -72,7 +73,7 @@ ISA::clear()
     miscRegs[MISCREG_SCTLR] = sctlr;
     miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
 
-    // Preserve MIDR accross reset
+    // Preserve MIDR across reset
     miscRegs[MISCREG_MIDR] = midr;
 
     /* Start with an event in the mailbox */
@@ -101,8 +102,6 @@ ISA::clear()
     mvfr1.advSimdHalfPrecision = 1;
     mvfr1.vfpHalfPrecision = 1;
     miscRegs[MISCREG_MVFR1] = mvfr1;
-
-    miscRegs[MISCREG_MPIDR] = 0;
 
     // Reset values of PRRR and NMRR are implementation dependent
 
@@ -172,6 +171,8 @@ ISA::readMiscRegNoEffect(int misc_reg)
 MiscReg
 ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 {
+    ArmSystem *arm_sys;
+
     if (misc_reg == MISCREG_CPSR) {
         CPSR cpsr = miscRegs[misc_reg];
         PCState pc = tc->pcState();
@@ -185,9 +186,17 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 
     switch (misc_reg) {
       case MISCREG_MPIDR:
+        arm_sys = dynamic_cast<ArmSystem*>(tc->getSystemPtr());
+        assert(arm_sys);
 
-        return 0x80000000 | // multiprocessor extensions available
-               tc->cpuId();
+        if (arm_sys->multiProc) {
+            return 0x80000000 | // multiprocessor extensions available
+                   tc->cpuId();
+        } else {
+            return 0x80000000 |  // multiprocessor extensions available
+                   0x40000000 |  // in up system
+                   tc->cpuId();
+        }
         break;
       case MISCREG_ID_MMFR0:
         return 0x03; // VMSAv7 support

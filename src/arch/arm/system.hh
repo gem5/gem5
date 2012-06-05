@@ -98,6 +98,9 @@ class ArmSystem : public System
             return addr & ~1;
         return addr;
     }
+
+    /** true if this a multiprocessor system */
+    bool multiProc;
 };
 
 #endif
