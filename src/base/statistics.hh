@@ -2289,9 +2289,31 @@ class BinaryNode : public Node
     total() const
     {
         const VResult &vec = this->result();
+        const VResult &lvec = l->result();
+        const VResult &rvec = r->result();
         Result total = 0.0;
-        for (off_type i = 0; i < size(); i++)
+        Result lsum = 0.0;
+        Result rsum = 0.0;
+        Op op;
+
+        assert(lvec.size() > 0 && rvec.size() > 0);
+        assert(lvec.size() == rvec.size() ||
+               lvec.size() == 1 || rvec.size() == 1);
+
+        /** If vectors are the same divide their sums (x0+x1)/(y0+y1) */
+        if (lvec.size() == rvec.size() && lvec.size() > 1) {
+            for (off_type i = 0; i < size(); ++i) {
+                lsum += lvec[i];
+                rsum += rvec[i];
+            }
+            return op(lsum, rsum);
+        }
+
+        /** Otherwise divide each item by the divisor */
+        for (off_type i = 0; i < size(); ++i) {
             total += vec[i];
+        }
+
         return total;
     }
 
