@@ -57,6 +57,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/vfp.cc')
     Source('interrupts.cc')
     Source('isa.cc')
+    Source('isa_traits.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
     Source('linux/system.cc')
