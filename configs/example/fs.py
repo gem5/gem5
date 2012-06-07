@@ -145,9 +145,6 @@ for i in xrange(np):
 
 CacheConfig.config_cache(options, test_sys)
 
-if buildEnv['TARGET_ISA'] == 'mips':
-    setMipsOptions(TestCPUClass)
-
 if len(bm) == 2:
     if buildEnv['TARGET_ISA'] == 'alpha':
         drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
