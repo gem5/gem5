@@ -107,7 +107,7 @@ elif buildEnv['TARGET_ISA'] == "arm":
             bare_metal=options.bare_metal)
     Simulation.setWorkCountOptions(test_sys, options)
 else:
-    fatal("incapable of building non-alpha or non-sparc full system!")
+    fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)
