@@ -73,6 +73,14 @@ class SimpleTimingPort : public QueuedSlavePort
 
     virtual Tick recvAtomic(PacketPtr pkt) = 0;
 
+    /**
+     * @todo this is a temporary workaround until the 4-phase code is committed.
+     * upstream caches need this packet until true is returned, so hold it for
+     * deletion until a subsequent call
+     */
+    std::vector<PacketPtr> pendingDelete;
+
+
   public:
 
     /**

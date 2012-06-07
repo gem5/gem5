@@ -62,6 +62,12 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 bool
 SimpleTimingPort::recvTimingReq(PacketPtr pkt)
 {
+    /// @todo temporary hack to deal with memory corruption issue until
+    /// 4-phase transactions are complete. Remove me later
+    for (int x = 0; x < pendingDelete.size(); x++)
+        delete pendingDelete[x];
+    pendingDelete.clear();
+
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet
@@ -78,7 +84,10 @@ SimpleTimingPort::recvTimingReq(PacketPtr pkt)
         assert(pkt->isResponse());
         queue.schedSendTiming(pkt, curTick() + latency);
     } else {
-        delete pkt;
+        /// @todo nominally we should just delete the packet here.
+        /// Until 4-phase stuff we can't because the sending
+        /// cache is still relying on it
+        pendingDelete.push_back(pkt);
     }
 
     return true;

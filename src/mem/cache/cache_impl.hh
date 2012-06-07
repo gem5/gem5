@@ -378,6 +378,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
+
+    /// @todo temporary hack to deal with memory corruption issue until
+    /// 4-phase transactions are complete
+    for (int x = 0; x < pendingDelete.size(); x++)
+        delete pendingDelete[x];
+    pendingDelete.clear();
+
     // we charge hitLatency for doing just about anything here
     Tick time =  curTick() + hitLatency;
 
@@ -421,7 +428,11 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         }
         // since we're the official target but we aren't responding,
         // delete the packet now.
-        delete pkt;
+
+        /// @todo nominally we should just delete the packet here,
+        /// however, until 4-phase stuff we can't because sending
+        /// cache is still relying on it
+        pendingDelete.push_back(pkt);
         return true;
     }
 
@@ -489,7 +500,10 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             pkt->makeTimingResponse();
             cpuSidePort->respond(pkt, curTick()+lat);
         } else {
-            delete pkt;
+            /// @todo nominally we should just delete the packet here,
+            /// however, until 4-phase stuff we can't because sending
+            /// cache is still relying on it
+            pendingDelete.push_back(pkt);
         }
     } else {
         // miss
