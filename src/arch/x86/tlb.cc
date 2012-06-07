@@ -101,7 +101,7 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     // If somebody beat us to it, just use that existing entry.
     TlbEntry *newEntry = trie.lookup(vpn);
     if (newEntry) {
-        assert(newEntry->vaddr = vpn);
+        assert(newEntry->vaddr == vpn);
         return newEntry;
     }
 
