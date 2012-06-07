@@ -270,7 +270,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
             bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
-            int logSize = sizeOverride ? m5Reg.altAddr : m5Reg.defAddr;
+            unsigned logSize = sizeOverride ? (unsigned)m5Reg.altAddr
+                                            : (unsigned)m5Reg.defAddr;
             int size = (1 << logSize) * 8;
             Addr offset = bits(vaddr - base, size - 1, 0);
             Addr endOffset = offset + req->getSize() - 1;
