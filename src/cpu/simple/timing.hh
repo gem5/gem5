@@ -164,7 +164,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
         {
             PacketPtr pkt;
             TimingSimpleCPU *cpu;
-            CpuPort *port;
 
             TickEvent(TimingSimpleCPU *_cpu) : pkt(NULL), cpu(_cpu) {}
             const char *description() const { return "Timing CPU tick"; }
