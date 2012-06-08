@@ -38,7 +38,10 @@ namespace PowerISA {
 
 using PowerISAInst::MaxInstSrcRegs;
 using PowerISAInst::MaxInstDestRegs;
-using PowerISAInst::MaxMiscDestRegs;
+
+// Power writes a misc register outside of the isa parser, so it can't
+// be detected by it. Manually add it here.
+const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 
 typedef uint8_t RegIndex;
 
