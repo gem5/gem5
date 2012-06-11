@@ -538,8 +538,22 @@ elif main['CLANG']:
     if compareVersions(clang_version, "3") >= 0:
         main.Append(CXXFLAGS=['-std=c++0x'])
 else:
-    print 'Error: Don\'t know what compiler options to use for your compiler.'
-    print '       Please fix SConstruct and src/SConscript and try again.'
+    print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
+    print "Don't know what compiler options to use for your compiler."
+    print termcap.Yellow + '       compiler:' + termcap.Normal, main['CXX']
+    print termcap.Yellow + '       version:' + termcap.Normal,
+    if not CXX_version:
+        print termcap.Yellow + termcap.Bold + "COMMAND NOT FOUND!" +\
+               termcap.Normal
+    else:
+        print CXX_version.replace('\n', '<nl>')
+    print "       If you're trying to use a compiler other than GCC, ICC, SunCC,"
+    print "       or clang, there appears to be something wrong with your"
+    print "       environment."
+    print "       "
+    print "       If you are trying to use a compiler other than those listed"
+    print "       above you will need to ease fix SConstruct and "
+    print "       src/SConscript to support that compiler."
     Exit(1)
 
 # Set up common yacc/bison flags (needed for Ruby)
