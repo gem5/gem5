@@ -74,19 +74,46 @@ namespace ArmISA
     Addr
     ProcessInfo::task(Addr ksp) const
     {
-        return 0;
+        Addr base = ksp & ~0x1fff;
+        if (base == ULL(0xffffffffc0000000))
+            return 0;
+
+        Addr tsk;
+
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        tsk = vp.readGtoH<Addr>(base + task_off);
+
+        return tsk;
     }
 
     int
     ProcessInfo::pid(Addr ksp) const
     {
-        return -1;
+        Addr task = this->task(ksp);
+        if (!task)
+            return -1;
+
+        uint16_t pd;
+
+        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        pd = vp.readGtoH<uint16_t>(task + pid_off);
+
+        return pd;
     }
 
     string
     ProcessInfo::name(Addr ksp) const
     {
-        return "Implement me";
+        Addr task = this->task(ksp);
+        if (!task)
+            return "unknown";
+
+        char comm[256];
+        CopyStringOut(tc, comm, task + name_off, sizeof(comm));
+        if (!comm[0])
+            return "startup";
+
+        return comm;
     }
 
     StackTrace::StackTrace()
