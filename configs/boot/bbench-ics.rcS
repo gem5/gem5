@@ -1,0 +1,38 @@
+#!/system/bin/sh
+
+#Author: Anthony Gutierrez
+# run script for bbench on ics
+
+stop_m5() {
+    /sbin/m5 exit
+
+    return
+}
+
+wait_bb_finishfifo() {
+    echo "<html><head>FINISH</head><body><h1>FINISH</h1></body></html>" > /data/bbench/finish_fifo.html
+
+    return
+}
+
+mkfifo_bbench() {
+    /sbin/busybox mkfifo /data/bbench/finish_fifo.html
+
+    return
+}
+
+run_bbench_test() {
+    mkfifo_bbench
+    am start -a android.intent.action.VIEW -d file:///data/bbench/index.html -t application/x-webarchive-xml
+    wait_bb_finishfifo
+
+    rm /data/bbench/finish_fifo.html
+    stop_m5
+
+    return
+}
+
+sleep 10
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+run_bbench_test

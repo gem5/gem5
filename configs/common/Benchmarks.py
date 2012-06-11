@@ -111,10 +111,14 @@ Benchmarks = {
     'ValStreamCopy':    [SysConfig('micro_streamcopy.rcS', '512MB')],
 
     'MutexTest':        [SysConfig('mutex-test.rcS', '128MB')],
-    'ArmAndroid':       [SysConfig('null.rcS', '256MB',
-                     'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.clean.img')],
-    'bbench':           [SysConfig('bbench.rcS', '256MB',
-                            'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.img')]
+    'ArmAndroid-GB':    [SysConfig('null.rcS', '256MB',
+                    'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.clean.img')],
+    'bbench-gb':        [SysConfig('bbench-gb.rcS', '256MB',
+                          'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.img')],
+    'ArmAndroid-ICS':   [SysConfig('null.rcS', '256MB',
+                            'ARMv7a-ICS-Android.SMP.nolock.clean.img')],
+    'bbench-ics':       [SysConfig('bbench-ics.rcS', '256MB',
+                            'ARMv7a-ICS-Android.SMP.nolock.img')]
 }
 
 benchs = Benchmarks.keys()
