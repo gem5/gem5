@@ -77,11 +77,13 @@ Ruby.create_system(options, system)
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
 for (i, cpu) in enumerate(system.cpu):
+    # create the interrupt controller
+    cpu.createInterruptController()
+
     #
     # Tie the cpu ports to the ruby cpu ports
     #
-    cpu.icache_port = system.ruby._cpu_ruby_ports[i].port
-    cpu.dcache_port = system.ruby._cpu_ruby_ports[i].port
+    cpu.connectAllPorts(system.ruby._cpu_ruby_ports[i])
 
 # -----------------------
 # run simulation
