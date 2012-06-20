@@ -580,7 +580,7 @@ if not main.has_key('SWIG'):
     Exit(1)
 
 # Check for appropriate SWIG version
-swig_version = readCommand(('swig', '-version'), exception='').split()
+swig_version = readCommand([main['SWIG'], '-version'], exception='').split()
 # First 3 words should be "SWIG Version x.y.z"
 if len(swig_version) < 3 or \
         swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
