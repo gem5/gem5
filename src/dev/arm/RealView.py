@@ -375,6 +375,7 @@ class VExpress_EMM(RealView):
        # (gic, a9scu)
        bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
                         AddrRange(0x30000000, size='256MB'),
+                        AddrRange(0x40000000, size='512MB'),
                         AddrRange(0x18000000, size='64MB'),
                         AddrRange(0x1C000000, size='64MB')]
 
