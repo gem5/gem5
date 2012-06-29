@@ -178,11 +178,11 @@ class NoncoherentBus : public BaseBus
 
     /** Function called by the port when the bus is recieving a Timing
       request packet.*/
-    bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
+    virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
 
     /** Function called by the port when the bus is recieving a Timing
       response packet.*/
-    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
+    virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
