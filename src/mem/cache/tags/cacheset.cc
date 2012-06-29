@@ -66,3 +66,27 @@ CacheSet::moveToHead(CacheBlk *blk)
     } while (next != blk);
 }
 
+void
+CacheSet::moveToTail(CacheBlk *blk)
+{
+    // nothing to do if blk is already tail
+    if (blks[assoc-1] == blk)
+        return;
+
+    // write 'next' block into blks[i], moving from LRU to MRU
+    // until we overwrite the block we moved to tail.
+
+    // start by setting up to write 'blk' into tail
+    int i = assoc - 1;
+    CacheBlk *next = blk;
+
+    do {
+        assert(i >= 0);
+        // swap blks[i] and next
+        CacheBlk *tmp = blks[i];
+        blks[i] = next;
+        next = tmp;
+        --i;
+    } while (next != blk);
+}
+

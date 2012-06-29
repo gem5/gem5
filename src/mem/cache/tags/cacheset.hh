@@ -66,6 +66,12 @@ class CacheSet
      */
     void moveToHead(CacheBlk *blk);
 
+    /**
+     * Move the given block to the tail of the list.
+     * @param blk The block to move
+     */
+    void moveToTail(CacheBlk *blk);
+
 };
 
 #endif

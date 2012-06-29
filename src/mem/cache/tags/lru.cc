@@ -213,6 +213,10 @@ LRU::invalidateBlk(BlkType *blk)
         blk->status = 0;
         blk->isTouched = false;
         blk->clearLoadLocks();
+
+        // should be evicted before valid blocks
+        unsigned set = blk->set;
+        sets[set].moveToTail(blk);
     }
 }
 
