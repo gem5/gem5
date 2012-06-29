@@ -275,7 +275,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     if (pkt->req->isUncacheable()) {
         if (pkt->req->isClearLL()) {
             tags->clearLocks();
-        } else {
+        } else if (pkt->isWrite()) {
            blk = tags->findBlock(pkt->getAddr());
            if (blk != NULL) {
                tags->invalidateBlk(blk);
@@ -439,7 +439,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     if (pkt->req->isUncacheable()) {
         if (pkt->req->isClearLL()) {
             tags->clearLocks();
-        } else {
+        } else if (pkt->isWrite()) {
             BlkType *blk = tags->findBlock(pkt->getAddr());
             if (blk != NULL) {
                 tags->invalidateBlk(blk);
