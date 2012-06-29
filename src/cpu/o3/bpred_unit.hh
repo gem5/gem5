@@ -207,7 +207,7 @@ class BPredUnit
                          bool pred_taken, void *bp_history,
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
-              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0),
+              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
               wasCall(0), wasReturn(0), validBTB(0)
         {}
 
@@ -241,6 +241,9 @@ class BPredUnit
 
         /** Whether or not the RAS was used. */
         bool usedRAS;
+
+        /* Wether or not the RAS was pushed */
+        bool pushedRAS;
 
         /** Whether or not the instruction was a call. */
         bool wasCall;

@@ -219,7 +219,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
 
             if (inst->isCall()) {
                 RAS[tid].push(pc);
-
+                predict_record.pushedRAS = true;
                 // Record that it was a call so that the top RAS entry can
                 // be popped off if the speculation is incorrect.
                 predict_record.wasCall = true;
@@ -253,6 +253,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
                               tid, inst->seqNum, inst->pcState());
                 } else if (inst->isCall() && !inst->isUncondCtrl()) {
                       RAS[tid].pop();
+                      predict_record.pushedRAS = false;
                 }
                 TheISA::advancePC(target, inst->staticInst);
             }
@@ -308,7 +309,7 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
             RAS[tid].restore(pred_hist.front().RASIndex,
                              pred_hist.front().RASTarget);
-        } else if(pred_hist.front().wasCall && pred_hist.front().validBTB) {
+        } else if(pred_hist.front().wasCall && pred_hist.front().pushedRAS) {
                  // Was a call but predicated false. Pop RAS here
                  DPRINTF(Fetch, "BranchPred: [tid: %i] Squashing"
                          "  Call [sn:%i] PC: %s Popping RAS\n", tid,
@@ -408,7 +409,7 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
                               hist_it->RASIndex, hist_it->RASTarget);
                 RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget);
 
-           } else if (hist_it->wasCall && hist_it->validBTB) {
+           } else if (hist_it->wasCall && hist_it->pushedRAS) {
                  //Was a Call but predicated false. Pop RAS here
                  DPRINTF(Fetch, "BranchPred: [tid: %i] Incorrectly predicted"
                            "  Call [sn:%i] PC: %s Popping RAS\n", tid,
