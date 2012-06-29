@@ -293,7 +293,7 @@ let {{
     buildDataInst("orr", "Dest = resTemp = Op1 | secondOp;")
     buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;", aiw = False)
     buildDataInst("mov", "Dest = resTemp = secondOp;", regRegAiw = False,
-                  isRasPop = "op1 == INTREG_LR", isBranch = "dest == INTREG_PC")
+                  isRasPop = "op2 == INTREG_LR", isBranch = "dest == INTREG_PC")
     buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
     buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
     buildDataInst("movt",

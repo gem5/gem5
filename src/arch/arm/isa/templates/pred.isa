@@ -115,11 +115,12 @@ def template DataRegConstructor {{
                 flags[IsUncondControl] = true;
             else
                 flags[IsCondControl] = true;
+
+            if (%(is_ras_pop)s) {
+                flags[IsReturn] = true;
+            }
         }
 
-        if (%(is_ras_pop)s) {
-            flags[IsReturn] = true;
-        }
     }
 }};
 
