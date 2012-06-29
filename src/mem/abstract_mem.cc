@@ -270,43 +270,50 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
     // Initialize return value.  Non-conditional stores always
     // succeed.  Assume conditional stores will fail until proven
     // otherwise.
-    bool success = !isLLSC;
+    bool allowStore = !isLLSC;
 
-    // Iterate over list.  Note that there could be multiple matching
-    // records, as more than one context could have done a load locked
-    // to this location.
+    // Iterate over list.  Note that there could be multiple matching records,
+    // as more than one context could have done a load locked to this location.
+    // Only remove records when we succeed in finding a record for (xc, addr);
+    // then, remove all records with this address.  Failed store-conditionals do
+    // not blow unrelated reservations.
     list<LockedAddr>::iterator i = lockedAddrList.begin();
 
-    while (i != lockedAddrList.end()) {
-
-        if (i->addr == paddr) {
-            // we have a matching address
-
-            if (isLLSC && i->matchesContext(req)) {
-                // it's a store conditional, and as far as the memory
-                // system can tell, the requesting context's lock is
-                // still valid.
+    if (isLLSC) {
+        while (i != lockedAddrList.end()) {
+            if (i->addr == paddr && i->matchesContext(req)) {
+                // it's a store conditional, and as far as the memory system can
+                // tell, the requesting context's lock is still valid.
                 DPRINTF(LLSC, "StCond success: context %d addr %#x\n",
                         req->contextId(), paddr);
-                success = true;
+                allowStore = true;
+                break;
             }
-
-            // Get rid of our record of this lock and advance to next
-            DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
-                    i->contextId, paddr);
-            i = lockedAddrList.erase(i);
+            // If we didn't find a match, keep searching!  Someone else may well
+            // have a reservation on this line here but we may find ours in just
+            // a little while.
+            i++;
         }
-        else {
-            // no match: advance to next record
-            ++i;
+        req->setExtraData(allowStore ? 1 : 0);
+    }
+    // LLSCs that succeeded AND non-LLSC stores both fall into here:
+    if (allowStore) {
+        // We write address paddr.  However, there may be several entries with a
+        // reservation on this address (for other contextIds) and they must all
+        // be removed.
+        i = lockedAddrList.begin();
+        while (i != lockedAddrList.end()) {
+            if (i->addr == paddr) {
+                DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
+                        i->contextId, paddr);
+                i = lockedAddrList.erase(i);
+            } else {
+                i++;
+            }
         }
     }
 
-    if (isLLSC) {
-        req->setExtraData(success ? 1 : 0);
-    }
-
-    return success;
+    return allowStore;
 }
 
 
