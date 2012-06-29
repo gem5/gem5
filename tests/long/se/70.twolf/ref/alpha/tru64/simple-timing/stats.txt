@@ -4,11 +4,11 @@ sim_seconds                                  0.118740                       # Nu
 sim_ticks                                118740049000                       # Number of ticks simulated
 final_tick                               118740049000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1590844                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1590843                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2055391195                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 218628                       # Number of bytes of host memory used
-host_seconds                                    57.77                       # Real time elapsed on the host
+host_inst_rate                                2205371                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2205370                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2849367775                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 222752                       # Number of bytes of host memory used
+host_seconds                                    41.67                       # Real time elapsed on the host
 sim_insts                                    91903056                       # Number of instructions simulated
 sim_ops                                      91903056                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            167744                       # Number of bytes read from this memory
@@ -262,9 +262,9 @@ system.cpu.dcache.overall_avg_mshr_miss_latency::total 51507.422402             
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.l2cache.replacements                     0                       # number of replacements
 system.cpu.l2cache.tagsinuse              2074.048594                       # Cycle average of tags in use
-system.cpu.l2cache.total_refs                    5951                       # Total number of references to valid blocks.
+system.cpu.l2cache.total_refs                    5956                       # Total number of references to valid blocks.
 system.cpu.l2cache.sampled_refs                  3109                       # Sample count of references to valid blocks.
-system.cpu.l2cache.avg_refs                  1.914120                       # Average number of references to valid blocks.
+system.cpu.l2cache.avg_refs                  1.915729                       # Average number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.occ_blocks::writebacks    17.795183                       # Average occupied blocks per requestor
 system.cpu.l2cache.occ_blocks::cpu.inst   1704.999565                       # Average occupied blocks per requestor

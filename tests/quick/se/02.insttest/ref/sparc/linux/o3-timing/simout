@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  4 2012 12:01:47
-gem5 started Jun  4 2012 14:45:02
+gem5 compiled Jun 28 2012 22:06:58
+gem5 started Jun 28 2012 22:53:48
 gem5 executing on zizzer
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/o3-timing
+command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/quick/se/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC/tests/fast/quick/se/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Begining test of difficult SPARC instructions...
@@ -18,4 +18,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 19744500 because target called exit()
+Exiting @ tick 19806500 because target called exit()

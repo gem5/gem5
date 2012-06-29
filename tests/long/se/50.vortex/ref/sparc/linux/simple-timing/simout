@@ -1,11 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  4 2012 12:01:47
-gem5 started Jun  4 2012 14:59:31
+gem5 compiled Jun 28 2012 22:06:58
+gem5 started Jun 28 2012 22:58:54
 gem5 executing on zizzer
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/50.vortex/sparc/linux/simple-timing -re tests/run.py build/SPARC/tests/opt/long/se/50.vortex/sparc/linux/simple-timing
+command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/long/se/50.vortex/sparc/linux/simple-timing -re tests/run.py build/SPARC/tests/fast/long/se/50.vortex/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 202941992000 because target called exit()
+Exiting @ tick 202680458000 because target called exit()

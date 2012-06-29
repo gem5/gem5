@@ -10,17 +10,25 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-warn: 5654850500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
-warn: 5664849500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
-warn: 5704830500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
-warn: 5721485500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
-warn: 6170779000: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
+warn: 5596738500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3744, checker: 0x3748
+warn: 5604531500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
+warn: 5613988500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
+warn: 5652343500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
+warn: 5668456500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
+warn: 6102531000: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
 warn: LCD dual screen mode not supported
-warn: 53396857000: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
-warn: 55147144000: Instruction results do not match! (Values may not actually be integers) Inst: 0x80d0, checker: 0xc71f6fc8
-warn: 55147144000: Instruction results do not match! (Values may not actually be integers) Inst: 0x71ef0, checker: 0x60000013
+warn: 53268640500: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr bpiallis' unimplemented
+warn: 2455592103500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
+warn: 2467697849500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2487360820500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2487895818500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2493686984500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
+warn: 2494805379500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
+warn: 2494806652500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
 hack: be nice to actually delete the event here
