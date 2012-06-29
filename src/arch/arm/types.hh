@@ -332,8 +332,8 @@ namespace ArmISA
         advance()
         {
             Base::advance();
-            npc(pc() + (thumb() ? 2 : 4));
             flags = nextFlags;
+            npc(pc() + (thumb() ? 2 : 4));
 
             if (_nextItstate) {
                 _itstate = _nextItstate;
