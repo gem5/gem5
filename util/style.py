@@ -244,7 +244,7 @@ class SortedIncludes(Verifier):
         modified = mod & regions
 
         if modified:
-            self.write("invalid sorting of includes\n")
+            self.write("invalid sorting of includes in %s\n" % (filename))
             if self.ui.verbose:
                 for start, end in modified.regions:
                     self.write("bad region [%d, %d)\n" % (start, end))
