@@ -46,7 +46,7 @@
 
 SimpleTimingPort::SimpleTimingPort(const std::string& _name,
                                    MemObject* _owner) :
-    QueuedSlavePort(_name, _owner, queue), queue(*_owner, *this)
+    QueuedSlavePort(_name, _owner, queueImpl), queueImpl(*_owner, *this)
 {
 }
 

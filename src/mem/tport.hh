@@ -60,10 +60,17 @@
 class SimpleTimingPort : public QueuedSlavePort
 {
 
-  protected:
+  private:
 
-    /** The packet queue used to store outgoing responses. */
-    SlavePacketQueue queue;
+    /**
+     * The packet queue used to store outgoing responses. Note that
+     * the queue is made private and that we avoid overloading the
+     * name used in the QueuedSlavePort. Access is provided through
+     * the queue reference in the base class.
+     */
+    SlavePacketQueue queueImpl;
+
+  protected:
 
     /** Implemented using recvAtomic(). */
     void recvFunctional(PacketPtr pkt);
