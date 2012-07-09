@@ -460,4 +460,6 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 
 MSHR::~MSHR()
 {
+    delete[] targets;
+    delete[] deferredTargets;
 }

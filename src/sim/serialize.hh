@@ -254,6 +254,7 @@ class Checkpoint
 
   public:
     Checkpoint(const std::string &cpt_dir);
+    ~Checkpoint();
 
     const std::string cptDir;
 

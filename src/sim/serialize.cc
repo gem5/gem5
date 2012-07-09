@@ -613,6 +613,10 @@ Checkpoint::Checkpoint(const string &cpt_dir)
     }
 }
 
+Checkpoint::~Checkpoint()
+{
+    delete db;
+}
 
 bool
 Checkpoint::find(const string &section, const string &entry, string &value)

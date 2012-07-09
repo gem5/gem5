@@ -98,6 +98,14 @@ FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
     //assert(check());
 }
 
+FALRU::~FALRU()
+{
+    if (numCaches)
+        delete[] cacheBoundaries;
+
+    delete[] blks;
+}
+
 void
 FALRU::regStats(const string &name)
 {

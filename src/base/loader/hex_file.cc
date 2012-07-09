@@ -56,6 +56,8 @@ HexFile::HexFile(const string _filename)
 
 HexFile::~HexFile()
 {
+    if (fp != NULL)
+        fclose(fp);
 }
 
 bool

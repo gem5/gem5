@@ -122,6 +122,11 @@ IGbE::IGbE(const Params *p)
     txFifo.clear();
 }
 
+IGbE::~IGbE()
+{
+    delete etherInt;
+}
+
 void
 IGbE::init()
 {
@@ -827,6 +832,8 @@ template<class T>
 IGbE::DescCache<T>::~DescCache()
 {
     reset();
+    delete[] fetchBuf;
+    delete[] wbBuf;
 }
 
 template<class T>

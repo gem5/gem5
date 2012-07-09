@@ -147,6 +147,7 @@ EtherTap::~EtherTap()
     if (buffer)
         delete [] buffer;
 
+    delete interface;
     delete listener;
 }
 

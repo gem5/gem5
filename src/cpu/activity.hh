@@ -54,6 +54,7 @@ class ActivityRecorder
   public:
     ActivityRecorder(const std::string &name, int num_stages,
                      int longest_latency, int count);
+    ~ActivityRecorder();
 
     /** Records that there is activity this cycle. */
     void activity();

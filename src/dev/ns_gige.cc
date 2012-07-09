@@ -135,7 +135,9 @@ NSGigE::NSGigE(Params *p)
 }
 
 NSGigE::~NSGigE()
-{}
+{
+    delete interface;
+}
 
 /**
  * This is to write to the PCI general configuration registers

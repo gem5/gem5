@@ -84,6 +84,11 @@ Pl111::Pl111(const Params *p)
         vncserver->setFramebufferAddr(dmaBuffer);
 }
 
+Pl111::~Pl111()
+{
+    delete[] dmaBuffer;
+}
+
 // read registers and frame buffer
 Tick
 Pl111::read(PacketPtr pkt)

@@ -46,6 +46,11 @@ ActivityRecorder::ActivityRecorder(const string &name, int num_stages,
     std::memset(stageActive, 0, numStages);
 }
 
+ActivityRecorder::~ActivityRecorder()
+{
+    delete[] stageActive;
+}
+
 void
 ActivityRecorder::activity()
 {

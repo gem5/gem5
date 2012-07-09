@@ -75,6 +75,11 @@ class PhysRegFile
     PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
                 unsigned _numPhysicalFloatRegs);
 
+    /**
+     * Destructor to free resources
+     */
+    ~PhysRegFile();
+
     //Everything below should be pretty well identical to the normal
     //register file that exists within AlphaISA class.
     //The duplication is unfortunate but it's better than having
@@ -195,6 +200,13 @@ PhysRegFile<Impl>::PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
 
     memset(intRegFile, 0, sizeof(IntReg) * numPhysicalIntRegs);
     memset(floatRegFile, 0, sizeof(PhysFloatReg) * numPhysicalFloatRegs);
+}
+
+template <class Impl>
+PhysRegFile<Impl>::~PhysRegFile()
+{
+    delete intRegFile;
+    delete floatRegFile;
 }
 
 #endif

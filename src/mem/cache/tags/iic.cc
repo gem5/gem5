@@ -160,6 +160,7 @@ IIC::~IIC()
     delete [] dataStore;
     delete [] tagStore;
     delete [] sets;
+    delete [] dataBlks;
 }
 
 /* register cache stats */

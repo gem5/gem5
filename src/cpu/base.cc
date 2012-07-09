@@ -243,6 +243,9 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
+    delete profileEvent;
+    delete[] comLoadEventQueue;
+    delete[] comInstEventQueue;
 }
 
 void

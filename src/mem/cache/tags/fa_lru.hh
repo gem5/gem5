@@ -156,6 +156,7 @@ public:
      * @param hit_latency The hit latency of the cache.
      */
     FALRU(unsigned blkSize, unsigned size, unsigned hit_latency);
+    ~FALRU();
 
     /**
      * Register the stats for this object.

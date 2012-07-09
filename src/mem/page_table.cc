@@ -228,6 +228,7 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
         entry = new TheISA::TlbEntry();
         entry->unserialize(cp, csprintf("%s.Entry%d", name(), i));
         pTable[vaddr] = *entry;
+        delete entry;
         ++i;
     }
 }
