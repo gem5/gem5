@@ -222,7 +222,7 @@ AbstractMemory::regStats()
 }
 
 Range<Addr>
-AbstractMemory::getAddrRange()
+AbstractMemory::getAddrRange() const
 {
     return range;
 }

@@ -209,21 +209,21 @@ class AbstractMemory : public MemObject
      *
      * @return a single contigous address range
      */
-    Range<Addr> getAddrRange();
+    Range<Addr> getAddrRange() const;
 
     /**
      * Get the memory size.
      *
      * @return the size of the memory
      */
-    uint64_t size() { return range.size(); }
+    uint64_t size() const { return range.size(); }
 
     /**
      * Get the start address.
      *
      * @return the start address of the memory
      */
-    Addr start() { return range.start; }
+    Addr start() const { return range.start; }
 
     /**
      *  Should this memory be passed to the kernel and part of the OS
