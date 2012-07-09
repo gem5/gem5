@@ -92,7 +92,8 @@ CoherentBus::init()
     // neighbouring master ports are snooping and add them as snoopers
     for (SlavePortConstIter p = slavePorts.begin(); p != slavePorts.end();
          ++p) {
-        if ((*p)->getMasterPort().isSnooping()) {
+        // check if the connected master port is snooping
+        if ((*p)->isSnooping()) {
             DPRINTF(BusAddrRanges, "Adding snooping master %s\n",
                     (*p)->getMasterPort().name());
             snoopPorts.push_back(*p);

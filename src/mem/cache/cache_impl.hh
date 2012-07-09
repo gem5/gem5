@@ -795,7 +795,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         // continues towards the memory side
         if (fromCpuSide) {
             memSidePort->sendFunctional(pkt);
-        } else if (forwardSnoops && cpuSidePort->getMasterPort().isSnooping()) {
+        } else if (forwardSnoops && cpuSidePort->isSnooping()) {
             // if it came from the memory side, it must be a snoop request
             // and we should only forward it if we are forwarding snoops
             cpuSidePort->sendFunctionalSnoop(pkt);

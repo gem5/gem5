@@ -695,7 +695,8 @@ RubyPort::ruby_eviction_callback(const Address& address)
     // should this really be using funcMasterId?
     Request req(address.getAddress(), 0, 0, Request::funcMasterId);
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
-        if ((*p)->getMasterPort().isSnooping()) {
+        // check if the connected master port is snooping
+        if ((*p)->isSnooping()) {
             Packet *pkt = new Packet(&req, MemCmd::InvalidationReq);
             // send as a snoop request
             (*p)->sendTimingSnoopReq(pkt);

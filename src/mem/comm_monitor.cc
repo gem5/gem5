@@ -328,7 +328,8 @@ CommMonitor::recvTimingSnoopResp(PacketPtr pkt)
 bool
 CommMonitor::isSnooping() const
 {
-    return slavePort.getMasterPort().isSnooping();
+    // check if the connected master port is snooping
+    return slavePort.isSnooping();
 }
 
 unsigned

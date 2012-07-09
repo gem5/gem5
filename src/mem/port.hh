@@ -356,6 +356,13 @@ class SlavePort : public Port
     unsigned peerBlockSize() const;
 
     /**
+     * Find out if the peer master port is snooping or not.
+     *
+     * @return true if the peer master port is snooping
+     */
+    bool isSnooping() const { return _masterPort->isSnooping(); }
+
+    /**
      * Called by the owner to send a range change
      */
     void sendRangeChange() const { _masterPort->recvRangeChange(); }
