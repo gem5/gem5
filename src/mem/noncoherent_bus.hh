@@ -73,6 +73,11 @@ class NoncoherentBus : public BaseBus
   protected:
 
     /**
+     * Declare the single layer of this bus.
+     */
+    Layer layer;
+
+    /**
      * Declaration of the non-coherent bus slave port type, one will
      * be instantiated for each of the master ports connecting to the
      * bus.
@@ -184,6 +189,10 @@ class NoncoherentBus : public BaseBus
       response packet.*/
     virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
+    /** Timing function called by port when it is once again able to process
+     * requests. */
+    void recvRetry();
+
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
     Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
@@ -195,6 +204,8 @@ class NoncoherentBus : public BaseBus
   public:
 
     NoncoherentBus(const NoncoherentBusParams *p);
+
+    unsigned int drain(Event *de);
 
 };
 

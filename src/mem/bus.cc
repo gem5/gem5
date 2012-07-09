@@ -55,9 +55,8 @@
 #include "mem/bus.hh"
 
 BaseBus::BaseBus(const BaseBusParams *p)
-    : MemObject(p), state(IDLE), clock(p->clock),
+    : MemObject(p), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width),
-      drainEvent(NULL), busIdleEvent(this),
       defaultPortID(InvalidPortID),
       useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
@@ -138,7 +137,13 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
     return headerTime;
 }
 
-void BaseBus::occupyBus(Tick until)
+BaseBus::Layer::Layer(BaseBus& _bus, const std::string& _name, Tick _clock) :
+    bus(_bus), _name(_name), state(IDLE), clock(_clock), drainEvent(NULL),
+    releaseEvent(this)
+{
+}
+
+void BaseBus::Layer::occupyLayer(Tick until)
 {
     // ensure the state is busy or in retry and never idle at this
     // point, as the bus should transition from idle as soon as it has
@@ -153,14 +158,14 @@ void BaseBus::occupyBus(Tick until)
 
     // until should never be 0 as express snoops never occupy the bus
     assert(until != 0);
-    schedule(busIdleEvent, until);
+    bus.schedule(releaseEvent, until);
 
     DPRINTF(BaseBus, "The bus is now busy from tick %d to %d\n",
             curTick(), until);
 }
 
 bool
-BaseBus::tryTiming(Port* port)
+BaseBus::Layer::tryTiming(Port* port)
 {
     // first we see if the bus is busy, next we check if we are in a
     // retry with a port other than the current one
@@ -180,7 +185,7 @@ BaseBus::tryTiming(Port* port)
 }
 
 void
-BaseBus::succeededTiming(Tick busy_time)
+BaseBus::Layer::succeededTiming(Tick busy_time)
 {
     // if a retrying port succeeded, also take it off the retry list
     if (state == RETRY) {
@@ -195,11 +200,11 @@ BaseBus::succeededTiming(Tick busy_time)
     assert(state == BUSY);
 
     // occupy the bus accordingly
-    occupyBus(busy_time);
+    occupyLayer(busy_time);
 }
 
 void
-BaseBus::failedTiming(SlavePort* port, Tick busy_time)
+BaseBus::Layer::failedTiming(SlavePort* port, Tick busy_time)
 {
     // if we are not in a retry, i.e. busy (but never idle), or we are
     // in a retry but not for the current port, then add the port at
@@ -213,15 +218,15 @@ BaseBus::failedTiming(SlavePort* port, Tick busy_time)
     state = BUSY;
 
     // occupy the bus accordingly
-    occupyBus(busy_time);
+    occupyLayer(busy_time);
 }
 
 void
-BaseBus::releaseBus()
+BaseBus::Layer::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
-    assert(!busIdleEvent.scheduled());
+    assert(!releaseEvent.scheduled());
 
     // update the state
     state = IDLE;
@@ -242,7 +247,7 @@ BaseBus::releaseBus()
 }
 
 void
-BaseBus::retryWaiting()
+BaseBus::Layer::retryWaiting()
 {
     // this should never be called with an empty retry list
     assert(!retryList.empty());
@@ -277,23 +282,23 @@ BaseBus::retryWaiting()
         // clock edge
         Tick now = divCeil(curTick(), clock) * clock;
 
-        occupyBus(now + clock);
+        occupyLayer(now + clock);
     }
 }
 
 void
-BaseBus::recvRetry()
+BaseBus::Layer::recvRetry()
 {
     // we got a retry from a peer that we tried to send something to
     // and failed, but we sent it on the account of someone else, and
     // that source port should be on our retry list, however if the
-    // bus is released before this happens and the retry (from the bus
-    // point of view) is successful then this no longer holds and we
-    // could in fact have an empty retry list
+    // bus layer is released before this happens and the retry (from
+    // the bus point of view) is successful then this no longer holds
+    // and we could in fact have an empty retry list
     if (retryList.empty())
         return;
 
-    // if the bus is idle
+    // if the bus layer is idle
     if (state == IDLE) {
         // note that we do not care who told us to retry at the moment, we
         // merely let the first one on the retry list go
@@ -481,7 +486,7 @@ BaseBus::findBlockSize()
 
 
 unsigned int
-BaseBus::drain(Event * de)
+BaseBus::Layer::drain(Event * de)
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we

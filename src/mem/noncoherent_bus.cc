@@ -55,7 +55,7 @@
 #include "mem/noncoherent_bus.hh"
 
 NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p)
+    : BaseBus(p), layer(*this, ".layer", p->clock)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -97,7 +97,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!tryTiming(src_port)) {
+    if (!layer.tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -123,12 +123,12 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        failedTiming(src_port, headerFinishTime);
+        layer.failedTiming(src_port, headerFinishTime);
 
         return false;
     }
 
-    succeededTiming(packetFinishTime);
+    layer.succeededTiming(packetFinishTime);
 
     return true;
 }
@@ -141,7 +141,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!tryTiming(src_port)) {
+    if (!layer.tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -161,9 +161,16 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // deadlock
     assert(success);
 
-    succeededTiming(packetFinishTime);
+    layer.succeededTiming(packetFinishTime);
 
     return true;
+}
+
+void
+NoncoherentBus::recvRetry()
+{
+    // only one layer that can deal with it
+    layer.recvRetry();
 }
 
 Tick
@@ -199,6 +206,13 @@ NoncoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
 
     // forward the request to the appropriate destination
     masterPorts[dest_id]->sendFunctional(pkt);
+}
+
+unsigned int
+NoncoherentBus::drain(Event *de)
+{
+    // only one layer to worry about at the moment
+    return layer.drain(de);
 }
 
 NoncoherentBus*

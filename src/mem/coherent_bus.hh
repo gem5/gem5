@@ -70,6 +70,11 @@ class CoherentBus : public BaseBus
   protected:
 
     /**
+     * Declare the single layer of this bus.
+     */
+    Layer layer;
+
+    /**
      * Declaration of the coherent bus slave port type, one will be
      * instantiated for each of the master ports connecting to the
      * bus.
@@ -231,6 +236,10 @@ class CoherentBus : public BaseBus
         snoop response.*/
     virtual bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
 
+    /** Timing function called by port when it is once again able to process
+     * requests. */
+    void recvRetry();
+
     /**
      * Forward a timing packet to our snoopers, potentially excluding
      * one of the connected coherent masters to avoid sending a packet
@@ -285,6 +294,8 @@ class CoherentBus : public BaseBus
     virtual void init();
 
     CoherentBus(const CoherentBusParams *p);
+
+    unsigned int drain(Event *de);
 };
 
 #endif //__MEM_COHERENT_BUS_HH__

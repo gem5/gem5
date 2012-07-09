@@ -54,7 +54,7 @@
 #include "mem/coherent_bus.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
-    : BaseBus(p)
+    : BaseBus(p), layer(*this, ".layer", p->clock)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -115,7 +115,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port, and exclude express snoops from the check
-    if (!is_express_snoop && !tryTiming(src_port)) {
+    if (!is_express_snoop && !layer.tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -176,10 +176,10 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             // update the bus state and schedule an idle event
-            failedTiming(src_port, headerFinishTime);
+            layer.failedTiming(src_port, headerFinishTime);
         } else {
             // update the bus state and schedule an idle event
-            succeededTiming(packetFinishTime);
+            layer.succeededTiming(packetFinishTime);
         }
     }
 
@@ -194,7 +194,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!tryTiming(src_port)) {
+    if (!layer.tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -221,7 +221,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // deadlock
     assert(success);
 
-    succeededTiming(packetFinishTime);
+    layer.succeededTiming(packetFinishTime);
 
     return true;
 }
@@ -258,7 +258,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!tryTiming(src_port)) {
+    if (!layer.tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -309,7 +309,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         assert(success);
     }
 
-    succeededTiming(packetFinishTime);
+    layer.succeededTiming(packetFinishTime);
 
     return true;
 }
@@ -330,6 +330,13 @@ CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
             p->sendTimingSnoopReq(pkt);
         }
     }
+}
+
+void
+CoherentBus::recvRetry()
+{
+    // only one layer that can deal with it
+    layer.recvRetry();
 }
 
 Tick
@@ -491,6 +498,13 @@ CoherentBus::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
             break;
         }
     }
+}
+
+unsigned int
+CoherentBus::drain(Event *de)
+{
+    // only one layer to worry about at the moment
+    return layer.drain(de);
 }
 
 CoherentBus *

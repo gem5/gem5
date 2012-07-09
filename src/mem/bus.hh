@@ -75,72 +75,163 @@ class BaseBus : public MemObject
   protected:
 
     /**
-     * We declare an enum to track the state of the bus. The starting
-     * point is an idle state where the bus is waiting for a packet to
-     * arrive. Upon arrival, the bus transitions to the busy state,
-     * where it remains either until the packet transfer is done, or
-     * the header time is spent. Once the bus leaves the busy state,
-     * it can either go back to idle, if no packets have arrived while
-     * it was busy, or the bus goes on to retry the first port on the
-     * retryList. A similar transition takes place from idle to retry
-     * if the bus receives a retry from one of its connected
-     * ports. The retry state lasts until the port in questions calls
-     * sendTiming and returns control to the bus, or goes to a busy
-     * state if the port does not immediately react to the retry by
-     * calling sendTiming.
+     * A bus layer is an internal bus structure with its own flow
+     * control and arbitration. Hence, a single-layer bus mimics a
+     * traditional off-chip tri-state bus (like PCI), where only one
+     * set of wires are shared. For on-chip buses, a good starting
+     * point is to have three layers, for requests, responses, and
+     * snoop responses respectively (snoop requests are instantaneous
+     * and do not need any flow control or arbitration). This case is
+     * similar to AHB and some OCP configurations. As a further
+     * extensions beyond the three-layer bus, a future multi-layer bus
+     * has with one layer per connected slave port provides a full or
+     * partial crossbar, like AXI, OCP, PCIe etc.
      */
-    enum State { IDLE, BUSY, RETRY };
+    class Layer
+    {
 
-    /** track the state of the bus */
-    State state;
+      public:
+
+        /**
+         * Create a bus layer and give it a name. The bus layer uses
+         * the bus an event manager.
+         *
+         * @param _bus the bus this layer belongs to
+         * @param _name the layer's name
+         * @param _clock clock period in ticks
+         */
+        Layer(BaseBus& _bus, const std::string& _name, Tick _clock);
+
+        /**
+         * Drain according to the normal semantics, so that the bus
+         * can tell the layer to drain, and pass an event to signal
+         * back when drained.
+         *
+         * @param de drain event to call once drained
+         *
+         * @return 1 if busy or waiting to retry, or 0 if idle
+         */
+        unsigned int drain(Event *de);
+
+        /**
+         * Get the bus layer's name
+         */
+        const std::string name() const { return bus.name() + _name; }
+
+
+        /**
+         * Determine if the bus layer accepts a packet from a specific
+         * port. If not, the port in question is also added to the
+         * retry list. In either case the state of the layer is updated
+         * accordingly.
+         *
+         * @param port Source port resenting the packet
+         *
+         * @return True if the bus layer accepts the packet
+         */
+        bool tryTiming(Port* port);
+
+        /**
+         * Deal with a destination port accepting a packet by potentially
+         * removing the source port from the retry list (if retrying) and
+         * occupying the bus layer accordingly.
+         *
+         * @param busy_time Time to spend as a result of a successful send
+         */
+        void succeededTiming(Tick busy_time);
+
+        /**
+         * Deal with a destination port not accepting a packet by
+         * potentially adding the source port to the retry list (if
+         * not already at the front) and occupying the bus layer
+         * accordingly.
+         *
+         * @param busy_time Time to spend as a result of a failed send
+         */
+        void failedTiming(SlavePort* port, Tick busy_time);
+
+        /** Occupy the bus layer until until */
+        void occupyLayer(Tick until);
+
+        /**
+         * Send a retry to the port at the head of the retryList. The
+         * caller must ensure that the list is not empty.
+         */
+        void retryWaiting();
+
+        /**
+         * Handler a retry from a neighbouring module. Eventually this
+         * should be all encapsulated in the bus. This wraps
+         * retryWaiting by verifying that there are ports waiting
+         * before calling retryWaiting.
+         */
+        void recvRetry();
+
+      private:
+
+        /** The bus this layer is a part of. */
+        BaseBus& bus;
+
+        /** A name for this layer. */
+        std::string _name;
+
+        /**
+         * We declare an enum to track the state of the bus layer. The
+         * starting point is an idle state where the bus layer is
+         * waiting for a packet to arrive. Upon arrival, the bus layer
+         * transitions to the busy state, where it remains either
+         * until the packet transfer is done, or the header time is
+         * spent. Once the bus layer leaves the busy state, it can
+         * either go back to idle, if no packets have arrived while it
+         * was busy, or the bus layer goes on to retry the first port
+         * on the retryList. A similar transition takes place from
+         * idle to retry if the bus layer receives a retry from one of
+         * its connected ports. The retry state lasts until the port
+         * in questions calls sendTiming and returns control to the
+         * bus layer, or goes to a busy state if the port does not
+         * immediately react to the retry by calling sendTiming.
+         */
+        enum State { IDLE, BUSY, RETRY };
+
+        /** track the state of the bus layer */
+        State state;
+
+        /** the clock speed for the bus layer */
+        Tick clock;
+
+        /** event for signalling when drained */
+        Event * drainEvent;
+
+        /**
+         * An array of pointers to ports that retry should be called
+         * on because the original send failed for whatever reason.
+         */
+        std::list<Port*> retryList;
+
+        /**
+         * Release the bus layer after being occupied and return to an
+         * idle state where we proceed to send a retry to any
+         * potential waiting port, or drain if asked to do so.
+         */
+        void releaseLayer();
+
+        /** event used to schedule a release of the layer */
+        EventWrapper<Layer, &Layer::releaseLayer> releaseEvent;
+
+    };
 
     /** the clock speed for the bus */
-    int clock;
+    Tick clock;
     /** cycles of overhead per transaction */
     int headerCycles;
     /** the width of the bus in bytes */
     int width;
-
-    Event * drainEvent;
 
     typedef range_map<Addr, PortID>::iterator PortMapIter;
     typedef range_map<Addr, PortID>::const_iterator PortMapConstIter;
     range_map<Addr, PortID> portMap;
 
     AddrRangeList defaultRange;
-
-    /**
-     * Determine if the bus accepts a packet from a specific port. If
-     * not, the port in question is also added to the retry list. In
-     * either case the state of the bus is updated accordingly.
-     *
-     * @param port Source port on the bus presenting the packet
-     *
-     * @return True if the bus accepts the packet
-     */
-    bool tryTiming(Port* port);
-
-    /**
-     * Deal with a destination port accepting a packet by potentially
-     * removing the source port from the retry list (if retrying) and
-     * occupying the bus accordingly.
-     *
-     * @param busy_time Time to spend as a result of a successful send
-     */
-    void succeededTiming(Tick busy_time);
-
-    /**
-     * Deal with a destination port not accepting a packet by
-     * potentially adding the source port to the retry list (if
-     * not already at the front) and occupying the bus accordingly.
-     *
-     * @param busy_time Time to spend as a result of a failed send
-     */
-    void failedTiming(SlavePort* port, Tick busy_time);
-
-    /** Timing function called by port when it is once again able to process
-     * requests. */
-    void recvRetry();
 
     /**
      * Function called by the port when the bus is recieving a range change.
@@ -224,31 +315,12 @@ class BaseBus : public MemObject
      */
     Tick calcPacketTiming(PacketPtr pkt);
 
-    /** Occupy the bus until until */
-    void occupyBus(Tick until);
-
-    /**
-     * Release the bus after being occupied and return to an idle
-     * state where we proceed to send a retry to any potential waiting
-     * port, or drain if asked to do so.
-     */
-    void releaseBus();
-
-    /**
-     * Send a retry to the port at the head of the retryList. The
-     * caller must ensure that the list is not empty.
-     */
-    void retryWaiting();
-
     /**
      * Ask everyone on the bus what their size is
      *
      * @return the max of all the sizes
      */
     unsigned findBlockSize();
-
-    // event used to schedule a release of the bus
-    EventWrapper<BaseBus, &BaseBus::releaseBus> busIdleEvent;
 
     std::set<PortID> inRecvRangeChange;
 
@@ -261,10 +333,6 @@ class BaseBus : public MemObject
     typedef std::vector<MasterPort*>::iterator MasterPortIter;
     typedef std::vector<SlavePort*>::const_iterator SlavePortConstIter;
     typedef std::vector<MasterPort*>::const_iterator MasterPortConstIter;
-
-    /** An array of pointers to ports that retry should be called on because the
-     * original send failed for whatever reason.*/
-    std::list<Port*> retryList;
 
     /** Port that handles requests that don't match any of the interfaces.*/
     PortID defaultPortID;
@@ -289,7 +357,7 @@ class BaseBus : public MemObject
     virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
     virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
 
-    unsigned int drain(Event *de);
+    virtual unsigned int drain(Event *de) = 0;
 
 };
 
