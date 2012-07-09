@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 28 2012 22:08:09
-gem5 started Jun 28 2012 23:13:04
+gem5 compiled Jul  2 2012 08:58:39
+gem5 started Jul  2 2012 13:12:36
 gem5 executing on zizzer
 command line: build/X86/gem5.fast -d build/X86/tests/fast/long/se/10.mcf/x86/linux/o3-timing -re tests/run.py build/X86/tests/fast/long/se/10.mcf/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -21,7 +21,8 @@ new implicit arcs          : 23867
 active arcs                : 25772
 simplex iterations         : 2663
 flow value                 : 3080014995
-info: Increasing stack size by one page.
 checksum                   : 68389
 optimal
-Exiting @ tick 66545720000 because target called exit()
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+Exiting @ tick 68340167000 because target called exit()

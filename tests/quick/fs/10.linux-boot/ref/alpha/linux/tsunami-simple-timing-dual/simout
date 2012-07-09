@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 28 2012 22:05:18
-gem5 started Jun 28 2012 22:10:10
+gem5 compiled Jul  2 2012 08:30:56
+gem5 started Jul  2 2012 09:09:26
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-timing-dual -re tests/run.py build/ALPHA/tests/fast/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-timing-dual
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
-info: Launching CPU 1 @ 562628000
-Exiting @ tick 1957577582000 because m5_exit instruction encountered
+info: Launching CPU 1 @ 573593000
+Exiting @ tick 1954209106000 because m5_exit instruction encountered

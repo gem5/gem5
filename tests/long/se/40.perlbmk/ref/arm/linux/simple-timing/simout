@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 28 2012 22:10:14
-gem5 started Jun 29 2012 01:12:18
+gem5 compiled Jul  2 2012 09:08:16
+gem5 started Jul  2 2012 16:24:15
 gem5 executing on zizzer
 command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/se/40.perlbmk/arm/linux/simple-timing -re tests/run.py build/ARM/tests/fast/long/se/40.perlbmk/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
@@ -1385,4 +1385,4 @@ info: Increasing stack size by one page.
 2000: 760651391
 1000: 4031656975
 0: 2206428413
-Exiting @ tick 2369826854000 because target called exit()
+Exiting @ tick 2369931974000 because target called exit()

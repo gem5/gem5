@@ -1,10 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 28 2012 22:05:18
-gem5 started Jun 28 2012 22:37:18
+gem5 compiled Jul  2 2012 08:30:56
+gem5 started Jul  2 2012 10:35:16
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/long/se/70.twolf/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA/tests/fast/long/se/70.twolf/alpha/tru64/inorder-timing
+Couldn't unlink  build/ALPHA/tests/fast/long/se/70.twolf/alpha/tru64/inorder-timing/smred.sav
+Couldn't unlink  build/ALPHA/tests/fast/long/se/70.twolf/alpha/tru64/inorder-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
@@ -21,4 +23,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 42005374000 because target called exit()
+122 123 124 Exiting @ tick 42012413000 because target called exit()

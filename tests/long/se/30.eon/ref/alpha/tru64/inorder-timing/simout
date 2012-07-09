@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 28 2012 22:05:18
-gem5 started Jun 28 2012 22:10:46
+gem5 compiled Jul  2 2012 08:30:56
+gem5 started Jul  2 2012 09:12:34
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
@@ -11,4 +11,4 @@ info: Increasing stack size by one page.
 Eon, Version 1.1
 info: Increasing stack size by one page.
 OO-style eon Time= 0.133333
-Exiting @ tick 141174877500 because target called exit()
+Exiting @ tick 141187061500 because target called exit()
