@@ -218,7 +218,10 @@ BaseBus::retryWaiting()
     // note that we might have blocked on the receiving port being
     // busy (rather than the bus itself) and now call retry before the
     // destination called retry on the bus
-    retryList.front()->sendRetry();
+    if (dynamic_cast<SlavePort*>(retryList.front()) != NULL)
+        (dynamic_cast<SlavePort*>(retryList.front()))->sendRetry();
+    else
+        (dynamic_cast<MasterPort*>(retryList.front()))->sendRetry();
 
     // If inRetry is still true, sendTiming wasn't called in zero time
     // (e.g. the cache does this)

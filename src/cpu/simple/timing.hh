@@ -170,7 +170,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             void schedule(PacketPtr _pkt, Tick t);
         };
 
-        EventWrapper<Port, &Port::sendRetry> retryEvent;
+        EventWrapper<MasterPort, &MasterPort::sendRetry> retryEvent;
     };
 
     class IcachePort : public TimingCPUPort

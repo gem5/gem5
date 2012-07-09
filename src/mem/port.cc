@@ -51,7 +51,7 @@
 #include "mem/port.hh"
 
 Port::Port(const std::string &_name, MemObject& _owner, PortID _id)
-    : portName(_name), id(_id), peer(NULL), owner(_owner)
+    : portName(_name), id(_id), owner(_owner)
 {
 }
 
@@ -86,7 +86,6 @@ MasterPort::bind(SlavePort& slave_port)
 {
     // master port keeps track of the slave port
     _slavePort = &slave_port;
-    peer = &slave_port;
 
     // slave port also keeps track of master port
     _slavePort->bind(*this);
@@ -133,6 +132,12 @@ MasterPort::sendTimingSnoopResp(PacketPtr pkt)
 }
 
 void
+MasterPort::sendRetry()
+{
+    _slavePort->recvRetry();
+}
+
+void
 MasterPort::printAddr(Addr a)
 {
     Request req(a, 1, 0, Request::funcMasterId);
@@ -159,7 +164,6 @@ void
 SlavePort::bind(MasterPort& master_port)
 {
     _masterPort = &master_port;
-    peer = &master_port;
 }
 
 MasterPort&
@@ -210,4 +214,10 @@ SlavePort::sendTimingSnoopReq(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     _masterPort->recvTimingSnoopReq(pkt);
+}
+
+void
+SlavePort::sendRetry()
+{
+    _masterPort->recvRetry();
 }

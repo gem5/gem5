@@ -70,10 +70,7 @@ class MemObject;
 /**
  * Ports are used to interface memory objects to each other. A port is
  * either a master or a slave and the connected peer is always of the
- * opposite role.
- *
- * Each port has a name and an owner, and enables three basic types of
- * accesses to the peer port: functional, atomic and timing.
+ * opposite role. Each port has a name, an owner, and an identifier.
  */
 class Port
 {
@@ -90,9 +87,6 @@ class Port
      * to InvalidPortID in case this port is not part of a vector.
      */
     const PortID id;
-
-    /** A pointer to the peer port.  */
-    Port* peer;
 
     /** A reference to the MemObject that owns this port. */
     MemObject& owner;
@@ -118,23 +112,6 @@ class Port
 
     /** Get the port id. */
     PortID getId() const { return id; }
-
-  protected:
-
-    /**
-     * Called by a peer port if sendTimingReq, sendTimingResp or
-     * sendTimingSnoopResp was unsuccesful, and had to wait.
-     */
-    virtual void recvRetry() = 0;
-
-  public:
-
-    /**
-     * Send a retry to a peer port that previously attempted a
-     * sendTimingReq, sendTimingResp or sendTimingSnoopResp which was
-     * unsuccessful.
-     */
-    void sendRetry() { return peer->recvRetry(); }
 
 };
 
@@ -211,6 +188,12 @@ class MasterPort : public Port
     bool sendTimingSnoopResp(PacketPtr pkt);
 
     /**
+     * Send a retry to the slave port that previously attempted a
+     * sendTimingResp to this master port and failed.
+     */
+    void sendRetry();
+
+    /**
      * Determine if this master port is snooping or not. The default
      * implementation returns false and thus tells the neighbour we
      * are not snooping. Any master port that wants to receive snoop
@@ -268,6 +251,14 @@ class MasterPort : public Port
     {
         panic("%s was not expecting a timing snoop request\n", name());
     }
+
+    /**
+     * Called by the slave port if sendTimingReq or
+     * sendTimingSnoopResp was called on this master port (causing
+     * recvTimingReq and recvTimingSnoopResp to be called on the
+     * slave port) and was unsuccesful.
+     */
+    virtual void recvRetry() = 0;
 
     /**
      * Called to receive an address range change from the peer slave
@@ -347,6 +338,13 @@ class SlavePort : public Port
     void sendTimingSnoopReq(PacketPtr pkt);
 
     /**
+     * Send a retry to the master port that previously attempted a
+     * sendTimingReq or sendTimingSnoopResp to this slave port and
+     * failed.
+     */
+    void sendRetry();
+
+    /**
      * Called by a peer port in order to determine the block size of
      * the owner of this port.
      */
@@ -395,6 +393,13 @@ class SlavePort : public Port
     {
         panic("%s was not expecting a timing snoop response\n", name());
     }
+
+    /**
+     * Called by the master port if sendTimingResp was called on this
+     * slave port (causing recvTimingResp to be called on the master
+     * port) and was unsuccesful.
+     */
+    virtual void recvRetry() = 0;
 
 };
 
