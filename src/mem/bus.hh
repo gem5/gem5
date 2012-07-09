@@ -74,14 +74,32 @@ class BaseBus : public MemObject
 
   protected:
 
+    /**
+     * We declare an enum to track the state of the bus. The starting
+     * point is an idle state where the bus is waiting for a packet to
+     * arrive. Upon arrival, the bus transitions to the busy state,
+     * where it remains either until the packet transfer is done, or
+     * the header time is spent. Once the bus leaves the busy state,
+     * it can either go back to idle, if no packets have arrived while
+     * it was busy, or the bus goes on to retry the first port on the
+     * retryList. A similar transition takes place from idle to retry
+     * if the bus receives a retry from one of its connected
+     * ports. The retry state lasts until the port in questions calls
+     * sendTiming and returns control to the bus, or goes to a busy
+     * state if the port does not immediately react to the retry by
+     * calling sendTiming.
+     */
+    enum State { IDLE, BUSY, RETRY };
+
+    /** track the state of the bus */
+    State state;
+
     /** the clock speed for the bus */
     int clock;
     /** cycles of overhead per transaction */
     int headerCycles;
     /** the width of the bus in bytes */
     int width;
-    /** the next tick at which the bus will be idle */
-    Tick tickNextIdle;
 
     Event * drainEvent;
 
@@ -92,15 +110,15 @@ class BaseBus : public MemObject
     AddrRangeList defaultRange;
 
     /**
-     * Determine if the bus is to be considered occupied when being
-     * presented with a packet from a specific port. If so, the port
-     * in question is also added to the retry list.
+     * Determine if the bus accepts a packet from a specific port. If
+     * not, the port in question is also added to the retry list. In
+     * either case the state of the bus is updated accordingly.
      *
      * @param port Source port on the bus presenting the packet
      *
-     * @return True if the bus is to be considered occupied
+     * @return True if the bus accepts the packet
      */
-    bool isOccupied(Port* port);
+    bool tryTiming(Port* port);
 
     /**
      * Deal with a destination port accepting a packet by potentially
@@ -110,6 +128,15 @@ class BaseBus : public MemObject
      * @param busy_time Time to spend as a result of a successful send
      */
     void succeededTiming(Tick busy_time);
+
+    /**
+     * Deal with a destination port not accepting a packet by
+     * potentially adding the source port to the retry list (if
+     * not already at the front) and occupying the bus accordingly.
+     *
+     * @param busy_time Time to spend as a result of a failed send
+     */
+    void failedTiming(SlavePort* port, Tick busy_time);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
@@ -223,7 +250,6 @@ class BaseBus : public MemObject
     // event used to schedule a release of the bus
     EventWrapper<BaseBus, &BaseBus::releaseBus> busIdleEvent;
 
-    bool inRetry;
     std::set<PortID> inRecvRangeChange;
 
     /** The master and slave ports of the bus */
@@ -239,25 +265,6 @@ class BaseBus : public MemObject
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
     std::list<Port*> retryList;
-
-    void addToRetryList(Port* port)
-    {
-        if (!inRetry) {
-            // The device wasn't retrying a packet, or wasn't at an
-            // appropriate time.
-            retryList.push_back(port);
-        } else {
-            if (!retryList.empty() && port == retryList.front()) {
-                // The device was retrying a packet. It didn't work,
-                // so we'll leave it at the head of the retry list.
-                inRetry = false;
-            } else {
-                // We are in retry, but not for this port, put it at
-                // the end.
-                retryList.push_back(port);
-            }
-        }
-    }
 
     /** Port that handles requests that don't match any of the interfaces.*/
     PortID defaultPortID;
@@ -281,8 +288,6 @@ class BaseBus : public MemObject
     /** A function used to return the port associated with this bus object. */
     virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
     virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
-
-    virtual void startup();
 
     unsigned int drain(Event *de);
 

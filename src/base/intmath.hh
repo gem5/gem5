@@ -193,9 +193,9 @@ ceilPow2(T n)
     return (T)1 << ceilLog2(n);
 }
 
-template <class T>
+template <class T, class U>
 inline T
-divCeil(T a, T b)
+divCeil(const T& a, const U& b)
 {
     return (a + b - 1) / b;
 }

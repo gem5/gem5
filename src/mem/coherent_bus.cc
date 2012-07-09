@@ -110,22 +110,26 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // determine the source port based on the id
     SlavePort *src_port = slavePorts[slave_port_id];
 
+    // remember if the packet is an express snoop
+    bool is_express_snoop = pkt->isExpressSnoop();
+
     // test if the bus should be considered occupied for the current
     // port, and exclude express snoops from the check
-    if (!pkt->isExpressSnoop() && isOccupied(src_port)) {
+    if (!is_express_snoop && !tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+    DPRINTF(CoherentBus, "recvTimingReq: src %s %s expr %d 0x%x\n",
+            src_port->name(), pkt->cmdString(), is_express_snoop,
+            pkt->getAddr());
 
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
 
-    Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
+    Tick headerFinishTime = is_express_snoop ? 0 : calcPacketTiming(pkt);
+    Tick packetFinishTime = is_express_snoop ? 0 : pkt->finishTime;
 
     // uncacheable requests need never be snooped
     if (!pkt->req->isUncacheable()) {
@@ -138,7 +142,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // necessary, if the packet needs a response, we should add it
     // as outstanding and express snoops never fail so there is
     // not need to worry about them
-    bool add_outstanding = !pkt->isExpressSnoop() && pkt->needsResponse();
+    bool add_outstanding = !is_express_snoop && pkt->needsResponse();
 
     // keep track that we have an outstanding request packet
     // matching this request, this is used by the coherency
@@ -154,27 +158,32 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // based on the address and attempt to send the packet
     bool success = masterPorts[findPort(pkt->getAddr())]->sendTimingReq(pkt);
 
-    if (!success)  {
-        // inhibited packets should never be forced to retry
-        assert(!pkt->memInhibitAsserted());
+    // if this is an express snoop, we are done at this point
+    if (is_express_snoop) {
+        assert(success);
+    } else {
+        // for normal requests, check if successful
+        if (!success)  {
+            // inhibited packets should never be forced to retry
+            assert(!pkt->memInhibitAsserted());
 
-        // if it was added as outstanding and the send failed, then
-        // erase it again
-        if (add_outstanding)
-            outstandingReq.erase(pkt->req);
+            // if it was added as outstanding and the send failed, then
+            // erase it again
+            if (add_outstanding)
+                outstandingReq.erase(pkt->req);
 
-        DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
+                    src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        addToRetryList(src_port);
-        occupyBus(headerFinishTime);
-
-        return false;
+            // update the bus state and schedule an idle event
+            failedTiming(src_port, headerFinishTime);
+        } else {
+            // update the bus state and schedule an idle event
+            succeededTiming(packetFinishTime);
+        }
     }
 
-    succeededTiming(packetFinishTime);
-
-    return true;
+    return success;
 }
 
 bool
@@ -185,7 +194,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (isOccupied(src_port)) {
+    if (!tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -239,9 +248,6 @@ CoherentBus::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // wrong, hence there is nothing further to do as the packet
     // would be going back to where it came from
     assert(master_port_id == findPort(pkt->getAddr()));
-
-    // this is an express snoop and is never forced to retry
-    assert(!inRetry);
 }
 
 bool
@@ -252,7 +258,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (isOccupied(src_port)) {
+    if (!tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;

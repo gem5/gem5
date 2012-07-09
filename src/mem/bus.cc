@@ -47,6 +47,7 @@
  * Definition of a bus object.
  */
 
+#include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/Bus.hh"
@@ -54,9 +55,9 @@
 #include "mem/bus.hh"
 
 BaseBus::BaseBus(const BaseBusParams *p)
-    : MemObject(p), clock(p->clock),
-      headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
-      drainEvent(NULL), busIdleEvent(this), inRetry(false),
+    : MemObject(p), state(IDLE), clock(p->clock),
+      headerCycles(p->header_cycles), width(p->width),
+      drainEvent(NULL), busIdleEvent(this),
       defaultPortID(InvalidPortID),
       useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
@@ -113,10 +114,7 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
 {
     // determine the current time rounded to the closest following
     // clock edge
-    Tick now = curTick();
-    if (now % clock != 0) {
-        now = ((now / clock) + 1) * clock;
-    }
+    Tick now = divCeil(curTick(), clock) * clock;
 
     Tick headerTime = now + headerCycles * clock;
 
@@ -142,52 +140,91 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
 
 void BaseBus::occupyBus(Tick until)
 {
-    if (until == 0) {
-        // shortcut for express snoop packets
-        return;
-    }
+    // ensure the state is busy or in retry and never idle at this
+    // point, as the bus should transition from idle as soon as it has
+    // decided to forward the packet to prevent any follow-on calls to
+    // sendTiming seeing an unoccupied bus
+    assert(state != IDLE);
 
-    tickNextIdle = until;
-    reschedule(busIdleEvent, tickNextIdle, true);
+    // note that we do not change the bus state here, if we are going
+    // from idle to busy it is handled by tryTiming, and if we
+    // are in retry we should remain in retry such that
+    // succeededTiming still sees the accurate state
 
-    DPRINTF(BaseBus, "The bus is now occupied from tick %d to %d\n",
-            curTick(), tickNextIdle);
+    // until should never be 0 as express snoops never occupy the bus
+    assert(until != 0);
+    schedule(busIdleEvent, until);
+
+    DPRINTF(BaseBus, "The bus is now busy from tick %d to %d\n",
+            curTick(), until);
 }
 
 bool
-BaseBus::isOccupied(Port* port)
+BaseBus::tryTiming(Port* port)
 {
-    // first we see if the next idle tick is in the future, next the
-    // bus is considered occupied if there are ports on the retry list
-    // and we are not in a retry with the current port
-    if (tickNextIdle > curTick() ||
-        (!retryList.empty() && !(inRetry && port == retryList.front()))) {
-        addToRetryList(port);
-        return true;
+    // first we see if the bus is busy, next we check if we are in a
+    // retry with a port other than the current one
+    if (state == BUSY || (state == RETRY && port != retryList.front())) {
+        // put the port at the end of the retry list
+        retryList.push_back(port);
+        return false;
     }
-    return false;
+
+    // update the state which is shared for request, response and
+    // snoop responses, if we were idle we are now busy, if we are in
+    // a retry, then do not change
+    if (state == IDLE)
+        state = BUSY;
+
+    return true;
 }
 
 void
 BaseBus::succeededTiming(Tick busy_time)
 {
-    // occupy the bus accordingly
-    occupyBus(busy_time);
-
     // if a retrying port succeeded, also take it off the retry list
-    if (inRetry) {
+    if (state == RETRY) {
         DPRINTF(BaseBus, "Remove retry from list %s\n",
                 retryList.front()->name());
         retryList.pop_front();
-        inRetry = false;
+        state = BUSY;
     }
+
+    // we should either have gone from idle to busy in the
+    // tryTiming test, or just gone from a retry to busy
+    assert(state == BUSY);
+
+    // occupy the bus accordingly
+    occupyBus(busy_time);
+}
+
+void
+BaseBus::failedTiming(SlavePort* port, Tick busy_time)
+{
+    // if we are not in a retry, i.e. busy (but never idle), or we are
+    // in a retry but not for the current port, then add the port at
+    // the end of the retry list
+    if (state != RETRY || port != retryList.front()) {
+        retryList.push_back(port);
+    }
+
+    // even if we retried the current one and did not succeed,
+    // we are no longer retrying but instead busy
+    state = BUSY;
+
+    // occupy the bus accordingly
+    occupyBus(busy_time);
 }
 
 void
 BaseBus::releaseBus()
 {
     // releasing the bus means we should now be idle
-    assert(curTick() >= tickNextIdle);
+    assert(state == BUSY);
+    assert(!busIdleEvent.scheduled());
+
+    // update the state
+    state = IDLE;
 
     // bus is now idle, so if someone is waiting we can retry
     if (!retryList.empty()) {
@@ -196,10 +233,8 @@ BaseBus::releaseBus()
         // busy, and in the latter case the bus may be released before
         // we see a retry from the destination
         retryWaiting();
-    }
-
-    //If we weren't able to drain before, we might be able to now.
-    if (drainEvent && retryList.empty() && curTick() >= tickNextIdle) {
+    } else if (drainEvent) {
+        //If we weren't able to drain before, do it now.
         drainEvent->process();
         // Clear the drain event once we're done with it.
         drainEvent = NULL;
@@ -212,8 +247,12 @@ BaseBus::retryWaiting()
     // this should never be called with an empty retry list
     assert(!retryList.empty());
 
-    // send a retry to the port at the head of the retry list
-    inRetry = true;
+    // we always go to retrying from idle
+    assert(state == IDLE);
+
+    // update the state which is shared for request, response and
+    // snoop responses
+    state = RETRY;
 
     // note that we might have blocked on the receiving port being
     // busy (rather than the bus itself) and now call retry before the
@@ -223,20 +262,22 @@ BaseBus::retryWaiting()
     else
         (dynamic_cast<MasterPort*>(retryList.front()))->sendRetry();
 
-    // If inRetry is still true, sendTiming wasn't called in zero time
-    // (e.g. the cache does this)
-    if (inRetry) {
+    // If the bus is still in the retry state, sendTiming wasn't
+    // called in zero time (e.g. the cache does this)
+    if (state == RETRY) {
         retryList.pop_front();
-        inRetry = false;
-
-        //Bring tickNextIdle up to the present
-        while (tickNextIdle < curTick())
-            tickNextIdle += clock;
 
         //Burn a cycle for the missed grant.
-        tickNextIdle += clock;
 
-        reschedule(busIdleEvent, tickNextIdle, true);
+        // update the state which is shared for request, response and
+        // snoop responses
+        state = BUSY;
+
+        // determine the current time rounded to the closest following
+        // clock edge
+        Tick now = divCeil(curTick(), clock) * clock;
+
+        occupyBus(now + clock);
     }
 }
 
@@ -252,8 +293,8 @@ BaseBus::recvRetry()
     if (retryList.empty())
         return;
 
-    // if the bus isn't busy
-    if (curTick() >= tickNextIdle) {
+    // if the bus is idle
+    if (state == IDLE) {
         // note that we do not care who told us to retry at the moment, we
         // merely let the first one on the retry list go
         retryWaiting();
@@ -445,17 +486,9 @@ BaseBus::drain(Event * de)
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
-    if (!retryList.empty() || (curTick() < tickNextIdle &&
-                               busIdleEvent.scheduled())) {
+    if (!retryList.empty() || state != IDLE) {
         drainEvent = de;
         return 1;
     }
     return 0;
-}
-
-void
-BaseBus::startup()
-{
-    if (tickNextIdle < curTick())
-        tickNextIdle = (curTick() / clock) * clock + clock;
 }

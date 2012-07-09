@@ -97,7 +97,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (isOccupied(src_port)) {
+    if (!tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -123,8 +123,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        addToRetryList(src_port);
-        occupyBus(headerFinishTime);
+        failedTiming(src_port, headerFinishTime);
 
         return false;
     }
@@ -142,7 +141,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (isOccupied(src_port)) {
+    if (!tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
