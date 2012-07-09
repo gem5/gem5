@@ -431,17 +431,12 @@ class EventManager
     EventQueue *eventq;
 
   public:
-    EventManager(EventManager &em) : eventq(em.queue()) {}
-    EventManager(EventManager *em) : eventq(em ? em->queue() : NULL) {}
+    EventManager(EventManager &em) : eventq(em.eventq) {}
+    EventManager(EventManager *em) : eventq(em ? em->eventq : NULL) {}
     EventManager(EventQueue *eq) : eventq(eq) {}
 
     EventQueue *
-    queue() const
-    {
-        return eventq;
-    }
-
-    operator EventQueue *() const
+    eventQueue() const
     {
         return eventq;
     }
