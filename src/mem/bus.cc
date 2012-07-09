@@ -317,8 +317,9 @@ BaseBus::recvRangeChange(PortID master_port_id)
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
+            // get the address ranges of the connected slave port
             AddrRangeList ranges =
-                masterPorts[master_port_id]->getSlavePort().getAddrRanges();
+                masterPorts[master_port_id]->getAddrRanges();
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -339,7 +340,8 @@ BaseBus::recvRangeChange(PortID master_port_id)
                 portIter++;
         }
 
-        ranges = port->getSlavePort().getAddrRanges();
+        // get the address ranges of the connected slave port
+        ranges = port->getAddrRanges();
 
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",

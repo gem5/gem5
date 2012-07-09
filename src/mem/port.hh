@@ -215,6 +215,11 @@ class MasterPort : public Port
     */
     unsigned peerBlockSize() const;
 
+    /**
+     * Get the address ranges of the connected slave port.
+     */
+    AddrRangeList getAddrRanges() const;
+
     /** Inject a PrintReq for the given address to print the state of
      * that address throughout the memory system.  For debugging.
      */

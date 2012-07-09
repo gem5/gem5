@@ -103,6 +103,12 @@ MasterPort::peerBlockSize() const
     return _slavePort->deviceBlockSize();
 }
 
+AddrRangeList
+MasterPort::getAddrRanges() const
+{
+    return _slavePort->getAddrRanges();
+}
+
 Tick
 MasterPort::sendAtomic(PacketPtr pkt)
 {
