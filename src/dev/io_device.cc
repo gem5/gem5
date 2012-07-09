@@ -47,7 +47,7 @@
 #include "sim/system.hh"
 
 PioPort::PioPort(PioDevice *dev)
-    : SimpleTimingPort(dev->name() + "-pio", dev), device(dev)
+    : SimpleTimingPort(dev->name() + ".pio", dev), device(dev)
 {
 }
 

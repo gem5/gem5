@@ -141,7 +141,7 @@ class FullO3CPU : public BaseO3CPU
       public:
         /** Default constructor. */
         IcachePort(DefaultFetch<Impl> *_fetch, FullO3CPU<Impl>* _cpu)
-            : CpuPort(_fetch->name() + "-iport", _cpu), fetch(_fetch)
+            : CpuPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
         { }
 
       protected:
@@ -168,7 +168,7 @@ class FullO3CPU : public BaseO3CPU
       public:
         /** Default constructor. */
         DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : CpuPort(_lsq->name() + "-dport", _cpu), lsq(_lsq)
+            : CpuPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq)
         { }
 
       protected:

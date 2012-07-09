@@ -105,7 +105,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
-      icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
+      icachePort(name() + ".icache_port", this),
+      dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem)
 {
     _status = Idle;

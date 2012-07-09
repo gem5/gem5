@@ -62,7 +62,7 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
     // vector ports, and the presence of the default port, the ports
     // are enumerated starting from zero
     for (int i = 0; i < p->port_master_connection_count; ++i) {
-        std::string portName = csprintf("%s-p%d", name(), i);
+        std::string portName = csprintf("%s.master[%d]", name(), i);
         MasterPort* bp = new NoncoherentBusMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
     }
@@ -71,7 +71,7 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
     // our corresponding master port
     if (p->port_default_connection_count) {
         defaultPortID = masterPorts.size();
-        std::string portName = csprintf("%s-default", name());
+        std::string portName = name() + ".default";
         MasterPort* bp = new NoncoherentBusMasterPort(portName, *this,
                                                       defaultPortID);
         masterPorts.push_back(bp);
@@ -79,7 +79,7 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
 
     // create the slave ports, once again starting at zero
     for (int i = 0; i < p->port_slave_connection_count; ++i) {
-        std::string portName = csprintf("%s-p%d", name(), i);
+        std::string portName = csprintf("%s.slave[%d]", name(), i);
         SlavePort* bp = new NoncoherentBusSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
     }

@@ -165,7 +165,7 @@ class InOrderCPU : public BaseCPU
 
       public:
         /** Default constructor. */
-        CachePort(CacheUnit *_cacheUnit);
+        CachePort(CacheUnit *_cacheUnit, const std::string& name);
 
       protected:
 

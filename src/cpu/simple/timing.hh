@@ -178,7 +178,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         IcachePort(TimingSimpleCPU *_cpu)
-            : TimingCPUPort(_cpu->name() + "-iport", _cpu),
+            : TimingCPUPort(_cpu->name() + ".icache_port", _cpu),
               tickEvent(_cpu)
         { }
 
@@ -206,7 +206,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         DcachePort(TimingSimpleCPU *_cpu)
-            : TimingCPUPort(_cpu->name() + "-dport", _cpu), tickEvent(_cpu)
+            : TimingCPUPort(_cpu->name() + ".dcache_port", _cpu),
+              tickEvent(_cpu)
         { }
 
       protected:

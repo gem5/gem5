@@ -82,8 +82,9 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
-InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit) :
-    CpuPort(_cacheUnit->name() + "-cache-port", _cacheUnit->cpu),
+InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit,
+                                 const std::string& name) :
+    CpuPort(_cacheUnit->name() + name, _cacheUnit->cpu),
     cacheUnit(_cacheUnit)
 { }
 
@@ -230,8 +231,8 @@ InOrderCPU::InOrderCPU(Params *params)
       stageWidth(params->stageWidth),
       resPool(new ResourcePool(this, params)),
       timeBuffer(2 , 2),
-      dataPort(resPool->getDataUnit()),
-      instPort(resPool->getInstUnit()),
+      dataPort(resPool->getDataUnit(), ".dcache_port"),
+      instPort(resPool->getInstUnit(), ".icache_port"),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
       system(params->system),

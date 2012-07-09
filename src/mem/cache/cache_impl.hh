@@ -72,9 +72,9 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
 
-    cpuSidePort = new CpuSidePort(p->name + "-cpu_side_port", this,
+    cpuSidePort = new CpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
-    memSidePort = new MemSidePort(p->name + "-mem_side_port", this,
+    memSidePort = new MemSidePort(p->name + ".mem_side", this,
                                   "MemSidePort");
 
     tags->setCache(this);

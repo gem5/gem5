@@ -79,9 +79,9 @@ Bridge::BridgeMasterPort::BridgeMasterPort(const std::string &_name,
 
 Bridge::Bridge(Params *p)
     : MemObject(p),
-      slavePort(p->name + "-slave", this, masterPort, p->delay,
+      slavePort(p->name + ".slave", this, masterPort, p->delay,
                 p->nack_delay, p->resp_size, p->ranges),
-      masterPort(p->name + "-master", this, slavePort, p->delay, p->req_size),
+      masterPort(p->name + ".master", this, slavePort, p->delay, p->req_size),
       ackWrites(p->write_ack), _params(p)
 {
     if (ackWrites)
