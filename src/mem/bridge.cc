@@ -443,7 +443,7 @@ Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
 }
 
 AddrRangeList
-Bridge::BridgeSlavePort::getAddrRanges()
+Bridge::BridgeSlavePort::getAddrRanges() const
 {
     return ranges;
 }

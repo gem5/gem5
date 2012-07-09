@@ -276,7 +276,7 @@ class Bridge : public MemObject
 
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
-        virtual AddrRangeList getAddrRanges();
+        virtual AddrRangeList getAddrRanges() const;
     };
 
 

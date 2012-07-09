@@ -86,7 +86,7 @@ class RubyPort : public MemObject
         virtual bool recvTimingReq(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
         virtual void recvFunctional(PacketPtr pkt);
-        virtual AddrRangeList getAddrRanges();
+        virtual AddrRangeList getAddrRanges() const;
 
       private:
         bool isPhysMemAddress(Addr addr);

@@ -124,7 +124,7 @@ class CoherentBus : public BaseBus
         /**
          * Return the union of all adress ranges seen by this bus.
          */
-        virtual AddrRangeList getAddrRanges()
+        virtual AddrRangeList getAddrRanges() const
         { return bus.getAddrRanges(); }
 
         /**

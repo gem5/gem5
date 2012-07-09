@@ -101,7 +101,7 @@ class Cache : public BaseCache
         virtual unsigned deviceBlockSize() const
         { return cache->getBlockSize(); }
 
-        virtual AddrRangeList getAddrRanges();
+        virtual AddrRangeList getAddrRanges() const;
 
       public:
 

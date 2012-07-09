@@ -269,7 +269,7 @@ BaseBus::findPort(Addr addr)
         return dest_id;
 
     // Check normal port ranges
-    PortIter i = portMap.find(RangeSize(addr,1));
+    PortMapConstIter i = portMap.find(RangeSize(addr,1));
     if (i != portMap.end()) {
         dest_id = i->second;
         updatePortCache(dest_id, i->first.start, i->first.end);
@@ -278,8 +278,8 @@ BaseBus::findPort(Addr addr)
 
     // Check if this matches the default range
     if (useDefaultRange) {
-        AddrRangeIter a_end = defaultRange.end();
-        for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
+        AddrRangeConstIter a_end = defaultRange.end();
+        for (AddrRangeConstIter i = defaultRange.begin(); i != a_end; i++) {
             if (*i == addr) {
                 DPRINTF(BusAddrRanges, "  found addr %#llx on default\n",
                         addr);
@@ -332,7 +332,7 @@ BaseBus::recvRangeChange(PortID master_port_id)
         MasterPort *port = masterPorts[master_port_id];
 
         // Clean out any previously existent ids
-        for (PortIter portIter = portMap.begin();
+        for (PortMapIter portIter = portMap.begin();
              portIter != portMap.end(); ) {
             if (portIter->second == master_port_id)
                 portMap.erase(portIter++);
@@ -367,22 +367,22 @@ BaseBus::recvRangeChange(PortID master_port_id)
 }
 
 AddrRangeList
-BaseBus::getAddrRanges()
+BaseBus::getAddrRanges() const
 {
     AddrRangeList ranges;
 
     DPRINTF(BusAddrRanges, "received address range request, returning:\n");
 
-    for (AddrRangeIter dflt_iter = defaultRange.begin();
+    for (AddrRangeConstIter dflt_iter = defaultRange.begin();
          dflt_iter != defaultRange.end(); dflt_iter++) {
         ranges.push_back(*dflt_iter);
         DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
-    for (PortIter portIter = portMap.begin();
+    for (PortMapConstIter portIter = portMap.begin();
          portIter != portMap.end(); portIter++) {
         bool subset = false;
-        for (AddrRangeIter dflt_iter = defaultRange.begin();
+        for (AddrRangeConstIter dflt_iter = defaultRange.begin();
              dflt_iter != defaultRange.end(); dflt_iter++) {
             if ((portIter->first.start < dflt_iter->start &&
                 portIter->first.end >= dflt_iter->start) ||

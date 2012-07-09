@@ -65,7 +65,7 @@ class PciDev : public DmaDevice
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual AddrRangeList getAddrRanges();
+        virtual AddrRangeList getAddrRanges() const;
 
         Platform *platform;
 
@@ -191,7 +191,7 @@ class PciDev : public DmaDevice
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
     /**
      * Constructor for PCI Dev. This function copies data from the

@@ -74,7 +74,7 @@ class IntDev
         {
         }
 
-        AddrRangeList getAddrRanges()
+        AddrRangeList getAddrRanges() const
         {
             return device->getIntAddrRange();
         }
@@ -152,7 +152,7 @@ class IntDev
     }
 
     virtual AddrRangeList
-    getIntAddrRange()
+    getIntAddrRange() const
     {
         panic("intAddrRange not implemented.\n");
     }

@@ -85,7 +85,8 @@ class BaseBus : public MemObject
 
     Event * drainEvent;
 
-    typedef range_map<Addr, PortID>::iterator PortIter;
+    typedef range_map<Addr, PortID>::iterator PortMapIter;
+    typedef range_map<Addr, PortID>::const_iterator PortMapConstIter;
     range_map<Addr, PortID> portMap;
 
     AddrRangeList defaultRange;
@@ -187,7 +188,7 @@ class BaseBus : public MemObject
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.

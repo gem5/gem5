@@ -141,7 +141,7 @@ class Iob : public PioDevice
     bool receiveJBusInterrupt(int cpu_id, int source, uint64_t d0,
                               uint64_t d1);
 
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

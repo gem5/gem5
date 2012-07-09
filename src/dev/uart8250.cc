@@ -287,7 +287,7 @@ Uart8250::dataAvailable()
 }
 
 AddrRangeList
-Uart8250::getAddrRanges()
+Uart8250::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(pioAddr, pioSize));

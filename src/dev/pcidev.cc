@@ -71,7 +71,7 @@ PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
 }
 
 AddrRangeList
-PciDev::PciConfigPort::getAddrRanges()
+PciDev::PciConfigPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     if (configAddr != ULL(-1))
@@ -208,7 +208,7 @@ PciDev::readConfig(PacketPtr pkt)
 }
 
 AddrRangeList
-PciDev::getAddrRanges()
+PciDev::getAddrRanges() const
 {
     AddrRangeList ranges;
     int x = 0;

@@ -261,7 +261,7 @@ class Gic : public PioDevice
     /** Return the address ranges used by the Gic
      * This is the distributor address + all cpu addresses
      */
-    virtual AddrRangeList getAddrRanges();
+    virtual AddrRangeList getAddrRanges() const;
 
     /** A PIO read to the device, immediately split up into
      * readDistributor() or readCpu()

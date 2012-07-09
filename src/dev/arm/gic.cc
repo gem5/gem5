@@ -708,7 +708,7 @@ Gic::postInt(uint32_t cpu, Tick when)
 }
 
 AddrRangeList
-Gic::getAddrRanges()
+Gic::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(distAddr, DIST_SIZE));

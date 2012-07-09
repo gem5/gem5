@@ -132,7 +132,7 @@ SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
 { }
 
 AddrRangeList
-SimpleMemory::MemoryPort::getAddrRanges()
+SimpleMemory::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(memory.getAddrRange());

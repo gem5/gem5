@@ -64,6 +64,7 @@
 
 typedef std::list<Range<Addr> > AddrRangeList;
 typedef std::list<Range<Addr> >::iterator AddrRangeIter;
+typedef std::list<Range<Addr> >::const_iterator AddrRangeConstIter;
 
 class MemObject;
 
@@ -379,7 +380,7 @@ class SlavePort : public Port
      *
      * @return a list of ranges responded to
      */
-    virtual AddrRangeList getAddrRanges() = 0;
+    virtual AddrRangeList getAddrRanges() const = 0;
 
   protected:
 

@@ -77,7 +77,7 @@ class SimpleMemory : public AbstractMemory
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual AddrRangeList getAddrRanges();
+        virtual AddrRangeList getAddrRanges() const;
 
     };
 

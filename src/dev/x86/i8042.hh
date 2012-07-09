@@ -255,7 +255,7 @@ class I8042 : public BasicPioDevice
         commandByte.keyboardFullInt = 1;
     }
 
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
     Tick read(PacketPtr pkt);
 

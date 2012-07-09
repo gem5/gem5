@@ -345,7 +345,7 @@ CommMonitor::deviceBlockSizeSlave()
 }
 
 AddrRangeList
-CommMonitor::getAddrRanges()
+CommMonitor::getAddrRanges() const
 {
     // get the address ranges of the connected slave port
     return masterPort.getAddrRanges();

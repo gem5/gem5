@@ -746,7 +746,7 @@ Pl111::generateInterrupt()
 }
 
 AddrRangeList
-Pl111::getAddrRanges()
+Pl111::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(pioAddr, pioSize));

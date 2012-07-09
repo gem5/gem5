@@ -324,7 +324,7 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
 }
 
 AddrRangeList
-Iob::getAddrRanges()
+Iob::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(iobManAddr, iobManSize));

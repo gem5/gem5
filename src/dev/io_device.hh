@@ -67,7 +67,7 @@ class PioPort : public SimpleTimingPort
 
     virtual Tick recvAtomic(PacketPtr pkt);
 
-    virtual AddrRangeList getAddrRanges();
+    virtual AddrRangeList getAddrRanges() const;
 
   public:
 
@@ -96,7 +96,7 @@ class PioDevice : public MemObject
      *
      * @return a list of non-overlapping address ranges
      */
-    virtual AddrRangeList getAddrRanges() = 0;
+    virtual AddrRangeList getAddrRanges() const = 0;
 
     /** Pure virtual function that the device must implement. Called
      * when a read command is recieved by the port.
@@ -160,7 +160,7 @@ class BasicPioDevice : public PioDevice
      *
      * @return a list of non-overlapping address ranges
      */
-    virtual AddrRangeList getAddrRanges();
+    virtual AddrRangeList getAddrRanges() const;
 
 };
 

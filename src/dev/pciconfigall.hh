@@ -80,7 +80,7 @@ class PciConfigAll : public PioDevice
 
     virtual Tick write(PacketPtr pkt);
 
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
   private:
     Addr pioAddr;

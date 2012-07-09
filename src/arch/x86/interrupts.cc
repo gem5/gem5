@@ -303,6 +303,7 @@ X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
     cpu = newCPU;
     initialApicId = cpu->cpuId();
     regs[APIC_ID] = (initialApicId << 24);
+    pioAddr = x86LocalAPICAddress(initialApicId, 0);
 }
 
 
@@ -367,20 +368,19 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 
 
 AddrRangeList
-X86ISA::Interrupts::getAddrRanges()
+X86ISA::Interrupts::getAddrRanges() const
 {
     AddrRangeList ranges;
     Range<Addr> range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
                                 x86LocalAPICAddress(initialApicId, 0) + 
                                 PageBytes);
     ranges.push_back(range);
-    pioAddr = range.start;
     return ranges;
 }
 
 
 AddrRangeList
-X86ISA::Interrupts::getIntAddrRange()
+X86ISA::Interrupts::getIntAddrRange() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),

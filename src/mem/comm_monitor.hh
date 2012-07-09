@@ -230,7 +230,7 @@ class CommMonitor : public MemObject
             return mon.deviceBlockSizeSlave();
         }
 
-        AddrRangeList getAddrRanges()
+        AddrRangeList getAddrRanges() const
         {
             return mon.getAddrRanges();
         }
@@ -269,7 +269,7 @@ class CommMonitor : public MemObject
 
     unsigned deviceBlockSizeSlave();
 
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 
     bool isSnooping() const;
 

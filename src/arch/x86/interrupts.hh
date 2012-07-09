@@ -236,8 +236,8 @@ class Interrupts : public BasicPioDevice, IntDev
         return entry.periodic;
     }
 
-    AddrRangeList getAddrRanges();
-    AddrRangeList getIntAddrRange();
+    AddrRangeList getAddrRanges() const;
+    AddrRangeList getIntAddrRange() const;
 
     MasterPort &getMasterPort(const std::string &if_name, int idx = -1)
     {

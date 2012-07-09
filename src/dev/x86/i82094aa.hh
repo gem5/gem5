@@ -101,7 +101,7 @@ class I82094AA : public PioDevice, public IntDev
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 
-    AddrRangeList getAddrRanges()
+    AddrRangeList getAddrRanges() const
     {
         AddrRangeList ranges;
         ranges.push_back(RangeEx(pioAddr, pioAddr + 4));
@@ -109,7 +109,7 @@ class I82094AA : public PioDevice, public IntDev
         return ranges;
     }
 
-    AddrRangeList getIntAddrRange()
+    AddrRangeList getIntAddrRange() const
     {
         AddrRangeList ranges;
         ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),

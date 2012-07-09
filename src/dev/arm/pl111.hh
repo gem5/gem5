@@ -329,7 +329,7 @@ class Pl111: public AmbaDmaDevice
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges();
+    AddrRangeList getAddrRanges() const;
 };
 
 #endif

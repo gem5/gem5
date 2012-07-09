@@ -1588,7 +1588,7 @@ Cache<TagStore>::unserialize(Checkpoint *cp, const std::string &section)
 
 template<class TagStore>
 AddrRangeList
-Cache<TagStore>::CpuSidePort::getAddrRanges()
+Cache<TagStore>::CpuSidePort::getAddrRanges() const
 {
     return cache->getAddrRanges();
 }

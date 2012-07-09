@@ -85,7 +85,7 @@ PciConfigAll::write(PacketPtr pkt)
 
 
 AddrRangeList
-PciConfigAll::getAddrRanges()
+PciConfigAll::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(pioAddr, params()->size));

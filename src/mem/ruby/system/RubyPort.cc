@@ -669,7 +669,7 @@ RubyPort::PioPort::sendNextCycle(PacketPtr pkt)
 }
 
 AddrRangeList
-RubyPort::M5Port::getAddrRanges()
+RubyPort::M5Port::getAddrRanges() const
 {
     // at the moment the assumption is that the master does not care
     AddrRangeList ranges;

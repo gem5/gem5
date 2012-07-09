@@ -44,9 +44,10 @@ const uint8_t CommandNack = 0xfe;
 const uint8_t BatSuccessful = 0xaa;
 
 AddrRangeList
-X86ISA::I8042::getAddrRanges()
+X86ISA::I8042::getAddrRanges() const
 {
     AddrRangeList ranges;
+    // TODO: Are these really supposed to be a single byte and not 4?
     ranges.push_back(RangeSize(dataPort, 1));
     ranges.push_back(RangeSize(commandPort, 1));
     return ranges;

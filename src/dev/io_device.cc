@@ -58,7 +58,7 @@ PioPort::recvAtomic(PacketPtr pkt)
 }
 
 AddrRangeList
-PioPort::getAddrRanges()
+PioPort::getAddrRanges() const
 {
     return device->getAddrRanges();
 }
@@ -106,7 +106,7 @@ BasicPioDevice::BasicPioDevice(const Params *p)
 {}
 
 AddrRangeList
-BasicPioDevice::getAddrRanges()
+BasicPioDevice::getAddrRanges() const
 {
     assert(pioSize != 0);
     AddrRangeList ranges;
