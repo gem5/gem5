@@ -55,7 +55,8 @@
 #include "mem/noncoherent_bus.hh"
 
 NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p), layer(*this, ".layer", p->clock)
+    : BaseBus(p), reqLayer(*this, ".reqLayer", p->clock),
+      respLayer(*this, ".respLayer", p->clock)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -97,7 +98,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!layer.tryTiming(src_port)) {
+    if (!reqLayer.tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -123,12 +124,12 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        layer.failedTiming(src_port, headerFinishTime);
+        reqLayer.failedTiming(src_port, headerFinishTime);
 
         return false;
     }
 
-    layer.succeededTiming(packetFinishTime);
+    reqLayer.succeededTiming(packetFinishTime);
 
     return true;
 }
@@ -141,7 +142,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!layer.tryTiming(src_port)) {
+    if (!respLayer.tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -161,7 +162,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // deadlock
     assert(success);
 
-    layer.succeededTiming(packetFinishTime);
+    respLayer.succeededTiming(packetFinishTime);
 
     return true;
 }
@@ -169,8 +170,10 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 void
 NoncoherentBus::recvRetry()
 {
-    // only one layer that can deal with it
-    layer.recvRetry();
+    // responses never block on forwarding them, so the retry will
+    // always be coming from a port to which we tried to forward a
+    // request
+    reqLayer.recvRetry();
 }
 
 Tick
@@ -211,8 +214,8 @@ NoncoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
 unsigned int
 NoncoherentBus::drain(Event *de)
 {
-    // only one layer to worry about at the moment
-    return layer.drain(de);
+    // sum up the individual layers
+    return reqLayer.drain(de) + respLayer.drain(de);
 }
 
 NoncoherentBus*

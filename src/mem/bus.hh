@@ -82,11 +82,19 @@ class BaseBus : public MemObject
      * point is to have three layers, for requests, responses, and
      * snoop responses respectively (snoop requests are instantaneous
      * and do not need any flow control or arbitration). This case is
-     * similar to AHB and some OCP configurations. As a further
-     * extensions beyond the three-layer bus, a future multi-layer bus
-     * has with one layer per connected slave port provides a full or
-     * partial crossbar, like AXI, OCP, PCIe etc.
+     * similar to AHB and some OCP configurations.
+     *
+     * As a further extensions beyond the three-layer bus, a future
+     * multi-layer bus has with one layer per connected slave port
+     * provides a full or partial crossbar, like AXI, OCP, PCIe etc.
+     *
+     * The template parameter, PortClass, indicates the destination
+     * port type for the bus. The retry list holds either master ports
+     * or slave ports, depending on the direction of the layer. Thus,
+     * a request layer has a retry list containing slave ports,
+     * whereas a response layer holds master ports.
      */
+    template <typename PortClass>
     class Layer
     {
 
@@ -129,7 +137,7 @@ class BaseBus : public MemObject
          *
          * @return True if the bus layer accepts the packet
          */
-        bool tryTiming(Port* port);
+        bool tryTiming(PortClass* port);
 
         /**
          * Deal with a destination port accepting a packet by potentially
@@ -148,7 +156,7 @@ class BaseBus : public MemObject
          *
          * @param busy_time Time to spend as a result of a failed send
          */
-        void failedTiming(SlavePort* port, Tick busy_time);
+        void failedTiming(PortClass* port, Tick busy_time);
 
         /** Occupy the bus layer until until */
         void occupyLayer(Tick until);
@@ -203,10 +211,10 @@ class BaseBus : public MemObject
         Event * drainEvent;
 
         /**
-         * An array of pointers to ports that retry should be called
+         * An array of ports that retry should be called
          * on because the original send failed for whatever reason.
          */
-        std::list<Port*> retryList;
+        std::list<PortClass*> retryList;
 
         /**
          * Release the bus layer after being occupied and return to an

@@ -70,9 +70,12 @@ class CoherentBus : public BaseBus
   protected:
 
     /**
-     * Declare the single layer of this bus.
+     * Declare the three layers of this bus, one for requests, one
+     * for responses, and one for snoop responses
      */
-    Layer layer;
+    Layer<SlavePort> reqLayer;
+    Layer<MasterPort> respLayer;
+    Layer<SlavePort> snoopRespLayer;
 
     /**
      * Declaration of the coherent bus slave port type, one will be

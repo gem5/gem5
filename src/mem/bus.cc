@@ -137,13 +137,16 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
     return headerTime;
 }
 
-BaseBus::Layer::Layer(BaseBus& _bus, const std::string& _name, Tick _clock) :
+template <typename PortClass>
+BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name,
+                                 Tick _clock) :
     bus(_bus), _name(_name), state(IDLE), clock(_clock), drainEvent(NULL),
     releaseEvent(this)
 {
 }
 
-void BaseBus::Layer::occupyLayer(Tick until)
+template <typename PortClass>
+void BaseBus::Layer<PortClass>::occupyLayer(Tick until)
 {
     // ensure the state is busy or in retry and never idle at this
     // point, as the bus should transition from idle as soon as it has
@@ -164,8 +167,9 @@ void BaseBus::Layer::occupyLayer(Tick until)
             curTick(), until);
 }
 
+template <typename PortClass>
 bool
-BaseBus::Layer::tryTiming(Port* port)
+BaseBus::Layer<PortClass>::tryTiming(PortClass* port)
 {
     // first we see if the bus is busy, next we check if we are in a
     // retry with a port other than the current one
@@ -184,8 +188,9 @@ BaseBus::Layer::tryTiming(Port* port)
     return true;
 }
 
+template <typename PortClass>
 void
-BaseBus::Layer::succeededTiming(Tick busy_time)
+BaseBus::Layer<PortClass>::succeededTiming(Tick busy_time)
 {
     // if a retrying port succeeded, also take it off the retry list
     if (state == RETRY) {
@@ -203,8 +208,9 @@ BaseBus::Layer::succeededTiming(Tick busy_time)
     occupyLayer(busy_time);
 }
 
+template <typename PortClass>
 void
-BaseBus::Layer::failedTiming(SlavePort* port, Tick busy_time)
+BaseBus::Layer<PortClass>::failedTiming(PortClass* port, Tick busy_time)
 {
     // if we are not in a retry, i.e. busy (but never idle), or we are
     // in a retry but not for the current port, then add the port at
@@ -221,8 +227,9 @@ BaseBus::Layer::failedTiming(SlavePort* port, Tick busy_time)
     occupyLayer(busy_time);
 }
 
+template <typename PortClass>
 void
-BaseBus::Layer::releaseLayer()
+BaseBus::Layer<PortClass>::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
@@ -246,8 +253,9 @@ BaseBus::Layer::releaseLayer()
     }
 }
 
+template <typename PortClass>
 void
-BaseBus::Layer::retryWaiting()
+BaseBus::Layer<PortClass>::retryWaiting()
 {
     // this should never be called with an empty retry list
     assert(!retryList.empty());
@@ -262,10 +270,7 @@ BaseBus::Layer::retryWaiting()
     // note that we might have blocked on the receiving port being
     // busy (rather than the bus itself) and now call retry before the
     // destination called retry on the bus
-    if (dynamic_cast<SlavePort*>(retryList.front()) != NULL)
-        (dynamic_cast<SlavePort*>(retryList.front()))->sendRetry();
-    else
-        (dynamic_cast<MasterPort*>(retryList.front()))->sendRetry();
+    retryList.front()->sendRetry();
 
     // If the bus is still in the retry state, sendTiming wasn't
     // called in zero time (e.g. the cache does this)
@@ -286,8 +291,9 @@ BaseBus::Layer::retryWaiting()
     }
 }
 
+template <typename PortClass>
 void
-BaseBus::Layer::recvRetry()
+BaseBus::Layer<PortClass>::recvRetry()
 {
     // we got a retry from a peer that we tried to send something to
     // and failed, but we sent it on the account of someone else, and
@@ -484,9 +490,9 @@ BaseBus::findBlockSize()
     return max_bs;
 }
 
-
+template <typename PortClass>
 unsigned int
-BaseBus::Layer::drain(Event * de)
+BaseBus::Layer<PortClass>::drain(Event * de)
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
@@ -497,3 +503,11 @@ BaseBus::Layer::drain(Event * de)
     }
     return 0;
 }
+
+/**
+ * Bus layer template instantiations. Could be removed with _impl.hh
+ * file, but since there are only two given options (MasterPort and
+ * SlavePort) it seems a bit excessive at this point.
+ */
+template class BaseBus::Layer<SlavePort>;
+template class BaseBus::Layer<MasterPort>;

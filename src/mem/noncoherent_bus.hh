@@ -73,9 +73,11 @@ class NoncoherentBus : public BaseBus
   protected:
 
     /**
-     * Declare the single layer of this bus.
+     * Declare the two layers of this bus, one for requests and one
+     * for responses.
      */
-    Layer layer;
+    Layer<SlavePort> reqLayer;
+    Layer<MasterPort> respLayer;
 
     /**
      * Declaration of the non-coherent bus slave port type, one will
