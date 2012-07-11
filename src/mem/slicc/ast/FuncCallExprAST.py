@@ -93,7 +93,7 @@ class FuncCallExprAST(ExprAST):
         for expr,expected_type in zip(self.exprs, func.param_types):
             # Check the types of the parameter
             actual_type,param_code = expr.inline(True)
-            if actual_type != expected_type:
+            if str(actual_type) != str(expected_type):
                 expr.error("Type mismatch: expected: %s actual: %s" % \
                            (expected_type, actual_type))
             cvec.append(param_code)

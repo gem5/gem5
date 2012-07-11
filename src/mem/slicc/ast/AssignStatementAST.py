@@ -45,7 +45,7 @@ class AssignStatementAST(StatementAST):
 
         code("$lcode = $rcode;")
 
-        if ltype != rtype:
+        if not (ltype == rtype or (ltype.isInterface and ltype['interface'] == rtype.ident)):
             # FIXME - beckmann
             # the following if statement is a hack to allow NetDest
             # objects to be assigned to Sets this allows for the
