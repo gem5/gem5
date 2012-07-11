@@ -118,6 +118,12 @@ namespace X86ISA
             return paddr;
         }
 
+        // Return the page size in bytes
+        int size()
+        {
+            return (1 << logBytes);
+        }
+
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
     };
