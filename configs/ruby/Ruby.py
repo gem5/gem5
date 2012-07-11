@@ -79,6 +79,16 @@ def define_options(parser):
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
 
+def create_topology(controllers, options):
+    """ Called from create_system in configs/ruby/<protocol>.py
+        Must return an object which is a subclass of BaseTopology
+        found in configs/topologies/BaseTopology.py
+        This is a wrapper for the legacy topologies.
+    """
+    exec "import %s as Topo" % options.topology
+    topology = eval("Topo.%s(controllers)" % options.topology)
+    return topology
+
 def create_system(options, system, piobus = None, dma_ports = []):
 
     system.ruby = RubySystem(clock = options.clock,
@@ -89,7 +99,7 @@ def create_system(options, system, piobus = None, dma_ports = []):
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     try:
-        (cpu_sequencers, dir_cntrls, all_cntrls) = \
+        (cpu_sequencers, dir_cntrls, topology) = \
              eval("%s.create_system(options, system, piobus, dma_ports, ruby)"
                   % protocol)
     except:
@@ -128,17 +138,17 @@ def create_system(options, system, piobus = None, dma_ports = []):
         class RouterClass(BasicRouter): pass
     
     #
-    # Important: the topology must be created before the network and after the
-    # controllers.
+    # Important: the topology must be instantiated before the network and after
+    # the controllers. Hence the separation between topology definition and
+    # instantiation. TopologyCreator is in src/mem/ruby/network/topologies/.
     #
-    exec "import %s" % options.topology
+    from TopologyCreator import instantiateTopology
     try:
-        net_topology = eval("%s.makeTopology(all_cntrls, options, \
-                                             IntLinkClass, ExtLinkClass, \
-                                             RouterClass)" \
-                            % options.topology)
+        net_topology = instantiateTopology(topology, options, \
+                                           IntLinkClass, ExtLinkClass, \
+                                           RouterClass)
     except:
-        print "Error: could not create topology %s" % options.topology
+        print "Error: could not make topology %s" % options.topology
         raise
 
     if options.network_fault_model:

@@ -31,27 +31,30 @@
 from m5.params import *
 from m5.objects import *
 
-class Pt2Pt(Topology):
+from BaseTopology import BaseTopology
+
+class Pt2Pt(BaseTopology):
     description='Pt2Pt'
 
-def makeTopology(nodes, options, IntLink, ExtLink, Router):
-    # Create an individual router for each controller, and connect all to all.
-    pt2pt = Pt2Pt()
-    pt2pt.routers = [Router(router_id=i) for i in range(len(nodes))]
-    ext_links = [ExtLink(link_id=i, ext_node=n, int_node=pt2pt.routers[i])
-                 for (i, n) in enumerate(nodes)]
-    link_count = len(nodes)
+    def __init__(self, controllers):
+        self.nodes = controllers
 
-    int_links = []
-    for i in xrange(len(nodes)):
-        for j in xrange(len(nodes)):
-            if (i != j):
-                link_count += 1
-                int_links.append(IntLink(link_id=link_count,
-                                         node_a=pt2pt.routers[i],
-                                         node_b=pt2pt.routers[j]))
+    def makeTopology(self, options, IntLink, ExtLink, Router):
+        nodes = self.nodes
+        # Create an individual router for each controller, and connect all to all.
 
-    pt2pt.ext_links = ext_links
-    pt2pt.int_links = int_links
+        routers = [Router(router_id=i) for i in range(len(nodes))]
+        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
+                    for (i, n) in enumerate(nodes)]
+        link_count = len(nodes)
 
-    return pt2pt
+        int_links = []
+        for i in xrange(len(nodes)):
+            for j in xrange(len(nodes)):
+                if (i != j):
+                    link_count += 1
+                    int_links.append(IntLink(link_id=link_count,
+                                            node_a=routers[i],
+                                            node_b=routers[j]))
+
+        return routers, int_links, ext_links

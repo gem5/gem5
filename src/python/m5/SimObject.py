@@ -168,10 +168,15 @@ class MetaSimObject(type):
         cls._port_refs = multidict() # port ref objects
         cls._instantiated = False # really instantiated, cloned, or subclassed
 
-        # We don't support multiple inheritance.  If you want to, you
-        # must fix multidict to deal with it properly.
-        if len(bases) > 1:
-            raise TypeError, "SimObjects do not support multiple inheritance"
+        # We don't support multiple inheritance of sim objects.  If you want
+        # to, you must fix multidict to deal with it properly. Non sim-objects
+        # are ok, though
+        bTotal = 0
+        for c in bases:
+            if isinstance(c, MetaSimObject):
+                bTotal += 1
+            if bTotal > 1:
+                raise TypeError, "SimObjects do not support multiple inheritance"
 
         base = bases[0]
 

@@ -35,6 +35,7 @@ from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
 addToPath('../ruby')
+addToPath('../topologies')
 
 import Options
 import Ruby

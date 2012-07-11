@@ -40,6 +40,7 @@ from m5.util import addToPath, fatal
 
 addToPath('../common')
 addToPath('../ruby')
+addToPath('../topologies')
 
 import Ruby
 

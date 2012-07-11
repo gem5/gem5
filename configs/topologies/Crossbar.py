@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -26,11 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Brad Beckmann
+# Authors: Steve Reinhardt
 
-Import('*')
+from m5.params import *
+from m5.objects import *
 
-if env['PROTOCOL'] == 'None':
-    Return()
+from BaseTopology import BaseTopology
 
-PySource('', 'TopologyCreator.py')
+class Crossbar(BaseTopology):
+    description='Crossbar'
+
+    def __init__(self, controllers):
+        self.nodes = controllers
+
+    def makeTopology(self, options, IntLink, ExtLink, Router):
+        # Create an individual router for each controller plus one more for the
+        # centralized crossbar.  The large numbers of routers are needed because
+        # external links do not model outgoing bandwidth in the simple network, but
+        # internal links do.
+
+        routers = [Router(router_id=i) for i in range(len(self.nodes)+1)]
+        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
+                        for (i, n) in enumerate(self.nodes)]
+        link_count = len(self.nodes)
+        xbar = routers[len(self.nodes)] # the crossbar router is the last router created
+        int_links = [IntLink(link_id=(link_count+i),
+                             node_a=routers[i], node_b=xbar)
+                        for i in range(len(self.nodes))]
+
+        return routers, int_links, ext_links
+

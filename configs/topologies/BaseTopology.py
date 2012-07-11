@@ -1,4 +1,4 @@
-# Copyright (c) 2010 Advanced Micro Devices, Inc.
+# Copyright (c) 2012 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,28 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Jason Power
 
-from m5.params import *
-from m5.objects import *
 
-class Crossbar(Topology):
-    description='Crossbar'
+class BaseTopology(object):
+    description = "BaseTopology"
 
-def makeTopology(nodes, options, IntLink, ExtLink, Router):
-    # Create an individual router for each controller plus one more for the
-    # centralized crossbar.  The large numbers of routers are needed because
-    # external links do not model outgoing bandwidth in the simple network, but
-    # internal links do.
-    cb = Crossbar()
-    cb.routers = [Router(router_id=i) for i in range(len(nodes)+1)]
-    cb.ext_links = [ExtLink(link_id=i, ext_node=n, int_node=cb.routers[i])
-                    for (i, n) in enumerate(nodes)]
-    link_count = len(nodes)
-    xbar = cb.routers[len(nodes)] # the crossbar router is the last router created
-    cb.int_links = [IntLink(link_id=(link_count+i),
-                            node_a=cb.routers[i], node_b=xbar)
-                    for i in range(len(nodes))]
-    return cb
+    def __init__(self):
+        """ When overriding place any objects created in
+            configs/ruby/<protocol>.py that are needed in
+            makeTopology (below) here. The minimum is usually
+            all of the controllers created in the above file.
+        """
 
+    def makeTopology(self, options, IntLink, ExtLink, Router):
+        """ Called from src/mem/ruby/network/topologies/TopologyCreatory.py
+            The return value is ( list(Router), list(IntLink), list(ExtLink))
+            The API of this function cannot change when subclassing!!
+            Any additional information needed to create this topology should
+            be passed into the constructor when it's instantiated in
+            configs/ruby/<protocol>.py
+        """
+        print "BaseTopology should have been overridden in a sub class!!"
+        import sys
+        sys.exit(1)
 
