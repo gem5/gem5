@@ -400,6 +400,9 @@ class System : public MemObject
 
     static void printSystems();
 
+    // For futex system call
+    std::map<uint64_t, std::list<ThreadContext *> * > futexMap;
+
 
 };
 

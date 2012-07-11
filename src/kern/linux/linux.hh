@@ -171,6 +171,12 @@ class Linux : public OperatingSystem
     static int openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc);
     static std::string procMeminfo(LiveProcess *process, ThreadContext *tc);
 
+    // For futex system call
+    static const unsigned TGT_FUTEX_WAIT  = 0;
+    static const unsigned TGT_FUTEX_WAKE  = 1;
+    static const unsigned TGT_EAGAIN      = 11;
+    static const unsigned TGT_EWOULDBLOCK = TGT_EAGAIN;
+
 };  // class Linux
 
 #endif // __LINUX_HH__

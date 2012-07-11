@@ -415,7 +415,7 @@ SyscallDesc X86_64LinuxProcess::syscallDescs[] = {
     /* 199 */ SyscallDesc("fremovexattr", unimplementedFunc),
     /* 200 */ SyscallDesc("tkill", unimplementedFunc),
     /* 201 */ SyscallDesc("time", timeFunc<X86Linux64>),
-    /* 202 */ SyscallDesc("futex", ignoreFunc),
+    /* 202 */ SyscallDesc("futex", futexFunc<X86Linux64>),
     /* 203 */ SyscallDesc("sched_setaffinity", unimplementedFunc),
     /* 204 */ SyscallDesc("sched_getaffinity", unimplementedFunc),
     /* 205 */ SyscallDesc("set_thread_area", unimplementedFunc),

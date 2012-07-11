@@ -334,6 +334,87 @@ SyscallReturn getegidFunc(SyscallDesc *desc, int num,
 SyscallReturn cloneFunc(SyscallDesc *desc, int num,
                                LiveProcess *p, ThreadContext *tc);
 
+/// Futex system call
+///  Implemented by Daniel Sanchez
+///  Used by printf's in multi-threaded apps
+template <class OS>
+SyscallReturn
+futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+          ThreadContext *tc)
+{
+    int index_uaddr = 0;
+    int index_op = 1;
+    int index_val = 2;
+    int index_timeout = 3;
+
+    uint64_t uaddr = process->getSyscallArg(tc, index_uaddr);
+    int op = process->getSyscallArg(tc, index_op);
+    int val = process->getSyscallArg(tc, index_val);
+    uint64_t timeout = process->getSyscallArg(tc, index_timeout);
+
+    std::map<uint64_t, std::list<ThreadContext *> * >
+        &futex_map = tc->getSystemPtr()->futexMap;
+
+    DPRINTF(SyscallVerbose, "In sys_futex: Address=%llx, op=%d, val=%d\n",
+            uaddr, op, val);
+
+
+    if (op == OS::TGT_FUTEX_WAIT) {
+        if (timeout != 0) {
+            warn("sys_futex: FUTEX_WAIT with non-null timeout unimplemented;"
+                 "we'll wait indefinitely");
+        }
+
+        uint8_t *buf = new uint8_t[sizeof(int)];
+        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int));
+        int mem_val = *((int *)buf);
+        delete buf;
+
+        if(val != mem_val) {
+            DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, read: %d, "
+                                    "expected: %d\n", mem_val, val);
+            return -OS::TGT_EWOULDBLOCK;
+        }
+
+        // Queue the thread context
+        std::list<ThreadContext *> * tcWaitList;
+        if (futex_map.count(uaddr)) {
+            tcWaitList = futex_map.find(uaddr)->second;
+        } else {
+            tcWaitList = new std::list<ThreadContext *>();
+            futex_map.insert(std::pair< uint64_t,
+                            std::list<ThreadContext *> * >(uaddr, tcWaitList));
+        }
+        tcWaitList->push_back(tc);
+        DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAIT, suspending calling "
+                                "thread context\n");
+        tc->suspend();
+        return 0;
+    } else if (op == OS::TGT_FUTEX_WAKE){
+        int wokenUp = 0;
+        std::list<ThreadContext *> * tcWaitList;
+        if (futex_map.count(uaddr)) {
+            tcWaitList = futex_map.find(uaddr)->second;
+            while (tcWaitList->size() > 0 && wokenUp < val) {
+                tcWaitList->front()->activate();
+                tcWaitList->pop_front();
+                wokenUp++;
+            }
+            if(tcWaitList->empty()) {
+                futex_map.erase(uaddr);
+                delete tcWaitList;
+            }
+        }
+        DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, activated %d waiting "
+                                "thread contexts\n", wokenUp);
+        return wokenUp;
+    } else {
+        warn("sys_futex: op %d is not implemented, just returning...");
+        return 0;
+    }
+
+}
+
 
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register

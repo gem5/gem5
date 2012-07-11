@@ -142,6 +142,10 @@ class AlphaLinux : public Linux
        uint64_t freehigh;  /* Available high memory size */
        uint64_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;
+
+    // For futex system call
+    static const unsigned TGT_EAGAIN      = 35;
+    static const unsigned TGT_EWOULDBLOCK = TGT_EAGAIN;
 };
 
 #endif // __ALPHA_ALPHA_LINUX_LINUX_HH__
