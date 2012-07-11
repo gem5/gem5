@@ -106,6 +106,7 @@ CheckTable::addCheck(const Address& address)
 Check*
 CheckTable::getRandomCheck()
 {
+    assert(m_check_vector.size() > 0);
     return m_check_vector[random() % m_check_vector.size()];
 }
 

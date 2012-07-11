@@ -90,8 +90,7 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 
 tester = RubyTester(check_flush = check_flush,
                     checks_to_complete = options.checks,
-                    wakeup_frequency = options.wakeup_freq,
-                    num_cpus = options.num_cpus)
+                    wakeup_frequency = options.wakeup_freq)
 
 #
 # Create the M5 system.  Note that the Memory Object isn't
@@ -103,6 +102,8 @@ system = System(tester = tester, physmem = SimpleMemory())
 Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
+
+tester.num_cpus = len(system.ruby._cpu_ruby_ports)
 
 #
 # The tester is most effective when randomization is turned on and
