@@ -37,6 +37,7 @@
  * Authors: Gabe Black
  */
 
+#include <cmath>
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
 #include "sim/serialize.hh"
@@ -69,14 +70,25 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(paddr);
     UNSERIALIZE_SCALAR(vaddr);
-    UNSERIALIZE_SCALAR(logBytes);
+    //
+    // The logBytes scalar variable replaced the previous size variable.
+    // The following code maintains backwards compatibility with previous
+    // checkpoints using the old size variable.
+    //
+    if (UNSERIALIZE_OPT_SCALAR(logBytes) == false) {
+        int size;
+        UNSERIALIZE_SCALAR(size);
+        logBytes = log2(size);
+    }
     UNSERIALIZE_SCALAR(writable);
     UNSERIALIZE_SCALAR(user);
     UNSERIALIZE_SCALAR(uncacheable);
     UNSERIALIZE_SCALAR(global);
     UNSERIALIZE_SCALAR(patBit);
     UNSERIALIZE_SCALAR(noExec);
-    UNSERIALIZE_SCALAR(lruSeq);
+    if (UNSERIALIZE_OPT_SCALAR(lruSeq) == false) {
+        lruSeq = 0;
+    }
 }
 
 }
