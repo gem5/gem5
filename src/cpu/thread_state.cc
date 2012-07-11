@@ -122,6 +122,30 @@ ThreadState::initMemProxies(ThreadContext *tc)
     }
 }
 
+PortProxy &
+ThreadState::getPhysProxy()
+{
+    assert(FullSystem);
+    assert(physProxy != NULL);
+    return *physProxy;
+}
+
+FSTranslatingPortProxy &
+ThreadState::getVirtProxy()
+{
+    assert(FullSystem);
+    assert(virtProxy != NULL);
+    return *virtProxy;
+}
+
+SETranslatingPortProxy &
+ThreadState::getMemProxy()
+{
+    assert(!FullSystem);
+    assert(proxy != NULL);
+    return *proxy;
+}
+
 void
 ThreadState::profileClear()
 {

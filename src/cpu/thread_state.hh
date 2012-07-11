@@ -99,13 +99,13 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
-    PortProxy &getPhysProxy() { return *physProxy; }
+    PortProxy &getPhysProxy();
 
-    FSTranslatingPortProxy &getVirtProxy() { return *virtProxy; }
+    FSTranslatingPortProxy &getVirtProxy();
 
     Process *getProcessPtr() { return process; }
 
-    SETranslatingPortProxy &getMemProxy() { return *proxy; }
+    SETranslatingPortProxy &getMemProxy();
 
     /** Reads the number of instructions functionally executed and
      * committed.
