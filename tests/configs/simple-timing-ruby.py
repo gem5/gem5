@@ -37,6 +37,7 @@ config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 addToPath(config_root+'/configs/common')
 addToPath(config_root+'/configs/ruby')
+addToPath(config_root+'/configs/topologies')
 
 import Ruby
 import Options

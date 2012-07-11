@@ -28,6 +28,7 @@
 
 import m5
 from m5.objects import *
+m5.util.addToPath('../configs/topologies')
 
 
 nb_cores = 4

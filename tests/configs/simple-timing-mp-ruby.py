@@ -38,6 +38,7 @@ config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
 addToPath(config_root+'/configs/common')
 addToPath(config_root+'/configs/ruby')
+addToPath(config_root+'/configs/topologies')
 
 import Options
 import Ruby

@@ -4,8 +4,32 @@ sim_seconds                                  0.000206                       # Nu
 sim_ticks                                      205611                       # Number of ticks simulated
 final_tick                                     205611                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                2093129                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 221128                       # Number of bytes of host memory used
-host_seconds                                     0.10                       # Real time elapsed on the host
+host_tick_rate                                1499366                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 230800                       # Number of bytes of host memory used
+host_seconds                                     0.14                       # Real time elapsed on the host
+system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.dir_cntrl0.probeFilter.num_data_array_reads            0                       # number of data array reads
+system.dir_cntrl0.probeFilter.num_data_array_writes            0                       # number of data array writes
+system.dir_cntrl0.probeFilter.num_tag_array_reads            0                       # number of tag array reads
+system.dir_cntrl0.probeFilter.num_tag_array_writes            0                       # number of tag array writes
+system.dir_cntrl0.probeFilter.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.dir_cntrl0.probeFilter.num_data_array_stalls            0                       # number of stalls caused by data array
 
 ---------- End Simulation Statistics   ----------
