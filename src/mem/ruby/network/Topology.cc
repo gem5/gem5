@@ -79,7 +79,7 @@ Topology::Topology(const Params *p)
     if (m_nodes != params()->ext_links.size() &&
         m_nodes != params()->ext_links.size()) {
         fatal("m_nodes (%d) != ext_links vector length (%d)\n",
-              m_nodes != params()->ext_links.size());
+              m_nodes, params()->ext_links.size());
     }
 
     // analyze both the internal and external links, create data structures
