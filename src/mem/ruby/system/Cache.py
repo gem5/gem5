@@ -40,3 +40,9 @@ class RubyCache(SimObject):
     replacement_policy = Param.String("PSEUDO_LRU", "");
     start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");
     is_icache = Param.Bool(False, "is instruction only cache");
+
+    dataArrayBanks = Param.Int(1, "Number of banks for the data array")
+    tagArrayBanks = Param.Int(1, "Number of banks for the tag array")
+    dataAccessLatency = Param.Int(1, "Gem5 cycles for the data array")
+    tagAccessLatency = Param.Int(1, "Gem5 cycles for the tag array")
+    resourceStalls = Param.Bool(False, "stall if there is a resource failure")

@@ -184,6 +184,11 @@ enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   TagArrayWrite,    desc="Write access to the cache's tag array";
 }
 
+enumeration(CacheResourceType, desc="...", default="CacheResourceType_NULL") {
+  DataArray,    desc="Access to the cache's data array";
+  TagArray,     desc="Access to the cache's tag array";
+}
+
 enumeration(DirectoryRequestType, desc="...", default="DirectoryRequestType_NULL") {
   Default,    desc="Replace this with access_types passed to the Directory Ruby object";
 }

@@ -29,6 +29,7 @@
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyCacheTrace.hh"
+#include "debug/RubyResourceStalls.hh"
 #include "debug/RubyStats.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/system/CacheMemory.hh"
@@ -51,7 +52,9 @@ RubyCacheParams::create()
 }
 
 CacheMemory::CacheMemory(const Params *p)
-    : SimObject(p)
+    : SimObject(p),
+    dataArray(p->dataArrayBanks, p->dataAccessLatency, p->start_index_bit),
+    tagArray(p->tagArrayBanks, p->tagAccessLatency, p->start_index_bit)
 {
     m_cache_size = p->size;
     m_latency = p->latency;
@@ -60,6 +63,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_profiler_ptr = new CacheProfiler(name());
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
+    m_resource_stalls = p->resourceStalls;
 }
 
 void
@@ -523,4 +527,42 @@ CacheMemory::regStats() {
         .name(name() + ".num_tag_array_writes")
         .desc("number of tag array writes")
         ;
+
+    numTagArrayStalls
+        .name(name() + ".num_tag_array_stalls")
+        .desc("number of stalls caused by tag array")
+        ;
+
+    numDataArrayStalls
+        .name(name() + ".num_data_array_stalls")
+        .desc("number of stalls caused by data array")
+        ;
 }
+
+bool
+CacheMemory::checkResourceAvailable(CacheResourceType res, Address addr)
+{
+    if (!m_resource_stalls) {
+        return true;
+    }
+
+    if (res == CacheResourceType_TagArray) {
+        if (tagArray.tryAccess(addressToCacheSet(addr))) return true;
+        else {
+            DPRINTF(RubyResourceStalls, "Tag array stall on addr %s in set %d\n", addr, addressToCacheSet(addr));
+            numTagArrayStalls++;
+            return false;
+        }
+    } else if (res == CacheResourceType_DataArray) {
+        if (dataArray.tryAccess(addressToCacheSet(addr))) return true;
+        else {
+            DPRINTF(RubyResourceStalls, "Data array stall on addr %s in set %d\n", addr, addressToCacheSet(addr));
+            numDataArrayStalls++;
+            return false;
+        }
+    } else {
+        assert(false);
+        return true;
+    }
+}
+

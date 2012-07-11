@@ -1238,6 +1238,14 @@ if (!%s.areNSlotsAvailable(%s))
 ''' % (key.code, val)
                 case_sorter.append(val)
 
+            # Check all of the request_types for resource constraints
+            for request_type in request_types:
+                val = '''
+if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
+    return TransitionResult_ResourceStall;
+}
+''' % (self.ident, request_type.ident)
+                case_sorter.append(val)
 
             # Emit the code sequences in a sorted order.  This makes the
             # output deterministic (without this the output order can vary
