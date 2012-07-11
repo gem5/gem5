@@ -59,6 +59,7 @@ class RubyMemoryControl : public MemoryControl
     typedef RubyMemoryControlParams Params;
     RubyMemoryControl(const Params *p);
     void init();
+    void reset();
 
     ~RubyMemoryControl();
 

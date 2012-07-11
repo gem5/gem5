@@ -53,6 +53,7 @@ class MemoryControl :
   public:
     MemoryControl(const Params *p);
     virtual void init() = 0;
+    virtual void reset() = 0;
 
     ~MemoryControl();
 

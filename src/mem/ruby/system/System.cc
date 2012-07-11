@@ -125,6 +125,11 @@ RubySystem::registerSparseMemory(SparseMemory* s)
     m_sparse_memory_vector.push_back(s);
 }
 
+void
+RubySystem::registerMemController(MemoryControl *mc) {
+    m_memory_controller = mc;
+}
+
 RubySystem::~RubySystem()
 {
     delete m_network_ptr;
@@ -390,6 +395,8 @@ RubySystem::startup()
         delete m_cache_recorder;
         m_cache_recorder = NULL;
         m_warmup_enabled = false;
+        // reset DRAM
+        m_memory_controller->reset();
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
         // Restore curTick

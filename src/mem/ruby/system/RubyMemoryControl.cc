@@ -222,6 +222,50 @@ RubyMemoryControl::init()
         m_tfaw_count[i] = 0;
     }
 }
+void
+RubyMemoryControl::reset()
+{
+    m_msg_counter = 0;
+
+    assert(m_tFaw <= 62); // must fit in a uint64 shift register
+
+    m_total_banks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
+    m_total_ranks = m_ranks_per_dimm * m_dimms_per_channel;
+    m_refresh_period_system = m_refresh_period / m_total_banks;
+
+    assert(m_bankQueues);
+
+    assert(m_bankBusyCounter);
+
+    assert(m_oldRequest);
+
+    for (int i = 0; i < m_total_banks; i++) {
+        m_bankBusyCounter[i] = 0;
+        m_oldRequest[i] = 0;
+    }
+
+    m_busBusyCounter_Basic = 0;
+    m_busBusyCounter_Write = 0;
+    m_busBusyCounter_ReadNewRank = 0;
+    m_busBusy_WhichRank = 0;
+
+    m_roundRobin = 0;
+    m_refresh_count = 1;
+    m_need_refresh = 0;
+    m_refresh_bank = 0;
+    m_idleCount = 0;
+    m_ageCounter = 0;
+
+    // Each tfaw shift register keeps a moving bit pattern
+    // which shows when recent activates have occurred.
+    // m_tfaw_count keeps track of how many 1 bits are set
+    // in each shift register.  When m_tfaw_count is >= 4,
+    // new activates are not allowed.
+    for (int i = 0; i < m_total_ranks; i++) {
+        m_tfaw_shift[i] = 0;
+        m_tfaw_count[i] = 0;
+    }
+}
 
 RubyMemoryControl::~RubyMemoryControl()
 {
