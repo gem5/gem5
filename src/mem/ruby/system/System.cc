@@ -395,7 +395,8 @@ RubySystem::startup()
         delete m_cache_recorder;
         m_cache_recorder = NULL;
         m_warmup_enabled = false;
-        // reset DRAM
+        // reset DRAM so that it's not waiting for events on the old event
+        // queue
         m_memory_controller->reset();
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
