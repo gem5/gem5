@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2012 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
-#define __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
+#ifndef __MEM_RUBY_SYSTEM_ABSTRACT_MEMORY_CONTROL_HH__
+#define __MEM_RUBY_SYSTEM_ABSTRACT_MEMORY_CONTROL_HH__
 
 #include <iostream>
 #include <list>
@@ -39,12 +40,8 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/AbstractMemOrCache.hh"
 #include "mem/ruby/system/MemoryNode.hh"
-#include "params/RubyMemoryControl.hh"
+#include "mem/ruby/system/System.hh"
 #include "sim/sim_object.hh"
-
-// This constant is part of the definition of tFAW; see
-// the comments in header to MemoryControl.cc
-#define ACTIVATE_PER_TFAW 4
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -54,45 +51,50 @@ class MemoryControl :
     public SimObject, public Consumer, public AbstractMemOrCache
 {
   public:
-
-    typedef RubyMemoryControlParams Params;
     MemoryControl(const Params *p);
-    void init();
+    virtual void init() = 0;
 
     ~MemoryControl();
 
-    unsigned int drain(Event *de);
+    unsigned int drain(Event *de) = 0;
 
-    void wakeup();
+    virtual void wakeup() = 0;
 
-    void setConsumer(Consumer* consumer_ptr);
-    Consumer* getConsumer() { return m_consumer_ptr; };
-    void setDescription(const std::string& name) { m_description = name; };
-    std::string getDescription() { return m_description; };
+    virtual void setConsumer(Consumer* consumer_ptr) = 0;
+    virtual Consumer* getConsumer() = 0;
+    virtual void setDescription(const std::string& name) = 0;
+    virtual std::string getDescription() = 0;
 
     // Called from the directory:
-    void enqueue(const MsgPtr& message, int latency );
-    void enqueueMemRef(MemoryNode& memRef);
-    void dequeue();
-    const Message* peek();
-    MemoryNode peekNode();
-    bool isReady();
-    bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
+    virtual void enqueue(const MsgPtr& message, int latency ) = 0;
+    virtual void enqueueMemRef(MemoryNode& memRef) = 0;
+    virtual void dequeue() = 0;
+    virtual const Message* peek() = 0;
+    virtual MemoryNode peekNode() = 0;
+    virtual bool isReady() = 0;
+    virtual bool areNSlotsAvailable(int n) = 0;  // infinite queue length
 
     //// Called from L3 cache:
     //void writeBack(physical_address_t addr);
 
-    void printConfig(std::ostream& out);
-    void print(std::ostream& out) const;
-    void clearStats() const;
-    void printStats(std::ostream& out) const;
+    virtual void printConfig(std::ostream& out) = 0;
+    virtual void print(std::ostream& out) const = 0;
+    virtual void clearStats() const = 0;
+    virtual void printStats(std::ostream& out) const = 0;
+
+    virtual void regStats() {};
+
+    virtual const int getChannel(const physical_address_t addr) const = 0;
+    virtual const int getBank(const physical_address_t addr) const = 0;
+    virtual const int getRank(const physical_address_t addr) const = 0;
+    virtual const int getRow(const physical_address_t addr) const = 0;
 
     //added by SS
-    int getBanksPerRank() { return m_banks_per_rank; };
-    int getRanksPerDimm() { return m_ranks_per_dimm; };
-    int getDimmsPerChannel() { return m_dimms_per_channel; }
+    virtual int getBanksPerRank() = 0;
+    virtual int getRanksPerDimm() = 0;
+    virtual int getDimmsPerChannel() = 0;
 
-  private:
+protected:
     class MemCntrlEvent : public Event
     {
       public:
@@ -106,76 +108,7 @@ class MemoryControl :
         MemoryControl* mem_cntrl;
     };
 
-    void enqueueToDirectory(MemoryNode req, int latency);
-    int getBank(physical_address_t addr);
-    int getRank(int bank);
-    bool queueReady(int bank);
-    void issueRequest(int bank);
-    bool issueRefresh(int bank);
-    void markTfaw(int rank);
-    void executeCycle();
-
-    // Private copy constructor and assignment operator
-    MemoryControl (const MemoryControl& obj);
-    MemoryControl& operator=(const MemoryControl& obj);
-
-    // data members
-    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-    std::string m_description;
-    int m_msg_counter;
-
-    int m_mem_bus_cycle_multiplier;
-    int m_banks_per_rank;
-    int m_ranks_per_dimm;
-    int m_dimms_per_channel;
-    int m_bank_bit_0;
-    int m_rank_bit_0;
-    int m_dimm_bit_0;
-    unsigned int m_bank_queue_size;
-    int m_bank_busy_time;
-    int m_rank_rank_delay;
-    int m_read_write_delay;
-    int m_basic_bus_busy_time;
-    int m_mem_ctl_latency;
-    int m_refresh_period;
-    int m_mem_random_arbitrate;
-    int m_tFaw;
-    int m_mem_fixed_delay;
-
-    int m_total_banks;
-    int m_total_ranks;
-    int m_refresh_period_system;
-
-    // queues where memory requests live
-    std::list<MemoryNode> m_response_queue;
-    std::list<MemoryNode> m_input_queue;
-    std::list<MemoryNode>* m_bankQueues;
-
-    // Each entry indicates number of address-bus cycles until bank
-    // is reschedulable:
-    int* m_bankBusyCounter;
-    int* m_oldRequest;
-
-    uint64* m_tfaw_shift;
-    int* m_tfaw_count;
-
-    // Each of these indicates number of address-bus cycles until
-    // we can issue a new request of the corresponding type:
-    int m_busBusyCounter_Write;
-    int m_busBusyCounter_ReadNewRank;
-    int m_busBusyCounter_Basic;
-
-    int m_busBusy_WhichRank;  // which rank last granted
-    int m_roundRobin;         // which bank queue was last granted
-    int m_refresh_count;      // cycles until next refresh
-    int m_need_refresh;       // set whenever m_refresh_count goes to zero
-    int m_refresh_bank;       // which bank to refresh next
-    int m_ageCounter;         // age of old requests; to detect starvation
-    int m_idleCount;          // watchdog timer for shutting down
-
-    MemCntrlProfiler* m_profiler_ptr;
-
     MemCntrlEvent m_event;
 };
 
-#endif // __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
+#endif //   __MEM_RUBY_SYSTEM_ABSTRACT_MEMORY_CONTROL_HH__

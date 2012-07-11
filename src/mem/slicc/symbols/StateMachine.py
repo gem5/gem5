@@ -39,7 +39,7 @@ python_class_map = {"int": "Int",
                     "WireBuffer": "RubyWireBuffer",
                     "Sequencer": "RubySequencer",
                     "DirectoryMemory": "RubyDirectoryMemory",
-                    "MemoryControl": "RubyMemoryControl",
+                    "MemoryControl": "MemoryControl",
                     "DMASequencer": "DMASequencer"
                     }
 
