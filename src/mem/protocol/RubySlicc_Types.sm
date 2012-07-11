@@ -108,6 +108,7 @@ structure (Sequencer, external = "yes") {
   void checkCoherence(Address);
   void profileNack(Address, int, int, uint64);
   void evictionCallback(Address);
+  void recordRequestType(SequencerRequestType);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {
@@ -130,6 +131,7 @@ structure (DirectoryMemory, external = "yes") {
   AbstractEntry lookup(Address);
   bool isPresent(Address);
   void invalidateBlock(Address);
+  void recordRequestType(DirectoryRequestType);
 }
 
 structure(AbstractCacheEntry, primitive="yes", external = "yes") {
@@ -151,6 +153,7 @@ structure (CacheMemory, external = "yes") {
                              PrefetchBit);
 
   void setMRU(Address);
+  void recordRequestType(CacheRequestType);
 }
 
 structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
@@ -158,12 +161,13 @@ structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
 }
 
 structure (MemoryControl, inport="yes", outport="yes", external = "yes") {
-
+  void recordRequestType(CacheRequestType);
 }
 
 structure (DMASequencer, external = "yes") {
   void ackCallback();
   void dataCallback(DataBlock);
+  void recordRequestType(CacheRequestType);
 }
 
 structure (TimerTable, inport="yes", external = "yes") {

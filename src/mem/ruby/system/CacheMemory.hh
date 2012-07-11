@@ -34,6 +34,8 @@
 #include <vector>
 
 #include "base/hashmap.hh"
+#include "base/statistics.hh"
+#include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -114,6 +116,14 @@ class CacheMemory : public SimObject
 
     void clearStats() const;
     void printStats(std::ostream& out) const;
+
+    void recordRequestType(CacheRequestType requestType);
+    void regStats();
+
+    Stats::Scalar numDataArrayReads;
+    Stats::Scalar numDataArrayWrites;
+    Stats::Scalar numTagArrayReads;
+    Stats::Scalar numTagArrayWrites;
 
   private:
     // convert a Address to its location in the cache

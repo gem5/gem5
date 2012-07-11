@@ -27,6 +27,7 @@
  */
 
 #include "debug/RubyDma.hh"
+#include "debug/RubyStats.hh"
 #include "mem/protocol/SequencerMsg.hh"
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
@@ -166,6 +167,12 @@ DMASequencer::ackCallback()
 void
 DMASequencer::printConfig(std::ostream & out)
 {
+}
+
+void
+DMASequencer::recordRequestType(DMASequencerRequestType requestType) {
+    DPRINTF(RubyStats, "Recorded statistic: %s\n",
+            DMASequencerRequestType_to_string(requestType));
 }
 
 DMASequencer *

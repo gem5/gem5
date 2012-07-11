@@ -33,6 +33,7 @@
 #include <string>
 
 #include "mem/ruby/common/Address.hh"
+#include "mem/protocol/DirectoryRequestType.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/SparseMemory.hh"
@@ -65,6 +66,8 @@ class DirectoryMemory : public SimObject
 
     void print(std::ostream& out) const;
     void printStats(std::ostream& out) const;
+
+    void recordRequestType(DirectoryRequestType requestType);
 
   private:
     // Private copy constructor and assignment operator

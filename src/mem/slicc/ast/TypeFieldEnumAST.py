@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.TypeFieldAST import TypeFieldAST
-from slicc.symbols import Event, State
+from slicc.symbols import Event, State, RequestType
 
 class TypeFieldEnumAST(TypeFieldAST):
     def __init__(self, slicc, field_id, pairs_ast):
@@ -54,3 +54,10 @@ class TypeFieldEnumAST(TypeFieldAST):
                 self.error("Event declaration not part of a machine.")
             e = Event(self.symtab, self.field_id, self.location, self.pairs)
             machine.addEvent(e)
+
+        if str(type) == "RequestType":
+            if not machine:
+                self.error("RequestType declaration not part of a machine.")
+            s = RequestType(self.symtab, self.field_id, self.location,
+                           self.pairs)
+            machine.addRequestType(s)

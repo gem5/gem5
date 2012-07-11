@@ -138,6 +138,7 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
   LD,          desc="Load";
   ST,          desc="Store";
   NULL,        desc="Invalid request type";
@@ -174,6 +175,25 @@ enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
   DMA_READ,    desc="DMA READ";
   DMA_WRITE,   desc="DMA WRITE";
   NULL,        desc="null request type";
+}
+
+enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
+  DataArrayRead,    desc="Read access to the cache's data array";
+  DataArrayWrite,   desc="Write access to the cache's data array";
+  TagArrayRead,     desc="Read access to the cache's tag array";
+  TagArrayWrite,    desc="Write access to the cache's tag array";
+}
+
+enumeration(DirectoryRequestType, desc="...", default="DirectoryRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the Directory Ruby object";
+}
+
+enumeration(DMASequencerRequestType, desc="...", default="DMASequencerRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
+}
+
+enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
 }
 
 enumeration(GenericMachineType, desc="...", default="GenericMachineType_NULL") {

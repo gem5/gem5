@@ -34,6 +34,7 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/RubyRequestType.hh"
+#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/RubyPort.hh"
@@ -118,6 +119,8 @@ class Sequencer : public RubyPort, public Consumer
     void markRemoved();
     void removeRequest(SequencerRequest* request);
     void evictionCallback(const Address& address);
+
+    void recordRequestType(SequencerRequestType requestType);
 
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);

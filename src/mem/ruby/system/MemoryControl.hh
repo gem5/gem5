@@ -35,6 +35,7 @@
 #include <string>
 
 #include "mem/protocol/MemoryMsg.hh"
+#include "mem/protocol/MemoryControlRequestType.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
@@ -94,6 +95,8 @@ class MemoryControl :
     virtual int getBanksPerRank() = 0;
     virtual int getRanksPerDimm() = 0;
     virtual int getDimmsPerChannel() = 0;
+
+    virtual void recordRequestType(MemoryControlRequestType requestType);
 
 protected:
     class MemCntrlEvent : public Event

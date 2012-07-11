@@ -29,6 +29,7 @@
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyCacheTrace.hh"
+#include "debug/RubyStats.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/System.hh"
@@ -476,3 +477,50 @@ CacheMemory::isLocked(const Address& address, int context)
     return m_cache[cacheSet][loc]->m_locked == context;
 }
 
+void
+CacheMemory::recordRequestType(CacheRequestType requestType) {
+    DPRINTF(RubyStats, "Recorded statistic: %s\n",
+            CacheRequestType_to_string(requestType));
+    switch(requestType) {
+    case CacheRequestType_DataArrayRead:
+        numDataArrayReads++;
+        return;
+    case CacheRequestType_DataArrayWrite:
+        numDataArrayWrites++;
+        return;
+    case CacheRequestType_TagArrayRead:
+        numTagArrayReads++;
+        return;
+    case CacheRequestType_TagArrayWrite:
+        numTagArrayWrites++;
+        return;
+    default:
+        warn("CacheMemory access_type not found: %s",
+             CacheRequestType_to_string(requestType));
+    }
+}
+
+void
+CacheMemory::regStats() {
+    using namespace Stats;
+
+    numDataArrayReads
+        .name(name() + ".num_data_array_reads")
+        .desc("number of data array reads")
+        ;
+
+    numDataArrayWrites
+        .name(name() + ".num_data_array_writes")
+        .desc("number of data array writes")
+        ;
+
+    numTagArrayReads
+        .name(name() + ".num_tag_array_reads")
+        .desc("number of tag array reads")
+        ;
+
+    numTagArrayWrites
+        .name(name() + ".num_tag_array_writes")
+        .desc("number of tag array writes")
+        ;
+}

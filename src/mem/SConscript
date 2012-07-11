@@ -85,6 +85,7 @@ DebugFlag('RubySequencer')
 DebugFlag('RubySlicc')
 DebugFlag('RubySystem')
 DebugFlag('RubyTester')
+DebugFlag('RubyStats')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',

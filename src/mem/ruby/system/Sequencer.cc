@@ -36,6 +36,7 @@
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubySequencer.hh"
+#include "debug/RubyStats.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
@@ -729,6 +730,13 @@ Sequencer::checkCoherence(const Address& addr)
     g_system_ptr->checkGlobalCoherenceInvariant(addr);
 #endif
 }
+
+void
+Sequencer::recordRequestType(SequencerRequestType requestType) {
+    DPRINTF(RubyStats, "Recorded statistic: %s\n",
+            SequencerRequestType_to_string(requestType));
+}
+
 
 void
 Sequencer::evictionCallback(const Address& address)

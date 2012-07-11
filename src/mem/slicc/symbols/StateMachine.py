@@ -61,6 +61,7 @@ class StateMachine(Symbol):
         self.states = orderdict()
         self.events = orderdict()
         self.actions = orderdict()
+        self.request_types = orderdict()
         self.transitions = []
         self.in_ports = []
         self.functions = []
@@ -96,6 +97,10 @@ class StateMachine(Symbol):
                 action.error("    shorthand = %s" % action.short)
 
         self.actions[action.ident] = action
+
+    def addRequestType(self, request_type):
+        assert self.table is None
+        self.request_types[request_type.ident] = request_type
 
     def addTransition(self, trans):
         assert self.table is None
@@ -989,6 +994,10 @@ $c_ident::${{action.ident}}(const Address& addr)
         code = self.symtab.codeFormatter()
         ident = self.ident
 
+        outputRequest_types = True
+        if len(self.request_types) == 0:
+            outputRequest_types = False
+
         code('''
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
@@ -1003,6 +1012,12 @@ $c_ident::${{action.ident}}(const Address& addr)
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
+''')
+
+        if outputRequest_types:
+            code('''#include "mem/protocol/${ident}_RequestType.hh"''')
+
+        code('''
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
@@ -1210,6 +1225,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                 case('next_state = ${ident}_State_${ns_ident};')
 
             actions = trans.actions
+            request_types = trans.request_types
 
             # Check for resources
             case_sorter = []
@@ -1228,6 +1244,10 @@ if (!%s.areNSlotsAvailable(%s))
             # since Map's keys() on a vector of pointers is not deterministic
             for c in sorted(case_sorter):
                 case("$c")
+
+            # Record access types for this transition
+            for request_type in request_types:
+                case('recordRequestType(${ident}_RequestType_${{request_type.ident}}, addr);')
 
             # Figure out if we stall
             stall = False

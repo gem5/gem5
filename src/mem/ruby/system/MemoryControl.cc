@@ -29,6 +29,7 @@
 
 #include "base/cast.hh"
 #include "base/cprintf.hh"
+#include "debug/RubyStats.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -47,6 +48,12 @@ MemoryControl::MemoryControl(const Params *p) : SimObject(p), m_event(this)
 }
 
 MemoryControl::~MemoryControl() {};
+
+void
+MemoryControl::recordRequestType(MemoryControlRequestType request) {
+    DPRINTF(RubyStats, "Recorded request: %s\n",
+            MemoryControlRequestType_to_string(request));
+}
 
 RubyMemoryControl *
 RubyMemoryControlParams::create()

@@ -28,6 +28,7 @@
 
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
+#include "debug/RubyStats.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/System.hh"
@@ -224,6 +225,12 @@ DirectoryMemory::printStats(ostream& out) const
     if (m_use_map) {
         m_sparseMemory->printStats(out);
     }
+}
+
+void
+DirectoryMemory::recordRequestType(DirectoryRequestType requestType) {
+    DPRINTF(RubyStats, "Recorded statistic: %s\n",
+            DirectoryRequestType_to_string(requestType));
 }
 
 DirectoryMemory *
