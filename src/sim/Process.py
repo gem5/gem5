@@ -39,6 +39,14 @@ class Process(SimObject):
     system = Param.System(Parent.any, "system process will run on")
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 
+    @classmethod
+    def export_method_cxx_predecls(cls, code):
+        code('#include "sim/process.hh"')
+
+    @classmethod
+    def export_methods(cls, code):
+        code('bool map(Addr vaddr, Addr paddr, int size);')
+
 class LiveProcess(Process):
     type = 'LiveProcess'
     executable = Param.String('', "executable (overrides cmd[0] if set)")

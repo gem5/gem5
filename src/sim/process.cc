@@ -545,6 +545,14 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 
+bool
+Process::map(Addr vaddr, Addr paddr, int size)
+{
+    pTable->map(vaddr, paddr, size);
+    return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 //
 // LiveProcess member definitions
