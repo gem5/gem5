@@ -34,6 +34,6 @@ MessageBufferNode::print(std::ostream& out) const
     out << "[";
     out << m_time << ", ";
     out << m_msg_counter << ", ";
-    out << m_msgptr << "; ";
+    out << *m_msgptr << "; ";
     out << "]";
 }
