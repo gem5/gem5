@@ -29,15 +29,8 @@
 
 // Profiler function
 
-void profileStore(NodeID node, bool needCLB);
-void profileCacheCLBsize(int size, int numStaleI);
-void profileMemoryCLBsize(int size, int numStaleI);
-
 // used by 2level exclusive cache protocols
 void profile_miss(RubyRequest msg);
-
-// used by non-fast path protocols
-void profile_L1Cache_miss(RubyRequest msg, NodeID l1cacheID);
 
 // used by CMP protocols
 void profile_request(std::string L1CacheStateStr, std::string L2CacheStateStr,
@@ -55,10 +48,3 @@ void profile_average_latency_estimate(int latency);
 
 // profile the total message delay of a message across a virtual network
 void profileMsgDelay(int virtualNetwork, int delayCycles);
-
-// used by transactional-memory protocols
-void profile_transaction(int numStores);
-void profile_trans_wb();
-void profileOverflow(Address addr, MachineID mach);
-
-

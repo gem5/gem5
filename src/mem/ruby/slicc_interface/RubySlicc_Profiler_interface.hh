@@ -51,7 +51,6 @@ void profile_request(const std::string& L1CacheStateStr,
                      const std::string& directoryStateStr,
                      const std::string& requestTypeStr);
 void profile_miss(const RubyRequest& msg, NodeID id);
-void profile_L1Cache_miss(const RubyRequest& msg, NodeID id);
 void profile_token_retry(const Address& addr, AccessType type, int count);
 void profile_filter_action(int action);
 void profile_persistent_prediction(const Address& addr, AccessType type);

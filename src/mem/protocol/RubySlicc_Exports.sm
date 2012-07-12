@@ -1,6 +1,6 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -305,55 +305,6 @@ enumeration(MaskPredictorTraining, "MaskPredictorTraining_Undefined", desc="..."
   Implicit, desc="Implicit";
   Explicit, desc="Explicit";
   Both, desc="Both";
-}
-
-// Network Topologies
-enumeration(TopologyType, desc="...") {
-  CROSSBAR, desc="One node per chip, single switch crossbar";
-  HIERARCHICAL_SWITCH, desc="One node per chip, totally ordered hierarchical tree switched network";
-  TORUS_2D, desc="One node per chip, 2D torus";
-  PT_TO_PT, desc="One node per chip, Point to Point Network";
-  FILE_SPECIFIED, desc="described by the file NETWORK_FILE";
-}
-
-// DNUCA AllocationStrategy
-enumeration(AllocationStrategy, desc="...") {
-  InMiddle, desc="";
-  InInvCorners, desc="";
-  InSharedSides, desc="";
-  StaticDist, desc="";
-  RandomBank, desc="";
-  FrequencyBank, desc="";
-  FrequencyBlock, desc="";
-  LRUBlock, desc="";
-}
-
-// DNUCA SearchMechanism
-enumeration(SearchMechanism, desc="...") {
-  Perfect, desc="";
-  PartialTag, desc="";
-  BloomFilter, desc="";
-  Random, desc="";
-  None, desc="";
-}
-
-// DNUCA link type
-enumeration(LinkType, desc="...") {
-  RC_1500UM, desc="";
-  RC_2500UM, desc="";
-  TL_9000UM, desc="";
-  TL_11000UM, desc="";
-  TL_13000UM, desc="";
-  NO_ENERGY, desc="";
-  NULL, desc="";
-}
-
-// transient request type
-enumeration(TransientRequestType, desc="...", default="TransientRequestType_Undefined") {
-  Undefined, desc="";
-  OffChip, desc="";
-  OnChip, desc="";
-  LocalTransient, desc="";
 }
 
 // Request Status

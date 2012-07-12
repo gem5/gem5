@@ -38,8 +38,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/packet.hh"
 
-typedef void* RubyPortHandle;
-
 class RubyRequest : public Message
 {
   public:

@@ -31,7 +31,6 @@
 
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
-#include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"

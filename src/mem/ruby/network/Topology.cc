@@ -30,7 +30,6 @@
 
 #include "debug/RubyNetwork.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/BasicRouter.hh"

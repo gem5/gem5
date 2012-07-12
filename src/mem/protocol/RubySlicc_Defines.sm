@@ -28,7 +28,7 @@
  */
 
 // Hack, no node object since base class has them
-NodeID id, no_chip_object="yes", no_vector="yes", abstract_chip_ptr="true";
-NodeID version, no_chip_object="yes", no_vector="yes", abstract_chip_ptr="true";
-MachineID machineID, no_chip_object="yes", no_vector="yes", abstract_chip_ptr="true";
+NodeID id;
+NodeID version;
+MachineID machineID;
 

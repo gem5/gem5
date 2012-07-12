@@ -35,35 +35,15 @@
 
 #include <cassert>
 
-#include "mem/protocol/AccessType.hh"
-#include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/MachineType.hh"
-#include "mem/protocol/MessageSizeType.hh"
-#include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/System.hh"
-
-class Set;
-class NetDest;
 
 inline int
 random(int n)
 {
   return random() % n;
-}
-
-inline bool
-multicast_retry()
-{
-    if (RubySystem::getRandomization()) {
-        return (random() & 0x1);
-    } else {
-        return true;
-    }
 }
 
 inline Time
@@ -92,24 +72,6 @@ IDToInt(NodeID id)
     return nodenum;
 }
 
-inline int
-addressToInt(Address addr)
-{
-    return (int)addr.getLineAddress();
-}
-
-inline bool
-long_enough_ago(Time event)
-{
-    return ((get_time() - event) > 200);
-}
-
-inline int
-getAddThenMod(int addend1, int addend2, int modulus)
-{
-    return (addend1 + addend2) % modulus;
-}
-
 inline Time
 getTimeModInt(Time time, int modulus)
 {
@@ -127,16 +89,6 @@ getTimeMinusTime(Time t1, Time t2)
 {
     assert(t1 >= t2);
     return t1 - t2;
-}
-
-inline Time
-getPreviousDelayedCycles(Time t1, Time t2)
-{
-    if (RubySystem::getRandomization()) {  // when randomizing delayed
-        return 0;
-    } else {
-        return getTimeMinusTime(t1, t2);
-    }
 }
 
 // Return type for time_to_int is "Time" and not "int" so we get a
