@@ -1,39 +1,3 @@
-
-================ Begin RubySystem Configuration Print ================
-
-RubySystem config:
-  random_seed: 1234
-  randomization: 0
-  cycle_period: 1
-  block_size_bytes: 64
-  block_size_bits: 6
-  memory_size_bytes: 134217728
-  memory_size_bits: 27
-
-Network Configuration
----------------------
-network: SIMPLE_NETWORK
-topology: 
-
-virtual_net_0: active, ordered
-virtual_net_1: active, ordered
-virtual_net_2: active, ordered
-virtual_net_3: active, ordered
-virtual_net_4: active, ordered
-virtual_net_5: inactive
-virtual_net_6: inactive
-virtual_net_7: inactive
-virtual_net_8: inactive
-virtual_net_9: inactive
-
-
-Profiler Configuration
-----------------------
-periodic_stats_period: 1000000
-
-================ End RubySystem Configuration Print ================
-
-
 Real time: Jul/10/2012 17:16:10
 
 Profiler Stats
