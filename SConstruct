@@ -177,8 +177,8 @@ termcap = get_termcap(GetOption('use_colors'))
 # Set up the main build environment.
 #
 ########################################################################
-use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
-                 'PYTHONPATH', 'RANLIB', 'SWIG' ])
+use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
+                 'LIBRARY_PATH', 'PATH', 'PYTHONPATH', 'RANLIB', 'SWIG' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
