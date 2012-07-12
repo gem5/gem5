@@ -57,6 +57,7 @@ cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
+                funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(),
                 membus = CoherentBus(clock="500GHz", width=16))
 
@@ -73,9 +74,12 @@ for cpu in cpus:
     cpu.l1c = L1(size = '32kB', assoc = 4)
     cpu.l1c.cpu_side = cpu.test
     cpu.l1c.mem_side = system.toL2Bus.slave
-    system.funcmem.port = cpu.functional
+    system.funcbus.slave = cpu.functional
 
 system.system_port = system.membus.slave
+
+# connect reference memory to funcbus
+system.funcmem.port = system.funcbus.master
 
 # connect memory to membus
 system.physmem.port = system.membus.master

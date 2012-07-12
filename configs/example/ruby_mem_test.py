@@ -107,6 +107,7 @@ cpus = [ MemTest(atomic = False,
 
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
+                funcbus = NoncoherentBus(),
                 physmem = SimpleMemory())
 
 if options.num_dmas > 0:
@@ -141,7 +142,7 @@ for (i, cpu) in enumerate(cpus):
     # Tie the cpu memtester ports to the correct system ports
     #
     cpu.test = system.ruby._cpu_ruby_ports[i].slave
-    cpu.functional = system.funcmem.port
+    cpu.functional = system.funcbus.slave
 
     #
     # Since the memtester is incredibly bursty, increase the deadlock
@@ -160,7 +161,10 @@ for (i, dma) in enumerate(dmas):
     # Tie the dma memtester ports to the correct functional port
     # Note that the test port has already been connected to the dma_sequencer
     #
-    dma.functional = system.funcmem.port
+    dma.functional = system.funcbus.slave
+
+# connect reference memory to funcbus
+system.funcbus.master = system.funcmem.port
 
 # -----------------------
 # run simulation

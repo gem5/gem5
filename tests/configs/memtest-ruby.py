@@ -79,6 +79,7 @@ options.num_cpus = nb_cores
 # system simulated
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
+                funcbus = NoncoherentBus(),
                 physmem = SimpleMemory())
 
 Ruby.create_system(options, system)
@@ -91,7 +92,7 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
      # physmem, respectively
      #
      cpus[i].test = ruby_port.slave
-     cpus[i].functional = system.funcmem.port
+     cpus[i].functional = system.funcbus.slave
      
      #
      # Since the memtester is incredibly bursty, increase the deadlock
@@ -104,6 +105,9 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
      # the tester.
      #
      ruby_port.access_phys_mem = False
+
+# connect reference memory to funcbus
+system.funcmem.port = system.funcbus.master
 
 # -----------------------
 # run simulation

@@ -141,6 +141,7 @@ for scale in treespec[:-2]:
 
 # system simulated
 system = System(funcmem = SimpleMemory(in_addr_map = False),
+                funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(latency = "100ns"))
 
 def make_level(spec, prototypes, attach_obj, attach_port):
@@ -169,9 +170,12 @@ def make_level(spec, prototypes, attach_obj, attach_port):
           parent.cpu = objs
           for t in objs:
                t.test = getattr(attach_obj, attach_port)
-               t.functional = system.funcmem.port
+               t.functional = system.funcbus.slave
 
 make_level(treespec, prototypes, system.physmem, "port")
+
+# connect reference memory to funcbus
+system.funcbus.master = system.funcmem.port
 
 # -----------------------
 # run simulation

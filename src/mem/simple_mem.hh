@@ -54,9 +54,10 @@
 #include "params/SimpleMemory.hh"
 
 /**
- * The simple memory is a basic multi-ported memory with an infinite
- * throughput and a fixed latency, potentially with a variance added
- * to it. It uses a SimpleTimingPort to implement the timing accesses.
+ * The simple memory is a basic single-ported memory controller with
+ * an infinite throughput and a fixed latency, potentially with a
+ * variance added to it. It uses a SimpleTimingPort to implement the
+ * timing accesses.
  */
 class SimpleMemory : public AbstractMemory
 {
@@ -81,7 +82,7 @@ class SimpleMemory : public AbstractMemory
 
     };
 
-    std::vector<MemoryPort*> ports;
+    MemoryPort port;
 
     Tick lat;
     Tick lat_var;

@@ -49,24 +49,17 @@ using namespace std;
 
 SimpleMemory::SimpleMemory(const Params* p) :
     AbstractMemory(p),
-    lat(p->latency), lat_var(p->latency_var)
+    port(name() + ".port", *this), lat(p->latency), lat_var(p->latency_var)
 {
-    for (size_t i = 0; i < p->port_port_connection_count; ++i) {
-        ports.push_back(new MemoryPort(csprintf("%s-port-%d", name(), i),
-                                       *this));
-    }
 }
 
 void
 SimpleMemory::init()
 {
-    for (vector<MemoryPort*>::iterator p = ports.begin(); p != ports.end();
-         ++p) {
-        if (!(*p)->isConnected()) {
-            fatal("SimpleMemory port %s is unconnected!\n", (*p)->name());
-        } else {
-            (*p)->sendRangeChange();
-        }
+    // allow unconnected memories as this is used in several ruby
+    // systems at the moment
+    if (port.isConnected()) {
+        port.sendRangeChange();
     }
 }
 
@@ -102,22 +95,14 @@ SimpleMemory::getSlavePort(const std::string &if_name, int idx)
     if (if_name != "port") {
         return MemObject::getSlavePort(if_name, idx);
     } else {
-        if (idx >= static_cast<int>(ports.size())) {
-            fatal("SimpleMemory::getSlavePort: unknown index %d\n", idx);
-        }
-
-        return *ports[idx];
+        return port;
     }
 }
 
 unsigned int
 SimpleMemory::drain(Event *de)
 {
-    int count = 0;
-    for (vector<MemoryPort*>::iterator p = ports.begin(); p != ports.end();
-         ++p) {
-        count += (*p)->drain(de);
-    }
+    int count = port.drain(de);
 
     if (count)
         changeState(Draining);
