@@ -92,34 +92,6 @@ DirectoryMemory::~DirectoryMemory()
     }
 }
 
-void
-DirectoryMemory::printConfig(ostream& out) const
-{
-    out << "DirectoryMemory module config: " << m_name << endl
-        << "  version: " << m_version << endl
-        << "  memory_bits: " << m_size_bits << endl
-        << "  memory_size_bytes: " << m_size_bytes << endl
-        << "  memory_size_Kbytes: " << double(m_size_bytes) / (1<<10) << endl
-        << "  memory_size_Mbytes: " << double(m_size_bytes) / (1<<20) << endl
-        << "  memory_size_Gbytes: " << double(m_size_bytes) / (1<<30) << endl;
-}
-
-// Static method
-void
-DirectoryMemory::printGlobalConfig(ostream & out)
-{
-    out << "DirectoryMemory Global Config: " << endl;
-    out << "  number of directory memories: " << m_num_directories << endl;
-    if (m_num_directories > 1) {
-        out << "  number of selection bits: " << m_num_directories_bits << endl
-            << "  selection bits: " << m_numa_high_bit
-            << "-" << m_numa_high_bit-m_num_directories_bits
-            << endl;
-    }
-    out << "  total memory size bytes: " << m_total_size_bytes << endl;
-    out << "  total memory bits: " << floorLog2(m_total_size_bytes) << endl;
-}
-
 uint64
 DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
 {

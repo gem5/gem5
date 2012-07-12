@@ -65,7 +65,6 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     void printLinkStats(std::ostream& out) const;
     void printPowerStats(std::ostream& out) const;
-    void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
     // Methods used by Topology to setup the network

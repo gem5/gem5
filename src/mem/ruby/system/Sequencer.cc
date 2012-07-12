@@ -201,16 +201,6 @@ Sequencer::printProgress(ostream& out) const
 #endif
 }
 
-void
-Sequencer::printConfig(ostream& out) const
-{
-    out << "Seqeuncer config: " << m_name << endl
-        << "  controller: " << m_controller->getName() << endl
-        << "  version: " << m_version << endl
-        << "  max_outstanding_requests: " << m_max_outstanding_requests << endl
-        << "  deadlock_threshold: " << m_deadlock_threshold << endl;
-}
-
 // Insert the request on the correct request table.  Return true if
 // the entry was already present.
 RequestStatus

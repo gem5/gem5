@@ -283,54 +283,6 @@ Topology::clearStats()
     }
 }
 
-void
-Topology::printConfig(std::ostream& out) const
-{
-    if (m_print_config == false)
-        return;
-
-    assert(m_component_latencies.size() > 0);
-
-    out << "--- Begin Topology Print ---" << endl
-        << endl
-        << "Topology print ONLY indicates the _NETWORK_ latency between two "
-        << "machines" << endl
-        << "It does NOT include the latency within the machines" << endl
-        << endl;
-
-    for (int m = 0; m < MachineType_NUM; m++) {
-        int i_end = MachineType_base_count((MachineType)m);
-        for (int i = 0; i < i_end; i++) {
-            MachineID cur_mach = {(MachineType)m, i};
-            out << cur_mach << " Network Latencies" << endl;
-            for (int n = 0; n < MachineType_NUM; n++) {
-                int j_end = MachineType_base_count((MachineType)n);
-                for (int j = 0; j < j_end; j++) {
-                    MachineID dest_mach = {(MachineType)n, j};
-                    if (cur_mach == dest_mach)
-                        continue;
-
-                    int src = MachineType_base_number((MachineType)m) + i;
-                    int dst = MachineType_base_number(MachineType_NUM) +
-                        MachineType_base_number((MachineType)n) + j;
-                    int link_latency = m_component_latencies[src][dst];
-                    int intermediate_switches =
-                        m_component_inter_switches[src][dst];
-
-                    // NOTE switches are assumed to have single
-                    // cycle latency
-                    out << "  " << cur_mach << " -> " << dest_mach
-                        << " net_lat: "
-                        << link_latency + intermediate_switches << endl;
-                }
-            }
-            out << endl;
-        }
-    }
-
-    out << "--- End Topology Print ---" << endl;
-}
-
 // The following all-pairs shortest path algorithm is based on the
 // discussion from Cormen et al., Chapter 26.1.
 void

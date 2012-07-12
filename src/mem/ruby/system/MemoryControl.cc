@@ -60,5 +60,3 @@ RubyMemoryControlParams::create()
 {
     return new RubyMemoryControl(this);
 }
-
-

@@ -165,11 +165,6 @@ DMASequencer::ackCallback()
 }
 
 void
-DMASequencer::printConfig(std::ostream & out)
-{
-}
-
-void
 DMASequencer::recordRequestType(DMASequencerRequestType requestType) {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DMASequencerRequestType_to_string(requestType));

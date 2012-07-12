@@ -65,11 +65,6 @@ class GenericBloomFilter
     void writeBit(const int index, const int value);
 
     void print(std::ostream& out) const;
-    void
-    printConfig(std::ostream& out)
-    {
-        out << "GenericBloomFilter" << std::endl;
-    }
 
   private:
     AbstractBloomFilter* m_filter;

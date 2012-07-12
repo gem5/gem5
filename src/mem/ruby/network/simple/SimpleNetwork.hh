@@ -58,8 +58,6 @@ class SimpleNetwork : public Network
 
     void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(std::ostream& out) const;
-
     void reset();
 
     // returns the queue requested for the given component

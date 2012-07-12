@@ -144,11 +144,6 @@ WireBuffer::print(ostream& out) const
 }
 
 void
-WireBuffer::printConfig(ostream& out)
-{
-}
-
-void
 WireBuffer::clearStats() const
 {
 }

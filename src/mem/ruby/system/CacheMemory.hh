@@ -60,8 +60,6 @@ class CacheMemory : public SimObject
     void init();
 
     // Public Methods
-    void printConfig(std::ostream& out);
-
     // perform a cache access and see if we hit or not.  Return true on a hit.
     bool tryCacheAccess(const Address& address, RubyRequestType type,
                         DataBlock*& data_ptr);

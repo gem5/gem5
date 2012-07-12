@@ -94,13 +94,3 @@ InputUnit_d::wakeup()
         m_num_buffer_reads[vnet]++;
     }
 }
-
-void
-InputUnit_d::printConfig(ostream& out)
-{
-    out << endl;
-    out << "InputUnit Configuration" << endl;
-    out << "---------------------" << endl;
-    out << "id = " << m_id << endl;
-    out << "In link is " << m_in_link->get_id() << endl;
-}

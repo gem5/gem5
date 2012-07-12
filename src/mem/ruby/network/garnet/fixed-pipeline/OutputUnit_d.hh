@@ -52,7 +52,6 @@ class OutputUnit_d : public Consumer
     void set_credit_link(CreditLink_d *credit_link);
     void wakeup();
     flitBuffer_d* getOutQueue();
-    void printConfig(std::ostream& out);
     void update_vc(int vc, int in_port, int in_vc);
     void print(std::ostream& out) const {};
     void decrement_credit(int out_vc);

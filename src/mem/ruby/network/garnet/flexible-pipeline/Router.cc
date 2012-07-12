@@ -418,25 +418,6 @@ Router::check_arbiter_reschedule()
 }
 
 void
-Router::printConfig(ostream& out) const
-{
-    out << "[Router " << m_id << "] :: " << endl;
-    out << "[inLink - ";
-    for (int i = 0;i < m_in_link.size(); i++)
-        out << m_in_link[i]->get_id() << " - ";
-    out << "]" << endl;
-    out << "[outLink - ";
-    for (int i = 0;i < m_out_link.size(); i++)
-        out << m_out_link[i]->get_id() << " - ";
-    out << "]" << endl;
-#if 0
-    out << "---------- routing table -------------" << endl;
-    for (int i = 0; i < m_routing_table.size(); i++)
-        out << m_routing_table[i] << endl;
-#endif
-}
-
-void
 Router::print(ostream& out) const
 {
     out << "[Router]";

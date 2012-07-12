@@ -107,7 +107,6 @@ class RubySystem : public SimObject
         return m_mem_vec_ptr;
     }
 
-    static void printConfig(std::ostream& out);
     static void printStats(std::ostream& out);
     void clearStats() const;
 

@@ -54,8 +54,6 @@ class SparseMemory
     SparseMemory(int number_of_levels);
     ~SparseMemory();
 
-    void printConfig(std::ostream& out) { }
-
     bool exist(const Address& address) const;
     void add(const Address& address, AbstractEntry*);
     void remove(const Address& address);

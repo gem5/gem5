@@ -51,7 +51,6 @@ class AbstractMemOrCache
     virtual bool isReady () = 0;
     virtual MemoryNode peekNode () = 0;
     virtual bool areNSlotsAvailable (int n) = 0;
-    virtual void printConfig (std::ostream& out) = 0;
     virtual void print (std::ostream& out) const = 0;
 };
 

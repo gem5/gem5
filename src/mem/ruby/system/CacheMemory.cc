@@ -105,31 +105,6 @@ CacheMemory::~CacheMemory()
     }
 }
 
-void
-CacheMemory::printConfig(ostream& out)
-{
-    int block_size = RubySystem::getBlockSizeBytes();
-
-    out << "Cache config: " << m_cache_name << endl;
-    out << "  cache_associativity: " << m_cache_assoc << endl;
-    out << "  num_cache_sets_bits: " << m_cache_num_set_bits << endl;
-    const int cache_num_sets = 1 << m_cache_num_set_bits;
-    out << "  num_cache_sets: " << cache_num_sets << endl;
-    out << "  cache_set_size_bytes: " << cache_num_sets * block_size << endl;
-    out << "  cache_set_size_Kbytes: "
-        << double(cache_num_sets * block_size) / (1<<10) << endl;
-    out << "  cache_set_size_Mbytes: "
-        << double(cache_num_sets * block_size) / (1<<20) << endl;
-    out << "  cache_size_bytes: "
-        << cache_num_sets * block_size * m_cache_assoc << endl;
-    out << "  cache_size_Kbytes: "
-        << double(cache_num_sets * block_size * m_cache_assoc) / (1<<10)
-        << endl;
-    out << "  cache_size_Mbytes: "
-        << double(cache_num_sets * block_size * m_cache_assoc) / (1<<20)
-        << endl;
-}
-
 // convert a Address to its location in the cache
 Index
 CacheMemory::addressToCacheSet(const Address& address) const

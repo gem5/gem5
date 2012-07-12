@@ -60,7 +60,6 @@ class NetworkInterface_d : public Consumer
     void wakeup();
     void addNode(std::vector<MessageBuffer *> &inNode,
                  std::vector<MessageBuffer *> &outNode);
-    void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
     int get_vnet(int vc);
 

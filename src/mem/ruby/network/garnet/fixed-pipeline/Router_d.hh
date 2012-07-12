@@ -86,7 +86,6 @@ class Router_d : public BasicRouter
     void route_req(flit_d *t_flit, InputUnit_d* in_unit, int invc);
     void vcarb_req();
     void swarb_req();
-    void printConfig(std::ostream& out);
     void printFaultVector(std::ostream& out);
     void printAggregateFaultProbability(std::ostream& out);
 

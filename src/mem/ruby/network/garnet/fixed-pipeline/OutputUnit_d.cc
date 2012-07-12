@@ -107,13 +107,3 @@ OutputUnit_d::update_vc(int vc, int in_port, int in_vc)
     m_router->update_incredit(in_port, in_vc,
                               m_outvc_state[vc]->get_credit_count());
 }
-
-void
-OutputUnit_d::printConfig(ostream& out)
-{
-    out << endl;
-    out << "OutputUnit Configuration" << endl;
-    out << "---------------------" << endl;
-    out << "id = " << m_id << endl;
-    out << "Out link is " << m_out_link->get_id() << endl;
-}

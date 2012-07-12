@@ -69,8 +69,6 @@ class PersistentTable
     int countStarvingForAddress(const Address& addr) const;
     int countReadStarvingForAddress(const Address& addr) const;
 
-    static void printConfig(std::ostream& out) {}
-
     void print(std::ostream& out) const;
 
   private:

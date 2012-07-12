@@ -68,8 +68,6 @@ class Switch
 
     void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(std::ostream& out) const;
-
     void print(std::ostream& out) const;
 
   private:

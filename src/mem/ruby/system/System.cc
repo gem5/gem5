@@ -139,29 +139,6 @@ RubySystem::~RubySystem()
 }
 
 void
-RubySystem::printSystemConfig(ostream & out)
-{
-    out << "RubySystem config:" << endl
-        << "  random_seed: " << m_random_seed << endl
-        << "  randomization: " << m_randomization << endl
-        << "  cycle_period: " << m_clock << endl
-        << "  block_size_bytes: " << m_block_size_bytes << endl
-        << "  block_size_bits: " << m_block_size_bits << endl
-        << "  memory_size_bytes: " << m_memory_size_bytes << endl
-        << "  memory_size_bits: " << m_memory_size_bits << endl;
-}
-
-void
-RubySystem::printConfig(ostream& out)
-{
-    out << "\n================ Begin RubySystem Configuration Print ================\n\n";
-    printSystemConfig(out);
-    m_network_ptr->printConfig(out);
-    m_profiler_ptr->printConfig(out);
-    out << "\n================ End RubySystem Configuration Print ================\n\n";
-}
-
-void
 RubySystem::printStats(ostream& out)
 {
     const time_t T = time(NULL);
@@ -488,7 +465,5 @@ void
 RubyExitCallback::process()
 {
     std::ostream *os = simout.create(stats_filename);
-    RubySystem::printConfig(*os);
-    *os << endl;
     RubySystem::printStats(*os);
 }

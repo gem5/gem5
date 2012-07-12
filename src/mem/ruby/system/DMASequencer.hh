@@ -64,8 +64,6 @@ class DMASequencer : public RubyPort
     void dataCallback(const DataBlock & dblk);
     void ackCallback();
 
-    void printConfig(std::ostream & out);
-
     void recordRequestType(DMASequencerRequestType requestType);
 
   private:

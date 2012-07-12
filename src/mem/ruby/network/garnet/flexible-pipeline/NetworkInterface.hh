@@ -70,7 +70,6 @@ class NetworkInterface : public FlexibleConsumer
     void request_vc(int in_vc, int in_port, NetDest destination,
                     Time request_time);
 
-    void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
   private:

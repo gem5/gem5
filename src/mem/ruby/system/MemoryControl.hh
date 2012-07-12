@@ -76,10 +76,6 @@ class MemoryControl :
     virtual bool isReady() = 0;
     virtual bool areNSlotsAvailable(int n) = 0;  // infinite queue length
 
-    //// Called from L3 cache:
-    //void writeBack(physical_address_t addr);
-
-    virtual void printConfig(std::ostream& out) = 0;
     virtual void print(std::ostream& out) const = 0;
     virtual void clearStats() const = 0;
     virtual void printStats(std::ostream& out) const = 0;

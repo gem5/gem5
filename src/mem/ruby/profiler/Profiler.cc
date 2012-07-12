@@ -165,15 +165,6 @@ Profiler::setPeriodicStatsInterval(integer_t period)
 }
 
 void
-Profiler::printConfig(ostream& out) const
-{
-    out << endl;
-    out << "Profiler Configuration" << endl;
-    out << "----------------------" << endl;
-    out << "periodic_stats_period: " << m_stats_period << endl;
-}
-
-void
 Profiler::print(ostream& out) const
 {
     out << "[Profiler]";

@@ -55,8 +55,6 @@ class DirectoryMemory : public SimObject
     bool isSparseImplementation() { return m_use_map; }
     uint64 getSize() { return m_size_bytes; }
 
-    void printConfig(std::ostream& out) const;
-    static void printGlobalConfig(std::ostream & out);
     bool isPresent(PhysAddress address);
     AbstractEntry* lookup(PhysAddress address);
     AbstractEntry* allocate(const PhysAddress& address,

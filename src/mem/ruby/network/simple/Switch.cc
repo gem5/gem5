@@ -209,16 +209,6 @@ Switch::clearStats()
 }
 
 void
-Switch::printConfig(std::ostream& out) const
-{
-    m_perfect_switch_ptr->printConfig(out);
-    for (int i = 0; i < m_throttles.size(); i++) {
-        if (m_throttles[i] != NULL)
-            m_throttles[i]->printConfig(out);
-    }
-}
-
-void
 Switch::print(std::ostream& out) const
 {
     // FIXME printing

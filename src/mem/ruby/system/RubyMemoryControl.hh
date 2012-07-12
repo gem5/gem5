@@ -81,10 +81,6 @@ class RubyMemoryControl : public MemoryControl
     bool isReady();
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
-    //// Called from L3 cache:
-    //void writeBack(physical_address_t addr);
-
-    void printConfig(std::ostream& out);
     void print(std::ostream& out) const;
     void clearStats() const;
     void printStats(std::ostream& out) const;

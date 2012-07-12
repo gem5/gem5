@@ -43,8 +43,6 @@ class TimerTable
   public:
     TimerTable();
 
-    static void printConfig(std::ostream& out) {}
-
     void
     setConsumer(Consumer* consumer_ptr)
     {

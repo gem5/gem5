@@ -63,7 +63,6 @@ class AbstractController : public SimObject, public Consumer
 
     virtual void print(std::ostream & out) const = 0;
     virtual void printStats(std::ostream & out) const = 0;
-    virtual void printConfig(std::ostream & out) const = 0;
     virtual void wakeup() = 0;
     //  virtual void dumpStats(std::ostream & out) = 0;
     virtual void clearStats() = 0;

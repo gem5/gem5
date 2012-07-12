@@ -92,7 +92,6 @@ class Network : public SimObject
 
     virtual void printStats(std::ostream& out) const = 0;
     virtual void clearStats() = 0;
-    virtual void printConfig(std::ostream& out) const = 0;
     virtual void print(std::ostream& out) const = 0;
 
   protected:

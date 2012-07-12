@@ -86,7 +86,6 @@ class Profiler : public SimObject, public Consumer
     void printShortStats(std::ostream& out) { printStats(out, true); }
     void printTraceStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(std::ostream& out) const;
     void printResourceUsage(std::ostream& out) const;
 
     AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }

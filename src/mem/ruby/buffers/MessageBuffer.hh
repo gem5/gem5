@@ -55,7 +55,6 @@ class MessageBuffer
 
     std::string name() const { return m_name; }
 
-    static void printConfig(std::ostream& out) {}
     void
     setRecycleLatency(int recycle_latency)
     {

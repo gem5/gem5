@@ -238,11 +238,6 @@ Throttle::clearStats()
     }
 }
 
-void
-Throttle::printConfig(ostream& out) const
-{
-}
-
 double
 Throttle::getUtilization() const
 {

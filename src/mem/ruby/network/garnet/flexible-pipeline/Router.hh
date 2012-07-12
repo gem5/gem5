@@ -67,7 +67,6 @@ class Router : public BasicRouter, public FlexibleConsumer
     void vc_arbitrate();
     int get_vnet(int vc);
 
-    void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
     void init_net_ptr(GarnetNetwork* net_ptr) 

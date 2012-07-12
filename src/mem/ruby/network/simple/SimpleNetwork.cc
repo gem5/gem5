@@ -314,43 +314,10 @@ SimpleNetwork::clearStats()
 }
 
 void
-SimpleNetwork::printConfig(ostream& out) const
-{
-    out << endl;
-    out << "Network Configuration" << endl;
-    out << "---------------------" << endl;
-    out << "network: SIMPLE_NETWORK" << endl;
-    out << "topology: " << m_topology_ptr->getName() << endl;
-    out << endl;
-
-    for (int i = 0; i < m_virtual_networks; i++) {
-        out << "virtual_net_" << i << ": ";
-        if (m_in_use[i]) {
-            out << "active, ";
-            if (m_ordered[i]) {
-                out << "ordered" << endl;
-            } else {
-                out << "unordered" << endl;
-            }
-        } else {
-            out << "inactive" << endl;
-        }
-    }
-    out << endl;
-
-    for(int i = 0; i < m_switch_ptr_vector.size(); i++) {
-        m_switch_ptr_vector[i]->printConfig(out);
-    }
-
-    m_topology_ptr->printConfig(out);
-}
-
-void
 SimpleNetwork::print(ostream& out) const
 {
     out << "[SimpleNetwork]";
 }
-
 
 SimpleNetwork *
 SimpleNetworkParams::create()

@@ -50,7 +50,6 @@ class InputUnit_d : public Consumer
     ~InputUnit_d();
 
     void wakeup();
-    void printConfig(std::ostream& out);
     flitBuffer_d* getCreditQueue() { return creditQueue; }
     void print(std::ostream& out) const {};
 

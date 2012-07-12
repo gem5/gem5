@@ -244,40 +244,6 @@ GarnetNetwork::printPowerStats(ostream& out) const
 }
 
 void
-GarnetNetwork::printConfig(ostream& out) const
-{
-    out << endl;
-    out << "Network Configuration" << endl;
-    out << "---------------------" << endl;
-    out << "network: Garnet Flexible Pipeline" << endl;
-    out << "topology: " << m_topology_ptr->getName() << endl;
-    out << endl;
-
-    for (int i = 0; i < m_virtual_networks; i++) {
-        out << "virtual_net_" << i << ": ";
-        if (m_in_use[i]) {
-            out << "active, ";
-            if (m_ordered[i]) {
-                out << "ordered" << endl;
-            } else {
-                out << "unordered" << endl;
-            }
-        } else {
-            out << "inactive" << endl;
-        }
-    }
-    out << endl;
-
-    for (int i = 0; i < m_ni_ptr_vector.size(); i++) {
-        m_ni_ptr_vector[i]->printConfig(out);
-    }
-    for (int i = 0; i < m_router_ptr_vector.size(); i++) {
-        m_router_ptr_vector[i]->printConfig(out);
-    }
-    m_topology_ptr->printConfig(out);
-}
-
-void
 GarnetNetwork::print(ostream& out) const
 {
     out << "[GarnetNetwork]";

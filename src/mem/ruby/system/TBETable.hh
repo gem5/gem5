@@ -46,12 +46,6 @@ class TBETable
     {
     }
 
-    void
-    printConfig(std::ostream& out)
-    {
-        out << "TBEs_per_TBETable: " << m_number_of_TBEs << std::endl;
-    }
-
     bool isPresent(const Address& address) const;
     void allocate(const Address& address);
     void deallocate(const Address& address);

@@ -362,37 +362,6 @@ RubyMemoryControl::print(ostream& out) const
 }
 
 void
-RubyMemoryControl::printConfig(ostream& out)
-{
-    out << "Memory Control " << name() << ":" << endl;
-    out << "  Ruby cycles per memory cycle: " << m_mem_bus_cycle_multiplier
-        << endl;
-    out << "  Basic read latency: " << m_mem_ctl_latency << endl;
-    if (m_mem_fixed_delay) {
-        out << "  Fixed Latency mode:  Added cycles = " << m_mem_fixed_delay
-            << endl;
-    } else {
-        out << "  Bank busy time: " << m_bank_busy_time << " memory cycles"
-            << endl;
-        out << "  Memory channel busy time: " << m_basic_bus_busy_time << endl;
-        out << "  Dead cycles between reads to different ranks: "
-            << m_rank_rank_delay << endl;
-        out << "  Dead cycle between a read and a write: "
-            << m_read_write_delay << endl;
-        out << "  tFaw (four-activate) window: " << m_tFaw << endl;
-    }
-    out << "  Banks per rank: " << m_banks_per_rank << endl;
-    out << "  Ranks per DIMM: " << m_ranks_per_dimm << endl;
-    out << "  DIMMs per channel:  " << m_dimms_per_channel << endl;
-    out << "  LSB of bank field in address: " << m_bank_bit_0 << endl;
-    out << "  LSB of rank field in address: " << m_rank_bit_0 << endl;
-    out << "  LSB of DIMM field in address: " << m_dimm_bit_0 << endl;
-    out << "  Max size of each bank queue: " << m_bank_queue_size << endl;
-    out << "  Refresh period (within one bank): " << m_refresh_period << endl;
-    out << "  Arbitration randomness: " << m_mem_random_arbitrate << endl;
-}
-
-void
 RubyMemoryControl::clearStats() const
 {
     m_profiler_ptr->clearStats();

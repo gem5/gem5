@@ -176,20 +176,6 @@ Router_d::calculate_performance_numbers()
 }
 
 void
-Router_d::printConfig(ostream& out)
-{
-    out << name() << endl;
-    out << "[inLink - ";
-    for (int i = 0;i < m_input_unit.size(); i++)
-        out << m_input_unit[i]->get_inlink_id() << " - ";
-    out << "]" << endl;
-    out << "[outLink - ";
-    for (int i = 0;i < m_output_unit.size(); i++)
-        out << m_output_unit[i]->get_outlink_id() << " - ";
-    out << "]" << endl;
-}
-
-void
 Router_d::printFaultVector(ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;

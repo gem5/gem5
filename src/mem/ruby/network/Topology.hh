@@ -79,7 +79,6 @@ class Topology : public SimObject
     const std::string getName() { return m_name; }
     void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   protected:

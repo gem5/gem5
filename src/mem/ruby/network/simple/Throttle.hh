@@ -67,7 +67,6 @@ class Throttle : public Consumer
 
     void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(std::ostream& out) const;
     // The average utilization (a percent) since last clearStats()
     double getUtilization() const;
     int

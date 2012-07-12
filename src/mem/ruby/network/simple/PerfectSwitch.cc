@@ -334,11 +334,6 @@ PerfectSwitch::clearStats()
 }
 
 void
-PerfectSwitch::printConfig(std::ostream& out) const
-{
-}
-
-void
 PerfectSwitch::print(std::ostream& out) const
 {
     out << "[PerfectSwitch " << m_switch_id << "]";

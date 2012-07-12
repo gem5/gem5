@@ -338,14 +338,6 @@ NetworkInterface::checkReschedule()
 }
 
 void
-NetworkInterface::printConfig(std::ostream& out) const
-{
-    out << "[Network Interface " << m_id << "] - ";
-    out << "[inLink " << inNetLink->get_id() << "] - ";
-    out << "[outLink " << outNetLink->get_id() << "]" << std::endl;
-}
-
-void
 NetworkInterface::print(std::ostream& out) const
 {
     out << "[Network Interface]";
