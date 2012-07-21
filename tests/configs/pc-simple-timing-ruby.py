@@ -33,7 +33,7 @@ from Benchmarks import SysConfig
 import FSConfig
 
 m5.util.addToPath('../configs/ruby')
-m5.util.addToPath('../configs/topology')
+m5.util.addToPath('../configs/topologies')
 import Ruby
 import Options
 
