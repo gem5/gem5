@@ -135,6 +135,7 @@ namespace X86ISA {
               case TLB1GBPageInfo:
               case PerformanceInfo:*/
               default:
+                warn("x86 cpuid: unimplemented function %u", funcNum);
                 return false;
             }
         } else if(family == 0x0000) {
@@ -153,9 +154,14 @@ namespace X86ISA {
                                      0xe7d3fbff, 0x00000001);
                 break;
               default:
+                warn("x86 cpuid: unimplemented function %u", funcNum);
                 return false;
             }
+        } else {
+            warn("x86 cpuid: unknown family %#x", family);
+            return false;
         }
+
         return true;
     }
 } // namespace X86ISA
