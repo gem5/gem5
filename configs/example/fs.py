@@ -74,8 +74,8 @@ drive_mem_mode = 'atomic'
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
-TestCPUClass.clock = '2GHz'
-DriveCPUClass.clock = '2GHz'
+TestCPUClass.clock = options.clock
+DriveCPUClass.clock = options.clock
 
 if options.benchmark:
     try:

@@ -147,7 +147,7 @@ if options.cpu_type == "detailed" or options.cpu_type == "inorder":
     numThreads = len(workloads)
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
-CPUClass.clock = '2GHz'
+CPUClass.clock = options.clock
 CPUClass.numThreads = numThreads;
 
 np = options.num_cpus
