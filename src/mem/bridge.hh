@@ -213,22 +213,8 @@ class Bridge : public MemObject
          */
         void trySend();
 
-        /**
-         * Private class for scheduling sending of responses from the
-         * response queue.
-         */
-        class SendEvent : public Event
-        {
-            BridgeSlavePort& port;
-
-          public:
-            SendEvent(BridgeSlavePort& p) : port(p) {}
-            virtual void process() { port.trySend(); }
-            virtual const char *description() const { return "bridge send"; }
-        };
-
         /** Send event for the response queue. */
-        SendEvent sendEvent;
+        EventWrapper<BridgeSlavePort, &BridgeSlavePort::trySend> sendEvent;
 
       public:
 
@@ -322,22 +308,8 @@ class Bridge : public MemObject
          */
         void trySend();
 
-        /**
-         * Private class for scheduling sending of requests from the
-         * request queue.
-         */
-        class SendEvent : public Event
-        {
-            BridgeMasterPort& port;
-
-          public:
-            SendEvent(BridgeMasterPort& p) : port(p) {}
-            virtual void process() { port.trySend(); }
-            virtual const char *description() const { return "bridge send"; }
-        };
-
         /** Send event for the request queue. */
-        SendEvent sendEvent;
+        EventWrapper<BridgeMasterPort, &BridgeMasterPort::trySend> sendEvent;
 
       public:
 
