@@ -1,9 +1,6 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/n/piton/z/nate/work/m5/work/src/python/m5/main.py", line 357, in main
-    exec filecode in scope
-  File "tests/run.py", line 78, in <module>
-    execfile(joinpath(tests_root, category, mode, name, 'test.py'))
-  File "tests/quick/se/20.eio-short/test.py", line 29, in <module>
-    root.system.cpu.workload = EioProcess(file = binpath('anagram',
-NameError: name 'EioProcess' is not defined
+warn: Sockets disabled, not accepting gdb connections
+warn: Prefetch instructions in Alpha do not do anything
+warn: Prefetch instructions in Alpha do not do anything
+hack: be nice to actually delete the event here
+
+gzip: stdout: Broken pipe

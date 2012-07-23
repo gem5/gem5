@@ -1,7 +1,18 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  8 2012 15:36:31
-gem5 started May  8 2012 15:40:55
-gem5 executing on piton
+gem5 compiled Feb 29 2012 00:47:21
+gem5 started Feb 29 2012 00:51:57
+gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-atomic-mp -re tests/run.py build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-atomic-mp
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+49508 bytes wasted
+49508 bytes wasted
+49508 bytes wasted
+49508 bytes wasted
+>>>>Exiting @ tick 250015500 because a thread reached the max instruction count
