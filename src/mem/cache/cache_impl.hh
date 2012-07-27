@@ -172,7 +172,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                 // on ReadExReq we give up our copy unconditionally
                 tags->invalidateBlk(blk);
             } else if (blk->isWritable() && !pending_downgrade
-                       && !pkt->sharedAsserted()) {
+                      && !pkt->sharedAsserted() && !pkt->req->isInstFetch()) {
                 // we can give the requester an exclusive copy (by not
                 // asserting shared line) on a read request if:
                 // - we have an exclusive copy at this level (& below)
@@ -180,7 +180,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                 //   signaling another read request
                 // - no other cache above has a copy (otherwise it
                 //   would have asseretd shared line on request)
-                
+                // - we are not satisfying an instruction fetch (this
+                //   prevents dirty data in the i-cache)
+
                 if (blk->isDirty()) {
                     // special considerations if we're owner:
                     if (!deferred_response && !isTopLevel) {
