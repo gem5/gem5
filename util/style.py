@@ -78,7 +78,7 @@ def modregions(wctx, fname):
             mod_regions &= m2
     else:
         mod_regions = Regions()
-        mod_regions.add(0, len(lines))
+        mod_regions.append(0, len(lines))
 
     return mod_regions
 
