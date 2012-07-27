@@ -222,7 +222,33 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_ID_PFR1:
         return 0x00001; // !Timer | !Virti | !M Profile | !TrustZone | ARMv4
       case MISCREG_CTR:
-        return 0x86468006; // V7, 64 byte cache line, load/exclusive is exact
+        {
+            //all caches have the same line size in gem5
+            //4 byte words in ARM
+            unsigned lineSizeWords =
+                tc->getCpuPtr()->getInstPort().peerBlockSize() / 4;
+            unsigned log2LineSizeWords = 0;
+
+            while (lineSizeWords >>= 1) {
+                ++log2LineSizeWords;
+            }
+
+            CTR ctr = 0;
+            //log2 of minimun i-cache line size (words)
+            ctr.iCacheLineSize = log2LineSizeWords;
+            //b11 - gem5 uses pipt
+            ctr.l1IndexPolicy = 0x3;
+            //log2 of minimum d-cache line size (words)
+            ctr.dCacheLineSize = log2LineSizeWords;
+            //log2 of max reservation size (words)
+            ctr.erg = log2LineSizeWords;
+            //log2 of max writeback size (words)
+            ctr.cwg = log2LineSizeWords;
+            //b100 - gem5 format is ARMv7
+            ctr.format = 0x4;
+
+            return ctr;
+        }
       case MISCREG_ACTLR:
         warn("Not doing anything for miscreg ACTLR\n");
         break;
@@ -250,7 +276,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         /* For now just implement the version number.
          * Return 0 as we don't support debug architecture yet.
          */
-         return 0;
+        return 0;
       case MISCREG_DBGDSCR_INT:
         return 0;
     }

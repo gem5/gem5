@@ -529,6 +529,16 @@ namespace ArmISA
       Bitfield<31>    l2rstDISABLE_monitor;
    EndBitUnion(L2CTLR)
 
+   BitUnion32(CTR)
+      Bitfield<3,0>   iCacheLineSize;
+      Bitfield<13,4>  raz_13_4;
+      Bitfield<15,14> l1IndexPolicy;
+      Bitfield<19,16> dCacheLineSize;
+      Bitfield<23,20> erg;
+      Bitfield<27,24> cwg;
+      Bitfield<28>    raz_28;
+      Bitfield<31,29> format;
+   EndBitUnion(CTR)
 }
 
 #endif // __ARCH_ARM_MISCREGS_HH__
