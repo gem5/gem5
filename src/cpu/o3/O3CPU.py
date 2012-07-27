@@ -141,6 +141,7 @@ class DerivO3CPU(BaseCPU):
                                      warnOnlyOnLoadError=True)
             self.checker.itb = ArmTLB(size = self.itb.size)
             self.checker.dtb = ArmTLB(size = self.dtb.size)
+            self.checker.cpu_id = self.cpu_id
 
         else:
             print "ERROR: Checker only supported under ARM ISA!"
