@@ -83,9 +83,6 @@ class DmaPort : public MasterPort
     /** Number of outstanding packets the dma port has. */
     int pendingCount;
 
-    /** If a dmaAction is in progress. */
-    int actionInProgress;
-
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
     Event *drainEvent;

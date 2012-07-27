@@ -49,7 +49,7 @@
 DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff)
     : MasterPort(dev->name() + ".dma", dev), device(dev), sys(s),
       masterId(s->getMasterId(dev->name())),
-      pendingCount(0), actionInProgress(0), drainEvent(NULL),
+      pendingCount(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
       maxBackoffDelay(max_backoff), inRetry(false),
       backoffEvent(this)
