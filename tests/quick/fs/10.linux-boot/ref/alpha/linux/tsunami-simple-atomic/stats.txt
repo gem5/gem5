@@ -4,11 +4,11 @@ sim_seconds                                  1.829332                       # Nu
 sim_ticks                                1829332258000                       # Number of ticks simulated
 final_tick                               1829332258000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                4017982                       # Simulator instruction rate (inst/s)
-host_op_rate                                  4017978                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                           122425314574                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 297960                       # Number of bytes of host memory used
-host_seconds                                    14.94                       # Real time elapsed on the host
+host_inst_rate                                2962809                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2962806                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            90274916526                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 302384                       # Number of bytes of host memory used
+host_seconds                                    20.26                       # Real time elapsed on the host
 sim_insts                                    60038305                       # Number of instructions simulated
 sim_ops                                      60038305                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            857984                       # Number of bytes read from this memory
@@ -40,9 +40,9 @@ system.physmem.bw_total::tsunami.ide          1449867                       # To
 system.physmem.bw_total::total               42507908                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                        992301                       # number of replacements
 system.l2c.tagsinuse                     65424.374305                       # Cycle average of tags in use
-system.l2c.total_refs                         2433195                       # Total number of references to valid blocks.
+system.l2c.total_refs                         2433239                       # Total number of references to valid blocks.
 system.l2c.sampled_refs                       1057464                       # Sample count of references to valid blocks.
-system.l2c.avg_refs                          2.300972                       # Average number of references to valid blocks.
+system.l2c.avg_refs                          2.301014                       # Average number of references to valid blocks.
 system.l2c.warmup_cycle                     614754000                       # Cycle when the warmup percentage was hit.
 system.l2c.occ_blocks::writebacks        56309.122439                       # Average occupied blocks per requestor
 system.l2c.occ_blocks::cpu.inst           4867.329747                       # Average occupied blocks per requestor
@@ -52,20 +52,20 @@ system.l2c.occ_percent::cpu.inst             0.074270                       # Av
 system.l2c.occ_percent::cpu.data             0.064818                       # Average percentage of cache occupancy
 system.l2c.occ_percent::total                0.998297                       # Average percentage of cache occupancy
 system.l2c.ReadReq_hits::cpu.inst              906797                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu.data              811183                       # number of ReadReq hits
-system.l2c.ReadReq_hits::total                1717980                       # number of ReadReq hits
-system.l2c.Writeback_hits::writebacks          833599                       # number of Writeback hits
-system.l2c.Writeback_hits::total               833599                       # number of Writeback hits
-system.l2c.UpgradeReq_hits::cpu.data                1                       # number of UpgradeReq hits
-system.l2c.UpgradeReq_hits::total                   1                       # number of UpgradeReq hits
-system.l2c.ReadExReq_hits::cpu.data            187125                       # number of ReadExReq hits
-system.l2c.ReadExReq_hits::total               187125                       # number of ReadExReq hits
+system.l2c.ReadReq_hits::cpu.data              811229                       # number of ReadReq hits
+system.l2c.ReadReq_hits::total                1718026                       # number of ReadReq hits
+system.l2c.Writeback_hits::writebacks          833491                       # number of Writeback hits
+system.l2c.Writeback_hits::total               833491                       # number of Writeback hits
+system.l2c.UpgradeReq_hits::cpu.data                4                       # number of UpgradeReq hits
+system.l2c.UpgradeReq_hits::total                   4                       # number of UpgradeReq hits
+system.l2c.ReadExReq_hits::cpu.data            187229                       # number of ReadExReq hits
+system.l2c.ReadExReq_hits::total               187229                       # number of ReadExReq hits
 system.l2c.demand_hits::cpu.inst               906797                       # number of demand (read+write) hits
-system.l2c.demand_hits::cpu.data               998308                       # number of demand (read+write) hits
-system.l2c.demand_hits::total                 1905105                       # number of demand (read+write) hits
+system.l2c.demand_hits::cpu.data               998458                       # number of demand (read+write) hits
+system.l2c.demand_hits::total                 1905255                       # number of demand (read+write) hits
 system.l2c.overall_hits::cpu.inst              906797                       # number of overall hits
-system.l2c.overall_hits::cpu.data              998308                       # number of overall hits
-system.l2c.overall_hits::total                1905105                       # number of overall hits
+system.l2c.overall_hits::cpu.data              998458                       # number of overall hits
+system.l2c.overall_hits::total                1905255                       # number of overall hits
 system.l2c.ReadReq_misses::cpu.inst             13406                       # number of ReadReq misses
 system.l2c.ReadReq_misses::cpu.data            927640                       # number of ReadReq misses
 system.l2c.ReadReq_misses::total               941046                       # number of ReadReq misses
@@ -80,33 +80,33 @@ system.l2c.overall_misses::cpu.inst             13406                       # nu
 system.l2c.overall_misses::cpu.data           1044757                       # number of overall misses
 system.l2c.overall_misses::total              1058163                       # number of overall misses
 system.l2c.ReadReq_accesses::cpu.inst          920203                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu.data         1738823                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::total            2659026                       # number of ReadReq accesses(hits+misses)
-system.l2c.Writeback_accesses::writebacks       833599                       # number of Writeback accesses(hits+misses)
-system.l2c.Writeback_accesses::total           833599                       # number of Writeback accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::cpu.data           13                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::total              13                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.ReadExReq_accesses::cpu.data        304242                       # number of ReadExReq accesses(hits+misses)
-system.l2c.ReadExReq_accesses::total           304242                       # number of ReadExReq accesses(hits+misses)
+system.l2c.ReadReq_accesses::cpu.data         1738869                       # number of ReadReq accesses(hits+misses)
+system.l2c.ReadReq_accesses::total            2659072                       # number of ReadReq accesses(hits+misses)
+system.l2c.Writeback_accesses::writebacks       833491                       # number of Writeback accesses(hits+misses)
+system.l2c.Writeback_accesses::total           833491                       # number of Writeback accesses(hits+misses)
+system.l2c.UpgradeReq_accesses::cpu.data           16                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_accesses::total              16                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.ReadExReq_accesses::cpu.data        304346                       # number of ReadExReq accesses(hits+misses)
+system.l2c.ReadExReq_accesses::total           304346                       # number of ReadExReq accesses(hits+misses)
 system.l2c.demand_accesses::cpu.inst           920203                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::cpu.data          2043065                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::total             2963268                       # number of demand (read+write) accesses
+system.l2c.demand_accesses::cpu.data          2043215                       # number of demand (read+write) accesses
+system.l2c.demand_accesses::total             2963418                       # number of demand (read+write) accesses
 system.l2c.overall_accesses::cpu.inst          920203                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::cpu.data         2043065                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::total            2963268                       # number of overall (read+write) accesses
+system.l2c.overall_accesses::cpu.data         2043215                       # number of overall (read+write) accesses
+system.l2c.overall_accesses::total            2963418                       # number of overall (read+write) accesses
 system.l2c.ReadReq_miss_rate::cpu.inst       0.014569                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu.data       0.533487                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::total          0.353906                       # miss rate for ReadReq accesses
-system.l2c.UpgradeReq_miss_rate::cpu.data     0.923077                       # miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_miss_rate::total       0.923077                       # miss rate for UpgradeReq accesses
-system.l2c.ReadExReq_miss_rate::cpu.data     0.384947                       # miss rate for ReadExReq accesses
-system.l2c.ReadExReq_miss_rate::total        0.384947                       # miss rate for ReadExReq accesses
+system.l2c.ReadReq_miss_rate::cpu.data       0.533473                       # miss rate for ReadReq accesses
+system.l2c.ReadReq_miss_rate::total          0.353900                       # miss rate for ReadReq accesses
+system.l2c.UpgradeReq_miss_rate::cpu.data     0.750000                       # miss rate for UpgradeReq accesses
+system.l2c.UpgradeReq_miss_rate::total       0.750000                       # miss rate for UpgradeReq accesses
+system.l2c.ReadExReq_miss_rate::cpu.data     0.384815                       # miss rate for ReadExReq accesses
+system.l2c.ReadExReq_miss_rate::total        0.384815                       # miss rate for ReadExReq accesses
 system.l2c.demand_miss_rate::cpu.inst        0.014569                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::cpu.data        0.511367                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::total           0.357093                       # miss rate for demand accesses
+system.l2c.demand_miss_rate::cpu.data        0.511330                       # miss rate for demand accesses
+system.l2c.demand_miss_rate::total           0.357075                       # miss rate for demand accesses
 system.l2c.overall_miss_rate::cpu.inst       0.014569                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::cpu.data       0.511367                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::total          0.357093                       # miss rate for overall accesses
+system.l2c.overall_miss_rate::cpu.data       0.511330                       # miss rate for overall accesses
+system.l2c.overall_miss_rate::total          0.357075                       # miss rate for overall accesses
 system.l2c.blocked_cycles::no_mshrs                 0                       # number of cycles access was blocked
 system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
@@ -385,8 +385,6 @@ system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                     
 system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
-system.cpu.icache.writebacks::writebacks          108                       # number of writebacks
-system.cpu.icache.writebacks::total               108                       # number of writebacks
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.dcache.replacements                2042702                       # number of replacements
 system.cpu.dcache.tagsinuse                511.997802                       # Cycle average of tags in use

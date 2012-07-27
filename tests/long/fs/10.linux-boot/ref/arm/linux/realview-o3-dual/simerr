@@ -10,9 +10,9 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: 	instruction 'mcr bpiallis' unimplemented
 warn: LCD dual screen mode not supported
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
 warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr icialluis' unimplemented

@@ -4,11 +4,11 @@ sim_seconds                                  5.191766                       # Nu
 sim_ticks                                5191766314000                       # Number of ticks simulated
 final_tick                               5191766314000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 672863                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1291533                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            25283717995                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 405876                       # Number of bytes of host memory used
-host_seconds                                   205.34                       # Real time elapsed on the host
+host_inst_rate                                 787684                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1511929                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            29598304712                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 358992                       # Number of bytes of host memory used
+host_seconds                                   175.41                       # Real time elapsed on the host
 sim_insts                                   138165780                       # Number of instructions simulated
 sim_ops                                     265203824                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2891072                       # Number of bytes read from this memory
@@ -44,9 +44,9 @@ system.physmem.bw_total::cpu.data             1721828                       # To
 system.physmem.bw_total::total                3993388                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                         86221                       # number of replacements
 system.l2c.tagsinuse                     64766.656127                       # Cycle average of tags in use
-system.l2c.total_refs                         3491043                       # Total number of references to valid blocks.
+system.l2c.total_refs                         3490237                       # Total number of references to valid blocks.
 system.l2c.sampled_refs                        150947                       # Sample count of references to valid blocks.
-system.l2c.avg_refs                         23.127608                       # Average number of references to valid blocks.
+system.l2c.avg_refs                         23.122268                       # Average number of references to valid blocks.
 system.l2c.warmup_cycle                             0                       # Cycle when the warmup percentage was hit.
 system.l2c.occ_blocks::writebacks        50170.355166                       # Average occupied blocks per requestor
 system.l2c.occ_blocks::cpu.itb.walker        0.141198                       # Average occupied blocks per requestor
@@ -62,8 +62,8 @@ system.l2c.ReadReq_hits::cpu.itb.walker          2757                       # nu
 system.l2c.ReadReq_hits::cpu.inst              777565                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu.data             1279351                       # number of ReadReq hits
 system.l2c.ReadReq_hits::total                2065979                       # number of ReadReq hits
-system.l2c.Writeback_hits::writebacks         1542135                       # number of Writeback hits
-system.l2c.Writeback_hits::total              1542135                       # number of Writeback hits
+system.l2c.Writeback_hits::writebacks         1541329                       # number of Writeback hits
+system.l2c.Writeback_hits::total              1541329                       # number of Writeback hits
 system.l2c.UpgradeReq_hits::cpu.data              319                       # number of UpgradeReq hits
 system.l2c.UpgradeReq_hits::total                 319                       # number of UpgradeReq hits
 system.l2c.ReadExReq_hits::cpu.data            200451                       # number of ReadExReq hits
@@ -115,8 +115,8 @@ system.l2c.ReadReq_accesses::cpu.itb.walker         2762                       #
 system.l2c.ReadReq_accesses::cpu.inst          790398                       # number of ReadReq accesses(hits+misses)
 system.l2c.ReadReq_accesses::cpu.data         1307724                       # number of ReadReq accesses(hits+misses)
 system.l2c.ReadReq_accesses::total            2107190                       # number of ReadReq accesses(hits+misses)
-system.l2c.Writeback_accesses::writebacks      1542135                       # number of Writeback accesses(hits+misses)
-system.l2c.Writeback_accesses::total          1542135                       # number of Writeback accesses(hits+misses)
+system.l2c.Writeback_accesses::writebacks      1541329                       # number of Writeback accesses(hits+misses)
+system.l2c.Writeback_accesses::total          1541329                       # number of Writeback accesses(hits+misses)
 system.l2c.UpgradeReq_accesses::cpu.data         1665                       # number of UpgradeReq accesses(hits+misses)
 system.l2c.UpgradeReq_accesses::total            1665                       # number of UpgradeReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu.data        312686                       # number of ReadExReq accesses(hits+misses)
@@ -431,8 +431,6 @@ system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                     
 system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
-system.cpu.icache.writebacks::writebacks          806                       # number of writebacks
-system.cpu.icache.writebacks::total               806                       # number of writebacks
 system.cpu.icache.ReadReq_mshr_misses::cpu.inst       790411                       # number of ReadReq MSHR misses
 system.cpu.icache.ReadReq_mshr_misses::total       790411                       # number of ReadReq MSHR misses
 system.cpu.icache.demand_mshr_misses::cpu.inst       790411                       # number of demand (read+write) MSHR misses

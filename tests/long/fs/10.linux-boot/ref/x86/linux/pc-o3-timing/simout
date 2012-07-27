@@ -1,15 +1,13 @@
-Redirecting stdout to build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing/simout
-Redirecting stderr to build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 22 2012 08:05:39
-gem5 started Jul 22 2012 08:05:57
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Jul 26 2012 21:30:36
+gem5 started Jul 27 2012 00:44:18
+gem5 executing on zizzer
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing -re tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing
 warning: add_child('terminal'): child 'terminal' already has parent
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9
+info: kernel located at: /dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5172902281500 because m5_exit instruction encountered
+Exiting @ tick 5172910256500 because m5_exit instruction encountered

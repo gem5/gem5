@@ -4,31 +4,8 @@ warn: Sockets disabled, not accepting gdb connections
 warn: The clidr register always reports 0 caches.
 warn: clidr LoUIS field of 0b001 to match current ARM implementations.
 warn: The csselr register isn't implemented.
-warn: The ccsidr register isn't implemented and always reads as 0.
-warn: 	instruction 'mcr bpiallis' unimplemented
-warn: 	instruction 'mcr icialluis' unimplemented
-warn: 	instruction 'mcr dccimvac' unimplemented
-warn: 	instruction 'mcr dccmvau' unimplemented
-warn: 	instruction 'mcr icimvau' unimplemented
-warn: 5800930000: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
-warn: 5810491000: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
-warn: 5849158000: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
-warn: 5865375000: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
-warn: 6307702500: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
-warn: LCD dual screen mode not supported
-warn: 53639390500: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
-warn: 	instruction 'mcr icialluis' unimplemented
-warn: 	instruction 'mcr bpiallis' unimplemented
-warn: 2456135822500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
-warn: 2468351819500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2488200522500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2488780405500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2494975875500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
-warn: 2496192426500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
-warn: 2496193716500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
-warn: 2496816594500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2fc, checker: 0
-hack: be nice to actually delete the event here
+panic: Not supported on checker!
+ @ cycle 197694500
+[getInstPort:build/ARM/cpu/checker/cpu.hh, line 130]
+Memory Usage: 355632 KBytes
+Program aborted at cycle 197694500
