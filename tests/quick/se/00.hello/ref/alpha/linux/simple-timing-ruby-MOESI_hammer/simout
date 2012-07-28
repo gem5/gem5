@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  4 2012 11:51:44
-gem5 started Jun  4 2012 13:41:27
+gem5 compiled Jul 28 2012 11:27:37
+gem5 started Jul 28 2012 11:35:39
 gem5 executing on zizzer
 command line: build/ALPHA_MOESI_hammer/gem5.opt -d build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer -re tests/run.py build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second

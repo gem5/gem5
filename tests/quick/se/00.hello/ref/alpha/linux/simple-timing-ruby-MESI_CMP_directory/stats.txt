@@ -4,11 +4,11 @@ sim_seconds                                  0.000279                       # Nu
 sim_ticks                                      279353                       # Number of ticks simulated
 final_tick                                     279353                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  12119                       # Simulator instruction rate (inst/s)
-host_op_rate                                    12118                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 528605                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 226340                       # Number of bytes of host memory used
-host_seconds                                     0.53                       # Real time elapsed on the host
+host_inst_rate                                  24063                       # Simulator instruction rate (inst/s)
+host_op_rate                                    24061                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                1049533                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 233960                       # Number of bytes of host memory used
+host_seconds                                     0.27                       # Real time elapsed on the host
 sim_insts                                        6404                       # Number of instructions simulated
 sim_ops                                          6404                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             25656                       # Number of bytes read from this memory
@@ -33,6 +33,24 @@ system.physmem.bw_write::total               23969673                       # Wr
 system.physmem.bw_total::cpu.inst            91840789                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data            55485354                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total              147326143                       # Total bandwidth to/from this memory (bytes/s)
+system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv

@@ -4,9 +4,159 @@ sim_seconds                                  0.019129                       # Nu
 sim_ticks                                    19129199                       # Number of ticks simulated
 final_tick                                   19129199                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 171697                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 369968                       # Number of bytes of host memory used
-host_seconds                                   111.41                       # Real time elapsed on the host
+host_tick_rate                                 190724                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 378788                       # Number of bytes of host memory used
+host_seconds                                   100.30                       # Real time elapsed on the host
+system.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl4.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl4.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl4.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl4.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl4.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl4.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl4.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl4.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl4.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl4.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl4.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl4.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl4.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl4.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl4.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl5.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl5.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl5.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl5.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl5.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl5.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl5.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl5.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl5.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl5.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl5.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl5.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl5.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl5.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl5.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl5.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl5.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl5.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl6.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl6.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl6.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl6.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl6.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl6.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl6.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl6.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl6.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl6.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl6.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl6.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl6.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl6.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl6.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl6.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl6.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl6.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl7.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl7.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl7.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl7.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl7.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl7.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl7.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl7.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl7.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl7.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl7.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl7.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl7.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl7.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl7.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl7.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl7.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl7.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl1.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl1.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl1.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl1.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl1.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl1.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl1.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl1.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl1.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl1.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl1.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl2.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl2.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl2.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl2.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl2.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl2.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl2.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl2.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl2.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl2.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl2.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl2.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl2.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl2.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl2.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl2.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl2.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl2.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl3.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl3.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl3.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl3.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl3.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl3.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl3.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl3.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl3.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl3.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl3.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl3.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl3.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.l1_cntrl3.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.l1_cntrl3.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.l1_cntrl3.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.l1_cntrl3.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.l1_cntrl3.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.dir_cntrl0.probeFilter.num_data_array_reads            0                       # number of data array reads
+system.dir_cntrl0.probeFilter.num_data_array_writes            0                       # number of data array writes
+system.dir_cntrl0.probeFilter.num_tag_array_reads            0                       # number of tag array reads
+system.dir_cntrl0.probeFilter.num_tag_array_writes            0                       # number of tag array writes
+system.dir_cntrl0.probeFilter.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.dir_cntrl0.probeFilter.num_data_array_stalls            0                       # number of stalls caused by data array
 system.cpu0.num_reads                          100000                       # number of read accesses completed
 system.cpu0.num_writes                          53893                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed
