@@ -38,6 +38,7 @@ NetDest::NetDest()
 void
 NetDest::add(MachineID newElement)
 {
+    assert(bitIndex(newElement.num) < m_bits[vecIndex(newElement)].getSize());
     m_bits[vecIndex(newElement)].add(bitIndex(newElement.num));
 }
 
