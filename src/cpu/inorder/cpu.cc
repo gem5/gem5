@@ -290,7 +290,7 @@ InOrderCPU::InOrderCPU(Params *params)
         } else {
             if (tid < (ThreadID)params->workload.size()) {
                 DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
-                        tid, params->workload[tid]->prog_fname);
+                        tid, params->workload[tid]->progName());
                 thread[tid] =
                     new Thread(this, tid, params->workload[tid]);
             } else {

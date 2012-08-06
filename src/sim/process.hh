@@ -110,10 +110,7 @@ class Process : public SimObject
     Addr nxm_start;
     Addr nxm_end;
 
-    std::string prog_fname;     // file name
-
     Stats::Scalar num_syscalls;       // number of syscalls executed
-
 
   protected:
     // constructor
@@ -176,6 +173,9 @@ class Process : public SimObject
 
     // Find a free context to use
     ThreadContext *findFreeContext();
+
+    // provide program name for debug messages
+    virtual const char *progName() const { return "<unknown>"; }
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);
@@ -291,6 +291,9 @@ class LiveProcess : public Process
     inline uint64_t egid() {return __egid;}
     inline uint64_t pid() {return __pid;}
     inline uint64_t ppid() {return __ppid;}
+
+    // provide program name for debug messages
+    virtual const char *progName() const { return argv[0].c_str(); }
 
     std::string
     fullPath(const std::string &filename)

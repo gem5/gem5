@@ -571,8 +571,6 @@ LiveProcess::LiveProcess(LiveProcessParams * params, ObjectFile *_objFile)
     __pid = params->pid;
     __ppid = params->ppid;
 
-    prog_fname = params->cmd[0];
-
     // load up symbols, if any... these may be used for debugging or
     // profiling.
     if (!debugSymbolTable) {
