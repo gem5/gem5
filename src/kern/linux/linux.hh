@@ -147,6 +147,32 @@ class Linux : public OperatingSystem
         uint64_t iov_len;
     };
 
+    //@{
+    /// ioctl() command codes.
+    static const unsigned TGT_TCGETS     = 0x5401;
+    static const unsigned TGT_TCGETA     = 0x5405;
+    static const unsigned TGT_TCSETAW    = 0x5407;
+    static const unsigned TGT_FIONREAD   = 0x541B;
+    //@}
+
+    /// Return true for the ioctl codes for which we return ENOTTY
+    /// *without* printing a warning, since we know that ENOTTY is the
+    /// correct thing to return (and not just a sign that we don't
+    /// recognize the ioctl code.
+    static bool
+    isTtyReq(unsigned req)
+    {
+        switch (req) {
+          case TGT_FIONREAD:
+          case TGT_TCSETAW:
+          case TGT_TCGETS:
+          case TGT_TCGETA:
+            return true;
+          default:
+            return false;
+        }
+    }
+
 
     /// For getrusage().
     struct rusage {

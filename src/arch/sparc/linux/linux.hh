@@ -94,6 +94,35 @@ class SparcLinux : public Linux
         uint64_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;
 
+    //@{
+    /// ioctl() command codes.
+    /// These were calculated using the SPARC Linux headers on an x86
+    /// machine and thus may not be correct.  It would be good to
+    /// verify/update these values on an actual SPARC Linux machine.
+    static const unsigned TGT_TCGETA    = 0x40125401;
+    static const unsigned TGT_TCSETAW   = 0x80125403;
+    static const unsigned TGT_TCGETS    = 0x40385408;
+    static const unsigned TGT_FIONREAD  = 0x4004667f;
+    static const unsigned TGT_TIOCGETP  = 0x40067408;
+    static const unsigned TGT_TIOCSETP  = 0x80067409;
+    static const unsigned TGT_TIOCSETN  = 0x8006740a;
+    //@}
+
+    static bool
+    isTtyReq(unsigned req)
+    {
+        switch (req) {
+          case TGT_TIOCGETP:
+          case TGT_TIOCSETP:
+          case TGT_TIOCSETN:
+          case TGT_TCGETS:
+          case TGT_TCGETA:
+          case TGT_TCSETAW:
+            return true;
+          default:
+            return false;
+        }
+    }
 };
 
 class Sparc32Linux : public SparcLinux

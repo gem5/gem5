@@ -131,19 +131,34 @@ class PowerLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    /// These are for the 2.6.15 kernel. Some have changed for
-    /// later versions.
-    static const unsigned TIOCGETP_   = 0x40067408;
-    static const unsigned TIOCSETP_   = 0x80067409;
-    static const unsigned TIOCSETN_   = 0x8006740a;
-    static const unsigned TIOCSETC_   = 0x80067411;
-    static const unsigned TIOCGETC_   = 0x40067412;
-    static const unsigned FIONREAD_   = 0x4004667f;
-    static const unsigned TIOCISATTY_ = 0x2000745e;
-    static const unsigned TIOCGETS_   = 0x402c7413;
-    static const unsigned TIOCGETA_   = 0x40147417;
-    static const unsigned TCSETAW_    = 0x80147419;
+    static const unsigned TGT_TIOCGETP   = 0x40067408;
+    static const unsigned TGT_TIOCSETP   = 0x80067409;
+    static const unsigned TGT_TIOCSETN   = 0x8006740a;
+    static const unsigned TGT_TIOCSETC   = 0x80067411;
+    static const unsigned TGT_TIOCGETC   = 0x40067412;
+    static const unsigned TGT_FIONREAD   = 0x4004667f;
+    static const unsigned TGT_TCGETS     = 0x402c7413;
+    static const unsigned TGT_TCGETA     = 0x40127417;
+    static const unsigned TGT_TCSETAW    = 0x80147419; // 2.6.15 kernel
     //@}
+
+    static bool
+    isTtyReq(unsigned req)
+    {
+        switch (req) {
+          case TGT_TIOCGETP:
+          case TGT_TIOCSETP:
+          case TGT_TIOCSETN:
+          case TGT_TIOCSETC:
+          case TGT_TIOCGETC:
+          case TGT_TCGETS:
+          case TGT_TCGETA:
+          case TGT_TCSETAW:
+            return true;
+          default:
+            return false;
+        }
+    }
 };
 
 #endif // __ARCH_POWER_LINUX_LINUX_HH__

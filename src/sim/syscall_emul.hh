@@ -567,7 +567,8 @@ copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
 /// only to find out if their stdout is a tty, to determine whether to
-/// do line or block buffering.
+/// do line or block buffering.  We always claim that output fds are
+/// not TTYs to provide repeatable results.
 template <class OS>
 SyscallReturn
 ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
@@ -584,22 +585,13 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -EBADF;
     }
 
-    switch (req) {
-      case OS::TIOCISATTY_:
-      case OS::TIOCGETP_:
-      case OS::TIOCSETP_:
-      case OS::TIOCSETN_:
-      case OS::TIOCSETC_:
-      case OS::TIOCGETC_:
-      case OS::TIOCGETS_:
-      case OS::TIOCGETA_:
-      case OS::TCSETAW_:
+    if (OS::isTtyReq(req)) {
         return -ENOTTY;
-
-      default:
-        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ \n",
-              fd, req, tc->pcState());
     }
+
+    warn("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ \n",
+         fd, req, tc->pcState());
+    return -ENOTTY;
 }
 
 /// Target open() handler.

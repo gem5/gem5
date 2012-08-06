@@ -92,17 +92,31 @@ class MipsLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP_   = 0x7408;
-    static const unsigned TIOCSETP_   = 0x7409;
-    static const unsigned TIOCSETN_   = 0x740a;
-    static const unsigned TIOCSETC_   = 0x7411;
-    static const unsigned TIOCGETC_   = 0x7412;
-    static const unsigned FIONREAD_   = 0x467f;
-    static const unsigned TIOCISATTY_ = 0x5480;
-    static const unsigned TIOCGETS_   = 0x540d;
-    static const unsigned TIOCGETA_   = 0x7417;
-    static const unsigned TCSETAW_    = 0x5403; // 2.6.15 kernel
+    static const unsigned TGT_TCGETA     = 0x5401;
+    static const unsigned TGT_TCSETAW    = 0x5403;
+    static const unsigned TGT_TCGETS     = 0x540d;
+    static const unsigned TGT_FIONREAD   = 0x467f;
+    static const unsigned TGT_TIOCGETP   = 0x7408;
+    static const unsigned TGT_TIOCSETP   = 0x7409;
+    static const unsigned TGT_TIOCSETN   = 0x740a;
     //@}
+
+    static bool
+    isTtyReq(unsigned req)
+    {
+        switch (req) {
+          case TGT_TIOCGETP:
+          case TGT_TIOCSETP:
+          case TGT_TIOCSETN:
+          case TGT_FIONREAD:
+          case TGT_TCGETS:
+          case TGT_TCGETA:
+          case TGT_TCSETAW:
+            return true;
+          default:
+            return false;
+        }
+    }
 
     /// For table().
     static const int TBL_SYSINFO = 12;
