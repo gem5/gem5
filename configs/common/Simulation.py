@@ -99,6 +99,143 @@ def setWorkCountOptions(system, options):
     if options.work_cpus_checkpoint_count != None:
         system.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
 
+def findCptDir(options, maxtick, cptdir, testsys):
+    """Figures out the directory from which the checkpointed state is read.
+
+    There are two different ways in which the directories holding checkpoints
+    can be named --
+    1. cpt.<benchmark name>.<instruction count when the checkpoint was taken>
+    2. cpt.<some number, usually the tick value when the checkpoint was taken>
+
+    This function parses through the options to figure out which one of the
+    above should be used for selecting the checkpoint, and then figures out
+    the appropriate directory.
+
+    It also sets the value of the maximum tick value till which the simulation
+    will run.
+    """
+
+    from os.path import isdir, exists
+    from os import listdir
+    import re
+
+    if not isdir(cptdir):
+        fatal("checkpoint dir %s does not exist!", cptdir)
+
+    if options.at_instruction or options.simpoint:
+        inst = options.checkpoint_restore
+        if options.simpoint:
+            # assume workload 0 has the simpoint
+            if testsys.cpu[0].workload[0].simpoint == 0:
+                fatal('Unable to find simpoint')
+            inst += int(testsys.cpu[0].workload[0].simpoint)
+
+        checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % (options.bench, inst))
+        if not exists(checkpoint_dir):
+            fatal("Unable to find checkpoint directory %s", checkpoint_dir)
+    else:
+        dirs = listdir(cptdir)
+        expr = re.compile('cpt\.([0-9]*)')
+        cpts = []
+        for dir in dirs:
+            match = expr.match(dir)
+            if match:
+                cpts.append(match.group(1))
+
+        cpts.sort(lambda a,b: cmp(long(a), long(b)))
+
+        cpt_num = options.checkpoint_restore
+        if cpt_num > len(cpts):
+            fatal('Checkpoint %d not found', cpt_num)
+
+        maxtick = maxtick - int(cpts[cpt_num - 1])
+        checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
+
+    return maxtick, checkpoint_dir
+
+def scriptCheckpoints(options):
+    if options.at_instruction or options.simpoint:
+        checkpoint_inst = int(options.take_checkpoints)
+
+        # maintain correct offset if we restored from some instruction
+        if options.checkpoint_restore != None:
+            checkpoint_inst += options.checkpoint_restore
+
+        print "Creating checkpoint at inst:%d" % (checkpoint_inst)
+        exit_event = m5.simulate()
+        exit_cause = exit_event.getCause()
+        print "exit cause = %s" % exit_cause
+
+        # skip checkpoint instructions should they exist
+        while exit_cause == "checkpoint":
+            exit_event = m5.simulate()
+            exit_cause = exit_event.getCause()
+
+        if exit_cause == "a thread reached the max instruction count":
+            m5.checkpoint(joinpath(cptdir, "cpt.%s.%d" % \
+                    (options.bench, checkpoint_inst)))
+            print "Checkpoint written."
+
+    else:
+        when, period = options.take_checkpoints.split(",", 1)
+        when = int(when)
+        period = int(period)
+
+        exit_event = m5.simulate(when)
+        exit_cause = exit_event.getCause()
+        while exit_cause == "checkpoint":
+            exit_event = m5.simulate(when - m5.curTick())
+            exit_cause = exit_event.getCause()
+
+        if exit_cause == "simulate() limit reached":
+            m5.checkpoint(joinpath(cptdir, "cpt.%d"))
+            num_checkpoints += 1
+
+        sim_ticks = when
+        num_checkpoints = 0
+        max_checkpoints = options.max_checkpoints
+
+        while num_checkpoints < max_checkpoints and \
+                exit_cause == "simulate() limit reached":
+            if (sim_ticks + period) > maxtick:
+                exit_event = m5.simulate(maxtick - sim_ticks)
+                exit_cause = exit_event.getCause()
+                break
+            else:
+                exit_event = m5.simulate(period)
+                exit_cause = exit_event.getCause()
+                sim_ticks += period
+                while exit_event.getCause() == "checkpoint":
+                    exit_event = m5.simulate(sim_ticks - m5.curTick())
+                if exit_event.getCause() == "simulate() limit reached":
+                    m5.checkpoint(joinpath(cptdir, "cpt.%d"))
+                    num_checkpoints += 1
+
+    return exit_cause
+
+def benchCheckpoints(options, maxtick, cptdir):
+    if options.fast_forward:
+        m5.stats.reset()
+
+    print "**** REAL SIMULATION ****"
+    exit_event = m5.simulate(maxtick)
+    exit_cause = exit_event.getCause()
+
+    num_checkpoints = 0
+    max_checkpoints = options.max_checkpoints
+
+    while exit_cause == "checkpoint":
+        m5.checkpoint(joinpath(cptdir, "cpt.%d"))
+        num_checkpoints += 1
+        if num_checkpoints == max_checkpoints:
+            exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
+            break
+
+        exit_event = m5.simulate(maxtick - m5.curTick())
+        exit_cause = exit_event.getCause()
+
+    return exit_cause
+
 def run(options, root, testsys, cpu_class):
     if options.maxtick:
         maxtick = options.maxtick
@@ -123,7 +260,6 @@ def run(options, root, testsys, cpu_class):
         fatal("Must specify --caches when using --standard-switch")
 
     np = options.num_cpus
-    max_checkpoints = options.max_checkpoints
     switch_cpus = None
 
     if options.prog_interval:
@@ -229,45 +365,7 @@ def run(options, root, testsys, cpu_class):
 
     checkpoint_dir = None
     if options.checkpoint_restore != None:
-        from os.path import isdir, exists
-        from os import listdir
-        import re
-
-        if not isdir(cptdir):
-            fatal("checkpoint dir %s does not exist!", cptdir)
-
-        if options.at_instruction or options.simpoint:
-            inst = options.checkpoint_restore
-            if options.simpoint:
-                # assume workload 0 has the simpoint
-                if testsys.cpu[0].workload[0].simpoint == 0:
-                    fatal('Unable to find simpoint')
-                inst += int(testsys.cpu[0].workload[0].simpoint)
-
-            checkpoint_dir = joinpath(cptdir,
-                                      "cpt.%s.%s" % (options.bench, inst))
-            if not exists(checkpoint_dir):
-                fatal("Unable to find checkpoint directory %s", checkpoint_dir)
-        else:
-            dirs = listdir(cptdir)
-            expr = re.compile('cpt\.([0-9]*)')
-            cpts = []
-            for dir in dirs:
-                match = expr.match(dir)
-                if match:
-                    cpts.append(match.group(1))
-
-            cpts.sort(lambda a,b: cmp(long(a), long(b)))
-
-            cpt_num = options.checkpoint_restore
-
-            if cpt_num > len(cpts):
-                fatal('Checkpoint %d not found', cpt_num)
-
-            ## Adjust max tick based on our starting tick
-            maxtick = maxtick - int(cpts[cpt_num - 1])
-            checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
-
+        maxtick, checkpoint_dir = findCptDir(options, maxtick, cptdir, testsys)
     m5.instantiate(checkpoint_dir)
 
     if options.standard_switch or cpu_class:
@@ -310,9 +408,6 @@ def run(options, root, testsys, cpu_class):
             m5.switchCpus(switch_cpu_list1)
             m5.resume(testsys)
 
-    num_checkpoints = 0
-    exit_cause = ''
-
     # If we're taking and restoring checkpoints, use checkpoint_dir
     # option only for finding the checkpoints to restore from.  This
     # lets us test checkpointing by restoring from one set of
@@ -323,88 +418,17 @@ def run(options, root, testsys, cpu_class):
         else:
             cptdir = getcwd()
 
-    # Checkpoints being taken via the command line at <when> and at
-    # subsequent periods of <period>.  Checkpoint instructions
-    # received from the benchmark running are ignored and skipped in
-    # favor of command line checkpoint instructions.
     if options.take_checkpoints != None :
-        if options.at_instruction or options.simpoint:
-            checkpoint_inst = int(options.take_checkpoints)
+        # Checkpoints being taken via the command line at <when> and at
+        # subsequent periods of <period>.  Checkpoint instructions
+        # received from the benchmark running are ignored and skipped in
+        # favor of command line checkpoint instructions.
+        exit_cause = scriptCheckpoints(options)
+    else:
+        # If checkpoints are being taken, then the checkpoint instruction
+        # will occur in the benchmark code it self.
+        exit_cause = benchCheckpoints(options, maxtick, cptdir)
 
-            # maintain correct offset if we restored from some instruction
-            if options.checkpoint_restore != None:
-                checkpoint_inst += options.checkpoint_restore
-
-            print "Creating checkpoint at inst:%d" % (checkpoint_inst)
-            exit_event = m5.simulate()
-            print "exit cause = %s" % (exit_event.getCause())
-
-            # skip checkpoint instructions should they exist
-            while exit_event.getCause() == "checkpoint":
-                exit_event = m5.simulate()
-
-            if exit_event.getCause() == \
-                   "a thread reached the max instruction count":
-                m5.checkpoint(joinpath(cptdir, "cpt.%s.%d" % \
-                        (options.bench, checkpoint_inst)))
-                print "Checkpoint written."
-                num_checkpoints += 1
-
-            if exit_event.getCause() == "user interrupt received":
-                exit_cause = exit_event.getCause();
-        else:
-            when, period = options.take_checkpoints.split(",", 1)
-            when = int(when)
-            period = int(period)
-
-            exit_event = m5.simulate(when)
-            while exit_event.getCause() == "checkpoint":
-                exit_event = m5.simulate(when - m5.curTick())
-
-            if exit_event.getCause() == "simulate() limit reached":
-                m5.checkpoint(joinpath(cptdir, "cpt.%d"))
-                num_checkpoints += 1
-
-            sim_ticks = when
-            exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
-            while num_checkpoints < max_checkpoints and \
-                    exit_event.getCause() == "simulate() limit reached":
-                if (sim_ticks + period) > maxtick:
-                    exit_event = m5.simulate(maxtick - sim_ticks)
-                    exit_cause = exit_event.getCause()
-                    break
-                else:
-                    exit_event = m5.simulate(period)
-                    sim_ticks += period
-                    while exit_event.getCause() == "checkpoint":
-                        exit_event = m5.simulate(sim_ticks - m5.curTick())
-                    if exit_event.getCause() == "simulate() limit reached":
-                        m5.checkpoint(joinpath(cptdir, "cpt.%d"))
-                        num_checkpoints += 1
-
-            if exit_event.getCause() != "simulate() limit reached":
-                exit_cause = exit_event.getCause();
-
-    else: # no checkpoints being taken via this script
-        if options.fast_forward:
-            m5.stats.reset()
-        print "**** REAL SIMULATION ****"
-        exit_event = m5.simulate(maxtick)
-
-        while exit_event.getCause() == "checkpoint":
-            m5.checkpoint(joinpath(cptdir, "cpt.%d"))
-            num_checkpoints += 1
-            if num_checkpoints == max_checkpoints:
-                exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
-                break
-
-            exit_event = m5.simulate(maxtick - m5.curTick())
-            exit_cause = exit_event.getCause()
-
-    if exit_cause == '':
-        exit_cause = exit_event.getCause()
     print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
-
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
-
