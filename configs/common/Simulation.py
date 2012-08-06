@@ -38,45 +38,48 @@ from O3_ARM_v7a import *
 
 addToPath('../common')
 
-def setCPUClass(options):
+def getCPUClass(cpu_type):
+    """Returns the required cpu class and the mode of operation.
+    """
 
-    atomic = False
-    if options.cpu_type == "timing":
-        class TmpClass(TimingSimpleCPU): pass
-    elif options.cpu_type == "detailed" or options.cpu_type == "arm_detailed":
-        if not options.caches and not options.ruby:
-            print "O3 CPU must be used with caches"
-            sys.exit(1)
-        if options.cpu_type == "arm_detailed":
-            class TmpClass(O3_ARM_v7a_3): pass
-        else:
-            class TmpClass(DerivO3CPU): pass
-    elif options.cpu_type == "inorder":
-        if not options.caches:
-            print "InOrder CPU must be used with caches"
-            sys.exit(1)
-        class TmpClass(InOrderCPU): pass
+    if cpu_type == "timing":
+        return TimingSimpleCPU, 'timing'
+    elif cpu_type == "detailed":
+        return DerivO3CPU, 'timing'
+    elif cpu_type == "arm_detailed":
+        return O3_ARM_v7a_3, 'timing'
+    elif cpu_type == "inorder":
+        return InOrderCPU, 'timing'
     else:
-        class TmpClass(AtomicSimpleCPU): pass
-        atomic = True
+        return AtomicSimpleCPU, 'atomic'
 
+def setCPUClass(options):
+    """Returns two cpu classes and the initial mode of operation.
+
+       Restoring from a checkpoint or fast forwarding through a benchmark
+       can be done using one type of cpu, and then the actual
+       simulation can be carried out using another type. This function
+       returns these two types of cpus and the initial mode of operation
+       depending on the options provided.
+    """
+
+    if options.cpu_type == "detailed" or \
+       options.cpu_type == "arm_detailed" or \
+       options.cpu_type == "inorder" :
+        if not options.caches and not options.ruby:
+            fatal("O3/Inorder CPU must be used with caches")
+
+    TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
     CPUClass = None
-    test_mem_mode = 'atomic'
 
-    if not atomic:
-        if options.checkpoint_restore != None:
-            if options.restore_with_cpu != options.cpu_type:
-                CPUClass = TmpClass
-                class TmpClass(AtomicSimpleCPU): pass
-            else:
-                if options.restore_with_cpu != "atomic":
-                    test_mem_mode = 'timing'
-
-        elif options.fast_forward:
+    if options.checkpoint_restore != None:
+        if options.restore_with_cpu != options.cpu_type:
             CPUClass = TmpClass
-            class TmpClass(AtomicSimpleCPU): pass
-        else:
-            test_mem_mode = 'timing'
+            TmpClass, test_mem_mode = getCPUClass(options.restore_with_cpu)
+    elif options.fast_forward:
+        CPUClass = TmpClass
+        TmpClass = AtomicSimpleCPU
+        test_mem_mode = 'atomic'
 
     return (TmpClass, test_mem_mode, CPUClass)
 
