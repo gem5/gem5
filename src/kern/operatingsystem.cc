@@ -33,9 +33,10 @@
 #include "kern/operatingsystem.hh"
 
 int
-OperatingSystem::openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc)
+OperatingSystem::openSpecialFile(std::string path, LiveProcess *process,
+                                 ThreadContext *tc)
 {
-    warn("Attempting to open special file: %s. Ignorning. Simulation may"
+    warn("Attempting to open special file: %s. Ignoring. Simulation may"
             " take un-expected code path or be non-deterministic until proper"
             "  handling is implemented.\n", path.c_str());
     return -1;

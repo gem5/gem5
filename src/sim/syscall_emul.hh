@@ -640,17 +640,22 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
 
     int fd;
+    int local_errno;
     if (startswith(path, "/proc/") || startswith(path, "/system/") ||
         startswith(path, "/platform/") || startswith(path, "/sys/")) {
-        // It's a proc/sys entery and requires special handling
+        // It's a proc/sys entry and requires special handling
         fd = OS::openSpecialFile(path, process, tc);
-        return (fd == -1) ? -1 : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+        local_errno = ENOENT;
      } else {
         // open the file
         fd = open(path.c_str(), hostFlags, mode);
-        return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+        local_errno = errno;
      }
 
+    if (fd == -1)
+        return -local_errno;
+
+    return process->alloc_fd(fd, path.c_str(), hostFlags, mode, false);
 }
 
 /// Target sysinfo() handler.

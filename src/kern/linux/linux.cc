@@ -38,7 +38,8 @@
 #include "sim/system.hh"
 
 int
-Linux::openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc)
+Linux::openSpecialFile(std::string path, LiveProcess *process,
+                       ThreadContext *tc)
 {
     DPRINTF(SyscallVerbose, "Opening special file: %s\n", path.c_str());
     if (path.compare(0, 13, "/proc/meminfo") == 0) {
@@ -51,7 +52,7 @@ Linux::openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc
         return fd;
     }
 
-    warn("Attempting to open special file: %s. Ignorning. Simulation may"
+    warn("Attempting to open special file: %s. Ignoring. Simulation may"
             " take un-expected code path or be non-deterministic until proper"
             "  handling is implemented.\n", path.c_str());
     return -1;
