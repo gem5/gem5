@@ -190,15 +190,18 @@ SETranslatingPortProxy::tryReadString(std::string &str, Addr addr) const
 
     Addr vaddr = addr;
 
-    do {
+    while (true) {
         Addr paddr;
 
         if (!pTable->translate(vaddr++, paddr))
             return false;
 
         PortProxy::readBlob(paddr, &c, 1);
+        if (c == '\0')
+            break;
+
         str += c;
-    } while (c);
+    }
 
     return true;
 }
