@@ -33,6 +33,7 @@
 #define __STR_HH__
 
 #include <cctype>
+#include <cstring>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -139,5 +140,36 @@ quote(const std::string &s)
 
     return ret;
 }
+
+
+/**
+ * Return true if 's' starts with the prefix string 'prefix'.
+ */
+inline bool
+startswith(const char *s, const char *prefix)
+{
+    return (strncmp(s, prefix, strlen(prefix)) == 0);
+}
+
+
+/**
+ * Return true if 's' starts with the prefix string 'prefix'.
+ */
+inline bool
+startswith(const std::string &s, const char *prefix)
+{
+    return (s.compare(0, strlen(prefix), prefix) == 0);
+}
+
+
+/**
+ * Return true if 's' starts with the prefix string 'prefix'.
+ */
+inline bool
+startswith(const std::string &s, const std::string &prefix)
+{
+    return (s.compare(0, prefix.size(), prefix) == 0);
+}
+
 
 #endif //__STR_HH__

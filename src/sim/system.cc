@@ -51,6 +51,7 @@
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/str.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
@@ -402,8 +403,7 @@ MasterID
 System::getMasterId(std::string master_name)
 {
     // strip off system name if the string starts with it
-    if (master_name.size() > name().size() &&
-                          master_name.compare(0, name().size(), name()) == 0)
+    if (startswith(master_name, name()))
         master_name = master_name.erase(0, name().size() + 1);
 
     // CPUs in switch_cpus ask for ids again after switching

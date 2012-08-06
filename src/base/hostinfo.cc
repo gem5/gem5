@@ -45,6 +45,7 @@
 #include <string>
 
 #include "base/misc.hh"
+#include "base/str.hh"
 #include "base/types.hh"
 
 using namespace std;
@@ -77,7 +78,7 @@ procInfo(const char *filename, const char *target)
 
     while (fp && !feof(fp) && !done) {
         if (fgets(line, 80, fp)) {
-            if (strncmp(line, target, strlen(target)) == 0) {
+            if (startswith(line, target)) {
                 snprintf(format, sizeof(format), "%s %%ld", target);
                 sscanf(line, format, &usage);
 
