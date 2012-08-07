@@ -93,30 +93,8 @@ class ArmLinux : public Linux
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
     static const unsigned TGT_MAP_FIXED     = 0x10;
 
-    //@{
-    /// For getrusage().
-    static const int TGT_RUSAGE_SELF = 0;
-    static const int TGT_RUSAGE_CHILDREN = -1;
-    static const int TGT_RUSAGE_BOTH = -2;
-    //@}
-
     /// For table().
     static const int TBL_SYSINFO = 12;
-
-    /// Resource enumeration for getrlimit().
-    enum rlimit_resources {
-        TGT_RLIMIT_CPU = 0,
-        TGT_RLIMIT_FSIZE = 1,
-        TGT_RLIMIT_DATA = 2,
-        TGT_RLIMIT_STACK = 3,
-        TGT_RLIMIT_CORE = 4,
-        TGT_RLIMIT_RSS = 5,
-        TGT_RLIMIT_NPROC = 6,
-        TGT_RLIMIT_NOFILE = 7,
-        TGT_RLIMIT_MEMLOCK = 8,
-        TGT_RLIMIT_AS = 9,
-        TGT_RLIMIT_LOCKS = 10
-    };
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit {

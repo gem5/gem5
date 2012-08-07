@@ -167,6 +167,9 @@ class Sparc32Linux : public SparcLinux
         uint32_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;   
 
+    /// Resource constants for getrlimit() (overide some generics).
+    static const unsigned TGT_RLIMIT_NPROC = 7;
+    static const unsigned TGT_RLIMIT_NOFILE = 6;
 };
 
 #endif

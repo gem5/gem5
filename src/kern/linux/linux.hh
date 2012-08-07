@@ -174,7 +174,30 @@ class Linux : public OperatingSystem
     }
 
 
+    /// Resource constants for getrlimit().
+    static const unsigned TGT_RLIMIT_CPU = 0;
+    static const unsigned TGT_RLIMIT_FSIZE = 1;
+    static const unsigned TGT_RLIMIT_DATA = 2;
+    static const unsigned TGT_RLIMIT_STACK = 3;
+    static const unsigned TGT_RLIMIT_CORE = 4;
+    static const unsigned TGT_RLIMIT_RSS = 5;
+    static const unsigned TGT_RLIMIT_NPROC = 6;
+    static const unsigned TGT_RLIMIT_NOFILE = 7;
+    static const unsigned TGT_RLIMIT_MEMLOCK = 8;
+    static const unsigned TGT_RLIMIT_AS = 9;
+    static const unsigned TGT_RLIMIT_LOCKS = 10;
+    static const unsigned TGT_RLIMIT_SIGPENDING = 11;
+    static const unsigned TGT_RLIMIT_MSGQUEUE = 12;
+    static const unsigned TGT_RLIMIT_NICE = 13;
+    static const unsigned TGT_RLIMIT_RTPRIO = 14;
+    static const unsigned TGT_RLIMIT_RTTIME = 15;
+    static const unsigned TGT_RLIM_NLIMITS = 16;
+
     /// For getrusage().
+    static const int TGT_RUSAGE_SELF     = 0;
+    static const int TGT_RUSAGE_CHILDREN = -1;
+    static const int TGT_RUSAGE_BOTH     = -2;
+
     struct rusage {
         struct timeval ru_utime;        //!< user time used
         struct timeval ru_stime;        //!< system time used

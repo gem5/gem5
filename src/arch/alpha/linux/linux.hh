@@ -84,13 +84,6 @@ class AlphaLinux : public Linux
     //@}
 
     //@{
-    /// For getrusage().
-    static const int TGT_RUSAGE_SELF     = 0;
-    static const int TGT_RUSAGE_CHILDREN = -1;
-    static const int TGT_RUSAGE_BOTH     = -2;
-    //@}
-
-    //@{
     /// For setsysinfo().
     static const unsigned SSI_IEEE_FP_CONTROL = 14; //!< ieee_set_fp_control()
     //@}
@@ -129,21 +122,11 @@ class AlphaLinux : public Linux
     /// For table().
     static const int TBL_SYSINFO = 12;
 
-    /// Resource enumeration for getrlimit().
-    enum rlimit_resources {
-        TGT_RLIMIT_CPU = 0,
-        TGT_RLIMIT_FSIZE = 1,
-        TGT_RLIMIT_DATA = 2,
-        TGT_RLIMIT_STACK = 3,
-        TGT_RLIMIT_CORE = 4,
-        TGT_RLIMIT_RSS = 5,
-        TGT_RLIMIT_NOFILE = 6,
-        TGT_RLIMIT_AS = 7,
-        TGT_RLIMIT_VMEM = 7,
-        TGT_RLIMIT_NPROC = 8,
-        TGT_RLIMIT_MEMLOCK = 9,
-        TGT_RLIMIT_LOCKS = 10
-    };
+    /// Resource constants for getrlimit() (overide some generics).
+    static const unsigned TGT_RLIMIT_NPROC = 8;
+    static const unsigned TGT_RLIMIT_AS = 7;
+    static const unsigned TGT_RLIMIT_NOFILE = 6;
+    static const unsigned TGT_RLIMIT_MEMLOCK = 9;
    
     typedef struct {
        int64_t  uptime;    /* Seconds since boot */
