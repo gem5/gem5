@@ -111,7 +111,9 @@ System::System(Params *p)
     if (FullSystem) {
         if (params()->kernel == "") {
             inform("No kernel set for full system simulation. "
-                    "Assuming you know what you're doing if not SPARC ISA\n");
+                   "Assuming you know what you're doing\n");
+
+            kernel = NULL;
         } else {
             // Get the kernel code
             kernel = createObjectFile(params()->kernel);
