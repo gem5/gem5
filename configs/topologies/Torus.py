@@ -31,9 +31,9 @@
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import BaseTopology
+from BaseTopology import SimpleTopology
 
-class Torus(BaseTopology):
+class Torus(SimpleTopology):
     description='Torus'
 
     def __init__(self, controllers):

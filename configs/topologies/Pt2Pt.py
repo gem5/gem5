@@ -31,9 +31,9 @@
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import BaseTopology
+from BaseTopology import SimpleTopology
 
-class Pt2Pt(BaseTopology):
+class Pt2Pt(SimpleTopology):
     description='Pt2Pt'
 
     def __init__(self, controllers):

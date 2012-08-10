@@ -29,9 +29,9 @@
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import BaseTopology
+from BaseTopology import SimpleTopology
 
-class Mesh(BaseTopology):
+class Mesh(SimpleTopology):
     description='Mesh'
 
     def __init__(self, controllers):

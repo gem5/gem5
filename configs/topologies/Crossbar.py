@@ -29,13 +29,10 @@
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import BaseTopology
+from BaseTopology import SimpleTopology
 
-class Crossbar(BaseTopology):
+class Crossbar(SimpleTopology):
     description='Crossbar'
-
-    def __init__(self, controllers):
-        self.nodes = controllers
 
     def makeTopology(self, options, IntLink, ExtLink, Router):
         # Create an individual router for each controller plus one more for the
@@ -53,4 +50,3 @@ class Crossbar(BaseTopology):
                         for i in range(len(self.nodes))]
 
         return routers, int_links, ext_links
-

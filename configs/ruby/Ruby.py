@@ -136,20 +136,23 @@ def create_system(options, system, piobus = None, dma_ports = []):
         class IntLinkClass(SimpleIntLink): pass
         class ExtLinkClass(SimpleExtLink): pass
         class RouterClass(BasicRouter): pass
-    
+
     #
     # Important: the topology must be instantiated before the network and after
     # the controllers. Hence the separation between topology definition and
-    # instantiation. TopologyCreator is in src/mem/ruby/network/topologies/.
+    # instantiation.
     #
-    from TopologyCreator import instantiateTopology
-    try:
-        net_topology = instantiateTopology(topology, options, \
-                                           IntLinkClass, ExtLinkClass, \
-                                           RouterClass)
-    except:
-        print "Error: could not make topology %s" % options.topology
-        raise
+    # gem5 SimObject defined in src/mem/ruby/network/Network.py
+    net_topology = Topology()
+    net_topology.description = topology.description
+
+    routers, int_links, ext_links = topology.makeTopology(options,
+                                    IntLinkClass, ExtLinkClass, RouterClass)
+
+    net_topology.routers = routers
+    net_topology.int_links = int_links
+    net_topology.ext_links = ext_links
+
 
     if options.network_fault_model:
         assert(options.garnet_network == "fixed")
@@ -162,7 +165,7 @@ def create_system(options, system, piobus = None, dma_ports = []):
     #
     # Loop through the directory controlers.
     # Determine the total memory size of the ruby system and verify it is equal
-    # to physmem.  However, if Ruby memory is using sparse memory in SE 
+    # to physmem.  However, if Ruby memory is using sparse memory in SE
     # mode, then the system should not back-up the memory state with
     # the Memory Vector and thus the memory size bytes should stay at 0.
     # Also set the numa bits to the appropriate values.
@@ -180,11 +183,11 @@ def create_system(options, system, piobus = None, dma_ports = []):
             numa_bit = dir_bits + 5
         else:
             numa_bit = 6
-        
+
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
         dir_cntrl.directory.numa_high_bit = numa_bit
-        
+
     phys_mem_size = 0
     for mem in system.memories.unproxy(system):
         phys_mem_size += long(mem.range.second) - long(mem.range.first) + 1

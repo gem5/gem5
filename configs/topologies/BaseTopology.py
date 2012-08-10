@@ -26,6 +26,7 @@
 #
 # Authors: Jason Power
 
+import m5
 
 class BaseTopology(object):
     description = "BaseTopology"
@@ -38,14 +39,28 @@ class BaseTopology(object):
         """
 
     def makeTopology(self, options, IntLink, ExtLink, Router):
-        """ Called from src/mem/ruby/network/topologies/TopologyCreatory.py
+        """ Called from configs/ruby/Ruby.py
             The return value is ( list(Router), list(IntLink), list(ExtLink))
             The API of this function cannot change when subclassing!!
             Any additional information needed to create this topology should
             be passed into the constructor when it's instantiated in
             configs/ruby/<protocol>.py
         """
-        print "BaseTopology should have been overridden in a sub class!!"
-        import sys
-        sys.exit(1)
+        m5.util.fatal("BaseTopology should have been overridden!!")
 
+class SimpleTopology(BaseTopology):
+    """ Provides methods needed for the topologies included in Ruby before
+        topology changes.
+        These topologies are "simple" in the sense that they only use a flat
+        list of controllers to construct the topology.
+    """
+    description = "SimpleTopology"
+
+    def __init__(self, controllers):
+        self.nodes = controllers
+
+    def addController(self, controller):
+        self.nodes.append(controller)
+
+    def __len__(self):
+        return len(self.nodes)
