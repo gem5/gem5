@@ -82,6 +82,12 @@ MasterPort::getSlavePort() const
 }
 
 void
+MasterPort::unBind()
+{
+    _slavePort = NULL;
+}
+
+void
 MasterPort::bind(SlavePort& slave_port)
 {
     // master port keeps track of the slave port
@@ -164,6 +170,12 @@ SlavePort::SlavePort(const std::string& name, MemObject* owner, PortID id)
 
 SlavePort::~SlavePort()
 {
+}
+
+void
+SlavePort::unBind()
+{
+    _masterPort = NULL;
 }
 
 void

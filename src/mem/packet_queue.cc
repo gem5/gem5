@@ -41,6 +41,7 @@
  *          Andreas Hansson
  */
 
+#include "debug/Drain.hh"
 #include "debug/PacketQueue.hh"
 #include "mem/packet_queue.hh"
 
@@ -168,7 +169,9 @@ PacketQueue::scheduleSend(Tick time)
             em.schedule(&sendEvent, std::max(nextReady, curTick() + 1));
     } else {
         // no more to send, so if we're draining, we may be done
-        if (drainEvent && !sendEvent.scheduled()) {
+        if (drainEvent && transmitList.empty() && !sendEvent.scheduled()) {
+            DPRINTF(Drain, "PacketQueue done draining,"
+                    "processing drain event\n");
             drainEvent->process();
             drainEvent = NULL;
         }
@@ -201,6 +204,7 @@ PacketQueue::drain(Event *de)
 {
     if (transmitList.empty() && !sendEvent.scheduled())
         return 0;
+    DPRINTF(Drain, "PacketQueue not drained\n");
     drainEvent = de;
     return 1;
 }

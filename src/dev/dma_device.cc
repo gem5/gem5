@@ -43,6 +43,7 @@
 
 #include "base/chunk_generator.hh"
 #include "debug/DMA.hh"
+#include "debug/Drain.hh"
 #include "dev/dma_device.hh"
 #include "sim/system.hh"
 
@@ -103,7 +104,7 @@ DmaPort::recvTimingResp(PacketPtr pkt)
         delete pkt->req;
         delete pkt;
 
-        if (pendingCount == 0 && drainEvent) {
+        if (pendingCount == 0 && transmitList.empty() && drainEvent) {
             drainEvent->process();
             drainEvent = NULL;
         }
@@ -142,9 +143,10 @@ DmaDevice::drain(Event *de)
 unsigned int
 DmaPort::drain(Event *de)
 {
-    if (pendingCount == 0)
+    if (transmitList.empty() && pendingCount == 0)
         return 0;
     drainEvent = de;
+    DPRINTF(Drain, "DmaPort not drained\n");
     return 1;
 }
 
@@ -182,8 +184,6 @@ void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag)
 {
-    assert(device->getState() == SimObject::Running);
-
     DmaReqState *reqState = new DmaReqState(event, size, delay);
 
 
@@ -287,7 +287,8 @@ DmaPort::sendDma()
         assert(pendingCount >= 0);
         delete pkt;
 
-        if (pendingCount == 0 && drainEvent) {
+        if (pendingCount == 0 && transmitList.empty() && drainEvent) {
+            DPRINTF(Drain, "DmaPort done draining, processing drain event\n");
             drainEvent->process();
             drainEvent = NULL;
         }

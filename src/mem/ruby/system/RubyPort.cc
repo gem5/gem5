@@ -41,6 +41,7 @@
 
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
+#include "debug/Drain.hh"
 #include "debug/Ruby.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -524,8 +525,9 @@ RubyPort::testDrainComplete()
     //If we weren't able to drain before, we might be able to now.
     if (drainEvent != NULL) {
         unsigned int drainCount = getDrainCount(drainEvent);
-        DPRINTF(Config, "Drain count: %u\n", drainCount);
+        DPRINTF(Drain, "Drain count: %u\n", drainCount);
         if (drainCount == 0) {
+            DPRINTF(Drain, "RubyPort done draining, processing drain event\n");
             drainEvent->process();
             // Clear the drain event once we're done with it.
             drainEvent = NULL;
@@ -584,6 +586,7 @@ RubyPort::drain(Event *de)
     if (count != 0) {
         drainEvent = de;
 
+        DPRINTF(Drain, "RubyPort not drained\n");
         changeState(SimObject::Draining);
         return count;
     }

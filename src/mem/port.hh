@@ -140,6 +140,7 @@ class MasterPort : public Port
                PortID id = InvalidPortID);
     virtual ~MasterPort();
 
+    void unBind();
     void bind(SlavePort& slave_port);
     SlavePort& getSlavePort() const;
     bool isConnected() const;
@@ -297,6 +298,7 @@ class SlavePort : public Port
               PortID id = InvalidPortID);
     virtual ~SlavePort();
 
+    void unBind();
     void bind(MasterPort& master_port);
     MasterPort& getMasterPort() const;
     bool isConnected() const;

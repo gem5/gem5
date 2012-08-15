@@ -55,6 +55,7 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
+#include "debug/Drain.hh"
 #include "debug/O3CPU.hh"
 #include "debug/Quiesce.hh"
 #include "enums/MemoryMode.hh"
@@ -260,7 +261,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     if (!deferRegistration) {
         _status = Running;
     } else {
-        _status = Idle;
+        _status = SwitchedOut;
     }
 
     if (params->checker) {
@@ -1119,9 +1120,8 @@ FullO3CPU<Impl>::drain(Event *drain_event)
     DPRINTF(O3CPU, "Switching out\n");
 
     // If the CPU isn't doing anything, then return immediately.
-    if (_status == Idle || _status == SwitchedOut) {
+    if (_status == SwitchedOut)
         return 0;
-    }
 
     drainCount = 0;
     fetch.drain();
@@ -1142,6 +1142,8 @@ FullO3CPU<Impl>::drain(Event *drain_event)
         wakeCPU();
         activityRec.activity();
 
+        DPRINTF(Drain, "CPU not drained\n");
+
         return 1;
     } else {
         return 0;
@@ -1160,7 +1162,7 @@ FullO3CPU<Impl>::resume()
 
     changeState(SimObject::Running);
 
-    if (_status == SwitchedOut || _status == Idle)
+    if (_status == SwitchedOut)
         return;
 
     assert(system->getMemoryMode() == Enums::timing);
@@ -1183,6 +1185,7 @@ FullO3CPU<Impl>::signalDrained()
         BaseCPU::switchOut();
 
         if (drainEvent) {
+            DPRINTF(Drain, "CPU done draining, processing drain event\n");
             drainEvent->process();
             drainEvent = NULL;
         }
@@ -1236,6 +1239,10 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     commit.takeOverFrom();
 
     assert(!tickEvent.scheduled() || tickEvent.squashed());
+
+    FullO3CPU<Impl> *oldO3CPU = dynamic_cast<FullO3CPU<Impl>*>(oldCPU);
+    if (oldO3CPU)
+        globalSeqNum = oldO3CPU->globalSeqNum;
 
     // @todo: Figure out how to properly select the tid to put onto
     // the active threads list.

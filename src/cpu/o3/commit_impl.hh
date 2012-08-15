@@ -631,7 +631,8 @@ DefaultCommit<Impl>::tick()
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
 
-    if (drainPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
+    if (drainPending && cpu->instList.empty() && !iewStage->hasStoresToWB() &&
+        interrupt == NoFault) {
         cpu->signalDrained();
         drainPending = false;
         return;

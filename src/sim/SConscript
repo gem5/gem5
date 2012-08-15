@@ -62,6 +62,7 @@ if env['TARGET_ISA'] != 'no':
 
 DebugFlag('Checkpoint')
 DebugFlag('Config')
+DebugFlag('Drain')
 DebugFlag('Event')
 DebugFlag('Fault')
 DebugFlag('Flow')

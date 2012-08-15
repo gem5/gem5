@@ -48,6 +48,7 @@
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
 #include "debug/Cache.hh"
+#include "debug/Drain.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/mshr.hh"
 #include "sim/full_system.hh"
@@ -752,6 +753,7 @@ BaseCache::drain(Event *de)
         drainEvent = de;
 
         changeState(SimObject::Draining);
+        DPRINTF(Drain, "Cache not drained\n");
         return count;
     }
 

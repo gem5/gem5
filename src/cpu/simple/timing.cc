@@ -48,6 +48,7 @@
 #include "cpu/simple/timing.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Config.hh"
+#include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
@@ -129,6 +130,7 @@ TimingSimpleCPU::drain(Event *drain_event)
     } else {
         changeState(SimObject::Draining);
         drainEvent = drain_event;
+        DPRINTF(Drain, "CPU not drained\n");
         return 1;
     }
 }
@@ -829,7 +831,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 void
 TimingSimpleCPU::completeDrain()
 {
-    DPRINTF(Config, "Done draining\n");
+    DPRINTF(Drain, "CPU done draining, processing drain event\n");
     changeState(SimObject::Drained);
     drainEvent->process();
 }

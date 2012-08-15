@@ -385,8 +385,7 @@ void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
-
-    _cpuId = oldCPU->cpuId();
+    assert(_cpuId == oldCPU->cpuId());
 
     ThreadID size = threadContexts.size();
     for (ThreadID i = 0; i < size; ++i) {
@@ -418,11 +417,13 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             assert(old_itb_port);
             SlavePort &slavePort = old_itb_port->getSlavePort();
             new_itb_port->bind(slavePort);
+            old_itb_port->unBind();
         }
         if (new_dtb_port && !new_dtb_port->isConnected()) {
             assert(old_dtb_port);
             SlavePort &slavePort = old_dtb_port->getSlavePort();
             new_dtb_port->bind(slavePort);
+            old_dtb_port->unBind();
         }
 
         // Checker whether or not we have to transfer CheckerCPU
@@ -444,17 +445,20 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
                 assert(old_checker_itb_port);
                 SlavePort &slavePort = old_checker_itb_port->getSlavePort();;
                 new_checker_itb_port->bind(slavePort);
+                old_checker_itb_port->unBind();
             }
             if (new_checker_dtb_port && !new_checker_dtb_port->isConnected()) {
                 assert(old_checker_dtb_port);
                 SlavePort &slavePort = old_checker_dtb_port->getSlavePort();;
                 new_checker_dtb_port->bind(slavePort);
+                old_checker_dtb_port->unBind();
             }
         }
     }
 
     interrupts = oldCPU->interrupts;
     interrupts->setCPU(this);
+    oldCPU->interrupts = NULL;
 
     if (FullSystem) {
         for (ThreadID i = 0; i < size; ++i)
@@ -469,10 +473,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // CPU.
     if (!getInstPort().isConnected()) {
         getInstPort().bind(oldCPU->getInstPort().getSlavePort());
+        oldCPU->getInstPort().unBind();
     }
 
     if (!getDataPort().isConnected()) {
         getDataPort().bind(oldCPU->getDataPort().getSlavePort());
+        oldCPU->getDataPort().unBind();
     }
 }
 

@@ -335,6 +335,11 @@ class LSQUnit {
             std::memset(data, 0, sizeof(data));
         }
 
+        ~SQEntry()
+        {
+            inst = NULL;
+        }
+
         /** Constructs a store queue entry for a given instruction. */
         SQEntry(DynInstPtr &_inst)
             : inst(_inst), req(NULL), sreqLow(NULL), sreqHigh(NULL), size(0),

@@ -132,8 +132,10 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
 
-    for (int i = 0; i < Impl::MaxThreads; i++)
+    for (int i = 0; i < Impl::MaxThreads; i++) {
+        cacheData[i] = NULL;
         decoder[i] = new TheISA::Decoder(NULL);
+    }
 }
 
 template <class Impl>
@@ -346,7 +348,8 @@ DefaultFetch<Impl>::setIcache()
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         // Create space to store a cache line.
-        cacheData[tid] = new uint8_t[cacheBlkSize];
+        if (!cacheData[tid])
+            cacheData[tid] = new uint8_t[cacheBlkSize];
         cacheDataPC[tid] = 0;
         cacheDataValid[tid] = false;
     }
