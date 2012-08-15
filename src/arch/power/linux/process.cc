@@ -54,8 +54,8 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
-    strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "2.6.16.19");
+    strcpy(name->nodename, "sim.gem5.org");
+    strcpy(name->release, "3.0.0");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "power");
 
