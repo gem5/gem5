@@ -104,11 +104,12 @@ def addCommonOptions(parser):
     # CPU Switching - default switch model goes from a checkpoint
     # to a timing simple CPU with caches to warm up, then to detailed CPU for
     # data measurement
-    parser.add_option("-s", "--standard-switch", action="store_true",
-        help="switch from timing CPU to Detailed CPU")
-    parser.add_option("-w", "--warmup", action="store", type="int",
-        help="if -s, then this is the warmup period.  else, this is ignored",
-        default=5000000000)
+    parser.add_option("--repeat-switch", action="store", type="int",
+        default=None,
+        help="switch back and forth between CPUs with period <N>")
+    parser.add_option("-s", "--standard-switch", action="store", type="int",
+        default=None,
+        help="switch from timing to Detailed CPU after warmup period of <N>")
     parser.add_option("-p", "--prog-interval", type="int",
         help="CPU Progress Interval")
 

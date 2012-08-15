@@ -214,10 +214,6 @@ def scriptCheckpoints(options):
     return exit_cause
 
 def benchCheckpoints(options, maxtick, cptdir):
-    if options.fast_forward:
-        m5.stats.reset()
-
-    print "**** REAL SIMULATION ****"
     exit_event = m5.simulate(maxtick)
     exit_cause = exit_event.getCause()
 
@@ -235,6 +231,29 @@ def benchCheckpoints(options, maxtick, cptdir):
         exit_cause = exit_event.getCause()
 
     return exit_cause
+
+def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
+    print "starting switch loop"
+    while True:
+        exit_event = m5.simulate(switch_freq)
+        exit_cause = exit_event.getCause()
+
+        if exit_cause != "simulate() limit reached":
+            return exit_cause
+
+        print "draining the system"
+        m5.doDrain(testsys)
+        m5.switchCpus(repeat_switch_cpu_list)
+        m5.resume(testsys)
+
+        tmp_cpu_list = []
+        for old_cpu, new_cpu in repeat_switch_cpu_list:
+            tmp_cpu_list.append((new_cpu, old_cpu))
+        repeat_switch_cpu_list = tmp_cpu_list
+
+        if (maxtick - m5.curTick()) <= switch_freq:
+            exit_event = m5.simulate(maxtick - m5.curTick())
+            return exit_event.getCause()
 
 def run(options, root, testsys, cpu_class):
     if options.maxtick:
@@ -259,6 +278,12 @@ def run(options, root, testsys, cpu_class):
     if options.standard_switch and not options.caches:
         fatal("Must specify --caches when using --standard-switch")
 
+    if options.standard_switch and options.repeat_switch:
+        fatal("Can't specify both --standard-switch and --repeat-switch")
+
+    if options.repeat_switch and options.take_checkpoints:
+        fatal("Can't specify both --repeat-switch and --take-checkpoints")
+
     np = options.num_cpus
     switch_cpus = None
 
@@ -271,7 +296,7 @@ def run(options, root, testsys, cpu_class):
             testsys.cpu[i].max_insts_any_thread = options.maxinsts
 
     if cpu_class:
-        switch_cpus = [cpu_class(defer_registration=True, cpu_id=(np+i))
+        switch_cpus = [cpu_class(defer_registration=True, cpu_id=(i))
                        for i in xrange(np)]
 
         for i in xrange(np):
@@ -290,15 +315,55 @@ def run(options, root, testsys, cpu_class):
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
-    if options.standard_switch:
-        if not options.caches:
-            # O3 CPU must have a cache to work.
-            print "O3 CPU must be used with caches"
-            sys.exit(1)
+    if options.repeat_switch:
+        if options.cpu_type == "arm_detailed":
+            if not options.caches:
+                print "O3 CPU must be used with caches"
+                sys.exit(1)
 
-        switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
+            repeat_switch_cpus = [O3_ARM_v7a_3(defer_registration=True, \
+                                  cpu_id=(i)) for i in xrange(np)]
+        elif options.cpu_type == "detailed":
+            if not options.caches:
+                print "O3 CPU must be used with caches"
+                sys.exit(1)
+
+            repeat_switch_cpus = [DerivO3CPU(defer_registration=True, \
+                                  cpu_id=(i)) for i in xrange(np)]
+        elif options.cpu_type == "inorder":
+            print "inorder CPU switching not supported"
+            sys.exit(1)
+        elif options.cpu_type == "timing":
+            repeat_switch_cpus = [TimingSimpleCPU(defer_registration=True, \
+                                  cpu_id=(i)) for i in xrange(np)]
+        else:
+            repeat_switch_cpus = [AtomicSimpleCPU(defer_registration=True, \
+                                  cpu_id=(i)) for i in xrange(np)]
+
+        for i in xrange(np):
+            repeat_switch_cpus[i].system = testsys
+            repeat_switch_cpus[i].workload = testsys.cpu[i].workload
+            repeat_switch_cpus[i].clock = testsys.cpu[i].clock
+
+            if options.maxinsts:
+                repeat_switch_cpus[i].max_insts_any_thread = options.maxinsts
+
+            if options.checker:
+                repeat_switch_cpus[i].addCheckerCpu()
+
+        testsys.repeat_switch_cpus = repeat_switch_cpus
+
+        if cpu_class:
+            repeat_switch_cpu_list = [(switch_cpus[i], repeat_switch_cpus[i])
+                                      for i in xrange(np)]
+        else:
+            repeat_switch_cpu_list = [(testsys.cpu[i], repeat_switch_cpus[i])
+                                      for i in xrange(np)]
+
+    if options.standard_switch:
+        switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(i))
                        for i in xrange(np)]
-        switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
+        switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(i))
                         for i in xrange(np)]
 
         for i in xrange(np):
@@ -400,7 +465,7 @@ def run(options, root, testsys, cpu_class):
             if options.warmup_insts:
                 exit_event = m5.simulate()
             else:
-                exit_event = m5.simulate(options.warmup)
+                exit_event = m5.simulate(options.standard_switch)
             print "Switching CPUS @ tick %s" % (m5.curTick())
             print "Simulation ends instruction count:%d" % \
                     (testsys.switch_cpus_1[0].max_insts_any_thread)
@@ -425,9 +490,17 @@ def run(options, root, testsys, cpu_class):
         # favor of command line checkpoint instructions.
         exit_cause = scriptCheckpoints(options)
     else:
+        if options.fast_forward:
+            m5.stats.reset()
+        print "**** REAL SIMULATION ****"
+
         # If checkpoints are being taken, then the checkpoint instruction
         # will occur in the benchmark code it self.
-        exit_cause = benchCheckpoints(options, maxtick, cptdir)
+        if options.repeat_switch and maxtick > options.repeat_switch:
+            exit_cause = repeatSwitch(testsys, repeat_switch_cpu_list,
+                                      maxtick, options.repeat_switch)
+        else:
+            exit_cause = benchCheckpoints(options, maxtick, cptdir)
 
     print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
     if options.checkpoint_at_end:
