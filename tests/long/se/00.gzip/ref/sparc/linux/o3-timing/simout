@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  2 2012 08:54:18
-gem5 started Jul  2 2012 11:32:18
+gem5 compiled Aug 13 2012 17:04:37
+gem5 started Aug 13 2012 18:13:42
 gem5 executing on zizzer
-command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/long/se/00.gzip/sparc/linux/o3-timing -re tests/run.py build/SPARC/tests/fast/long/se/00.gzip/sparc/linux/o3-timing
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/00.gzip/sparc/linux/o3-timing -re tests/run.py build/SPARC/tests/opt/long/se/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
@@ -38,4 +38,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 389181871500 because target called exit()
+Exiting @ tick 389171398000 because target called exit()

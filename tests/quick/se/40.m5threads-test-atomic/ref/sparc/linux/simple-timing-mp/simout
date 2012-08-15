@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  2 2012 08:54:18
-gem5 started Jul  2 2012 11:32:06
+gem5 compiled Aug 13 2012 17:04:37
+gem5 started Aug 13 2012 18:13:39
 gem5 executing on zizzer
-command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/quick/se/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC/tests/fast/quick/se/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC/tests/opt/quick/se/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done
@@ -79,4 +79,4 @@ Iteration 9 completed
 [Iteration 10, Thread 3] Critical section done, previously next=2, now next=3
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 268912000 because target called exit()
+Exiting @ tick 268898000 because target called exit()

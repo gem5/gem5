@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  4 2012 12:01:47
-gem5 started Jun  4 2012 14:45:04
+gem5 compiled Aug 13 2012 17:04:37
+gem5 started Aug 13 2012 18:13:25
 gem5 executing on zizzer
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic -re tests/run.py build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
@@ -18,4 +18,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 7618500 because target called exit()
+Exiting @ tick 7612000 because target called exit()

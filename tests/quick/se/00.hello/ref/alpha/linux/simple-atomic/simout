@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  4 2012 11:50:11
-gem5 started Jun  4 2012 13:46:44
+gem5 compiled Aug 13 2012 16:51:51
+gem5 started Aug 13 2012 17:17:12
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/simple-atomic -re tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 3215000 because target called exit()
+Exiting @ tick 3208000 because target called exit()

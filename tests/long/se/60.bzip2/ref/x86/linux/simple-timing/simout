@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  2 2012 08:58:39
-gem5 started Jul  2 2012 14:08:03
+gem5 compiled Aug 13 2012 17:08:22
+gem5 started Aug 13 2012 19:22:39
 gem5 executing on zizzer
-command line: build/X86/gem5.fast -d build/X86/tests/fast/long/se/60.bzip2/x86/linux/simple-timing -re tests/run.py build/X86/tests/fast/long/se/60.bzip2/x86/linux/simple-timing
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-timing -re tests/run.py build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
@@ -24,4 +24,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 5901048931000 because target called exit()
+Exiting @ tick 5901048883000 because target called exit()

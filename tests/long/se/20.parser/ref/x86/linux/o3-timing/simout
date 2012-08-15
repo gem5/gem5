@@ -1,28 +1,15 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 26 2012 21:30:36
-gem5 started Jul 26 2012 23:13:36
+gem5 compiled Aug 13 2012 17:08:22
+gem5 started Aug 13 2012 18:47:07
 gem5 executing on zizzer
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
  Reading the dictionary files: ***********************info: Increasing stack size by one page.
-***************info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-***********
+**************************
  58924 words stored in 3784810 bytes
 
 
@@ -35,6 +22,8 @@ Processing sentences in batch mode
 Echoing of input sentence turned on.
 * as had expected the party to be a success , it was a success 
 * do you know where John 's 
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
 * he said that , finding that it was impossible to get work as a waiter , he would work as a janitor 
 * how fast the program is it 
 * I am wondering whether to invite to the party 
@@ -80,4 +69,4 @@ Echoing of input sentence turned on.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 460506550000 because target called exit()
+Exiting @ tick 460397003000 because target called exit()
