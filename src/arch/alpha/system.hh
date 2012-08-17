@@ -62,9 +62,9 @@ class AlphaSystem : public System
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    /** Override loadState to provide a path to call setupFuncEvents()
+    /** Override startup() to provide a path to call setupFuncEvents()
      */
-    virtual void loadState(Checkpoint *cp);
+    virtual void startup();
 
     /**
      * Set the m5AlphaAccess pointer in the console

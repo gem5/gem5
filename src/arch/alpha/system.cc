@@ -134,21 +134,14 @@ AlphaSystem::initState()
         virtProxy.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
-
-    // Setup all the function events now that we have a system and a symbol
-    // table
-    setupFuncEvents();
 }
 
 void
-AlphaSystem::loadState(Checkpoint *cp)
+AlphaSystem::startup()
 {
-    System::loadState(cp);
-
     // Setup all the function events now that we have a system and a symbol
     // table
     setupFuncEvents();
-
 }
 
 void
