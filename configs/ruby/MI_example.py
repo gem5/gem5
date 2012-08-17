@@ -115,7 +115,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         # Create the Ruby objects associated with the directory controller
         #
 
-        mem_cntrl = RubyMemoryControl(version = i)
+        mem_cntrl = RubyMemoryControl(version = i,
+                                      ruby_system = ruby_system)
 
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size

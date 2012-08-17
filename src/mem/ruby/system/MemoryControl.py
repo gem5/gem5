@@ -35,5 +35,6 @@ class MemoryControl(SimObject):
     type = 'MemoryControl'
     cxx_class = 'MemoryControl'
     version = Param.Int("");
+    ruby_system = Param.RubySystem("")
 
     mem_bus_cycle_multiplier = Param.Int(10, "");
