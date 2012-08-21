@@ -82,7 +82,7 @@ class BaseCPU(MemObject):
     numThreads = Param.Unsigned(1, "number of HW thread contexts")
 
     function_trace = Param.Bool(False, "Enable function trace")
-    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+    function_trace_start = Param.Tick(0, "Tick to start function trace")
 
     checker = Param.BaseCPU(NULL, "checker CPU")
 

@@ -109,6 +109,3 @@ class SimpleOzoneCPU(BaseCPU):
     numROBEntries = Param.Unsigned("Number of reorder buffer entries")
 
     instShiftAmt = Param.Unsigned("Number of bits to shift instructions by")
-
-    function_trace = Param.Bool(False, "Enable function trace")
-    function_trace_start = Param.Tick(0, "Cycle to start function trace")

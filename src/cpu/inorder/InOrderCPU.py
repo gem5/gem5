@@ -62,8 +62,7 @@ class InOrderCPU(BaseCPU):
     RASSize = Param.Unsigned(16, "RAS size")
 
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
-    functionTrace = Param.Bool(False, "Enable function trace")
-    functionTraceStart = Param.Tick(0, "Cycle to start function trace")
+
     stageTracing = Param.Bool(False, "Enable tracing of each stage in CPU")
 
     multLatency = Param.Unsigned(1, "Latency for Multiply Operations")

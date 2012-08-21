@@ -113,9 +113,6 @@ class DerivOzoneCPU(BaseCPU):
 
     instShiftAmt = Param.Unsigned("Number of bits to shift instructions by")
 
-    function_trace = Param.Bool(False, "Enable function trace")
-    function_trace_start = Param.Tick(0, "Cycle to start function trace")
-
     # If the CheckerCPU is brought back to useability in the OzoneCPU, create a
     # function here called addCheckerCpu() to create a non-NULL Checker and
     # connect its TLBs (if needed)
