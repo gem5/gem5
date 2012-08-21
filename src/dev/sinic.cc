@@ -78,7 +78,7 @@ const char *TxStateStrings[] =
 // Sinic PCI Device
 //
 Base::Base(const Params *p)
-    : PciDev(p), rxEnable(false), txEnable(false), clock(p->clock),
+    : PciDev(p), rxEnable(false), txEnable(false),
       intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
       cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {

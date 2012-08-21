@@ -145,9 +145,6 @@ class BaseCPU(MemObject):
     defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
 
-    clock = Param.Clock('1t', "clock speed")
-    phase = Param.Latency('0ns', "clock phase")
-
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
     icache_port = MasterPort("Instruction Port")

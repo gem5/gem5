@@ -56,8 +56,6 @@ class MemTest : public MemObject
     // register statistics
     virtual void regStats();
 
-    inline Tick ticks(int numCycles) const { return numCycles; }
-
     // main simulation loop (one cycle)
     void tick();
 

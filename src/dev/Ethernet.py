@@ -79,7 +79,8 @@ class IGbE(EtherDevice):
         "Number of enteries in the rx descriptor cache")
     tx_desc_cache_size = Param.Int(64,
         "Number of enteries in the rx descriptor cache")
-    clock = Param.Clock('500MHz', "Clock speed of the device")
+    # Override the default clock
+    clock = '500MHz'
     VendorID = 0x8086
     SubsystemID = 0x1008
     SubsystemVendorID = 0x8086
@@ -127,7 +128,8 @@ class EtherDevBase(EtherDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    clock = Param.Clock('0ns', "State machine processor frequency")
+    # Override the default clock
+    clock = '0ns'
 
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")

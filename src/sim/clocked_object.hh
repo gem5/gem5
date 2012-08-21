@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -37,56 +34,85 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Andreas Hansson
+ * Authors: Andreas Hansson
  */
 
 /**
  * @file
- * MemObject declaration.
+ * ClockedObject declaration and implementation.
  */
 
-#ifndef __MEM_MEM_OBJECT_HH__
-#define __MEM_MEM_OBJECT_HH__
+#ifndef __SIM_CLOCKED_OBJECT_HH__
+#define __SIM_CLOCKED_OBJECT_HH__
 
-#include "mem/port.hh"
-#include "params/MemObject.hh"
-#include "sim/clocked_object.hh"
+#include "base/intmath.hh"
+#include "params/ClockedObject.hh"
+#include "sim/sim_object.hh"
 
 /**
- * The MemObject class extends the ClockedObject with accessor functions
- * to get its master and slave ports.
+ * The ClockedObject class extends the SimObject with a clock and
+ * accessor functions to relate ticks to the cycles of the object.
  */
-class MemObject : public ClockedObject
+class ClockedObject : public SimObject
 {
+
+  private:
+
+    /**
+     * Prevent inadvertent use of the copy constructor and assignment
+     * operator by making them private.
+     */
+    ClockedObject(ClockedObject&);
+    ClockedObject& operator=(ClockedObject&);
+
+  protected:
+
+    // Clock period in ticks
+    Tick clock;
+
+    /**
+     * Create a clocked object and set the clock based on the
+     * parameters.
+     */
+    ClockedObject(const ClockedObjectParams* p) : SimObject(p), clock(p->clock)
+    { }
+
+    /**
+     * Virtual destructor due to inheritance.
+     */
+    virtual ~ClockedObject() { }
+
   public:
-    typedef MemObjectParams Params;
-    const Params *params() const
-    { return dynamic_cast<const Params *>(_params); }
-
-    MemObject(const Params *params);
 
     /**
-     * Get a master port with a given name and index.
+     * Based on the clock of the object, determine the tick when the
+     * next cycle begins, in other words, round the curTick() to the
+     * next tick that is a multiple of the clock.
      *
-     * @param if_name Port name
-     * @param idx Index in the case of a VectorPort
-     *
-     * @return A reference to the given port
+     * @return The tick when the next cycle starts
      */
-    virtual MasterPort& getMasterPort(const std::string& if_name,
-                                      int idx = -1);
+    Tick nextCycle() const
+    { return divCeil(curTick(), clock) * clock; }
 
     /**
-     * Get a slave port with a given name and index.
+     * Determine the next cycle starting from a given tick instead of
+     * curTick().
      *
-     * @param if_name Port name
-     * @param idx Index in the case of a VectorPort
+     * @param begin_tick The tick to round to a clock edge
      *
-     * @return A reference to the given port
+     * @return The tick when the cycle after or on begin_tick starts
      */
-    virtual SlavePort& getSlavePort(const std::string& if_name,
-                                    int idx = -1);
+    Tick nextCycle(Tick begin_tick) const
+    { return divCeil(begin_tick, clock) * clock; }
+
+    inline Tick frequency() const { return SimClock::Frequency / clock; }
+
+    inline Tick ticks(int numCycles) const { return clock * numCycles; }
+
+    inline Tick curCycle() const { return curTick() / clock; }
+
+    inline Tick tickToCycles(Tick val) const { return val / clock; }
+
 };
 
-#endif //__MEM_MEM_OBJECT_HH__
+#endif //__SIM_CLOCKED_OBJECT_HH__

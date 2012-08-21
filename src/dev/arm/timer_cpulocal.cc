@@ -58,7 +58,7 @@ CpuLocalTimer::CpuLocalTimer(Params *p)
         localTimer[i].parent = this;
         localTimer[i].intNumTimer = p->int_num_timer;
         localTimer[i].intNumWatchdog = p->int_num_watchdog;
-        localTimer[i].clock = p->clock;
+        localTimer[i].clock = clock;
         localTimer[i].cpuNum = i;
     }
     pioSize = 0x38;
@@ -339,7 +339,6 @@ CpuLocalTimer::Timer::serialize(std::ostream &os)
     DPRINTF(Checkpoint, "Serializing Arm CpuLocalTimer\n");
     SERIALIZE_SCALAR(intNumTimer);
     SERIALIZE_SCALAR(intNumWatchdog);
-    SERIALIZE_SCALAR(clock);
 
     uint32_t timer_control_serial = timerControl;
     uint32_t watchdog_control_serial = watchdogControl;
@@ -379,7 +378,6 @@ CpuLocalTimer::Timer::unserialize(Checkpoint *cp, const std::string &section)
 
     UNSERIALIZE_SCALAR(intNumTimer);
     UNSERIALIZE_SCALAR(intNumWatchdog);
-    UNSERIALIZE_SCALAR(clock);
 
     uint32_t timer_control_serial;
     UNSERIALIZE_SCALAR(timer_control_serial);

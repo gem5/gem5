@@ -619,7 +619,6 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 X86ISA::Interrupts::Interrupts(Params * p) :
     BasicPioDevice(p), IntDev(this, p->int_latency), latency(p->pio_latency), 
-    clock(0),
     apicTimerEvent(this),
     pendingSmi(false), smiVector(0),
     pendingNmi(false), nmiVector(0),
@@ -630,6 +629,8 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingIPIs(0), cpu(NULL),
     intSlavePort(name() + ".int_slave", this, this, latency)
 {
+    // Override the default clock
+    clock = 0;
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));
     //Set the local apic DFR to the flat model.

@@ -68,7 +68,7 @@ IGbE::IGbE(const Params *p)
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
       txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size),
-      clock(p->clock), lastInterrupt(0)
+      lastInterrupt(0)
 {
     etherInt = new IGbEInt(name() + ".int", this);
 

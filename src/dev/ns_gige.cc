@@ -99,7 +99,6 @@ NSGigE::NSGigE(Params *p)
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), rxDmaFree(false), txDmaFree(false),
-      clock(p->clock),
       txState(txIdle), txEnable(false), CTDD(false), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       rxEnable(false), CRDD(false), rxPktBytes(0), rxHalt(false),

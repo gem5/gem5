@@ -63,7 +63,7 @@ Pl111::Pl111(const Params *p)
       lcdRis(0), lcdMis(0),
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
-      clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0), clock(p->clock),
+      clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
       vncserver(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
@@ -512,26 +512,6 @@ Pl111::dmaDone()
         schedule(fillFifoEvent, nextCycle());
 }
 
-
-Tick
-Pl111::nextCycle()
-{
-    Tick nextTick = curTick() + clock - 1;
-    nextTick -= nextTick%clock;
-    return nextTick;
-}
-
-Tick
-Pl111::nextCycle(Tick beginTick)
-{
-    Tick nextTick = beginTick;
-    if (nextTick%clock!=0)
-        nextTick = nextTick - (nextTick%clock) + clock;
-
-    assert(nextTick >= curTick());
-    return nextTick;
-}
-
 void
 Pl111::serialize(std::ostream &os)
 {
@@ -586,7 +566,6 @@ Pl111::serialize(std::ostream &os)
     uint8_t clcdCrsrMis_serial = clcdCrsrMis;
     SERIALIZE_SCALAR(clcdCrsrMis_serial);
 
-    SERIALIZE_SCALAR(clock);
     SERIALIZE_SCALAR(height);
     SERIALIZE_SCALAR(width);
     SERIALIZE_SCALAR(bytesPerPixel);
@@ -689,7 +668,6 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(clcdCrsrMis_serial);
     clcdCrsrMis = clcdCrsrMis_serial;
 
-    UNSERIALIZE_SCALAR(clock);
     UNSERIALIZE_SCALAR(height);
     UNSERIALIZE_SCALAR(width);
     UNSERIALIZE_SCALAR(bytesPerPixel);

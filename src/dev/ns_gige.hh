@@ -196,10 +196,6 @@ class NSGigE : public EtherDevice
     ns_desc64 txDesc64;
     ns_desc64 rxDesc64;
 
-    /* state machine cycle time */
-    Tick clock;
-    inline Tick ticks(int numCycles) const { return numCycles * clock; }
-
     /* tx State Machine */
     TxState txState;
     bool txEnable;

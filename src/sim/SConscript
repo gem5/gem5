@@ -31,6 +31,7 @@
 Import('*')
 
 SimObject('BaseTLB.py')
+SimObject('ClockedObject.py')
 SimObject('Root.py')
 SimObject('InstTracer.py')
 

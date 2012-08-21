@@ -51,8 +51,6 @@ class NetworkTest : public MemObject
 
     virtual void init();
 
-    inline Tick ticks(int numCycles) const { return numCycles; }
-
     // main simulation loop (one cycle)
     void tick();
 

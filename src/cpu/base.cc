@@ -115,15 +115,12 @@ CPUProgressEvent::description() const
 }
 
 BaseCPU::BaseCPU(Params *p, bool is_checker)
-    : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
+    : MemObject(p), instCnt(0), _cpuId(p->cpu_id),
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
       interrupts(p->interrupts),
-      numThreads(p->numThreads), system(p->system),
-      phase(p->phase)
+      numThreads(p->numThreads), system(p->system)
 {
-//    currentTick = curTick();
-
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
         _cpuId = cpuList.size();
@@ -315,27 +312,6 @@ BaseCPU::getMasterPort(const string &if_name, int idx)
         return getInstPort();
     else
         return MemObject::getMasterPort(if_name, idx);
-}
-
-Tick
-BaseCPU::nextCycle()
-{
-    Tick next_tick = curTick() - phase + clock - 1;
-    next_tick -= (next_tick % clock);
-    next_tick += phase;
-    return next_tick;
-}
-
-Tick
-BaseCPU::nextCycle(Tick begin_tick)
-{
-    Tick next_tick = begin_tick;
-    if (next_tick % clock != 0)
-        next_tick = next_tick - (next_tick % clock) + clock;
-    next_tick += phase;
-
-    assert(next_tick >= curTick());
-    return next_tick;
 }
 
 void

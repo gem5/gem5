@@ -118,7 +118,8 @@ class CpuLocalTimer(BasicPioDevice):
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
     int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
-    clock = Param.Clock('1GHz', "Clock speed at which the timer counts")
+    # Override the default clock
+    clock = '1GHz'
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
@@ -134,7 +135,8 @@ class Pl050(AmbaIntDevice):
 
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
-    clock = Param.Clock('24MHz', "Clock speed of the input")
+    # Override the default clock
+    clock = '24MHz'
     vnc   = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
 

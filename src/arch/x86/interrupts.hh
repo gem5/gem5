@@ -89,7 +89,6 @@ class Interrupts : public BasicPioDevice, IntDev
      * Timing related stuff.
      */
     Tick latency;
-    Tick clock;
 
     class ApicTimerEvent : public Event
     {

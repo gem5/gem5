@@ -47,7 +47,8 @@ class BaseBus(MemObject):
     abstract = True
     slave = VectorSlavePort("vector port for connecting masters")
     master = VectorMasterPort("vector port for connecting slaves")
-    clock = Param.Clock("1GHz", "bus clock speed")
+    # Override the default clock
+    clock = '1GHz'
     header_cycles = Param.Int(1, "cycles of overhead per transaction")
     width = Param.Int(8, "bus width (bytes)")
     block_size = Param.Int(64, "The default block size if not set by " \

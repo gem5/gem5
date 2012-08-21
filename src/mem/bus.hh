@@ -228,8 +228,6 @@ class BaseBus : public MemObject
 
     };
 
-    /** the clock speed for the bus */
-    Tick clock;
     /** cycles of overhead per transaction */
     int headerCycles;
     /** the width of the bus in bytes */

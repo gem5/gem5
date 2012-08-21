@@ -47,7 +47,6 @@
  * Definition of a bus object.
  */
 
-#include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/Bus.hh"
@@ -56,7 +55,7 @@
 #include "mem/bus.hh"
 
 BaseBus::BaseBus(const BaseBusParams *p)
-    : MemObject(p), clock(p->clock),
+    : MemObject(p),
       headerCycles(p->header_cycles), width(p->width),
       defaultPortID(InvalidPortID),
       useDefaultRange(p->use_default_range),
@@ -114,7 +113,7 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
 {
     // determine the current time rounded to the closest following
     // clock edge
-    Tick now = divCeil(curTick(), clock) * clock;
+    Tick now = nextCycle();
 
     Tick headerTime = now + headerCycles * clock;
 
@@ -287,7 +286,7 @@ BaseBus::Layer<PortClass>::retryWaiting()
 
         // determine the current time rounded to the closest following
         // clock edge
-        Tick now = divCeil(curTick(), clock) * clock;
+        Tick now = bus.nextCycle();
 
         occupyLayer(now + clock);
     }

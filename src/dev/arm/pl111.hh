@@ -228,9 +228,6 @@ class Pl111: public AmbaDmaDevice
     /** Cursor masked interrupt status register - const */
     InterruptReg clcdCrsrMis;
 
-    /** Clock speed */
-    Tick clock;
-
     /** VNC server */
     VncServer *vncserver;
 
@@ -290,10 +287,6 @@ class Pl111: public AmbaDmaDevice
 
     /** DMA done event */
     void dmaDone();
-
-    /** Next cycle event */
-    Tick nextCycle();
-    Tick nextCycle(Tick beginTick);
 
     /** DMA framebuffer read event */
     EventWrapper<Pl111, &Pl111::readFramebuffer> readEvent;
