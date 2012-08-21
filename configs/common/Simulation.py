@@ -153,7 +153,7 @@ def findCptDir(options, maxtick, cptdir, testsys):
 
     return maxtick, checkpoint_dir
 
-def scriptCheckpoints(options):
+def scriptCheckpoints(options, cptdir):
     if options.at_instruction or options.simpoint:
         checkpoint_inst = int(options.take_checkpoints)
 
@@ -180,6 +180,7 @@ def scriptCheckpoints(options):
         when, period = options.take_checkpoints.split(",", 1)
         when = int(when)
         period = int(period)
+        num_checkpoints = 0
 
         exit_event = m5.simulate(when)
         exit_cause = exit_event.getCause()
@@ -192,7 +193,6 @@ def scriptCheckpoints(options):
             num_checkpoints += 1
 
         sim_ticks = when
-        num_checkpoints = 0
         max_checkpoints = options.max_checkpoints
 
         while num_checkpoints < max_checkpoints and \
@@ -488,7 +488,7 @@ def run(options, root, testsys, cpu_class):
         # subsequent periods of <period>.  Checkpoint instructions
         # received from the benchmark running are ignored and skipped in
         # favor of command line checkpoint instructions.
-        exit_cause = scriptCheckpoints(options)
+        exit_cause = scriptCheckpoints(options, cptdir)
     else:
         if options.fast_forward:
             m5.stats.reset()
