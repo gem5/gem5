@@ -47,7 +47,7 @@ class DumbTOD(BasicPioDevice):
 class Iob(PioDevice):
     type = 'Iob'
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    pio_latency = Param.Latency('1ns', "Programed IO latency in simticks")
+    pio_latency = Param.Latency('1ns', "Programed IO latency")
 
 
 class T1000(Platform):

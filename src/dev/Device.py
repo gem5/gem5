@@ -40,7 +40,7 @@ class BasicPioDevice(PioDevice):
     type = 'BasicPioDevice'
     abstract = True
     pio_addr = Param.Addr("Device Address")
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
+    pio_latency = Param.Latency('1ns', "Programmed IO latency")
 
 class DmaDevice(PioDevice):
     type = 'DmaDevice'

@@ -33,5 +33,4 @@ from Device import BasicPioDevice
 class PcSpeaker(BasicPioDevice):
     type = 'PcSpeaker'
     cxx_class = 'X86ISA::Speaker'
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     i8254 = Param.I8254('Timer that drives the speaker')

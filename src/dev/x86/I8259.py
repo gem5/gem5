@@ -40,7 +40,6 @@ class X86I8259CascadeMode(Enum):
 class I8259(BasicPioDevice):
     type = 'I8259'
     cxx_class='X86ISA::I8259'
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     output = Param.X86IntSourcePin(X86IntSourcePin(),
             'The pin this I8259 drives')
     mode = Param.X86I8259CascadeMode('How this I8259 is cascaded')

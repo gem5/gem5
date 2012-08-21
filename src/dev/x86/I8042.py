@@ -34,7 +34,6 @@ from X86IntPin import X86IntSourcePin
 class I8042(BasicPioDevice):
     type = 'I8042'
     cxx_class = 'X86ISA::I8042'
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     # This isn't actually used for anything here.
     pio_addr = 0x0
     data_port = Param.Addr('Data port address')

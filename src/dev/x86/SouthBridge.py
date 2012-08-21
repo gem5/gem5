@@ -45,7 +45,6 @@ def x86IOAddress(port):
 
 class SouthBridge(SimObject):
     type = 'SouthBridge'
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     platform = Param.Platform(Parent.any, "Platform this device is part of")
 
     _pic1 = I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master')

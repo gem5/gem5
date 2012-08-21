@@ -33,4 +33,3 @@ from Device import BasicPioDevice
 class I8237(BasicPioDevice):
     type = 'I8237'
     cxx_class = 'X86ISA::I8237'
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")

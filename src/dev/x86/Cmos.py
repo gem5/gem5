@@ -36,6 +36,5 @@ class Cmos(BasicPioDevice):
     cxx_class='X86ISA::Cmos'
     time = Param.Time('01/01/2012',
         "System time to use ('Now' for actual time)")
-    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
             'Pin to signal RTC alarm interrupts to')
