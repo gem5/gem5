@@ -106,7 +106,8 @@ PacketQueue::schedSendEvent(Tick when)
 void
 PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
 {
-    assert(when > curTick());
+    // we can still send a packet before the end of this tick
+    assert(when >= curTick());
 
     // nothing on the list, or earlier than current front element,
     // schedule an event
