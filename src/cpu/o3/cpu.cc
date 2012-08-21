@@ -388,7 +388,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
     lastRunningCycle = curTick();
 
-    lastActivatedCycle = -1;
+    lastActivatedCycle = 0;
 #if 0
     // Give renameMap & rename stage access to the freeList;
     for (ThreadID tid = 0; tid < numThreads; tid++)
@@ -752,7 +752,9 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
         activateThread(tid);
     }
 
-    if (lastActivatedCycle < curTick()) {
+    // If we are time 0 or if the last activation time is in the past,
+    // schedule the next tick and wake up the fetch unit
+    if (lastActivatedCycle == 0 || lastActivatedCycle < curTick()) {
         scheduleTickEvent(delay);
 
         // Be sure to signal that there's some activity so the CPU doesn't

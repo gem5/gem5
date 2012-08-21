@@ -481,9 +481,7 @@ class EventManager
 inline void
 EventQueue::schedule(Event *event, Tick when)
 {
-    // Typecasting Tick->Utick here since gcc
-    // complains about signed overflow
-    assert((UTick)when >= (UTick)curTick());
+    assert(when >= curTick());
     assert(!event->scheduled());
     assert(event->initialized());
 
@@ -520,9 +518,7 @@ EventQueue::deschedule(Event *event)
 inline void
 EventQueue::reschedule(Event *event, Tick when, bool always)
 {
-    // Typecasting Tick->Utick here since gcc
-    // complains about signed overflow
-    assert((UTick)when >= (UTick)curTick());
+    assert(when >= curTick());
     assert(always || event->scheduled());
     assert(event->initialized());
 
