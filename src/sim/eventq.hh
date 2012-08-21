@@ -432,7 +432,7 @@ class EventManager
 
   public:
     EventManager(EventManager &em) : eventq(em.eventq) {}
-    EventManager(EventManager *em) : eventq(em ? em->eventq : NULL) {}
+    EventManager(EventManager *em) : eventq(em->eventq) {}
     EventManager(EventQueue *eq) : eventq(eq) {}
 
     EventQueue *
