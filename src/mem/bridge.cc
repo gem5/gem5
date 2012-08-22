@@ -49,43 +49,37 @@
  */
 
 #include "base/trace.hh"
-#include "debug/BusBridge.hh"
+#include "debug/Bridge.hh"
 #include "mem/bridge.hh"
 #include "params/Bridge.hh"
 
-Bridge::BridgeSlavePort::BridgeSlavePort(const std::string &_name,
-                                         Bridge* _bridge,
+Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
+                                         Bridge& _bridge,
                                          BridgeMasterPort& _masterPort,
-                                         int _delay, int _nack_delay,
-                                         int _resp_limit,
+                                         int _delay, int _resp_limit,
                                          std::vector<Range<Addr> > _ranges)
-    : SlavePort(_name, _bridge), bridge(_bridge), masterPort(_masterPort),
-      delay(_delay), nackDelay(_nack_delay),
-      ranges(_ranges.begin(), _ranges.end()),
-      outstandingResponses(0), inRetry(false),
+    : SlavePort(_name, &_bridge), bridge(_bridge), masterPort(_masterPort),
+      delay(_delay), ranges(_ranges.begin(), _ranges.end()),
+      outstandingResponses(0), retryReq(false),
       respQueueLimit(_resp_limit), sendEvent(*this)
 {
 }
 
-Bridge::BridgeMasterPort::BridgeMasterPort(const std::string &_name,
-                                           Bridge* _bridge,
+Bridge::BridgeMasterPort::BridgeMasterPort(const std::string& _name,
+                                           Bridge& _bridge,
                                            BridgeSlavePort& _slavePort,
                                            int _delay, int _req_limit)
-    : MasterPort(_name, _bridge), bridge(_bridge), slavePort(_slavePort),
-      delay(_delay), inRetry(false), reqQueueLimit(_req_limit),
-      sendEvent(*this)
+    : MasterPort(_name, &_bridge), bridge(_bridge), slavePort(_slavePort),
+      delay(_delay), reqQueueLimit(_req_limit), sendEvent(*this)
 {
 }
 
 Bridge::Bridge(Params *p)
     : MemObject(p),
-      slavePort(p->name + ".slave", this, masterPort, p->delay,
-                p->nack_delay, p->resp_size, p->ranges),
-      masterPort(p->name + ".master", this, slavePort, p->delay, p->req_size),
-      ackWrites(p->write_ack), _params(p)
+      slavePort(p->name + ".slave", *this, masterPort, p->delay, p->resp_size,
+                p->ranges),
+      masterPort(p->name + ".master", *this, slavePort, p->delay, p->req_size)
 {
-    if (ackWrites)
-        panic("No support for acknowledging writes\n");
 }
 
 MasterPort&
@@ -133,7 +127,7 @@ Bridge::BridgeSlavePort::respQueueFull()
 bool
 Bridge::BridgeMasterPort::reqQueueFull()
 {
-    return requestQueue.size() == reqQueueLimit;
+    return transmitList.size() == reqQueueLimit;
 }
 
 bool
@@ -141,12 +135,12 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 {
     // all checks are done when the request is accepted on the slave
     // side, so we are guaranteed to have space for the response
-    DPRINTF(BusBridge, "recvTiming: response %s addr 0x%x\n",
+    DPRINTF(Bridge, "recvTimingResp: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
-    DPRINTF(BusBridge, "Request queue size: %d\n", requestQueue.size());
+    DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
-    slavePort.queueForSendTiming(pkt);
+    slavePort.schedTimingResp(pkt, curTick() + delay);
 
     return true;
 }
@@ -154,95 +148,52 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 bool
 Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
 {
-    DPRINTF(BusBridge, "recvTiming: request %s addr 0x%x\n",
+    DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
-    DPRINTF(BusBridge, "Response queue size: %d outresp: %d\n",
-            responseQueue.size(), outstandingResponses);
+    // ensure we do not have something waiting to retry
+    if(retryReq)
+        return false;
+
+    DPRINTF(Bridge, "Response queue size: %d outresp: %d\n",
+            transmitList.size(), outstandingResponses);
 
     if (masterPort.reqQueueFull()) {
-        DPRINTF(BusBridge, "Request queue full, nacking\n");
-        nackRequest(pkt);
-        return true;
-    }
-
-    if (pkt->needsResponse()) {
+        DPRINTF(Bridge, "Request queue full\n");
+        retryReq = true;
+    } else if (pkt->needsResponse()) {
         if (respQueueFull()) {
-            DPRINTF(BusBridge,
-                    "Response queue full, no space for response, nacking\n");
-            DPRINTF(BusBridge,
-                    "queue size: %d outstanding resp: %d\n",
-                    responseQueue.size(), outstandingResponses);
-            nackRequest(pkt);
-            return true;
+            DPRINTF(Bridge, "Response queue full\n");
+            retryReq = true;
         } else {
-            DPRINTF(BusBridge, "Request Needs response, reserving space\n");
+            DPRINTF(Bridge, "Reserving space for response\n");
             assert(outstandingResponses != respQueueLimit);
             ++outstandingResponses;
+            retryReq = false;
+            masterPort.schedTimingReq(pkt, curTick() + delay);
         }
     }
 
-    masterPort.queueForSendTiming(pkt);
-
-    return true;
+    // remember that we are now stalling a packet and that we have to
+    // tell the sending master to retry once space becomes available,
+    // we make no distinction whether the stalling is due to the
+    // request queue or response queue being full
+    return !retryReq;
 }
 
 void
-Bridge::BridgeSlavePort::nackRequest(PacketPtr pkt)
+Bridge::BridgeSlavePort::retryStalledReq()
 {
-    // Nack the packet
-    pkt->makeTimingResponse();
-    pkt->setNacked();
-
-    // The Nack packets are stored in the response queue just like any
-    // other response, but they do not occupy any space as this is
-    // tracked by the outstandingResponses, this guarantees space for
-    // the Nack packets, but implicitly means we have an (unrealistic)
-    // unbounded Nack queue.
-
-    // put it on the list to send
-    Tick readyTime = curTick() + nackDelay;
-    DeferredResponse resp(pkt, readyTime, true);
-
-    // nothing on the list, add it and we're done
-    if (responseQueue.empty()) {
-        assert(!sendEvent.scheduled());
-        bridge->schedule(sendEvent, readyTime);
-        responseQueue.push_back(resp);
-        return;
+    if (retryReq) {
+        DPRINTF(Bridge, "Request waiting for retry, now retrying\n");
+        retryReq = false;
+        sendRetry();
     }
-
-    assert(sendEvent.scheduled() || inRetry);
-
-    // does it go at the end?
-    if (readyTime >= responseQueue.back().ready) {
-        responseQueue.push_back(resp);
-        return;
-    }
-
-    // ok, somewhere in the middle, fun
-    std::list<DeferredResponse>::iterator i = responseQueue.begin();
-    std::list<DeferredResponse>::iterator end = responseQueue.end();
-    std::list<DeferredResponse>::iterator begin = responseQueue.begin();
-    bool done = false;
-
-    while (i != end && !done) {
-        if (readyTime < (*i).ready) {
-            if (i == begin)
-                bridge->reschedule(sendEvent, readyTime);
-            responseQueue.insert(i, resp);
-            done = true;
-        }
-        i++;
-    }
-    assert(done);
 }
 
 void
-Bridge::BridgeMasterPort::queueForSendTiming(PacketPtr pkt)
+Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
 {
-    Tick readyTime = curTick() + delay;
-
     // If we expect to see a response, we need to restore the source
     // and destination field that is potentially changed by a second
     // bus
@@ -257,18 +208,18 @@ Bridge::BridgeMasterPort::queueForSendTiming(PacketPtr pkt)
     // need to schedule an event to do the transmit.  Otherwise there
     // should already be an event scheduled for sending the head
     // packet.
-    if (requestQueue.empty()) {
-        bridge->schedule(sendEvent, readyTime);
+    if (transmitList.empty()) {
+        bridge.schedule(sendEvent, when);
     }
 
-    assert(requestQueue.size() != reqQueueLimit);
+    assert(transmitList.size() != reqQueueLimit);
 
-    requestQueue.push_back(DeferredRequest(pkt, readyTime));
+    transmitList.push_back(DeferredPacket(pkt, when));
 }
 
 
 void
-Bridge::BridgeSlavePort::queueForSendTiming(PacketPtr pkt)
+Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
 {
     // This is a response for a request we forwarded earlier.  The
     // corresponding request state should be stored in the packet's
@@ -278,119 +229,124 @@ Bridge::BridgeSlavePort::queueForSendTiming(PacketPtr pkt)
     // set up new packet dest & senderState based on values saved
     // from original request
     req_state->fixResponse(pkt);
+    delete req_state;
 
     // the bridge assumes that at least one bus has set the
     // destination field of the packet
     assert(pkt->isDestValid());
-    DPRINTF(BusBridge, "response, new dest %d\n", pkt->getDest());
-    delete req_state;
-
-    Tick readyTime = curTick() + delay;
+    DPRINTF(Bridge, "response, new dest %d\n", pkt->getDest());
 
     // If we're about to put this packet at the head of the queue, we
     // need to schedule an event to do the transmit.  Otherwise there
     // should already be an event scheduled for sending the head
     // packet.
-    if (responseQueue.empty()) {
-        bridge->schedule(sendEvent, readyTime);
+    if (transmitList.empty()) {
+        bridge.schedule(sendEvent, when);
     }
-    responseQueue.push_back(DeferredResponse(pkt, readyTime));
+
+    transmitList.push_back(DeferredPacket(pkt, when));
 }
 
 void
-Bridge::BridgeMasterPort::trySend()
+Bridge::BridgeMasterPort::trySendTiming()
 {
-    assert(!requestQueue.empty());
+    assert(!transmitList.empty());
 
-    DeferredRequest req = requestQueue.front();
+    DeferredPacket req = transmitList.front();
 
-    assert(req.ready <= curTick());
+    assert(req.tick <= curTick());
 
     PacketPtr pkt = req.pkt;
 
-    DPRINTF(BusBridge, "trySend request: addr 0x%x\n", pkt->getAddr());
+    DPRINTF(Bridge, "trySend request addr 0x%x, queue size %d\n",
+            pkt->getAddr(), transmitList.size());
 
     if (sendTimingReq(pkt)) {
         // send successful
-        requestQueue.pop_front();
+        transmitList.pop_front();
+        DPRINTF(Bridge, "trySend request successful\n");
 
         // If there are more packets to send, schedule event to try again.
-        if (!requestQueue.empty()) {
-            req = requestQueue.front();
-            DPRINTF(BusBridge, "Scheduling next send\n");
-            bridge->schedule(sendEvent,
-                             std::max(req.ready, curTick() + 1));
+        if (!transmitList.empty()) {
+            req = transmitList.front();
+            DPRINTF(Bridge, "Scheduling next send\n");
+            bridge.schedule(sendEvent, std::max(req.tick,
+                                                bridge.nextCycle()));
         }
-    } else {
-        inRetry = true;
+
+        // if we have stalled a request due to a full request queue,
+        // then send a retry at this point, also note that if the
+        // request we stalled was waiting for the response queue
+        // rather than the request queue we might stall it again
+        slavePort.retryStalledReq();
     }
 
-    DPRINTF(BusBridge, "trySend: request queue size: %d\n",
-            requestQueue.size());
+    // if the send failed, then we try again once we receive a retry,
+    // and therefore there is no need to take any action
 }
 
 void
-Bridge::BridgeSlavePort::trySend()
+Bridge::BridgeSlavePort::trySendTiming()
 {
-    assert(!responseQueue.empty());
+    assert(!transmitList.empty());
 
-    DeferredResponse resp = responseQueue.front();
+    DeferredPacket resp = transmitList.front();
 
-    assert(resp.ready <= curTick());
+    assert(resp.tick <= curTick());
 
     PacketPtr pkt = resp.pkt;
 
-    DPRINTF(BusBridge, "trySend response: dest %d addr 0x%x\n",
-            pkt->getDest(), pkt->getAddr());
-
-    bool was_nacked_here = resp.nackedHere;
+    DPRINTF(Bridge, "trySend response addr 0x%x, outstanding %d\n",
+            pkt->getAddr(), outstandingResponses);
 
     if (sendTimingResp(pkt)) {
-        DPRINTF(BusBridge, "  successful\n");
         // send successful
-        responseQueue.pop_front();
+        transmitList.pop_front();
+        DPRINTF(Bridge, "trySend response successful\n");
 
-        if (!was_nacked_here) {
-            assert(outstandingResponses != 0);
-            --outstandingResponses;
-        }
+        assert(outstandingResponses != 0);
+        --outstandingResponses;
 
         // If there are more packets to send, schedule event to try again.
-        if (!responseQueue.empty()) {
-            resp = responseQueue.front();
-            DPRINTF(BusBridge, "Scheduling next send\n");
-            bridge->schedule(sendEvent,
-                             std::max(resp.ready, curTick() + 1));
+        if (!transmitList.empty()) {
+            resp = transmitList.front();
+            DPRINTF(Bridge, "Scheduling next send\n");
+            bridge.schedule(sendEvent, std::max(resp.tick,
+                                                bridge.nextCycle()));
         }
-    } else {
-        DPRINTF(BusBridge, "  unsuccessful\n");
-        inRetry = true;
+
+        // if there is space in the request queue and we were stalling
+        // a request, it will definitely be possible to accept it now
+        // since there is guaranteed space in the response queue
+        if (!masterPort.reqQueueFull() && retryReq) {
+            DPRINTF(Bridge, "Request waiting for retry, now retrying\n");
+            retryReq = false;
+            sendRetry();
+        }
     }
 
-    DPRINTF(BusBridge, "trySend: queue size: %d outstanding resp: %d\n",
-            responseQueue.size(), outstandingResponses);
+    // if the send failed, then we try again once we receive a retry,
+    // and therefore there is no need to take any action
 }
 
 void
 Bridge::BridgeMasterPort::recvRetry()
 {
-    inRetry = false;
-    Tick nextReady = requestQueue.front().ready;
+    Tick nextReady = transmitList.front().tick;
     if (nextReady <= curTick())
-        trySend();
+        trySendTiming();
     else
-        bridge->schedule(sendEvent, nextReady);
+        bridge.schedule(sendEvent, nextReady);
 }
 
 void
 Bridge::BridgeSlavePort::recvRetry()
 {
-    inRetry = false;
-    Tick nextReady = responseQueue.front().ready;
+    Tick nextReady = transmitList.front().tick;
     if (nextReady <= curTick())
-        trySend();
+        trySendTiming();
     else
-        bridge->schedule(sendEvent, nextReady);
+        bridge.schedule(sendEvent, nextReady);
 }
 
 Tick
@@ -402,12 +358,12 @@ Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 void
 Bridge::BridgeSlavePort::recvFunctional(PacketPtr pkt)
 {
-    std::list<DeferredResponse>::iterator i;
+    std::list<DeferredPacket>::iterator i;
 
     pkt->pushLabel(name());
 
     // check the response queue
-    for (i = responseQueue.begin();  i != responseQueue.end(); ++i) {
+    for (i = transmitList.begin();  i != transmitList.end(); ++i) {
         if (pkt->checkFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
@@ -429,9 +385,9 @@ bool
 Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
 {
     bool found = false;
-    std::list<DeferredRequest>::iterator i = requestQueue.begin();
+    std::list<DeferredPacket>::iterator i = transmitList.begin();
 
-    while(i != requestQueue.end() && !found) {
+    while(i != transmitList.end() && !found) {
         if (pkt->checkFunctional((*i).pkt)) {
             pkt->makeResponse();
             found = true;

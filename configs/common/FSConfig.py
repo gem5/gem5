@@ -71,7 +71,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.membus = MemBus()
     # By default the bridge responds to all addresses above the I/O
     # base address (including the PCI config space)
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns',
+    self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
     self.physmem = SimpleMemory(range = AddrRange(mdesc.mem()))
     self.bridge.master = self.iobus.slave
@@ -174,7 +174,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = NoncoherentBus()
     self.membus = MemBus()
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.bridge = Bridge(delay='50ns')
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)
@@ -240,7 +240,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.iobus = NoncoherentBus()
     self.membus = MemBus()
     self.membus.badaddr_responder.warn_access = "warn"
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.bridge = Bridge(delay='50ns')
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
 
@@ -322,7 +322,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = NoncoherentBus()
     self.membus = MemBus()
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.bridge = Bridge(delay='50ns')
     self.physmem = SimpleMemory(range = AddrRange('1GB'))
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -368,7 +368,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
 
     # North Bridge
     x86_sys.iobus = NoncoherentBus()
-    x86_sys.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    x86_sys.bridge = Bridge(delay='50ns')
     x86_sys.bridge.master = x86_sys.iobus.slave
     x86_sys.bridge.slave = x86_sys.membus.master
     # Allow the bridge to pass through the IO APIC (two pages),
@@ -387,7 +387,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
 
     # Create a bridge from the IO bus to the memory bus to allow access to
     # the local APIC (two pages)
-    x86_sys.apicbridge = Bridge(delay='50ns', nack_delay='4ns')
+    x86_sys.apicbridge = Bridge(delay='50ns')
     x86_sys.apicbridge.slave = x86_sys.iobus.master
     x86_sys.apicbridge.master = x86_sys.membus.slave
     x86_sys.apicbridge.ranges = [AddrRange(interrupts_address_space_base,

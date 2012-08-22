@@ -52,15 +52,10 @@
 #define __MEM_BRIDGE_HH__
 
 #include <list>
-#include <queue>
-#include <string>
 
 #include "base/types.hh"
 #include "mem/mem_object.hh"
-#include "mem/packet.hh"
-#include "mem/port.hh"
 #include "params/Bridge.hh"
-#include "sim/eventq.hh"
 
 /**
  * A bridge is used to interface two different busses (or in general a
@@ -71,9 +66,9 @@
  * The bridge comprises a slave port and a master port, that buffer
  * outgoing responses and requests respectively. Buffer space is
  * reserved when a request arrives, also reserving response space
- * before forwarding the request. An incoming request is always
- * accepted (recvTiming returns true), but is potentially NACKed if
- * there is no request space or response space.
+ * before forwarding the request. If there is no space present, then
+ * the bridge will delay accepting the packet until space becomes
+ * available.
  */
 class Bridge : public MemObject
 {
@@ -106,40 +101,18 @@ class Bridge : public MemObject
     };
 
     /**
-     * A deferred request stores a packet along with its scheduled
-     * transmission time, and whether we can expect to see a response
-     * or not.
+     * A deferred packet stores a packet along with its scheduled
+     * transmission time
      */
-    class DeferredRequest
+    class DeferredPacket
     {
 
       public:
 
-        Tick ready;
+        Tick tick;
         PacketPtr pkt;
-        bool expectResponse;
 
-        DeferredRequest(PacketPtr _pkt, Tick t)
-            : ready(t), pkt(_pkt), expectResponse(_pkt->needsResponse())
-        { }
-    };
-
-    /**
-     * A deferred response stores a packet along with its scheduled
-     * transmission time. It also contains information of whether the
-     * bridge NACKed the packet to be able to correctly maintain
-     * counters of outstanding responses.
-     */
-    class DeferredResponse {
-
-      public:
-
-        Tick ready;
-        PacketPtr pkt;
-        bool nackedHere;
-
-        DeferredResponse(PacketPtr _pkt, Tick t, bool nack = false)
-            : ready(t), pkt(_pkt), nackedHere(nack)
+        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
         { }
     };
 
@@ -157,20 +130,17 @@ class Bridge : public MemObject
 
       private:
 
-        /** A pointer to the bridge to which this port belongs. */
-        Bridge *bridge;
+        /** The bridge to which this port belongs. */
+        Bridge& bridge;
 
         /**
-         * Master port on the other side of the bridge
-         * (connected to the other bus).
+         * Master port on the other side of the bridge (connected to
+         * the other bus).
          */
         BridgeMasterPort& masterPort;
 
         /** Minimum request delay though this bridge. */
         Tick delay;
-
-        /** Min delay to respond with a nack. */
-        Tick nackDelay;
 
         /** Address ranges to pass through the bridge */
         AddrRangeList ranges;
@@ -180,13 +150,13 @@ class Bridge : public MemObject
          * queue for a specified delay to model the processing delay
          * of the bridge.
          */
-        std::list<DeferredResponse> responseQueue;
+        std::list<DeferredPacket> transmitList;
 
         /** Counter to track the outstanding responses. */
         unsigned int outstandingResponses;
 
-        /** If we're waiting for a retry to happen. */
-        bool inRetry;
+        /** If we should send a retry when space becomes available. */
+        bool retryReq;
 
         /** Max queue size for reserved responses. */
         unsigned int respQueueLimit;
@@ -199,22 +169,15 @@ class Bridge : public MemObject
         bool respQueueFull();
 
         /**
-         * Turn the request packet into a NACK response and put it in
-         * the response queue and schedule its transmission.
-         *
-         * @param pkt the request packet to NACK
-         */
-        void nackRequest(PacketPtr pkt);
-
-        /**
          * Handle send event, scheduled when the packet at the head of
          * the response queue is ready to transmit (for timing
          * accesses only).
          */
-        void trySend();
+        void trySendTiming();
 
         /** Send event for the response queue. */
-        EventWrapper<BridgeSlavePort, &BridgeSlavePort::trySend> sendEvent;
+        EventWrapper<BridgeSlavePort,
+                     &BridgeSlavePort::trySendTiming> sendEvent;
 
       public:
 
@@ -225,44 +188,50 @@ class Bridge : public MemObject
          * @param _bridge the structural owner
          * @param _masterPort the master port on the other side of the bridge
          * @param _delay the delay from seeing a response to sending it
-         * @param _nack_delay the delay from a NACK to sending the response
          * @param _resp_limit the size of the response queue
          * @param _ranges a number of address ranges to forward
          */
-        BridgeSlavePort(const std::string &_name, Bridge *_bridge,
+        BridgeSlavePort(const std::string& _name, Bridge& _bridge,
                         BridgeMasterPort& _masterPort, int _delay,
-                        int _nack_delay, int _resp_limit,
-                        std::vector<Range<Addr> > _ranges);
+                        int _resp_limit, std::vector<Range<Addr> > _ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule
          * a send if necessary.
          *
          * @param pkt a response to send out after a delay
+         * @param when tick when response packet should be sent
          */
-        void queueForSendTiming(PacketPtr pkt);
+        void schedTimingResp(PacketPtr pkt, Tick when);
+
+        /**
+         * Retry any stalled request that we have failed to accept at
+         * an earlier point in time. This call will do nothing if no
+         * request is waiting.
+         */
+        void retryStalledReq();
 
       protected:
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTimingReq(PacketPtr pkt);
+        bool recvTimingReq(PacketPtr pkt);
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        virtual void recvRetry();
+        void recvRetry();
 
         /** When receiving a Atomic requestfrom the peer port,
             pass it to the bridge. */
-        virtual Tick recvAtomic(PacketPtr pkt);
+        Tick recvAtomic(PacketPtr pkt);
 
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
-        virtual void recvFunctional(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt);
 
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
-        virtual AddrRangeList getAddrRanges() const;
+        AddrRangeList getAddrRanges() const;
     };
 
 
@@ -276,12 +245,12 @@ class Bridge : public MemObject
 
       private:
 
-        /** A pointer to the bridge to which this port belongs. */
-        Bridge* bridge;
+        /** The bridge to which this port belongs. */
+        Bridge& bridge;
 
         /**
-         * Pointer to the slave port on the other side of the bridge
-         * (connected to the other bus).
+         * The slave port on the other side of the bridge (connected
+         * to the other bus).
          */
         BridgeSlavePort& slavePort;
 
@@ -293,10 +262,7 @@ class Bridge : public MemObject
          * queue for a specified delay to model the processing delay
          * of the bridge.
          */
-        std::list<DeferredRequest> requestQueue;
-
-        /** If we're waiting for a retry to happen. */
-        bool inRetry;
+        std::list<DeferredPacket> transmitList;
 
         /** Max queue size for request packets */
         unsigned int reqQueueLimit;
@@ -306,10 +272,11 @@ class Bridge : public MemObject
          * the outbound queue is ready to transmit (for timing
          * accesses only).
          */
-        void trySend();
+        void trySendTiming();
 
         /** Send event for the request queue. */
-        EventWrapper<BridgeMasterPort, &BridgeMasterPort::trySend> sendEvent;
+        EventWrapper<BridgeMasterPort,
+                     &BridgeMasterPort::trySendTiming> sendEvent;
 
       public:
 
@@ -322,7 +289,7 @@ class Bridge : public MemObject
          * @param _delay the delay from seeing a request to sending it
          * @param _req_limit the size of the request queue
          */
-        BridgeMasterPort(const std::string &_name, Bridge *_bridge,
+        BridgeMasterPort(const std::string& _name, Bridge& _bridge,
                          BridgeSlavePort& _slavePort, int _delay,
                          int _req_limit);
 
@@ -338,8 +305,9 @@ class Bridge : public MemObject
          * a send if necessary.
          *
          * @param pkt a request to send out after a delay
+         * @param when tick when response packet should be sent
          */
-        void queueForSendTiming(PacketPtr pkt);
+        void schedTimingReq(PacketPtr pkt, Tick when);
 
         /**
          * Check a functional request against the packets in our
@@ -355,11 +323,11 @@ class Bridge : public MemObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTimingResp(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt);
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        virtual void recvRetry();
+        void recvRetry();
     };
 
     /** Slave port of the bridge. */
@@ -368,23 +336,15 @@ class Bridge : public MemObject
     /** Master port of the bridge. */
     BridgeMasterPort masterPort;
 
-    /** If this bridge should acknowledge writes. */
-    bool ackWrites;
-
   public:
-    typedef BridgeParams Params;
-
-  protected:
-    Params *_params;
-
-  public:
-    const Params *params() const { return _params; }
 
     virtual MasterPort& getMasterPort(const std::string& if_name,
                                       int idx = -1);
     virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
 
     virtual void init();
+
+    typedef BridgeParams Params;
 
     Bridge(Params *p);
 };

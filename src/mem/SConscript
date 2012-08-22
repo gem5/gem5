@@ -65,7 +65,7 @@ DebugFlag('NoncoherentBus')
 CompoundFlag('Bus', ['BaseBus', 'BusAddrRanges', 'CoherentBus',
                      'NoncoherentBus'])
 
-DebugFlag('BusBridge')
+DebugFlag('Bridge')
 DebugFlag('CommMonitor')
 DebugFlag('LLSC')
 DebugFlag('MMU')
