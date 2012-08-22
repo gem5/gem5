@@ -51,7 +51,7 @@ X86ISA::IntDev::IntMasterPort::sendMessage(ApicList apics,
     for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
         PacketPtr pkt = buildIntRequest(*apicIt, message);
         if (timing) {
-            queue.schedSendTiming(pkt, curTick() + latency);
+            schedTimingReq(pkt, curTick() + latency);
             // The target handles cleaning up the packet in timing mode.
         } else {
             // ignore the latency involved in the atomic transaction

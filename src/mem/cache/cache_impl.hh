@@ -407,7 +407,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
         rec->restore(pkt, this);
         delete rec;
-        memSidePort->respond(pkt, time);
+        memSidePort->schedTimingSnoopResp(pkt, time);
         return true;
     }
 
@@ -500,7 +500,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
         if (needsResponse) {
             pkt->makeTimingResponse();
-            cpuSidePort->respond(pkt, curTick()+lat);
+            cpuSidePort->schedTimingResp(pkt, curTick()+lat);
         } else {
             /// @todo nominally we should just delete the packet here,
             /// however, until 4-phase stuff we can't because sending
@@ -933,7 +933,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // isInvalidate() set otherwise.
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
-            cpuSidePort->respond(target->pkt, completion_time);
+            cpuSidePort->schedTimingResp(target->pkt, completion_time);
             break;
 
           case MSHR::Target::FromPrefetcher:
@@ -1166,7 +1166,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
         // invalidate it.
         pkt->cmd = MemCmd::ReadRespWithInvalidate;
     }
-    memSidePort->respond(pkt, curTick() + hitLatency);
+    memSidePort->schedTimingSnoopResp(pkt, curTick() + hitLatency);
 }
 
 template<class TagStore>

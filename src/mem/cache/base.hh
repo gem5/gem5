@@ -134,17 +134,6 @@ class BaseCache : public MemObject
             queue.schedSendEvent(time);
         }
 
-        /**
-         * Schedule the transmissions of a response packet at a given
-         * point in time.
-         *
-         * @param pkt response packet
-         * @param when time to send the response
-         */
-        void respond(PacketPtr pkt, Tick time) {
-            queue.schedSendTiming(pkt, time, true);
-        }
-
       protected:
 
         CacheMasterPort(const std::string &_name, BaseCache *_cache,
@@ -178,17 +167,6 @@ class BaseCache : public MemObject
 
         /** Return to normal operation and accept new requests. */
         void clearBlocked();
-
-        /**
-         * Schedule the transmissions of a response packet at a given
-         * point in time.
-         *
-         * @param pkt response packet
-         * @param when time to send the response
-         */
-        void respond(PacketPtr pkt, Tick time) {
-            queue.schedSendTiming(pkt, time);
-        }
 
       protected:
 

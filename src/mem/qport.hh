@@ -84,6 +84,15 @@ class QueuedSlavePort : public SlavePort
 
     virtual ~QueuedSlavePort() { }
 
+    /**
+     * Schedule the sending of a timing response.
+     *
+     * @param pkt Packet to send
+     * @param when Absolute time (in ticks) to send packet
+     */
+    void schedTimingResp(PacketPtr pkt, Tick when)
+    { queue.schedSendTiming(pkt, when); }
+
     /** Check the list of buffered packets against the supplied
      * functional request. */
     bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
@@ -124,6 +133,24 @@ class QueuedMasterPort : public MasterPort
     { }
 
     virtual ~QueuedMasterPort() { }
+
+    /**
+     * Schedule the sending of a timing request.
+     *
+     * @param pkt Packet to send
+     * @param when Absolute time (in ticks) to send packet
+     */
+    void schedTimingReq(PacketPtr pkt, Tick when)
+    { queue.schedSendTiming(pkt, when); }
+
+    /**
+     * Schedule the sending of a timing snoop response.
+     *
+     * @param pkt Packet to send
+     * @param when Absolute time (in ticks) to send packet
+     */
+    void schedTimingSnoopResp(PacketPtr pkt, Tick when)
+    { queue.schedSendTiming(pkt, when, true); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */

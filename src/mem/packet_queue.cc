@@ -109,6 +109,9 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
     // we can still send a packet before the end of this tick
     assert(when >= curTick());
 
+    // express snoops should never be queued
+    assert(!pkt->isExpressSnoop());
+
     // nothing on the list, or earlier than current front element,
     // schedule an event
     if (transmitList.empty() || when < transmitList.front().tick) {

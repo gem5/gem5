@@ -196,7 +196,10 @@ RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
                 "Request for address 0x%#x is assumed to be a pio request\n",
                 pkt->getAddr());
 
-        return ruby_port->pio_port.sendNextCycle(pkt);
+        // send next cycle
+        ruby_port->pio_port.schedTimingReq(pkt, curTick() +
+                                           g_eventQueue_ptr->getClock());
+        return true;
     }
 
     assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
@@ -647,28 +650,12 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
-        sendNextCycle(pkt);
+        // send next cycle
+        schedTimingResp(pkt, curTick() + g_eventQueue_ptr->getClock());
     } else {
         delete pkt;
     }
     DPRINTF(RubyPort, "Hit callback done!\n");
-}
-
-bool
-RubyPort::M5Port::sendNextCycle(PacketPtr pkt, bool send_as_snoop)
-{
-    //minimum latency, must be > 0
-    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()),
-                          send_as_snoop);
-    return true;
-}
-
-bool
-RubyPort::PioPort::sendNextCycle(PacketPtr pkt)
-{
-    //minimum latency, must be > 0
-    queue.schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
-    return true;
 }
 
 AddrRangeList
