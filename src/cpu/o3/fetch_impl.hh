@@ -363,8 +363,6 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n", tid);
 
-    assert(!pkt->wasNacked());
-
     // Only change the status if it's still waiting on the icache access
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||

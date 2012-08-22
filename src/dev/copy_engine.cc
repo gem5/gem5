@@ -78,8 +78,7 @@ CopyEngine::CopyEngine(const Params *p)
 
 
 CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
-    : cePort(_ce, _ce->sys, _ce->params()->min_backoff_delay,
-             _ce->params()->max_backoff_delay),
+    : cePort(_ce, _ce->sys),
       ce(_ce), channelId(cid), busy(false), underReset(false),
     refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
     latAfterCompletion(ce->params()->latAfterCompletion),

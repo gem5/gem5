@@ -120,7 +120,6 @@ class MemCmd
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
         // compatibility
-        NetworkNackError,  // nacked at network layer (not by protocol)
         InvalidDestError,  // packet dest field invalid
         BadAddressError,   // memory address invalid
         FunctionalReadError, // unable to fulfill functional read
@@ -466,20 +465,12 @@ class Packet : public Printable
     // their encoding keeps changing (from result field to command
     // field, etc.)
     void
-    setNacked()
-    {
-        assert(isResponse());
-        cmd = MemCmd::NetworkNackError;
-    }
-
-    void
     setBadAddress()
     {
         assert(isResponse());
         cmd = MemCmd::BadAddressError;
     }
 
-    bool wasNacked() const     { return cmd == MemCmd::NetworkNackError; }
     bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
@@ -667,20 +658,6 @@ class Packet : public Printable
                 cmd = MemCmd::FunctionalReadError;
             }
         }
-    }
-
-    /**
-     * Take a request packet that has been returned as NACKED and
-     * modify it so that it can be sent out again. Only packets that
-     * need a response can be NACKED, so verify that that is true.
-     */
-    void
-    reinitNacked()
-    {
-        assert(wasNacked());
-        cmd = origCmd;
-        assert(needsResponse());
-        clearDest();
     }
 
     void

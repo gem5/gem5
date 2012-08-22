@@ -692,8 +692,6 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(), old_state);
 
-        assert(!bus_pkt->wasNacked());
-
         // If packet was a forward, the response (if any) is already
         // in place in the bus_pkt == pkt structure, so we don't need
         // to do anything.  Otherwise, use the separate bus_pkt to
@@ -823,12 +821,6 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
     assert(mshr);
 
-    if (pkt->wasNacked()) {
-        //pkt->reinitFromRequest();
-        warn("NACKs from devices not connected to the same bus "
-             "not implemented\n");
-        return;
-    }
     if (is_error) {
         DPRINTF(Cache, "Cache received packet with error for address %x, "
                 "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
@@ -1644,12 +1636,6 @@ template<class TagStore>
 bool
 Cache<TagStore>::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
-    // this needs to be fixed so that the cache updates the mshr and sends the
-    // packet back out on the link, but it probably won't happen so until this
-    // gets fixed, just panic when it does
-    if (pkt->wasNacked())
-        panic("Need to implement cache resending nacked packets!\n");
-
     cache->handleResponse(pkt);
     return true;
 }

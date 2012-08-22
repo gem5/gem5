@@ -719,25 +719,14 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
-    if (!pkt->wasNacked()) {
-        DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
-        // delay processing of returned data until next CPU clock edge
-        Tick next_tick = cpu->nextCycle(curTick());
+    DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
+    // delay processing of returned data until next CPU clock edge
+    Tick next_tick = cpu->nextCycle();
 
-        if (next_tick == curTick())
-            cpu->completeIfetch(pkt);
-        else
-            tickEvent.schedule(pkt, next_tick);
-
-        return true;
-    } else {
-        assert(cpu->_status == IcacheWaitResponse);
-        pkt->reinitNacked();
-        if (!sendTimingReq(pkt)) {
-            cpu->_status = IcacheRetry;
-            cpu->ifetch_pkt = pkt;
-        }
-    }
+    if (next_tick == curTick())
+        cpu->completeIfetch(pkt);
+    else
+        tickEvent.schedule(pkt, next_tick);
 
     return true;
 }
@@ -839,32 +828,21 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)
 {
-    if (!pkt->wasNacked()) {
-        // delay processing of returned data until next CPU clock edge
-        Tick next_tick = cpu->nextCycle(curTick());
+    // delay processing of returned data until next CPU clock edge
+    Tick next_tick = cpu->nextCycle();
 
-        if (next_tick == curTick()) {
-            cpu->completeDataAccess(pkt);
+    if (next_tick == curTick()) {
+        cpu->completeDataAccess(pkt);
+    } else {
+        if (!tickEvent.scheduled()) {
+            tickEvent.schedule(pkt, next_tick);
         } else {
-            if (!tickEvent.scheduled()) {
-                tickEvent.schedule(pkt, next_tick);
-            } else {
-                // In the case of a split transaction and a cache that is
-                // faster than a CPU we could get two responses before
-                // next_tick expires
-                if (!retryEvent.scheduled())
-                    cpu->schedule(retryEvent, next_tick);
-                return false;
-            }
-        }
-
-        return true;
-    } else  {
-        assert(cpu->_status == DcacheWaitResponse);
-        pkt->reinitNacked();
-        if (!sendTimingReq(pkt)) {
-            cpu->_status = DcacheRetry;
-            cpu->dcache_pkt = pkt;
+            // In the case of a split transaction and a cache that is
+            // faster than a CPU we could get two responses before
+            // next_tick expires
+            if (!retryEvent.scheduled())
+                cpu->schedule(retryEvent, next_tick);
+            return false;
         }
     }
 

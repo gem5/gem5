@@ -570,63 +570,49 @@ bool
 Walker::WalkerState::recvPacket(PacketPtr pkt)
 {
     assert(pkt->isResponse());
-    if (!pkt->wasNacked()) {
-        assert(inflight);
-        assert(state == Waiting);
-        assert(!read);
-        inflight--;
-        if (pkt->isRead()) {
-            state = nextState;
-            nextState = Ready;
-            PacketPtr write = NULL;
-            read = pkt;
-            timingFault = stepWalk(write);
-            state = Waiting;
-            assert(timingFault == NoFault || read == NULL);
-            if (write) {
-                writes.push_back(write);
-            }
-            sendPackets();
-        } else {
-            sendPackets();
+    assert(inflight);
+    assert(state == Waiting);
+    assert(!read);
+    inflight--;
+    if (pkt->isRead()) {
+        state = nextState;
+        nextState = Ready;
+        PacketPtr write = NULL;
+        read = pkt;
+        timingFault = stepWalk(write);
+        state = Waiting;
+        assert(timingFault == NoFault || read == NULL);
+        if (write) {
+            writes.push_back(write);
         }
-        if (inflight == 0 && read == NULL && writes.size() == 0) {
-            state = Ready;
-            nextState = Waiting;
-            if (timingFault == NoFault) {
-                /*
-                 * Finish the translation. Now that we now the right entry is
-                 * in the TLB, this should work with no memory accesses.
-                 * There could be new faults unrelated to the table walk like
-                 * permissions violations, so we'll need the return value as
-                 * well.
-                 */
-                bool delayedResponse;
-                Fault fault = walker->tlb->translate(req, tc, NULL, mode,
-                        delayedResponse, true);
-                assert(!delayedResponse);
-                // Let the CPU continue.
-                translation->finish(fault, req, tc, mode);
-            } else {
-                // There was a fault during the walk. Let the CPU know.
-                translation->finish(timingFault, req, tc, mode);
-            }
-            return true;
-        }
+        sendPackets();
     } else {
-        DPRINTF(PageTableWalker, "Request was nacked. Entering retry state\n");
-        pkt->reinitNacked();
-        if (!walker->sendTiming(this, pkt)) {
-            inflight--;
-            retrying = true;
-            if (pkt->isWrite()) {
-                writes.push_back(pkt);
-            } else {
-                assert(!read);
-                read = pkt;
-            }
-        }
+        sendPackets();
     }
+    if (inflight == 0 && read == NULL && writes.size() == 0) {
+        state = Ready;
+        nextState = Waiting;
+        if (timingFault == NoFault) {
+            /*
+             * Finish the translation. Now that we now the right entry is
+             * in the TLB, this should work with no memory accesses.
+             * There could be new faults unrelated to the table walk like
+             * permissions violations, so we'll need the return value as
+             * well.
+             */
+            bool delayedResponse;
+            Fault fault = walker->tlb->translate(req, tc, NULL, mode,
+                                                 delayedResponse, true);
+            assert(!delayedResponse);
+            // Let the CPU continue.
+            translation->finish(fault, req, tc, mode);
+        } else {
+            // There was a fault during the walk. Let the CPU know.
+            translation->finish(timingFault, req, tc, mode);
+        }
+        return true;
+    }
+
     return false;
 }
 

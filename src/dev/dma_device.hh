@@ -87,16 +87,6 @@ class DmaPort : public MasterPort
      * here.*/
     Event *drainEvent;
 
-    /** time to wait between sending another packet, increases as NACKs are
-     * recived, decreases as responses are recived. */
-    Tick backoffTime;
-
-    /** Minimum time that device should back off for after failed sendTiming */
-    Tick minBackoffDelay;
-
-    /** Maximum time that device should back off for after failed sendTiming */
-    Tick maxBackoffDelay;
-
     /** If the port is currently waiting for a retry before it can send whatever
      * it is that it's sending. */
     bool inRetry;
@@ -108,11 +98,9 @@ class DmaPort : public MasterPort
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();
 
-    /** event to give us a kick every time we backoff time is reached. */
-    EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
-
   public:
-    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff);
+
+    DmaPort(MemObject *dev, System *s);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag = 0);

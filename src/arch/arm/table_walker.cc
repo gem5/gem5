@@ -51,8 +51,7 @@
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(this, params()->sys, params()->min_backoff,
-                         params()->max_backoff), drainEvent(NULL),
+    : MemObject(p), port(this, params()->sys), drainEvent(NULL),
       tlb(NULL), currState(NULL), pending(false),
       masterId(p->sys->getMasterId(name())),
       doL1DescEvent(this), doL2DescEvent(this), doProcessEvent(this)

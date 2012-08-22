@@ -47,36 +47,18 @@
 #include "dev/dma_device.hh"
 #include "sim/system.hh"
 
-DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff)
+DmaPort::DmaPort(MemObject *dev, System *s)
     : MasterPort(dev->name() + ".dma", dev), device(dev), sys(s),
       masterId(s->getMasterId(dev->name())),
       pendingCount(0), drainEvent(NULL),
-      backoffTime(0), minBackoffDelay(min_backoff),
-      maxBackoffDelay(max_backoff), inRetry(false),
-      backoffEvent(this)
+      inRetry(false)
 { }
 
 bool
 DmaPort::recvTimingResp(PacketPtr pkt)
 {
-    if (pkt->wasNacked()) {
-        DPRINTF(DMA, "Received nacked %s addr %#x\n",
-                pkt->cmdString(), pkt->getAddr());
-
-        if (backoffTime < minBackoffDelay)
-            backoffTime = minBackoffDelay;
-        else if (backoffTime < maxBackoffDelay)
-            backoffTime <<= 1;
-
-        device->reschedule(backoffEvent, curTick() + backoffTime, true);
-
-        DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
-
-        pkt->reinitNacked();
-        queueDma(pkt, true);
-    } else if (pkt->senderState) {
+    if (pkt->senderState) {
         DmaReqState *state;
-        backoffTime >>= 2;
 
         DPRINTF(DMA, "Received response %s addr %#x size %#x\n",
                 pkt->cmdString(), pkt->getAddr(), pkt->req->getSize());
@@ -116,8 +98,7 @@ DmaPort::recvTimingResp(PacketPtr pkt)
 }
 
 DmaDevice::DmaDevice(const Params *p)
-    : PioDevice(p), dmaPort(this, sys, params()->min_backoff_delay,
-                            params()->max_backoff_delay)
+    : PioDevice(p), dmaPort(this, sys)
 { }
 
 void
@@ -168,16 +149,10 @@ DmaPort::recvRetry()
             inRetry = true;
             DPRINTF(DMA, "-- Failed, queued\n");
         }
-    } while (!backoffTime &&  result && transmitList.size());
+    } while (result && transmitList.size());
 
-    if (transmitList.size() && backoffTime && !inRetry) {
-        DPRINTF(DMA, "Scheduling backoff for %d\n", curTick()+backoffTime);
-        if (!backoffEvent.scheduled())
-            device->schedule(backoffEvent, backoffTime + curTick());
-    }
-    DPRINTF(DMA, "TransmitList: %d, backoffTime: %d inRetry: %d es: %d\n",
-            transmitList.size(), backoffTime, inRetry,
-            backoffEvent.scheduled());
+    DPRINTF(DMA, "TransmitList: %d, inRetry: %d\n",
+            transmitList.size(), inRetry);
 }
 
 void
@@ -231,8 +206,8 @@ DmaPort::sendDma()
 
     Enums::MemoryMode state = sys->getMemoryMode();
     if (state == Enums::timing) {
-        if (backoffEvent.scheduled() || inRetry) {
-            DPRINTF(DMA, "Can't send immediately, waiting for retry or backoff timer\n");
+        if (inRetry) {
+            DPRINTF(DMA, "Can't send immediately, waiting for retry\n");
             return;
         }
 
@@ -249,14 +224,7 @@ DmaPort::sendDma()
                 inRetry = true;
                 DPRINTF(DMA, "-- Failed: queued\n");
             }
-        } while (result && !backoffTime && transmitList.size());
-
-        if (transmitList.size() && backoffTime && !inRetry &&
-                !backoffEvent.scheduled()) {
-            DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
-                    backoffTime+curTick());
-            device->schedule(backoffEvent, backoffTime + curTick());
-        }
+        } while (result && transmitList.size());
     } else if (state == Enums::atomic) {
         transmitList.pop_front();
 

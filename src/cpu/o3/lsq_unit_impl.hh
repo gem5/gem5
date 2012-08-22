@@ -95,8 +95,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
-    assert(!pkt->wasNacked());
-
     // If this is a split access, wait until all packets are received.
     if (TheISA::HasUnalignedMemAcc && !state->complete()) {
         delete pkt->req;

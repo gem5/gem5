@@ -47,9 +47,6 @@ class ArmTableWalker(MemObject):
     cxx_class = 'ArmISA::TableWalker'
     port = MasterPort("Port for TableWalker to do walk the translation with")
     sys = Param.System(Parent.any, "system object parameter")
-    min_backoff = Param.Tick(0, "Minimum backoff delay after failed send")
-    max_backoff = Param.Tick(100000, "Minimum backoff delay after failed send")
-
 
 class ArmTLB(SimObject):
     type = 'ArmTLB'

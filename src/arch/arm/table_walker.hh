@@ -287,9 +287,8 @@ class TableWalker : public MemObject
          * A snooping DMA port merely calls the construtor of the DMA
          * port.
          */
-        SnoopingDmaPort(MemObject *dev, System *s, Tick min_backoff,
-                        Tick max_backoff) :
-            DmaPort(dev, s, min_backoff, max_backoff)
+        SnoopingDmaPort(MemObject *dev, System *s) :
+            DmaPort(dev, s)
         { }
     };
 
