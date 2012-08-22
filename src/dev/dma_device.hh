@@ -44,6 +44,8 @@
 #ifndef __DEV_DMA_DEVICE_HH__
 #define __DEV_DMA_DEVICE_HH__
 
+#include <deque>
+
 #include "dev/io_device.hh"
 #include "params/DmaDevice.hh"
 
@@ -71,7 +73,9 @@ class DmaPort : public MasterPort
     };
 
     MemObject *device;
-    std::list<PacketPtr> transmitList;
+
+    /** Use a deque as we never to any insertion or removal in the middle */
+    std::deque<PacketPtr> transmitList;
 
     /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
@@ -81,21 +85,32 @@ class DmaPort : public MasterPort
     MasterID masterId;
 
     /** Number of outstanding packets the dma port has. */
-    int pendingCount;
+    uint32_t pendingCount;
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
     Event *drainEvent;
 
-    /** If the port is currently waiting for a retry before it can send whatever
-     * it is that it's sending. */
+    /** If the port is currently waiting for a retry before it can
+     * send whatever it is that it's sending. */
     bool inRetry;
 
-    virtual bool recvTimingResp(PacketPtr pkt);
+    /**
+     * Handle a response packet by updating the corresponding DMA
+     * request state to reflect the bytes received, and also update
+     * the pending request counter. If the DMA request that this
+     * packet is part of is complete, then signal the completion event
+     * if present, potentially with a delay added to it.
+     *
+     * @param pkt Response packet to handler
+     * @param delay Additional delay for scheduling the completion event
+     */
+    void handleResp(PacketPtr pkt, Tick delay = 0);
 
-    virtual void recvRetry() ;
+    bool recvTimingResp(PacketPtr pkt);
+    void recvRetry() ;
 
-    void queueDma(PacketPtr pkt, bool front = false);
+    void queueDma(PacketPtr pkt);
     void sendDma();
 
   public:
@@ -105,7 +120,7 @@ class DmaPort : public MasterPort
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag = 0);
 
-    bool dmaPending() { return pendingCount > 0; }
+    bool dmaPending() const { return pendingCount > 0; }
 
     unsigned cacheBlockSize() const { return peerBlockSize(); }
     unsigned int drain(Event *de);
@@ -119,13 +134,7 @@ class DmaDevice : public PioDevice
   public:
     typedef DmaDeviceParams Params;
     DmaDevice(const Params *p);
-    virtual ~DmaDevice();
-
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
+    virtual ~DmaDevice() { }
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
                   Tick delay = 0)

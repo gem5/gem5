@@ -39,6 +39,7 @@
  *
  * Authors: Ali Saidi
  *          Nathan Binkert
+ *          Andreas Hansson
  */
 
 #include "base/chunk_generator.hh"
@@ -54,45 +55,62 @@ DmaPort::DmaPort(MemObject *dev, System *s)
       inRetry(false)
 { }
 
+void
+DmaPort::handleResp(PacketPtr pkt, Tick delay)
+{
+    // should always see a response with a sender state
+    assert(pkt->isResponse());
+
+    // get the DMA sender state
+    DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
+    assert(state);
+
+    DPRINTF(DMA, "Received response %s for addr: %#x size: %d nb: %d,"  \
+            " tot: %d sched %d\n",
+            pkt->cmdString(), pkt->getAddr(), pkt->req->getSize(),
+            state->numBytes, state->totBytes,
+            state->completionEvent ?
+            state->completionEvent->scheduled() : 0);
+
+    assert(pendingCount != 0);
+    pendingCount--;
+
+    // update the number of bytes received based on the request rather
+    // than the packet as the latter could be rounded up to line sizes
+    state->numBytes += pkt->req->getSize();
+    assert(state->totBytes >= state->numBytes);
+
+    // if we have reached the total number of bytes for this DMA
+    // request, then signal the completion and delete the sate
+    if (state->totBytes == state->numBytes) {
+        if (state->completionEvent) {
+            delay += state->delay;
+            if (delay)
+                device->schedule(state->completionEvent, curTick() + delay);
+            else
+                state->completionEvent->process();
+        }
+        delete state;
+    }
+
+    // delete the request that we created and also the packet
+    delete pkt->req;
+    delete pkt;
+
+    // we might be drained at this point, if so signal the drain event
+    if (pendingCount == 0 && drainEvent) {
+        drainEvent->process();
+        drainEvent = NULL;
+    }
+}
+
 bool
 DmaPort::recvTimingResp(PacketPtr pkt)
 {
-    if (pkt->senderState) {
-        DmaReqState *state;
+    // We shouldn't ever get a block in ownership state
+    assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
 
-        DPRINTF(DMA, "Received response %s addr %#x size %#x\n",
-                pkt->cmdString(), pkt->getAddr(), pkt->req->getSize());
-        state = dynamic_cast<DmaReqState*>(pkt->senderState);
-        pendingCount--;
-
-        assert(pendingCount >= 0);
-        assert(state);
-
-        // We shouldn't ever get a block in ownership state
-        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
-
-        state->numBytes += pkt->req->getSize();
-        assert(state->totBytes >= state->numBytes);
-        if (state->totBytes == state->numBytes) {
-            if (state->completionEvent) {
-                if (state->delay)
-                    device->schedule(state->completionEvent,
-                                     curTick() + state->delay);
-                else
-                    state->completionEvent->process();
-            }
-            delete state;
-        }
-        delete pkt->req;
-        delete pkt;
-
-        if (pendingCount == 0 && transmitList.empty() && drainEvent) {
-            drainEvent->process();
-            drainEvent = NULL;
-        }
-    }  else {
-        panic("Got packet without sender state... huh?\n");
-    }
+    handleResp(pkt);
 
     return true;
 }
@@ -112,8 +130,7 @@ DmaDevice::init()
 unsigned int
 DmaDevice::drain(Event *de)
 {
-    unsigned int count;
-    count = pioPort.drain(de) + dmaPort.drain(de);
+    unsigned int count = pioPort.drain(de) + dmaPort.drain(de);
     if (count)
         changeState(Draining);
     else
@@ -124,7 +141,7 @@ DmaDevice::drain(Event *de)
 unsigned int
 DmaPort::drain(Event *de)
 {
-    if (transmitList.empty() && pendingCount == 0)
+    if (pendingCount == 0)
         return 0;
     drainEvent = de;
     DPRINTF(Drain, "DmaPort not drained\n");
@@ -159,46 +176,46 @@ void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag)
 {
+    // one DMA request sender state for every action, that is then
+    // split into many requests and packets based on the block size,
+    // i.e. cache line size
     DmaReqState *reqState = new DmaReqState(event, size, delay);
 
-
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
-            event ? event->scheduled() : -1 );
+            event ? event->scheduled() : -1);
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-            Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
-            PacketPtr pkt = new Packet(req, cmd);
+        Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
+        PacketPtr pkt = new Packet(req, cmd);
 
-            // Increment the data pointer on a write
-            if (data)
-                pkt->dataStatic(data + gen.complete());
+        // Increment the data pointer on a write
+        if (data)
+            pkt->dataStatic(data + gen.complete());
 
-            pkt->senderState = reqState;
+        pkt->senderState = reqState;
 
-            assert(pendingCount >= 0);
-            pendingCount++;
-            DPRINTF(DMA, "--Queuing DMA for addr: %#x size: %d\n", gen.addr(),
-                    gen.size());
-            queueDma(pkt);
+        DPRINTF(DMA, "--Queuing DMA for addr: %#x size: %d\n", gen.addr(),
+                gen.size());
+        queueDma(pkt);
     }
-
 }
 
 void
-DmaPort::queueDma(PacketPtr pkt, bool front)
+DmaPort::queueDma(PacketPtr pkt)
 {
+    transmitList.push_back(pkt);
 
-    if (front)
-        transmitList.push_front(pkt);
-    else
-        transmitList.push_back(pkt);
+    // remember that we have another packet pending, this will only be
+    // decremented once a response comes back
+    pendingCount++;
+
     sendDma();
 }
 
 void
 DmaPort::sendDma()
 {
-    // some kind of selction between access methods
+    // some kind of selcetion between access methods
     // more work is going to have to be done to make
     // switching actually work
     assert(transmitList.size());
@@ -228,45 +245,13 @@ DmaPort::sendDma()
     } else if (state == Enums::atomic) {
         transmitList.pop_front();
 
-        Tick lat;
-        DPRINTF(DMA, "--Sending  DMA for addr: %#x size: %d\n",
+        DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
                 pkt->req->getPaddr(), pkt->req->getSize());
-        lat = sendAtomic(pkt);
-        assert(pkt->senderState);
-        DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
-        assert(state);
-        state->numBytes += pkt->req->getSize();
+        Tick lat = sendAtomic(pkt);
 
-        DPRINTF(DMA, "--Received response for  DMA for addr: %#x size: %d nb: %d, tot: %d sched %d\n",
-                pkt->req->getPaddr(), pkt->req->getSize(), state->numBytes,
-                state->totBytes,
-                state->completionEvent ? state->completionEvent->scheduled() : 0 );
-
-        if (state->totBytes == state->numBytes) {
-            if (state->completionEvent) {
-                assert(!state->completionEvent->scheduled());
-                device->schedule(state->completionEvent,
-                                 curTick() + lat + state->delay);
-            }
-            delete state;
-            delete pkt->req;
-        }
-        pendingCount--;
-        assert(pendingCount >= 0);
-        delete pkt;
-
-        if (pendingCount == 0 && transmitList.empty() && drainEvent) {
-            DPRINTF(Drain, "DmaPort done draining, processing drain event\n");
-            drainEvent->process();
-            drainEvent = NULL;
-        }
-
-   } else
-       panic("Unknown memory command state.");
-}
-
-DmaDevice::~DmaDevice()
-{
+        handleResp(pkt, lat);
+    } else
+        panic("Unknown memory mode.");
 }
 
 MasterPort &
