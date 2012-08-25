@@ -628,7 +628,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(3, responseIntraChipL1Network_in.dequeue_getDelayCycles());
+    profileMsgDelay(1, responseIntraChipL1Network_in.dequeue_getDelayCycles());
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {

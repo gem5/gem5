@@ -48,7 +48,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   MessageBuffer unblockToL2Cache, network="From", virtual_network="2", ordered="false", vnet_type="unblock";  // a local L1 || Memory -> this L2 bank
   MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0", ordered="false", vnet_type="request";  // a local L1 -> this L2 bank
   MessageBuffer responseToL2Cache, network="From", virtual_network="1", ordered="false", vnet_type="response";  // a local L1 || Memory -> this L2 bank
-//  MessageBuffer unblockToL2Cache, network="From", virtual_network="4", ordered="false", vnet_type="unblock";  // a local L1 || Memory -> this L2 bank
 
   // STATES
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
@@ -621,7 +620,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue") {
-    profileMsgDelay(3, responseIntraChipL2Network_in.dequeue_getDelayCycles());
+    profileMsgDelay(1, responseIntraChipL2Network_in.dequeue_getDelayCycles());
   }
 
   action(m_writeDataToCache, "m", desc="Write data from response queue to cache") {
