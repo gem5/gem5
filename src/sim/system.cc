@@ -257,9 +257,8 @@ System::numRunningContexts()
 void
 System::initState()
 {
-    int i;
     if (FullSystem) {
-        for (i = 0; i < threadContexts.size(); i++)
+        for (int i = 0; i < threadContexts.size(); i++)
             TheISA::startupCPU(threadContexts[i], i);
         // Moved from the constructor to here since it relies on the
         // address map being resolved in the interconnect
@@ -278,12 +277,6 @@ System::initState()
     }
 
     activeCpus.clear();
-
-    if (!FullSystem)
-        return;
-
-    for (i = 0; i < threadContexts.size(); i++)
-        TheISA::startupCPU(threadContexts[i], i);
 }
 
 void
