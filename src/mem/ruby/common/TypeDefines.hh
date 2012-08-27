@@ -35,8 +35,6 @@ typedef unsigned char uint8;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
-typedef signed char int8;
-typedef int int32;
 typedef long long int64;
 
 typedef long long integer_t;

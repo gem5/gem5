@@ -154,8 +154,7 @@ CacheMemory::tryCacheAccess(const Address& address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->
-            touch(cacheSet, loc, g_eventQueue_ptr->getTime());
+        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
         data_ptr = &(entry->getDataBlk());
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
@@ -183,8 +182,7 @@ CacheMemory::testCacheAccess(const Address& address, RubyRequestType type,
     if (loc != -1) {
         // Do we even have a tag match?
         AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->
-            touch(cacheSet, loc, g_eventQueue_ptr->getTime());
+        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
         data_ptr = &(entry->getDataBlk());
 
         return m_cache[cacheSet][loc]->m_Permission !=
@@ -258,8 +256,7 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
 
-            m_replacementPolicy_ptr->
-                touch(cacheSet, i, g_eventQueue_ptr->getTime());
+            m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
 
             return entry;
         }
@@ -324,8 +321,7 @@ CacheMemory::setMRU(const Address& address)
     int loc = findTagInSet(cacheSet, address);
 
     if(loc != -1)
-        m_replacementPolicy_ptr->
-             touch(cacheSet, loc, g_eventQueue_ptr->getTime());
+        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
 }
 
 void
@@ -540,4 +536,3 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Address addr)
         return true;
     }
 }
-

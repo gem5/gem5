@@ -313,7 +313,7 @@ Check::performCallback(NodeID proc, SubBlock* data)
                       proc, address, data, byte_number,
                       (int)m_value + byte_number,
                       (int)data->getByte(byte_number), *this,
-                      g_eventQueue_ptr->getTime());
+                      g_system_ptr->getTime());
             }
         }
         DPRINTF(RubyTest, "Action/check success\n");
@@ -328,7 +328,7 @@ Check::performCallback(NodeID proc, SubBlock* data)
     } else {
         panic("Unexpected TesterStatus: %s proc: %d data: %s m_status: %s "
               "time: %d\n",
-              *this, proc, data, m_status, g_eventQueue_ptr->getTime());
+              *this, proc, data, m_status, g_system_ptr->getTime());
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,

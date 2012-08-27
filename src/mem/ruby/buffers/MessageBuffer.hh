@@ -45,7 +45,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
 class MessageBuffer
@@ -70,7 +69,7 @@ class MessageBuffer
     isReady() const
     {
         return ((m_prio_heap.size() > 0) &&
-                (m_prio_heap.front().m_time <= g_eventQueue_ptr->getTime()));
+                (m_prio_heap.front().m_time <= g_system_ptr->getTime()));
     }
 
     void

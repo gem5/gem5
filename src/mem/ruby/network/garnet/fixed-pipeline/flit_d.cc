@@ -34,8 +34,8 @@ flit_d::flit_d(int id, int  vc, int vnet, int size, MsgPtr msg_ptr)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
-    m_enqueue_time = g_eventQueue_ptr->getTime();
-    m_time = g_eventQueue_ptr->getTime();
+    m_enqueue_time = g_system_ptr->getTime();
+    m_time = g_system_ptr->getTime();
     m_id = id;
     m_vnet = vnet;
     m_vc = vc;
@@ -59,7 +59,7 @@ flit_d::flit_d(int vc, bool is_free_signal)
     m_id = 0;
     m_vc = vc;
     m_is_free_signal = is_free_signal;
-    m_time = g_eventQueue_ptr->getTime();
+    m_time = g_system_ptr->getTime();
 }
 
 void

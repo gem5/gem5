@@ -31,12 +31,11 @@
 
 #include <cassert>
 #include <iostream>
+#include <map>
 #include <string>
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
-
-class Consumer;
+#include "mem/ruby/common/Consumer.hh"
 
 class TimerTable
 {

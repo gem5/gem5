@@ -260,7 +260,7 @@ PerfectSwitch::wakeup()
 
                     // There were not enough resources
                     if (!enough) {
-                        g_eventQueue_ptr->scheduleEvent(this, 1);
+                        scheduleEvent(1);
                         DPRINTF(RubyNetwork, "Can't deliver message since a node "
                                 "is blocked\n");
                         DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));

@@ -61,21 +61,21 @@ class flit_d
     is_stage(flit_stage t_stage)
     {
         return (m_stage.first == t_stage &&
-                g_eventQueue_ptr->getTime() >= m_stage.second);
+                g_system_ptr->getTime() >= m_stage.second);
     }
 
     bool
     is_next_stage(flit_stage t_stage)
     {
         return (m_stage.first == t_stage &&
-                (g_eventQueue_ptr->getTime() + 1) >= m_stage.second);
+                (g_system_ptr->getTime() + 1) >= m_stage.second);
     }
 
     void
     advance_stage(flit_stage t_stage)
     {
         m_stage.first = t_stage;
-        m_stage.second = g_eventQueue_ptr->getTime() + 1;
+        m_stage.second = g_system_ptr->getTime() + 1;
     }
     std::pair<flit_stage, Time>
     get_stage()

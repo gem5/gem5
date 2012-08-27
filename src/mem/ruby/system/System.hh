@@ -37,7 +37,6 @@
 
 #include "base/callback.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/MemoryVector.hh"
@@ -78,6 +77,8 @@ class RubySystem : public SimObject
     static int getBlockSizeBits() { return m_block_size_bits; }
     static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
     static int getMemorySizeBits() { return m_memory_size_bits; }
+    Tick getTime() const { return curTick() / m_clock; }
+    Tick getClock() const { return m_clock; }
 
     // Public Methods
     static Network*
@@ -85,12 +86,6 @@ class RubySystem : public SimObject
     {
         assert(m_network_ptr != NULL);
         return m_network_ptr;
-    }
-
-    static RubyEventQueue*
-    getEventQueue()
-    {
-        return g_eventQueue_ptr;
     }
 
     Profiler*
@@ -111,11 +106,6 @@ class RubySystem : public SimObject
     void clearStats() const;
 
     uint64 getInstructionCount(int thread) { return 1; }
-    static uint64
-    getCycleCount(int thread)
-    {
-        return g_eventQueue_ptr->getTime();
-    }
 
     void print(std::ostream& out) const;
 

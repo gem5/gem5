@@ -29,15 +29,15 @@
  */
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
+#include "mem/ruby/system/System.hh"
 
 OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
 {
     m_network_ptr = network_ptr;
     m_id = id;
     m_vc_state = IDLE_;
-    m_time = g_eventQueue_ptr->getTime();
+    m_time = g_system_ptr->getTime();
 
     if (m_network_ptr->get_vnet_type(id) == DATA_VNET_)
         m_credit_count = m_network_ptr->getBuffersPerDataVC();

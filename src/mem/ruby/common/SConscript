@@ -34,6 +34,7 @@ if env['PROTOCOL'] == 'None':
     Return()
 
 Source('Address.cc')
+Source('Consumer.cc')
 Source('DataBlock.cc')
 Source('Global.cc')
 Source('Histogram.cc')

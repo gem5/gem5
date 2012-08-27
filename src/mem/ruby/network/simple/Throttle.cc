@@ -167,7 +167,7 @@ Throttle::wakeup()
                 DPRINTF(RubyNetwork, "throttle: %d my bw %d bw spent "
                         "enqueueing net msg %d time: %lld.\n",
                         m_node, getLinkBandwidth(), m_units_remaining[vnet],
-                        g_eventQueue_ptr->getTime());
+                        g_system_ptr->getTime());
 
                 // Move the message
                 m_out[vnet]->enqueue(m_in[vnet]->peekMsgPtr(), m_link_latency);
@@ -215,7 +215,7 @@ Throttle::wakeup()
 
         // We are out of bandwidth for this cycle, so wakeup next
         // cycle and continue
-        g_eventQueue_ptr->scheduleEvent(this, 1);
+        scheduleEvent(1);
     }
 }
 
@@ -228,7 +228,7 @@ Throttle::printStats(ostream& out) const
 void
 Throttle::clearStats()
 {
-    m_ruby_start = g_eventQueue_ptr->getTime();
+    m_ruby_start = g_system_ptr->getTime();
     m_links_utilized = 0.0;
 
     for (int i = 0; i < m_message_counters.size(); i++) {
@@ -242,7 +242,7 @@ double
 Throttle::getUtilization() const
 {
     return 100.0 * double(m_links_utilized) /
-        double(g_eventQueue_ptr->getTime()-m_ruby_start);
+        double(g_system_ptr->getTime()-m_ruby_start);
 }
 
 void

@@ -36,13 +36,11 @@
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "params/RubySequencer.hh"
 
 class DataBlock;
-class CacheMemory;
-
-struct RubySequencerParams;
 
 struct SequencerRequest
 {
@@ -57,7 +55,7 @@ struct SequencerRequest
 
 std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
 
-class Sequencer : public RubyPort, public Consumer
+class Sequencer : public RubyPort
 {
   public:
     typedef RubySequencerParams Params;

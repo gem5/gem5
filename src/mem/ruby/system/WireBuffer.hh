@@ -38,7 +38,6 @@
 
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "params/RubyWireBuffer.hh"
 #include "sim/sim_object.hh"
 

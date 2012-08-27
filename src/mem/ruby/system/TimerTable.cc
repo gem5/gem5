@@ -27,7 +27,7 @@
  */
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/TimerTable.hh"
 
 TimerTable::TimerTable()
@@ -48,7 +48,7 @@ TimerTable::isReady() const
         updateNext();
     }
     assert(m_next_valid);
-    return (g_eventQueue_ptr->getTime() >= m_next_time);
+    return (g_system_ptr->getTime() >= m_next_time);
 }
 
 const Address&
@@ -69,10 +69,10 @@ TimerTable::set(const Address& address, Time relative_latency)
     assert(address == line_address(address));
     assert(relative_latency > 0);
     assert(!m_map.count(address));
-    Time ready_time = g_eventQueue_ptr->getTime() + relative_latency;
+    Time ready_time = g_system_ptr->getTime() + relative_latency;
     m_map[address] = ready_time;
     assert(m_consumer_ptr != NULL);
-    g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, ready_time);
+    m_consumer_ptr->scheduleEventAbsolute(ready_time);
     m_next_valid = false;
 
     // Don't always recalculate the next ready address

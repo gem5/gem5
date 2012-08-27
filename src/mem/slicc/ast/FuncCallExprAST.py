@@ -142,7 +142,7 @@ class FuncCallExprAST(ExprAST):
     }
 
     if (result == TransitionResult_ResourceStall) {
-        g_eventQueue_ptr->scheduleEvent(this, 1);
+        scheduleEvent(this, 1);
 
         // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
     }
@@ -173,7 +173,7 @@ class FuncCallExprAST(ExprAST):
     }
 
     if (result1 == TransitionResult_ResourceStall) {
-        g_eventQueue_ptr->scheduleEvent(this, 1);
+        scheduleEvent(this, 1);
         // Cannot do anything with this transition, go check next
         // doable transition (mostly likely of next port)
     }

@@ -68,7 +68,7 @@ class VirtualChannel_d
     set_state(VC_state_type m_state)
     {
         m_vc_state.first = m_state;
-        m_vc_state.second = g_eventQueue_ptr->getTime() + 1;
+        m_vc_state.second = g_system_ptr->getTime() + 1;
     }
 
     inline flit_d*

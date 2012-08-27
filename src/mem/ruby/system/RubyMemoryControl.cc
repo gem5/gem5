@@ -279,7 +279,7 @@ RubyMemoryControl::~RubyMemoryControl()
 void
 RubyMemoryControl::enqueue(const MsgPtr& message, int latency)
 {
-    Time current_time = g_eventQueue_ptr->getTime();
+    Time current_time = g_system_ptr->getTime();
     Time arrival_time = current_time + latency;
     const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
     physical_address_t addr = memMess->getAddress().getAddress();
@@ -302,7 +302,7 @@ RubyMemoryControl::enqueueMemRef(MemoryNode& memRef)
     DPRINTF(RubyMemory,
             "New memory request%7d: %#08x %c arrived at %10d bank = %3x sched %c\n",
             m_msg_counter, addr, memRef.m_is_mem_read ? 'R':'W',
-            memRef.m_time * g_eventQueue_ptr->getClock(),
+            memRef.m_time * g_system_ptr->getClock(),
             bank, m_event.scheduled() ? 'Y':'N');
 
     m_profiler_ptr->profileMemReq(bank);
@@ -347,7 +347,7 @@ bool
 RubyMemoryControl::isReady()
 {
     return ((!m_response_queue.empty()) &&
-            (m_response_queue.front().m_time <= g_eventQueue_ptr->getTime()));
+            (m_response_queue.front().m_time <= g_system_ptr->getTime()));
 }
 
 void
@@ -377,17 +377,17 @@ RubyMemoryControl::printStats(ostream& out) const
 void
 RubyMemoryControl::enqueueToDirectory(MemoryNode req, int latency)
 {
-    Time arrival_time = g_eventQueue_ptr->getTime()
+    Time arrival_time = g_system_ptr->getTime()
         + (latency * m_mem_bus_cycle_multiplier);
     req.m_time = arrival_time;
     m_response_queue.push_back(req);
 
     DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
             req.m_addr, req.m_is_mem_read ? 'R':'W',
-            arrival_time * g_eventQueue_ptr->getClock());
+            arrival_time * g_system_ptr->getClock());
 
     // schedule the wake up
-    g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, arrival_time);
+    m_consumer_ptr->scheduleEventAbsolute(arrival_time);
 }
 
 // getBank returns an integer that is unique for each

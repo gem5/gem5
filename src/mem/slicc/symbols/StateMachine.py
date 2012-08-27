@@ -1037,7 +1037,7 @@ ${ident}_Controller::wakeup()
             g_system_ptr->getProfiler()->controllerBusy(m_machineID);
 
             // Wakeup in another cycle and try again
-            g_eventQueue_ptr->scheduleEvent(this, 1);
+            scheduleEvent(this, 1);
             break;
         }
 ''')
@@ -1064,7 +1064,6 @@ ${ident}_Controller::wakeup()
         code('''
         break;  // If we got this far, we have nothing left todo
     }
-    // g_eventQueue_ptr->scheduleEvent(this, 1);
 }
 ''')
 
@@ -1126,11 +1125,8 @@ ${ident}_Controller::doTransition(${ident}_Event event,
     ${ident}_State next_state = state;
 
     DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
-            *this,
-            g_eventQueue_ptr->getTime(),
-            ${ident}_State_to_string(state),
-            ${ident}_Event_to_string(event),
-            addr);
+            *this, g_system_ptr->getTime(), ${ident}_State_to_string(state),
+            ${ident}_Event_to_string(event), addr);
 
     TransitionResult result =
 ''')
@@ -1302,7 +1298,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
       default:
         fatal("Invalid transition\\n"
               "%s time: %d addr: %s event: %s state: %s\\n",
-              name(), g_eventQueue_ptr->getTime(), addr, event, state);
+              name(), g_system_ptr->getTime(), addr, event, state);
     }
     return TransitionResult_Valid;
 }

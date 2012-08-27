@@ -127,7 +127,7 @@ BaseGarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
 void
 BaseGarnetNetwork::clearStats()
 {
-    m_ruby_start = g_eventQueue_ptr->getTime();
+    m_ruby_start = g_system_ptr->getTime();
 }
 
 Time

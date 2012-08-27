@@ -90,7 +90,7 @@ class InputUnit_d : public Consumer
     {
         flit_d *t_flit = new flit_d(in_vc, free_signal);
         creditQueue->insert(t_flit);
-        g_eventQueue_ptr->scheduleEvent(m_credit_link, 1);
+        m_credit_link->scheduleEvent(1);
     }
 
     inline int

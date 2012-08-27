@@ -415,7 +415,7 @@ ${{self.c_ident}}::print(ostream& out) const
             code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";''')
 
         if self.isMessage:
-            code('out << "Time = " << getTime() * g_eventQueue_ptr->getClock() << " ";')
+            code('out << "Time = " << getTime() * g_system_ptr->getClock() << " ";')
         code.dedent()
 
         # Trailer

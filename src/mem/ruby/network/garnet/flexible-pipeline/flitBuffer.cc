@@ -55,7 +55,7 @@ flitBuffer::isReady()
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();
-        if (t_flit->get_time() <= g_eventQueue_ptr->getTime())
+        if (t_flit->get_time() <= g_system_ptr->getTime())
             return true;
     }
     return false;
@@ -66,7 +66,7 @@ flitBuffer::isReadyForNext()
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();
-        if (t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
+        if (t_flit->get_time() <= (g_system_ptr->getTime() + 1))
             return true;
     }
     return false;

@@ -49,7 +49,7 @@ random(int n)
 inline Time
 get_time()
 {
-    return g_eventQueue_ptr->getTime();
+    return g_system_ptr->getTime();
 }
 
 inline Time

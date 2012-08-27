@@ -74,13 +74,13 @@ void
 WireBuffer::enqueue(MsgPtr message, int latency)
 {
     m_msg_counter++;
-    Time current_time = g_eventQueue_ptr->getTime();
+    Time current_time = g_system_ptr->getTime();
     Time arrival_time = current_time + latency;
     assert(arrival_time > current_time);
     MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
     m_message_queue.push_back(thisNode);
     if (m_consumer_ptr != NULL) {
-        g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, arrival_time);
+        m_consumer_ptr->scheduleEventAbsolute(arrival_time);
     } else {
         panic("No Consumer for WireBuffer! %s\n", *this);
     }
@@ -123,19 +123,18 @@ WireBuffer::recycle()
     MessageBufferNode node = m_message_queue.front();
     pop_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MessageBufferNode>());
-    node.m_time = g_eventQueue_ptr->getTime() + 1;
+    node.m_time = g_system_ptr->getTime() + 1;
     m_message_queue.back() = node;
     push_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MessageBufferNode>());
-    g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr,
-        g_eventQueue_ptr->getTime() + 1);
+    m_consumer_ptr->scheduleEventAbsolute(g_system_ptr->getTime() + 1);
 }
 
 bool
 WireBuffer::isReady()
 {
     return ((!m_message_queue.empty()) &&
-            (m_message_queue.front().m_time <= g_eventQueue_ptr->getTime()));
+            (m_message_queue.front().m_time <= g_system_ptr->getTime()));
 }
 
 void

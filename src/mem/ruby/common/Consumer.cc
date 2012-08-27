@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cassert>
-
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
 
-RubyEventQueue::RubyEventQueue(EventQueue* eventq, Tick _clock)
-  : EventManager(eventq), m_clock(_clock)
+void
+Consumer::scheduleEvent(Time timeDelta)
 {
-}
-
-RubyEventQueue::~RubyEventQueue()
-{
+    scheduleEvent(g_system_ptr, timeDelta);
 }
 
 void
-RubyEventQueue::scheduleEvent(Consumer* consumer, Time timeDelta)
+Consumer::scheduleEvent(EventManager *em, Time timeDelta)
 {
-    scheduleEventAbsolute(consumer, timeDelta + getTime());
+    scheduleEventAbsolute(em, timeDelta + g_system_ptr->getTime());
 }
 
 void
-RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
+Consumer::scheduleEventAbsolute(Time timeAbs)
 {
-    // Check to see if this is a redundant wakeup
-    assert(consumer != NULL);
-    if (!consumer->alreadyScheduled(timeAbs)) {
+    scheduleEventAbsolute(g_system_ptr, timeAbs);
+}
+
+void
+Consumer::scheduleEventAbsolute(EventManager *em, Time timeAbs)
+{
+    Tick evt_time = timeAbs * g_system_ptr->getClock();
+    if (!alreadyScheduled(evt_time)) {
         // This wakeup is not redundant
-        RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer, this);
-        assert(timeAbs > getTime());
-        schedule(thisNode, (timeAbs * m_clock));
-        consumer->insertScheduledWakeupTime(timeAbs);
-    }
-}
+        ConsumerEvent *evt = new ConsumerEvent(this);
+        assert(timeAbs > g_system_ptr->getTime());
 
-void
-RubyEventQueue::print(std::ostream& out) const
-{
-    out << "[Event Queue:]";
+        em->schedule(evt, evt_time);
+        insertScheduledWakeupTime(evt_time);
+    }
 }

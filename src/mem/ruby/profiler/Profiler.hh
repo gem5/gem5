@@ -58,7 +58,6 @@
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/common/Set.hh"
@@ -70,7 +69,7 @@
 class RubyRequest;
 class AddressProfiler;
 
-class Profiler : public SimObject, public Consumer
+class Profiler : public SimObject
 {
   public:
     typedef RubyProfilerParams Params;
@@ -244,6 +243,20 @@ class Profiler : public SimObject, public Consumer
     bool m_all_instructions;
 
     int m_num_of_sequencers;
+
+  protected:
+    class ProfileEvent : public Event
+    {
+        public:
+            ProfileEvent(Profiler *_profiler)
+            {
+                profiler = _profiler;
+            }
+        private:
+            void process() { profiler->wakeup(); }
+            Profiler *profiler;
+    };
+    ProfileEvent m_event;
 };
 
 inline std::ostream&
@@ -255,5 +268,3 @@ operator<<(std::ostream& out, const Profiler& obj)
 }
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__
-
-

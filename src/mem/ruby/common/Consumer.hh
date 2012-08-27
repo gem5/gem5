@@ -38,10 +38,8 @@
 #include <iostream>
 #include <set>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-
-class MessageBuffer;
+#include "mem/ruby/common/TypeDefines.hh"
+#include "sim/eventq.hh"
 
 class Consumer
 {
@@ -55,55 +53,68 @@ class Consumer
     ~Consumer()
     { }
 
-    void
-    triggerWakeup(RubyEventQueue *eventQueue)
-    {
-        Time time = eventQueue->getTime();
-        if (m_last_wakeup != time) {
-            wakeup();
-            m_last_wakeup = time;
-        }
-    }
-
     virtual void wakeup() = 0;
     virtual void print(std::ostream& out) const = 0;
     virtual void storeEventInfo(int info) {}
 
-    const Time&
+    const Tick&
     getLastScheduledWakeup() const
     {
         return m_last_scheduled_wakeup;
     }
 
     void
-    setLastScheduledWakeup(const Time& time)
+    setLastScheduledWakeup(const Tick& time)
     {
         m_last_scheduled_wakeup = time;
     }
 
     bool
-    alreadyScheduled(Time time)
+    alreadyScheduled(Tick time)
     {
         return m_scheduled_wakeups.find(time) != m_scheduled_wakeups.end();
     }
 
     void
-    insertScheduledWakeupTime(Time time)
+    insertScheduledWakeupTime(Tick time)
     {
         m_scheduled_wakeups.insert(time);
     }
 
     void
-    removeScheduledWakeupTime(Time time)
+    removeScheduledWakeupTime(Tick time)
     {
         assert(alreadyScheduled(time));
         m_scheduled_wakeups.erase(time);
     }
 
+    void scheduleEvent(EventManager* em, Time timeDelta);
+    void scheduleEventAbsolute(EventManager* em, Time timeAbs);
+    void scheduleEvent(Time timeDelta);
+    void scheduleEventAbsolute(Time timeAbs);
+
   private:
-    Time m_last_scheduled_wakeup;
-    std::set<Time> m_scheduled_wakeups;
-    Time m_last_wakeup;
+    Tick m_last_scheduled_wakeup;
+    std::set<Tick> m_scheduled_wakeups;
+    Tick m_last_wakeup;
+
+    class ConsumerEvent : public Event
+    {
+      public:
+          ConsumerEvent(Consumer* _consumer)
+              : Event(Default_Pri, AutoDelete), m_consumer_ptr(_consumer)
+          {
+          }
+
+          void process()
+          {
+              m_consumer_ptr->wakeup();
+              m_consumer_ptr->removeScheduledWakeupTime(when());
+          }
+
+      private:
+          Consumer* m_consumer_ptr;
+    };
 };
 
 inline std::ostream&

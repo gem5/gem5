@@ -68,9 +68,9 @@ NetworkLink_d::wakeup()
 {
     if (link_srcQueue->isReady()) {
         flit_d *t_flit = link_srcQueue->getTopFlit();
-        t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
+        t_flit->set_time(g_system_ptr->getTime() + m_latency);
         linkBuffer->insert(t_flit);
-        g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
+        link_consumer->scheduleEvent(m_latency);
         m_link_utilized++;
         m_vc_load[t_flit->get_vc()]++;
     }

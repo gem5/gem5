@@ -64,7 +64,7 @@ void
 Switch_d::wakeup()
 {
     DPRINTF(RubyNetwork, "Switch woke up at time: %lld\n",
-            g_eventQueue_ptr->getTime());
+            g_system_ptr->getTime());
 
     for (int inport = 0; inport < m_num_inports; inport++) {
         if (!m_switch_buffer[inport]->isReady())
@@ -73,7 +73,7 @@ Switch_d::wakeup()
         if (t_flit->is_stage(ST_)) {
             int outport = t_flit->get_outport();
             t_flit->advance_stage(LT_);
-            t_flit->set_time(g_eventQueue_ptr->getTime() + 1);
+            t_flit->set_time(g_system_ptr->getTime() + 1);
 
             // This will take care of waking up the Network Link
             m_output_unit[outport]->insert_flit(t_flit);
@@ -89,7 +89,7 @@ Switch_d::check_for_wakeup()
 {
     for (int inport = 0; inport < m_num_inports; inport++) {
         if (m_switch_buffer[inport]->isReadyForNext()) {
-            g_eventQueue_ptr->scheduleEvent(this, 1);
+            scheduleEvent(1);
             break;
         }
     }

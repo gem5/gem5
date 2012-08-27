@@ -34,7 +34,7 @@
 #include "base/refcnt.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/system/System.hh"
 
 class Message;
 typedef RefCountingPtr<Message> MsgPtr;
@@ -43,8 +43,8 @@ class Message : public RefCounted
 {
   public:
     Message()
-        : m_time(g_eventQueue_ptr->getTime()),
-          m_LastEnqueueTime(g_eventQueue_ptr->getTime()),
+        : m_time(g_system_ptr->getTime()),
+          m_LastEnqueueTime(g_system_ptr->getTime()),
           m_DelayedCycles(0)
     { }
 

@@ -42,7 +42,6 @@
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "sim/sim_exit.hh"
 
 RubyDirectedTester::RubyDirectedTester(const Params *p)

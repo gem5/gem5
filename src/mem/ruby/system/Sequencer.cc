@@ -43,11 +43,9 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
-#include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/packet.hh"
-#include "params/RubySequencer.hh"
 
 using namespace std;
 
@@ -88,7 +86,7 @@ void
 Sequencer::wakeup()
 {
     // Check for deadlock of any of the requests
-    Time current_time = g_eventQueue_ptr->getTime();
+    Time current_time = g_system_ptr->getTime();
 
     // Check across all outstanding requests
     int total_outstanding = 0;
@@ -131,7 +129,7 @@ Sequencer::wakeup()
     if (m_outstanding_count > 0) {
         // If there are still outstanding requests, keep checking
         schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * g_eventQueue_ptr->getClock() +
+                 m_deadlock_threshold * g_system_ptr->getClock() +
                  curTick());
     }
 }
@@ -156,7 +154,7 @@ Sequencer::printProgress(ostream& out) const
 #if 0
     int total_demand = 0;
     out << "Sequencer Stats Version " << m_version << endl;
-    out << "Current time = " << g_eventQueue_ptr->getTime() << endl;
+    out << "Current time = " << g_system_ptr->getTime() << endl;
     out << "---------------" << endl;
     out << "outstanding requests" << endl;
 
@@ -212,7 +210,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     // See if we should schedule a deadlock check
     if (deadlockCheckEvent.scheduled() == false) {
         schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * g_eventQueue_ptr->getClock()
+                 m_deadlock_threshold * g_system_ptr->getClock()
                  + curTick());
     }
 
@@ -239,7 +237,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         if (r.second) {
             RequestTable::iterator i = r.first;
             i->second = new SequencerRequest(pkt, request_type,
-                                             g_eventQueue_ptr->getTime());
+                                             g_system_ptr->getTime());
             m_outstanding_count++;
         } else {
           // There is an outstanding write request for the cache line
@@ -260,7 +258,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         if (r.second) {
             RequestTable::iterator i = r.first;
             i->second = new SequencerRequest(pkt, request_type,
-                                             g_eventQueue_ptr->getTime());
+                                             g_system_ptr->getTime());
             m_outstanding_count++;
         } else {
             // There is an outstanding read request for the cache line
@@ -476,8 +474,8 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         m_dataCache_ptr->setMRU(request_line_address);
     }
 
-    assert(g_eventQueue_ptr->getTime() >= issued_time);
-    Time miss_latency = g_eventQueue_ptr->getTime() - issued_time;
+    assert(g_system_ptr->getTime() >= issued_time);
+    Time miss_latency = g_system_ptr->getTime() - issued_time;
 
     // Profile the miss latency for all non-zero demand misses
     if (miss_latency != 0) {
@@ -488,7 +486,7 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                                                    initialRequestTime,
                                                    forwardRequestTime,
                                                    firstResponseTime,
-                                                   g_eventQueue_ptr->getTime());
+                                                   g_system_ptr->getTime());
         }
 
         if (mach == GenericMachineType_Directory) {
@@ -496,7 +494,7 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                                                    initialRequestTime,
                                                    forwardRequestTime,
                                                    firstResponseTime,
-                                                   g_eventQueue_ptr->getTime());
+                                                   g_system_ptr->getTime());
         }
 
         DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",

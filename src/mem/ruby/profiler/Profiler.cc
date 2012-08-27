@@ -67,7 +67,7 @@ static double process_memory_total();
 static double process_memory_resident();
 
 Profiler::Profiler(const Params *p)
-    : SimObject(p)
+    : SimObject(p), m_event(this)
 {
     m_inst_profiler_ptr = NULL;
     m_address_profiler_ptr = NULL;
@@ -113,13 +113,13 @@ Profiler::wakeup()
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
-            g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
+            g_system_ptr->getTime() - m_cycles_executed_at_start[i] + 1;
         // The +1 allows us to avoid division by zero
     }
 
     ostream &out = *m_periodic_output_file_ptr;
 
-    out << "ruby_cycles: " << g_eventQueue_ptr->getTime()-m_ruby_start << endl
+    out << "ruby_cycles: " << g_system_ptr->getTime()-m_ruby_start << endl
         << "mbytes_resident: " << process_memory_resident() << endl
         << "mbytes_total: " << process_memory_total() << endl;
 
@@ -137,7 +137,7 @@ Profiler::wakeup()
     }
 
     //g_system_ptr->getNetwork()->printStats(out);
-    g_eventQueue_ptr->scheduleEvent(this, m_stats_period);
+    schedule(m_event, curTick() + m_stats_period * g_system_ptr->getClock());
 }
 
 void
@@ -151,7 +151,7 @@ Profiler::setPeriodicStatsFile(const string& filename)
     }
 
     m_periodic_output_file_ptr = new ofstream(filename.c_str());
-    g_eventQueue_ptr->scheduleEvent(this, 1);
+    schedule(m_event, curTick() + g_system_ptr->getClock());
 }
 
 void
@@ -161,7 +161,7 @@ Profiler::setPeriodicStatsInterval(integer_t period)
          << " Ruby cycles" << endl;
 
     m_stats_period = period;
-    g_eventQueue_ptr->scheduleEvent(this, 1);
+    schedule(m_event, curTick() + g_system_ptr->getClock());
 }
 
 void
@@ -185,7 +185,7 @@ Profiler::printStats(ostream& out, bool short_stats)
     double minutes = seconds / 60.0;
     double hours = minutes / 60.0;
     double days = hours / 24.0;
-    Time ruby_cycles = g_eventQueue_ptr->getTime()-m_ruby_start;
+    Time ruby_cycles = g_system_ptr->getTime()-m_ruby_start;
 
     if (!short_stats) {
         out << "Elapsed_time_in_seconds: " << seconds << endl;
@@ -208,7 +208,7 @@ Profiler::printStats(ostream& out, bool short_stats)
     out << "Virtual_time_in_days:    " << days << endl;
     out << endl;
 
-    out << "Ruby_current_time: " << g_eventQueue_ptr->getTime() << endl;
+    out << "Ruby_current_time: " << g_system_ptr->getTime() << endl;
     out << "Ruby_start_time: " << m_ruby_start << endl;
     out << "Ruby_cycles: " << ruby_cycles << endl;
     out << endl;
@@ -227,7 +227,7 @@ Profiler::printStats(ostream& out, bool short_stats)
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
-            g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
+            g_system_ptr->getTime() - m_cycles_executed_at_start[i] + 1;
         // The +1 allows us to avoid division by zero
     }
 
@@ -437,14 +437,14 @@ Profiler::printResourceUsage(ostream& out) const
 void
 Profiler::clearStats()
 {
-    m_ruby_start = g_eventQueue_ptr->getTime();
+    m_ruby_start = g_system_ptr->getTime();
 
     m_cycles_executed_at_start.resize(m_num_of_sequencers);
     for (int i = 0; i < m_num_of_sequencers; i++) {
         if (g_system_ptr == NULL) {
             m_cycles_executed_at_start[i] = 0;
         } else {
-            m_cycles_executed_at_start[i] = g_system_ptr->getCycleCount(i);
+            m_cycles_executed_at_start[i] = g_system_ptr->getTime();
         }
     }
 
@@ -524,7 +524,7 @@ Profiler::clearStats()
     //g_eventQueue_ptr->triggerAllEvents();
 
     // update the start time
-    m_ruby_start = g_eventQueue_ptr->getTime();
+    m_ruby_start = g_system_ptr->getTime();
 }
 
 void
@@ -723,7 +723,7 @@ Profiler::rubyWatch(int id)
     uint64 tr = 0;
     Address watch_address = Address(tr);
 
-    DPRINTFN("%7s %3s RUBY WATCH %d\n", g_eventQueue_ptr->getTime(), id,
+    DPRINTFN("%7s %3s RUBY WATCH %d\n", g_system_ptr->getTime(), id,
         watch_address);
 
     // don't care about success or failure

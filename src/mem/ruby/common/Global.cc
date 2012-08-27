@@ -28,6 +28,4 @@
 
 #include "mem/ruby/common/Global.hh"
 
-RubyEventQueue* g_eventQueue_ptr = 0;
 RubySystem* g_system_ptr = 0;
-

@@ -35,7 +35,7 @@ VirtualChannel_d::VirtualChannel_d(int id)
     m_id = id;
     m_input_buffer = new flitBuffer_d();
     m_vc_state.first = IDLE_;
-    m_vc_state.second = g_eventQueue_ptr->getTime();
+    m_vc_state.second = g_system_ptr->getTime();
     m_enqueue_time = INFINITE_;
 }
 
@@ -55,7 +55,7 @@ VirtualChannel_d::grant_vc(int out_vc)
 {
     m_output_vc = out_vc;
     m_vc_state.first = ACTIVE_;
-    m_vc_state.second = g_eventQueue_ptr->getTime() + 1;
+    m_vc_state.second = g_system_ptr->getTime() + 1;
     flit_d *t_flit = m_input_buffer->peekTopFlit();
     t_flit->advance_stage(SA_);
 }
@@ -64,7 +64,7 @@ bool
 VirtualChannel_d::need_stage(VC_state_type state, flit_stage stage)
 {
     if ((m_vc_state.first == state) &&
-       (g_eventQueue_ptr->getTime() >= m_vc_state.second)) {
+       (g_system_ptr->getTime() >= m_vc_state.second)) {
         if (m_input_buffer->isReady()) {
             flit_d *t_flit = m_input_buffer->peekTopFlit();
             return(t_flit->is_stage(stage)) ;
@@ -78,7 +78,7 @@ bool
 VirtualChannel_d::need_stage_nextcycle(VC_state_type state, flit_stage stage)
 {
     if ((m_vc_state.first == state) &&
-       ((g_eventQueue_ptr->getTime()+1) >= m_vc_state.second)) {
+       ((g_system_ptr->getTime()+1) >= m_vc_state.second)) {
         if (m_input_buffer->isReadyForNext()) {
             flit_d *t_flit = m_input_buffer->peekTopFlit();
             return(t_flit->is_next_stage(stage)) ;

@@ -77,7 +77,6 @@ RubySystem::RubySystem(const Params *p)
         m_memory_size_bits = floorLog2(m_memory_size_bytes);
     }
 
-    g_eventQueue_ptr = new RubyEventQueue(p->eventq, m_clock);
     g_system_ptr = this;
     if (p->no_mem_vec) {
         m_mem_vec_ptr = NULL;
@@ -423,13 +422,13 @@ RubySystem::checkGlobalCoherenceInvariant(const Address& addr)
                 WARN_EXPR(exclusive);
                 WARN_EXPR(m_chip_vector[i]->getID());
                 WARN_EXPR(addr);
-                WARN_EXPR(g_eventQueue_ptr->getTime());
+                WARN_EXPR(getTime());
                 ERROR_MSG("Coherence Violation Detected -- 2 exclusive chips");
             } else if (sharedDetected) {
                 WARN_EXPR(lastShared);
                 WARN_EXPR(m_chip_vector[i]->getID());
                 WARN_EXPR(addr);
-                WARN_EXPR(g_eventQueue_ptr->getTime());
+                WARN_EXPR(getTime());
                 ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
             } else {
                 exclusive = m_chip_vector[i]->getID();
@@ -442,7 +441,7 @@ RubySystem::checkGlobalCoherenceInvariant(const Address& addr)
                 WARN_EXPR(lastShared);
                 WARN_EXPR(exclusive);
                 WARN_EXPR(addr);
-                WARN_EXPR(g_eventQueue_ptr->getTime());
+                WARN_EXPR(getTime());
                 ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
             }
         }

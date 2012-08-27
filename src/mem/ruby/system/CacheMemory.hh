@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
 #define __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -172,4 +171,3 @@ class CacheMemory : public SimObject
 };
 
 #endif // __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
-

@@ -177,7 +177,7 @@ SWallocator_d::arbitrate_outports()
                 t_flit->advance_stage(ST_);
                 t_flit->set_vc(outvc);
                 t_flit->set_outport(outport);
-                t_flit->set_time(g_eventQueue_ptr->getTime() + 1);
+                t_flit->set_time(g_system_ptr->getTime() + 1);
                 m_output_unit[outport]->decrement_credit(outvc);
                 m_router->update_sw_winner(inport, t_flit);
                 m_global_arbiter_activity++;
@@ -209,7 +209,7 @@ SWallocator_d::check_for_wakeup()
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {
             if (m_input_unit[i]->need_stage_nextcycle(j, ACTIVE_, SA_)) {
-                g_eventQueue_ptr->scheduleEvent(this, 1);
+                scheduleEvent(1);
                 return;
             }
         }

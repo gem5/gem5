@@ -34,8 +34,8 @@ flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
-    m_enqueue_time = g_eventQueue_ptr->getTime();
-    m_time = g_eventQueue_ptr->getTime();
+    m_enqueue_time = g_system_ptr->getTime();
+    m_time = g_system_ptr->getTime();
     m_id = id;
     m_vnet = vnet;
     m_vc = vc;

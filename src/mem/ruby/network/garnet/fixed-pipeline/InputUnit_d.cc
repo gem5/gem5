@@ -79,7 +79,7 @@ InputUnit_d::wakeup()
             // Do the route computation for this vc
             m_router->route_req(t_flit, this, vc);
 
-            m_vcs[vc]->set_enqueue_time(g_eventQueue_ptr->getTime());
+            m_vcs[vc]->set_enqueue_time(g_system_ptr->getTime());
         } else {
             t_flit->advance_stage(SA_);
             m_router->swarb_req();

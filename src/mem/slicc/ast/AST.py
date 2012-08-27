@@ -56,7 +56,7 @@ class AST(PairContainer):
         code('''
 char c;
 cerr << "Runtime Error at ${{self.location}}, Ruby Time: "
-     << g_eventQueue_ptr->getTime() << ": "
+     << g_system_ptr->getTime() << ": "
      << $message
      << ", PID: " << getpid() << endl
      << "press return to continue." << endl;

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/profiler/StoreTrace.hh"
+#include "sim/core.hh"
 
 using namespace std;
 
@@ -105,7 +105,7 @@ StoreTrace::clearSummary()
 void
 StoreTrace::store(NodeID node)
 {
-    Time current = g_eventQueue_ptr->getTime();
+    Tick current = curTick();
 
     assert((m_last_writer == -1) || (m_last_writer == node));
 
@@ -127,7 +127,7 @@ void
 StoreTrace::downgrade(NodeID node)
 {
     if (node == m_last_writer) {
-        Time current = g_eventQueue_ptr->getTime();
+        Time current = curTick();
         assert(m_stores_this_interval != 0);
         assert(m_last_store != 0);
         assert(m_first_store != 0);

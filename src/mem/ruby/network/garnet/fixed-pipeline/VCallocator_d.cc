@@ -256,7 +256,7 @@ VCallocator_d::check_for_wakeup()
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {
             if (m_input_unit[i]->need_stage_nextcycle(j, VC_AB_, VA_)) {
-                g_eventQueue_ptr->scheduleEvent(this, 1);
+                scheduleEvent(1);
                 return;
             }
         }

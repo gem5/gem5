@@ -31,9 +31,6 @@
 
 #include "base/str.hh"
 
-class RubyEventQueue;
-extern RubyEventQueue* g_eventQueue_ptr;
-
 class RubySystem;
 extern RubySystem* g_system_ptr;
 
