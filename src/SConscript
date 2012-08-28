@@ -850,15 +850,13 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     swig_env = new_env.Clone()
     swig_env.Append(CCFLAGS='-Werror')
     if env['GCC']:
-        swig_env.Append(CCFLAGS='-Wno-uninitialized')
-        swig_env.Append(CCFLAGS='-Wno-sign-compare')
-        swig_env.Append(CCFLAGS='-Wno-parentheses')
-        swig_env.Append(CCFLAGS='-Wno-unused-label')
+        swig_env.Append(CCFLAGS=['-Wno-uninitialized', '-Wno-sign-compare',
+                                 '-Wno-parentheses', '-Wno-unused-label',
+                                 '-Wno-unused-value'])
         if compareVersions(env['GCC_VERSION'], '4.6') >= 0:
             swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
     if env['CLANG']:
-        swig_env.Append(CCFLAGS=['-Wno-unused-label'])
-
+        swig_env.Append(CCFLAGS=['-Wno-unused-label', '-Wno-unused-value'])
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
