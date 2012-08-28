@@ -140,8 +140,17 @@ class MasterPort : public Port
                PortID id = InvalidPortID);
     virtual ~MasterPort();
 
-    void unBind();
+    /**
+     * Bind this master port to a slave port. This also does the
+     * mirror action and binds the slave port to the master port.
+     */
     void bind(SlavePort& slave_port);
+
+    /**
+     * Unbind this master port and the associated slave port.
+     */
+    void unbind();
+
     SlavePort& getSlavePort() const;
     bool isConnected() const;
 
@@ -298,8 +307,6 @@ class SlavePort : public Port
               PortID id = InvalidPortID);
     virtual ~SlavePort();
 
-    void unBind();
-    void bind(MasterPort& master_port);
     MasterPort& getMasterPort() const;
     bool isConnected() const;
 
@@ -385,6 +392,18 @@ class SlavePort : public Port
     virtual AddrRangeList getAddrRanges() const = 0;
 
   protected:
+
+    /**
+     * Called by the master port to unbind. Should never be called
+     * directly.
+     */
+    void unbind();
+
+    /**
+     * Called by the master port to bind. Should never be called
+     * directly.
+     */
+    void bind(MasterPort& master_port);
 
     /**
      * Receive an atomic request packet from the master port.

@@ -82,14 +82,22 @@ MasterPort::getSlavePort() const
 }
 
 void
-MasterPort::unBind()
+MasterPort::unbind()
 {
+    if (_slavePort == NULL)
+        panic("Attempting to unbind master port %s that is not connected\n",
+              name());
+    _slavePort->unbind();
     _slavePort = NULL;
 }
 
 void
 MasterPort::bind(SlavePort& slave_port)
 {
+    if (_slavePort != NULL)
+        panic("Attempting to bind master port %s that is already connected\n",
+              name());
+
     // master port keeps track of the slave port
     _slavePort = &slave_port;
 
@@ -173,7 +181,7 @@ SlavePort::~SlavePort()
 }
 
 void
-SlavePort::unBind()
+SlavePort::unbind()
 {
     _masterPort = NULL;
 }
