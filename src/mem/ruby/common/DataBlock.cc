@@ -87,14 +87,6 @@ DataBlock::setData(uint8* data, int offset, int len)
 DataBlock &
 DataBlock::operator=(const DataBlock & obj)
 {
-    if (this == &obj) {
-        // assert(false);
-    } else {
-        if (!m_alloc)
-            m_data = new uint8[RubySystem::getBlockSizeBytes()];
-        memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
-        m_alloc = true;
-    }
-
+    memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
     return *this;
 }

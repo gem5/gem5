@@ -29,6 +29,7 @@
 #ifndef __MEM_RUBY_COMMON_DATABLOCK_HH__
 #define __MEM_RUBY_COMMON_DATABLOCK_HH__
 
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 
@@ -72,6 +73,7 @@ class DataBlock
 inline void
 DataBlock::assign(uint8* data)
 {
+    assert(data != NULL);
     if (m_alloc) {
         delete [] m_data;
     }
