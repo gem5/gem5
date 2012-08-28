@@ -2052,7 +2052,7 @@ IGbE::restartClock()
 {
     if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) &&
         getState() == SimObject::Running)
-        schedule(tickEvent, (curTick() / ticks(1)) * ticks(1) + ticks(1));
+        schedule(tickEvent, clockEdge(1));
 }
 
 unsigned int
@@ -2434,7 +2434,7 @@ IGbE::tick()
 
 
     if (rxTick || txTick || txFifoTick)
-        schedule(tickEvent, curTick() + ticks(1));
+        schedule(tickEvent, curTick() + clockPeriod());
 }
 
 void

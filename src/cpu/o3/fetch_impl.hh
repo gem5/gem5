@@ -646,7 +646,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             assert(!finishTranslationEvent.scheduled());
             finishTranslationEvent.setFault(fault);
             finishTranslationEvent.setReq(mem_req);
-            cpu->schedule(finishTranslationEvent, cpu->nextCycle(curTick() + cpu->ticks(1)));
+            cpu->schedule(finishTranslationEvent, cpu->clockEdge(1));
             return;
         }
         DPRINTF(Fetch, "[tid:%i] Got back req with addr %#x but expected %#x\n",

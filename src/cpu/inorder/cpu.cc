@@ -212,7 +212,7 @@ void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
     assert(!scheduled() || squashed());
-    cpu->reschedule(this, cpu->nextCycle(curTick() + cpu->ticks(delay)), true);
+    cpu->reschedule(this, cpu->clockEdge(delay), true);
 }
 
 void
@@ -401,7 +401,7 @@ InOrderCPU::InOrderCPU(Params *params)
     frontEndSked = createFrontEndSked();
     faultSked = createFaultSked();
 
-    lastRunningCycle = curTick();
+    lastRunningCycle = curCycle();
 
     lockAddr = 0;
     lockFlag = false;
@@ -761,17 +761,17 @@ InOrderCPU::tick()
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut) {
             // increment stat
-            lastRunningCycle = curTick();
+            lastRunningCycle = curCycle();
         } else if (!activityRec.active()) {
             DPRINTF(InOrderCPU, "sleeping CPU.\n");
-            lastRunningCycle = curTick();
+            lastRunningCycle = curCycle();
             timesIdled++;
         } else {
             //Tick next_tick = curTick() + cycles(1);
             //tickEvent.schedule(next_tick);
-            schedule(&tickEvent, nextCycle(curTick() + 1));
+            schedule(&tickEvent, clockEdge(1));
             DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", 
-                    nextCycle(curTick() + 1));
+                    clockEdge(1));
         }
     }
 
@@ -959,15 +959,10 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
                                        event_pri);
 
-    Tick sked_tick = nextCycle(curTick() + ticks(delay));
-    if (delay >= 0) {
-        DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
-                eventNames[c_event], curTick() + delay, tid);
-        schedule(cpu_event, sked_tick);
-    } else {
-        cpu_event->process();
-        cpuEventRemoveList.push(cpu_event);
-    }
+    Tick sked_tick = clockEdge(delay);
+    DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
+            eventNames[c_event], curTick() + delay, tid);
+    schedule(cpu_event, sked_tick);
 
     // Broadcast event to the Resource Pool
     // Need to reset tid just in case this is a dummy instruction
@@ -1696,7 +1691,9 @@ InOrderCPU::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    Tick extra_cycles = tickToCycles((curTick() - 1) - lastRunningCycle);
+    Tick extra_cycles = curCycle() - lastRunningCycle;
+    if (extra_cycles != 0)
+        --extra_cycles;
 
     idleCycles += extra_cycles;    
     for (int stage_num = 0; stage_num < NumStages; stage_num++) {
@@ -1705,7 +1702,7 @@ InOrderCPU::wakeCPU()
 
     numCycles += extra_cycles;
 
-    schedule(&tickEvent, nextCycle(curTick()));
+    schedule(&tickEvent, nextCycle());
 }
 
 // Lots of copied full system code...place into BaseCPU class?

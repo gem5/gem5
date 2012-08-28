@@ -87,13 +87,11 @@ TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
     : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
-    dcachePort(this), fetchEvent(this)
+      dcachePort(this), ifetch_pkt(NULL), dcache_pkt(NULL), previousCycle(0),
+      fetchEvent(this)
 {
     _status = Idle;
 
-    ifetch_pkt = dcache_pkt = NULL;
-    drainEvent = NULL;
-    previousTick = 0;
     changeState(SimObject::Running);
     system->totalNumInsts = 0;
 }
@@ -156,7 +154,7 @@ TimingSimpleCPU::switchOut()
 {
     assert(_status == Running || _status == Idle);
     _status = SwitchedOut;
-    numCycles += tickToCycles(curTick() - previousTick);
+    numCycles += curCycle() - previousCycle;
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
@@ -184,7 +182,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
-    previousTick = curTick();
+    previousCycle = curCycle();
 }
 
 
@@ -202,7 +200,7 @@ TimingSimpleCPU::activateContext(ThreadID thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    schedule(fetchEvent, nextCycle(curTick() + ticks(delay)));
+    schedule(fetchEvent, clockEdge(delay));
 }
 
 
@@ -231,9 +229,8 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
 {
     RequestPtr req = pkt->req;
     if (req->isMmappedIpr()) {
-        Tick delay;
-        delay = TheISA::handleIprRead(thread->getTC(), pkt);
-        new IprEvent(pkt, this, nextCycle(curTick() + delay));
+        Tick delay = TheISA::handleIprRead(thread->getTC(), pkt);
+        new IprEvent(pkt, this, clockEdge(delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
     } else if (!dcachePort.sendTimingReq(pkt)) {
@@ -322,8 +319,8 @@ TimingSimpleCPU::translationFault(Fault fault)
 {
     // fault may be NoFault in cases where a fault is suppressed,
     // for instance prefetches.
-    numCycles += tickToCycles(curTick() - previousTick);
-    previousTick = curTick();
+    numCycles += curCycle() - previousCycle;
+    previousCycle = curCycle();
 
     if (traceData) {
         // Since there was a fault, we shouldn't trace this instruction.
@@ -446,9 +443,8 @@ TimingSimpleCPU::handleWritePacket()
 {
     RequestPtr req = dcache_pkt->req;
     if (req->isMmappedIpr()) {
-        Tick delay;
-        delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
-        new IprEvent(dcache_pkt, this, nextCycle(curTick() + delay));
+        Tick delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
+        new IprEvent(dcache_pkt, this, clockEdge(delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
     } else if (!dcachePort.sendTimingReq(dcache_pkt)) {
@@ -567,8 +563,8 @@ TimingSimpleCPU::fetch()
         _status = IcacheWaitResponse;
         completeIfetch(NULL);
 
-        numCycles += tickToCycles(curTick() - previousTick);
-        previousTick = curTick();
+        numCycles += curCycle() - previousCycle;
+        previousCycle = curCycle();
     }
 }
 
@@ -600,8 +596,8 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
         advanceInst(fault);
     }
 
-    numCycles += tickToCycles(curTick() - previousTick);
-    previousTick = curTick();
+    numCycles += curCycle() - previousCycle;
+    previousCycle = curCycle();
 }
 
 
@@ -647,8 +643,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    numCycles += tickToCycles(curTick() - previousTick);
-    previousTick = curTick();
+    numCycles += curCycle() - previousCycle;
+    previousCycle = curCycle();
 
     if (getState() == SimObject::Draining) {
         if (pkt) {
@@ -754,8 +750,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
-    numCycles += tickToCycles(curTick() - previousTick);
-    previousTick = curTick();
+    numCycles += curCycle() - previousCycle;
+    previousCycle = curCycle();
 
     if (pkt->senderState) {
         SplitFragmentSenderState * send_state =

@@ -58,12 +58,48 @@ class ClockedObject : public SimObject
 
   private:
 
+    // the tick value of the next clock edge (>= curTick()) at the
+    // time of the last call to update()
+    mutable Tick tick;
+
+    // The cycle counter value corresponding to the current value of
+    // 'tick'
+    mutable Tick cycle;
+
     /**
      * Prevent inadvertent use of the copy constructor and assignment
      * operator by making them private.
      */
     ClockedObject(ClockedObject&);
     ClockedObject& operator=(ClockedObject&);
+
+    /**
+     *  Align cycle and tick to the next clock edge if not already done.
+     */
+    void update() const
+    {
+        // both tick and cycle are up-to-date and we are done, note
+        // that the >= is important as it captures cases where tick
+        // has already passed curTick()
+        if (tick >= curTick())
+            return;
+
+        // optimise for the common case and see if the tick should be
+        // advanced by a single clock period
+        tick += clock;
+        ++cycle;
+
+        // see if we are done at this point
+        if (tick >= curTick())
+            return;
+
+        // if not, we have to recalculate the cycle and tick, we
+        // perform the calculations in terms of relative cycles to
+        // allow changes to the clock period in the future
+        Tick elapsedCycles = divCeil(curTick() - tick, clock);
+        cycle += elapsedCycles;
+        tick += elapsedCycles * clock;
+    }
 
   protected:
 
@@ -74,7 +110,8 @@ class ClockedObject : public SimObject
      * Create a clocked object and set the clock based on the
      * parameters.
      */
-    ClockedObject(const ClockedObjectParams* p) : SimObject(p), clock(p->clock)
+    ClockedObject(const ClockedObjectParams* p) :
+        SimObject(p), tick(0), cycle(0), clock(p->clock)
     { }
 
     /**
@@ -85,33 +122,53 @@ class ClockedObject : public SimObject
   public:
 
     /**
+     * Determine the tick when a cycle begins, by default the current
+     * one, but the argument also enables the caller to determine a
+     * future cycle.
+     *
+     * @param cycles The number of cycles into the future
+     *
+     * @return The tick when the clock edge occurs
+     */
+    inline Tick clockEdge(int cycles = 0) const
+    {
+        // align tick to the next clock edge
+        update();
+
+        // figure out when this future cycle is
+        return tick + ticks(cycles);
+    }
+
+    /**
+     * Determine the current cycle, corresponding to a tick aligned to
+     * a clock edge.
+     *
+     * @return The current cycle
+     */
+    inline Tick curCycle() const
+    {
+        // align cycle to the next clock edge.
+        update();
+
+        return cycle;
+    }
+
+    /**
      * Based on the clock of the object, determine the tick when the
-     * next cycle begins, in other words, round the curTick() to the
-     * next tick that is a multiple of the clock.
+     * next cycle begins, in other words, return the next clock edge.
      *
      * @return The tick when the next cycle starts
      */
     Tick nextCycle() const
-    { return divCeil(curTick(), clock) * clock; }
-
-    /**
-     * Determine the next cycle starting from a given tick instead of
-     * curTick().
-     *
-     * @param begin_tick The tick to round to a clock edge
-     *
-     * @return The tick when the cycle after or on begin_tick starts
-     */
-    Tick nextCycle(Tick begin_tick) const
-    { return divCeil(begin_tick, clock) * clock; }
+    { return clockEdge(); }
 
     inline Tick frequency() const { return SimClock::Frequency / clock; }
 
-    inline Tick ticks(int numCycles) const { return clock * numCycles; }
+    inline Tick ticks(int cycles) const { return clock * cycles; }
 
-    inline Tick curCycle() const { return curTick() / clock; }
+    inline Tick clockPeriod() const { return clock; }
 
-    inline Tick tickToCycles(Tick val) const { return val / clock; }
+    inline Tick tickToCycle(Tick tick) const { return tick / clock; }
 
 };
 

@@ -76,8 +76,8 @@ class DerivO3CPU(BaseCPU):
     renameToROBDelay = Param.Unsigned(1, "Rename to reorder buffer delay")
     commitWidth = Param.Unsigned(8, "Commit width")
     squashWidth = Param.Unsigned(8, "Squash width")
-    trapLatency = Param.Tick(13, "Trap latency")
-    fetchTrapLatency = Param.Tick(1, "Fetch trap latency")
+    trapLatency = Param.Unsigned(13, "Trap latency")
+    fetchTrapLatency = Param.Unsigned(1, "Fetch trap latency")
 
     backComSize = Param.Unsigned(5, "Time buffer size for backwards communication")
     forwardComSize = Param.Unsigned(5, "Time buffer size for forward communication")

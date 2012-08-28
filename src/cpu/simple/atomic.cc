@@ -208,10 +208,10 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
-    numCycles += tickToCycles(thread->lastActivate - thread->lastSuspend);
+    numCycles += tickToCycle(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    schedule(tickEvent, nextCycle(curTick() + ticks(delay)));
+    schedule(tickEvent, clockEdge(delay));
     _status = Running;
 }
 
@@ -518,7 +518,7 @@ AtomicSimpleCPU::tick()
                 stall_ticks += dcache_latency;
 
             if (stall_ticks) {
-                Tick stall_cycles = stall_ticks / ticks(1);
+                Tick stall_cycles = stall_ticks / clockPeriod();
                 Tick aligned_stall_ticks = ticks(stall_cycles);
 
                 if (aligned_stall_ticks < stall_ticks)
@@ -533,8 +533,8 @@ AtomicSimpleCPU::tick()
     }
 
     // instruction takes at least one cycle
-    if (latency < ticks(1))
-        latency = ticks(1);
+    if (latency < clockPeriod())
+        latency = clockPeriod();
 
     if (_status != Idle)
         schedule(tickEvent, curTick() + latency);

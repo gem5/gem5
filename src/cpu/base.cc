@@ -91,7 +91,7 @@ CPUProgressEvent::process()
 {
     Counter temp = cpu->totalOps();
 #ifndef NDEBUG
-    double ipc = double(temp - lastNumInst) / (_interval / cpu->ticks(1));
+    double ipc = double(temp - lastNumInst) / (_interval / cpu->clockPeriod());
 
     DPRINTFN("%s progress event, total committed:%i, progress insts committed: "
              "%lli, IPC: %0.8d\n", cpu->name(), temp, temp - lastNumInst,
@@ -261,9 +261,7 @@ BaseCPU::startup()
     }
 
     if (params()->progress_interval) {
-        Tick num_ticks = ticks(params()->progress_interval);
-
-        new CPUProgressEvent(this, num_ticks);
+        new CPUProgressEvent(this, params()->progress_interval);
     }
 }
 

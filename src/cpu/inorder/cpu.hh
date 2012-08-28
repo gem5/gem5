@@ -204,7 +204,7 @@ class InOrderCPU : public BaseCPU
     void scheduleTickEvent(int delay)
     {
         assert(!tickEvent.scheduled() || tickEvent.squashed());
-        reschedule(&tickEvent, nextCycle(curTick() + ticks(delay)), true);
+        reschedule(&tickEvent, clockEdge(delay), true);
     }
 
     /** Unschedule tick event, regardless of its current state. */

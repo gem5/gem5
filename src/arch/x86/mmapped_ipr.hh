@@ -62,7 +62,7 @@ namespace X86ISA
         // Make sure we don't trot off the end of data.
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->setData(((uint8_t *)&data) + offset);
-        return xc->getCpuPtr()->ticks(1);
+        return 1;
     }
 
     inline Tick
@@ -76,7 +76,7 @@ namespace X86ISA
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->writeData(((uint8_t *)&data) + offset);
         xc->setMiscReg(index, gtoh(data));
-        return xc->getCpuPtr()->ticks(1);
+        return 1;
     }
 }
 

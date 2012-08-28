@@ -386,7 +386,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     // Setup the ROB for whichever stages need it.
     commit.setROB(&rob);
 
-    lastRunningCycle = curTick();
+    lastRunningCycle = curCycle();
 
     lastActivatedCycle = 0;
 #if 0
@@ -623,13 +623,13 @@ FullO3CPU<Impl>::tick()
             getState() == SimObject::Drained) {
             DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
-            lastRunningCycle = curTick();
+            lastRunningCycle = curCycle();
         } else if (!activityRec.active() || _status == Idle) {
             DPRINTF(O3CPU, "Idle!\n");
-            lastRunningCycle = curTick();
+            lastRunningCycle = curCycle();
             timesIdled++;
         } else {
-            schedule(tickEvent, nextCycle(curTick() + ticks(1)));
+            schedule(tickEvent, clockEdge(1));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -762,7 +762,10 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
         activityRec.activity();
         fetch.wakeFromQuiesce();
 
-        quiesceCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
+        Tick cycles = curCycle() - lastRunningCycle;
+        if (cycles != 0)
+            --cycles;
+        quiesceCycles += cycles;
 
         lastActivatedCycle = curTick();
 
@@ -801,7 +804,7 @@ FullO3CPU<Impl>::suspendContext(ThreadID tid)
         unscheduleTickEvent();
 
     DPRINTF(Quiesce, "Suspending Context\n");
-    lastRunningCycle = curTick();
+    lastRunningCycle = curCycle();
     _status = Idle;
 }
 
@@ -1275,7 +1278,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     if (!tickEvent.scheduled())
         schedule(tickEvent, nextCycle());
 
-    lastRunningCycle = curTick();
+    lastRunningCycle = curCycle();
 }
 
 template <class Impl>
@@ -1669,8 +1672,11 @@ FullO3CPU<Impl>::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    idleCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
-    numCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
+    Tick cycles = curCycle() - lastRunningCycle;
+    if (cycles != 0)
+        --cycles;
+    idleCycles += cycles;
+    numCycles += cycles;
 
     schedule(tickEvent, nextCycle());
 }

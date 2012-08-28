@@ -632,7 +632,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             delete snd_data_pkt;
         }
         WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
-        cpu->schedule(wb, curTick() + delay);
+        cpu->schedule(wb, cpu->clockEdge(delay));
         return NoFault;
     }
 

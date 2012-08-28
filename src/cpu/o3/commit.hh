@@ -409,7 +409,7 @@ class DefaultCommit
     /** The latency to handle a trap.  Used when scheduling trap
      * squash event.
      */
-    Tick trapLatency;
+    uint trapLatency;
 
     /** The interrupt fault. */
     Fault interrupt;

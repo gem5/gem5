@@ -1147,7 +1147,7 @@ NSGigE::rxKick()
         }
 
         // Go to the next state machine clock tick.
-        rxKickTick = curTick() + ticks(1);
+        rxKickTick = curTick() + clockPeriod();
     }
 
     switch(rxDmaState) {
@@ -1594,7 +1594,7 @@ NSGigE::txKick()
         }
 
         // Go to the next state machine clock tick.
-        txKickTick = curTick() + ticks(1);
+        txKickTick = curTick() + clockPeriod();
     }
 
     switch(txDmaState) {
@@ -2015,7 +2015,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    reschedule(txEvent, curTick() + ticks(1), true);
+    reschedule(txEvent, curTick() + clockPeriod(), true);
 }
 
 bool

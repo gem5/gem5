@@ -238,7 +238,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 {
     assert(delay >= 0);
 
-    Tick when = cpu->nextCycle(curTick() + cpu->ticks(delay));
+    Tick when = cpu->clockEdge(delay);
 
     switch ((int)e_type)
     {
@@ -460,7 +460,7 @@ ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
     InOrderCPU *cpu = resPool->cpu;
     assert(!scheduled() || squashed());
-    cpu->reschedule(this, cpu->nextCycle(curTick() + cpu->ticks(delay)), true);
+    cpu->reschedule(this, cpu->clockEdge(delay), true);
 }
 
 /** Unschedule resource event, regardless of its current state. */

@@ -758,7 +758,7 @@ void
 TableWalker::nextWalk(ThreadContext *tc)
 {
     if (pendingQueue.size())
-        schedule(doProcessEvent, tc->getCpuPtr()->nextCycle(curTick()+1));
+        schedule(doProcessEvent, tc->getCpuPtr()->clockEdge(1));
 }
 
 

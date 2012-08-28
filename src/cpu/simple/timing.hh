@@ -234,7 +234,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     PacketPtr ifetch_pkt;
     PacketPtr dcache_pkt;
 
-    Tick previousTick;
+    Tick previousCycle;
 
   protected:
 

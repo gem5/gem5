@@ -440,7 +440,7 @@ Pl111::readFramebuffer()
         schedule(intEvent, nextCycle());
 
     curAddr = 0;
-    startTime = curTick();
+    startTime = curCycle();
 
     maxAddr = static_cast<Addr>(length * bytesPerPixel);
 
@@ -475,12 +475,12 @@ Pl111::fillFifo()
 void
 Pl111::dmaDone()
 {
-    Tick maxFrameTime = lcdTiming2.cpl * height * clock;
+    Tick maxFrameTime = lcdTiming2.cpl * height;
 
     --dmaPendingNum;
 
     if (maxAddr == curAddr && !dmaPendingNum) {
-        if ((curTick() - startTime) > maxFrameTime) {
+        if ((curCycle() - startTime) > maxFrameTime) {
             warn("CLCD controller buffer underrun, took %d cycles when should"
                  " have taken %d\n", curTick() - startTime, maxFrameTime);
             lcdRis.underflow = 1;
@@ -498,11 +498,13 @@ Pl111::dmaDone()
         pic->seekp(0);
         bmp->write(pic);
 
-        DPRINTF(PL111, "-- schedule next dma read event at %d tick \n",
-                maxFrameTime + curTick());
-
+        // schedule the next read based on when the last frame started
+        // and the desired fps (i.e. maxFrameTime), we turn the
+        // argument into a relative number of cycles in the future by
+        // subtracting curCycle()
         if (lcdControl.lcden)
-            schedule(readEvent, nextCycle(startTime + maxFrameTime));
+            schedule(readEvent, clockEdge(startTime + maxFrameTime -
+                                          curCycle()));
     }
 
     if (dmaPendingNum > (maxOutstandingDma - waterMark))

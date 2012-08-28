@@ -165,7 +165,7 @@ NetworkTest::tick()
         exitSimLoop("Network Tester completed simCycles");
     else {
         if (!tickEvent.scheduled())
-            schedule(tickEvent, curTick() + ticks(1));
+            schedule(tickEvent, clockEdge(1));
     }
 }
 
