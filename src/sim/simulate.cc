@@ -49,12 +49,10 @@ simulate(Tick num_cycles)
 {
     inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
 
-    if (num_cycles < 0)
-        fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
-    else if (curTick() + num_cycles < 0)  //Overflow
-        num_cycles = MaxTick;
-    else
+    if (num_cycles < MaxTick - curTick())
         num_cycles = curTick() + num_cycles;
+    else // counter would roll over or be set to MaxTick anyhow
+        num_cycles = MaxTick;
 
     Event *limit_event =
         new SimLoopExitEvent("simulate() limit reached", 0);
