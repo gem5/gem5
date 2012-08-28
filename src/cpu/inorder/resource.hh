@@ -63,7 +63,7 @@ class Resource {
 
   public:
     Resource(std::string res_name, int res_id, int res_width,
-             int res_latency, InOrderCPU *_cpu);
+             Cycles res_latency, InOrderCPU *_cpu);
     virtual ~Resource();
 
 
@@ -178,20 +178,17 @@ class Resource {
     int slotsInUse();
 
     /** Schedule resource event, regardless of its current state. */
-    void scheduleEvent(int slot_idx, int delay);
+    void scheduleEvent(int slot_idx, Cycles delay);
 
     /** Find instruction in list, Schedule resource event, regardless of its 
      *  current state. */
-    bool scheduleEvent(DynInstPtr inst, int delay);
+    bool scheduleEvent(DynInstPtr inst, Cycles delay);
 
     /** Unschedule resource event, regardless of its current state. */
     void unscheduleEvent(int slot_idx);
 
     /** Unschedule resource event, regardless of its current state. */
     bool unscheduleEvent(DynInstPtr inst);
-
-    /** Return the number of cycles in 'Tick' format */
-    Tick ticks(int numCycles);
 
     /** Find the request that corresponds to this instruction */
     virtual ResReqPtr findRequest(DynInstPtr inst);
@@ -206,7 +203,7 @@ class Resource {
 
     /** Return Latency of Resource */
     /*  Can be overridden for complex cases */
-    virtual int getLatency(int slot_num) { return latency; }
+    virtual Cycles getLatency(int slot_num) { return latency; }
 
   protected:
     /** The name of this resource */
@@ -226,7 +223,7 @@ class Resource {
      *  Note: Dynamic latency resources set this to 0 and
      *  manage the latency themselves
      */
-    const int latency;
+    const Cycles latency;
 
   public:
     /** List of all Requests the Resource is Servicing. Each request
@@ -287,7 +284,7 @@ class ResourceEvent : public Event
     void setSlot(int slot) { slotIdx = slot; }
 
     /** Schedule resource event, regardless of its current state. */
-    void scheduleEvent(int delay);
+    void scheduleEvent(Cycles delay);
 
     /** Unschedule resource event, regardless of its current state. */
     void unscheduleEvent()

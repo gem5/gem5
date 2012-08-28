@@ -55,7 +55,8 @@ class TLBUnit : public Resource
 
   public:
     TLBUnit(std::string res_name, int res_id, int res_width,
-              int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
+            Cycles res_latency, InOrderCPU *_cpu,
+            ThePipeline::Params *params);
     virtual ~TLBUnit() {}
 
     void init();

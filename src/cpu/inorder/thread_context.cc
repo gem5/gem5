@@ -98,7 +98,7 @@ InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
 }
 
 void
-InOrderThreadContext::activate(int delay)
+InOrderThreadContext::activate(Cycles delay)
 {
     DPRINTF(InOrderCPU, "Calling activate on Thread Context %d\n",
             getThreadNum());
@@ -113,7 +113,7 @@ InOrderThreadContext::activate(int delay)
 
 
 void
-InOrderThreadContext::suspend(int delay)
+InOrderThreadContext::suspend(Cycles delay)
 {
     DPRINTF(InOrderCPU, "Calling suspend on Thread Context %d\n",
             getThreadNum());
@@ -126,7 +126,7 @@ InOrderThreadContext::suspend(int delay)
 }
 
 void
-InOrderThreadContext::halt(int delay)
+InOrderThreadContext::halt(Cycles delay)
 {
     DPRINTF(InOrderCPU, "Calling halt on Thread Context %d\n",
             getThreadNum());

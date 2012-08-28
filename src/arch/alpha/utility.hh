@@ -67,7 +67,8 @@ void zeroRegisters(TC *tc);
 
 // Alpha IPR register accessors
 inline bool PcPAL(Addr addr) { return addr & 0x3; }
-inline void startupCPU(ThreadContext *tc, int cpuId) { tc->activate(0); }
+inline void startupCPU(ThreadContext *tc, int cpuId)
+{ tc->activate(Cycles(0)); }
 
 ////////////////////////////////////////////////////////////////////////
 //

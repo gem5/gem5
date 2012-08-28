@@ -482,7 +482,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val,
 
     miscRegFile[misc_reg][reg_sel] = cp0_val;
 
-    scheduleCP0Update(tc->getCpuPtr(), 1);
+    scheduleCP0Update(tc->getCpuPtr(), Cycles(1));
 }
 
 /**
@@ -511,14 +511,14 @@ ISA::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
 }
 
 void
-ISA::scheduleCP0Update(BaseCPU *cpu, int delay)
+ISA::scheduleCP0Update(BaseCPU *cpu, Cycles delay)
 {
     if (!cp0Updated) {
         cp0Updated = true;
 
         //schedule UPDATE
         CP0Event *cp0_event = new CP0Event(this, cpu, UpdateCP0);
-        cpu->schedule(cp0_event, curTick() + cpu->ticks(delay));
+        cpu->schedule(cp0_event, cpu->clockEdge(delay));
     }
 }
 
@@ -573,9 +573,9 @@ ISA::CP0Event::description() const
 }
 
 void
-ISA::CP0Event::scheduleEvent(int delay)
+ISA::CP0Event::scheduleEvent(Cycles delay)
 {
-    cpu->reschedule(this, curTick() + cpu->ticks(delay), true);
+    cpu->reschedule(this, cpu->clockEdge(delay), true);
 }
 
 void

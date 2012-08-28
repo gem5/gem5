@@ -848,7 +848,7 @@ TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
     return NoFault;
 }
 
-Tick
+Cycles
 TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     Addr va = pkt->getAddr();
@@ -1030,10 +1030,10 @@ doMmuReadError:
             (uint32_t)asi, va);
     }
     pkt->makeAtomicResponse();
-    return tc->getCpuPtr()->ticks(1);
+    return Cycles(1);
 }
 
-Tick
+Cycles
 TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
     uint64_t data = pkt->get<uint64_t>();
@@ -1283,7 +1283,7 @@ doMmuWriteError:
             (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
     }
     pkt->makeAtomicResponse();
-    return tc->getCpuPtr()->ticks(1);
+    return Cycles(1);
 }
 
 void

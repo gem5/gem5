@@ -209,7 +209,7 @@ class SimpleThread : public ThreadState
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    void activate(int delay = 1);
+    void activate(Cycles delay = Cycles(1));
 
     /// Set the status to Suspended.
     void suspend();

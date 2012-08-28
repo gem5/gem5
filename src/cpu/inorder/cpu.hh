@@ -201,7 +201,7 @@ class InOrderCPU : public BaseCPU
     TickEvent tickEvent;
 
     /** Schedule tick event, regardless of its current state. */
-    void scheduleTickEvent(int delay)
+    void scheduleTickEvent(Cycles delay)
     {
         assert(!tickEvent.scheduled() || tickEvent.squashed());
         reschedule(&tickEvent, clockEdge(delay), true);
@@ -279,7 +279,7 @@ class InOrderCPU : public BaseCPU
         const char *description() const;
 
         /** Schedule Event */
-        void scheduleEvent(int delay);
+        void scheduleEvent(Cycles delay);
 
         /** Unschedule This Event */
         void unscheduleEvent();
@@ -287,7 +287,7 @@ class InOrderCPU : public BaseCPU
 
     /** Schedule a CPU Event */
     void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
-                          DynInstPtr inst, unsigned delay = 0,
+                          DynInstPtr inst, Cycles delay = Cycles(0),
                           CPUEventPri event_pri = InOrderCPU_Pri);
 
   public:
@@ -479,19 +479,20 @@ class InOrderCPU : public BaseCPU
 
     /** Schedule a syscall on the CPU */
     void syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
-                        int delay = 0);
+                        Cycles delay = Cycles(0));
 
     /** Executes a syscall.*/
     void syscall(int64_t callnum, ThreadID tid);
 
     /** Schedule a trap on the CPU */
-    void trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay = 0);
+    void trapContext(Fault fault, ThreadID tid, DynInstPtr inst,
+                     Cycles delay = Cycles(0));
 
     /** Perform trap to Handle Given Fault */
     void trap(Fault fault, ThreadID tid, DynInstPtr inst);
 
     /** Schedule thread activation on the CPU */
-    void activateContext(ThreadID tid, int delay = 0);
+    void activateContext(ThreadID tid, Cycles delay = Cycles(0));
 
     /** Add Thread to Active Threads List. */
     void activateThread(ThreadID tid);
@@ -500,13 +501,13 @@ class InOrderCPU : public BaseCPU
     void activateThreadInPipeline(ThreadID tid);
     
     /** Schedule Thread Activation from Ready List */
-    void activateNextReadyContext(int delay = 0);
+    void activateNextReadyContext(Cycles delay = Cycles(0));
 
     /** Add Thread From Ready List to Active Threads List. */
     void activateNextReadyThread();
 
     /** Schedule a thread deactivation on the CPU */
-    void deactivateContext(ThreadID tid, int delay = 0);
+    void deactivateContext(ThreadID tid, Cycles delay = Cycles(0));
 
     /** Remove from Active Thread List */
     void deactivateThread(ThreadID tid);
@@ -529,7 +530,8 @@ class InOrderCPU : public BaseCPU
      *  squashDueToMemStall() - squashes pipeline
      *  @note: maybe squashContext/squashThread would be better?
      */
-    void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
+    void squashFromMemStall(DynInstPtr inst, ThreadID tid,
+                            Cycles delay = Cycles(0));
     void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
 
     void removePipelineStalls(ThreadID tid);

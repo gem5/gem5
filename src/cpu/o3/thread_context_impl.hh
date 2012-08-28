@@ -102,7 +102,7 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::activate(int delay)
+O3ThreadContext<Impl>::activate(Cycles delay)
 {
     DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
             threadId());
@@ -119,7 +119,7 @@ O3ThreadContext<Impl>::activate(int delay)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::suspend(int delay)
+O3ThreadContext<Impl>::suspend(Cycles delay)
 {
     DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
             threadId());
@@ -136,7 +136,7 @@ O3ThreadContext<Impl>::suspend(int delay)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::halt(int delay)
+O3ThreadContext<Impl>::halt(Cycles delay)
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n",
             threadId());

@@ -77,7 +77,7 @@ startupCPU(ThreadContext *tc, int cpuId)
 {
     // Other CPUs will get activated by IPIs
     if (cpuId == 0 || !FullSystem)
-        tc->activate(0);
+        tc->activate(Cycles(0));
 }
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);

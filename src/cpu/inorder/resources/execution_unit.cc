@@ -44,7 +44,7 @@ using namespace std;
 using namespace ThePipeline;
 
 ExecutionUnit::ExecutionUnit(string res_name, int res_id, int res_width,
-                             int res_latency, InOrderCPU *_cpu,
+                             Cycles res_latency, InOrderCPU *_cpu,
                              ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       lastExecuteTick(0), lastControlTick(0)

@@ -172,7 +172,7 @@ quiesceCycles(ThreadContext *tc, uint64_t cycles)
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick() + cpu->ticks(cycles);
+    Tick resume = cpu->clockEdge(Cycles(cycles));
 
     cpu->reschedule(quiesceEvent, resume, true);
 

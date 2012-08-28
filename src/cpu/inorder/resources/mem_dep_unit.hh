@@ -47,7 +47,7 @@ class MemDepUnit : public Resource {
 
   public:
     MemDepUnit(std::string res_name, int res_id, int res_width,
-              int res_latency, InOrderCPU *_cpu);
+               Cycles res_latency, InOrderCPU *_cpu);
     virtual ~MemDepUnit() {}
 
     virtual void execute(int slot_num);

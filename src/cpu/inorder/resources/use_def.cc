@@ -45,7 +45,7 @@ using namespace TheISA;
 using namespace ThePipeline;
 
 UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
-                       int res_latency, InOrderCPU *_cpu,
+                       Cycles res_latency, InOrderCPU *_cpu,
                        ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
@@ -107,7 +107,7 @@ void
 UseDefUnit::init()
 {
     // Set Up Resource Events to Appropriate Resource BandWidth
-    if (latency > 0) {
+    if (latency > Cycles(0)) {
         resourceEvent = new ResourceEvent[width];
     } else {
         resourceEvent = NULL;

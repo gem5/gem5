@@ -463,6 +463,8 @@ class CheckedInt(NumericParamValue):
         # most derived types require this, so we just do it here once
         code('%import "stdint.i"')
         code('%import "base/types.hh"')
+        # ignore the case operator for Cycles
+        code('%ignore *::operator uint64_t() const;')
 
     def getValue(self):
         return long(self.value)
@@ -480,6 +482,7 @@ class Int64(CheckedInt):    cxx_type =  'int64_t'; size = 64; unsigned = False
 class UInt64(CheckedInt):   cxx_type = 'uint64_t'; size = 64; unsigned = True
 
 class Counter(CheckedInt):  cxx_type = 'Counter';  size = 64; unsigned = True
+class Cycles(CheckedInt): cxx_type = 'Cycles'; size = 64; unsigned = True
 class Tick(CheckedInt):     cxx_type = 'Tick';     size = 64; unsigned = True
 class TcpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True
 class UdpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True

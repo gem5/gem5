@@ -163,13 +163,13 @@ class ThreadContext
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    virtual void activate(int delay = 1) = 0;
+    virtual void activate(Cycles delay = Cycles(1)) = 0;
 
     /// Set the status to Suspended.
-    virtual void suspend(int delay = 0) = 0;
+    virtual void suspend(Cycles delay = Cycles(0)) = 0;
 
     /// Set the status to Halted.
-    virtual void halt(int delay = 0) = 0;
+    virtual void halt(Cycles delay = Cycles(0)) = 0;
 
     virtual void dumpFuncProfile() = 0;
 
@@ -329,13 +329,14 @@ class ProxyThreadContext : public ThreadContext
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    void activate(int delay = 1) { actualTC->activate(delay); }
+    void activate(Cycles delay = Cycles(1))
+    { actualTC->activate(delay); }
 
     /// Set the status to Suspended.
-    void suspend(int delay = 0) { actualTC->suspend(); }
+    void suspend(Cycles delay = Cycles(0)) { actualTC->suspend(); }
 
     /// Set the status to Halted.
-    void halt(int delay = 0) { actualTC->halt(); }
+    void halt(Cycles delay = Cycles(0)) { actualTC->halt(); }
 
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 

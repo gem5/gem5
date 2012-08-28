@@ -56,7 +56,8 @@ class InstBuffer : public Resource {
 
   public:
     InstBuffer(std::string res_name, int res_id, int res_width,
-               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
+               Cycles res_latency, InOrderCPU *_cpu,
+               ThePipeline::Params *params);
 
     void regStats();
 

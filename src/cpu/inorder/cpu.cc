@@ -209,7 +209,7 @@ InOrderCPU::CPUEvent::description() const
 }
 
 void
-InOrderCPU::CPUEvent::scheduleEvent(int delay)
+InOrderCPU::CPUEvent::scheduleEvent(Cycles delay)
 {
     assert(!scheduled() || squashed());
     cpu->reschedule(this, cpu->clockEdge(delay), true);
@@ -407,7 +407,7 @@ InOrderCPU::InOrderCPU(Params *params)
     lockFlag = false;
     
     // Schedule First Tick Event, CPU will reschedule itself from here on out.
-    scheduleTickEvent(0);
+    scheduleTickEvent(Cycles(0));
 }
 
 InOrderCPU::~InOrderCPU()
@@ -769,9 +769,9 @@ InOrderCPU::tick()
         } else {
             //Tick next_tick = curTick() + cycles(1);
             //tickEvent.schedule(next_tick);
-            schedule(&tickEvent, clockEdge(1));
+            schedule(&tickEvent, clockEdge(Cycles(1)));
             DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", 
-                    clockEdge(1));
+                    clockEdge(Cycles(1)));
         }
     }
 
@@ -877,7 +877,7 @@ InOrderCPU::checkForInterrupts()
                 // Schedule Squash Through-out Resource Pool
                 resPool->scheduleEvent(
                     (InOrderCPU::CPUEventType)ResourcePool::SquashAll,
-                    dummyTrapInst[tid], 0);
+                    dummyTrapInst[tid], Cycles(0));
 
                 // Finally, Setup Trap to happen at end of cycle
                 trapContext(interrupt, tid, dummyTrapInst[tid]);
@@ -912,7 +912,8 @@ InOrderCPU::processInterrupts(Fault interrupt)
 }
 
 void
-InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
+InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst,
+                        Cycles delay)
 {
     scheduleCpuEvent(Trap, fault, tid, inst, delay);
     trapPending[tid] = true;
@@ -926,7 +927,8 @@ InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 }
 
 void 
-InOrderCPU::squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay)
+InOrderCPU::squashFromMemStall(DynInstPtr inst, ThreadID tid,
+                               Cycles delay)
 {
     scheduleCpuEvent(SquashFromMemStall, NoFault, tid, inst, delay);
 }
@@ -954,7 +956,7 @@ InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num,
 void
 InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
                              ThreadID tid, DynInstPtr inst, 
-                             unsigned delay, CPUEventPri event_pri)
+                             Cycles delay, CPUEventPri event_pri)
 {
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
                                        event_pri);
@@ -967,7 +969,8 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     // Broadcast event to the Resource Pool
     // Need to reset tid just in case this is a dummy instruction
     inst->setTid(tid);        
-    resPool->scheduleEvent(c_event, inst, 0, 0, tid);
+    // @todo: Is this really right? Should the delay not be passed on?
+    resPool->scheduleEvent(c_event, inst, Cycles(0), 0, tid);
 }
 
 bool
@@ -1071,7 +1074,7 @@ InOrderCPU::activateThreadInPipeline(ThreadID tid)
 }
 
 void
-InOrderCPU::deactivateContext(ThreadID tid, int delay)
+InOrderCPU::deactivateContext(ThreadID tid, Cycles delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Deactivating ...\n", tid);
 
@@ -1153,7 +1156,7 @@ InOrderCPU::tickThreadStats()
 }
 
 void
-InOrderCPU::activateContext(ThreadID tid, int delay)
+InOrderCPU::activateContext(ThreadID tid, Cycles delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Activating ...\n", tid);
 
@@ -1168,7 +1171,7 @@ InOrderCPU::activateContext(ThreadID tid, int delay)
 }
 
 void
-InOrderCPU::activateNextReadyContext(int delay)
+InOrderCPU::activateNextReadyContext(Cycles delay)
 {
     DPRINTF(InOrderCPU,"Activating next ready thread\n");
 
@@ -1719,7 +1722,8 @@ InOrderCPU::wakeup()
 }
 
 void
-InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
+InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
+                           Cycles delay)
 {
     // Syscall must be non-speculative, so squash from last stage
     unsigned squash_stage = NumStages - 1;
@@ -1730,7 +1734,8 @@ InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay
 
     // Schedule Squash Through-out Resource Pool
     resPool->scheduleEvent(
-        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
+        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst,
+        Cycles(0));
     scheduleCpuEvent(Syscall, fault, tid, inst, delay, Syscall_Pri);
 }
 

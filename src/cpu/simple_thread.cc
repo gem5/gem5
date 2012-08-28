@@ -210,7 +210,7 @@ SimpleThread::dumpFuncProfile()
 }
 
 void
-SimpleThread::activate(int delay)
+SimpleThread::activate(Cycles delay)
 {
     if (status() == ThreadContext::Active)
         return;

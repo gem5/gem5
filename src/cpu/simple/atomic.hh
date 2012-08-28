@@ -127,7 +127,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
-    virtual void activateContext(ThreadID thread_num, int delay);
+    virtual void activateContext(ThreadID thread_num, Cycles delay);
     virtual void suspendContext(ThreadID thread_num);
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);

@@ -240,15 +240,16 @@ TableWalker::processWalk()
     if (currState->timing) {
         port.dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                        &doL1DescEvent, (uint8_t*)&currState->l1Desc.data,
-                       currState->tc->getCpuPtr()->ticks(1), flag);
-        DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
+                       currState->tc->getCpuPtr()->clockPeriod(), flag);
+        DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before "
+                "adding: %d\n",
                 stateQueueL1.size());
         stateQueueL1.push_back(currState);
         currState = NULL;
     } else if (!currState->functional) {
         port.dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                        NULL, (uint8_t*)&currState->l1Desc.data,
-                       currState->tc->getCpuPtr()->ticks(1), flag);
+                       currState->tc->getCpuPtr()->clockPeriod(), flag);
         doL1Descriptor();
         f = currState->fault;
     } else {
@@ -588,12 +589,12 @@ TableWalker::doL1Descriptor()
         if (currState->timing) {
             currState->delayed = true;
             port.dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    &doL2DescEvent, (uint8_t*)&currState->l2Desc.data,
-                    currState->tc->getCpuPtr()->ticks(1));
+                           &doL2DescEvent, (uint8_t*)&currState->l2Desc.data,
+                           currState->tc->getCpuPtr()->clockPeriod());
         } else if (!currState->functional) {
             port.dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    NULL, (uint8_t*)&currState->l2Desc.data,
-                    currState->tc->getCpuPtr()->ticks(1));
+                           NULL, (uint8_t*)&currState->l2Desc.data,
+                           currState->tc->getCpuPtr()->clockPeriod());
             doL2Descriptor();
         } else {
             RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0,
@@ -758,7 +759,7 @@ void
 TableWalker::nextWalk(ThreadContext *tc)
 {
     if (pendingQueue.size())
-        schedule(doProcessEvent, tc->getCpuPtr()->clockEdge(1));
+        schedule(doProcessEvent, tc->getCpuPtr()->clockEdge(Cycles(1)));
 }
 
 

@@ -44,14 +44,14 @@ class ThreadContext;
 
 namespace AlphaISA {
 
-inline Tick
+inline Cycles
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
     panic("No handleIprRead implementation in Alpha\n");
 }
 
 
-inline Tick
+inline Cycles
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
     panic("No handleIprWrite implementation in Alpha\n");

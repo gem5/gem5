@@ -197,7 +197,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
 
 void
-AtomicSimpleCPU::activateContext(ThreadID thread_num, int delay)
+AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
 {
     DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
 
@@ -208,7 +208,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
-    numCycles += tickToCycle(thread->lastActivate - thread->lastSuspend);
+    numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
     schedule(tickEvent, clockEdge(delay));
@@ -518,13 +518,11 @@ AtomicSimpleCPU::tick()
                 stall_ticks += dcache_latency;
 
             if (stall_ticks) {
-                Tick stall_cycles = stall_ticks / clockPeriod();
-                Tick aligned_stall_ticks = ticks(stall_cycles);
-
-                if (aligned_stall_ticks < stall_ticks)
-                    aligned_stall_ticks += 1;
-
-                latency += aligned_stall_ticks;
+                // the atomic cpu does its accounting in ticks, so
+                // keep counting in ticks but round to the clock
+                // period
+                latency += divCeil(stall_ticks, clockPeriod()) *
+                    clockPeriod();
             }
 
         }

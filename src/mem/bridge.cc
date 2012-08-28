@@ -56,7 +56,7 @@
 Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
                                          Bridge& _bridge,
                                          BridgeMasterPort& _masterPort,
-                                         int _delay, int _resp_limit,
+                                         Cycles _delay, int _resp_limit,
                                          std::vector<Range<Addr> > _ranges)
     : SlavePort(_name, &_bridge), bridge(_bridge), masterPort(_masterPort),
       delay(_delay), ranges(_ranges.begin(), _ranges.end()),
@@ -68,7 +68,7 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
 Bridge::BridgeMasterPort::BridgeMasterPort(const std::string& _name,
                                            Bridge& _bridge,
                                            BridgeSlavePort& _slavePort,
-                                           int _delay, int _req_limit)
+                                           Cycles _delay, int _req_limit)
     : MasterPort(_name, &_bridge), bridge(_bridge), slavePort(_slavePort),
       delay(_delay), reqQueueLimit(_req_limit), sendEvent(*this)
 {
@@ -76,9 +76,10 @@ Bridge::BridgeMasterPort::BridgeMasterPort(const std::string& _name,
 
 Bridge::Bridge(Params *p)
     : MemObject(p),
-      slavePort(p->name + ".slave", *this, masterPort, p->delay, p->resp_size,
-                p->ranges),
-      masterPort(p->name + ".master", *this, slavePort, p->delay, p->req_size)
+      slavePort(p->name + ".slave", *this, masterPort,
+                ticksToCycles(p->delay), p->resp_size, p->ranges),
+      masterPort(p->name + ".master", *this, slavePort,
+                 ticksToCycles(p->delay), p->req_size)
 {
 }
 
@@ -140,7 +141,7 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 
     DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
-    slavePort.schedTimingResp(pkt, curTick() + delay);
+    slavePort.schedTimingResp(pkt, bridge.clockEdge(delay));
 
     return true;
 }
@@ -170,7 +171,7 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
             assert(outstandingResponses != respQueueLimit);
             ++outstandingResponses;
             retryReq = false;
-            masterPort.schedTimingReq(pkt, curTick() + delay);
+            masterPort.schedTimingReq(pkt, bridge.clockEdge(delay));
         }
     }
 
@@ -352,7 +353,7 @@ Bridge::BridgeSlavePort::recvRetry()
 Tick
 Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 {
-    return delay + masterPort.sendAtomic(pkt);
+    return delay * bridge.clockPeriod() + masterPort.sendAtomic(pkt);
 }
 
 void

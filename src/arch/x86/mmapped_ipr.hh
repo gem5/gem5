@@ -53,7 +53,7 @@
 
 namespace X86ISA
 {
-    inline Tick
+    inline Cycles
     handleIprRead(ThreadContext *xc, Packet *pkt)
     {
         Addr offset = pkt->getAddr() & mask(3);
@@ -62,10 +62,10 @@ namespace X86ISA
         // Make sure we don't trot off the end of data.
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->setData(((uint8_t *)&data) + offset);
-        return 1;
+        return Cycles(1);
     }
 
-    inline Tick
+    inline Cycles
     handleIprWrite(ThreadContext *xc, Packet *pkt)
     {
         Addr offset = pkt->getAddr() & mask(3);
@@ -76,7 +76,7 @@ namespace X86ISA
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->writeData(((uint8_t *)&data) + offset);
         xc->setMiscReg(index, gtoh(data));
-        return 1;
+        return Cycles(1);
     }
 }
 

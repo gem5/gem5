@@ -828,7 +828,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 FUCompletion *execution = new FUCompletion(issuing_inst,
                                                            idx, this);
 
-                cpu->schedule(execution, cpu->clockEdge(op_latency - 1));
+                cpu->schedule(execution,
+                              cpu->clockEdge(Cycles(op_latency - 1)));
 
                 // @todo: Enforce that issue_latency == 1 or op_latency
                 if (issue_latency > 1) {

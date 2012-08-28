@@ -168,8 +168,8 @@ class TLB : public BaseTLB
      *  does not support the Checker model at the moment
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
-    Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
+    Cycles doMmuRegRead(ThreadContext *tc, Packet *pkt);
+    Cycles doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
 
     // Checkpointing

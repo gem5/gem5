@@ -132,7 +132,7 @@ class ResourcePool {
         const char *description() const;
 
         /** Schedule Event */
-        void scheduleEvent(int delay);
+        void scheduleEvent(Cycles delay);
 
         /** Unschedule This Event */
         void unscheduleEvent();
@@ -206,7 +206,8 @@ class ResourcePool {
 
     /** Schedule resource event, regardless of its current state. */
     void scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst = NULL,
-                       int delay = 0, int res_idx = 0, ThreadID tid = 0);
+                       Cycles delay = Cycles(0), int res_idx = 0,
+                       ThreadID tid = 0);
 
    /** UnSchedule resource event, regardless of its current state. */
     void unscheduleEvent(int res_idx, DynInstPtr inst);

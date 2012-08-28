@@ -102,7 +102,7 @@ void zeroRegisters(TC *tc);
 
 inline void startupCPU(ThreadContext *tc, int cpuId)
 {
-    tc->activate(0);
+    tc->activate(Cycles(0));
 }
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);

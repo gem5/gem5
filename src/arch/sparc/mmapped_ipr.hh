@@ -44,13 +44,13 @@
 namespace SparcISA
 {
 
-inline Tick
+inline Cycles
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
     return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
 }
 
-inline Tick
+inline Cycles
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
     return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);

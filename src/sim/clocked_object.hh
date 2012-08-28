@@ -64,7 +64,7 @@ class ClockedObject : public SimObject
 
     // The cycle counter value corresponding to the current value of
     // 'tick'
-    mutable Tick cycle;
+    mutable Cycles cycle;
 
     /**
      * Prevent inadvertent use of the copy constructor and assignment
@@ -96,7 +96,7 @@ class ClockedObject : public SimObject
         // if not, we have to recalculate the cycle and tick, we
         // perform the calculations in terms of relative cycles to
         // allow changes to the clock period in the future
-        Tick elapsedCycles = divCeil(curTick() - tick, clock);
+        Cycles elapsedCycles(divCeil(curTick() - tick, clock));
         cycle += elapsedCycles;
         tick += elapsedCycles * clock;
     }
@@ -130,22 +130,22 @@ class ClockedObject : public SimObject
      *
      * @return The tick when the clock edge occurs
      */
-    inline Tick clockEdge(int cycles = 0) const
+    inline Tick clockEdge(Cycles cycles = Cycles(0)) const
     {
         // align tick to the next clock edge
         update();
 
         // figure out when this future cycle is
-        return tick + ticks(cycles);
+        return tick + clock * cycles;
     }
 
     /**
      * Determine the current cycle, corresponding to a tick aligned to
      * a clock edge.
      *
-     * @return The current cycle
+     * @return The current cycle count
      */
-    inline Tick curCycle() const
+    inline Cycles curCycle() const
     {
         // align cycle to the next clock edge.
         update();
@@ -162,13 +162,12 @@ class ClockedObject : public SimObject
     Tick nextCycle() const
     { return clockEdge(); }
 
-    inline Tick frequency() const { return SimClock::Frequency / clock; }
-
-    inline Tick ticks(int cycles) const { return clock * cycles; }
+    inline uint64_t frequency() const { return SimClock::Frequency / clock; }
 
     inline Tick clockPeriod() const { return clock; }
 
-    inline Tick tickToCycle(Tick tick) const { return tick / clock; }
+    inline Cycles ticksToCycles(Tick tick) const
+    { return Cycles(tick / clock); }
 
 };
 

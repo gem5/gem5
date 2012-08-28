@@ -140,7 +140,7 @@ class Bridge : public MemObject
         BridgeMasterPort& masterPort;
 
         /** Minimum request delay though this bridge. */
-        Tick delay;
+        Cycles delay;
 
         /** Address ranges to pass through the bridge */
         AddrRangeList ranges;
@@ -187,12 +187,12 @@ class Bridge : public MemObject
          * @param _name the port name including the owner
          * @param _bridge the structural owner
          * @param _masterPort the master port on the other side of the bridge
-         * @param _delay the delay from seeing a response to sending it
+         * @param _delay the delay in cycles from receiving to sending
          * @param _resp_limit the size of the response queue
          * @param _ranges a number of address ranges to forward
          */
         BridgeSlavePort(const std::string& _name, Bridge& _bridge,
-                        BridgeMasterPort& _masterPort, int _delay,
+                        BridgeMasterPort& _masterPort, Cycles _delay,
                         int _resp_limit, std::vector<Range<Addr> > _ranges);
 
         /**
@@ -255,7 +255,7 @@ class Bridge : public MemObject
         BridgeSlavePort& slavePort;
 
         /** Minimum delay though this bridge. */
-        Tick delay;
+        Cycles delay;
 
         /**
          * Request packet queue. Request packets are held in this
@@ -286,11 +286,11 @@ class Bridge : public MemObject
          * @param _name the port name including the owner
          * @param _bridge the structural owner
          * @param _slavePort the slave port on the other side of the bridge
-         * @param _delay the delay from seeing a request to sending it
+         * @param _delay the delay in cycles from receiving to sending
          * @param _req_limit the size of the request queue
          */
         BridgeMasterPort(const std::string& _name, Bridge& _bridge,
-                         BridgeSlavePort& _slavePort, int _delay,
+                         BridgeSlavePort& _slavePort, Cycles _delay,
                          int _req_limit);
 
         /**

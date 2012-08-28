@@ -54,7 +54,8 @@ class FetchSeqUnit : public Resource {
 
   public:
     FetchSeqUnit(std::string res_name, int res_id, int res_width,
-              int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
+                 Cycles res_latency, InOrderCPU *_cpu,
+                 ThePipeline::Params *params);
     ~FetchSeqUnit();
     
     void init();

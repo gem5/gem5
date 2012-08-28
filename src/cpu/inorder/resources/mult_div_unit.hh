@@ -56,7 +56,7 @@ class MultDivUnit : public Resource {
 
   public:
     MultDivUnit(std::string res_name, int res_id, int res_width,
-                int res_latency, InOrderCPU *_cpu,
+                Cycles res_latency, InOrderCPU *_cpu,
                 ThePipeline::Params *params);
 
   public:
@@ -86,23 +86,23 @@ class MultDivUnit : public Resource {
   protected:
     /** Latency & Repeat Rate for Multiply Insts */
     unsigned multRepeatRate;
-    unsigned multLatency;
+    Cycles multLatency;
 
     /** Latency & Repeat Rate for 8-bit Divide Insts */
     unsigned div8RepeatRate;
-    unsigned div8Latency;
+    Cycles div8Latency;
 
     /** Latency & Repeat Rate for 16-bit Divide Insts */
     unsigned div16RepeatRate;
-    unsigned div16Latency;
+    Cycles div16Latency;
 
     /** Latency & Repeat Rate for 24-bit Divide Insts */
     unsigned div24RepeatRate;
-    unsigned div24Latency;
+    Cycles div24Latency;
 
     /** Latency & Repeat Rate for 32-bit Divide Insts */
     unsigned div32RepeatRate;
-    unsigned div32Latency;
+    Cycles div32Latency;
 
     /** Last cycle that MDU was used */
     Tick lastMDUCycle;

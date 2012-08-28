@@ -556,7 +556,7 @@ PipelineStage::activateThread(ThreadID tid)
             // prevent "double"-execution of instructions
             cpu->resPool->scheduleEvent((InOrderCPU::CPUEventType)
                                         ResourcePool::UpdateAfterContextSwitch, 
-                                        inst, 0, 0, tid);
+                                        inst, Cycles(0), 0, tid);
 
             // Clear switchout buffer
             switchedOutBuffer[tid] = NULL;

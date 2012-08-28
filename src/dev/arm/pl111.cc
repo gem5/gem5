@@ -475,7 +475,7 @@ Pl111::fillFifo()
 void
 Pl111::dmaDone()
 {
-    Tick maxFrameTime = lcdTiming2.cpl * height;
+    Cycles maxFrameTime(lcdTiming2.cpl * height);
 
     --dmaPendingNum;
 
@@ -503,8 +503,11 @@ Pl111::dmaDone()
         // argument into a relative number of cycles in the future by
         // subtracting curCycle()
         if (lcdControl.lcden)
-            schedule(readEvent, clockEdge(startTime + maxFrameTime -
-                                          curCycle()));
+            // @todo: This is a terrible way of doing the time
+            // keeping, make it all relative
+            schedule(readEvent,
+                     clockEdge(Cycles(startTime - curCycle() +
+                                      maxFrameTime)));
     }
 
     if (dmaPendingNum > (maxOutstandingDma - waterMark))

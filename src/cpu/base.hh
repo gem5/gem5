@@ -246,7 +246,7 @@ class BaseCPU : public MemObject
     /// Notify the CPU that the indicated context is now active.  The
     /// delay parameter indicates the number of ticks to wait before
     /// executing (typically 0 or 1).
-    virtual void activateContext(ThreadID thread_num, int delay) {}
+    virtual void activateContext(ThreadID thread_num, Cycles delay) {}
 
     /// Notify the CPU that the indicated context is now suspended.
     virtual void suspendContext(ThreadID thread_num) {}

@@ -136,14 +136,14 @@ namespace MipsISA
             const char *description() const;
 
             /** Schedule This Event */
-            void scheduleEvent(int delay);
+            void scheduleEvent(Cycles delay);
 
             /** Unschedule This Event */
             void unscheduleEvent();
         };
 
         // Schedule a CP0 Update Event
-        void scheduleCP0Update(BaseCPU *cpu, int delay = 0);
+        void scheduleCP0Update(BaseCPU *cpu, Cycles delay = Cycles(0));
 
         // If any changes have been made, then check the state for changes
         // and if necessary alert the CPU

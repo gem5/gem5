@@ -176,7 +176,7 @@ void initCPU(ThreadContext *tc, int cpuId)
 
     // @todo: Control the relative frequency, in this case 16:1, of
     // the clocks in the Python code
-    interrupts->setClock(tc->getCpuPtr()->ticks(16));
+    interrupts->setClock(tc->getCpuPtr()->clockPeriod() * 16);
 
     // TODO Set the SMRAM base address (SMBASE) to 0x00030000
 
@@ -189,12 +189,12 @@ void initCPU(ThreadContext *tc, int cpuId)
 void startupCPU(ThreadContext *tc, int cpuId)
 {
     if (cpuId == 0 || !FullSystem) {
-        tc->activate(0);
+        tc->activate(Cycles(0));
     } else {
         // This is an application processor (AP). It should be initialized to
         // look like only the BIOS POST has run on it and put then put it into
         // a halted state.
-        tc->suspend(0);
+        tc->suspend(Cycles(0));
     }
 }
 

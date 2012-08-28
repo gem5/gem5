@@ -187,7 +187,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
 
 void
-TimingSimpleCPU::activateContext(ThreadID thread_num, int delay)
+TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
 {
     DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
 
@@ -229,7 +229,7 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
 {
     RequestPtr req = pkt->req;
     if (req->isMmappedIpr()) {
-        Tick delay = TheISA::handleIprRead(thread->getTC(), pkt);
+        Cycles delay = TheISA::handleIprRead(thread->getTC(), pkt);
         new IprEvent(pkt, this, clockEdge(delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
@@ -443,7 +443,7 @@ TimingSimpleCPU::handleWritePacket()
 {
     RequestPtr req = dcache_pkt->req;
     if (req->isMmappedIpr()) {
-        Tick delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
+        Cycles delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
         new IprEvent(dcache_pkt, this, clockEdge(delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;

@@ -256,7 +256,8 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       globalSeqNum(1),
       system(params->system),
       drainCount(0),
-      deferRegistration(params->defer_registration)
+      deferRegistration(params->defer_registration),
+      lastRunningCycle(curCycle())
 {
     if (!deferRegistration) {
         _status = Running;
@@ -385,8 +386,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
     // Setup the ROB for whichever stages need it.
     commit.setROB(&rob);
-
-    lastRunningCycle = curCycle();
 
     lastActivatedCycle = 0;
 #if 0
@@ -629,7 +628,7 @@ FullO3CPU<Impl>::tick()
             lastRunningCycle = curCycle();
             timesIdled++;
         } else {
-            schedule(tickEvent, clockEdge(1));
+            schedule(tickEvent, clockEdge(Cycles(1)));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -741,12 +740,12 @@ FullO3CPU<Impl>::totalOps() const
 
 template <class Impl>
 void
-FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
+FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
 {
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
-                "on cycle %d\n", tid, curTick() + ticks(delay));
+                "on cycle %d\n", tid, clockEdge(delay));
         scheduleActivateThreadEvent(tid, delay);
     } else {
         activateThread(tid);
@@ -762,7 +761,8 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
         activityRec.activity();
         fetch.wakeFromQuiesce();
 
-        Tick cycles = curCycle() - lastRunningCycle;
+        Cycles cycles(curCycle() - lastRunningCycle);
+        // @todo: This is an oddity that is only here to match the stats
         if (cycles != 0)
             --cycles;
         quiesceCycles += cycles;
@@ -776,12 +776,12 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
 template <class Impl>
 bool
 FullO3CPU<Impl>::scheduleDeallocateContext(ThreadID tid, bool remove,
-                                           int delay)
+                                           Cycles delay)
 {
     // Schedule removal of thread data from CPU
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to deallocate "
-                "on cycle %d\n", tid, curTick() + ticks(delay));
+                "on tick %d\n", tid, clockEdge(delay));
         scheduleDeallocateContextEvent(tid, remove, delay);
         return false;
     } else {
@@ -797,7 +797,7 @@ void
 FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
-    bool deallocated = scheduleDeallocateContext(tid, false, 1);
+    bool deallocated = scheduleDeallocateContext(tid, false, Cycles(1));
     // If this was the last thread then unschedule the tick event.
     if ((activeThreads.size() == 1 && !deallocated) ||
         activeThreads.size() == 0)
@@ -814,7 +814,7 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
 {
     //For now, this is the same as deallocate
     DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
-    scheduleDeallocateContext(tid, true, 1);
+    scheduleDeallocateContext(tid, true, Cycles(1));
 }
 
 template <class Impl>
@@ -854,7 +854,7 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
 
     src_tc->setStatus(ThreadContext::Active);
 
-    activateContext(tid,1);
+    activateContext(tid, Cycles(1));
 
     //Reset ROB/IQ/LSQ Entries
     commit.rob->resetEntries();
@@ -1672,7 +1672,8 @@ FullO3CPU<Impl>::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    Tick cycles = curCycle() - lastRunningCycle;
+    Cycles cycles(curCycle() - lastRunningCycle);
+    // @todo: This is an oddity that is only here to match the stats
     if (cycles != 0)
         --cycles;
     idleCycles += cycles;

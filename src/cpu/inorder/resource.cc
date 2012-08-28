@@ -44,7 +44,7 @@
 using namespace std;
 
 Resource::Resource(string res_name, int res_id, int res_width,
-                   int res_latency, InOrderCPU *_cpu)
+                   Cycles res_latency, InOrderCPU *_cpu)
     : resName(res_name), id(res_id),
       width(res_width), latency(res_latency), cpu(_cpu),
       resourceEvent(NULL)
@@ -76,7 +76,7 @@ Resource::init()
     // If the resource has a zero-cycle (no latency)
     // function, then no reason to have events
     // that will process them for the right tick
-    if (latency > 0)
+    if (latency > Cycles(0))
       resourceEvent = new ResourceEvent[width];
 
 
@@ -296,7 +296,8 @@ Resource::setupSquash(DynInstPtr inst, int stage_num, ThreadID tid)
 
     // Schedule Squash Through-out Resource Pool
     cpu->resPool->scheduleEvent(
-        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
+        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst,
+        Cycles(0));
 }
 
 void
@@ -321,7 +322,7 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
 
             int req_slot_num = req_ptr->getSlot();
 
-            if (latency > 0) {
+            if (latency > Cycles(0)) {
                 if (resourceEvent[req_slot_num].scheduled())
                     unscheduleEvent(req_slot_num);
             }
@@ -362,17 +363,10 @@ Resource::squashThenTrap(int stage_num, DynInstPtr inst)
     cpu->trapContext(inst->fault, tid, inst);
 }
 
-Tick
-Resource::ticks(int num_cycles)
-{
-    return cpu->ticks(num_cycles);
-}
-
-
 void
 Resource::scheduleExecution(int slot_num)
 {
-    if (latency > 0) {
+    if (latency > Cycles(0)) {
         scheduleEvent(slot_num, latency);
     } else {
         execute(slot_num);
@@ -380,17 +374,17 @@ Resource::scheduleExecution(int slot_num)
 }
 
 void
-Resource::scheduleEvent(int slot_idx, int delay)
+Resource::scheduleEvent(int slot_idx, Cycles delay)
 {
     DPRINTF(Resource, "[tid:%i]: Scheduling event for [sn:%i] on tick %i.\n",
             reqs[slot_idx]->inst->readTid(),
             reqs[slot_idx]->inst->seqNum,
-            cpu->ticks(delay) + curTick());
+            cpu->clockEdge(delay));
     resourceEvent[slot_idx].scheduleEvent(delay);
 }
 
 bool
-Resource::scheduleEvent(DynInstPtr inst, int delay)
+Resource::scheduleEvent(DynInstPtr inst, Cycles delay)
 {
     int slot_idx = findSlot(inst);
 
@@ -521,9 +515,9 @@ ResourceEvent::description() const
 }
 
 void
-ResourceEvent::scheduleEvent(int delay)
+ResourceEvent::scheduleEvent(Cycles delay)
 {
     assert(!scheduled() || squashed());
     resource->cpu->reschedule(this,
-                              curTick() + resource->ticks(delay), true);
+                              resource->cpu->clockEdge(delay), true);
 }

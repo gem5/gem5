@@ -114,7 +114,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
                 cpu->deschedule(tickCompare);
-            cpu->schedule(tickCompare, curTick() + time * cpu->ticks(1));
+            cpu->schedule(tickCompare, cpu->clockEdge(Cycles(time)));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -130,7 +130,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
                 cpu->deschedule(sTickCompare);
-            cpu->schedule(sTickCompare, curTick() + time * cpu->ticks(1));
+            cpu->schedule(sTickCompare, cpu->clockEdge(Cycles(time)));
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -200,7 +200,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
                 cpu->deschedule(hSTickCompare);
-            cpu->schedule(hSTickCompare, curTick() + time * cpu->ticks(1));
+            cpu->schedule(hSTickCompare, cpu->clockEdge(Cycles(time)));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -329,19 +329,19 @@ ISA::processSTickCompare(ThreadContext *tc)
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
-    int ticks;
-    ticks = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
+    int delay;
+    delay = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
         cpu->instCount();
-    assert(ticks >= 0 && "stick compare missed interrupt cycle");
+    assert(delay >= 0 && "stick compare missed interrupt cycle");
 
-    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
+    if (delay == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
             setMiscReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else {
-        cpu->schedule(sTickCompare, curTick() + ticks * cpu->ticks(1));
+        cpu->schedule(sTickCompare, cpu->clockEdge(Cycles(delay)));
     }
 }
 
@@ -353,15 +353,15 @@ ISA::processHSTickCompare(ThreadContext *tc)
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
-    int ticks;
+    int delay;
     if ( tc->status() == ThreadContext::Halted)
        return;
 
-    ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
+    delay = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
         cpu->instCount();
-    assert(ticks >= 0 && "hstick compare missed interrupt cycle");
+    assert(delay >= 0 && "hstick compare missed interrupt cycle");
 
-    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
+    if (delay == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {
@@ -369,7 +369,7 @@ ISA::processHSTickCompare(ThreadContext *tc)
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else {
-        cpu->schedule(hSTickCompare, curTick() + ticks * cpu->ticks(1));
+        cpu->schedule(hSTickCompare, cpu->clockEdge(Cycles(delay)));
     }
 }
 

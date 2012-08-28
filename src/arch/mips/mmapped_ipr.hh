@@ -45,13 +45,13 @@ class ThreadContext;
 namespace MipsISA
 {
 
-inline Tick
+inline Cycles
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
     panic("No implementation for handleIprRead in MIPS\n");
 }
 
-inline Tick
+inline Cycles
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
     panic("No implementation for handleIprWrite in MIPS\n");

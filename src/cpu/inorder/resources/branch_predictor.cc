@@ -39,8 +39,9 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
-BranchPredictor::BranchPredictor(std::string res_name, int res_id, int res_width,
-                                 int res_latency, InOrderCPU *_cpu,
+BranchPredictor::BranchPredictor(std::string res_name, int res_id,
+                                 int res_width, Cycles res_latency,
+                                 InOrderCPU *_cpu,
                                  ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       branchPred(this, params)

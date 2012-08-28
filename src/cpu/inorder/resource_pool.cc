@@ -64,54 +64,57 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     // name - id - bandwidth - latency - CPU - Parameters
     // --------------------------------------------------
     resources.push_back(new FetchSeqUnit("fetch_seq_unit", FetchSeq,
-                                         stage_width * 2, 0, _cpu, params));
+                                         stage_width * 2, Cycles(0),
+                                         _cpu, params));
 
     // Keep track of the instruction fetch unit so we can easily
     // provide a pointer to it in the CPU.
     instUnit = new FetchUnit("icache_port", ICache,
-                             stage_width * 2 + MaxThreads, 0, _cpu,
+                             stage_width * 2 + MaxThreads, Cycles(0), _cpu,
                              params);
     resources.push_back(instUnit);
 
     resources.push_back(new DecodeUnit("decode_unit", Decode,
-                                       stage_width, 0, _cpu, params));
+                                       stage_width, Cycles(0), _cpu,
+                                       params));
 
     resources.push_back(new BranchPredictor("branch_predictor", BPred,
-                                            stage_width, 0, _cpu, params));
+                                            stage_width, Cycles(0),
+                                            _cpu, params));
 
     resources.push_back(new InstBuffer("fetch_buffer_t0", FetchBuff, 4,
-                                       0, _cpu, params));
+                                       Cycles(0), _cpu, params));
 
     resources.push_back(new UseDefUnit("regfile_manager", RegManager,
-                                       stage_width * 3, 0, _cpu,
+                                       stage_width * 3, Cycles(0), _cpu,
                                        params));
 
     resources.push_back(new AGENUnit("agen_unit", AGEN,
-                                     stage_width, 0, _cpu, params));
+                                     stage_width, Cycles(0), _cpu,
+                                     params));
 
     resources.push_back(new ExecutionUnit("execution_unit", ExecUnit,
-                                          stage_width, 0, _cpu, params));
+                                          stage_width, Cycles(0), _cpu,
+                                          params));
 
     resources.push_back(new MultDivUnit("mult_div_unit", MDU,
-                                        stage_width * 2,
-                                        0,
-                                        _cpu,
-                                        params));
+                                        stage_width * 2, Cycles(0),
+                                        _cpu, params));
 
     // Keep track of the data load/store unit so we can easily provide
     // a pointer to it in the CPU.
     dataUnit = new CacheUnit("dcache_port", DCache,
-                             stage_width * 2 + MaxThreads, 0, _cpu,
+                             stage_width * 2 + MaxThreads, Cycles(0), _cpu,
                              params);
     resources.push_back(dataUnit);
 
     gradObjects.push_back(BPred);
     resources.push_back(new GraduationUnit("graduation_unit", Grad,
-                                           stage_width, 0, _cpu,
+                                           stage_width, Cycles(0), _cpu,
                                            params));
 
     resources.push_back(new InstBuffer("fetch_buffer_t1", FetchBuff2, 4,
-                                       0, _cpu, params));
+                                       Cycles(0), _cpu, params));
 
 }
 
@@ -234,7 +237,7 @@ ResourcePool::slotsInUse(int res_idx)
 //       to the event construction
 void
 ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
-                            int delay,  int res_idx, ThreadID tid)
+                            Cycles delay,  int res_idx, ThreadID tid)
 {
     assert(delay >= 0);
 
@@ -456,7 +459,7 @@ ResourcePool::ResPoolEvent::description() const
 
 /** Schedule resource event, regardless of its current state. */
 void
-ResourcePool::ResPoolEvent::scheduleEvent(int delay)
+ResourcePool::ResPoolEvent::scheduleEvent(Cycles delay)
 {
     InOrderCPU *cpu = resPool->cpu;
     assert(!scheduled() || squashed());
