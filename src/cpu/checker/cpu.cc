@@ -65,7 +65,8 @@ CheckerCPU::init()
 }
 
 CheckerCPU::CheckerCPU(Params *p)
-    : BaseCPU(p, true), thread(NULL), tc(NULL)
+    : BaseCPU(p, true), systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
+      tc(NULL), thread(NULL)
 {
     memReq = NULL;
     curStaticInst = NULL;
@@ -83,9 +84,7 @@ CheckerCPU::CheckerCPU(Params *p)
     warnOnlyOnLoadError = p->warnOnlyOnLoadError;
     itb = p->itb;
     dtb = p->dtb;
-    systemPtr = NULL;
     workload = p->workload;
-    thread = NULL;
 
     updateOnError = true;
 }

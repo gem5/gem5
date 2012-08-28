@@ -98,42 +98,40 @@ class CheckerCPU : public BaseCPU
   public:
     virtual void init();
 
-  public:
     typedef CheckerCPUParams Params;
-    const Params *params() const
-    { return reinterpret_cast<const Params *>(_params); }
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
-    std::vector<Process*> workload;
-
     void setSystem(System *system);
-
-    System *systemPtr;
 
     void setIcachePort(CpuPort *icache_port);
 
-    CpuPort *icachePort;
-
     void setDcachePort(CpuPort *dcache_port);
-
-    CpuPort *dcachePort;
 
     CpuPort &getDataPort()
     {
-        panic("Not supported on checker!");
+        // the checker does not have ports on its own so return the
+        // data port of the actual CPU core
+        assert(dcachePort);
         return *dcachePort;
     }
 
     CpuPort &getInstPort()
     {
-        panic("Not supported on checker!");
+        // the checker does not have ports on its own so return the
+        // data port of the actual CPU core
+        assert(icachePort);
         return *icachePort;
     }
 
-  public:
-    // Primary thread being run.
-    SimpleThread *thread;
+  protected:
+
+    std::vector<Process*> workload;
+
+    System *systemPtr;
+
+    CpuPort *icachePort;
+    CpuPort *dcachePort;
 
     ThreadContext *tc;
 
@@ -166,6 +164,11 @@ class CheckerCPU : public BaseCPU
     Counter startNumInst;
 
     std::queue<int> miscRegIdxs;
+
+  public:
+
+    // Primary thread being run.
+    SimpleThread *thread;
 
     TheISA::TLB* getITBPtr() { return itb; }
     TheISA::TLB* getDTBPtr() { return dtb; }
