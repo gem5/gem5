@@ -1,12 +1,12 @@
 
 ---------- Begin Simulation Statistics ----------
-sim_seconds                                  0.019129                       # Number of seconds simulated
-sim_ticks                                    19129199                       # Number of ticks simulated
-final_tick                                   19129199                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_seconds                                  0.005747                       # Number of seconds simulated
+sim_ticks                                     5747338                       # Number of ticks simulated
+final_tick                                    5747338                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 190724                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 378788                       # Number of bytes of host memory used
-host_seconds                                   100.30                       # Real time elapsed on the host
+host_tick_rate                                  47566                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 409708                       # Number of bytes of host memory used
+host_seconds                                   120.83                       # Real time elapsed on the host
 system.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -157,29 +157,29 @@ system.dir_cntrl0.probeFilter.num_tag_array_reads            0                  
 system.dir_cntrl0.probeFilter.num_tag_array_writes            0                       # number of tag array writes
 system.dir_cntrl0.probeFilter.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.dir_cntrl0.probeFilter.num_data_array_stalls            0                       # number of stalls caused by data array
-system.cpu0.num_reads                          100000                       # number of read accesses completed
-system.cpu0.num_writes                          53893                       # number of write accesses completed
+system.cpu0.num_reads                           98701                       # number of read accesses completed
+system.cpu0.num_writes                          53180                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed
-system.cpu1.num_reads                           99845                       # number of read accesses completed
-system.cpu1.num_writes                          52936                       # number of write accesses completed
+system.cpu1.num_reads                           98822                       # number of read accesses completed
+system.cpu1.num_writes                          52970                       # number of write accesses completed
 system.cpu1.num_copies                              0                       # number of copy accesses completed
-system.cpu2.num_reads                           99959                       # number of read accesses completed
-system.cpu2.num_writes                          53318                       # number of write accesses completed
+system.cpu2.num_reads                           99173                       # number of read accesses completed
+system.cpu2.num_writes                          53394                       # number of write accesses completed
 system.cpu2.num_copies                              0                       # number of copy accesses completed
-system.cpu3.num_reads                           99709                       # number of read accesses completed
-system.cpu3.num_writes                          53594                       # number of write accesses completed
+system.cpu3.num_reads                           99438                       # number of read accesses completed
+system.cpu3.num_writes                          53653                       # number of write accesses completed
 system.cpu3.num_copies                              0                       # number of copy accesses completed
-system.cpu4.num_reads                           99622                       # number of read accesses completed
-system.cpu4.num_writes                          53609                       # number of write accesses completed
+system.cpu4.num_reads                           99047                       # number of read accesses completed
+system.cpu4.num_writes                          53311                       # number of write accesses completed
 system.cpu4.num_copies                              0                       # number of copy accesses completed
-system.cpu5.num_reads                           99608                       # number of read accesses completed
-system.cpu5.num_writes                          53591                       # number of write accesses completed
+system.cpu5.num_reads                           99288                       # number of read accesses completed
+system.cpu5.num_writes                          53451                       # number of write accesses completed
 system.cpu5.num_copies                              0                       # number of copy accesses completed
-system.cpu6.num_reads                           99715                       # number of read accesses completed
-system.cpu6.num_writes                          54030                       # number of write accesses completed
+system.cpu6.num_reads                           98768                       # number of read accesses completed
+system.cpu6.num_writes                          53052                       # number of write accesses completed
 system.cpu6.num_copies                              0                       # number of copy accesses completed
-system.cpu7.num_reads                           97913                       # number of read accesses completed
-system.cpu7.num_writes                          53717                       # number of write accesses completed
+system.cpu7.num_reads                          100000                       # number of read accesses completed
+system.cpu7.num_writes                          53766                       # number of write accesses completed
 system.cpu7.num_copies                              0                       # number of copy accesses completed
 
 ---------- End Simulation Statistics   ----------

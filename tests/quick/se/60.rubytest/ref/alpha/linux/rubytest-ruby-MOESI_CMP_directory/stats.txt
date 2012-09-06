@@ -1,12 +1,12 @@
 
 ---------- Begin Simulation Statistics ----------
-sim_seconds                                  0.000358                       # Number of seconds simulated
-sim_ticks                                      357561                       # Number of ticks simulated
-final_tick                                     357561                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_seconds                                  0.000317                       # Number of seconds simulated
+sim_ticks                                      316521                       # Number of ticks simulated
+final_tick                                     316521                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 791110                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 229444                       # Number of bytes of host memory used
-host_seconds                                     0.45                       # Real time elapsed on the host
+host_tick_rate                                 596457                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 260972                       # Number of bytes of host memory used
+host_seconds                                     0.53                       # Real time elapsed on the host
 system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
