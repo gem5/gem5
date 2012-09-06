@@ -149,7 +149,6 @@ operator<<(ostream& out, const RubyMemoryControl& obj)
 RubyMemoryControl::RubyMemoryControl(const Params *p)
     : MemoryControl(p)
 {
-    m_mem_bus_cycle_multiplier = p->mem_bus_cycle_multiplier;
     m_banks_per_rank = p->banks_per_rank;
     m_ranks_per_dimm = p->ranks_per_dimm;
     m_dimms_per_channel = p->dimms_per_channel;
@@ -309,7 +308,7 @@ RubyMemoryControl::enqueueMemRef(MemoryNode& memRef)
     m_input_queue.push_back(memRef);
 
     if (!m_event.scheduled()) {
-        schedule(m_event, curTick() + 1);
+        schedule(m_event, nextCycle());
     }
 }
 
@@ -377,17 +376,17 @@ RubyMemoryControl::printStats(ostream& out) const
 void
 RubyMemoryControl::enqueueToDirectory(MemoryNode req, int latency)
 {
-    Time arrival_time = g_system_ptr->getTime()
-        + (latency * m_mem_bus_cycle_multiplier);
-    req.m_time = arrival_time;
+    Time arrival_time = curTick() + (latency * clock);
+    Time ruby_arrival_time = arrival_time / g_system_ptr->getClock();
+    req.m_time = ruby_arrival_time;
     m_response_queue.push_back(req);
 
     DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
             req.m_addr, req.m_is_mem_read ? 'R':'W',
-            arrival_time * g_system_ptr->getClock());
+            arrival_time);
 
     // schedule the wake up
-    m_consumer_ptr->scheduleEventAbsolute(arrival_time);
+    m_consumer_ptr->scheduleEventAbsolute(ruby_arrival_time);
 }
 
 // getBank returns an integer that is unique for each
@@ -705,7 +704,7 @@ RubyMemoryControl::wakeup()
     m_idleCount--;
     if (m_idleCount > 0) {
         assert(!m_event.scheduled());
-        schedule(m_event, curTick() + m_mem_bus_cycle_multiplier);
+        schedule(m_event, curTick() + clock);
     }
 }
 

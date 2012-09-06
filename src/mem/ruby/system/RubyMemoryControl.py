@@ -36,6 +36,8 @@ class RubyMemoryControl(MemoryControl):
     cxx_class = 'RubyMemoryControl'
     version = Param.Int("");
 
+    # Override the default clock
+    clock = '400MHz'
     banks_per_rank = Param.Int(8, "");
     ranks_per_dimm = Param.Int(2, "");
     dimms_per_channel = Param.Int(2, "");

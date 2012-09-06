@@ -116,7 +116,6 @@ class RubyMemoryControl : public MemoryControl
     std::string m_description;
     int m_msg_counter;
 
-    int m_mem_bus_cycle_multiplier;
     int m_banks_per_rank;
     int m_ranks_per_dimm;
     int m_dimms_per_channel;

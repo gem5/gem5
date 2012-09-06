@@ -28,13 +28,11 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 
-class MemoryControl(SimObject):
+class MemoryControl(ClockedObject):
     abstract = True
     type = 'MemoryControl'
     cxx_class = 'MemoryControl'
     version = Param.Int("");
     ruby_system = Param.RubySystem("")
-
-    mem_bus_cycle_multiplier = Param.Int(10, "");

@@ -34,24 +34,29 @@
 #include <list>
 #include <string>
 
-#include "mem/protocol/MemoryMsg.hh"
 #include "mem/protocol/MemoryControlRequestType.hh"
+#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/AbstractMemOrCache.hh"
 #include "mem/ruby/system/MemoryNode.hh"
 #include "mem/ruby/system/System.hh"
-#include "sim/sim_object.hh"
+#include "params/MemoryControl.hh"
+#include "sim/clocked_object.hh"
 
 //////////////////////////////////////////////////////////////////////////////
 
 class Consumer;
 
 class MemoryControl :
-    public SimObject, public Consumer, public AbstractMemOrCache
+    public ClockedObject, public Consumer, public AbstractMemOrCache
 {
   public:
+    typedef MemoryControlParams Params;
+    const Params *params() const
+    { return dynamic_cast<const Params *>(_params); }
+
     MemoryControl(const Params *p);
     virtual void init() = 0;
     virtual void reset() = 0;
