@@ -97,24 +97,24 @@ class InOrderParams : public BaseCPU::Params
     // then MDU must be defined as its own SimObject so that an arbitrary # can
     // be defined with different parameters
     /** Latency & Repeat Rate for Multiply Insts */
-    unsigned multLatency;
-    unsigned multRepeatRate;
+    Cycles multLatency;
+    Cycles multRepeatRate;
 
     /** Latency & Repeat Rate for 8-bit Divide Insts */
-    unsigned div8Latency;
-    unsigned div8RepeatRate;
+    Cycles div8Latency;
+    Cycles div8RepeatRate;
 
     /** Latency & Repeat Rate for 16-bit Divide Insts */
-    unsigned div16Latency;
-    unsigned div16RepeatRate;
+    Cycles div16Latency;
+    Cycles div16RepeatRate;
 
     /** Latency & Repeat Rate for 24-bit Divide Insts */
-    unsigned div24Latency;
-    unsigned div24RepeatRate;
+    Cycles div24Latency;
+    Cycles div24RepeatRate;
 
     /** Latency & Repeat Rate for 32-bit Divide Insts */
-    unsigned div32Latency;
-    unsigned div32RepeatRate;
+    Cycles div32Latency;
+    Cycles div32RepeatRate;
 
 
 };

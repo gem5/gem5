@@ -428,17 +428,17 @@ class DefaultFetch
     /** Tracks which stages are telling fetch to stall. */
     Stalls stalls[Impl::MaxThreads];
 
-    /** Decode to fetch delay, in ticks. */
-    unsigned decodeToFetchDelay;
+    /** Decode to fetch delay. */
+    Cycles decodeToFetchDelay;
 
-    /** Rename to fetch delay, in ticks. */
-    unsigned renameToFetchDelay;
+    /** Rename to fetch delay. */
+    Cycles renameToFetchDelay;
 
-    /** IEW to fetch delay, in ticks. */
-    unsigned iewToFetchDelay;
+    /** IEW to fetch delay. */
+    Cycles iewToFetchDelay;
 
-    /** Commit to fetch delay, in ticks. */
-    unsigned commitToFetchDelay;
+    /** Commit to fetch delay. */
+    Cycles commitToFetchDelay;
 
     /** The width of fetch in instructions. */
     unsigned fetchWidth;

@@ -53,9 +53,9 @@ class OpClass(Enum):
 
 class OpDesc(SimObject):
     type = 'OpDesc'
-    issueLat = Param.Int(1, "cycles until another can be issued")
+    issueLat = Param.Cycles(1, "cycles until another can be issued")
     opClass = Param.OpClass("type of operation")
-    opLat = Param.Int(1, "cycles until result is available")
+    opLat = Param.Cycles(1, "cycles until result is available")
 
 class FUDesc(SimObject):
     type = 'FUDesc'

@@ -244,17 +244,17 @@ class DefaultDecode
     /** Tracks which stages are telling decode to stall. */
     Stalls stalls[Impl::MaxThreads];
 
-    /** Rename to decode delay, in ticks. */
-    unsigned renameToDecodeDelay;
+    /** Rename to decode delay. */
+    Cycles renameToDecodeDelay;
 
-    /** IEW to decode delay, in ticks. */
-    unsigned iewToDecodeDelay;
+    /** IEW to decode delay. */
+    Cycles iewToDecodeDelay;
 
-    /** Commit to decode delay, in ticks. */
-    unsigned commitToDecodeDelay;
+    /** Commit to decode delay. */
+    Cycles commitToDecodeDelay;
 
-    /** Fetch to decode delay, in ticks. */
-    unsigned fetchToDecodeDelay;
+    /** Fetch to decode delay. */
+    Cycles fetchToDecodeDelay;
 
     /** The width of decode, in instructions. */
     unsigned decodeWidth;

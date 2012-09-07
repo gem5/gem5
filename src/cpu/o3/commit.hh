@@ -375,16 +375,16 @@ class DefaultCommit
     /** Priority List used for Commit Policy */
     std::list<ThreadID> priority_list;
 
-    /** IEW to Commit delay, in ticks. */
-    unsigned iewToCommitDelay;
+    /** IEW to Commit delay. */
+    Cycles iewToCommitDelay;
 
-    /** Commit to IEW delay, in ticks. */
-    unsigned commitToIEWDelay;
+    /** Commit to IEW delay. */
+    Cycles commitToIEWDelay;
 
-    /** Rename to ROB delay, in ticks. */
-    unsigned renameToROBDelay;
+    /** Rename to ROB delay. */
+    Cycles renameToROBDelay;
 
-    unsigned fetchToCommitDelay;
+    Cycles fetchToCommitDelay;
 
     /** Rename width, in instructions.  Used so ROB knows how many
      *  instructions to get from the rename instruction queue.

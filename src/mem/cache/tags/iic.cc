@@ -250,6 +250,8 @@ IIC::accessBlock(Addr addr, int &lat, int context_src)
         }
 
     }
+    // @todo: is hashDelay is really cycles, then
+    // multiply with period
     set_lat = set_lat * hashDelay + hitLatency;
     if (tag_ptr != NULL) {
         // IIC replacement: if this is not the first element of

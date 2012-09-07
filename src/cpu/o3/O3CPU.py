@@ -39,31 +39,31 @@ class DerivO3CPU(BaseCPU):
 
     cachePorts = Param.Unsigned(200, "Cache Ports")
 
-    decodeToFetchDelay = Param.Unsigned(1, "Decode to fetch delay")
-    renameToFetchDelay = Param.Unsigned(1 ,"Rename to fetch delay")
-    iewToFetchDelay = Param.Unsigned(1, "Issue/Execute/Writeback to fetch "
-                                     "delay")
-    commitToFetchDelay = Param.Unsigned(1, "Commit to fetch delay")
+    decodeToFetchDelay = Param.Cycles(1, "Decode to fetch delay")
+    renameToFetchDelay = Param.Cycles(1 ,"Rename to fetch delay")
+    iewToFetchDelay = Param.Cycles(1, "Issue/Execute/Writeback to fetch "
+                                   "delay")
+    commitToFetchDelay = Param.Cycles(1, "Commit to fetch delay")
     fetchWidth = Param.Unsigned(8, "Fetch width")
 
-    renameToDecodeDelay = Param.Unsigned(1, "Rename to decode delay")
-    iewToDecodeDelay = Param.Unsigned(1, "Issue/Execute/Writeback to decode "
-               "delay")
-    commitToDecodeDelay = Param.Unsigned(1, "Commit to decode delay")
-    fetchToDecodeDelay = Param.Unsigned(1, "Fetch to decode delay")
+    renameToDecodeDelay = Param.Cycles(1, "Rename to decode delay")
+    iewToDecodeDelay = Param.Cycles(1, "Issue/Execute/Writeback to decode "
+                                    "delay")
+    commitToDecodeDelay = Param.Cycles(1, "Commit to decode delay")
+    fetchToDecodeDelay = Param.Cycles(1, "Fetch to decode delay")
     decodeWidth = Param.Unsigned(8, "Decode width")
 
-    iewToRenameDelay = Param.Unsigned(1, "Issue/Execute/Writeback to rename "
-               "delay")
-    commitToRenameDelay = Param.Unsigned(1, "Commit to rename delay")
-    decodeToRenameDelay = Param.Unsigned(1, "Decode to rename delay")
+    iewToRenameDelay = Param.Cycles(1, "Issue/Execute/Writeback to rename "
+                                    "delay")
+    commitToRenameDelay = Param.Cycles(1, "Commit to rename delay")
+    decodeToRenameDelay = Param.Cycles(1, "Decode to rename delay")
     renameWidth = Param.Unsigned(8, "Rename width")
 
-    commitToIEWDelay = Param.Unsigned(1, "Commit to "
+    commitToIEWDelay = Param.Cycles(1, "Commit to "
                "Issue/Execute/Writeback delay")
-    renameToIEWDelay = Param.Unsigned(2, "Rename to "
+    renameToIEWDelay = Param.Cycles(2, "Rename to "
                "Issue/Execute/Writeback delay")
-    issueToExecuteDelay = Param.Unsigned(1, "Issue to execute delay (internal "
+    issueToExecuteDelay = Param.Cycles(1, "Issue to execute delay (internal "
               "to the IEW stage)")
     dispatchWidth = Param.Unsigned(8, "Dispatch width")
     issueWidth = Param.Unsigned(8, "Issue width")
@@ -71,13 +71,13 @@ class DerivO3CPU(BaseCPU):
     wbDepth = Param.Unsigned(1, "Writeback depth")
     fuPool = Param.FUPool(DefaultFUPool(), "Functional Unit pool")
 
-    iewToCommitDelay = Param.Unsigned(1, "Issue/Execute/Writeback to commit "
+    iewToCommitDelay = Param.Cycles(1, "Issue/Execute/Writeback to commit "
                "delay")
-    renameToROBDelay = Param.Unsigned(1, "Rename to reorder buffer delay")
+    renameToROBDelay = Param.Cycles(1, "Rename to reorder buffer delay")
     commitWidth = Param.Unsigned(8, "Commit width")
     squashWidth = Param.Unsigned(8, "Squash width")
-    trapLatency = Param.Unsigned(13, "Trap latency")
-    fetchTrapLatency = Param.Unsigned(1, "Fetch trap latency")
+    trapLatency = Param.Cycles(13, "Trap latency")
+    fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 
     backComSize = Param.Unsigned(5, "Time buffer size for backwards communication")
     forwardComSize = Param.Unsigned(5, "Time buffer size for forward communication")

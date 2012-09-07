@@ -426,7 +426,7 @@ class InstructionQueue
     /** Delay between commit stage and the IQ.
      *  @todo: Make there be a distinction between the delays within IEW.
      */
-    unsigned commitToIEWDelay;
+    Cycles commitToIEWDelay;
 
     /** Is the IQ switched out. */
     bool switchedOut;

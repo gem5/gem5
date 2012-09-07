@@ -51,8 +51,8 @@ class OpDesc : public SimObject
 {
   public:
     OpClass opClass;
-    unsigned    opLat;
-    unsigned    issueLat;
+    Cycles opLat;
+    Cycles issueLat;
 
     OpDesc(const OpDescParams *p)
         : SimObject(p), opClass(p->opClass), opLat(p->opLat),

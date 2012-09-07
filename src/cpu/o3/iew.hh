@@ -419,18 +419,18 @@ class DefaultIEW
      */
     bool updatedQueues;
 
-    /** Commit to IEW delay, in ticks. */
-    unsigned commitToIEWDelay;
+    /** Commit to IEW delay. */
+    Cycles commitToIEWDelay;
 
-    /** Rename to IEW delay, in ticks. */
-    unsigned renameToIEWDelay;
+    /** Rename to IEW delay. */
+    Cycles renameToIEWDelay;
 
     /**
-     * Issue to execute delay, in ticks.  What this actually represents is
+     * Issue to execute delay. What this actually represents is
      * the amount of time it takes for an instruction to wake up, be
      * scheduled, and sent to a FU for execution.
      */
-    unsigned issueToExecuteDelay;
+    Cycles issueToExecuteDelay;
 
     /** Width of dispatch, in instructions. */
     unsigned dispatchWidth;

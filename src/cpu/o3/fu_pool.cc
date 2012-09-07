@@ -76,8 +76,8 @@ FUPool::FUPool(const Params *p)
     funcUnits.clear();
 
     for (int i = 0; i < Num_OpClasses; ++i) {
-        maxOpLatencies[i] = 0;
-        maxIssueLatencies[i] = 0;
+        maxOpLatencies[i] = Cycles(0);
+        maxIssueLatencies[i] = Cycles(0);
     }
 
     //
@@ -149,7 +149,7 @@ FUPool::FUPool(const Params *p)
 }
 
 void
-FUPool::annotateMemoryUnits(unsigned hit_latency)
+FUPool::annotateMemoryUnits(Cycles hit_latency)
 {
     maxOpLatencies[MemReadOp] = hit_latency;
 

@@ -89,6 +89,9 @@ class Cycles
     /** Explicit constructor assigning a value. */
     explicit Cycles(uint64_t _c) : c(_c) { }
 
+    /** Default constructor for parameter classes. */
+    Cycles() : c(0) { }
+
 #ifndef SWIG // keep the operators away from SWIG
 
     /** Converting back to the value type. */

@@ -37,7 +37,7 @@ class BaseCache(MemObject):
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
     latency = Param.Latency("Latency")
-    hash_delay = Param.Int(1, "time in cycles of hash access")
+    hash_delay = Param.Cycles(1, "time in cycles of hash access")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")

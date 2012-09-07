@@ -800,7 +800,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
         }
 
         int idx = -2;
-        int op_latency = 1;
+        Cycles op_latency = Cycles(1);
         ThreadID tid = issuing_inst->threadNumber;
 
         if (op_class != No_OpClass) {
@@ -814,7 +814,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
         // If we have an instruction that doesn't require a FU, or a
         // valid FU, then schedule for execution.
         if (idx == -2 || idx != -1) {
-            if (op_latency == 1) {
+            if (op_latency == Cycles(1)) {
                 i2e_info->size++;
                 instsToExecute.push_back(issuing_inst);
 
@@ -823,7 +823,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 if (idx >= 0)
                     fuPool->freeUnitNextCycle(idx);
             } else {
-                int issue_latency = fuPool->getIssueLatency(op_class);
+                Cycles issue_latency = fuPool->getIssueLatency(op_class);
                 // Generate completion event for the FU
                 FUCompletion *execution = new FUCompletion(issuing_inst,
                                                            idx, this);
@@ -832,7 +832,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                               cpu->clockEdge(Cycles(op_latency - 1)));
 
                 // @todo: Enforce that issue_latency == 1 or op_latency
-                if (issue_latency > 1) {
+                if (issue_latency > Cycles(1)) {
                     // If FU isn't pipelined, then it must be freed
                     // upon the execution completing.
                     execution->setFreeFU();

@@ -36,7 +36,7 @@
 #include "mem/ruby/system/BankedArray.hh"
 #include "sim/eventq.hh"
 
-BankedArray::BankedArray(unsigned int banks, unsigned int accessLatency, unsigned int startIndexBit) :
+BankedArray::BankedArray(unsigned int banks, Cycles accessLatency, unsigned int startIndexBit) :
     EventManager(&mainEventQueue)
 {
     this->banks = banks;

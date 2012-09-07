@@ -59,9 +59,9 @@ class FUPool : public SimObject
 {
   private:
     /** Maximum op execution latencies, per op class. */
-    unsigned maxOpLatencies[Num_OpClasses];
+    Cycles maxOpLatencies[Num_OpClasses];
     /** Maximum issue latencies, per op class. */
-    unsigned maxIssueLatencies[Num_OpClasses];
+    Cycles maxIssueLatencies[Num_OpClasses];
 
     /** Bitvector listing capabilities of this FU pool. */
     std::bitset<Num_OpClasses> capabilityList;
@@ -124,7 +124,7 @@ class FUPool : public SimObject
     /** Annotates units that provide memory operations. Included only because
      *  old FU pool provided this function.
      */
-    void annotateMemoryUnits(unsigned hit_latency);
+    void annotateMemoryUnits(Cycles hit_latency);
 
     /**
      * Gets a FU providing the requested capability. Will mark the unit as busy,
@@ -148,12 +148,12 @@ class FUPool : public SimObject
     void dump();
 
     /** Returns the operation execution latency of the given capability. */
-    unsigned getOpLatency(OpClass capability) {
+    Cycles getOpLatency(OpClass capability) {
         return maxOpLatencies[capability];
     }
 
     /** Returns the issue latency of the given capability. */
-    unsigned getIssueLatency(OpClass capability) {
+    Cycles getIssueLatency(OpClass capability) {
         return maxIssueLatencies[capability];
     }
 
