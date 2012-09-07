@@ -40,8 +40,8 @@
 #          Ali Saidi
 
 ### If we are not compiling on an arm, we must use cross tools ###    
-ifneq ($(shell uname -m), arm)
-CROSS_COMPILE?=arm-none-linux-gnueabi-
+ifneq ($(shell uname -m), armv7l)
+CROSS_COMPILE?=arm-linux-gnueabi-
 endif
 CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
