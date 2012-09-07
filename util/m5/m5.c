@@ -65,9 +65,17 @@ parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
     if (argc > len)
         usage();
 
+// On 32 bit platforms we need to use strtoull to do the conversion
+#ifdef __LP64__
+#define strto64 strtoul
+#else
+#define strto64 strtoull
+#endif
     int i;
     for (i = 0; i < len; ++i)
-        ints[i] = (i < argc) ? strtoul(argv[i], NULL, 0) : 0;
+        ints[i] = (i < argc) ? strto64(argv[i], NULL, 0) : 0;
+
+#undef strto64
 }
 
 int
@@ -121,7 +129,9 @@ do_exit(int argc, char *argv[])
     if (argc > 1)
         usage();
 
-    m5_exit((argc > 0) ? strtoul(argv[0], NULL, 0) : 0);
+    uint64_t ints[1];
+    parse_int_args(argc, argv, ints, 2);
+    m5_exit(ints[0]);
 }
 
 void
@@ -223,7 +233,8 @@ do_sw99param(int argc, char *argv[])
     uint64_t param = m5_initparam();
 
     // run-time, rampup-time, rampdown-time, warmup-time, connections
-    printf("%d %d %d %d %d", (param >> 48) & 0xfff,
+    printf("%"PRId64" %"PRId64" %"PRId64" %"PRId64" %"PRId64,
+           (param >> 48) & 0xfff,
            (param >> 36) & 0xfff, (param >> 24) & 0xfff,
            (param >> 12) & 0xfff, (param >> 0) & 0xfff);
 }
