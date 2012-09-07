@@ -248,6 +248,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
     // initialize segment sizes to 0 in case they're not present
     text.size = data.size = bss.size = 0;
+    text.baseAddr = data.baseAddr = bss.baseAddr = 0;
 
     int secIdx = 1;
     Elf_Scn *section;
