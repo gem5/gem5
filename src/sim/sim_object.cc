@@ -105,11 +105,6 @@ SimObject::regStats()
 }
 
 void
-SimObject::regFormulas()
-{
-}
-
-void
 SimObject::resetStats()
 {
 }

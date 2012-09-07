@@ -126,7 +126,6 @@ class SimObject : public EventManager, public Serializable
 
     // register statistics for this object
     virtual void regStats();
-    virtual void regFormulas();
     virtual void resetStats();
 
     /**

@@ -110,7 +110,6 @@ def instantiate(ckpt_dir=None):
 
     # Do a third pass to initialize statistics
     for obj in root.descendants(): obj.regStats()
-    for obj in root.descendants(): obj.regFormulas()
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()

@@ -597,7 +597,6 @@ class SimObject(object):
     void loadState(Checkpoint *cp);
     void initState();
     void regStats();
-    void regFormulas();
     void resetStats();
     void startup();
 
@@ -707,7 +706,7 @@ class SimObject(object):
         # If the attribute exists on the C++ object, transparently
         # forward the reference there.  This is typically used for
         # SWIG-wrapped methods such as init(), regStats(),
-        # regFormulas(), resetStats(), startup(), drain(), and
+        # resetStats(), startup(), drain(), and
         # resume().
         if self._ccObject and hasattr(self._ccObject, attr):
             return getattr(self._ccObject, attr)
