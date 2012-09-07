@@ -1650,11 +1650,9 @@ IGbE::TxDescCache::headerComplete()
         unusedCache.pop_front();
         usedCache.push_back(desc);
     } else {
-        // I don't think this case happens, I think the headrer is always
-        // it's own packet, if it wasn't it might be as simple as just
-        // incrementing descBytesUsed by the header length, but I'm not
-        // completely sure
-        panic("TSO header part of bigger packet, not implemented\n");
+        DPRINTF(EthernetDesc, "TSO: header part of larger payload\n");
+        tsoDescBytesUsed = tsoHeaderLen;
+        tsoLoadedHeader = true;
     }
     enableSm();
     igbe->checkDrain();
