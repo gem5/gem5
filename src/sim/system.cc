@@ -266,6 +266,13 @@ System::initState()
          * Load the kernel code into memory
          */
         if (params()->kernel != "")  {
+            // Validate kernel mapping before loading binary
+            if (!(isMemAddr(kernelStart & loadAddrMask) &&
+                            isMemAddr(kernelEnd & loadAddrMask))) {
+                fatal("Kernel is mapped to invalid location (not memory). "
+                      "kernelStart 0x(%x) - kernelEnd 0x(%x)\n", kernelStart,
+                      kernelEnd);
+            }
             // Load program sections into memory
             kernel->loadSections(physProxy, loadAddrMask);
 
