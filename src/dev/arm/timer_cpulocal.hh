@@ -77,8 +77,8 @@ class CpuLocalTimer : public BasicPioDevice
             Bitfield<0>   enable;
             Bitfield<1>   autoReload;
             Bitfield<2>   intEnable;
-            Bitfield<3,7> reserved;
-            Bitfield<8,15> prescalar;
+            Bitfield<7,3> reserved;
+            Bitfield<15,8> prescalar;
         EndBitUnion(TimerCtrl)
 
         BitUnion32(WatchdogCtrl)
@@ -86,8 +86,8 @@ class CpuLocalTimer : public BasicPioDevice
             Bitfield<1>   autoReload;
             Bitfield<2>   intEnable;
             Bitfield<3>   watchdogMode;
-            Bitfield<4,7> reserved;
-            Bitfield<8,15> prescalar;
+            Bitfield<7,4> reserved;
+            Bitfield<15,8> prescalar;
         EndBitUnion(WatchdogCtrl)
 
       protected:
