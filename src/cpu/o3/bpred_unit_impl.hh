@@ -207,8 +207,6 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid)
             predict_record.RASIndex = RAS[tid].topIdx();
             predict_record.RASTarget = rasTop;
 
-            assert(predict_record.RASIndex < 16);
-
             RAS[tid].pop();
 
             DPRINTF(Fetch, "BranchPred: [tid:%i]: Instruction %s is a return, "
