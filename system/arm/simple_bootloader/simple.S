@@ -68,8 +68,7 @@ _entry:
 
 bootldr:
     mrc p15, 0, r8, c0, c0, 5 // get the MPIDR register
-    uxtb r8, r8               // isolate the lower 8 bits (affinity lvl 1)
-    adds r8, r8, #0           // set flags for branch
+    bics r8, r8, #0xff000000  // isolate the lower 24 bits (affinity levels)
     bxeq r3                   // if it's 0 (CPU 0), branch to kernel
     mov  r8, #1
     str  r8, [r4, #0]         //  Enable CPU interface on GIC
