@@ -133,7 +133,13 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
     # Print
     time_width = width * cycle_time
     base_tick = (inst['fetch'] / time_width) * time_width
-    num_lines = ((inst['retire'] - inst['fetch']) / time_width) + 1
+    # Timeline shorter then time_width is printed in compact form where
+    # the print continues at the start of the same line.
+    if ((inst['retire'] - inst['fetch']) < time_width):
+        num_lines = 1 # compact form
+    else:
+        num_lines = ((inst['retire'] - base_tick) / time_width) + 1
+
     curr_color = termcap.Normal
     for i in range(num_lines):
         start_tick = base_tick + i * time_width
