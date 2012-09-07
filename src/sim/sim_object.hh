@@ -51,18 +51,94 @@
 class BaseCPU;
 class Event;
 
-/*
+/**
  * Abstract superclass for simulation objects.  Represents things that
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
+ *
+ * SimObject initialization is controlled by the instantiate method in
+ * src/python/m5/simulate.py. There are slightly different
+ * initialization paths when starting the simulation afresh and when
+ * loading from a checkpoint.  After instantiation and connecting
+ * ports, simulate.py initializes the object using the following call
+ * sequence:
+ *
+ * <ol>
+ * <li>SimObject::init()
+ * <li>SimObject::regStats()
+ * <li><ul>
+ *     <li>SimObject::initState() if starting afresh.
+ *     <li>SimObject::loadState() if restoring from a checkpoint.
+ *     </ul>
+ * <li>SimObject::resetStats()
+ * <li>SimObject::startup()
+ * <li>SimObject::resume() if resuming from a checkpoint.
+ * </ol>
+ *
+ * An object's internal state needs to be drained when creating a
+ * checkpoint, switching between CPU models, or switching between
+ * timing models. Once the internal state has been drained from
+ * <i>all</i> objects in the system, the objects are serialized to
+ * disc or the configuration change takes place. The process works as
+ * follows (see simulate.py for details):
+ *
+ * <ol>
+ * <li>An instance of a CountedDrainEvent is created to keep track of
+ *     how many objects need to be drained. The object maintains an
+ *     internal counter that is decreased every time its
+ *     CountedDrainEvent::process() method is called. When the counter
+ *     reaches zero, the simulation is stopped.
+ *
+ * <li>Call SimObject::drain() for every object in the
+ *     system. Draining has completed if all of them return
+ *     zero. Otherwise, the sum of the return values is loaded into
+ *     the counter of the CountedDrainEvent. A pointer of the drain
+ *     event is passed as an argument to the drain() method.
+ *
+ * <li>Continue simulation. When an object has finished draining its
+ *     internal state, it calls CountedDrainEvent::process() on the
+ *     CountedDrainEvent. When counter in the CountedDrainEvent reaches
+ *     zero, the simulation stops.
+ *
+ * <li>Check if any object still needs draining, if so repeat the
+ *     process above.
+ *
+ * <li>Serialize objects, switch CPU model, or change timing model.
+ *
+ * <li>Call SimObject::resume() and continue the simulation.
+ * </ol>
+ *
+ * @note Whenever a method is called on all objects in the simulator's
+ * object tree (e.g., init(), startup(), or loadState()), a pre-order
+ * depth-first traversal is performed (see descendants() in
+ * SimObject.py). This has the effect of calling the method on the
+ * parent node <i>before</i> its children.
  */
 class SimObject : public EventManager, public Serializable
 {
   public:
+    /**
+     * Object drain/handover states
+     *
+     * An object starts out in the Running state. When the simulator
+     * prepares to take a snapshot or prepares a CPU for handover, it
+     * calls the drain() method to transfer the object into the
+     * Draining or Drained state. If any object enters the Draining
+     * state (drain() returning >0), simulation continues until it all
+     * objects have entered the Drained.
+     *
+     * The before resuming simulation, the simulator calls resume() to
+     * transfer the object to the Running state.
+     *
+     * \note Even though the state of an object (visible to the rest
+     * of the world through getState()) could be used to determine if
+     * all objects have entered the Drained state, the protocol is
+     * actually a bit more elaborate. See drain() for details.
+     */
     enum State {
-        Running,
-        Draining,
-        Drained
+        Running,  /** Running normally */
+        Draining, /** Draining buffers pending serialization/handover */
+        Drained   /** Buffers drained, ready for serialization/handover */
     };
 
   private:
@@ -77,10 +153,11 @@ class SimObject : public EventManager, public Serializable
   private:
     typedef std::vector<SimObject *> SimObjectList;
 
-    // list of all instantiated simulation objects
+    /** List of all instantiated simulation objects. */
     static SimObjectList simObjectList;
 
   protected:
+    /** Cached copy of the object parameters. */
     const SimObjectParams *_params;
 
   public:
@@ -92,11 +169,6 @@ class SimObject : public EventManager, public Serializable
   public:
 
     virtual const std::string name() const { return params()->name; }
-
-    // The following SimObject initialization methods are called from
-    // the instantiate() method in src/python/m5/simulate.py.  See
-    // that function for details on how/when these methods are
-    // invoked.
 
     /**
      * init() is called after all C++ SimObjects have been created and
@@ -114,6 +186,8 @@ class SimObject : public EventManager, public Serializable
      * other behaviors, e.g., doing other programmed initializations
      * after unserialize(), or complaining if no checkpoint section is
      * found.
+     *
+     * @param cp Checkpoint to restore the state from.
      */
     virtual void loadState(Checkpoint *cp);
 
@@ -124,8 +198,14 @@ class SimObject : public EventManager, public Serializable
      */
     virtual void initState();
 
-    // register statistics for this object
+    /**
+     * Register statistics for this object.
+     */
     virtual void regStats();
+
+    /**
+     * Reset statistics associated with this object.
+     */
     virtual void resetStats();
 
     /**
@@ -136,18 +216,73 @@ class SimObject : public EventManager, public Serializable
      */
     virtual void startup();
 
-    // static: call nameOut() & serialize() on all SimObjects
-    static void serializeAll(std::ostream &);
+    /**
+     * Serialize all SimObjects in the system.
+     */
+    static void serializeAll(std::ostream &os);
 
-    // Methods to drain objects in order to take checkpoints
-    // Or switch from timing -> atomic memory model
-    // Drain returns 0 if the simobject can drain immediately or
-    // the number of times the drain_event's process function will be called
-    // before the object will be done draining. Normally this should be 1
+    /**
+     * Determine if an object needs draining and register a drain
+     * event.
+     *
+     * When draining the state of an object, the simulator calls drain
+     * with a pointer to a drain event. If the object does not need
+     * further simulation to drain internal buffers, it switched to
+     * the Drained state and returns 0, otherwise it switches to the
+     * Draining state and returns the number of times that it will
+     * call Event::process() on the drain event. Most objects are
+     * expected to return either 0 or 1.
+     *
+     * The default implementation simply switches to the Drained state
+     * and returns 0.
+     *
+     * @note An object that has entered the Drained state can be
+     * disturbed by other objects in the system and consequently be
+     * forced to enter the Draining state again. The simulator
+     * therefore repeats the draining process until all objects return
+     * 0 on the first call to drain().
+     *
+     * @param drain_event Event to use to inform the simulator when
+     * the draining has completed.
+     *
+     * @return 0 if the object is ready for serialization now, >0 if
+     * it needs further simulation.
+     */
     virtual unsigned int drain(Event *drain_event);
+
+    /**
+     * Switch an object in the Drained stated into the Running state.
+     */
     virtual void resume();
+
+    /**
+     * Change the memory mode the simulator operates in.
+     *
+     * @note Should only be implemented in the System object.
+     */
     virtual void setMemoryMode(Enums::MemoryMode new_mode);
+
+    /**
+     * Prepare a CPU model to be switched out, invoked on active CPUs
+     * that are about to be replaced.
+     *
+     * @note This should only be implemented in CPU models.
+     */
     virtual void switchOut();
+
+    /**
+     * Load the state of a CPU from the previous CPU object, invoked
+     * on all new CPUs that are about to be switched in.
+     *
+     * A CPU model implementing this method is expected to initialize
+     * its state from the old CPU and connect its memory (unless they
+     * are already connected) to the memories connected to the old
+     * CPU.
+     *
+     * @note This should only be implemented in CPU models.
+     *
+     * @param cpu CPU to initialize read state from.
+     */
     virtual void takeOverFrom(BaseCPU *cpu);
 
 #ifdef DEBUG

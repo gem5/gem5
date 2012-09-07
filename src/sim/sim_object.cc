@@ -113,7 +113,7 @@ SimObject::resetStats()
 // static function: serialize all SimObjects.
 //
 void
-SimObject::serializeAll(ostream &os)
+SimObject::serializeAll(std::ostream &os)
 {
     SimObjectList::reverse_iterator ri = simObjectList.rbegin();
     SimObjectList::reverse_iterator rend = simObjectList.rend();
