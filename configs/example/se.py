@@ -61,6 +61,52 @@ import CacheConfig
 from Caches import *
 from cpu2000 import *
 
+def get_processes(options):
+    """Interprets provided options and returns a list of processes"""
+
+    multiprocesses = []
+    inputs = []
+    outputs = []
+    errouts = []
+    pargs = []
+
+    workloads = options.cmd.split(';')
+    if options.input != "":
+        inputs = options.input.split(';')
+    if options.output != "":
+        outputs = options.output.split(';')
+    if options.errout != "":
+        errouts = options.errout.split(';')
+    if options.options != "":
+        pargs = options.options.split(';')
+
+    idx = 0
+    for wrkld in workloads:
+        process = LiveProcess()
+        process.executable = wrkld
+
+        if len(pargs) > idx:
+            process.cmd = [wrkld] + [" "] + [pargs[idx]]
+        else:
+            process.cmd = [wrkld]
+
+        if len(inputs) > idx:
+            process.input = inputs[idx]
+        if len(outputs) > idx:
+            process.output = outputs[idx]
+        if len(errouts) > idx:
+            process.errout = errouts[idx]
+
+        multiprocesses.append(process)
+        idx += 1
+
+    if options.smt:
+        assert(options.cpu_type == "detailed" or options.cpu_type == "inorder")
+        return multiprocesses, idx
+    else:
+        return multiprocesses, 1
+
+
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
@@ -75,7 +121,7 @@ if args:
     sys.exit(1)
 
 multiprocesses = []
-apps = []
+numThreads = 1
 
 if options.bench:
     apps = options.bench.split("-")
@@ -94,64 +140,21 @@ if options.bench:
             print >>sys.stderr, "Unable to find workload for %s: %s" % (buildEnv['TARGET_ISA'], app)
             sys.exit(1)
 elif options.cmd:
-    process = LiveProcess()
-    process.executable = options.cmd
-    process.cmd = [options.cmd] + options.options.split()
-    multiprocesses.append(process)
+    multiprocesses, numThreads = get_processes(options)
 else:
     print >> sys.stderr, "No workload specified. Exiting!\n"
     sys.exit(1)
 
 
-if options.input != "":
-    process.input = options.input
-if options.output != "":
-    process.output = options.output
-if options.errout != "":
-    process.errout = options.errout
-
-
-# By default, set workload to path of user-specified binary
-workloads = options.cmd
-numThreads = 1
-
-if options.cpu_type == "detailed" or options.cpu_type == "inorder":
-    #check for SMT workload
-    workloads = options.cmd.split(';')
-    if len(workloads) > 1:
-        process = []
-        smt_idx = 0
-        inputs = []
-        outputs = []
-        errouts = []
-
-        if options.input != "":
-            inputs = options.input.split(';')
-        if options.output != "":
-            outputs = options.output.split(';')
-        if options.errout != "":
-            errouts = options.errout.split(';')
-
-        for wrkld in workloads:
-            smt_process = LiveProcess()
-            smt_process.executable = wrkld
-            smt_process.cmd = wrkld + " " + options.options
-            if inputs and inputs[smt_idx]:
-                smt_process.input = inputs[smt_idx]
-            if outputs and outputs[smt_idx]:
-                smt_process.output = outputs[smt_idx]
-            if errouts and errouts[smt_idx]:
-                smt_process.errout = errouts[smt_idx]
-            process += [smt_process, ]
-            smt_idx += 1
-    numThreads = len(workloads)
-
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 CPUClass.clock = options.clock
-CPUClass.numThreads = numThreads;
+CPUClass.numThreads = numThreads
+
+# Check -- do not allow SMT with multiple CPUs
+if options.smt and options.num_cpus > 1:
+    fatal("You cannot use SMT with multiple CPUs!")
 
 np = options.num_cpus
-
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = SimpleMemory(range=AddrRange("512MB")),
                 membus = CoherentBus(), mem_mode = test_mem_mode)
@@ -161,7 +164,9 @@ if options.fastmem and (options.caches or options.l2cache):
     fatal("You cannot use fastmem in combination with caches!")
 
 for i in xrange(np):
-    if len(multiprocesses) == 1:
+    if options.smt:
+        system.cpu[i].workload = multiprocesses
+    elif len(multiprocesses) == 1:
         system.cpu[i].workload = multiprocesses[0]
     else:
         system.cpu[i].workload = multiprocesses[i]

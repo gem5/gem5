@@ -56,6 +56,11 @@ def addCommonOptions(parser):
     parser.add_option("--l3_assoc", type="int", default=16)
     parser.add_option("--cacheline_size", type="int", default=64)
     parser.add_option("--ruby", action="store_true")
+    parser.add_option("--smt", action="store_true", default=False,
+                      help = """
+                      Only used if multiple programs are specified. If true,
+                      then the number of threads per cpu is same as the
+                      number of programs.""")
 
     # Run duration options
     parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
