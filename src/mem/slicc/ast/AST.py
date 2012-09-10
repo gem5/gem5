@@ -54,14 +54,7 @@ class AST(PairContainer):
             message = message % args
         code = self.slicc.codeFormatter()
         code('''
-char c;
-cerr << "Runtime Error at ${{self.location}}, Ruby Time: "
-     << g_system_ptr->getTime() << ": "
-     << $message
-     << ", PID: " << getpid() << endl
-     << "press return to continue." << endl;
-cin.get(c);
-abort();
+panic("Runtime Error at ${{self.location}}, Ruby Time: %d, %s.\\n",
+    g_system_ptr->getTime(), $message);
 ''')
-
         return code
