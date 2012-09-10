@@ -1,14 +1,14 @@
 
 ---------- Begin Simulation Statistics ----------
-sim_seconds                                  0.000276                       # Number of seconds simulated
-sim_ticks                                      276484                       # Number of ticks simulated
-final_tick                                     276484                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_seconds                                  0.000122                       # Number of seconds simulated
+sim_ticks                                      121759                       # Number of ticks simulated
+final_tick                                     121759                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  51763                       # Simulator instruction rate (inst/s)
-host_op_rate                                    93738                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                2658830                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 243356                       # Number of bytes of host memory used
-host_seconds                                     0.10                       # Real time elapsed on the host
+host_inst_rate                                   4061                       # Simulator instruction rate (inst/s)
+host_op_rate                                     7355                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                  91887                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 243480                       # Number of bytes of host memory used
+host_seconds                                     1.33                       # Real time elapsed on the host
 sim_insts                                        5381                       # Number of instructions simulated
 sim_ops                                          9746                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             54912                       # Number of bytes read from this memory
@@ -23,16 +23,16 @@ system.physmem.num_reads::cpu.data               1052                       # Nu
 system.physmem.num_reads::total                  7916                       # Number of read requests responded to by this memory
 system.physmem.num_writes::cpu.data               934                       # Number of write requests responded to by this memory
 system.physmem.num_writes::total                  934                       # Number of write requests responded to by this memory
-system.physmem.bw_read::cpu.inst            198608238                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu.data             25549399                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total               224157637                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu.inst       198608238                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total          198608238                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu.data            25715774                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::total               25715774                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total::cpu.inst           198608238                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu.data            51265173                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total              249873410                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_read::cpu.inst            450989249                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu.data             58016245                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total               509005494                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu.inst       450989249                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total          450989249                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu.data            58394041                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total               58394041                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu.inst           450989249                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu.data           116410286                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total              567399535                       # Total bandwidth to/from this memory (bytes/s)
 system.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -40,7 +40,7 @@ system.l1_cntrl0.cacheMemory.num_tag_array_writes            0                  
 system.l1_cntrl0.cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl0.cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
-system.cpu.numCycles                           276484                       # number of cpu cycles simulated
+system.cpu.numCycles                           121759                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                        5381                       # Number of instructions committed
@@ -59,7 +59,7 @@ system.cpu.num_mem_refs                          1986                       # nu
 system.cpu.num_load_insts                        1052                       # Number of load instructions
 system.cpu.num_store_insts                        934                       # Number of store instructions
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_busy_cycles                     276484                       # Number of busy cycles
+system.cpu.num_busy_cycles                     121759                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 
