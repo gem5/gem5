@@ -116,6 +116,7 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
+#include <signal.h>
 #include <sys/signal.h>
 #include <unistd.h>
 

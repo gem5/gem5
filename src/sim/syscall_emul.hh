@@ -33,7 +33,8 @@
 #define __SIM_SYSCALL_EMUL_HH__
 
 #define NO_STAT64 (defined(__APPLE__) || defined(__OpenBSD__) || \
-                   defined(__FreeBSD__) || defined(__CYGWIN__))
+  defined(__FreeBSD__) || defined(__CYGWIN__) || \
+  defined(__NetBSD__))
 
 ///
 /// @file syscall_emul.hh
