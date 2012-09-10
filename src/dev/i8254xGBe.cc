@@ -160,7 +160,7 @@ IGbE::writeConfig(PacketPtr pkt)
     // Some work may need to be done here based for the pci COMMAND bits.
     //
 
-    return pioDelay;
+    return configDelay;
 }
 
 // Handy macro for range-testing register access addresses
