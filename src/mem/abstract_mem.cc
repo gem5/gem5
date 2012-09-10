@@ -51,6 +51,7 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <climits>
 #include <iostream>
 #include <string>
 
@@ -486,9 +487,17 @@ AbstractMemory::serialize(ostream &os)
         fatal("Insufficient memory to allocate compression state for %s\n",
                 filename);
 
-    if (gzwrite(compressedMem, pmemAddr, size()) != (int)size()) {
-        fatal("Write failed on physical memory checkpoint file '%s'\n",
-              filename);
+    uint64_t pass_size = 0;
+    // gzwrite fails if (int)len < 0 (gzwrite returns int)
+    for (uint64_t written = 0; written < size(); written += pass_size) {
+        pass_size = (uint64_t)INT_MAX < (size() - written) ?
+            (uint64_t)INT_MAX : (size() - written);
+
+        if (gzwrite(compressedMem, pmemAddr + written,
+                    (unsigned int) pass_size) != (int)pass_size) {
+            fatal("Write failed on physical memory checkpoint file '%s'\n",
+                  filename);
+        }
     }
 
     if (gzclose(compressedMem))
