@@ -129,8 +129,7 @@ Sequencer::wakeup()
     if (m_outstanding_count > 0) {
         // If there are still outstanding requests, keep checking
         schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * g_system_ptr->getClock() +
-                 curTick());
+            g_system_ptr->clockPeriod() * m_deadlock_threshold + curTick());
     }
 }
 
@@ -210,8 +209,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     // See if we should schedule a deadlock check
     if (deadlockCheckEvent.scheduled() == false) {
         schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * g_system_ptr->getClock()
-                 + curTick());
+            g_system_ptr->clockPeriod() * m_deadlock_threshold + curTick());
     }
 
     Address line_addr(pkt->getAddr());

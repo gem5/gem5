@@ -301,7 +301,7 @@ RubyMemoryControl::enqueueMemRef(MemoryNode& memRef)
     DPRINTF(RubyMemory,
             "New memory request%7d: %#08x %c arrived at %10d bank = %3x sched %c\n",
             m_msg_counter, addr, memRef.m_is_mem_read ? 'R':'W',
-            memRef.m_time * g_system_ptr->getClock(),
+            memRef.m_time * g_system_ptr->clockPeriod(),
             bank, m_event.scheduled() ? 'Y':'N');
 
     m_profiler_ptr->profileMemReq(bank);
@@ -377,7 +377,7 @@ void
 RubyMemoryControl::enqueueToDirectory(MemoryNode req, int latency)
 {
     Time arrival_time = curTick() + (latency * clock);
-    Time ruby_arrival_time = arrival_time / g_system_ptr->getClock();
+    Time ruby_arrival_time = arrival_time / g_system_ptr->clockPeriod();
     req.m_time = ruby_arrival_time;
     m_response_queue.push_back(req);
 

@@ -137,7 +137,7 @@ Profiler::wakeup()
     }
 
     //g_system_ptr->getNetwork()->printStats(out);
-    schedule(m_event, curTick() + m_stats_period * g_system_ptr->getClock());
+    schedule(m_event, g_system_ptr->clockEdge(Cycles(m_stats_period )));
 }
 
 void
@@ -151,7 +151,7 @@ Profiler::setPeriodicStatsFile(const string& filename)
     }
 
     m_periodic_output_file_ptr = new ofstream(filename.c_str());
-    schedule(m_event, curTick() + g_system_ptr->getClock());
+    schedule(m_event, g_system_ptr->clockEdge(Cycles(1)));
 }
 
 void
@@ -161,7 +161,7 @@ Profiler::setPeriodicStatsInterval(integer_t period)
          << " Ruby cycles" << endl;
 
     m_stats_period = period;
-    schedule(m_event, curTick() + g_system_ptr->getClock());
+    schedule(m_event, g_system_ptr->clockEdge(Cycles(1)));
 }
 
 void

@@ -45,7 +45,6 @@ using namespace std;
 
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
-Tick RubySystem::m_clock;
 int RubySystem::m_block_size_bytes;
 int RubySystem::m_block_size_bits;
 uint64 RubySystem::m_memory_size_bytes;
@@ -56,7 +55,7 @@ Profiler* RubySystem::m_profiler_ptr;
 MemoryVector* RubySystem::m_mem_vec_ptr;
 
 RubySystem::RubySystem(const Params *p)
-    : SimObject(p)
+    : ClockedObject(p)
 {
     if (g_system_ptr != NULL)
         fatal("Only one RubySystem object currently allowed.\n");
@@ -64,7 +63,6 @@ RubySystem::RubySystem(const Params *p)
     m_random_seed = p->random_seed;
     srandom(m_random_seed);
     m_randomization = p->randomization;
-    m_clock = p->clock;
 
     m_block_size_bytes = p->block_size_bytes;
     assert(isPowerOf2(m_block_size_bytes));

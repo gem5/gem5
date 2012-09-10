@@ -42,13 +42,13 @@
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/SparseMemory.hh"
 #include "params/RubySystem.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class Network;
 class Profiler;
 class MemoryControl;
 
-class RubySystem : public SimObject
+class RubySystem : public ClockedObject
 {
   public:
     class RubyEvent : public Event
@@ -77,8 +77,7 @@ class RubySystem : public SimObject
     static int getBlockSizeBits() { return m_block_size_bits; }
     static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
     static int getMemorySizeBits() { return m_memory_size_bits; }
-    Tick getTime() const { return curTick() / m_clock; }
-    Tick getClock() const { return m_clock; }
+    Cycles getTime() const { return curCycle(); }
 
     // Public Methods
     static Network*
@@ -145,7 +144,6 @@ class RubySystem : public SimObject
     // configuration parameters
     static int m_random_seed;
     static bool m_randomization;
-    static Tick m_clock;
     static int m_block_size_bytes;
     static int m_block_size_bits;
     static uint64 m_memory_size_bytes;

@@ -28,14 +28,14 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 
-class RubySystem(SimObject):
+class RubySystem(ClockedObject):
     type = 'RubySystem'
     random_seed = Param.Int(1234, "random seed used by the simulation");
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times");
-    clock = Param.Clock('1GHz', "")
+    clock = '1GHz'
     block_size_bytes = Param.Int(64,
         "default cache block size; must be a power of two");
     mem_size = Param.MemorySize("total memory size of the system");

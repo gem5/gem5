@@ -51,7 +51,7 @@ Consumer::scheduleEventAbsolute(Time timeAbs)
 void
 Consumer::scheduleEventAbsolute(EventManager *em, Time timeAbs)
 {
-    Tick evt_time = timeAbs * g_system_ptr->getClock();
+    Tick evt_time = g_system_ptr->clockPeriod() * timeAbs;
     if (!alreadyScheduled(evt_time)) {
         // This wakeup is not redundant
         ConsumerEvent *evt = new ConsumerEvent(this);

@@ -192,10 +192,10 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
                   *this, m_name,
-                  current_time * g_system_ptr->getClock(),
-                  delta * g_system_ptr->getClock(),
-                  arrival_time * g_system_ptr->getClock(),
-                  m_last_arrival_time * g_system_ptr->getClock());
+                  current_time * g_system_ptr->clockPeriod(),
+                  delta * g_system_ptr->clockPeriod(),
+                  arrival_time * g_system_ptr->clockPeriod(),
+                  m_last_arrival_time * g_system_ptr->clockPeriod());
         }
     }
 
@@ -223,7 +223,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
         greater<MessageBufferNode>());
 
     DPRINTF(RubyQueue, "Enqueue with arrival_time %lld.\n",
-            arrival_time * g_system_ptr->getClock());
+            arrival_time * g_system_ptr->clockPeriod());
     DPRINTF(RubyQueue, "Enqueue Message: %s.\n", (*(message.get())));
 
     // Schedule the wakeup

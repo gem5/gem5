@@ -197,8 +197,8 @@ RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
                 pkt->getAddr());
 
         // send next cycle
-        ruby_port->pio_port.schedTimingReq(pkt, curTick() +
-                                           g_system_ptr->getClock());
+        ruby_port->pio_port.schedTimingReq(pkt,
+            curTick() + g_system_ptr->clockPeriod());
         return true;
     }
 
@@ -651,7 +651,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     if (needsResponse) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
         // send next cycle
-        schedTimingResp(pkt, curTick() + g_system_ptr->getClock());
+        schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
     } else {
         delete pkt;
     }
