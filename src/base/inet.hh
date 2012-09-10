@@ -380,8 +380,6 @@ class TcpPtr
 
 uint16_t cksum(const TcpPtr &ptr);
 
-typedef Range<uint16_t> SackRange;
-
 struct TcpOpt : public tcp_opt
 {
     uint8_t type() const { return opt_type; }
@@ -393,7 +391,6 @@ struct TcpOpt : public tcp_opt
 
     uint16_t mss() const { return ntohs(opt_data.mss); }
     uint8_t wscale() const { return opt_data.wscale; }
-    bool sack(std::vector<SackRange> &vec) const;
     uint32_t echo() const { return ntohl(opt_data.echo); }
     uint32_t tsval() const { return ntohl(opt_data.timestamp[0]); }
     uint32_t tsecr() const { return ntohl(opt_data.timestamp[1]); }

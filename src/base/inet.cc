@@ -254,29 +254,6 @@ TcpHdr::options(vector<const TcpOpt *> &vec) const
     return true;
 }
 
-bool
-TcpOpt::sack(vector<SackRange> &vec) const
-{
-    vec.clear();
-
-    const uint8_t *data = bytes() + sizeof(struct tcp_hdr);
-    int all = len() - offsetof(tcp_opt, opt_data.sack);
-    while (all > 0) {
-        const uint16_t *sack = (const uint16_t *)data;
-        int len = sizeof(uint16_t) * 2;
-        if (all < len) {
-            vec.clear();
-            return false;
-        }
-
-        vec.push_back(RangeIn(ntohs(sack[0]), ntohs(sack[1])));
-        all -= len;
-        data += len;
-    }
-
-    return false;
-}
-
 int 
 hsplit(const EthPacketPtr &ptr)
 {
