@@ -116,13 +116,45 @@ def operands {{
                           (None, None, 'IsControl'), 50),
         'nuIP':          ('PCState', 'uqw', 'nupc',
                           (None, None, 'IsControl'), 50),
-        # This holds the condition code portion of the flag register. The
-        # nccFlagBits version holds the rest.
+        # These registers hold the condition code portion of the flag
+        # register. The nccFlagBits version holds the rest.
         'ccFlagBits':    intReg('INTREG_PSEUDO(0)', 60),
         'cfofBits':      intReg('INTREG_PSEUDO(1)', 61),
         'dfBit':         intReg('INTREG_PSEUDO(2)', 62),
         'ecfBit':        intReg('INTREG_PSEUDO(3)', 63),
         'ezfBit':        intReg('INTREG_PSEUDO(4)', 64),
+
+        # These Pred registers are to be used where reading the portions of
+        # condition code registers is possibly optional, depending on how the
+        # check evaluates. There are two checks being specified, one tests if
+        # a register needs to be read, the other tests whether the register
+        # needs to be written to. It is unlikely that these would need to be
+        # used in the actual operation of the instruction. It is expected
+        # that these are used only in the flag code.
+
+        # Rationale behind the checks: at times, we need to partially update
+        # the condition code bits in a register. So we read the register even
+        # in the case when the all the bits will be written, or none of the
+        # bits will be written. The read predicate checks if any of the bits
+        # would be retained, the write predicate checks if any of the bits
+        # are being written.
+
+        'PredccFlagBits': ('IntReg', 'uqw', 'INTREG_PSEUDO(0)', 'IsInteger',
+                60, None, None, '''(((ext & (PFBit | AFBit | ZFBit | SFBit
+                )) != (PFBit | AFBit | ZFBit | SFBit )) &&
+                ((ext & (PFBit | AFBit | ZFBit | SFBit )) != 0))''',
+                '((ext & (PFBit | AFBit | ZFBit | SFBit )) != 0)'),
+        'PredcfofBits':   ('IntReg', 'uqw', 'INTREG_PSEUDO(1)', 'IsInteger',
+                61, None, None, '''(((ext & CFBit) == 0 ||
+                (ext & OFBit) == 0) && ((ext & (CFBit | OFBit)) != 0))''',
+                '((ext & (CFBit | OFBit)) != 0)'),
+        'PreddfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(2)', 'IsInteger',
+                62, None, None, '(false)', '((ext & DFBit) != 0)'),
+        'PredecfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(3)', 'IsInteger',
+                63, None, None, '(false)', '((ext & ECFBit) != 0)'),
+        'PredezfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(4)', 'IsInteger',
+                64, None, None, '(false)', '((ext & EZFBit) != 0)'),
+
         # These register should needs to be more protected so that later
         # instructions don't map their indexes with an old value.
         'nccFlagBits':   controlReg('MISCREG_RFLAGS', 65),
