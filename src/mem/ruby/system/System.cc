@@ -150,7 +150,7 @@ RubySystem::printStats(ostream& out)
 }
 
 void
-RubySystem::writeCompressedTrace(uint8* raw_data, string filename,
+RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
                                  uint64 uncompressed_trace_size)
 {
     // Create the checkpoint file for the memory
@@ -231,7 +231,7 @@ RubySystem::serialize(std::ostream &os)
     // Restore curTick
     curTick(curtick_original);
 
-    uint8* raw_data = NULL;
+    uint8_t *raw_data = NULL;
 
     if (m_mem_vec_ptr != NULL) {
         uint64 memory_trace_size = m_mem_vec_ptr->collatePages(raw_data);
@@ -264,7 +264,7 @@ RubySystem::serialize(std::ostream &os)
 }
 
 void
-RubySystem::readCompressedTrace(string filename, uint8*& raw_data,
+RubySystem::readCompressedTrace(string filename, uint8_t *&raw_data,
                                 uint64& uncompressed_trace_size)
 {
     // Read the trace file
@@ -303,7 +303,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     // value of curTick()
     //
     clearStats();
-    uint8* uncompressed_trace = NULL;
+    uint8_t *uncompressed_trace = NULL;
 
     if (m_mem_vec_ptr != NULL) {
         string memory_trace_file;

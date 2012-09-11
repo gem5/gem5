@@ -135,9 +135,9 @@ class RubySystem : public ClockedObject
 
     static void printSystemConfig(std::ostream& out);
     void readCompressedTrace(std::string filename,
-                             uint8*& raw_data,
+                             uint8_t *&raw_data,
                              uint64& uncompressed_trace_size);
-    void writeCompressedTrace(uint8* raw_data, std::string file,
+    void writeCompressedTrace(uint8_t *raw_data, std::string file,
                               uint64 uncompressed_trace_size);
 
   private:

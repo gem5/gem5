@@ -43,7 +43,7 @@ struct DMARequest
     bool write;
     int bytes_completed;
     int bytes_issued;
-    uint8* data;
+    uint8_t *data;
     PacketPtr pkt;
 };
 

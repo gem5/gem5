@@ -189,7 +189,7 @@ Check::initiateAction()
     // }
 
     PacketPtr pkt = new Packet(req, cmd);
-    uint8_t* writeData = new uint8_t;
+    uint8_t *writeData = new uint8_t;
     *writeData = m_value + m_store_count;
     pkt->dataDynamic(writeData);
 
@@ -245,7 +245,7 @@ Check::initiateCheck()
 
     req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-    uint8_t* dataArray = new uint8_t[CHECK_SIZE];
+    uint8_t *dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamicArray(dataArray);
 
     // push the subblock onto the sender state.  The sequencer will
@@ -306,7 +306,7 @@ Check::performCallback(NodeID proc, SubBlock* data)
         DPRINTF(RubyTest, "Check callback\n");
         // Perform load/check
         for (int byte_number=0; byte_number<CHECK_SIZE; byte_number++) {
-            if (uint8(m_value + byte_number) != data->getByte(byte_number)) {
+            if (uint8_t(m_value + byte_number) != data->getByte(byte_number)) {
                 panic("Action/check failure: proc: %d address: %s data: %s "
                       "byte_number: %d m_value+byte_number: %d byte: %d %s"
                       "Time: %d\n",

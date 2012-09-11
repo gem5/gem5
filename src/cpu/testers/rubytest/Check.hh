@@ -68,7 +68,7 @@ class Check
     void debugPrint();
 
     TesterStatus m_status;
-    uint8 m_value;
+    uint8_t m_value;
     int m_store_count;
     NodeID m_initiatingNode;
     Address m_address;

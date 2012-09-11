@@ -275,7 +275,7 @@ RubyPort::M5Port::doFunctionalRead(PacketPtr pkt)
     }
     assert(num_rw <= 1);
 
-    uint8* data = pkt->getPtr<uint8_t>(true);
+    uint8_t *data = pkt->getPtr<uint8_t>(true);
     unsigned int size_in_bytes = pkt->getSize();
     unsigned startByte = address.getAddress() - line_address.getAddress();
 
@@ -387,7 +387,7 @@ RubyPort::M5Port::doFunctionalWrite(PacketPtr pkt)
             num_busy, num_ro, num_rw);
     assert(num_rw <= 1);
 
-    uint8* data = pkt->getPtr<uint8_t>(true);
+    uint8_t *data = pkt->getPtr<uint8_t>(true);
     unsigned int size_in_bytes = pkt->getSize();
     unsigned startByte = addr.getAddress() - line_addr.getAddress();
 

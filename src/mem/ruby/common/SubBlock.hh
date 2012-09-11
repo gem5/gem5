@@ -48,12 +48,12 @@ class SubBlock
 
     int getSize() const { return m_data.size(); }
     void resize(int size) {  m_data.resize(size); }
-    uint8 getByte(int offset) const { return m_data[offset]; }
-    void setByte(int offset, uint8 data) { m_data[offset] = data; }
+    uint8_t getByte(int offset) const { return m_data[offset]; }
+    void setByte(int offset, uint8_t data) { m_data[offset] = data; }
 
     // Shorthands
-    uint8 readByte() const { return getByte(0); }
-    void writeByte(uint8 data) { setByte(0, data); }
+    uint8_t readByte() const { return getByte(0); }
+    void writeByte(uint8_t data) { setByte(0, data); }
 
     // Merging to and from DataBlocks - We only need to worry about
     // updates when we are using DataBlocks

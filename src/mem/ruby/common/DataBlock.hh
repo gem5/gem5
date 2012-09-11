@@ -29,11 +29,11 @@
 #ifndef __MEM_RUBY_COMMON_DATABLOCK_HH__
 #define __MEM_RUBY_COMMON_DATABLOCK_HH__
 
+#include <inttypes.h>
+
 #include <cassert>
 #include <iomanip>
 #include <iostream>
-
-#include "mem/ruby/common/TypeDefines.hh"
 
 class DataBlock
 {
@@ -53,25 +53,25 @@ class DataBlock
 
     DataBlock& operator=(const DataBlock& obj);
 
-    void assign(uint8* data);
+    void assign(uint8_t *data);
 
     void clear();
-    uint8 getByte(int whichByte) const;
-    const uint8* getData(int offset, int len) const;
-    void setByte(int whichByte, uint8 data);
-    void setData(uint8* data, int offset, int len);
+    uint8_t getByte(int whichByte) const;
+    const uint8_t *getData(int offset, int len) const;
+    void setByte(int whichByte, uint8_t data);
+    void setData(uint8_t *data, int offset, int len);
     void copyPartial(const DataBlock & dblk, int offset, int len);
     bool equal(const DataBlock& obj) const;
     void print(std::ostream& out) const;
 
   private:
     void alloc();
-    uint8* m_data;
+    uint8_t *m_data;
     bool m_alloc;
 };
 
 inline void
-DataBlock::assign(uint8* data)
+DataBlock::assign(uint8_t *data)
 {
     assert(data != NULL);
     if (m_alloc) {
@@ -81,14 +81,14 @@ DataBlock::assign(uint8* data)
     m_alloc = false;
 }
 
-inline uint8
+inline uint8_t
 DataBlock::getByte(int whichByte) const
 {
     return m_data[whichByte];
 }
 
 inline void
-DataBlock::setByte(int whichByte, uint8 data)
+DataBlock::setByte(int whichByte, uint8_t data)
 {
     m_data[whichByte] = data;
 }

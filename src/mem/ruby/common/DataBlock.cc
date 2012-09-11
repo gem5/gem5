@@ -31,7 +31,7 @@
 
 DataBlock::DataBlock(const DataBlock &cp)
 {
-    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    m_data = new uint8_t[RubySystem::getBlockSizeBytes()];
     memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
     m_alloc = true;
 }
@@ -39,7 +39,7 @@ DataBlock::DataBlock(const DataBlock &cp)
 void
 DataBlock::alloc()
 {
-    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    m_data = new uint8_t[RubySystem::getBlockSizeBytes()];
     m_alloc = true;
     clear();
 }
@@ -70,7 +70,7 @@ DataBlock::print(std::ostream& out) const
     out << dec << "]" << flush;
 }
 
-const uint8*
+const uint8_t*
 DataBlock::getData(int offset, int len) const
 {
     assert(offset + len <= RubySystem::getBlockSizeBytes());
@@ -78,7 +78,7 @@ DataBlock::getData(int offset, int len) const
 }
 
 void
-DataBlock::setData(uint8* data, int offset, int len)
+DataBlock::setData(uint8_t *data, int offset, int len)
 {
     assert(offset + len <= RubySystem::getBlockSizeBytes());
     memcpy(&m_data[offset], data, len);
