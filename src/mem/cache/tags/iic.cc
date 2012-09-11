@@ -352,33 +352,32 @@ IIC::freeReplacementBlock(PacketList & writebacks)
     unsigned long data_ptr;
     /* consult replacement policy */
     tag_ptr = &tagStore[repl->getRepl()];
+    assert(tag_ptr != NULL);
     assert(tag_ptr->isValid());
 
     DPRINTF(Cache, "Replacing %x in IIC: %s\n",
             regenerateBlkAddr(tag_ptr->tag,0),
             tag_ptr->isDirty() ? "writeback" : "clean");
     /* write back replaced block data */
-    if (tag_ptr && (tag_ptr->isValid())) {
-        replacements[0]++;
-        totalRefs += tag_ptr->refCount;
-        ++sampledRefs;
-        tag_ptr->refCount = 0;
+    replacements[0]++;
+    totalRefs += tag_ptr->refCount;
+    ++sampledRefs;
+    tag_ptr->refCount = 0;
 
-        if (tag_ptr->isDirty()) {
+    if (tag_ptr->isDirty()) {
 /*          PacketPtr writeback =
-                buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
-                                  tag_ptr->req->asid, tag_ptr->xc, blkSize,
-                                  tag_ptr->data,
-                                  tag_ptr->size);
+            buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
+            tag_ptr->req->asid, tag_ptr->xc, blkSize,
+            tag_ptr->data,
+            tag_ptr->size);
 */
-            Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
-                                           blkSize, 0, Request::wbMasterId);
-            PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
-            writeback->allocate();
-            memcpy(writeback->getPtr<uint8_t>(), tag_ptr->data, blkSize);
+        Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
+                                            blkSize, 0, Request::wbMasterId);
+        PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
+        writeback->allocate();
+        memcpy(writeback->getPtr<uint8_t>(), tag_ptr->data, blkSize);
 
-            writebacks.push_back(writeback);
-        }
+        writebacks.push_back(writeback);
     }
 
     // free the data blocks

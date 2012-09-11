@@ -645,8 +645,9 @@ Sequencer::makeRequest(PacketPtr pkt)
 void
 Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 {
+    assert(pkt != NULL);
     int proc_id = -1;
-    if (pkt != NULL && pkt->req->hasContextId()) {
+    if (pkt->req->hasContextId()) {
         proc_id = pkt->req->contextId();
     }
 
