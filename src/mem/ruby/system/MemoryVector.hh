@@ -50,7 +50,7 @@ class MemoryVector
 
     void write(const Address & paddr, uint8_t *data, int len);
     uint8_t *read(const Address & paddr, uint8_t *data, int len);
-    uint32 collatePages(uint8_t *&raw_data);
+    uint32_t collatePages(uint8_t *&raw_data);
     void populatePages(uint8_t *raw_data);
 
   private:
@@ -58,9 +58,9 @@ class MemoryVector
 
     uint64 m_size;
     uint8_t **m_pages;
-    uint32 m_num_pages;
-    const uint32 m_page_offset_mask;
-    static const uint32 PAGE_SIZE = 4096;
+    uint32_t m_num_pages;
+    const uint32_t m_page_offset_mask;
+    static const uint32_t PAGE_SIZE = 4096;
 };
 
 inline
@@ -112,7 +112,7 @@ inline void
 MemoryVector::write(const Address & paddr, uint8_t *data, int len)
 {
     assert(paddr.getAddress() + len <= m_size);
-    uint32 page_num = paddr.getAddress() >> 12;
+    uint32_t page_num = paddr.getAddress() >> 12;
     if (m_pages[page_num] == 0) {
         bool all_zeros = true;
         for (int i = 0; i < len;i++) {
@@ -125,7 +125,7 @@ MemoryVector::write(const Address & paddr, uint8_t *data, int len)
             return;
         m_pages[page_num] = new uint8_t[PAGE_SIZE];
         memset(m_pages[page_num], 0, PAGE_SIZE);
-        uint32 offset = paddr.getAddress() & m_page_offset_mask;
+        uint32_t offset = paddr.getAddress() & m_page_offset_mask;
         memcpy(&m_pages[page_num][offset], data, len);
     } else {
         memcpy(&m_pages[page_num][paddr.getAddress()&m_page_offset_mask],
@@ -137,7 +137,7 @@ inline uint8_t*
 MemoryVector::read(const Address & paddr, uint8_t *data, int len)
 {
     assert(paddr.getAddress() + len <= m_size);
-    uint32 page_num = paddr.getAddress() >> 12;
+    uint32_t page_num = paddr.getAddress() >> 12;
     if (m_pages[page_num] == 0) {
         memset(data, 0, len);
     } else {
@@ -150,7 +150,7 @@ MemoryVector::read(const Address & paddr, uint8_t *data, int len)
 inline uint8_t*
 MemoryVector::getBlockPtr(const PhysAddress & paddr)
 {
-    uint32 page_num = paddr.getAddress() >> 12;
+    uint32_t page_num = paddr.getAddress() >> 12;
     if (m_pages[page_num] == 0) {
         m_pages[page_num] = new uint8_t[PAGE_SIZE];
         memset(m_pages[page_num], 0, PAGE_SIZE);
@@ -166,28 +166,28 @@ MemoryVector::getBlockPtr(const PhysAddress & paddr)
  * the bytes represent the data on the page.
  */
 
-inline uint32
+inline uint32_t
 MemoryVector::collatePages(uint8_t *&raw_data)
 {
-    uint32 num_zero_pages = 0;
-    uint32 data_size = 0;
+    uint32_t num_zero_pages = 0;
+    uint32_t data_size = 0;
 
-    for (uint32 i = 0;i < m_num_pages; ++i)
+    for (uint32_t i = 0;i < m_num_pages; ++i)
     {
         if (m_pages[i] == 0) num_zero_pages++;
     }
 
-    raw_data = new uint8_t[sizeof(uint32) /* number of pages*/ +
+    raw_data = new uint8_t[sizeof(uint32_t) /* number of pages*/ +
                            m_num_pages /* whether the page is all zeros */ +
                            PAGE_SIZE * (m_num_pages - num_zero_pages)];
 
     /* Write the number of pages to be stored. */
-    memcpy(raw_data, &m_num_pages, sizeof(uint32));
-    data_size = sizeof(uint32);
+    memcpy(raw_data, &m_num_pages, sizeof(uint32_t));
+    data_size = sizeof(uint32_t);
 
     DPRINTF(RubyCacheTrace, "collating %d pages\n", m_num_pages);
 
-    for (uint32 i = 0;i < m_num_pages; ++i)
+    for (uint32_t i = 0;i < m_num_pages; ++i)
     {
         if (m_pages[i] == 0) {
             raw_data[data_size] = 0;
@@ -212,17 +212,17 @@ MemoryVector::collatePages(uint8_t *&raw_data)
 inline void
 MemoryVector::populatePages(uint8_t *raw_data)
 {
-    uint32 data_size = 0;
-    uint32 num_pages = 0;
+    uint32_t data_size = 0;
+    uint32_t num_pages = 0;
 
     /* Read the number of pages that were stored. */
-    memcpy(&num_pages, raw_data, sizeof(uint32));
-    data_size = sizeof(uint32);
+    memcpy(&num_pages, raw_data, sizeof(uint32_t));
+    data_size = sizeof(uint32_t);
     assert(num_pages == m_num_pages);
 
     DPRINTF(RubyCacheTrace, "Populating %d pages\n", num_pages);
 
-    for (uint32 i = 0;i < m_num_pages; ++i)
+    for (uint32_t i = 0;i < m_num_pages; ++i)
     {
         assert(m_pages[i] == 0);
         if (raw_data[data_size] != 0) {
