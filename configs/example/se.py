@@ -86,7 +86,7 @@ def get_processes(options):
         process.executable = wrkld
 
         if len(pargs) > idx:
-            process.cmd = [wrkld] + [" "] + [pargs[idx]]
+            process.cmd = [wrkld] + pargs[idx].split()
         else:
             process.cmd = [wrkld]
 
