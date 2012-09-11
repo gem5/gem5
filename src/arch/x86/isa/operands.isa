@@ -120,12 +120,13 @@ def operands {{
         # nccFlagBits version holds the rest.
         'ccFlagBits':    intReg('INTREG_PSEUDO(0)', 60),
         'cfofBits':      intReg('INTREG_PSEUDO(1)', 61),
-        'ecfBit':        intReg('INTREG_PSEUDO(2)', 62),
-        'ezfBit':        intReg('INTREG_PSEUDO(3)', 63),
+        'dfBit':         intReg('INTREG_PSEUDO(2)', 62),
+        'ecfBit':        intReg('INTREG_PSEUDO(3)', 63),
+        'ezfBit':        intReg('INTREG_PSEUDO(4)', 64),
         # These register should needs to be more protected so that later
         # instructions don't map their indexes with an old value.
-        'nccFlagBits':   controlReg('MISCREG_RFLAGS', 64),
-        'TOP':           controlReg('MISCREG_X87_TOP', 65, ctype='ub'),
+        'nccFlagBits':   controlReg('MISCREG_RFLAGS', 65),
+        'TOP':           controlReg('MISCREG_X87_TOP', 66, ctype='ub'),
         # The segment base as used by memory instructions.
         'SegBase':       controlReg('MISCREG_SEG_EFF_BASE(segment)', 70),
 

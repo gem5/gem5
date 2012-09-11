@@ -438,9 +438,10 @@ let {{
         flag_code = '''
             //Don't have genFlags handle the OF or CF bits
             uint64_t mask = CFBit | ECFBit | OFBit;
-            uint64_t newFlags = genFlags(ccFlagBits | ezfBit, ext & ~mask,
-                                  result, psrc1, op2);
+            uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
+                                         ext & ~mask, result, psrc1, op2);
             ezfBit = newFlags & EZFBit;
+            dfBit = newFlags & DFBit;
             ccFlagBits = newFlags & ccFlagMask;
 
             //If a logic microop wants to set these, it wants to set them to 0.
@@ -451,29 +452,32 @@ let {{
     class FlagRegOp(RegOp):
         abstract = True
         flag_code = '''
-            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | ecfBit |
-                                  ezfBit, ext, result, psrc1, op2);
+            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | dfBit |
+                                    ecfBit | ezfBit, ext, result, psrc1, op2);
             cfofBits = newFlags & cfofMask;
             ecfBit = newFlags & ECFBit;
             ezfBit = newFlags & EZFBit;
+            dfBit = newFlags & DFBit;
             ccFlagBits = newFlags & ccFlagMask;
         '''
 
     class SubRegOp(RegOp):
         abstract = True
         flag_code = '''
-            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | ecfBit |
-                                  ezfBit, ext, result, psrc1, ~op2, true);
+            uint64_t newFlags = genFlags(ccFlagBits | cfofBits | dfBit |
+                                         ecfBit | ezfBit, ext, result, psrc1,
+                                         ~op2, true);
             cfofBits = newFlags & cfofMask;
             ecfBit = newFlags & ECFBit;
             ezfBit = newFlags & EZFBit;
+            dfBit = newFlags & DFBit;
             ccFlagBits = newFlags & ccFlagMask;
         '''
 
     class CondRegOp(RegOp):
         abstract = True
-        cond_check = "checkCondition(ccFlagBits | cfofBits | ecfBit | ezfBit, \
-                                     ext)"
+        cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | ecfBit | \
+                                     ezfBit, ext)"
         cond_control_flag_init = "flags[IsCondControl] = flags[IsControl];"
 
     class RdRegOp(RegOp):
@@ -732,9 +736,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                         ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -774,9 +779,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                         ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -815,9 +821,10 @@ let {{
                 }
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                         ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -856,9 +863,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                         ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -901,9 +909,10 @@ let {{
                 }
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                     ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -943,9 +952,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                     ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -990,9 +1000,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                     ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -1047,9 +1058,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                         ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -1110,9 +1122,10 @@ let {{
                     cfofBits = cfofBits | OFBit;
 
                 //Use the regular mechanisms to calculate the other flags.
-                uint64_t newFlags = genFlags(ccFlagBits | ezfBit,
+                uint64_t newFlags = genFlags(ccFlagBits | dfBit | ezfBit,
                       ext & ~(CFBit | ECFBit | OFBit), DestReg, psrc1, op2);
                 ezfBit = newFlags & EZFBit;
+                dfBit = newFlags & DFBit;
                 ccFlagBits = newFlags & ccFlagMask;
             }
         '''
@@ -1130,6 +1143,7 @@ let {{
             cfofBits = newFlags & cfofMask;
             ecfBit = newFlags & ECFBit;
             ezfBit = newFlags & EZFBit;
+            dfBit = newFlags & DFBit;
             ccFlagBits = newFlags & ccFlagMask;
         '''
 
@@ -1140,6 +1154,7 @@ let {{
 
             // Get only the user flags
             ccFlagBits = newFlags & ccFlagMask;
+            dfBit = newFlags & DFBit;
             cfofBits = newFlags & cfofMask;
             ecfBit = 0;
             ezfBit = 0;
@@ -1152,22 +1167,25 @@ let {{
         code = 'DestReg = NRIP - CSBase;'
 
     class Ruflags(RdRegOp):
-        code = 'DestReg = ccFlagBits | cfofBits | ecfBit | ezfBit;'
+        code = 'DestReg = ccFlagBits | cfofBits | dfBit | ecfBit | ezfBit;'
 
     class Rflags(RdRegOp):
         code = '''
-            DestReg = ccFlagBits | cfofBits | ecfBit | ezfBit | nccFlagBits;
+            DestReg = ccFlagBits | cfofBits | dfBit |
+                      ecfBit | ezfBit | nccFlagBits;
             '''
 
     class Ruflag(RegOp):
         code = '''
-            int flag = bits(ccFlagBits | cfofBits | ecfBit | ezfBit, imm8);
+            int flag = bits(ccFlagBits | cfofBits | dfBit |
+                            ecfBit | ezfBit, imm8);
             DestReg = merge(DestReg, flag, dataSize);
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
 
         big_code = '''
-            int flag = bits(ccFlagBits | cfofBits | ecfBit | ezfBit, imm8);
+            int flag = bits(ccFlagBits | cfofBits | dfBit |
+                            ecfBit | ezfBit, imm8);
             DestReg = flag & mask(dataSize * 8);
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
@@ -1180,7 +1198,7 @@ let {{
     class Rflag(RegOp):
         code = '''
             MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits |
+            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
                              ecfBit | ezfBit) & flagMask;
 
             int flag = bits(flags, imm8);
@@ -1190,7 +1208,7 @@ let {{
 
         big_code = '''
             MiscReg flagMask = 0x3F7FDD5;
-            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits |
+            MiscReg flags = (nccFlagBits | ccFlagBits | cfofBits | dfBit |
                              ecfBit | ezfBit) & flagMask;
 
             int flag = bits(flags, imm8);

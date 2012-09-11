@@ -142,7 +142,7 @@ let {{
                  "func": func,
                  "func_num": "GenericISA::M5DebugFault::%s" % func_num,
                  "cond_test": "checkCondition(ccFlagBits | cfofBits | \
-                                              ecfBit | ezfBit, cc)"})
+                                              dfBit | ecfBit | ezfBit, cc)"})
         exec_output += MicroDebugExecute.subst(iop)
         header_output += MicroDebugDeclare.subst(iop)
         decoder_output += MicroDebugConstructor.subst(iop)

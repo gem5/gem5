@@ -65,7 +65,7 @@ namespace X86ISA
     };
 
     const uint32_t cfofMask = CFBit | OFBit;
-    const uint32_t ccFlagMask = PFBit | AFBit | ZFBit | SFBit | DFBit;
+    const uint32_t ccFlagMask = PFBit | AFBit | ZFBit | SFBit;
 
     enum RFLAGBit {
         TFBit = 1 << 8,
