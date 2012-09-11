@@ -1,24 +1,24 @@
-Real time: Sep/10/2012 12:39:22
+Real time: Sep/10/2012 23:29:19
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 743
-Elapsed_time_in_minutes: 12.3833
-Elapsed_time_in_hours: 0.206389
-Elapsed_time_in_days: 0.00859954
+Elapsed_time_in_seconds: 752
+Elapsed_time_in_minutes: 12.5333
+Elapsed_time_in_hours: 0.208889
+Elapsed_time_in_days: 0.0087037
 
-Virtual_time_in_seconds: 741.97
-Virtual_time_in_minutes: 12.3662
-Virtual_time_in_hours:   0.206103
-Virtual_time_in_days:    0.00858762
+Virtual_time_in_seconds: 751.42
+Virtual_time_in_minutes: 12.5237
+Virtual_time_in_hours:   0.208728
+Virtual_time_in_days:    0.00869699
 
 Ruby_current_time: 10410013848
 Ruby_start_time: 0
 Ruby_cycles: 10410013848
 
-mbytes_resident: 256.176
-mbytes_total: 493.555
-resident_ratio: 0.51905
+mbytes_resident: 256.566
+mbytes_total: 493.43
+resident_ratio: 0.519973
 
 ruby_cycles_executed: [ 10410013849 10410013849 ]
 
@@ -87,13 +87,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 9 count: 4899404 average: 0.0429665 |
 Resource Usage
 --------------
 page_size: 4096
-user_time: 741
+user_time: 751
 system_time: 0
-page_reclaims: 56598
+page_reclaims: 57058
 page_faults: 18
 swaps: 0
-block_inputs: 28712
-block_outputs: 496
+block_inputs: 16016
+block_outputs: 528
 
 Network Stats
 -------------

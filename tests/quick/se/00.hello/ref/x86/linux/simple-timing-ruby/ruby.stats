@@ -1,4 +1,4 @@
-Real time: Sep/09/2012 13:51:25
+Real time: Sep/10/2012 21:50:40
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.53
-Virtual_time_in_minutes: 0.00883333
-Virtual_time_in_hours:   0.000147222
-Virtual_time_in_days:    6.13426e-06
+Virtual_time_in_seconds: 0.48
+Virtual_time_in_minutes: 0.008
+Virtual_time_in_hours:   0.000133333
+Virtual_time_in_days:    5.55556e-06
 
 Ruby_current_time: 121759
 Ruby_start_time: 0
 Ruby_cycles: 121759
 
-mbytes_resident: 59.5742
-mbytes_total: 275.16
-resident_ratio: 0.216522
+mbytes_resident: 57.9453
+mbytes_total: 275.082
+resident_ratio: 0.210662
 
 ruby_cycles_executed: [ 121760 ]
 
@@ -89,11 +89,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 11362
+page_reclaims: 11940
 page_faults: 0
 swaps: 0
-block_inputs: 0
-block_outputs: 80
+block_inputs: 24
+block_outputs: 88
 
 Network Stats
 -------------

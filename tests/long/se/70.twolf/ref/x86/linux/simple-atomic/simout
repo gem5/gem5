@@ -1,9 +1,11 @@
+Redirecting stdout to build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic/simout
+Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 13 2012 17:08:22
-gem5 started Aug 13 2012 20:10:43
-gem5 executing on zizzer
+gem5 compiled Sep 10 2012 22:29:00
+gem5 started Sep 10 2012 22:29:08
+gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic -re tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic/smred.sav
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic/smred.sv2

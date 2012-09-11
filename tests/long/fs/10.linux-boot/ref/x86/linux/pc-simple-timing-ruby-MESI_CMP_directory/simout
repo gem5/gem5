@@ -3,8 +3,8 @@ Redirecting stderr to build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-bo
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 10 2012 12:26:53
-gem5 started Sep 10 2012 12:26:58
+gem5 compiled Sep 10 2012 23:16:41
+gem5 started Sep 10 2012 23:16:46
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86_MESI_CMP_directory/gem5.opt -d build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory -re tests/run.py build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory
 warning: add_child('terminal'): child 'terminal' already has parent
