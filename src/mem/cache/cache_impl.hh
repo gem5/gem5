@@ -170,7 +170,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                     pkt->assertMemInhibit();
                 }
                 // on ReadExReq we give up our copy unconditionally
-                tags->invalidateBlk(blk);
+                assert(blk != tempBlock);
+                tags->invalidate(blk);
+                blk->invalidate();
             } else if (blk->isWritable() && !pending_downgrade
                       && !pkt->sharedAsserted() && !pkt->req->isInstFetch()) {
                 // we can give the requester an exclusive copy (by not
@@ -210,7 +212,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
         // to just ack those as long as we have an exclusive
         // copy at this level.
         assert(pkt->isUpgrade());
-        tags->invalidateBlk(blk);
+        assert(blk != tempBlock);
+        tags->invalidate(blk);
+        blk->invalidate();
     }
 }
 
@@ -280,7 +284,8 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         } else if (pkt->isWrite()) {
            blk = tags->findBlock(pkt->getAddr());
            if (blk != NULL) {
-               tags->invalidateBlk(blk);
+               tags->invalidate(blk);
+               blk->invalidate();
            }
         }
 
@@ -444,7 +449,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         } else if (pkt->isWrite()) {
             BlkType *blk = tags->findBlock(pkt->getAddr());
             if (blk != NULL) {
-                tags->invalidateBlk(blk);
+                tags->invalidate(blk);
+                blk->invalidate();
             }
         }
 
@@ -644,7 +650,8 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         if (pkt->isInvalidate()) {
             BlkType *blk = tags->findBlock(pkt->getAddr());
             if (blk && blk->isValid()) {
-                tags->invalidateBlk(blk);
+                tags->invalidate(blk);
+                blk->invalidate();
                 DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: invalidating\n",
                         pkt->cmdString(), pkt->getAddr());
             }
@@ -953,9 +960,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         mshr->popTarget();
     }
 
-    if (blk) {
+    if (blk && blk->isValid()) {
         if (pkt->isInvalidate() || mshr->hasPostInvalidate()) {
-            tags->invalidateBlk(blk);
+            assert(blk != tempBlock);
+            tags->invalidate(blk);
+            blk->invalidate();
         } else if (mshr->hasPostDowngrade()) {
             blk->status &= ~BlkWritable;
         }
@@ -988,8 +997,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         if (blk->isDirty()) {
             allocateWriteBuffer(writebackBlk(blk), time, true);
         }
-        blk->status &= ~BlkValid;
-        tags->invalidateBlk(blk);
+        blk->invalidate();
     }
 
     delete pkt;
@@ -1087,8 +1095,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tags->insertBlock(pkt->getAddr(), blk, id);
         }
 
-        // starting from scratch with a new block
-        blk->status = 0;
+        // we should never be overwriting a valid block
+        assert(!blk->isValid());
     } else {
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
@@ -1259,7 +1267,9 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // Do this last in case it deallocates block data or something
     // like that
     if (invalidate) {
-        tags->invalidateBlk(blk);
+        assert(blk != tempBlock);
+        tags->invalidate(blk);
+        blk->invalidate();
     }
 }
 

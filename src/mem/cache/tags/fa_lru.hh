@@ -168,7 +168,7 @@ public:
      * Invalidate a cache block.
      * @param blk The block to invalidate.
      */
-    void invalidateBlk(BlkType *blk);
+    void invalidate(BlkType *blk);
 
     /**
      * Access block and update replacement data.  May not succeed, in which case

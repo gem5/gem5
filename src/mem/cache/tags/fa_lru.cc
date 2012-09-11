@@ -152,13 +152,10 @@ FALRU::hashLookup(Addr addr) const
 }
 
 void
-FALRU::invalidateBlk(FALRU::BlkType *blk)
+FALRU::invalidate(FALRU::BlkType *blk)
 {
-    if (blk) {
-        blk->status = 0;
-        blk->isTouched = false;
-        tagsInUse--;
-    }
+    assert(blk);
+    tagsInUse--;
 }
 
 FALRUBlk*

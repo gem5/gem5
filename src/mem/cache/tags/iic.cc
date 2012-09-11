@@ -617,7 +617,7 @@ IIC::secondaryChain(Addr tag, unsigned long chain_ptr,
 }
 
 void
-IIC::invalidateBlk(IIC::BlkType *tag_ptr)
+IIC::invalidate(IIC::BlkType *tag_ptr)
 {
     if (tag_ptr) {
         for (int i = 0; i < tag_ptr->numData; ++i) {

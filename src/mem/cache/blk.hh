@@ -189,6 +189,16 @@ class CacheBlk
     }
 
     /**
+     * Invalidate the block and clear all state.
+     */
+    void invalidate()
+    {
+        status = 0;
+        isTouched = false;
+        clearLoadLocks();
+    }
+
+    /**
      * Check to see if a block has been written.
      * @return True if the block is dirty.
      */
