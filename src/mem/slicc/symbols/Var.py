@@ -44,7 +44,7 @@ class Var(Symbol):
     def __repr__(self):
         return "[Var id: %s]" % (self.c_ident)
 
-    def writeCodeFiles(self, path):
+    def writeCodeFiles(self, path, includes):
         pass
 
 __all__ = [ "Var" ]

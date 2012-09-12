@@ -124,15 +124,15 @@ class SymbolTable(object):
             if isinstance(symbol, type):
                 yield symbol
 
-    def writeCodeFiles(self, path):
+    def writeCodeFiles(self, path, includes):
         makeDir(path)
 
         code = self.codeFormatter()
-        code('''
-/** Auto generated C++ code started by $__file__:$__line__ */
+        code('/** Auto generated C++ code started by $__file__:$__line__ */')
 
-#include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
-''')
+        for include_path in includes:
+            code('#include "${{include_path}}"')
+
         for symbol in self.sym_vec:
             if isinstance(symbol, Type) and not symbol.isPrimitive:
                 code('#include "mem/protocol/${{symbol.c_ident}}.hh"')
@@ -140,7 +140,7 @@ class SymbolTable(object):
         code.write(path, "Types.hh")
 
         for symbol in self.sym_vec:
-            symbol.writeCodeFiles(path)
+            symbol.writeCodeFiles(path, includes)
 
     def writeHTMLFiles(self, path):
         makeDir(path)

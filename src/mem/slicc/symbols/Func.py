@@ -63,7 +63,7 @@ class Func(Symbol):
         return "%s %s(%s);" % (return_type, self.c_ident,
                                ", ".join(self.param_strings))
 
-    def writeCodeFiles(self, path):
+    def writeCodeFiles(self, path, includes):
         return
 
     def generateCode(self):

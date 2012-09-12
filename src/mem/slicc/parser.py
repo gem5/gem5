@@ -38,11 +38,12 @@ import slicc.util as util
 from slicc.symbols import SymbolTable
 
 class SLICC(Grammar):
-    def __init__(self, filename, verbose=False, traceback=False, **kwargs):
+    def __init__(self, filename, base_dir, verbose=False, traceback=False, **kwargs):
         self.protocol = None
         self.traceback = traceback
         self.verbose = verbose
         self.symtab = SymbolTable(self)
+        self.base_dir = base_dir
 
         try:
             self.decl_list = self.parse_file(filename, **kwargs)
@@ -64,8 +65,8 @@ class SLICC(Grammar):
         self.decl_list.findMachines()
         self.decl_list.generate()
 
-    def writeCodeFiles(self, code_path):
-        self.symtab.writeCodeFiles(code_path)
+    def writeCodeFiles(self, code_path, includes):
+        self.symtab.writeCodeFiles(code_path, includes)
 
     def writeHTMLFiles(self, html_path):
         self.symtab.writeHTMLFiles(html_path)
@@ -249,7 +250,10 @@ class SLICC(Grammar):
     def p_decl__include(self, p):
         "decl : INCLUDE STRING SEMI"
         dirname = os.path.dirname(self.current_source)
-        filename = os.path.join(dirname, p[2])
+        if os.path.exists(os.path.join(dirname, p[2])):
+            filename = os.path.join(dirname, p[2])
+        else:
+            filename = os.path.join(self.base_dir, p[2])
         p[0] = self.parse_file(filename)
 
     def p_decl__machine(self, p):

@@ -184,7 +184,7 @@ class Type(Symbol):
 
         return True
 
-    def writeCodeFiles(self, path):
+    def writeCodeFiles(self, path, includes):
         if self.isExternal:
             # Do nothing
             pass

@@ -32,7 +32,7 @@ import os
 
 Import('*')
 
-all_protocols = [
+all_protocols.extend([
     'MESI_CMP_directory',
     'MI_example',
     'MOESI_CMP_directory',
@@ -40,13 +40,14 @@ all_protocols = [
     'MOESI_hammer',
     'Network_test',
     'None'
-    ]
-
-opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
-                   all_protocols)
-
-sticky_vars.AddVariables(opt)
-export_vars += ['PROTOCOL']
+    ])
 
 opt = BoolVariable('SLICC_HTML', 'Create HTML files', False)
 sticky_vars.AddVariables(opt)
+
+protocol_dirs.append(Dir('.').abspath)
+
+protocol_base = Dir('.')
+Export('protocol_base')
+
+slicc_includes.append('mem/ruby/slicc_interface/RubySlicc_includes.hh')

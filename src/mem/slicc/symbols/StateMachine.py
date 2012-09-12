@@ -162,12 +162,12 @@ class StateMachine(Symbol):
                 action.warning(error_msg)
         self.table = table
 
-    def writeCodeFiles(self, path):
+    def writeCodeFiles(self, path, includes):
         self.printControllerPython(path)
         self.printControllerHH(path)
-        self.printControllerCC(path)
+        self.printControllerCC(path, includes)
         self.printCSwitch(path)
-        self.printCWakeup(path)
+        self.printCWakeup(path, includes)
         self.printProfilerCC(path)
         self.printProfilerHH(path)
         self.printProfileDumperCC(path)
@@ -399,7 +399,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code('#endif // __${ident}_CONTROLLER_H__')
         code.write(path, '%s.hh' % c_ident)
 
-    def printControllerCC(self, path):
+    def printControllerCC(self, path, includes):
         '''Output the actions for performing the actions'''
 
         code = self.symtab.codeFormatter()
@@ -429,8 +429,12 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
 #include "mem/ruby/system/System.hh"
+''')
+        for include_path in includes:
+            code('#include "${{include_path}}"')
+
+        code('''
 
 using namespace std;
 ''')
@@ -988,7 +992,7 @@ $c_ident::${{action.ident}}(const Address& addr)
 
         code.write(path, "%s.cc" % c_ident)
 
-    def printCWakeup(self, path):
+    def printCWakeup(self, path, includes):
         '''Output the wakeup loop for the events'''
 
         code = self.symtab.codeFormatter()
@@ -1020,8 +1024,14 @@ $c_ident::${{action.ident}}(const Address& addr)
         code('''
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
 #include "mem/ruby/system/System.hh"
+''')
+
+
+        for include_path in includes:
+            code('#include "${{include_path}}"')
+
+        code('''
 
 using namespace std;
 

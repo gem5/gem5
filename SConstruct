@@ -116,7 +116,7 @@ extra_python_paths = [
     Dir('src/python').srcnode().abspath, # gem5 includes
     Dir('ext/ply').srcnode().abspath, # ply is used by several files
     ]
-    
+
 sys.path[1:1] = extra_python_paths
 
 from m5.util import compareVersions, readCommand
@@ -835,6 +835,14 @@ Export('sticky_vars')
 export_vars = []
 Export('export_vars')
 
+# For Ruby
+all_protocols = []
+Export('all_protocols')
+protocol_dirs = []
+Export('protocol_dirs')
+slicc_includes = []
+Export('slicc_includes')
+
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
 if not GetOption('verbose'):
@@ -867,11 +875,14 @@ sticky_vars.AddVariables(
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
+    EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
+                  all_protocols),
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP',
-                'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK' ]
+                'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'PROTOCOL',
+               ]
 
 ###################################################
 #
