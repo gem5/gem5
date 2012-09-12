@@ -447,10 +447,6 @@ class DefaultCommit
     /** Updates commit stats based on this instruction. */
     void updateComInstStats(DynInstPtr &inst);
 
-    /** Stat for the total number of committed instructions. */
-    Stats::Scalar commitCommittedInsts;
-    /** Stat for the total number of committed ops. */
-    Stats::Scalar commitCommittedOps;
     /** Stat for the total number of squashed instructions discarded by commit.
      */
     Stats::Scalar commitSquashedInsts;

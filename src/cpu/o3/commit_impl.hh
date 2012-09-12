@@ -161,14 +161,6 @@ void
 DefaultCommit<Impl>::regStats()
 {
     using namespace Stats;
-    commitCommittedInsts
-        .name(name() + ".commitCommittedInsts")
-        .desc("The number of committed instructions")
-        .prereq(commitCommittedInsts);
-    commitCommittedOps
-        .name(name() + ".commitCommittedOps")
-        .desc("The number of committed instructions")
-        .prereq(commitCommittedInsts);
     commitSquashedInsts
         .name(name() + ".commitSquashedInsts")
         .desc("The number of squashed insts skipped by commit")
@@ -998,16 +990,6 @@ DefaultCommit<Impl>::commitInsts()
                 // Set the doneSeqNum to the youngest committed instruction.
                 toIEW->commitInfo[tid].doneSeqNum = head_inst->seqNum;
 
-                if (!head_inst->isMicroop() || head_inst->isLastMicroop())
-                    ++commitCommittedInsts;
-                ++commitCommittedOps;
-
-                // To match the old model, don't count nops and instruction
-                // prefetches towards the total commit count.
-                if (!head_inst->isNop() && !head_inst->isInstPrefetch()) {
-                    cpu->instDone(tid, head_inst);
-                }
-
                 if (tid == 0) {
                     canHandleInterrupts =  (!head_inst->isDelayedCommit()) &&
                                            ((THE_ISA != ALPHA_ISA) ||
@@ -1368,6 +1350,12 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
     if (!inst->isMicroop() || inst->isLastMicroop())
         instsCommitted[tid]++;
     opsCommitted[tid]++;
+
+    // To match the old model, don't count nops and instruction
+    // prefetches towards the total commit count.
+    if (!inst->isNop() && !inst->isInstPrefetch()) {
+        cpu->instDone(tid, inst);
+    }
 
     //
     //  Control Instructions
