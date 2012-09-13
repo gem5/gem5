@@ -118,7 +118,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     : MemObject(p), instCnt(0), _cpuId(p->cpu_id),
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
-      interrupts(p->interrupts),
+      interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system)
 {
     // if Python did not provide a valid ID, do it here
@@ -225,7 +225,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     }
 
     if (FullSystem) {
-        profileEvent = NULL;
         if (params()->profile)
             profileEvent = new ProfileEvent(this, params()->profile);
     }
