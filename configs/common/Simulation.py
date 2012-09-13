@@ -453,6 +453,7 @@ def run(options, root, testsys, cpu_class):
         # manually.  You DON'T need to resume after just switching
         # CPUs if you haven't changed anything on the system level.
 
+        m5.doDrain(testsys)
         m5.changeToTiming(testsys)
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
@@ -469,7 +470,7 @@ def run(options, root, testsys, cpu_class):
             print "Switching CPUS @ tick %s" % (m5.curTick())
             print "Simulation ends instruction count:%d" % \
                     (testsys.switch_cpus_1[0].max_insts_any_thread)
-            m5.drain(testsys)
+            m5.doDrain(testsys)
             m5.switchCpus(switch_cpu_list1)
             m5.resume(testsys)
 

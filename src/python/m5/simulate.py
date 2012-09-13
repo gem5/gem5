@@ -203,7 +203,6 @@ def changeToTiming(system):
               (type(system), objects.Root, objects.System)
 
     if system.getMemoryMode() != objects.params.timing:
-        doDrain(system)
         print "Changing memory mode to timing"
         for obj in system.descendants():
             obj.changeTiming(objects.params.timing)
