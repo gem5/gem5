@@ -44,7 +44,6 @@ system.cpu.commit.COM:membars                       0                       # Nu
 system.cpu.commit.COM:refs                     189772                       # Number of memory references committed
 system.cpu.commit.COM:swp_count                     0                       # Number of s/w prefetches committed
 system.cpu.commit.branchMispredicts              2863                       # The number of times a branch was mispredicted
-system.cpu.commit.commitCommittedInsts         518948                       # The number of committed instructions
 system.cpu.commit.commitNonSpecStalls              18                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.commitSquashedInsts           59006                       # The number of squashed insts skipped by commit
 system.cpu.committedInsts                      500002                       # Number of Instructions Simulated

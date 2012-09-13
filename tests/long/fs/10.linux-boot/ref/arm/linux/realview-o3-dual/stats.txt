@@ -771,8 +771,6 @@ system.cpu0.iew.wb_penalized                        0                       # nu
 system.cpu0.iew.wb_rate                      0.480756                       # insts written-back per cycle
 system.cpu0.iew.wb_fanout                    0.524445                       # average fanout of values written-back
 system.cpu0.iew.wb_penalized_rate                   0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu0.commit.commitCommittedInsts      24280608                       # The number of committed instructions
-system.cpu0.commit.commitCommittedOps        32020757                       # The number of committed instructions
 system.cpu0.commit.commitSquashedInsts        6703968                       # The number of squashed insts skipped by commit
 system.cpu0.commit.commitNonSpecStalls         689136                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu0.commit.branchMispredicts           267907                       # The number of times a branch was mispredicted
@@ -1347,8 +1345,6 @@ system.cpu1.iew.wb_penalized                        0                       # nu
 system.cpu1.iew.wb_rate                      0.132714                       # insts written-back per cycle
 system.cpu1.iew.wb_fanout                    0.564304                       # average fanout of values written-back
 system.cpu1.iew.wb_penalized_rate                   0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu1.commit.commitCommittedInsts      38947564                       # The number of committed instructions
-system.cpu1.commit.commitCommittedOps        49311547                       # The number of committed instructions
 system.cpu1.commit.commitSquashedInsts       19037243                       # The number of squashed insts skipped by commit
 system.cpu1.commit.commitNonSpecStalls         919803                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu1.commit.branchMispredicts           377326                       # The number of times a branch was mispredicted

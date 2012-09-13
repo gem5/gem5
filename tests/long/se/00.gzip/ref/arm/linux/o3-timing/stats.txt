@@ -297,8 +297,6 @@ system.cpu.iew.wb_penalized                         0                       # nu
 system.cpu.iew.wb_rate                       1.937324                       # insts written-back per cycle
 system.cpu.iew.wb_fanout                     0.644082                       # average fanout of values written-back
 system.cpu.iew.wb_penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu.commit.commitCommittedInsts      570052771                       # The number of committed instructions
-system.cpu.commit.commitCommittedOps        602360977                       # The number of committed instructions
 system.cpu.commit.commitSquashedInsts        79830456                       # The number of squashed insts skipped by commit
 system.cpu.commit.commitNonSpecStalls            2931                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.branchMispredicts           2422889                       # The number of times a branch was mispredicted
