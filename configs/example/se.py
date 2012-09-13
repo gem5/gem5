@@ -198,6 +198,9 @@ if options.ruby:
         # Connect the cpu's cache ports to Ruby
         system.cpu[i].icache_port = ruby_port.slave
         system.cpu[i].dcache_port = ruby_port.slave
+        if buildEnv['TARGET_ISA'] == 'x86':
+            system.cpu[i].itb.walker.port = ruby_port.slave
+            system.cpu[i].dtb.walker.port = ruby_port.slave
 else:
     system.system_port = system.membus.slave
     system.physmem.port = system.membus.master
