@@ -933,10 +933,15 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
 # Start out with the compiler flags common to all compilers,
 # i.e. they all use -g for opt and -g -pg for prof
-ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg']}
+ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg'],
+           'perf' : ['-g']}
 
-# Start out with the linker flags common to all linkers, i.e. -pg for prof.
-ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg']}
+# Start out with the linker flags common to all linkers, i.e. -pg for
+# prof, and -lprofiler for perf. The -lprofile flag is surrounded by
+# no-as-needed and as-needed as the binutils linker is too clever and
+# simply doesn't link to the library otherwise.
+ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg'],
+           'perf' : ['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed']}
 
 if env['GCC']:
     if sys.platform == 'sunos5':
@@ -944,24 +949,24 @@ if env['GCC']:
     else:
         ccflags['debug'] += ['-ggdb3']
     ldflags['debug'] += ['-O0']
-    # opt, fast and prof all share the same cc flags
-    for target in ['opt', 'fast', 'prof']:
+    # opt, fast, prof and perf all share the same cc flags
+    for target in ['opt', 'fast', 'prof', 'perf']:
         ccflags[target] += ['-O3']
 elif env['SUNCC']:
     ccflags['debug'] += ['-g0']
     ccflags['opt'] += ['-O']
-    ccflags['fast'] += ['-fast']
-    ccflags['prof'] += ['-fast']
+    for target in ['fast', 'prof', 'perf']:
+        ccflags[target] += ['-fast']
 elif env['ICC']:
     ccflags['debug'] += ['-g', '-O0']
     ccflags['opt'] += ['-O']
-    ccflags['fast'] += ['-fast']
-    ccflags['prof'] += ['-fast']
+    for target in ['fast', 'prof', 'perf']:
+        ccflags[target] += ['-fast']
 elif env['CLANG']:
     ccflags['debug'] += ['-g', '-O0']
-    ccflags['opt'] += ['-O3']
-    ccflags['fast'] += ['-O3']
-    ccflags['prof'] += ['-O3']
+    # opt, fast, prof and perf all share the same cc flags
+    for target in ['opt', 'fast', 'prof', 'perf']:
+        ccflags[target] += ['-O3']
 else:
     print 'Unknown compiler, please fix compiler options'
     Exit(1)
@@ -971,8 +976,9 @@ else:
 # need.  We try to identify the needed environment for each target; if
 # we can't, we fall back on instantiating all the environments just to
 # be safe.
-target_types = ['debug', 'opt', 'fast', 'prof']
-obj2target = {'do': 'debug', 'o': 'opt', 'fo': 'fast', 'po': 'prof'}
+target_types = ['debug', 'opt', 'fast', 'prof', 'perf']
+obj2target = {'do': 'debug', 'o': 'opt', 'fo': 'fast', 'po': 'prof',
+              'gpo' : 'perf'}
 
 def identifyTarget(t):
     ext = t.split('.')[-1]
@@ -1010,11 +1016,18 @@ if 'fast' in needed_envs:
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
             LINKFLAGS = Split(ldflags['fast']))
 
-# Profiled binary
+# Profiled binary using gprof
 if 'prof' in needed_envs:
     makeEnv('prof', '.po',
             CCFLAGS = Split(ccflags['prof']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
             LINKFLAGS = Split(ldflags['prof']))
+
+# Profiled binary using google-pprof
+if 'perf' in needed_envs:
+    makeEnv('perf', '.gpo',
+            CCFLAGS = Split(ccflags['perf']),
+            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+            LINKFLAGS = Split(ldflags['perf']))
 
 Return('envList')
