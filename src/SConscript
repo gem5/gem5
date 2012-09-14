@@ -931,31 +931,37 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     new_env.M5Binary = targets[0]
     envList.append(new_env)
 
-# Debug binary
-ccflags = {}
+# Start out with the compiler flags common to all compilers,
+# i.e. they all use -g for opt and -g -pg for prof
+ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg']}
+
+# Start out with the linker flags common to all linkers, i.e. -pg for prof.
+ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg']}
+
 if env['GCC']:
     if sys.platform == 'sunos5':
-        ccflags['debug'] = '-gstabs+'
+        ccflags['debug'] += ['-gstabs+']
     else:
-        ccflags['debug'] = '-ggdb3'
-    ccflags['opt'] = '-g -O3'
-    ccflags['fast'] = '-O3'
-    ccflags['prof'] = '-O3 -g -pg'
+        ccflags['debug'] += ['-ggdb3']
+    ldflags['debug'] += ['-O0']
+    # opt, fast and prof all share the same cc flags
+    for target in ['opt', 'fast', 'prof']:
+        ccflags[target] += ['-O3']
 elif env['SUNCC']:
-    ccflags['debug'] = '-g0'
-    ccflags['opt'] = '-g -O'
-    ccflags['fast'] = '-fast'
-    ccflags['prof'] = '-fast -g -pg'
+    ccflags['debug'] += ['-g0']
+    ccflags['opt'] += ['-O']
+    ccflags['fast'] += ['-fast']
+    ccflags['prof'] += ['-fast']
 elif env['ICC']:
-    ccflags['debug'] = '-g -O0'
-    ccflags['opt'] = '-g -O'
-    ccflags['fast'] = '-fast'
-    ccflags['prof'] = '-fast -g -pg'
+    ccflags['debug'] += ['-g', '-O0']
+    ccflags['opt'] += ['-O']
+    ccflags['fast'] += ['-fast']
+    ccflags['prof'] += ['-fast']
 elif env['CLANG']:
-    ccflags['debug'] = '-g -O0'
-    ccflags['opt'] = '-g -O3'
-    ccflags['fast'] = '-O3'
-    ccflags['prof'] = '-O3 -g -pg'
+    ccflags['debug'] += ['-g', '-O0']
+    ccflags['opt'] += ['-O3']
+    ccflags['fast'] += ['-O3']
+    ccflags['prof'] += ['-O3']
 else:
     print 'Unknown compiler, please fix compiler options'
     Exit(1)
@@ -987,25 +993,28 @@ if 'all' in needed_envs:
 if 'debug' in needed_envs:
     makeEnv('debug', '.do',
             CCFLAGS = Split(ccflags['debug']),
-            CPPDEFINES = ['DEBUG', 'TRACING_ON=1'])
+            CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
+            LINKFLAGS = Split(ldflags['debug']))
 
 # Optimized binary
 if 'opt' in needed_envs:
     makeEnv('opt', '.o',
             CCFLAGS = Split(ccflags['opt']),
-            CPPDEFINES = ['TRACING_ON=1'])
+            CPPDEFINES = ['TRACING_ON=1'],
+            LINKFLAGS = Split(ldflags['opt']))
 
 # "Fast" binary
 if 'fast' in needed_envs:
     makeEnv('fast', '.fo', strip = True,
             CCFLAGS = Split(ccflags['fast']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'])
+            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+            LINKFLAGS = Split(ldflags['fast']))
 
 # Profiled binary
 if 'prof' in needed_envs:
     makeEnv('prof', '.po',
             CCFLAGS = Split(ccflags['prof']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = '-pg')
+            LINKFLAGS = Split(ldflags['prof']))
 
 Return('envList')
