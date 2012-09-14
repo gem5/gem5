@@ -165,6 +165,8 @@ AddLocalOption('--default', dest='default', type='string', action='store',
                help='Override which build_opts file to use for defaults')
 AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',
                help='Disable style checking hooks')
+AddLocalOption('--no-lto', dest='no_lto', action='store_true',
+               help='Disable Link-Time Optimization for fast')
 AddLocalOption('--update-ref', dest='update_ref', action='store_true',
                help='Update test reference outputs')
 AddLocalOption('--verbose', dest='verbose', action='store_true',
@@ -477,6 +479,10 @@ else:
     main['SHCXXCOMSTR']     = Transform("SHCXX")
 Export('MakeAction')
 
+# Initialize the Link-Time Optimization (LTO) flags
+main['LTO_CCFLAGS'] = []
+main['LTO_LDFLAGS'] = []
+
 CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
@@ -506,6 +512,24 @@ if main['GCC']:
     # http://gcc.gnu.org/projects/cxx0x.html for details
     if compareVersions(gcc_version, '4.4') >= 0:
         main.Append(CXXFLAGS=['-std=c++0x'])
+
+    # LTO support is only really working properly from 4.6 and beyond
+    if compareVersions(gcc_version, '4.6') >= 0:
+        # Add the appropriate Link-Time Optimization (LTO) flags
+        # unless LTO is explicitly turned off. Note that these flags
+        # are only used by the fast target.
+        if not GetOption('no_lto'):
+            # Pass the LTO flag when compiling to produce GIMPLE
+            # output, we merely create the flags here and only append
+            # them later/
+            main['LTO_CCFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
+
+            # Use the same amount of jobs for LTO as we are running
+            # scons with, we hardcode the use of the linker plugin
+            # which requires either gold or GNU ld >= 2.21
+            main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
+                                   '-fuse-linker-plugin']
+
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
 elif main['SUNCC']:

@@ -943,15 +943,26 @@ ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg'],
 ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg'],
            'perf' : ['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed']}
 
+# For Link Time Optimization, the optimisation flags used to compile
+# individual files are decoupled from those used at link time
+# (i.e. you can compile with -O3 and perform LTO with -O0), so we need
+# to also update the linker flags based on the target.
 if env['GCC']:
     if sys.platform == 'sunos5':
         ccflags['debug'] += ['-gstabs+']
     else:
         ccflags['debug'] += ['-ggdb3']
     ldflags['debug'] += ['-O0']
-    # opt, fast, prof and perf all share the same cc flags
+    # opt, fast, prof and perf all share the same cc flags, also add
+    # the optimization to the ldflags as LTO defers the optimization
+    # to link time
     for target in ['opt', 'fast', 'prof', 'perf']:
         ccflags[target] += ['-O3']
+        ldflags[target] += ['-O3']
+
+    ccflags['fast'] += env['LTO_CCFLAGS']
+    ldflags['fast'] += env['LTO_LDFLAGS']
+
 elif env['SUNCC']:
     ccflags['debug'] += ['-g0']
     ccflags['opt'] += ['-O']
