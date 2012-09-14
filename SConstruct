@@ -502,7 +502,9 @@ if main['GCC']:
        not compareVersions(gcc_version, '4.4.2'):
         print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
         main.Append(CCFLAGS=['-fno-tree-vectorize'])
-    if compareVersions(gcc_version, '4.6') >= 0:
+    # c++0x support in gcc is useful already from 4.4, see
+    # http://gcc.gnu.org/projects/cxx0x.html for details
+    if compareVersions(gcc_version, '4.4') >= 0:
         main.Append(CXXFLAGS=['-std=c++0x'])
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
@@ -535,6 +537,8 @@ elif main['CLANG']:
     # of if-statements
     main.Append(CCFLAGS=['-Wno-parentheses'])
 
+    # clang 2.9 does not play well with c++0x as it ships with C++
+    # headers that produce errors, this was fixed in 3.0
     if compareVersions(clang_version, "3") >= 0:
         main.Append(CXXFLAGS=['-std=c++0x'])
 else:

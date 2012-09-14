@@ -50,9 +50,9 @@
 // clang, use unordered_map
 
 // we need to determine what is available, as in the non-c++0x case,
-// e.g. gcc >= 4.3 and <= 4.5, the containers are in the std::tr1
-// namespace, and only gcc >= 4.6 (with -std=c++0x) adds the final
-// container implementation in the std namespace
+// i.e. gcc == 4.3, the containers are in the std::tr1 namespace, and
+// only gcc >= 4.4 (with -std=c++0x) adds the final container
+// implementation in the std namespace
 
 #if defined(__clang__)
 // align with -std=c++0x only for clang >= 3.0 in CCFLAGS and also
@@ -67,9 +67,9 @@
 #define HAVE_STD_TR1_UNORDERED_MAP 1
 #endif
 #else
-// align with -std=c++0x only for gcc >= 4.6 in CCFLAGS, contrary to
+// align with -std=c++0x only for gcc >= 4.4 in CCFLAGS, contrary to
 // clang we can rely entirely on the compiler version
-#if ((__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4)
+#if ((__GNUC__ == 4 && __GNUC_MINOR__ >= 4) || __GNUC__ > 4)
 #define HAVE_STD_UNORDERED_MAP 1
 #else
 #define HAVE_STD_TR1_UNORDERED_MAP 1
@@ -101,17 +101,17 @@
 
 #if HAVE_STD_UNORDERED_MAP
 
-// clang or gcc >= 4.6
+// clang or gcc >= 4.4
 #include <unordered_map>
 #include <unordered_set>
 // note that this assumes that -std=c++0x is added to the command line
-// which is done in the SConstruct CXXFLAGS for gcc >= 4.6 and clang
+// which is done in the SConstruct CXXFLAGS for gcc >= 4.4 and clang
 // >= 3.0
 #define __hash_namespace std
 #define __hash_namespace_begin namespace std {
 #define __hash_namespace_end }
 #else
-// clang <= 3.0, gcc >= 4.3 and < 4.6
+// clang <= 3.0, gcc == 4.3
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #define __hash_namespace std::tr1

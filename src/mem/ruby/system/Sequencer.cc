@@ -214,6 +214,11 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 
     Address line_addr(pkt->getAddr());
     line_addr.makeLineAddress();
+    // Create a default entry, mapping the address to NULL, the cast is
+    // there to make gcc 4.4 happy
+    RequestTable::value_type default_entry(line_addr,
+                                           (SequencerRequest*) NULL);
+
     if ((request_type == RubyRequestType_ST) ||
         (request_type == RubyRequestType_RMW_Read) ||
         (request_type == RubyRequestType_RMW_Write) ||
@@ -231,7 +236,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         }
 
         pair<RequestTable::iterator, bool> r =
-            m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
+            m_writeRequestTable.insert(default_entry);
         if (r.second) {
             RequestTable::iterator i = r.first;
             i->second = new SequencerRequest(pkt, request_type,
@@ -251,7 +256,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         }
 
         pair<RequestTable::iterator, bool> r =
-            m_readRequestTable.insert(RequestTable::value_type(line_addr, 0));
+            m_readRequestTable.insert(default_entry);
 
         if (r.second) {
             RequestTable::iterator i = r.first;
