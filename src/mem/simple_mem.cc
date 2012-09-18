@@ -47,9 +47,11 @@
 
 using namespace std;
 
-SimpleMemory::SimpleMemory(const Params* p) :
+SimpleMemory::SimpleMemory(const SimpleMemoryParams* p) :
     AbstractMemory(p),
-    port(name() + ".port", *this), lat(p->latency), lat_var(p->latency_var)
+    port(name() + ".port", *this), lat(p->latency),
+    lat_var(p->latency_var), bandwidth(p->bandwidth),
+    isBusy(false), retryReq(false), releaseEvent(this)
 {
 }
 
@@ -89,6 +91,80 @@ SimpleMemory::doFunctionalAccess(PacketPtr pkt)
     functionalAccess(pkt);
 }
 
+bool
+SimpleMemory::recvTimingReq(PacketPtr pkt)
+{
+    if (pkt->memInhibitAsserted()) {
+        // snooper will supply based on copy of packet
+        // still target's responsibility to delete packet
+        delete pkt;
+        return true;
+    }
+
+    // we should never get a new request after committing to retry the
+    // current one, the bus violates the rule as it simply sends a
+    // retry to the next one waiting on the retry list, so simply
+    // ignore it
+    if (retryReq)
+        return false;
+
+    // if we are busy with a read or write, remember that we have to
+    // retry
+    if (isBusy) {
+        retryReq = true;
+        return false;
+    }
+
+    // update the release time according to the bandwidth limit, and
+    // do so with respect to the time it takes to finish this request
+    // rather than long term as it is the short term data rate that is
+    // limited for any real memory
+
+    // only look at reads and writes when determining if we are busy,
+    // and for how long, as it is not clear what to regulate for the
+    // other types of commands
+    if (pkt->isRead() || pkt->isWrite()) {
+        // calculate an appropriate tick to release to not exceed
+        // the bandwidth limit
+        Tick duration = pkt->getSize() * bandwidth;
+
+        // only consider ourselves busy if there is any need to wait
+        // to avoid extra events being scheduled for (infinitely) fast
+        // memories
+        if (duration != 0) {
+            schedule(releaseEvent, curTick() + duration);
+            isBusy = true;
+        }
+    }
+
+    // go ahead and deal with the packet and put the response in the
+    // queue if there is one
+    bool needsResponse = pkt->needsResponse();
+    Tick latency = doAtomicAccess(pkt);
+    // turn packet around to go back to requester if response expected
+    if (needsResponse) {
+        // doAtomicAccess() should already have turned packet into
+        // atomic response
+        assert(pkt->isResponse());
+        port.schedTimingResp(pkt, curTick() + latency);
+    } else {
+        delete pkt;
+    }
+
+    return true;
+}
+
+void
+SimpleMemory::release()
+{
+    assert(isBusy);
+    isBusy = false;
+    if (retryReq) {
+        retryReq = false;
+        port.sendRetry();
+    }
+}
+
 SlavePort &
 SimpleMemory::getSlavePort(const std::string &if_name, int idx)
 {
@@ -113,7 +189,8 @@ SimpleMemory::drain(Event *de)
 
 SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
                                      SimpleMemory& _memory)
-    : SimpleTimingPort(_name, &_memory), memory(_memory)
+    : QueuedSlavePort(_name, &_memory, queueImpl),
+      queueImpl(_memory, *this), memory(_memory)
 { }
 
 AddrRangeList
@@ -143,6 +220,12 @@ SimpleMemory::MemoryPort::recvFunctional(PacketPtr pkt)
     }
 
     pkt->popLabel();
+}
+
+bool
+SimpleMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
+{
+    return memory.recvTimingReq(pkt);
 }
 
 SimpleMemory*
