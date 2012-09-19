@@ -109,7 +109,7 @@ Profiler::wakeup()
 {
     // FIXME - avoid the repeated code
 
-    vector<integer_t> perProcCycleCount(m_num_of_sequencers);
+    vector<int64_t> perProcCycleCount(m_num_of_sequencers);
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
@@ -155,7 +155,7 @@ Profiler::setPeriodicStatsFile(const string& filename)
 }
 
 void
-Profiler::setPeriodicStatsInterval(integer_t period)
+Profiler::setPeriodicStatsInterval(int64_t period)
 {
     cout << "Recording periodic statistics every " << m_stats_period
          << " Ruby cycles" << endl;
@@ -223,7 +223,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << endl;
     }
 
-    vector<integer_t> perProcCycleCount(m_num_of_sequencers);
+    vector<int64_t> perProcCycleCount(m_num_of_sequencers);
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
@@ -419,7 +419,7 @@ Profiler::printResourceUsage(ostream& out) const
     out << "Resource Usage" << endl;
     out << "--------------" << endl;
 
-    integer_t pagesize = getpagesize(); // page size in bytes
+    int64_t pagesize = getpagesize(); // page size in bytes
     out << "page_size: " << pagesize << endl;
 
     rusage usage;

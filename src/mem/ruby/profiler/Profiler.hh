@@ -79,7 +79,7 @@ class Profiler : public SimObject
     void wakeup();
 
     void setPeriodicStatsFile(const std::string& filename);
-    void setPeriodicStatsInterval(integer_t period);
+    void setPeriodicStatsInterval(int64_t period);
 
     void printStats(std::ostream& out, bool short_stats=false);
     void printShortStats(std::ostream& out) { printStats(out, true); }
@@ -182,13 +182,13 @@ class Profiler : public SimObject
     std::vector<int64> m_cycles_executed_at_start;
 
     std::ostream* m_periodic_output_file_ptr;
-    integer_t m_stats_period;
+    int64_t m_stats_period;
 
     Time m_ruby_start;
     time_t m_real_time_start_time;
 
-    std::vector<std::vector<integer_t> > m_busyControllerCount;
-    integer_t m_busyBankCount;
+    std::vector<std::vector<int64_t> > m_busyControllerCount;
+    int64_t m_busyBankCount;
     Histogram m_multicast_retry_histogram;
 
     Histogram m_filter_action_histogram;

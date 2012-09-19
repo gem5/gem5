@@ -55,10 +55,10 @@ Address::makeNextStrideAddress(int stride)
         + RubySystem::getBlockSizeBytes()*stride;
 }
 
-integer_t
+Index
 Address::memoryModuleIndex() const
 {
-    integer_t index =
+    Index index =
         bitSelect(RubySystem::getBlockSizeBits() +
                   RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
     assert (index >= 0);
