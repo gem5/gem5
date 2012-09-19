@@ -74,7 +74,8 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
 
     // Create a throttle
     throttle_ptr = new Throttle(m_switch_id, m_throttles.size(), link_latency,
-                                bw_multiplier, net_ptr->getEndpointBandwidth());
+                                bw_multiplier, net_ptr->getEndpointBandwidth(),
+                                net_ptr);
     m_throttles.push_back(throttle_ptr);
 
     // Create one buffer per vnet (these are intermediaryQueues)
@@ -214,4 +215,3 @@ Switch::print(std::ostream& out) const
     // FIXME printing
     out << "[Switch]";
 }
-

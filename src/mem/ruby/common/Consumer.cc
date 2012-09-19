@@ -33,23 +33,11 @@
 void
 Consumer::scheduleEvent(Time timeDelta)
 {
-    scheduleEvent(g_system_ptr, timeDelta);
-}
-
-void
-Consumer::scheduleEvent(EventManager *em, Time timeDelta)
-{
-    scheduleEventAbsolute(em, timeDelta + g_system_ptr->getTime());
+    scheduleEventAbsolute(timeDelta + g_system_ptr->getTime());
 }
 
 void
 Consumer::scheduleEventAbsolute(Time timeAbs)
-{
-    scheduleEventAbsolute(g_system_ptr, timeAbs);
-}
-
-void
-Consumer::scheduleEventAbsolute(EventManager *em, Time timeAbs)
 {
     Tick evt_time = g_system_ptr->clockPeriod() * timeAbs;
     if (!alreadyScheduled(evt_time)) {

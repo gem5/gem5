@@ -44,8 +44,8 @@
 class Consumer
 {
   public:
-    Consumer()
-        : m_last_scheduled_wakeup(0), m_last_wakeup(0)
+    Consumer(EventManager *_em)
+        : m_last_scheduled_wakeup(0), m_last_wakeup(0), em(_em)
     {
     }
 
@@ -88,8 +88,6 @@ class Consumer
         m_scheduled_wakeups.erase(time);
     }
 
-    void scheduleEvent(EventManager* em, Time timeDelta);
-    void scheduleEventAbsolute(EventManager* em, Time timeAbs);
     void scheduleEvent(Time timeDelta);
     void scheduleEventAbsolute(Time timeAbs);
 
@@ -97,6 +95,7 @@ class Consumer
     Tick m_last_scheduled_wakeup;
     std::set<Tick> m_scheduled_wakeups;
     Tick m_last_wakeup;
+    EventManager *em;
 
     class ConsumerEvent : public Event
     {

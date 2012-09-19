@@ -32,7 +32,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 
 NetworkLink::NetworkLink(const Params *p)
-    : SimObject(p)
+    : SimObject(p), FlexibleConsumer(this)
 {
     linkBuffer = new flitBuffer();
     m_in_port = 0;
@@ -140,7 +140,7 @@ NetworkLink::wakeup()
     flit *t_flit = link_srcQueue->getTopFlit();
     t_flit->set_time(g_system_ptr->getTime() + m_latency);
     linkBuffer->insert(t_flit);
-    link_consumer->scheduleEvent(this, m_latency);
+    link_consumer->scheduleEvent(m_latency);
     m_link_utilized++;
     m_vc_load[t_flit->get_vc()]++;
 }

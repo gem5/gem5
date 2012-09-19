@@ -37,6 +37,7 @@
 using m5::stl_helpers::deletePointers;
 
 Switch_d::Switch_d(Router_d *router)
+    : Consumer(router)
 {
     m_router = router;
     m_num_vcs = m_router->get_num_vcs();

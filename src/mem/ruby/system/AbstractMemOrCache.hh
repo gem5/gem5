@@ -35,7 +35,6 @@
 
 class Consumer;
 class MemoryNode;
-class Message;
 
 class AbstractMemOrCache
 {

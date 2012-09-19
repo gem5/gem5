@@ -1047,7 +1047,7 @@ ${ident}_Controller::wakeup()
             g_system_ptr->getProfiler()->controllerBusy(m_machineID);
 
             // Wakeup in another cycle and try again
-            scheduleEvent(this, 1);
+            scheduleEvent(1);
             break;
         }
 ''')

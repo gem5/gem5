@@ -42,7 +42,8 @@
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
-MemoryControl::MemoryControl(const Params *p) : ClockedObject(p), m_event(this)
+MemoryControl::MemoryControl(const Params *p)
+    : ClockedObject(p), Consumer(this), m_event(this)
 {
     g_system_ptr->registerMemController(this);
 }

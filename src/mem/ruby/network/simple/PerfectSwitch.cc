@@ -49,6 +49,7 @@ operator<(const LinkOrder& l1, const LinkOrder& l2)
 }
 
 PerfectSwitch::PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr)
+    : Consumer(network_ptr)
 {
     m_virtual_networks = network_ptr->getNumberOfVirtualNetworks();
     m_switch_id = sid;

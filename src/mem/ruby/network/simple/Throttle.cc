@@ -49,14 +49,18 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 static int network_message_to_size(NetworkMessage* net_msg_ptr);
 
 Throttle::Throttle(int sID, NodeID node, int link_latency,
-                   int link_bandwidth_multiplier, int endpoint_bandwidth)
+                   int link_bandwidth_multiplier, int endpoint_bandwidth,
+                   EventManager *em)
+    : Consumer(em)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = sID;
 }
 
 Throttle::Throttle(NodeID node, int link_latency,
-                   int link_bandwidth_multiplier, int endpoint_bandwidth)
+                   int link_bandwidth_multiplier, int endpoint_bandwidth,
+                   EventManager *em)
+    : Consumer(em)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = 0;

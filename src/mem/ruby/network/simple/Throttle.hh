@@ -53,9 +53,10 @@ class Throttle : public Consumer
 {
   public:
     Throttle(int sID, NodeID node, int link_latency,
-             int link_bandwidth_multiplier, int endpoint_bandwidth);
+             int link_bandwidth_multiplier, int endpoint_bandwidth,
+             EventManager *em);
     Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier,
-             int endpoint_bandwidth);
+             int endpoint_bandwidth, EventManager *em);
     ~Throttle() {}
 
     std::string name()

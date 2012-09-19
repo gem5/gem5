@@ -41,7 +41,7 @@ using namespace std;
 using m5::stl_helpers::deletePointers;
 
 Router::Router(const Params *p)
-    : BasicRouter(p)
+    : BasicRouter(p), FlexibleConsumer(this)
 {
     m_id = p->router_id;
     m_virtual_networks = p->virt_nets;

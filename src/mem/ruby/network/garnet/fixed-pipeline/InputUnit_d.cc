@@ -35,7 +35,7 @@
 using namespace std;
 using m5::stl_helpers::deletePointers;
 
-InputUnit_d::InputUnit_d(int id, Router_d *router)
+InputUnit_d::InputUnit_d(int id, Router_d *router) : Consumer(router)
 {
     m_id = id;
     m_router = router;

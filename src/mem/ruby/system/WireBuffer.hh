@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "mem/ruby/buffers/MessageBufferNode.hh"
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
 #include "params/RubyWireBuffer.hh"
 #include "sim/sim_object.hh"
 
@@ -51,7 +51,6 @@
 // separated by a network in real systems to simplify coherence.
 /////////////////////////////////////////////////////////////////////////////
 
-class Consumer;
 class Message; 
 
 class WireBuffer : public SimObject

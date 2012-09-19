@@ -32,6 +32,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
 
 VCarbiter::VCarbiter(Router *router)
+    : Consumer(router)
 {
     m_router = router;
 }

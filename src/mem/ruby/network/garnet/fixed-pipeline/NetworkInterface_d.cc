@@ -44,6 +44,7 @@ using m5::stl_helpers::deletePointers;
 
 NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks,
                                        GarnetNetwork_d *network_ptr)
+    : Consumer(network_ptr)
 {
     m_id = id;
     m_net_ptr = network_ptr;

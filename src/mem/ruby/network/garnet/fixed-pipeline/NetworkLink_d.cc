@@ -32,7 +32,7 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 
 NetworkLink_d::NetworkLink_d(const Params *p)
-    : SimObject(p)
+    : SimObject(p), Consumer(this)
 {
     m_latency = p->link_latency;
     channel_width = p->channel_width;

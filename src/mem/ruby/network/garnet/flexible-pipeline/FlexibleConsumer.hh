@@ -38,6 +38,7 @@
 class FlexibleConsumer : public Consumer
 {
   public:
+    FlexibleConsumer(EventManager *em) : Consumer(em) {}
     virtual bool isBufferNotFull(int vc, int inport) { return true; }
     virtual void grant_vc(int out_port, int vc, Time grant_time) {}
     virtual void release_vc(int out_port, int vc, Time release_time) {}

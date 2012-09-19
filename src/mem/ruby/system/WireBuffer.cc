@@ -38,9 +38,6 @@
 
 using namespace std;
 
-class Consumer;
-
-
 // Output operator definition
 
 ostream&

@@ -42,8 +42,6 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/common/Global.hh"
-
 class MessageBuffer;
 class PerfectSwitch;
 class NetDest;
