@@ -188,9 +188,8 @@ def create_system(options, system, piobus = None, dma_ports = []):
         total_mem_size.value += dir_cntrl.directory.size.value
         dir_cntrl.directory.numa_high_bit = numa_bit
 
-    phys_mem_size = 0
-    for mem in system.memories.unproxy(system):
-        phys_mem_size += long(mem.range.second) - long(mem.range.first) + 1
+    phys_mem_size = sum(map(lambda mem: mem.range.size(),
+                            system.memories.unproxy(system)))
     assert(total_mem_size.value == phys_mem_size)
 
     ruby_profiler = RubyProfiler(ruby_system = ruby,

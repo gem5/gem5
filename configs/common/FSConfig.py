@@ -519,7 +519,9 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
-    assert(self.physmem.range.second.getValue() >= 0x200000)
+    phys_mem_size = sum(map(lambda mem: mem.range.size(),
+                            self.memories.unproxy(self)))
+    assert(phys_mem_size >= 0x200000)
 
     self.e820_table.entries = \
        [
@@ -527,7 +529,7 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
         X86E820Entry(addr = 0, size = '1MB', range_type = 2),
         # Mark the rest as available
         X86E820Entry(addr = 0x100000,
-                size = '%dB' % (self.physmem.range.second - 0x100000 + 1),
+                size = '%dB' % (phys_mem_size - 0x100000),
                 range_type = 1)
         ]
 

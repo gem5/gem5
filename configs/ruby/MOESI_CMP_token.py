@@ -155,10 +155,9 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         l2_cntrl_nodes.append(l2_cntrl)
 
         cntrl_count += 1
-        
-    phys_mem_size = 0
-    for mem in system.memories.unproxy(system):
-        phys_mem_size += long(mem.range.second) - long(mem.range.first) + 1
+
+    phys_mem_size = sum(map(lambda mem: mem.range.size(),
+                            system.memories.unproxy(system)))
     mem_module_size = phys_mem_size / options.num_dirs
 
     for i in xrange(options.num_dirs):

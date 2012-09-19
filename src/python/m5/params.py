@@ -549,86 +549,64 @@ class Addr(CheckedInt):
         else:
             return self.value + other
 
+class AddrRange(ParamValue):
+    cxx_type = 'Range<Addr>'
 
-class MetaRange(MetaParamValue):
-    def __init__(cls, name, bases, dict):
-        super(MetaRange, cls).__init__(name, bases, dict)
-        if name == 'Range':
-            return
-        cls.cxx_type = 'Range< %s >' % cls.type.cxx_type
-
-class Range(ParamValue):
-    __metaclass__ = MetaRange
-    type = Int # default; can be overridden in subclasses
     def __init__(self, *args, **kwargs):
         def handle_kwargs(self, kwargs):
             if 'end' in kwargs:
-                self.second = self.type(kwargs.pop('end'))
+                self.end = Addr(kwargs.pop('end'))
             elif 'size' in kwargs:
-                self.second = self.first + self.type(kwargs.pop('size')) - 1
+                self.end = self.start + Addr(kwargs.pop('size')) - 1
             else:
                 raise TypeError, "Either end or size must be specified"
 
         if len(args) == 0:
-            self.first = self.type(kwargs.pop('start'))
+            self.start = Addr(kwargs.pop('start'))
             handle_kwargs(self, kwargs)
 
         elif len(args) == 1:
             if kwargs:
-                self.first = self.type(args[0])
+                self.start = Addr(args[0])
                 handle_kwargs(self, kwargs)
-            elif isinstance(args[0], Range):
-                self.first = self.type(args[0].first)
-                self.second = self.type(args[0].second)
             elif isinstance(args[0], (list, tuple)):
-                self.first = self.type(args[0][0])
-                self.second = self.type(args[0][1])
+                self.start = Addr(args[0][0])
+                self.end = Addr(args[0][1])
             else:
-                self.first = self.type(0)
-                self.second = self.type(args[0]) - 1
+                self.start = Addr(0)
+                self.end = Addr(args[0]) - 1
 
         elif len(args) == 2:
-            self.first = self.type(args[0])
-            self.second = self.type(args[1])
+            self.start = Addr(args[0])
+            self.end = Addr(args[1])
         else:
             raise TypeError, "Too many arguments specified"
 
         if kwargs:
-            raise TypeError, "too many keywords: %s" % kwargs.keys()
+            raise TypeError, "Too many keywords: %s" % kwargs.keys()
 
     def __str__(self):
-        return '%s:%s' % (self.first, self.second)
+        return '%s:%s' % (self.start, self.end)
+
+    def size(self):
+        return long(self.end) - long(self.start) + 1
 
     @classmethod
     def cxx_predecls(cls, code):
-        cls.type.cxx_predecls(code)
+        Addr.cxx_predecls(code)
         code('#include "base/range.hh"')
 
     @classmethod
     def swig_predecls(cls, code):
-        cls.type.swig_predecls(code)
+        Addr.swig_predecls(code)
         code('%import "python/swig/range.i"')
-
-class AddrRange(Range):
-    type = Addr
 
     def getValue(self):
         from m5.internal.range import AddrRange
 
         value = AddrRange()
-        value.start = long(self.first)
-        value.end = long(self.second)
-        return value
-
-class TickRange(Range):
-    type = Tick
-
-    def getValue(self):
-        from m5.internal.range import TickRange
-
-        value = TickRange()
-        value.start = long(self.first)
-        value.end = long(self.second)
+        value.start = long(self.start)
+        value.end = long(self.end)
         return value
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
@@ -1643,7 +1621,7 @@ __all__ = ['Param', 'VectorParam',
            'MemorySize', 'MemorySize32',
            'Latency', 'Frequency', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
-           'Range', 'AddrRange', 'TickRange',
+           'AddrRange',
            'MaxAddr', 'MaxTick', 'AllMemory',
            'Time',
            'NextEthernetAddr', 'NULL',
