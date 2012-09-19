@@ -76,29 +76,13 @@ AbstractMemory::AbstractMemory(const Params *p) :
     if (params()->null)
         return;
 
-    if (params()->file == "") {
-        int map_flags = MAP_ANON | MAP_PRIVATE;
-        pmemAddr = (uint8_t *)mmap(NULL, size(),
-                                   PROT_READ | PROT_WRITE, map_flags, -1, 0);
-    } else {
-        int map_flags = MAP_PRIVATE;
-        int fd = open(params()->file.c_str(), O_RDONLY);
-        long _size = lseek(fd, 0, SEEK_END);
-        if (_size != range.size()) {
-            fatal("Specified size %d does not match file %s %d\n",
-                  range.size(), params()->file, _size);
-        }
-        lseek(fd, 0, SEEK_SET);
-        pmemAddr = (uint8_t *)mmap(NULL, roundUp(_size, sysconf(_SC_PAGESIZE)),
-                                   PROT_READ | PROT_WRITE, map_flags, fd, 0);
-    }
+    int map_flags = MAP_ANON | MAP_PRIVATE;
+    pmemAddr = (uint8_t *)mmap(NULL, size(),
+                               PROT_READ | PROT_WRITE, map_flags, -1, 0);
 
     if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
-        if (params()->file == "")
-            fatal("Could not mmap!\n");
-        else
-            fatal("Could not find file: %s\n", params()->file);
+        fatal("Could not mmap!\n");
     }
 
     //If requested, initialize all the memory to 0

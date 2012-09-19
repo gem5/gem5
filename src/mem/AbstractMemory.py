@@ -46,7 +46,6 @@ class AbstractMemory(MemObject):
     type = 'AbstractMemory'
     abstract = True
     range = Param.AddrRange(AddrRange('128MB'), "Address range")
-    file = Param.String('', "Memory-mapped file")
     null = Param.Bool(False, "Do not store data, always return zero")
     zero = Param.Bool(False, "Initialize memory with zeros")
 
