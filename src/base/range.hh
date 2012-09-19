@@ -32,21 +32,6 @@
 #ifndef __BASE_RANGE_HH__
 #define __BASE_RANGE_HH__
 
-#include <cassert>
-#include <iostream>
-#include <string>
-
-/**
- * @param s range string
- * EndExclusive Ranges are in the following format:
- * @verbatim
- *    <range> := {<start_val>}:{<end>}
- *    <start>   := <end_val> | +<delta>
- * @endverbatim
- */
-template <class T>
-bool __parse_range(const std::string &s, T &start, T &end);
-
 template <class T>
 struct Range
 {
@@ -65,12 +50,6 @@ struct Range
         : start(r.start), end(r.end)
     {}
 
-    Range(const std::string &s)
-    {
-        if (!__parse_range(s, start, end))
-            invalidate();
-    }
-
     template <class U>
     const Range<T> &operator=(const Range<U> &r)
     {
@@ -87,25 +66,10 @@ struct Range
         return *this;
     }
 
-    const Range &operator=(const std::string &s)
-    {
-        if (!__parse_range(s, start, end))
-            invalidate();
-        return *this;
-    }
-
     void invalidate() { start = 1; end = 0; }
     T size() const { return end - start + 1; }
     bool valid() const { return start < end; }
 };
-
-template <class T>
-inline std::ostream &
-operator<<(std::ostream &o, const Range<T> &r)
-{
-    o << '[' << r.start << "," << r.end << ']';
-    return o;
-}
 
 template <class T>
 inline Range<T>

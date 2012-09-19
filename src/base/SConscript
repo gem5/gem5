@@ -52,7 +52,6 @@ Source('output.cc')
 Source('pollevent.cc')
 Source('random.cc')
 Source('random_mt.cc')
-Source('range.cc')
 if env['TARGET_ISA'] != 'no':
     Source('remote_gdb.cc')
 Source('socket.cc')
