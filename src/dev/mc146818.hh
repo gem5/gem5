@@ -33,7 +33,6 @@
 #ifndef __DEV_MC146818_HH__
 #define __DEV_MC146818_HH__
 
-#include "base/range.hh"
 #include "sim/eventq.hh"
 
 /** Real-Time Clock (MC146818) */

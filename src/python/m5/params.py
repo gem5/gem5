@@ -550,7 +550,7 @@ class Addr(CheckedInt):
             return self.value + other
 
 class AddrRange(ParamValue):
-    cxx_type = 'Range<Addr>'
+    cxx_type = 'AddrRange'
 
     def __init__(self, *args, **kwargs):
         def handle_kwargs(self, kwargs):
@@ -594,20 +594,18 @@ class AddrRange(ParamValue):
     @classmethod
     def cxx_predecls(cls, code):
         Addr.cxx_predecls(code)
-        code('#include "base/range.hh"')
+        code('#include "base/addr_range.hh"')
 
     @classmethod
     def swig_predecls(cls, code):
         Addr.swig_predecls(code)
-        code('%import "python/swig/range.i"')
 
     def getValue(self):
+        # Go from the Python class to the wrapped C++ class generated
+        # by swig
         from m5.internal.range import AddrRange
 
-        value = AddrRange()
-        value.start = long(self.start)
-        value.end = long(self.end)
-        return value
+        return AddrRange(long(self.start), long(self.end))
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and

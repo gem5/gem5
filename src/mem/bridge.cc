@@ -57,7 +57,7 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
                                          Bridge& _bridge,
                                          BridgeMasterPort& _masterPort,
                                          Cycles _delay, int _resp_limit,
-                                         std::vector<Range<Addr> > _ranges)
+                                         std::vector<AddrRange> _ranges)
     : SlavePort(_name, &_bridge), bridge(_bridge), masterPort(_masterPort),
       delay(_delay), ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), retryReq(false),

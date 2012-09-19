@@ -41,7 +41,6 @@
 #define __DEV_ARM_RV_HH__
 
 #include "base/bitunion.hh"
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "params/RealViewCtrl.hh"
 

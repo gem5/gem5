@@ -38,7 +38,6 @@
 
 #include <vector>
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "params/DumbTOD.hh"
 

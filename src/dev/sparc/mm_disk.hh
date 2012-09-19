@@ -36,7 +36,6 @@
 #ifndef __DEV_SPARC_MM_DISK_HH__
 #define __DEV_SPARC_MM_DISK_HH__
 
-#include "base/range.hh"
 #include "dev/disk_image.hh"
 #include "dev/io_device.hh"
 #include "params/MmDisk.hh"

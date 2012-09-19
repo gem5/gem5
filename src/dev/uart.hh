@@ -35,7 +35,6 @@
 #ifndef __UART_HH__
 #define __UART_HH__
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "params/Uart.hh"
 

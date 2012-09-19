@@ -49,7 +49,6 @@
 #ifndef __DEV_ARM_AMBA_DEVICE_HH__
 #define __DEV_ARM_AMBA_DEVICE_HH__
 
-#include "base/range.hh"
 #include "dev/arm/gic.hh"
 #include "dev/dma_device.hh"
 #include "dev/io_device.hh"

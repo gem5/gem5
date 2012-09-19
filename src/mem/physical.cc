@@ -64,7 +64,6 @@ PhysicalMemory::PhysicalMemory(const vector<AbstractMemory*>& _memories) :
                 "Skipping memory %s that is not in global address map\n",
                 (*m)->name());
     }
-    rangeCache.invalidate();
 }
 
 bool
@@ -73,8 +72,7 @@ PhysicalMemory::isMemAddr(Addr addr) const
     // see if the address is within the last matched range
     if (addr != rangeCache) {
         // lookup in the interval tree
-        range_map<Addr, AbstractMemory*>::const_iterator r =
-            addrMap.find(addr);
+        AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.find(addr);
         if (r == addrMap.end()) {
             // not in the cache, and not in the tree
             return false;
@@ -110,7 +108,7 @@ PhysicalMemory::access(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    range_map<Addr, AbstractMemory*>::const_iterator m = addrMap.find(addr);
+    AddrRangeMap<AbstractMemory*>::const_iterator m = addrMap.find(addr);
     assert(m != addrMap.end());
     m->second->access(pkt);
 }
@@ -120,7 +118,7 @@ PhysicalMemory::functionalAccess(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    range_map<Addr, AbstractMemory*>::const_iterator m = addrMap.find(addr);
+    AddrRangeMap<AbstractMemory*>::const_iterator m = addrMap.find(addr);
     assert(m != addrMap.end());
     m->second->functionalAccess(pkt);
 }

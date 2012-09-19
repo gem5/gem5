@@ -54,8 +54,7 @@
 #include <list>
 #include <set>
 
-#include "base/range.hh"
-#include "base/range_map.hh"
+#include "base/addr_range_map.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "params/BaseBus.hh"
@@ -233,9 +232,9 @@ class BaseBus : public MemObject
     /** the width of the bus in bytes */
     int width;
 
-    typedef range_map<Addr, PortID>::iterator PortMapIter;
-    typedef range_map<Addr, PortID>::const_iterator PortMapConstIter;
-    range_map<Addr, PortID> portMap;
+    typedef AddrRangeMap<PortID>::iterator PortMapIter;
+    typedef AddrRangeMap<PortID>::const_iterator PortMapConstIter;
+    AddrRangeMap<PortID> portMap;
 
     AddrRangeList defaultRange;
 

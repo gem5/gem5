@@ -37,7 +37,6 @@
 #ifndef __DEV_MALTA_IO_HH__
 #define __DEV_MALTA_IO_HH__
 
-#include "base/range.hh"
 #include "dev/mips/malta.hh"
 #include "dev/intel_8254_timer.hh"
 #include "dev/io_device.hh"

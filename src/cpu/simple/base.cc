@@ -51,7 +51,6 @@
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
-#include "base/range.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"

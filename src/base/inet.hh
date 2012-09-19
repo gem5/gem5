@@ -39,7 +39,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/range.hh"
 #include "base/types.hh"
 #include "dev/etherpkt.hh"
 #include "dnet/os.h"

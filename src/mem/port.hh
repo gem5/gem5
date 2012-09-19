@@ -52,7 +52,7 @@
 
 #include <list>
 
-#include "base/range.hh"
+#include "base/addr_range.hh"
 #include "mem/packet.hh"
 
 /**
@@ -62,9 +62,9 @@
  * defined.
  */
 
-typedef std::list<Range<Addr> > AddrRangeList;
-typedef std::list<Range<Addr> >::iterator AddrRangeIter;
-typedef std::list<Range<Addr> >::const_iterator AddrRangeConstIter;
+typedef std::list<AddrRange> AddrRangeList;
+typedef std::list<AddrRange>::iterator AddrRangeIter;
+typedef std::list<AddrRange>::const_iterator AddrRangeConstIter;
 
 class MemObject;
 

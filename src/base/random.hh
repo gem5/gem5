@@ -42,7 +42,6 @@
 #include <ios>
 #include <string>
 
-#include "base/range.hh"
 #include "base/types.hh"
 
 class Checkpoint;
@@ -208,13 +207,6 @@ class Random
     random(T min, T max)
     {
         return _random(min, max);
-    }
-
-    template <typename T>
-    T
-    random(const Range<T> &range)
-    {
-        return _random(range.start, range.end);
     }
 
     // [0,1]

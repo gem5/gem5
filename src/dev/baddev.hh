@@ -36,7 +36,6 @@
 #ifndef __DEV_BADDEV_HH__
 #define __DEV_BADDEV_HH__
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "params/BadDevice.hh"
 

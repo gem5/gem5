@@ -371,9 +371,9 @@ AddrRangeList
 X86ISA::Interrupts::getAddrRanges() const
 {
     AddrRangeList ranges;
-    Range<Addr> range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
-                                x86LocalAPICAddress(initialApicId, 0) + 
-                                PageBytes);
+    AddrRange range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
+                              x86LocalAPICAddress(initialApicId, 0) +
+                              PageBytes);
     ranges.push_back(range);
     return ranges;
 }

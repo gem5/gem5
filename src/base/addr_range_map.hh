@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,36 +38,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
-#ifndef __BASE_RANGE_MAP_HH__
-#define __BASE_RANGE_MAP_HH__
+#ifndef __BASE_ADDR_RANGE_MAP_HH__
+#define __BASE_ADDR_RANGE_MAP_HH__
 
 #include <map>
 #include <utility>
 
-#include "base/range.hh"
+#include "base/addr_range.hh"
 
 /**
- * The range_map uses an STL map to implement an interval tree. The
- * type of both the key (range) and the value are template
- * parameters. It can, for example, be used for address decoding,
- * using a range of addresses to map to ports.
+ * The AddrRangeMap uses an STL map to implement an interval tree for
+ * address decoding. The value stored is a template type and can be
+ * e.g. a port identifier, or a pointer.
  */
-template <class T,class V>
-class range_map
+template <typename V>
+class AddrRangeMap
 {
   private:
-    typedef std::map<Range<T>,V> RangeMap;
+    typedef std::map<AddrRange, V> RangeMap;
     RangeMap tree;
 
   public:
     typedef typename RangeMap::iterator iterator;
     typedef typename RangeMap::const_iterator const_iterator;
 
-    template <class U>
     const_iterator
-    find(const Range<U> &r) const
+    find(const AddrRange &r) const
     {
         const_iterator i;
 
@@ -77,9 +88,8 @@ class range_map
         return tree.end();
     }
 
-    template <class U>
     iterator
-    find(const Range<U> &r)
+    find(const AddrRange &r)
     {
         iterator i;
 
@@ -101,23 +111,20 @@ class range_map
         return tree.end();
     }
 
-    template <class U>
     const_iterator
-    find(const U &r) const
+    find(const Addr &r) const
     {
         return find(RangeSize(r, 1));
     }
 
-    template <class U>
     iterator
-    find(const U &r)
+    find(const Addr &r)
     {
         return find(RangeSize(r, 1));
     }
 
-    template <class U>
     bool
-    intersect(const Range<U> &r)
+    intersect(const AddrRange &r)
     {
         iterator i;
         i = find(r);
@@ -126,9 +133,8 @@ class range_map
         return false;
     }
 
-    template <class U,class W>
     iterator
-    insert(const Range<U> &r, const W d)
+    insert(const AddrRange &r, const V& d)
     {
         if (intersect(r))
             return tree.end();
@@ -136,8 +142,8 @@ class range_map
         return tree.insert(std::make_pair(r, d)).first;
     }
 
-    size_t
-    erase(T k)
+    std::size_t
+    erase(Addr k)
     {
         return tree.erase(k);
     }
@@ -184,7 +190,7 @@ class range_map
         return tree.end();
     }
 
-    size_t
+    std::size_t
     size() const
     {
         return tree.size();
@@ -197,4 +203,4 @@ class range_map
     }
 };
 
-#endif //__BASE_RANGE_MAP_HH__
+#endif //__BASE_ADDR_RANGE_MAP_HH__

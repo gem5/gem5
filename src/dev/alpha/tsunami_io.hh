@@ -37,7 +37,6 @@
 #ifndef __DEV_TSUNAMI_IO_HH__
 #define __DEV_TSUNAMI_IO_HH__
 
-#include "base/range.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/intel_8254_timer.hh"
 #include "dev/io_device.hh"

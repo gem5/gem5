@@ -355,7 +355,6 @@ BaseBus::findPort(Addr addr)
 void
 BaseBus::recvRangeChange(PortID master_port_id)
 {
-    AddrRangeList ranges;
     AddrRangeIter iter;
 
     if (inRecvRangeChange.count(master_port_id))
@@ -394,7 +393,7 @@ BaseBus::recvRangeChange(PortID master_port_id)
         }
 
         // get the address ranges of the connected slave port
-        ranges = port->getAddrRanges();
+        AddrRangeList ranges = port->getAddrRanges();
 
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",

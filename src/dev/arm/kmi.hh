@@ -51,7 +51,6 @@
 #include <list>
 
 #include "base/vnc/vncserver.hh"
-#include "base/range.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 

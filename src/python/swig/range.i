@@ -31,15 +31,12 @@
 %module(package="m5.internal") range
 
 %{
-#include "base/range.hh"
 #include "base/types.hh"
+#include "base/addr_range.hh"
 %}
 
 %include <stdint.i>
 
 %rename(assign) *::operator=;
-%include "base/range.hh"
 %include "base/types.hh"
-
-%template(AddrRange) Range<Addr>;
-%template(TickRange) Range<Tick>;
+%include "base/addr_range.hh"

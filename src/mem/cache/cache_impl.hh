@@ -51,7 +51,6 @@
  */
 
 #include "base/misc.hh"
-#include "base/range.hh"
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"

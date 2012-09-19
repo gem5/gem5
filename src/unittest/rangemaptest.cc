@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -31,46 +43,38 @@
 #include <cassert>
 #include <iostream>
 
-#include "base/range_map.hh"
-#include "base/types.hh"
+#include "base/addr_range_map.hh"
 
 using namespace std;
 
 int
 main()
 {
-    range_map<Addr,int> r;
+    AddrRangeMap<int> r;
 
-    range_map<Addr,int>::iterator i;
+    AddrRangeMap<int>::iterator i;
 
-    i = r.insert(RangeIn<Addr>(10,40),5);
+    i = r.insert(RangeIn(10, 40), 5);
     assert(i != r.end());
-    i = r.insert(RangeIn<Addr>(60,90),3);
-    assert(i != r.end());
-
-    i = r.find(RangeIn(20,30));
-    assert(i != r.end());
-    cout << i->first << " " << i->second << endl;
-
-    i = r.find(RangeIn(55,55));
-    assert(i == r.end());
-
-    i = r.insert(RangeIn<Addr>(0,12),1);
-    assert(i == r.end());
-
-    i = r.insert(RangeIn<Addr>(0,9),1);
+    i = r.insert(RangeIn(60, 90), 3);
     assert(i != r.end());
 
-    i = r.find(RangeIn(20,30));
+    i = r.find(RangeIn(20, 30));
     assert(i != r.end());
     cout << i->first << " " << i->second << endl;
 
+    i = r.find(RangeIn(55, 55));
+    assert(i == r.end());
+
+    i = r.insert(RangeIn(0, 12), 1);
+    assert(i == r.end());
+
+    i = r.insert(RangeIn(0, 9), 1);
+    assert(i != r.end());
+
+    i = r.find(RangeIn(20, 30));
+    assert(i != r.end());
+    cout << i->first << " " << i->second << endl;
+
+    return 0;
 }
-
-
-
-
-
-
-
-

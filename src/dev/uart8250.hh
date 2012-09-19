@@ -35,7 +35,6 @@
 #ifndef __DEV_UART8250_HH__
 #define __DEV_UART8250_HH__
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
 #include "params/Uart8250.hh"

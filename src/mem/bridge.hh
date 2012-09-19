@@ -193,7 +193,7 @@ class Bridge : public MemObject
          */
         BridgeSlavePort(const std::string& _name, Bridge& _bridge,
                         BridgeMasterPort& _masterPort, Cycles _delay,
-                        int _resp_limit, std::vector<Range<Addr> > _ranges);
+                        int _resp_limit, std::vector<AddrRange> _ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule

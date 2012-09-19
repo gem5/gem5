@@ -40,7 +40,6 @@
 #ifndef __DEV_ARM_SP804_HH__
 #define __DEV_ARM_SP804_HH__
 
-#include "base/range.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Sp804.hh"
 

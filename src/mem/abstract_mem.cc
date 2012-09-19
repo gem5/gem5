@@ -85,9 +85,8 @@ AbstractMemory::AbstractMemory(const Params *p) :
         int fd = open(params()->file.c_str(), O_RDONLY);
         long _size = lseek(fd, 0, SEEK_END);
         if (_size != range.size()) {
-            warn("Specified size %d does not match file %s %d\n", range.size(),
-                 params()->file, _size);
-            range = RangeSize(range.start, _size);
+            fatal("Specified size %d does not match file %s %d\n",
+                  range.size(), params()->file, _size);
         }
         lseek(fd, 0, SEEK_SET);
         pmemAddr = (uint8_t *)mmap(NULL, roundUp(_size, sysconf(_SC_PAGESIZE)),
@@ -222,7 +221,7 @@ AbstractMemory::regStats()
     bwTotal = (bytesRead + bytesWritten) / simSeconds;
 }
 
-Range<Addr>
+AddrRange
 AbstractMemory::getAddrRange() const
 {
     return range;

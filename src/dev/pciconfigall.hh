@@ -37,7 +37,6 @@
 #ifndef __PCICONFIGALL_HH__
 #define __PCICONFIGALL_HH__
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/pcireg.h"
 #include "params/PciConfigAll.hh"

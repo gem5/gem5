@@ -40,7 +40,7 @@
 #ifndef __PHYSICAL_MEMORY_HH__
 #define __PHYSICAL_MEMORY_HH__
 
-#include "base/range_map.hh"
+#include "base/addr_range_map.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet.hh"
 
@@ -55,10 +55,10 @@ class PhysicalMemory
   private:
 
     // Global address map
-    range_map<Addr, AbstractMemory* > addrMap;
+    AddrRangeMap<AbstractMemory*> addrMap;
 
     // a mutable cache for the last range that matched an address
-    mutable Range<Addr> rangeCache;
+    mutable AddrRange rangeCache;
 
     // All address-mapped memories
     std::vector<AbstractMemory*> memories;

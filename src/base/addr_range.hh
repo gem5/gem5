@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,51 +37,90 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Andreas Hansson
  */
 
-#ifndef __DEV_ARM_A9SCU_HH__
-#define __DEV_ARM_A9SCU_HH__
+#ifndef __BASE_ADDR_RANGE_HH__
+#define __BASE_ADDR_RANGE_HH__
 
-#include "dev/io_device.hh"
-#include "params/A9SCU.hh"
+#include "base/types.hh"
 
-/** @file
- * This defines the snoop control unit register on an A9
- */
-
-class A9SCU : public BasicPioDevice
+class AddrRange
 {
-  protected:
-    enum {
-        Control     = 0x00,
-        Config      = 0x04,
-    };
 
   public:
-    typedef A9SCUParams Params;
 
-    /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
-    A9SCU(Params *p);
+    Addr start;
+    Addr end;
 
-    /**
-     * Handle a read to the device
-     * @param pkt The memory request.
-     * @param data Where to put the data.
-     */
-    virtual Tick read(PacketPtr pkt);
+    AddrRange()
+        : start(1), end(0)
+    {}
 
-    /**
-     * All writes are panic.
-     * @param pkt The memory request.
-     * @param data the data
-     */
-    virtual Tick write(PacketPtr pkt);
+    AddrRange(Addr _start, Addr _end)
+        : start(_start), end(_end)
+    {}
+
+    AddrRange(const std::pair<Addr, Addr> &r)
+        : start(r.first), end(r.second)
+    {}
+
+    Addr size() const { return end - start + 1; }
+    bool valid() const { return start < end; }
 };
 
+/**
+ * Keep the operators away from SWIG.
+ */
+#ifndef SWIG
 
-#endif // __DEV_ARM_A9SCU_HH__
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 is less than range2 and does not overlap range1.
+ */
+inline bool
+operator<(const AddrRange& range1, const AddrRange& range2)
+{
+    return range1.start < range2.start;
+}
 
+/**
+ * @param addr address in the range
+ * @param range range compared against.
+ * @return indicates that the address is not within the range.
+ */
+inline bool
+operator!=(const Addr& addr, const AddrRange& range)
+{
+    return addr < range.start || addr > range.end;
+}
+
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * @return indicates that position pos is within the range.
+ */
+inline bool
+operator==(const AddrRange& range, const Addr& addr)
+{
+    return addr >= range.start && addr <= range.end;
+}
+
+inline AddrRange
+RangeEx(Addr start, Addr end)
+{ return std::make_pair(start, end - 1); }
+
+inline AddrRange
+RangeIn(Addr start, Addr end)
+{ return std::make_pair(start, end); }
+
+inline AddrRange
+RangeSize(Addr start, Addr size)
+{ return std::make_pair(start, start + size - 1); }
+
+#endif // SWIG
+
+#endif // __BASE_ADDR_RANGE_HH__

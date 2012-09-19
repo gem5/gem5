@@ -37,7 +37,6 @@
 
 #include <string>
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 // #include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"

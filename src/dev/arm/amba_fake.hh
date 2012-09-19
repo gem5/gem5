@@ -51,7 +51,6 @@
 #ifndef __DEV_ARM_AMBA_FAKE_H__
 #define __DEV_ARM_AMBA_FAKE_H__
 
-#include "base/range.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/AmbaFake.hh"
 

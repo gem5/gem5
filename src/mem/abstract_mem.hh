@@ -68,7 +68,7 @@ class AbstractMemory : public MemObject
   protected:
 
     // Address range of this memory
-    Range<Addr> range;
+    AddrRange range;
 
     // Pointer to host memory used to implement this memory
     uint8_t* pmemAddr;
@@ -209,7 +209,7 @@ class AbstractMemory : public MemObject
      *
      * @return a single contigous address range
      */
-    Range<Addr> getAddrRange() const;
+    AddrRange getAddrRange() const;
 
     /**
      * Get the memory size.

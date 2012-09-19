@@ -48,7 +48,6 @@
 #ifndef __DEV_ARM_PL011_H__
 #define __DEV_ARM_PL011_H__
 
-#include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
 #include "params/Pl011.hh"
