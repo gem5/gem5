@@ -483,8 +483,8 @@ BaseBus::findBlockSize()
     if (max_bs == 0)
         max_bs = defaultBlockSize;
 
-    if (max_bs != 64)
-        warn_once("Blocksize found to not be 64... hmm... probably not.\n");
+    if (max_bs != 64 && max_bs != 32)
+        warn_once("Blocksize found to not be 32 or 64... hmm... probably not.\n");
     cachedBlockSize = max_bs;
     cachedBlockSizeValid = true;
     return max_bs;
