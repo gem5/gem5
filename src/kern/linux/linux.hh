@@ -225,6 +225,7 @@ class Linux : public OperatingSystem
     static const unsigned TGT_FUTEX_WAKE  = 1;
     static const unsigned TGT_EAGAIN      = 11;
     static const unsigned TGT_EWOULDBLOCK = TGT_EAGAIN;
+    static const unsigned TGT_FUTEX_PRIVATE_FLAG = 128;
 
 };  // class Linux
 
