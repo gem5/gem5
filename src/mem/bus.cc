@@ -61,15 +61,7 @@ BaseBus::BaseBus(const BaseBusParams *p)
       useDefaultRange(p->use_default_range),
       defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
-{
-    //width, clock period, and header cycles must be positive
-    if (width <= 0)
-        fatal("Bus width must be positive\n");
-    if (clock <= 0)
-        fatal("Bus clock period must be positive\n");
-    if (headerCycles <= 0)
-        fatal("Number of header cycles must be positive\n");
-}
+{}
 
 BaseBus::~BaseBus()
 {

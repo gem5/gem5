@@ -228,9 +228,9 @@ class BaseBus : public MemObject
     };
 
     /** cycles of overhead per transaction */
-    int headerCycles;
+    const Cycles headerCycles;
     /** the width of the bus in bytes */
-    int width;
+    const uint32_t width;
 
     typedef AddrRangeMap<PortID>::iterator PortMapIter;
     typedef AddrRangeMap<PortID>::const_iterator PortMapConstIter;
@@ -346,10 +346,10 @@ class BaseBus : public MemObject
        address not handled by another port and not in default device's
        range will cause a fatal error.  If false, just send all
        addresses not handled by another port to default device. */
-    bool useDefaultRange;
+    const bool useDefaultRange;
 
-    unsigned defaultBlockSize;
-    unsigned cachedBlockSize;
+    const uint32_t defaultBlockSize;
+    uint32_t cachedBlockSize;
     bool cachedBlockSizeValid;
 
     BaseBus(const BaseBusParams *p);

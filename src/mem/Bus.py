@@ -50,9 +50,9 @@ class BaseBus(MemObject):
     # Override the default clock
     clock = '1GHz'
     header_cycles = Param.Cycles(1, "cycles of overhead per transaction")
-    width = Param.Int(8, "bus width (bytes)")
-    block_size = Param.Int(64, "The default block size if not set by " \
-                               "any connected module")
+    width = Param.Unsigned(8, "bus width (bytes)")
+    block_size = Param.Unsigned(64, "The default block size if not set by " \
+                                    "any connected module")
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port
