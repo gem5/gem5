@@ -53,10 +53,12 @@ Source('se_translating_port_proxy.cc')
 if env['TARGET_ISA'] != 'no':
     SimObject('AbstractMemory.py')
     SimObject('SimpleMemory.py')
+    SimObject('SimpleDRAM.py')
     Source('abstract_mem.cc')
     Source('simple_mem.cc')
     Source('page_table.cc')
     Source('physical.cc')
+    Source('simple_dram.cc')
 
 DebugFlag('BaseBus')
 DebugFlag('BusAddrRanges')
@@ -67,6 +69,8 @@ CompoundFlag('Bus', ['BaseBus', 'BusAddrRanges', 'CoherentBus',
 
 DebugFlag('Bridge')
 DebugFlag('CommMonitor')
+DebugFlag('DRAM')
+DebugFlag('DRAMWR')
 DebugFlag('LLSC')
 DebugFlag('MMU')
 DebugFlag('MemoryAccess')
