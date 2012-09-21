@@ -1,0 +1,10 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Aug 25 2012 13:56:00
+gem5 started Aug 25 2012 13:58:17
+gem5 executing on Andreas-MacBook-Pro.local
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/70.tgen/arm/linux/tgen-simple-mem -re tests/run.py build/ARM/tests/opt/quick/se/70.tgen/arm/linux/tgen-simple-mem
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+Exiting @ tick 100000000000 because simulate() limit reached
