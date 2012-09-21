@@ -192,6 +192,18 @@ main.Decider('MD5-timestamp')
 main.root = Dir(".")         # The current directory (where this file lives).
 main.srcdir = Dir("src")     # The source directory
 
+main_dict_keys = main.Dictionary().keys()
+
+# Check that we have a C/C++ compiler
+if not ('CC' in main_dict_keys and 'CXX' in main_dict_keys):
+    print "No C++ compiler installed (package g++ on Ubuntu and RedHat)"
+    Exit(1)
+
+# Check that swig is present
+if not 'SWIG' in main_dict_keys:
+    print "swig is not installed (package swig on Ubuntu and RedHat)"
+    Exit(1)
+
 # add useful python code PYTHONPATH so it can be used by subprocesses
 # as well
 main.AppendENVPath('PYTHONPATH', extra_python_paths)
@@ -763,6 +775,7 @@ if main['M5_BUILD_CACHE']:
 # verify that this stuff works
 if not conf.CheckHeader('Python.h', '<>'):
     print "Error: can't find Python.h header in", py_includes
+    print "Install Python headers (package python-dev on Ubuntu and RedHat)"
     Exit(1)
 
 for lib in py_libs:
