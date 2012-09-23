@@ -85,6 +85,8 @@ Sequencer::~Sequencer()
 void
 Sequencer::wakeup()
 {
+    assert(getState() != SimObject::Draining);
+
     // Check for deadlock of any of the requests
     Time current_time = g_system_ptr->getTime();
 
@@ -207,7 +209,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         (m_writeRequestTable.size() + m_readRequestTable.size()));
 
     // See if we should schedule a deadlock check
-    if (deadlockCheckEvent.scheduled() == false) {
+    if (!deadlockCheckEvent.scheduled() && getState() != SimObject::Draining) {
         schedule(deadlockCheckEvent,
             g_system_ptr->clockPeriod() * m_deadlock_threshold + curTick());
     }

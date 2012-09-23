@@ -527,7 +527,7 @@ RubyPort::testDrainComplete()
 {
     //If we weren't able to drain before, we might be able to now.
     if (drainEvent != NULL) {
-        unsigned int drainCount = getDrainCount(drainEvent);
+        unsigned int drainCount = outstandingCount();
         DPRINTF(Drain, "Drain count: %u\n", drainCount);
         if (drainCount == 0) {
             DPRINTF(Drain, "RubyPort done draining, processing drain event\n");
@@ -539,21 +539,9 @@ RubyPort::testDrainComplete()
 }
 
 unsigned int
-RubyPort::getDrainCount(Event *de)
+RubyPort::getChildDrainCount(Event *de)
 {
     int count = 0;
-    //
-    // If the sequencer is not empty, then requests need to drain.
-    // The outstandingCount is the number of requests outstanding and thus the
-    // number of times M5's timing port will process the drain event.
-    //
-    count += outstandingCount();
-
-    DPRINTF(Config, "outstanding count %d\n", outstandingCount());
-
-    // To simplify the draining process, the sequencer's deadlock detection
-    // event should have been descheduled.
-    assert(isDeadlockEventScheduled() == false);
 
     if (pio_port.isConnected()) {
         count += pio_port.drain(de);
@@ -583,19 +571,31 @@ RubyPort::drain(Event *de)
         descheduleDeadlockEvent();
     }
 
-    int count = getDrainCount(de);
+    //
+    // If the RubyPort is not empty, then it needs to clear all outstanding
+    // requests before it should call drainEvent->process()
+    //
+    DPRINTF(Config, "outstanding count %d\n", outstandingCount());
+    bool need_drain = outstandingCount() > 0;
+
+    //
+    // Also, get the number of child ports that will also need to clear
+    // their buffered requests before they call drainEvent->process()
+    //
+    unsigned int child_drain_count = getChildDrainCount(de);
 
     // Set status
-    if (count != 0) {
+    if (need_drain) {
         drainEvent = de;
 
         DPRINTF(Drain, "RubyPort not drained\n");
         changeState(SimObject::Draining);
-        return count;
+        return child_drain_count + 1;
     }
 
+    drainEvent = NULL;
     changeState(SimObject::Drained);
-    return 0;
+    return child_drain_count;
 }
 
 void

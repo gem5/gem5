@@ -166,7 +166,7 @@ class RubyPort : public MemObject
         }
     }
 
-    unsigned int getDrainCount(Event *de);
+    unsigned int getChildDrainCount(Event *de);
 
     uint16_t m_port_id;
     uint64_t m_request_cnt;
