@@ -259,6 +259,12 @@ class DataTranslation : public BaseTLB::Translation
         }
         delete this;
     }
+
+    bool
+    squashed() const
+    {
+        return xc->isSquashed();
+    }
 };
 
 #endif // __CPU_TRANSLATION_HH__

@@ -54,6 +54,7 @@ TableWalker::TableWalker(const Params *p)
     : MemObject(p), port(this, params()->sys), drainEvent(NULL),
       tlb(NULL), currState(NULL), pending(false),
       masterId(p->sys->getMasterId(name())),
+      numSquashable(p->num_squash_per_cycle),
       doL1DescEvent(this), doL2DescEvent(this), doProcessEvent(this)
 {
     sctlr = 0;
@@ -184,9 +185,46 @@ TableWalker::processWalkWrapper()
     assert(!currState);
     assert(pendingQueue.size());
     currState = pendingQueue.front();
-    pendingQueue.pop_front();
-    pending = true;
-    processWalk();
+
+
+    if (!currState->transState->squashed()) {
+        // We've got a valid request, lets process it
+        pending = true;
+        pendingQueue.pop_front();
+        processWalk();
+        return;
+    }
+
+
+    // If the instruction that we were translating for has been
+    // squashed we shouldn't bother.
+    unsigned num_squashed = 0;
+    ThreadContext *tc = currState->tc;
+    assert(currState->transState->squashed());
+    while ((num_squashed < numSquashable) && currState &&
+            currState->transState->squashed()) {
+        pendingQueue.pop_front();
+        num_squashed++;
+
+        DPRINTF(TLB, "Squashing table walk for address %#x\n", currState->vaddr);
+
+        // finish the translation which will delete the translation object
+        currState->transState->finish(new UnimpFault("Squashed Inst"),
+                currState->req, currState->tc, currState->mode);
+
+        // delete the current request
+        delete currState;
+
+        // peak at the next one
+        if (pendingQueue.size())
+            currState = pendingQueue.front();
+        else
+            currState = NULL;
+    }
+
+    // if we've still got pending translations schedule more work
+    nextWalk(tc);
+    currState = NULL;
 }
 
 Fault

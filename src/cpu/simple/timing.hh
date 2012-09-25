@@ -269,6 +269,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeDataAccess(PacketPtr pkt);
     void advanceInst(Fault fault);
 
+    /** This function is used by the page table walker to determine if it could
+     * translate the a pending request or if the underlying request has been
+     * squashed. This always returns false for the simple timing CPU as it never
+     * executes any instructions speculatively.
+     * @ return Is the current instruction squashed?
+     */
+    bool isSquashed() const { return false; }
+
     /**
      * Print state of address in memory system via PrintReq (for
      * debugging).

@@ -47,6 +47,8 @@ class ArmTableWalker(MemObject):
     cxx_class = 'ArmISA::TableWalker'
     port = MasterPort("Port for TableWalker to do walk the translation with")
     sys = Param.System(Parent.any, "system object parameter")
+    num_squash_per_cycle = Param.Unsigned(2,
+            "Number of outstanding walks that can be squashed per cycle")
 
 class ArmTLB(SimObject):
     type = 'ArmTLB'
