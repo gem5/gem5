@@ -684,16 +684,33 @@ def CheckLeading(context):
     context.Result(ret)
     return ret
 
+# Test for the presence of C++11 static asserts. If the compiler lacks
+# support for static asserts, base/compiler.hh enables a macro that
+# removes any static asserts in the code.
+def CheckStaticAssert(context):
+    context.Message("Checking for C++11 static_assert support...")
+    ret = context.TryCompile('''
+        static_assert(1, "This assert is always true");
+        ''', extension=".cc")
+    context.env.Append(HAVE_STATIC_ASSERT=ret)
+    context.Result(ret)
+    return ret
+
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(main,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'),
-                 custom_tests = { 'CheckLeading' : CheckLeading })
+                 custom_tests = { 'CheckLeading' : CheckLeading,
+                                  'CheckStaticAssert' : CheckStaticAssert,
+                                })
 
 # Check for leading underscores.  Don't really need to worry either
 # way so don't need to check the return code.
 conf.CheckLeading()
+
+# Check for C++11 features we want to use if they exist
+conf.CheckStaticAssert()
 
 # Check if we should compile a 64 bit binary on Mac OS X/Darwin
 try:
@@ -923,7 +940,7 @@ sticky_vars.AddVariables(
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP',
                 'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'PROTOCOL',
-               ]
+                'HAVE_STATIC_ASSERT']
 
 ###################################################
 #

@@ -31,6 +31,8 @@
 #ifndef __BASE_COMPILER_HH__
 #define __BASE_COMPILER_HH__
 
+#include "config/have_static_assert.hh"
+
 //http://msdn2.microsoft.com/en-us/library/ms937669.aspx
 //http://msdn2.microsoft.com/en-us/library/aa448724.aspx
 //http://docs.sun.com/source/819-3688/sun.specific.html#marker-998278
@@ -54,6 +56,34 @@
 #define M5_NO_INLINE __attribute__ ((__noinline__))
 #else
 #error "Need to define compiler options in base/compiler.hh"
+#endif
+
+/*
+ * Define a compatibility macro that emulates the behavior of
+ * static_assert using template magic if the compiler doesn't have
+ * native support.
+ */
+#if !HAVE_STATIC_ASSERT
+
+template<bool>
+struct static_assert_failure;
+
+template<>
+struct static_assert_failure<false> {};
+
+/* The following macro causes the compiler to evaluate the size of the
+ * static_assert_failure struct. The templates are designed so that
+ * only static_assert_failure<false> evaluates to a proper size, while
+ * static_assert_failure<true> generates a compile time error.
+ */
+#define static_assert(expr, msg)                                        \
+    namespace ns_static_assert {                                        \
+        enum {                                                          \
+            static_assert_ ## __LINE__ =                                \
+                sizeof(static_assert_failure<!(expr)>)                  \
+        };                                                              \
+    }
+
 #endif
 
 #endif // __BASE_COMPILER_HH__
