@@ -30,11 +30,13 @@
 
 Import('*')
 
+SimObject('AddrMapper.py')
 SimObject('Bridge.py')
 SimObject('Bus.py')
 SimObject('CommMonitor.py')
 SimObject('MemObject.py')
 
+Source('addr_mapper.cc')
 Source('bridge.cc')
 Source('bus.cc')
 Source('coherent_bus.cc')

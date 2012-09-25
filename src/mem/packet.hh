@@ -491,6 +491,15 @@ class Packet : public Printable
     void clearDest() { dest = InvalidPortID; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+    /**
+     * Update the address of this packet mid-transaction. This is used
+     * by the address mapper to change an already set address to a new
+     * one based on the system configuration. It is intended to remap
+     * an existing address, so it asserts that the current address is
+     * valid.
+     */
+    void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
+
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
 
