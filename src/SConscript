@@ -634,11 +634,14 @@ for name,enum in sorted(all_enums.iteritems()):
     SwigSource('m5.internal', i_file)
 
 # Generate SimObject SWIG wrapper files
-for name in sim_objects.iterkeys():
+for name,simobj in sim_objects.iteritems():
+    py_source = PySource.modules[simobj.__module__]
+    extra_deps = [ py_source.tnode ]
+
     i_file = File('python/m5/internal/param_%s.i' % name)
     env.Command(i_file, Value(name),
                 MakeAction(createSimObjectSwigWrapper, Transform("SO SWIG")))
-    env.Depends(i_file, depends)
+    env.Depends(i_file, depends + extra_deps)
     SwigSource('m5.internal', i_file)
 
 # Generate the main swig init file
