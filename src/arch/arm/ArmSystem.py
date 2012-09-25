@@ -65,5 +65,9 @@ class LinuxArmSystem(ArmSystem):
     load_addr_mask = 0x0fffffff
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
-    atags_addr = Param.Addr(0x100, "Address where default atags structure should be written")
-    early_kernel_symbols = Param.Bool(False, "enable early kernel symbol tables before MMU")
+    atags_addr = Param.Addr(0x100,
+        "Address where default atags structure should be written")
+    dtb_filename = Param.String("",
+        "File that contains the Device Tree Blob. Don't use DTB if empty.")
+    early_kernel_symbols = Param.Bool(False,
+        "enable early kernel symbol tables before MMU")

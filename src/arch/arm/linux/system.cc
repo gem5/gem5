@@ -122,40 +122,73 @@ LinuxArmSystem::initState()
     }
 
     // Setup boot data structure
-    AtagCore *ac = new AtagCore;
-    ac->flags(1); // read-only
-    ac->pagesize(8192);
-    ac->rootdev(0);
+    Addr addr = 0;
+    // Check if the kernel image has a symbol that tells us it supports
+    // device trees.
+    bool kernel_has_fdt_support =
+        kernelSymtab->findAddress("unflatten_device_tree", addr);
+    bool dtb_file_specified = params()->dtb_filename != "";
 
-    AddrRangeList atagRanges = physmem.getConfAddrRanges();
-    if (atagRanges.size() != 1) {
-        fatal("Expected a single ATAG memory entry but got %d\n",
-              atagRanges.size());
+    if (kernel_has_fdt_support && dtb_file_specified) {
+        // Kernel supports flattened device tree and dtb file specified.
+        // Using Device Tree Blob to describe system configuration.
+        inform("Loading DTB file: %s\n", params()->dtb_filename);
+
+        ObjectFile *dtb_file = createObjectFile(params()->dtb_filename, true);
+        if (!dtb_file) {
+            fatal("couldn't load DTB file: %s\n", params()->dtb_filename);
+        }
+        dtb_file->setTextBase(params()->atags_addr);
+        dtb_file->loadSections(physProxy);
+        delete dtb_file;
+    } else {
+        // Using ATAGS
+        // Warn if the kernel supports FDT and we haven't specified one
+        if (kernel_has_fdt_support) {
+            assert(!dtb_file_specified);
+            warn("Kernel supports device tree, but no DTB file specified\n");
+        }
+        // Warn if the kernel doesn't support FDT and we have specified one
+        if (dtb_file_specified) {
+            assert(!kernel_has_fdt_support);
+            warn("DTB file specified, but no device tree support in kernel\n");
+        }
+
+        AtagCore *ac = new AtagCore;
+        ac->flags(1); // read-only
+        ac->pagesize(8192);
+        ac->rootdev(0);
+
+        AddrRangeList atagRanges = physmem.getConfAddrRanges();
+        if (atagRanges.size() != 1) {
+            fatal("Expected a single ATAG memory entry but got %d\n",
+                  atagRanges.size());
+        }
+        AtagMem *am = new AtagMem;
+        am->memSize(atagRanges.begin()->size());
+        am->memStart(atagRanges.begin()->start);
+
+        AtagCmdline *ad = new AtagCmdline;
+        ad->cmdline(params()->boot_osflags);
+
+        DPRINTF(Loader, "boot command line %d bytes: %s\n", ad->size() <<2, params()->boot_osflags.c_str());
+
+        AtagNone *an = new AtagNone;
+
+        uint32_t size = ac->size() + am->size() + ad->size() + an->size();
+        uint32_t offset = 0;
+        uint8_t *boot_data = new uint8_t[size << 2];
+
+        offset += ac->copyOut(boot_data + offset);
+        offset += am->copyOut(boot_data + offset);
+        offset += ad->copyOut(boot_data + offset);
+        offset += an->copyOut(boot_data + offset);
+
+        DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
+        DDUMP(Loader, boot_data, size << 2);
+
+        physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
     }
-    AtagMem *am = new AtagMem;
-    am->memSize(atagRanges.begin()->size());
-    am->memStart(atagRanges.begin()->start);
-
-    AtagCmdline *ad = new AtagCmdline;
-    ad->cmdline(params()->boot_osflags);
-
-    DPRINTF(Loader, "boot command line %d bytes: %s\n", ad->size() <<2, params()->boot_osflags.c_str());
-
-    AtagNone *an = new AtagNone;
-
-    uint32_t size = ac->size() + am->size() + ad->size() + an->size();
-    uint32_t offset = 0;
-    uint8_t *boot_data = new uint8_t[size << 2];
-
-    offset += ac->copyOut(boot_data + offset);
-    offset += am->copyOut(boot_data + offset);
-    offset += ad->copyOut(boot_data + offset);
-    offset += an->copyOut(boot_data + offset);
-
-    DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
-    DDUMP(Loader, boot_data, size << 2);
-
-    physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
 
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);

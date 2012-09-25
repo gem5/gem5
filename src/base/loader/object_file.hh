@@ -127,6 +127,11 @@ class ObjectFile
     size_t dataSize() const { return data.size; }
     size_t bssSize() const { return bss.size; }
 
+    /* This function allows you to override the base address where
+     * a binary is going to be loaded or set it if the binary is just a
+     * blob that doesn't include an object header.
+     * @param a address to load the binary/text section at
+     */
     void setTextBase(Addr a) { text.baseAddr = a; }
 };
 
