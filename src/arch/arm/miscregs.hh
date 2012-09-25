@@ -43,6 +43,7 @@
 #define __ARCH_ARM_MISCREGS_HH__
 
 #include "base/bitunion.hh"
+#include "base/compiler.hh"
 
 namespace ArmISA
 {
@@ -250,7 +251,7 @@ namespace ArmISA
                                unsigned crm, unsigned opc2);
 
 
-    const char * const miscRegName[NUM_MISCREGS] = {
+    const char * const miscRegName[] = {
         "cpsr", "cpsr_q", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
         "fpsr", "fpsid", "fpscr", "fpscr_qc", "fpscr_exc", "fpexc",
@@ -324,6 +325,9 @@ namespace ArmISA
         "crn15",
         "nop", "raz"
     };
+
+    static_assert(sizeof(miscRegName) / sizeof(*miscRegName) == NUM_MISCREGS,
+                  "The miscRegName array and NUM_MISCREGS are inconsistent.");
 
     BitUnion32(CPSR)
         Bitfield<31,30> nz;
