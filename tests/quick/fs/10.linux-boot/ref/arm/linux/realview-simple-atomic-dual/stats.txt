@@ -4,11 +4,11 @@ sim_seconds                                  0.912097                       # Nu
 sim_ticks                                912096763500                       # Number of ticks simulated
 final_tick                               912096763500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1622636                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2089140                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            24015838223                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 388524                       # Number of bytes of host memory used
-host_seconds                                    37.98                       # Real time elapsed on the host
+host_inst_rate                                1783031                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2295648                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            26389770183                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 380112                       # Number of bytes of host memory used
+host_seconds                                    34.56                       # Real time elapsed on the host
 sim_insts                                    61625970                       # Number of instructions simulated
 sim_ops                                      79343340                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::realview.clcd     39321600                       # Number of bytes read from this memory
@@ -316,7 +316,7 @@ system.cpu0.committedOps                     39129633                       # Nu
 system.cpu0.num_int_alu_accesses             34471201                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                  5449                       # Number of float alu accesses
 system.cpu0.num_func_calls                    1241903                       # number of times a function call or return occured
-system.cpu0.num_conditional_control_insts      4025450                       # number of instructions that are conditional controls
+system.cpu0.num_conditional_control_insts      4044057                       # number of instructions that are conditional controls
 system.cpu0.num_int_insts                    34471201                       # number of integer instructions
 system.cpu0.num_fp_insts                         5449                       # number of float instructions
 system.cpu0.num_int_register_reads          175121947                       # number of times the integer registers were read
@@ -492,7 +492,7 @@ system.cpu1.committedOps                     40213707                       # Nu
 system.cpu1.num_int_alu_accesses             35797832                       # Number of integer alu accesses
 system.cpu1.num_fp_alu_accesses                  4436                       # Number of float alu accesses
 system.cpu1.num_func_calls                     955227                       # number of times a function call or return occured
-system.cpu1.num_conditional_control_insts      4028429                       # number of instructions that are conditional controls
+system.cpu1.num_conditional_control_insts      4048022                       # number of instructions that are conditional controls
 system.cpu1.num_int_insts                    35797832                       # number of integer instructions
 system.cpu1.num_fp_insts                         4436                       # number of float instructions
 system.cpu1.num_int_register_reads          181634271                       # number of times the integer registers were read

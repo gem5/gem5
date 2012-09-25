@@ -4,8 +4,40 @@ warn: Sockets disabled, not accepting gdb connections
 warn: The clidr register always reports 0 caches.
 warn: clidr LoUIS field of 0b001 to match current ARM implementations.
 warn: The csselr register isn't implemented.
-panic: Not supported on checker!
- @ cycle 197694500
-[getInstPort:build/ARM/cpu/checker/cpu.hh, line 130]
-Memory Usage: 355632 KBytes
-Program aborted at cycle 197694500
+warn: The ccsidr register isn't implemented and always reads as 0.
+warn: 	instruction 'mcr bpiallis' unimplemented
+warn: 	instruction 'mcr icialluis' unimplemented
+warn: 	instruction 'mcr dccimvac' unimplemented
+warn: 	instruction 'mcr dccmvau' unimplemented
+warn: 	instruction 'mcr icimvau' unimplemented
+warn: 6471379000: Instruction results do not match! (Values may not actually be integers) Inst: 0x3744, checker: 0x3748
+warn: 6479236500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
+warn: 6488789500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
+warn: 6527432500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
+warn: 6543641500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
+warn: 7089434000: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
+warn: 12809896500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 12854316500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 13169361500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 14424922500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 14474529500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 15519752500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: 15669382500: Instruction results do not match! (Values may not actually be integers) Inst: 0xc02dd14c, checker: 0xc781befc
+warn: LCD dual screen mode not supported
+warn: 54391557500: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+warn: 816692532000: Instruction results do not match! (Values may not actually be integers) Inst: 0, checker: 0x1
+warn: 	instruction 'mcr icialluis' unimplemented
+warn: 	instruction 'mcr bpiallis' unimplemented
+warn: 2486377425500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
+warn: 2500398254500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2501706856500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2a4, checker: 0
+warn: 2523057678500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2523647855500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2529994034500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
+warn: 2530576345500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d954, checker: 0
+warn: 2531219324500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
+warn: 2531220454500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
+hack: be nice to actually delete the event here

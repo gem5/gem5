@@ -4,31 +4,13 @@ sim_seconds                                  1.207291                       # Nu
 sim_ticks                                1207290627000                       # Number of ticks simulated
 final_tick                               1207290627000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 965295                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1230212                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            18956490102                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 382720                       # Number of bytes of host memory used
-host_seconds                                    63.69                       # Real time elapsed on the host
+host_inst_rate                                 648322                       # Simulator instruction rate (inst/s)
+host_op_rate                                   826248                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            12731770448                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 380152                       # Number of bytes of host memory used
+host_seconds                                    94.83                       # Real time elapsed on the host
 sim_insts                                    61477134                       # Number of instructions simulated
 sim_ops                                      78349023                       # Number of ops (including micro ops) simulated
-system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::cpu1.inst           48                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            68                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu1.inst           48                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           68                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::cpu1.inst           12                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total             17                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu0.inst           17                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::cpu1.inst           40                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total               56                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu0.inst           17                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu1.inst           40                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total           56                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu0.inst           17                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu1.inst           40                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total              56                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd     52642784                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker           64                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          128                       # Number of bytes read from this memory
@@ -88,6 +70,24 @@ system.physmem.bw_total::cpu1.itb.walker           53                       # To
 system.physmem.bw_total::cpu1.inst             267624                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.data            6461987                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total               57984106                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::cpu1.inst           48                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            68                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu1.inst           48                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           68                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::cpu1.inst           12                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total             17                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu0.inst           17                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::cpu1.inst           40                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total               56                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu0.inst           17                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu1.inst           40                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total           56                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu0.inst           17                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu1.inst           40                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total              56                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                         69267                       # number of replacements
 system.l2c.tagsinuse                     52917.687101                       # Cycle average of tags in use
 system.l2c.total_refs                         1645693                       # Total number of references to valid blocks.
@@ -576,7 +576,7 @@ system.cpu0.committedOps                     37228975                       # Nu
 system.cpu0.num_int_alu_accesses             33114839                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                  3860                       # Number of float alu accesses
 system.cpu0.num_func_calls                    1241592                       # number of times a function call or return occured
-system.cpu0.num_conditional_control_insts      4354316                       # number of instructions that are conditional controls
+system.cpu0.num_conditional_control_insts      4373527                       # number of instructions that are conditional controls
 system.cpu0.num_int_insts                    33114839                       # number of integer instructions
 system.cpu0.num_fp_insts                         3860                       # number of float instructions
 system.cpu0.num_int_register_reads          190147140                       # number of times the integer registers were read
@@ -884,7 +884,7 @@ system.cpu1.committedOps                     41120048                       # Nu
 system.cpu1.num_int_alu_accesses             37342001                       # Number of integer alu accesses
 system.cpu1.num_fp_alu_accesses                  6793                       # Number of float alu accesses
 system.cpu1.num_func_calls                     963082                       # number of times a function call or return occured
-system.cpu1.num_conditional_control_insts      3716244                       # number of instructions that are conditional controls
+system.cpu1.num_conditional_control_insts      3735102                       # number of instructions that are conditional controls
 system.cpu1.num_int_insts                    37342001                       # number of integer instructions
 system.cpu1.num_fp_insts                         6793                       # number of float instructions
 system.cpu1.num_int_register_reads          213831809                       # number of times the integer registers were read
