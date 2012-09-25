@@ -43,6 +43,7 @@
 #include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "sim/full_system.hh"
+#include "debug/O3PipeView.hh"
 
 template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr staticInst,
@@ -61,6 +62,33 @@ BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr _staticInst,
 {
     initVars();
 }
+
+template <class Impl>BaseO3DynInst<Impl>::~BaseO3DynInst()
+{
+#if TRACING_ON
+    Tick val, fetch = this->fetchTick;
+    // Print info needed by the pipeline activity viewer.
+    DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
+             fetch,
+             this->instAddr(),
+             this->microPC(),
+             this->seqNum,
+             this->staticInst->disassemble(this->instAddr()));
+    val = (this->decodeTick == -1) ? 0 : fetch + this->decodeTick;
+    DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
+    val = (this->renameTick == -1) ? 0 : fetch + this->renameTick;
+    DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", val);
+    val = (this->dispatchTick == -1) ? 0 : fetch + this->dispatchTick;
+    DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", val);
+    val = (this->issueTick == -1) ? 0 : fetch + this->issueTick;
+    DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", val);
+    val = (this->completeTick == -1) ? 0 : fetch + this->completeTick;
+    DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", val);
+    val = (this->commitTick == -1) ? 0 : fetch + this->commitTick;
+    DPRINTFR(O3PipeView, "O3PipeView:retire:%llu\n", val);
+#endif
+};
+
 
 template <class Impl>
 void
@@ -82,12 +110,15 @@ BaseO3DynInst<Impl>::initVars()
     _numDestMiscRegs = 0;
 
 #if TRACING_ON
-    fetchTick = 0;
-    decodeTick = 0;
-    renameTick = 0;
-    dispatchTick = 0;
-    issueTick = 0;
-    completeTick = 0;
+    // Value -1 indicates that particular phase
+    // hasn't happened (yet).
+    fetchTick = -1;
+    decodeTick = -1;
+    renameTick = -1;
+    dispatchTick = -1;
+    issueTick = -1;
+    completeTick = -1;
+    commitTick = -1;
 #endif
 }
 

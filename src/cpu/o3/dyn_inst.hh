@@ -93,6 +93,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** BaseDynInst constructor given a static inst pointer. */
     BaseO3DynInst(StaticInstPtr _staticInst, StaticInstPtr _macroop);
 
+    ~BaseO3DynInst();
+
     /** Executes the instruction.*/
     Fault execute();
 
@@ -123,12 +125,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
   public:
 #if TRACING_ON
     /** Tick records used for the pipeline activity viewer. */
-    Tick fetchTick;
-    uint32_t decodeTick;
-    uint32_t renameTick;
-    uint32_t dispatchTick;
-    uint32_t issueTick;
-    uint32_t completeTick;
+    Tick fetchTick;	     // instruction fetch is completed.
+    int32_t decodeTick;  // instruction enters decode phase
+    int32_t renameTick;  // instruction enters rename phase
+    int32_t dispatchTick;
+    int32_t issueTick;
+    int32_t completeTick;
+    int32_t commitTick;
 #endif
 
     /** Reads a misc. register, including any side-effects the read

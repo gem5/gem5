@@ -42,36 +42,76 @@
 import optparse
 import os
 import sys
+import copy
 
+# Temporary storage for instructions. The queue is filled in out-of-order
+# until it reaches 'max_threshold' number of instructions. It is then
+# sorted out and instructions are printed out until their number drops to
+# 'min_threshold'.
+# It is assumed that the instructions are not out of order for more then
+# 'min_threshold' places - otherwise they will appear out of order.
+insts = {
+    'queue': [] ,         # Instructions to print.
+    'max_threshold':2000, # Instructions are sorted out and printed when
+                          # their number reaches this threshold.
+    'min_threshold':1000, # Printing stops when this number is reached.
+    'sn_start':0,         # The first instruction seq. number to be printed.
+    'sn_stop':0,          # The last instruction seq. number to be printed.
+    'tick_start':0,       # The first tick to be printed
+    'tick_stop':0,        # The last tick to be printed
+    'tick_drift':2000,    # Used to calculate the start and the end of main
+                          # loop. We assume here that the instructions are not
+                          # out of order for more then 2000 CPU ticks,
+                          # otherwise the print may not start/stop
+                          # at the time specified by tick_start/stop.
+    'only_committed':0    # Set if only committed instructions are printed.
+}
 
 def process_trace(trace, outfile, cycle_time, width, color, timestamps,
-                  start_tick, stop_tick, start_sn, stop_sn):
+                  committed_only, start_tick, stop_tick, start_sn, stop_sn):
+    global insts
+
+    insts['sn_start'] = start_sn
+    insts['sn_stop'] = stop_sn
+    insts['tick_start'] = start_tick
+    insts['tick_stop'] = stop_tick
+    insts['tick_drift'] = insts['tick_drift'] * cycle_time
+    insts['only_committed'] = committed_only
     line = None
     fields = None
-    # Skip lines up to region of interest
+
+    # Read the first line
+    line = trace.readline()
+    if not line: return
+    fields = line.split(':')
+
+    # Skip lines up to the starting tick
     if start_tick != 0:
         while True:
+            if fields[0] != 'O3PipeView': continue
+            if (int(fields[2]) > 0 and
+                int(fields[2]) >= start_tick-insts['tick_drift']): break
             line = trace.readline()
             if not line: return
             fields = line.split(':')
-            if fields[0] != 'O3PipeView': continue
-            if int(fields[2]) >= start_tick: break
-    elif start_sn != 0:
+
+    # Skip lines up to the starting sequence number
+    if start_sn != 0:
         while True:
+            if fields[0] != 'O3PipeView': continue
+            if (fields[1] == 'fetch' and
+                int(fields[5]) >= (start_sn-insts['max_threshold'])):
+                break
             line = trace.readline()
             if not line: return
             fields = line.split(':')
-            if fields[0] != 'O3PipeView': continue
-            if fields[1] == 'fetch' and int(fields[5]) >= start_sn: break
-    else:
-        line = trace.readline()
-        if not line: return
-        fields = line.split(':')
+
     # Skip lines up to next instruction fetch
     while fields[0] != 'O3PipeView' or fields[1] != 'fetch':
         line = trace.readline()
         if not line: return
         fields = line.split(':')
+
     # Print header
     outfile.write('// f = fetch, d = decode, n = rename, p = dispatch, '
                   'i = issue, c = complete, r = retire\n\n')
@@ -83,26 +123,65 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
     if timestamps:
         outfile.write('timestamps'.center(25))
     outfile.write('\n')
+
     # Region of interest
     curr_inst = {}
     while True:
         if fields[0] == 'O3PipeView':
             curr_inst[fields[1]] = int(fields[2])
             if fields[1] == 'fetch':
-                if ((stop_tick > 0 and int(fields[2]) > stop_tick) or
-                    (stop_sn > 0 and int(fields[5]) > stop_sn)):
+                if ((stop_tick > 0 and int(fields[2]) > stop_tick+insts['tick_drift']) or
+                    (stop_sn > 0 and int(fields[5]) > (stop_sn+insts['max_threshold']))):
+                    print_insts(outfile, cycle_time, width, color, timestamps, 0)
                     return
                 (curr_inst['pc'], curr_inst['upc']) = fields[3:5]
                 curr_inst['sn'] = int(fields[5])
                 curr_inst['disasm'] = ' '.join(fields[6][:-1].split())
             elif fields[1] == 'retire':
-                print_inst(outfile, curr_inst, cycle_time, width, color,
-                           timestamps)
+                queue_inst(outfile, curr_inst, cycle_time, width, color, timestamps)
         line = trace.readline()
         if not line: return
         fields = line.split(':')
 
 
+#Sorts out instructions according to sequence number
+def compare_by_sn(a, b):
+    return cmp(a['sn'], b['sn'])
+
+# Puts new instruction into the print queue.
+# Sorts out and prints instructions when their number reaches threshold value
+def queue_inst(outfile, inst, cycle_time, width, color, timestamps):
+    global insts
+    l_copy = copy.deepcopy(inst)
+    insts['queue'].append(l_copy)
+    if len(insts['queue']) > insts['max_threshold']:
+        print_insts(outfile, cycle_time, width, color, timestamps, insts['min_threshold'])
+
+# Sorts out and prints instructions in print queue
+def print_insts(outfile, cycle_time, width, color, timestamps, lower_threshold):
+    global insts
+    insts['queue'].sort(compare_by_sn)
+    while len(insts['queue']) > lower_threshold:
+        print_item=insts['queue'].pop(0)
+        # As the instructions are processed out of order the main loop starts
+        # earlier then specified by start_sn/tick and finishes later then what
+        # is defined in stop_sn/tick.
+        # Therefore, here we have to filter out instructions that reside out of
+        # the specified boundaries.
+        if (insts['sn_start'] > 0 and print_item['sn'] < insts['sn_start']):
+            continue; # earlier then the starting sequence number
+        if (insts['sn_stop'] > 0 and print_item['sn'] > insts['sn_stop']):
+            continue; # later then the ending sequence number
+        if (insts['tick_start'] > 0 and print_item['fetch'] < insts['tick_start']):
+            continue; # earlier then the starting tick number
+        if (insts['tick_stop'] > 0 and print_item['fetch'] > insts['tick_stop']):
+            continue; # later then the ending tick number
+
+        if (insts['only_committed'] != 0 and print_item['retire'] == 0):
+            continue; # retire is set to zero if it hasn't been completed
+        print_inst(outfile,  print_item, cycle_time, width, color, timestamps)
+
+# Prints a single instruction
 def print_inst(outfile, inst, cycle_time, width, color, timestamps):
     if color:
         from m5.util.terminal import termcap
@@ -130,17 +209,30 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
               {'name': 'retire',
                'color': termcap.Blue + termcap.Reverse,
                'shorthand': 'r'}]
+
     # Print
+
     time_width = width * cycle_time
     base_tick = (inst['fetch'] / time_width) * time_width
+
+    # Find out the time of the last event - it may not
+    # be 'retire' if the instruction is not comlpeted.
+    last_event_time = max(inst['fetch'], inst['decode'],inst['rename'],
+        inst['dispatch'],inst['issue'], inst['complete'], inst['retire'])
+
     # Timeline shorter then time_width is printed in compact form where
     # the print continues at the start of the same line.
-    if ((inst['retire'] - inst['fetch']) < time_width):
+    if ((last_event_time - inst['fetch']) < time_width):
         num_lines = 1 # compact form
     else:
-        num_lines = ((inst['retire'] - base_tick) / time_width) + 1
+        num_lines = ((last_event_time - base_tick) / time_width) + 1
 
     curr_color = termcap.Normal
+
+    # This will visually distinguish completed and abandoned intructions.
+    if inst['retire'] == 0: dot = '=' # abandoned instruction
+    else:                   dot = '.' # completed instruction
+
     for i in range(num_lines):
         start_tick = base_tick + i * time_width
         end_tick = start_tick + time_width
@@ -149,10 +241,11 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
         events = []
         for stage_idx in range(len(stages)):
             tick = inst[stages[stage_idx]['name']]
-            if tick >= start_tick and tick < end_tick:
-                events.append((tick % time_width,
-                               stages[stage_idx]['name'],
-                               stage_idx))
+            if tick != 0:
+                if tick >= start_tick and tick < end_tick:
+                    events.append((tick % time_width,
+                                   stages[stage_idx]['name'],
+                                   stage_idx, tick))
         events.sort()
         outfile.write('[')
         pos = 0
@@ -162,15 +255,17 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
             if (stages[event[2]]['name'] == 'dispatch' and
                 inst['dispatch'] == inst['issue']):
                 continue
-            outfile.write(curr_color + '.' * ((event[0] / cycle_time) - pos))
+            outfile.write(curr_color + dot * ((event[0] / cycle_time) - pos))
             outfile.write(stages[event[2]]['color'] +
                           stages[event[2]]['shorthand'])
-            if event[2] != len(stages) - 1:  # event is not retire
+
+            if event[3] != last_event_time:  # event is not the last one
                 curr_color = stages[event[2]]['color']
             else:
                 curr_color = termcap.Normal
+
             pos = (event[0] / cycle_time) + 1
-        outfile.write(curr_color + '.' * (width - pos) + termcap.Normal +
+        outfile.write(curr_color + dot * (width - pos) + termcap.Normal +
                       ']-(' + str(base_tick + i * time_width).rjust(15) + ') ')
         if i == 0:
             outfile.write('%s.%s  %s [%s]' % (
@@ -230,6 +325,10 @@ def main():
         '--timestamps',
         action='store_true', default=False,
         help="print fetch and retire timestamps (default: '%default')")
+    parser.add_option(
+        '--only_committed',
+        action='store_true', default=False,
+        help="display only committed (completed) instructions (default: '%default')")
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error('incorrect number of arguments')
@@ -248,7 +347,7 @@ def main():
         with open(options.outfile, 'w') as out:
             process_trace(trace, out, options.cycle_time, options.width,
                           options.color, options.timestamps,
-                          *(tick_range + inst_range))
+                          options.only_committed, *(tick_range + inst_range))
     print 'done!'
 
 
