@@ -58,6 +58,7 @@
  * an configurable throughput and latency, potentially with a variance
  * added to the latter. It uses a QueueSlavePort to avoid dealing with
  * the flow control of sending responses.
+ * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
 class SimpleMemory : public AbstractMemory
 {

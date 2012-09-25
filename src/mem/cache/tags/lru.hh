@@ -50,6 +50,7 @@ class CacheSet;
 
 /**
  * A LRU cache tag store.
+ * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
 class LRU : public BaseTags
 {

@@ -47,6 +47,7 @@ class MSHRQueue;
 /**
  * Miss Status and handling Register. This class keeps all the information
  * needed to handle a cache miss including a list of target requests.
+ * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
 class MSHR : public Packet::SenderState, public Printable
 {

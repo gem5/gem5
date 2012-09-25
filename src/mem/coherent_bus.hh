@@ -63,6 +63,7 @@
  * The coherent bus can be used as a template for modelling QPI,
 * HyperTransport, ACE and coherent OCP buses, and is typically used
  * for the L1-to-L2 buses and as the main system interconnect.
+ * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
 class CoherentBus : public BaseBus
 {

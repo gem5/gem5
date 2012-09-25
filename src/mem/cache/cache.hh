@@ -64,7 +64,7 @@ class BasePrefetcher;
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
  * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore.
+ * storage @sa TagStore, \ref gem5MemorySystem "gem5 Memory System"
  */
 template <class TagStore>
 class Cache : public BaseCache
