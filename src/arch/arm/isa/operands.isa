@@ -118,7 +118,7 @@ let {{
         return ('IntReg', 'uw', idx, None, srtNormal)
 
     def cntrlReg(idx, id = srtNormal, type = 'uw'):
-        return ('ControlReg', type, idx, (None, None, 'IsControl'), id)
+        return ('ControlReg', type, idx, None, id)
 
     def cntrlRegNC(idx, id = srtNormal, type = 'uw'):
         return ('ControlReg', type, idx, None, id)
