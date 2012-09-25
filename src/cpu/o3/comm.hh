@@ -121,12 +121,12 @@ template<class Impl>
 struct TimeBufStruct {
     typedef typename Impl::DynInstPtr DynInstPtr;
     struct decodeComm {
-        uint64_t branchAddr;
-        InstSeqNum doneSeqNum;
+        TheISA::PCState nextPC;
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
+        InstSeqNum doneSeqNum;
         Addr mispredPC;
-        TheISA::PCState nextPC;
+        uint64_t branchAddr;
         unsigned branchCount;
         bool squash;
         bool predIncorrect;
@@ -143,9 +143,7 @@ struct TimeBufStruct {
 
     struct iewComm {
         // Also eventually include skid buffer space.
-        bool usedIQ;
         unsigned freeIQEntries;
-        bool usedLSQ;
         unsigned freeLSQEntries;
 
         unsigned iqCount;
@@ -153,57 +151,70 @@ struct TimeBufStruct {
 
         unsigned dispatched;
         unsigned dispatchedToLSQ;
+        bool usedIQ;
+        bool usedLSQ;
     };
 
     iewComm iewInfo[Impl::MaxThreads];
 
     struct commitComm {
+        /////////////////////////////////////////////////////////////////////
+        // This code has been re-structured for better packing of variables
+        // instead of by stage which is the more logical way to arrange the
+        // data.
+        // F = Fetch
+        // D = Decode
+        // I = IEW
+        // R = Rename
+        // As such each member is annotated with who consumes it
+        // e.g. bool variable name // *F,R for Fetch and Rename
+        /////////////////////////////////////////////////////////////////////
 
-        /////////////// For Decode, IEW, Rename, Fetch ///////////
-        bool squash;
-        bool robSquashing;
+        /// The pc of the next instruction to execute. This is the next
+        /// instruction for a branch mispredict, but the same instruction for
+        /// order violation and the like
+        TheISA::PCState pc; // *F
 
-        ////////// For Fetch & IEW /////////////
-        // Represents the instruction that has either been retired or
-        // squashed.  Similar to having a single bus that broadcasts the
-        // retired or squashed sequence number.
-        InstSeqNum doneSeqNum;
+        /// Provide fetch the instruction that mispredicted, if this
+        /// pointer is not-null a misprediction occured
+        DynInstPtr mispredictInst;  // *F
 
-        ////////////// For Rename /////////////////
-        // Rename should re-read number of free rob entries
-        bool usedROB;
-        // Notify Rename that the ROB is empty
-        bool emptyROB;
-        // Tell Rename how many free entries it has in the ROB
-        unsigned freeROBEntries;
+        /// Instruction that caused the a non-mispredict squash
+        DynInstPtr squashInst; // *F
 
+        /// Hack for now to send back an uncached access to the IEW stage.
+        DynInstPtr uncachedLoad; // *I
 
-        ///////////// For Fetch //////////////////
-        // Provide fetch the instruction that mispredicted, if this
-        // pointer is not-null a misprediction occured
-        DynInstPtr mispredictInst;
-        // Was the branch taken or not
-        bool branchTaken;
-        // The pc of the next instruction to execute. This is the next
-        // instruction for a branch mispredict, but the same instruction for
-        // order violation and the like
-        TheISA::PCState pc;
+        /// Communication specifically to the IQ to tell the IQ that it can
+        /// schedule a non-speculative instruction.
+        InstSeqNum nonSpecSeqNum; // *I
 
-        // Instruction that caused the a non-mispredict squash
-        DynInstPtr squashInst;
-        // If an interrupt is pending and fetch should stall
-        bool interruptPending;
-        // If the interrupt ended up being cleared before being handled
-        bool clearInterrupt;
+        /// Represents the instruction that has either been retired or
+        /// squashed.  Similar to having a single bus that broadcasts the
+        /// retired or squashed sequence number.
+        InstSeqNum doneSeqNum; // *F, I
 
-        //////////// For IEW //////////////////
-        // Communication specifically to the IQ to tell the IQ that it can
-        // schedule a non-speculative instruction.
-        InstSeqNum nonSpecSeqNum;
+        /// Tell Rename how many free entries it has in the ROB
+        unsigned freeROBEntries; // *R
 
-        // Hack for now to send back an uncached access to the IEW stage.
-        bool uncached;
-        DynInstPtr uncachedLoad;
+        bool squash; // *F, D, R, I
+        bool robSquashing; // *F, D, R, I
+
+        /// Rename should re-read number of free rob entries
+        bool usedROB; // *R
+
+        /// Notify Rename that the ROB is empty
+        bool emptyROB; // *R
+
+        /// Was the branch taken or not
+        bool branchTaken; // *F
+        /// If an interrupt is pending and fetch should stall
+        bool interruptPending; // *F
+        /// If the interrupt ended up being cleared before being handled
+        bool clearInterrupt; // *F
+
+        /// Hack for now to send back an uncached access to the IEW stage.
+        bool uncached; // *I
 
     };
 
