@@ -164,12 +164,6 @@ SimObject::resume()
 }
 
 void
-SimObject::setMemoryMode(Enums::MemoryMode new_mode)
-{
-    panic("setMemoryMode() should only be called on systems");
-}
-
-void
 SimObject::switchOut()
 {
     panic("Unimplemented!");

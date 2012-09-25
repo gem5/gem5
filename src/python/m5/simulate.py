@@ -194,8 +194,7 @@ def changeToAtomic(system):
     if system.getMemoryMode() != objects.params.atomic:
         doDrain(system)
         print "Changing memory mode to atomic"
-        for obj in system.descendants():
-            obj.changeTiming(objects.params.atomic)
+        system.setMemoryMode(objects.params.atomic)
 
 def changeToTiming(system):
     if not isinstance(system, (objects.Root, objects.System)):
@@ -204,8 +203,7 @@ def changeToTiming(system):
 
     if system.getMemoryMode() != objects.params.timing:
         print "Changing memory mode to timing"
-        for obj in system.descendants():
-            obj.changeTiming(objects.params.timing)
+        system.setMemoryMode(objects.params.timing)
 
 def switchCpus(cpuList):
     print "switching cpus"

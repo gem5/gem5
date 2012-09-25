@@ -256,13 +256,6 @@ class SimObject : public EventManager, public Serializable
     virtual void resume();
 
     /**
-     * Change the memory mode the simulator operates in.
-     *
-     * @note Should only be implemented in the System object.
-     */
-    virtual void setMemoryMode(Enums::MemoryMode new_mode);
-
-    /**
      * Prepare a CPU model to be switched out, invoked on active CPUs
      * that are about to be replaced.
      *

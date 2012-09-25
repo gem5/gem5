@@ -1050,19 +1050,6 @@ class SimObject(object):
         for portRef in self._port_refs.itervalues():
             portRef.ccConnect()
 
-    def getMemoryMode(self):
-        if not isinstance(self, m5.objects.System):
-            return None
-
-        return self._ccObject.getMemoryMode()
-
-    def changeTiming(self, mode):
-        if isinstance(self, m5.objects.System):
-            # i don't know if there's a better way to do this - calling
-            # setMemoryMode directly from self._ccObject results in calling
-            # SimObject::setMemoryMode, not the System::setMemoryMode
-            self._ccObject.setMemoryMode(mode)
-
     def takeOverFrom(self, old_cpu):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
 
