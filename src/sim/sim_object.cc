@@ -163,19 +163,6 @@ SimObject::resume()
     state = Running;
 }
 
-void
-SimObject::switchOut()
-{
-    panic("Unimplemented!");
-}
-
-void
-SimObject::takeOverFrom(BaseCPU *cpu)
-{
-    panic("Unimplemented!");
-}
-
-
 SimObject *
 SimObject::find(const char *name)
 {

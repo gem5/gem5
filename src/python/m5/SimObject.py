@@ -602,8 +602,6 @@ class SimObject(object):
 
     unsigned int drain(Event *drain_event);
     void resume();
-    void switchOut();
-    void takeOverFrom(BaseCPU *cpu);
 ''')
 
     # Initialize new instance.  For objects with SimObject-valued
@@ -1049,9 +1047,6 @@ class SimObject(object):
     def connectPorts(self):
         for portRef in self._port_refs.itervalues():
             portRef.ccConnect()
-
-    def takeOverFrom(self, old_cpu):
-        self._ccObject.takeOverFrom(old_cpu._ccObject)
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):

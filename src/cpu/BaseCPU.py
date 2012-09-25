@@ -77,6 +77,22 @@ class BaseCPU(MemObject):
     type = 'BaseCPU'
     abstract = True
 
+    @classmethod
+    def export_method_cxx_predecls(cls, code):
+        code('#include "cpu/base.hh"')
+
+
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+    void switchOut();
+    void takeOverFrom(BaseCPU *cpu);
+''')
+
+    def takeOverFrom(self, old_cpu):
+        self._ccObject.takeOverFrom(old_cpu._ccObject)
+
+
     system = Param.System(Parent.any, "system object")
     cpu_id = Param.Int(-1, "CPU identifier")
     numThreads = Param.Unsigned(1, "number of HW thread contexts")

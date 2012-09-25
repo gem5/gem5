@@ -278,13 +278,27 @@ class BaseCPU : public MemObject
 
     void registerThreadContexts();
 
-    /// Prepare for another CPU to take over execution.  When it is
-    /// is ready (drained pipe) it signals the sampler.
+    /**
+     * Prepare for another CPU to take over execution.
+     *
+     * When this method exits, all internal state should have been
+     * flushed. After the method returns, the simulator calls
+     * takeOverFrom() on the new CPU with this CPU as its parameter.
+     */
     virtual void switchOut();
 
-    /// Take over execution from the given CPU.  Used for warm-up and
-    /// sampling.
-    virtual void takeOverFrom(BaseCPU *);
+    /**
+     * Load the state of a CPU from the previous CPU object, invoked
+     * on all new CPUs that are about to be switched in.
+     *
+     * A CPU model implementing this method is expected to initialize
+     * its state from the old CPU and connect its memory (unless they
+     * are already connected) to the memories connected to the old
+     * CPU.
+     *
+     * @param cpu CPU to initialize read state from.
+     */
+    virtual void takeOverFrom(BaseCPU *cpu);
 
     /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).

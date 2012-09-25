@@ -255,29 +255,6 @@ class SimObject : public EventManager, public Serializable
      */
     virtual void resume();
 
-    /**
-     * Prepare a CPU model to be switched out, invoked on active CPUs
-     * that are about to be replaced.
-     *
-     * @note This should only be implemented in CPU models.
-     */
-    virtual void switchOut();
-
-    /**
-     * Load the state of a CPU from the previous CPU object, invoked
-     * on all new CPUs that are about to be switched in.
-     *
-     * A CPU model implementing this method is expected to initialize
-     * its state from the old CPU and connect its memory (unless they
-     * are already connected) to the memories connected to the old
-     * CPU.
-     *
-     * @note This should only be implemented in CPU models.
-     *
-     * @param cpu CPU to initialize read state from.
-     */
-    virtual void takeOverFrom(BaseCPU *cpu);
-
 #ifdef DEBUG
   public:
     bool doDebugBreak;

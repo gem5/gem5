@@ -221,7 +221,7 @@ def switchCpus(cpuList):
 
     # Now all of the CPUs are ready to be switched out
     for old_cpu, new_cpu in cpuList:
-        old_cpu._ccObject.switchOut()
+        old_cpu.switchOut()
 
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
