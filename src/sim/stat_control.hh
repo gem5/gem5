@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Sascha Bischoff
  */
 
 #ifndef __SIM_STAT_CONTROL_HH__
@@ -34,9 +47,34 @@
 namespace Stats {
 
 void initSimStats();
+
+/**
+ * Update the events after resuming from a checkpoint. When resuming from a
+ * checkpoint, curTick will be updated, and any already scheduled events can
+ * end up scheduled in the past. This function checks if the dumpEvent is
+ * scheduled in the past, and reschedules it appropriately.
+ */
+void updateEvents();
+
+/**
+ * Schedule statistics dumping. This allows you to dump and/or reset the
+ * built-in statistics. This can either be done once, or it can be done on a
+ * regular basis.
+ * @param dump Set true to dump the statistics.
+ * @param reset Set true to reset the statistics.
+ * @param when When the dump and/or reset should occur.
+ * @param repeat How often the event should repeat. Set 0 to disable repeating.
+ */
 void schedStatEvent(bool dump, bool reset, Tick when = curTick(),
                     Tick repeat = 0);
 
+/**
+ * Schedule periodic statistics dumping. This allows you to dump and reset the
+ * built-in statistics on a regular basis, thereby allowing the extraction of
+ * temporal trends in the data.
+ * @param period The period at which the dumping should occur.
+ */
+void periodicStatDump(uint64_t period = 0);
 } // namespace Stats
 
 #endif // __SIM_STAT_CONTROL_HH__

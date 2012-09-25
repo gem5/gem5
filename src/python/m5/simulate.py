@@ -52,6 +52,7 @@ import SimObject
 import ticks
 import objects
 from m5.util.dot_writer import do_dot
+from m5.internal.stats import updateEvents as updateStatEvents
 
 from util import fatal
 from util import attrdict
@@ -122,6 +123,10 @@ def instantiate(ckpt_dir=None):
         need_resume.append(root)
     else:
         for obj in root.descendants(): obj.initState()
+
+    # Check to see if any of the stat events are in the past after resuming from
+    # a checkpoint, If so, this call will shift them to be at a valid time.
+    updateStatEvents()
 
     # Reset to put the stats in a consistent state.
     stats.reset()

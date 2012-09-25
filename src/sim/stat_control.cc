@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Sascha Bischoff
  */
 
 // This file will contain default statistics for the simulator that
@@ -60,6 +73,8 @@ namespace Stats {
 
 Time statTime(true);
 Tick startTick;
+
+Event *dumpEvent;
 
 struct SimTicksReset : public Callback
 {
@@ -198,6 +213,9 @@ initSimStats()
     static Global global;
 }
 
+/**
+ * Event to dump and/or reset the statistics.
+ */
 class StatEvent : public Event
 {
   private:
@@ -230,8 +248,54 @@ class StatEvent : public Event
 void
 schedStatEvent(bool dump, bool reset, Tick when, Tick repeat)
 {
-    Event *event = new StatEvent(dump, reset, repeat);
-    mainEventQueue.schedule(event, when);
+    dumpEvent = new StatEvent(dump, reset, repeat);
+    mainEventQueue.schedule(dumpEvent, when);
+}
+
+void
+periodicStatDump(uint64_t period)
+{
+    /*
+     * If the period is set to 0, then we do not want to dump periodically,
+     * thus we deschedule the event. Else, if the period is not 0, but the event
+     * has already been scheduled, we need to get rid of the old event before we
+     * create a new one, as the old event will no longer be moved forward in the
+     * event that we resume from a checkpoint.
+     */
+    if (dumpEvent != NULL && (period == 0 || dumpEvent->scheduled())) {
+        // Event should AutoDelete, so we do not need to free it.
+        mainEventQueue.deschedule(dumpEvent);
+    }
+
+    /*
+     * If the period is not 0, we schedule the event. If this is called with a
+     * period that is less than the current tick, then we shift the first dump
+     * by curTick. This ensures that we do not schedule the event is the past.
+     */
+    if (period != 0) {
+        // Schedule the event
+        if (period >= curTick()) {
+            schedStatEvent(true, true, (Tick)period, (Tick)period);
+        } else {
+            schedStatEvent(true, true, (Tick)period + curTick(), (Tick)period);
+        }
+    }
+}
+
+void
+updateEvents()
+{
+    /*
+     * If the dumpEvent has been scheduled, but is scheduled in the past, then
+     * we need to shift the event to be at a valid point in time. Therefore, we
+     * shift the event by curTick.
+     */
+    if (dumpEvent != NULL &&
+        (dumpEvent->scheduled() && dumpEvent->when() < curTick())) {
+        // shift by curTick() and reschedule
+        Tick _when = dumpEvent->when();
+        mainEventQueue.reschedule(dumpEvent, _when + curTick());
+    }
 }
 
 } // namespace Stats

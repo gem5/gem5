@@ -152,6 +152,10 @@ Output *initText(const std::string &filename, bool desc);
 void schedStatEvent(bool dump, bool reset,
                     Tick when = curTick(), Tick repeat = 0);
 
+void periodicStatDump(long long period = 0);
+
+void updateEvents();
+
 void processResetQueue();
 void processDumpQueue();
 void enable();
