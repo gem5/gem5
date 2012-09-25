@@ -113,6 +113,14 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
                 } else {
                     *++uop = new MicroLdrUop(machInst, regIdx,
                                             INTREG_UREG0, up, addr);
+                    if (reg == INTREG_PC) {
+                        (*uop)->setFlag(StaticInst::IsControl);
+                        if (!(condCode == COND_AL || condCode == COND_UC))
+                            (*uop)->setFlag(StaticInst::IsCondControl);
+                        else
+                            (*uop)->setFlag(StaticInst::IsUncondControl);
+                        (*uop)->setFlag(StaticInst::IsIndirectControl);
+                    }
                 }
             }
         } else {

@@ -1155,6 +1155,15 @@ def template LoadRegConstructor {{
             uops[1]->setLastMicroop();
 
         }
+#else
+        if (_dest == INTREG_PC) {
+            flags[IsControl] = true;
+            flags[IsIndirectControl] = true;
+            if (conditional)
+                flags[IsCondControl] = true;
+            else
+                flags[IsUncondControl] = true;
+        }
 #endif
     }
 }};
@@ -1197,6 +1206,15 @@ def template LoadImmConstructor {{
             uops[0]->setDelayedCommit();
             uops[1] = new %(wb_decl)s;
             uops[1]->setLastMicroop();
+        }
+#else
+        if (_dest == INTREG_PC) {
+            flags[IsControl] = true;
+            flags[IsIndirectControl] = true;
+            if (conditional)
+                flags[IsCondControl] = true;
+            else
+                flags[IsUncondControl] = true;
         }
 #endif
     }

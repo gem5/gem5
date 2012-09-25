@@ -116,7 +116,8 @@ let {{
     regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, 0)"
 
     def buildImmDataInst(mnem, code, flagType = "logic", suffix = "Imm", \
-                         buildCc = True, buildNonCc = True, instFlags = []):
+                         buildCc = True, buildNonCc = True, isBranch = "0", \
+                         instFlags = []):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -133,10 +134,12 @@ let {{
         immCode = secondOpRe.sub(immOp2, code)
         immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
                        {"code" : immCode,
+                        "is_branch" : isBranch,
                         "predicate_test": pickPredicate(immCode)}, instFlags)
         immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
              "DataImmOp",
              {"code" : immCode + immCcCode,
+              "is_branch" : isBranch,
               "predicate_test": pickPredicate(immCode + immCcCode)}, instFlags)
 
         def subst(iop):
@@ -244,7 +247,7 @@ let {{
             if regRegAiw:
                 regRegCode = "AIW" + regRegCode
 
-        buildImmDataInst(mnem, instCode, flagType)
+        buildImmDataInst(mnem, instCode, flagType, isBranch = isBranch)
         buildRegDataInst(mnem, instCode, flagType,
                          isRasPop = isRasPop, isBranch = isBranch)
         buildRegRegDataInst(mnem, regRegCode, flagType)
@@ -276,13 +279,15 @@ let {{
 
     buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
     buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")
-    buildDataInst("sub", "Dest = resTemp = Op1 - secondOp;", "sub")
+    buildDataInst("sub", "Dest = resTemp = Op1 - secondOp;", "sub",
+                  isBranch = "dest == INTREG_PC")
     buildDataInst("rsb", "Dest = resTemp = secondOp - Op1;", "rsb")
-    buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add")
+    buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add",
+                  isBranch = "dest == INTREG_PC")
     buildImmDataInst("adr", '''
                                Dest = resTemp = (PC & ~0x3) +
                                (op1 ? secondOp : -secondOp);
-                            ''')
+                            ''', isBranch = "dest == INTREG_PC")
     buildDataInst("adc", "Dest = resTemp = Op1 + secondOp + %s;" % oldC, "add")
     buildDataInst("sbc", "Dest = resTemp = Op1 - secondOp - !%s;" % oldC, "sub")
     buildDataInst("rsc", "Dest = resTemp = secondOp - Op1 - !%s;" % oldC, "rsb")
