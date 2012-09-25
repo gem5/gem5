@@ -33,7 +33,8 @@ m5.util.addToPath('../configs/common')
 class MyCache(BaseCache):
     assoc = 2
     block_size = 64
-    latency = '1ns'
+    hit_latency = '1ns'
+    response_latency = '1ns'
     mshrs = 10
     tgts_per_mshr = 5
 

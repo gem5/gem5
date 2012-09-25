@@ -229,7 +229,15 @@ class BaseCache : public MemObject
     /**
      * The latency of a hit in this device.
      */
-    int hitLatency;
+    const Tick hitLatency;
+
+    /**
+     * The latency of sending reponse to its upper level cache/core on a
+     * linefill. In most contemporary processors, the return path on a cache
+     * miss is much quicker that the hit latency. The responseLatency parameter
+     * tries to capture this latency.
+     */
+    const Tick responseLatency;
 
     /** The number of targets for each MSHR. */
     const int numTarget;

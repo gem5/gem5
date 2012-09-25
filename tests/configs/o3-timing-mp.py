@@ -35,7 +35,8 @@ m5.util.addToPath('../configs/common')
 # ====================
 
 class L1(BaseCache):
-    latency = '1ns'
+    hit_latency = '1ns'
+    response_latency = '1ns'
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 20
@@ -47,7 +48,8 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    latency = '10ns'
+    hit_latency = '10ns'
+    response_latency = '10ns'
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8

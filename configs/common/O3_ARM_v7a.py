@@ -147,7 +147,8 @@ class O3_ARM_v7a_3(DerivO3CPU):
 # Instruction Cache
 # All latencys assume a 1GHz clock rate, with a faster clock they would be faster
 class O3_ARM_v7a_ICache(BaseCache):
-    latency = '1ns'
+    hit_latency = '1ns'
+    response_latency = '1ns'
     block_size = 64
     mshrs = 2
     tgts_per_mshr = 8
@@ -158,7 +159,8 @@ class O3_ARM_v7a_ICache(BaseCache):
 # Data Cache
 # All latencys assume a 1GHz clock rate, with a faster clock they would be faster
 class O3_ARM_v7a_DCache(BaseCache):
-    latency = '2ns'
+    hit_latency = '2ns'
+    response_latency = '2ns'
     block_size = 64
     mshrs = 6
     tgts_per_mshr = 8
@@ -170,7 +172,8 @@ class O3_ARM_v7a_DCache(BaseCache):
 # TLB Cache 
 # Use a cache as a L2 TLB
 class O3_ARM_v7aWalkCache(BaseCache):
-    latency = '4ns'
+    hit_latency = '4ns'
+    response_latency = '4ns'
     block_size = 64
     mshrs = 6
     tgts_per_mshr = 8
@@ -183,7 +186,8 @@ class O3_ARM_v7aWalkCache(BaseCache):
 # L2 Cache
 # All latencys assume a 1GHz clock rate, with a faster clock they would be faster
 class O3_ARM_v7aL2(BaseCache):
-    latency = '12ns'
+    hit_latency = '12ns'
+    response_latency = '12ns'
     block_size = 64
     mshrs = 16
     tgts_per_mshr = 8

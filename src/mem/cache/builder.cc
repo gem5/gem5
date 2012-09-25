@@ -71,7 +71,7 @@ using namespace std;
 
 #if defined(USE_CACHE_FALRU)
 #define BUILD_FALRU_CACHE do {                              \
-        FALRU *tags = new FALRU(block_size, size, latency); \
+        FALRU *tags = new FALRU(block_size, size, hit_latency); \
         BUILD_CACHE(FALRU, tags);                           \
     } while (0)
 #else
@@ -80,7 +80,7 @@ using namespace std;
 
 #if defined(USE_CACHE_LRU)
 #define BUILD_LRU_CACHE do {                                            \
-        LRU *tags = new LRU(numSets, block_size, assoc, latency);       \
+        LRU *tags = new LRU(numSets, block_size, assoc, hit_latency);       \
         BUILD_CACHE(LRU, tags);                                         \
     } while (0)
 #else
@@ -124,7 +124,7 @@ BaseCacheParams::create()
     iic_params.blkSize = block_size;
     iic_params.assoc = assoc;
     iic_params.hashDelay = hash_delay;
-    iic_params.hitLatency = latency;
+    iic_params.hitLatency = hit_latency;
     iic_params.rp = repl;
     iic_params.subblockSize = subblock_size;
 #else

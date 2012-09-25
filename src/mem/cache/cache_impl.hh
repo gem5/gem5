@@ -897,8 +897,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                     transfer_offset += blkSize;
                 }
 
-                // If critical word (no offset) return first word time
-                completion_time = tags->getHitLatency() +
+                // If critical word (no offset) return first word time.
+                // responseLatency is the latency of the return path
+                // from lower level caches/memory to an upper level cache or
+                // the core.
+                completion_time = responseLatency +
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
@@ -911,11 +914,16 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 assert(target->pkt->cmd == MemCmd::StoreCondReq ||
                        target->pkt->cmd == MemCmd::StoreCondFailReq ||
                        target->pkt->cmd == MemCmd::SCUpgradeFailReq);
-                completion_time = tags->getHitLatency() + pkt->finishTime;
+                // responseLatency is the latency of the return path
+                // from lower level caches/memory to an upper level cache or
+                // the core.
+                completion_time = responseLatency + pkt->finishTime;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
-                completion_time = tags->getHitLatency() + pkt->finishTime;
+                // responseLatency is the latency of the return path
+                // from lower level cahces/memory to the core.
+                completion_time = responseLatency + pkt->finishTime;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
                 }

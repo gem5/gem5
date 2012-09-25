@@ -36,7 +36,9 @@ class BaseCache(MemObject):
     type = 'BaseCache'
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
-    latency = Param.Latency("Latency")
+    hit_latency = Param.Latency("The hit latency for this cache")
+    response_latency = Param.Latency(
+            "Additional cache latency for the return path to core on a miss");
     hash_delay = Param.Cycles(1, "time in cycles of hash access")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
