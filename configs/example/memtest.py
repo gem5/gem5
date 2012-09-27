@@ -110,7 +110,8 @@ if len(treespec) < 1:
 
 # define prototype L1 cache
 proto_l1 = BaseCache(size = '32kB', assoc = 4, block_size = block_size,
-                     latency = '1ns', tgts_per_mshr = 8)
+                     hit_latency = '1ns', response_latency = '1ns',
+                     tgts_per_mshr = 8)
 
 if options.blocking:
      proto_l1.mshrs = 1
