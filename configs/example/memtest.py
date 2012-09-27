@@ -189,7 +189,7 @@ else:
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
-root.system.system_port = root.system.physmem.port
+root.system.system_port = root.system.funcbus.slave
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')
