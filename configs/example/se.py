@@ -190,15 +190,17 @@ if options.ruby:
         ruby_port = system.ruby._cpu_ruby_ports[i]
 
         # Create the interrupt controller and connect its ports to Ruby
+        # Note that the interrupt controller is always present but only
+        # in x86 does it have message ports that need to be connected
         system.cpu[i].createInterruptController()
-        system.cpu[i].interrupts.pio = ruby_port.master
-        system.cpu[i].interrupts.int_master = ruby_port.slave
-        system.cpu[i].interrupts.int_slave = ruby_port.master
 
         # Connect the cpu's cache ports to Ruby
         system.cpu[i].icache_port = ruby_port.slave
         system.cpu[i].dcache_port = ruby_port.slave
         if buildEnv['TARGET_ISA'] == 'x86':
+            system.cpu[i].interrupts.pio = ruby_port.master
+            system.cpu[i].interrupts.int_master = ruby_port.slave
+            system.cpu[i].interrupts.int_slave = ruby_port.master
             system.cpu[i].itb.walker.port = ruby_port.slave
             system.cpu[i].dtb.walker.port = ruby_port.slave
 else:
