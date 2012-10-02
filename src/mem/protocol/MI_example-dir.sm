@@ -102,7 +102,7 @@ machine(Directory, "Directory protocol")
   }
 
   // ** OBJECTS **
-  TBETable TBEs, template_hack="<Directory_TBE>";
+  TBETable TBEs, template="<Directory_TBE>";
 
   void set_tbe(TBE b);
   void unset_tbe();

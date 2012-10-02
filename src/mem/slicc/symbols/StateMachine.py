@@ -385,7 +385,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 // Objects
 ''')
         for var in self.objects:
-            th = var.get("template_hack", "")
+            th = var.get("template", "")
             code('${{var.type.c_ident}}$th* m_${{var.c_ident}}_ptr;')
 
             if var.type.ident == "MessageBuffer":
@@ -568,7 +568,7 @@ $c_ident::init()
                     if "factory" in var:
                         code('$vid = ${{var["factory"]}};')
                     elif var.ident.find("mandatoryQueue") < 0:
-                        th = var.get("template_hack", "")
+                        th = var.get("template", "")
                         expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
 
                         args = ""

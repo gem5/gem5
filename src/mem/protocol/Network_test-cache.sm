@@ -82,7 +82,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   // STRUCTURES
 
-  TBETable TBEs, template_hack="<L1Cache_TBE>";
+  TBETable TBEs, template="<L1Cache_TBE>";
 
 
   // FUNCTIONS

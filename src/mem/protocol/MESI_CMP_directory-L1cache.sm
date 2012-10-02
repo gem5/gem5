@@ -126,7 +126,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     bool isPresent(Address);
   }
 
-  TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
+  TBETable L1_TBEs, template="<L1Cache_TBE>";
 
   MessageBuffer mandatoryQueue, ordered="false";
 

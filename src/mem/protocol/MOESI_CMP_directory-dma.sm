@@ -44,7 +44,7 @@ machine(DMA, "DMA Controller")
 
   MessageBuffer mandatoryQueue, ordered="false";
   MessageBuffer triggerQueue, ordered="true";
-  TBETable TBEs, template_hack="<DMA_TBE>";
+  TBETable TBEs, template="<DMA_TBE>";
   State cur_state;
 
   void set_tbe(TBE b);

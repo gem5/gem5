@@ -180,7 +180,7 @@ machine(L1Cache, "Token protocol")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Address a);
 
-  TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
+  TBETable L1_TBEs, template="<L1Cache_TBE>";
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
 

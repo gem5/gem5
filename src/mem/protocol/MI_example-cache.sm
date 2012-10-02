@@ -98,7 +98,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
 
   // STRUCTURES
-  TBETable TBEs, template_hack="<L1Cache_TBE>";
+  TBETable TBEs, template="<L1Cache_TBE>";
 
   // PROTOTYPES
   void set_cache_entry(AbstractCacheEntry a);

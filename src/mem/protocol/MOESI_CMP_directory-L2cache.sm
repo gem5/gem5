@@ -225,8 +225,8 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  TBETable TBEs, template_hack="<L2Cache_TBE>";
-  PerfectCacheMemory localDirectory, template_hack="<L2Cache_DirEntry>";
+  TBETable TBEs, template="<L2Cache_TBE>";
+  PerfectCacheMemory localDirectory, template="<L2Cache_DirEntry>";
 
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();

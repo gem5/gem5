@@ -173,7 +173,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool isPresent(Address);
   }
 
-  TBETable TBEs, template_hack="<L1Cache_TBE>";
+  TBETable TBEs, template="<L1Cache_TBE>";
 
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();

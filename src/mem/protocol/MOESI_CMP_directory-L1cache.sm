@@ -142,7 +142,7 @@ machine(L1Cache, "Directory protocol")
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
 
-  TBETable TBEs, template_hack="<L1Cache_TBE>";
+  TBETable TBEs, template="<L1Cache_TBE>";
   TimerTable useTimerTable;
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
