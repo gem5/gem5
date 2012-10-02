@@ -89,8 +89,6 @@ class RubyPort : public MemObject
 
       private:
         bool isPhysMemAddress(Addr addr);
-        bool doFunctionalRead(PacketPtr pkt);
-        bool doFunctionalWrite(PacketPtr pkt);
     };
 
     friend class M5Port;

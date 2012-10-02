@@ -36,6 +36,7 @@
 #define __MEM_RUBY_SYSTEM_SYSTEM_HH__
 
 #include "base/callback.hh"
+#include "mem/packet.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -112,6 +113,8 @@ class RubySystem : public ClockedObject
     void unserialize(Checkpoint *cp, const std::string &section);
     void process();
     void startup();
+    bool functionalRead(Packet *ptr);
+    bool functionalWrite(Packet *ptr);
 
     void registerNetwork(Network*);
     void registerProfiler(Profiler*);
