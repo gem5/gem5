@@ -41,11 +41,11 @@
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/Global.hh"
 
 class MessageBuffer;
 class NetDest;
 class SimpleNetwork;
+class Switch;
 
 struct LinkOrder
 {
@@ -56,12 +56,13 @@ struct LinkOrder
 class PerfectSwitch : public Consumer
 {
   public:
-    PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr);
+    PerfectSwitch(SwitchID sid, Switch *, uint32_t);
     ~PerfectSwitch();
 
     std::string name()
     { return csprintf("PerfectSwitch-%i", m_switch_id); }
 
+    void init(SimpleNetwork *);
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
         const NetDest& routing_table_entry);
@@ -90,9 +91,11 @@ class PerfectSwitch : public Consumer
     std::vector<std::vector<MessageBuffer*> > m_out;
     std::vector<NetDest> m_routing_table;
     std::vector<LinkOrder> m_link_order;
-    int m_virtual_networks;
+
+    uint32_t m_virtual_networks;
     int m_round_robin_start;
     int m_wakeups_wo_switch;
+
     SimpleNetwork* m_network_ptr;
     std::vector<int> m_pending_message_count;
 };

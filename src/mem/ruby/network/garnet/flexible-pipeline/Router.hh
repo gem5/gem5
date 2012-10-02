@@ -75,7 +75,6 @@ class Router : public BasicRouter, public FlexibleConsumer
     }
 
   private:
-    int m_id;
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork *m_net_ptr;
     std::vector<int> m_vc_round_robin; // For scheduling of out source queues

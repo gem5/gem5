@@ -32,7 +32,6 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -40,8 +39,6 @@
 using namespace std;
 
 const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
-
-class BasicRouter;
 
 // Note: In this file, we use the first 2*m_nodes SwitchIDs to
 // represent the input and output endpoint links.  These really are

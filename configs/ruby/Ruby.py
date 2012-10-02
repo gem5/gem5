@@ -135,7 +135,7 @@ def create_system(options, system, piobus = None, dma_ports = []):
         class NetworkClass(SimpleNetwork): pass
         class IntLinkClass(SimpleIntLink): pass
         class ExtLinkClass(SimpleExtLink): pass
-        class RouterClass(BasicRouter): pass
+        class RouterClass(Switch): pass
 
     #
     # Important: the topology must be instantiated before the network and after

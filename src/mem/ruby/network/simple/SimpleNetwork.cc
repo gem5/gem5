@@ -78,6 +78,15 @@ SimpleNetwork::SimpleNetwork(const Params *p)
                 new MessageBuffer(csprintf("fromNet node %d j %d", node, j));
         }
     }
+
+    // record the routers
+    for (vector<BasicRouter*>::const_iterator i =
+             m_topology_ptr->params()->routers.begin();
+         i != m_topology_ptr->params()->routers.end(); ++i) {
+        Switch* s = safe_cast<Switch*>(*i);
+        m_switch_ptr_vector.push_back(s);
+        s->init_net_ptr(this);
+    }
 }
 
 void
@@ -88,11 +97,6 @@ SimpleNetwork::init()
     // The topology pointer should have already been initialized in
     // the parent class network constructor.
     assert(m_topology_ptr != NULL);
-    int number_of_switches = m_topology_ptr->numSwitches();
-    for (int i = 0; i < number_of_switches; i++) {
-        m_switch_ptr_vector.push_back(new Switch(i, this));
-    }
-
     // false because this isn't a reconfiguration
     m_topology_ptr->createLinks(this, false);
 }
@@ -282,15 +286,14 @@ SimpleNetwork::printStats(ostream& out) const
         
         if (total_msg_counts[type] > 0) {
             out << "total_msg_count_" << type << ": " << total_msg_counts[type] 
-                << " " << total_msg_counts[type] * 
-                uint64(RubySystem::getNetwork()->MessageSizeType_to_int(type))
+                << " " << total_msg_counts[type] *
+                uint64(MessageSizeType_to_int(type))
                 << endl;
             
             total_msgs += total_msg_counts[type];
             
             total_bytes += total_msg_counts[type] * 
-                uint64(RubySystem::getNetwork()->MessageSizeType_to_int(type));
-            
+                uint64(MessageSizeType_to_int(type));
         }
     }
     

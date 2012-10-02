@@ -39,5 +39,3 @@ class GarnetRouter(BasicRouter):
                               "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-
-

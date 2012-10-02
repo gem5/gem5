@@ -33,9 +33,8 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
-#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 
@@ -48,14 +47,19 @@ operator<(const LinkOrder& l1, const LinkOrder& l2)
     return (l1.m_value < l2.m_value);
 }
 
-PerfectSwitch::PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr)
-    : Consumer(network_ptr)
+PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
+    : Consumer(sw)
 {
-    m_virtual_networks = network_ptr->getNumberOfVirtualNetworks();
     m_switch_id = sid;
     m_round_robin_start = 0;
-    m_network_ptr = network_ptr;
     m_wakeups_wo_switch = 0;
+    m_virtual_networks = virt_nets;
+}
+
+void
+PerfectSwitch::init(SimpleNetwork *network_ptr)
+{
+    m_network_ptr = network_ptr;
 
     for(int i = 0;i < m_virtual_networks;++i)
     {

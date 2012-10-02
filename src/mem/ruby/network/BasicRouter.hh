@@ -53,7 +53,7 @@ class BasicRouter : public SimObject
     //
     // ID in relation to other routers in the system
     //
-    int m_id;
+    uint32_t m_id;
 };
 
 inline std::ostream&

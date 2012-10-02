@@ -41,10 +41,9 @@ using namespace std;
 using m5::stl_helpers::deletePointers;
 using m5::stl_helpers::operator<<;
 
-Switch::Switch(SwitchID sid, SimpleNetwork* network_ptr)
+Switch::Switch(const Params *p) : BasicRouter(p)
 {
-    m_perfect_switch_ptr = new PerfectSwitch(sid, network_ptr);
-    m_switch_id = sid;
+    m_perfect_switch_ptr = new PerfectSwitch(m_id, this, p->virt_nets);
 }
 
 Switch::~Switch()
@@ -59,6 +58,13 @@ Switch::~Switch()
 }
 
 void
+Switch::init()
+{
+    BasicRouter::init();
+    m_perfect_switch_ptr->init(m_network_ptr);
+}
+
+void
 Switch::addInPort(const vector<MessageBuffer*>& in)
 {
     m_perfect_switch_ptr->addInPort(in);
@@ -68,14 +74,10 @@ void
 Switch::addOutPort(const vector<MessageBuffer*>& out,
     const NetDest& routing_table_entry, int link_latency, int bw_multiplier)
 {
-    Throttle* throttle_ptr = NULL;
-    SimpleNetwork* net_ptr = 
-        safe_cast<SimpleNetwork*>(RubySystem::getNetwork());
-
     // Create a throttle
-    throttle_ptr = new Throttle(m_switch_id, m_throttles.size(), link_latency,
-                                bw_multiplier, net_ptr->getEndpointBandwidth(),
-                                net_ptr);
+    Throttle* throttle_ptr = new Throttle(m_id, m_throttles.size(),
+        link_latency, bw_multiplier, m_network_ptr->getEndpointBandwidth(),
+        this);
     m_throttles.push_back(throttle_ptr);
 
     // Create one buffer per vnet (these are intermediaryQueues)
@@ -84,12 +86,12 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
         MessageBuffer* buffer_ptr = new MessageBuffer;
         // Make these queues ordered
         buffer_ptr->setOrdering(true);
-        if (net_ptr->getBufferSize() > 0) {
-            buffer_ptr->resize(net_ptr->getBufferSize());
+        if (m_network_ptr->getBufferSize() > 0) {
+            buffer_ptr->resize(m_network_ptr->getBufferSize());
         }
         intermediateBuffers.push_back(buffer_ptr);
         m_buffers_to_free.push_back(buffer_ptr);
-  }
+    }
 
     // Hook the queues to the PerfectSwitch
     m_perfect_switch_ptr->addOutPort(intermediateBuffers, routing_table_entry);
@@ -137,9 +139,9 @@ Switch::getThrottles() const
 void
 Switch::printStats(std::ostream& out) const
 {
-    ccprintf(out, "switch_%d_inlinks: %d\n", m_switch_id,
+    ccprintf(out, "switch_%d_inlinks: %d\n", m_id,
         m_perfect_switch_ptr->getInLinks());
-    ccprintf(out, "switch_%d_outlinks: %d\n", m_switch_id,
+    ccprintf(out, "switch_%d_outlinks: %d\n", m_id,
         m_perfect_switch_ptr->getOutLinks());
 
     // Average link utilizations
@@ -157,13 +159,13 @@ Switch::printStats(std::ostream& out) const
         throttle_count == 0 ? 0 : average_utilization / throttle_count;
 
     // Individual link utilizations
-    out << "links_utilized_percent_switch_" << m_switch_id << ": "
+    out << "links_utilized_percent_switch_" << m_id << ": "
         << average_utilization << endl;
 
     for (int link = 0; link < m_throttles.size(); link++) {
         Throttle* throttle_ptr = m_throttles[link];
         if (throttle_ptr != NULL) {
-            out << "  links_utilized_percent_switch_" << m_switch_id
+            out << "  links_utilized_percent_switch_" << m_id
                 << "_link_" << link << ": "
                 << throttle_ptr->getUtilization() << " bw: "
                 << throttle_ptr->getLinkBandwidth()
@@ -187,9 +189,9 @@ Switch::printStats(std::ostream& out) const
             if (sum == 0)
                 continue;
 
-            out << "  outgoing_messages_switch_" << m_switch_id
+            out << "  outgoing_messages_switch_" << m_id
                 << "_link_" << link << "_" << type << ": " << sum << " "
-                << sum * RubySystem::getNetwork()->MessageSizeType_to_int(type)
+                << sum * m_network_ptr->MessageSizeType_to_int(type)
                 << " ";
             out << mct;
             out << " base_latency: "
@@ -214,4 +216,10 @@ Switch::print(std::ostream& out) const
 {
     // FIXME printing
     out << "[Switch]";
+}
+
+Switch *
+SwitchParams::create()
+{
+    return new Switch(this);
 }

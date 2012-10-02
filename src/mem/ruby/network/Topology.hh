@@ -46,6 +46,7 @@
 
 #include "mem/protocol/LinkDirection.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "params/Topology.hh"
 #include "sim/sim_object.hh"
 
