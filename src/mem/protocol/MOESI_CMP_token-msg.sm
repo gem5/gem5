@@ -57,20 +57,6 @@ enumeration(CoherenceResponseType, desc="...") {
   INV,         desc="L1 informing L2 of loss of all tokens";
 }
 
-// TriggerType
-enumeration(TriggerType, desc="...") {
-  REQUEST_TIMEOUT,         desc="See corresponding event";
-  USE_TIMEOUT,             desc="See corresponding event";
-  DATA,                    desc="data for dma read response";
-  DATA_ALL_TOKENS,         desc="data and all tokens for dma write response";
-}
-
-// TriggerMsg
-structure(TriggerMsg, desc="...", interface="Message") {
-  Address Address,             desc="Physical address for this request";
-  TriggerType Type,            desc="Type of trigger";
-}
-
 // PersistentMsg
 structure(PersistentMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";

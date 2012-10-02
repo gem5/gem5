@@ -41,37 +41,3 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   DataBlock DataBlk,           desc="data for the cache line";
   MessageSizeType MessageSize, desc="size category of the message";
 }
-
-
-enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {
-  READ,          desc="Memory Read";
-  WRITE,         desc="Memory Write";
-  NULL,          desc="Invalid";
-}
-
-enumeration(DMAResponseType, desc="...", default="DMAResponseType_NULL") {
-  DATA,          desc="DATA read";
-  ACK,           desc="ACK write";
-  NULL,          desc="Invalid";
-}
-
-structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
-  DMARequestType Type,       desc="Request type (read/write)";
-  Address PhysicalAddress,   desc="Physical address for this request";
-  Address LineAddress,       desc="Line address for this request";
-  NetDest Destination,       desc="Destination";
-  DataBlock DataBlk,         desc="DataBlk attached to this request";
-  int Len,                   desc="The length of the request";
-  MessageSizeType MessageSize, desc="size category of the message";
-}
-
-structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
-  DMAResponseType Type,      desc="Response type (DATA/ACK)";
-  Address PhysicalAddress,   desc="Physical address for this request";
-  Address LineAddress,       desc="Line address for this request";
-  NetDest Destination,       desc="Destination";
-  DataBlock DataBlk,         desc="DataBlk attached to this request";
-  MessageSizeType MessageSize, desc="size category of the message";
-}
-
-

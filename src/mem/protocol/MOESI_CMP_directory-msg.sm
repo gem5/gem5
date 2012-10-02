@@ -100,5 +100,3 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   int Acks,                    desc="How many acks to expect";
   MessageSizeType MessageSize, desc="size category of the message";
 }
-
-

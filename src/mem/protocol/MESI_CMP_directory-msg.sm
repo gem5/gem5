@@ -83,5 +83,3 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   int AckCount, default="0",  desc="number of acks in this message";
   MessageSizeType MessageSize,  desc="size category of the message";
 }
-
-

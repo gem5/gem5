@@ -38,11 +38,9 @@ machine(Directory, "Directory protocol")
 {
 
   // ** IN QUEUES **
-  MessageBuffer foo1, network="From", virtual_network="0", ordered="false", vnet_type="foo";  // a mod-L2 bank -> this Dir
   MessageBuffer requestToDir, network="From", virtual_network="1", ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
   MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
   
-  MessageBuffer goo1, network="To", virtual_network="0", ordered="false", vnet_type="goo";
   MessageBuffer forwardFromDir, network="To", virtual_network="1", ordered="false", vnet_type="forward";
   MessageBuffer responseFromDir, network="To", virtual_network="2", ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
 
@@ -223,17 +221,10 @@ machine(Directory, "Directory protocol")
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
 //  out_port(requestQueue_out, ResponseMsg, requestFromDir); // For recycling requests
-  out_port(goo1_out, ResponseMsg, goo1);
   out_port(memQueue_out, MemoryMsg, memBuffer);
 
   // ** IN_PORTS **
 
-  in_port(foo1_in, ResponseMsg, foo1) {
-
-  }
-
-  // in_port(unblockNetwork_in, ResponseMsg, unblockToDir) {
-  //  if (unblockNetwork_in.isReady()) {
   in_port(unblockNetwork_in, ResponseMsg, responseToDir) {
     if (unblockNetwork_in.isReady()) {
       peek(unblockNetwork_in, ResponseMsg) {

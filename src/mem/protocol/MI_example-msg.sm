@@ -51,17 +51,6 @@ enumeration(CoherenceResponseType, desc="...") {
   WRITEBACK,         desc="Generic writeback (contains data)";
 }
 
-// TriggerType
-enumeration(TriggerType, desc="...") {
-  ALL_ACKS,            desc="See corresponding event";
-}
-
-// TriggerMsg
-structure(TriggerMsg, desc="...", interface="Message") {
-  Address Address,             desc="Physical address for this request";
-  TriggerType Type,            desc="Type of trigger";
-}
-
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";

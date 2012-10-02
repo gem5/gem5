@@ -4,12 +4,8 @@ machine(DMA, "DMA Controller")
   int request_latency = 14,
   int response_latency = 14
 {
-  
-  MessageBuffer goo1, network="From", virtual_network="0", ordered="false", vnet_type="goo";
-  MessageBuffer goo2, network="From", virtual_network="1", ordered="false", vnet_type="goo";
   MessageBuffer responseFromDir, network="From", virtual_network="2", ordered="false", vnet_type="response";
 
-  MessageBuffer foo1, network="To", virtual_network="0", ordered="false", vnet_type="foo";
   MessageBuffer reqToDir, network="To", virtual_network="1", ordered="false", vnet_type="request";
   MessageBuffer respToDir, network="To", virtual_network="2", ordered="false", vnet_type="dmaresponse";
   
@@ -74,24 +70,7 @@ machine(DMA, "DMA Controller")
 
   out_port(reqToDirectory_out, RequestMsg, reqToDir, desc="...");
   out_port(respToDirectory_out, ResponseMsg, respToDir, desc="...");
-  out_port(foo1_out, ResponseMsg, foo1, desc="...");
   out_port(triggerQueue_out, TriggerMsg, triggerQueue, desc="...");
-
-  in_port(goo1_in, RequestMsg, goo1) {
-    if (goo1_in.isReady()) {
-      peek(goo1_in, RequestMsg) {
-        assert(false);
-      }
-    }
-  }
-  
-  in_port(goo2_in, RequestMsg, goo2) {
-    if (goo2_in.isReady()) {
-      peek(goo2_in, RequestMsg) {
-        assert(false);
-      }
-    }
-  }
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
     if (dmaRequestQueue_in.isReady()) {
