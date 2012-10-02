@@ -41,8 +41,6 @@ class ObjDeclAST(DeclAST):
     def generate(self):
         machineComponentSym = False
 
-        self["chip_object"] = "yes"
-
         if "hack" in self:
             warning("'hack=' is now deprecated")
 
@@ -70,9 +68,7 @@ class ObjDeclAST(DeclAST):
 
         # FIXME : should all use accessors here to avoid public member
         # variables
-        if self.ident == "id":
-            c_code = "m_chip_ptr.getID()"
-        elif self.ident == "version":
+        if self.ident == "version":
             c_code = "m_version"
         elif self.ident == "machineID":
             c_code = "m_machineID"

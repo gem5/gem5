@@ -121,8 +121,6 @@ class SLICC(Grammar):
         'is_invalid' : 'IS_INVALID',
         'else' : 'ELSE',
         'return' : 'RETURN',
-        'THIS' : 'THIS',
-        'CHIP' : 'CHIP',
         'void' : 'VOID',
         'new' : 'NEW',
         'OOD' : 'OOD',
@@ -619,27 +617,6 @@ class SLICC(Grammar):
         "aexpr : OOD"
         p[0] = ast.OodAST(self)
 
-    # globally access a local chip component and call a method
-    def p_expr__local_chip_method(self, p):
-        "aexpr : THIS DOT var '[' expr ']' DOT var DOT ident '(' exprs ')'"
-        p[0] = ast.LocalChipMethodAST(self, p[3], p[5], p[8], p[10], p[12])
-
-    # globally access a local chip component and access a data member
-    def p_expr__local_chip_member(self, p):
-        "aexpr : THIS DOT var '[' expr ']' DOT var DOT field"
-        p[0] = ast.LocalChipMemberAST(self, p[3], p[5], p[8], p[10])
-
-    # globally access a specified chip component and call a method
-    def p_expr__specified_chip_method(self, p):
-        "aexpr : CHIP '[' expr ']' DOT var '[' expr ']' DOT var DOT ident '(' exprs ')'"
-        p[0] = ast.SpecifiedChipMethodAST(self, p[3], p[6], p[8], p[11], p[13],
-                                          p[15])
-
-    # globally access a specified chip component and access a data member
-    def p_expr__specified_chip_member(self, p):
-        "aexpr : CHIP '[' expr ']' DOT var '[' expr ']' DOT var DOT field"
-        p[0] = ast.SpecifiedChipMemberAST(self, p[3], p[6], p[8], p[11], p[13])
-
     def p_expr__member(self, p):
         "aexpr : aexpr DOT ident"
         p[0] = ast.MemberExprAST(self, p[1], p[3])
@@ -718,7 +695,3 @@ class SLICC(Grammar):
     def p_var(self, p):
         "var : ident"
         p[0] = ast.VarExprAST(self, p[1])
-
-    def p_field(self, p):
-        "field : ident"
-        p[0] = p[1]

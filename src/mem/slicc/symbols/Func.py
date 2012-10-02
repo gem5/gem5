@@ -84,7 +84,7 @@ class Func(Symbol):
         if self.isInternalMachineFunc:
             klass = "%s_Controller" % self.machineStr
         else:
-            klass = "Chip"
+            self.error("No class found for the function %s" % self.ident)
 
         params = ', '.join(self.param_strings)
 

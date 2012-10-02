@@ -246,10 +246,7 @@ extern std::stringstream ${ident}_transitionComment;
 
 class $c_ident : public AbstractController
 {
-// the coherence checker needs to call isBlockExclusive() and isBlockShared()
-// making the Chip a friend class is an easy way to do this for now
-
-public:
+  public:
     typedef ${c_ident}Params Params;
     $c_ident(const Params *p);
     static int getNumControllers();
