@@ -64,8 +64,8 @@ class Network : public SimObject
 
     virtual void init();
 
-    int getNumberOfVirtualNetworks() { return m_virtual_networks; }
-    int MessageSizeType_to_int(MessageSizeType size_type);
+    static int getNumberOfVirtualNetworks() { return m_virtual_networks; }
+    static uint32_t MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component
     virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered,
@@ -102,10 +102,10 @@ class Network : public SimObject
   protected:
     const std::string m_name;
     int m_nodes;
-    int m_virtual_networks;
+    static uint32_t m_virtual_networks;
     Topology* m_topology_ptr;
-    int m_control_msg_size;
-    int m_data_msg_size;
+    static uint32_t m_control_msg_size;
+    static uint32_t m_data_msg_size;
 };
 
 inline std::ostream&

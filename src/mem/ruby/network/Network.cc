@@ -32,6 +32,10 @@
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/system/System.hh"
 
+uint32_t Network::m_virtual_networks;
+uint32_t Network::m_control_msg_size;
+uint32_t Network::m_data_msg_size;
+
 Network::Network(const Params *p)
     : SimObject(p)
 {
@@ -58,7 +62,7 @@ Network::init()
     m_data_msg_size = RubySystem::getBlockSizeBytes() + m_control_msg_size;
 }
 
-int
+uint32_t
 Network::MessageSizeType_to_int(MessageSizeType size_type)
 {
     switch(size_type) {

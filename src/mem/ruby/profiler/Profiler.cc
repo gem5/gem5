@@ -460,7 +460,7 @@ Profiler::clearStats()
 
     m_delayedCyclesHistogram.clear();
     m_delayedCyclesNonPFHistogram.clear();
-    int size = RubySystem::getNetwork()->getNumberOfVirtualNetworks();
+    int size = Network::getNumberOfVirtualNetworks();
     m_delayedCyclesVCHistograms.resize(size);
     for (int i = 0; i < size; i++) {
         m_delayedCyclesVCHistograms[i].clear();

@@ -81,7 +81,7 @@ class RubySystem : public ClockedObject
     Cycles getTime() const { return curCycle(); }
 
     // Public Methods
-    static Network*
+    Network*
     getNetwork()
     {
         assert(m_network_ptr != NULL);
@@ -95,14 +95,14 @@ class RubySystem : public ClockedObject
         return m_profiler_ptr;
     }
 
-    static MemoryVector*
+    MemoryVector*
     getMemoryVector()
     {
         assert(m_mem_vec_ptr != NULL);
         return m_mem_vec_ptr;
     }
 
-    static void printStats(std::ostream& out);
+    void printStats(std::ostream& out);
     void clearStats() const;
 
     uint64 getInstructionCount(int thread) { return 1; }
@@ -150,13 +150,13 @@ class RubySystem : public ClockedObject
     static int m_block_size_bits;
     static uint64 m_memory_size_bytes;
     static int m_memory_size_bits;
-    static Network* m_network_ptr;
 
+    Network* m_network_ptr;
     MemoryControl *m_memory_controller;
 
   public:
-    static Profiler* m_profiler_ptr;
-    static MemoryVector* m_mem_vec_ptr;
+    Profiler* m_profiler_ptr;
+    MemoryVector* m_mem_vec_ptr;
     std::vector<AbstractController*> m_abs_cntrl_vec;
     bool m_warmup_enabled;
     bool m_cooldown_enabled;
@@ -176,16 +176,18 @@ class RubyExitCallback : public Callback
 {
   private:
     std::string stats_filename;
+    RubySystem *ruby_system;
 
   public:
     virtual ~RubyExitCallback() {}
 
-    RubyExitCallback(const std::string& _stats_filename)
+    RubyExitCallback(const std::string& _stats_filename, RubySystem *system)
     {
         stats_filename = _stats_filename;
+        ruby_system = system;
     }
 
-    virtual void process();
+    void process();
 };
 
 #endif // __MEM_RUBY_SYSTEM_SYSTEM_HH__

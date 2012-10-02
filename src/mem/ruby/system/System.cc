@@ -51,10 +51,6 @@ int RubySystem::m_block_size_bits;
 uint64 RubySystem::m_memory_size_bytes;
 int RubySystem::m_memory_size_bits;
 
-Network* RubySystem::m_network_ptr;
-Profiler* RubySystem::m_profiler_ptr;
-MemoryVector* RubySystem::m_mem_vec_ptr;
-
 RubySystem::RubySystem(const Params *p)
     : ClockedObject(p)
 {
@@ -84,11 +80,9 @@ RubySystem::RubySystem(const Params *p)
         m_mem_vec_ptr->resize(m_memory_size_bytes);
     }
 
-    //
     // Print ruby configuration and stats at exit
-    //
-    RubyExitCallback* rubyExitCB = new RubyExitCallback(p->stats_filename);
-    registerExitCallback(rubyExitCB);
+    registerExitCallback(new RubyExitCallback(p->stats_filename, this));
+
     m_warmup_enabled = false;
     m_cooldown_enabled = false;
 }
@@ -636,5 +630,5 @@ void
 RubyExitCallback::process()
 {
     std::ostream *os = simout.create(stats_filename);
-    RubySystem::printStats(*os);
+    ruby_system->printStats(*os);
 }

@@ -260,8 +260,7 @@ network_message_to_size(NetworkMessage* net_msg_ptr)
 {
     assert(net_msg_ptr != NULL);
 
-    int size = RubySystem::getNetwork()->
-        MessageSizeType_to_int(net_msg_ptr->getMessageSize());
+    int size = Network::MessageSizeType_to_int(net_msg_ptr->getMessageSize());
     size *=  MESSAGE_SIZE_MULTIPLIER;
 
     // Artificially increase the size of broadcast messages
