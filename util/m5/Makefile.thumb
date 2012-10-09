@@ -47,12 +47,17 @@ endif
 CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
+AR=$(CROSS_COMPILE)ar
 
 #CFLAGS=-O2 -march=armv7 -mthumb 
 CFLAGS=-O2 -mthumb 
-OBJS=m5.o m5op_arm.o
+LDFLAGS=-L. -lm5
 
-all: m5
+OBJS=m5.o
+LIB_OBJS=m5op_arm.o
+
+
+all: libm5.a m5
 
 %.o: %.S
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -61,7 +66,11 @@ all: m5
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
 m5: $(OBJS)
-	$(CC) -o $@ -march=armv7 -mthumb $(OBJS)
+	$(CC) -o $@ -march=armv7 -mthumb $(OBJS) $(LDFLAGS)
+
+libm5.a: $(LIB_OBJS)
+	$(AR) rcs $@ $<
+
 
 clean:
-	rm -f *.o m5
+	rm -f *.o m5 libm5.a
