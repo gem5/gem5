@@ -90,6 +90,9 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
 void
 CoherentBus::init()
 {
+    // the base class is responsible for determining the block size
+    BaseBus::init();
+
     // iterate over our slave ports and determine which of our
     // neighbouring master ports are snooping and add them as snoopers
     for (SlavePortConstIter p = slavePorts.begin(); p != slavePorts.end();

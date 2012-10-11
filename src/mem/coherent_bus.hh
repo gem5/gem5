@@ -140,7 +140,7 @@ class CoherentBus : public BaseBus
          * Get the maximum block size as seen by the bus.
          */
         virtual unsigned deviceBlockSize() const
-        { return bus.findBlockSize(); }
+        { return bus.deviceBlockSize(); }
 
     };
 
@@ -211,7 +211,7 @@ class CoherentBus : public BaseBus
         // take the max of it. This might need to be changed a bit if we ever
         // support multiple block sizes.
         virtual unsigned deviceBlockSize() const
-        { return bus.findBlockSize(); }
+        { return bus.deviceBlockSize(); }
 
     };
 

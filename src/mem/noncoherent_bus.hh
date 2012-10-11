@@ -134,7 +134,7 @@ class NoncoherentBus : public BaseBus
          * Get the maximum block size as seen by the bus.
          */
         virtual unsigned deviceBlockSize() const
-        { return bus.findBlockSize(); }
+        { return bus.deviceBlockSize(); }
 
     };
 
@@ -179,7 +179,7 @@ class NoncoherentBus : public BaseBus
          * Get the maximum block size as seen by the bus.
          */
         virtual unsigned deviceBlockSize() const
-        { return bus.findBlockSize(); }
+        { return bus.deviceBlockSize(); }
 
     };
 

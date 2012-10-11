@@ -59,8 +59,7 @@ BaseBus::BaseBus(const BaseBusParams *p)
       headerCycles(p->header_cycles), width(p->width),
       defaultPortID(InvalidPortID),
       useDefaultRange(p->use_default_range),
-      defaultBlockSize(p->block_size),
-      cachedBlockSize(0), cachedBlockSizeValid(false)
+      blockSize(p->block_size)
 {}
 
 BaseBus::~BaseBus()
@@ -74,6 +73,34 @@ BaseBus::~BaseBus()
          ++s) {
         delete *s;
     }
+}
+
+void
+BaseBus::init()
+{
+    // determine the maximum peer block size, look at both the
+    // connected master and slave modules
+    uint32_t peer_block_size = 0;
+
+    for (MasterPortConstIter m = masterPorts.begin(); m != masterPorts.end();
+         ++m) {
+        peer_block_size = std::max((*m)->peerBlockSize(), peer_block_size);
+    }
+
+    for (SlavePortConstIter s = slavePorts.begin(); s != slavePorts.end();
+         ++s) {
+        peer_block_size = std::max((*s)->peerBlockSize(), peer_block_size);
+    }
+
+    // if the peers do not have a block size, use the default value
+    // set through the bus parameters
+    if (peer_block_size != 0)
+        blockSize = peer_block_size;
+
+    // check if the block size is a value known to work
+    if (blockSize != 16 || blockSize != 32 || blockSize != 64 ||
+        blockSize != 128)
+        warn_once("Block size is neither 16, 32, 64 or 128 bytes.\n");
 }
 
 MasterPort &
@@ -452,34 +479,9 @@ BaseBus::getAddrRanges() const
 }
 
 unsigned
-BaseBus::findBlockSize()
+BaseBus::deviceBlockSize() const
 {
-    if (cachedBlockSizeValid)
-        return cachedBlockSize;
-
-    unsigned max_bs = 0;
-
-    for (MasterPortConstIter m = masterPorts.begin(); m != masterPorts.end();
-         ++m) {
-        unsigned tmp_bs = (*m)->peerBlockSize();
-        if (tmp_bs > max_bs)
-            max_bs = tmp_bs;
-    }
-
-    for (SlavePortConstIter s = slavePorts.begin(); s != slavePorts.end();
-         ++s) {
-        unsigned tmp_bs = (*s)->peerBlockSize();
-        if (tmp_bs > max_bs)
-            max_bs = tmp_bs;
-    }
-    if (max_bs == 0)
-        max_bs = defaultBlockSize;
-
-    if (max_bs != 64 && max_bs != 32)
-        warn_once("Blocksize found to not be 32 or 64... hmm... probably not.\n");
-    cachedBlockSize = max_bs;
-    cachedBlockSizeValid = true;
-    return max_bs;
+    return blockSize;
 }
 
 template <typename PortClass>

@@ -321,11 +321,13 @@ class BaseBus : public MemObject
     Tick calcPacketTiming(PacketPtr pkt);
 
     /**
-     * Ask everyone on the bus what their size is
+     * Ask everyone on the bus what their size is and determine the
+     * bus size as either the maximum, or if no device specifies a
+     * block size return the default.
      *
-     * @return the max of all the sizes
+     * @return the max of all the sizes or the default if none is set
      */
-    unsigned findBlockSize();
+    unsigned deviceBlockSize() const;
 
     std::set<PortID> inRecvRangeChange;
 
@@ -348,15 +350,15 @@ class BaseBus : public MemObject
        addresses not handled by another port to default device. */
     const bool useDefaultRange;
 
-    const uint32_t defaultBlockSize;
-    uint32_t cachedBlockSize;
-    bool cachedBlockSizeValid;
+    uint32_t blockSize;
 
     BaseBus(const BaseBusParams *p);
 
     virtual ~BaseBus();
 
   public:
+
+    virtual void init();
 
     /** A function used to return the port associated with this bus object. */
     virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
