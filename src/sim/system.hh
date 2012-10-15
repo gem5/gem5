@@ -403,6 +403,26 @@ class System : public MemObject
     // For futex system call
     std::map<uint64_t, std::list<ThreadContext *> * > futexMap;
 
+  protected:
+
+    /**
+     * If needed, serialize additional symbol table entries for a
+     * specific subclass of this sytem. Currently this is used by
+     * Alpha and MIPS.
+     *
+     * @param os stream to serialize to
+     */
+    virtual void serializeSymtab(std::ostream &os) {}
+
+    /**
+     * If needed, unserialize additional symbol table entries for a
+     * specific subclass of this system.
+     *
+     * @param cp checkpoint to unserialize from
+     * @param section relevant section in the checkpoint
+     */
+    virtual void unserializeSymtab(Checkpoint *cp,
+                                   const std::string &section) {}
 
 };
 

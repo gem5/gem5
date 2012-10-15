@@ -388,19 +388,6 @@ X86System::~X86System()
     delete smbiosTable;
 }
 
-void
-X86System::serialize(std::ostream &os)
-{
-    System::serialize(os);
-}
-
-
-void
-X86System::unserialize(Checkpoint *cp, const std::string &section)
-{
-    System::unserialize(cp,section);
-}
-
 X86System *
 X86SystemParams::create()
 {

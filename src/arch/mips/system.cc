@@ -67,19 +67,6 @@ MipsSystem::breakpoint()
     return 0;
 }
 
-void
-MipsSystem::serialize(std::ostream &os)
-{
-    System::serialize(os);
-}
-
-
-void
-MipsSystem::unserialize(Checkpoint *cp, const std::string &section)
-{
-    System::unserialize(cp,section);
-}
-
 MipsSystem *
 MipsSystemParams::create()
 {

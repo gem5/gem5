@@ -59,8 +59,8 @@ class AlphaSystem : public System
     /**
      * Serialization stuff
      */
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void serializeSymtab(std::ostream &os);
+    virtual void unserializeSymtab(Checkpoint *cp, const std::string &section);
 
     /** Override startup() to provide a path to call setupFuncEvents()
      */

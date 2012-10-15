@@ -55,11 +55,6 @@ class MipsSystem : public System
     virtual bool breakpoint();
 
   public:
-    /**
-     * Serialization stuff
-     */
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     /**
      * Set the m5MipsAccess pointer in the console

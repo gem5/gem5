@@ -74,8 +74,6 @@ class X86System : public System
  * Serialization stuff
  */
   public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
 
     void initState();
 

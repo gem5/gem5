@@ -177,9 +177,8 @@ SparcSystem::~SparcSystem()
 }
 
 void
-SparcSystem::serialize(std::ostream &os)
+SparcSystem::serializeSymtab(std::ostream &os)
 {
-    System::serialize(os);
     resetSymtab->serialize("reset_symtab", os);
     hypervisorSymtab->serialize("hypervisor_symtab", os);
     openbootSymtab->serialize("openboot_symtab", os);
@@ -190,9 +189,8 @@ SparcSystem::serialize(std::ostream &os)
 
 
 void
-SparcSystem::unserialize(Checkpoint *cp, const std::string &section)
+SparcSystem::unserializeSymtab(Checkpoint *cp, const std::string &section)
 {
-    System::unserialize(cp,section);
     resetSymtab->unserialize("reset_symtab", cp, section);
     hypervisorSymtab->unserialize("hypervisor_symtab", cp, section);
     openbootSymtab->unserialize("openboot_symtab", cp, section);

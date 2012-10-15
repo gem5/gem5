@@ -218,17 +218,15 @@ AlphaSystem::setAlphaAccess(Addr access)
 }
 
 void
-AlphaSystem::serialize(std::ostream &os)
+AlphaSystem::serializeSymtab(std::ostream &os)
 {
-    System::serialize(os);
     consoleSymtab->serialize("console_symtab", os);
     palSymtab->serialize("pal_symtab", os);
 }
 
 void
-AlphaSystem::unserialize(Checkpoint *cp, const std::string &section)
+AlphaSystem::unserializeSymtab(Checkpoint *cp, const std::string &section)
 {
-    System::unserialize(cp,section);
     consoleSymtab->unserialize("console_symtab", cp, section);
     palSymtab->unserialize("pal_symtab", cp, section);
 }

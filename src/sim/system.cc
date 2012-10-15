@@ -341,6 +341,7 @@ System::serialize(ostream &os)
         kernelSymtab->serialize("kernel_symtab", os);
     SERIALIZE_SCALAR(pagePtr);
     SERIALIZE_SCALAR(nextPID);
+    serializeSymtab(os);
 }
 
 
@@ -351,6 +352,7 @@ System::unserialize(Checkpoint *cp, const string &section)
         kernelSymtab->unserialize("kernel_symtab", cp, section);
     UNSERIALIZE_SCALAR(pagePtr);
     UNSERIALIZE_SCALAR(nextPID);
+    unserializeSymtab(cp, section);
 }
 
 void
