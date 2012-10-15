@@ -152,12 +152,12 @@ class RubySystem : public ClockedObject
     static int m_memory_size_bits;
 
     Network* m_network_ptr;
-    MemoryControl *m_memory_controller;
+    std::vector<MemoryControl *> m_memory_controller_vec;
+    std::vector<AbstractController *> m_abs_cntrl_vec;
 
   public:
     Profiler* m_profiler_ptr;
     MemoryVector* m_mem_vec_ptr;
-    std::vector<AbstractController*> m_abs_cntrl_vec;
     bool m_warmup_enabled;
     bool m_cooldown_enabled;
     CacheRecorder* m_cache_recorder;

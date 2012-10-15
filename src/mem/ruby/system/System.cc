@@ -119,7 +119,7 @@ RubySystem::registerSparseMemory(SparseMemory* s)
 
 void
 RubySystem::registerMemController(MemoryControl *mc) {
-    m_memory_controller = mc;
+    m_memory_controller_vec.push_back(mc);
 }
 
 RubySystem::~RubySystem()
@@ -365,9 +365,13 @@ RubySystem::startup()
         delete m_cache_recorder;
         m_cache_recorder = NULL;
         m_warmup_enabled = false;
+
         // reset DRAM so that it's not waiting for events on the old event
         // queue
-        m_memory_controller->reset();
+        for (int i = 0; i < m_memory_controller_vec.size(); ++i) {
+            m_memory_controller_vec[i]->reset();
+        }
+
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
         // Restore curTick and Ruby System's clock
