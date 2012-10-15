@@ -55,16 +55,16 @@ class L2(BaseCache):
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest() for i in xrange(nb_cores) ]
+cpus = [ MemTest(clock = '2GHz') for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(),
-                membus = CoherentBus(clock="500GHz", width=16))
+                membus = CoherentBus(clock="1GHz", width=16))
 
 # l2cache & bus
-system.toL2Bus = CoherentBus(clock="500GHz", width=16)
+system.toL2Bus = CoherentBus(clock="2GHz", width=16)
 system.l2c = L2(size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 

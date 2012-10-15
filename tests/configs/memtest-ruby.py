@@ -69,7 +69,7 @@ options.l3_assoc=2
 nb_cores = 8
 
 # ruby does not support atomic, functional, or uncacheable accesses
-cpus = [ MemTest(atomic=False, percent_functional=50,
+cpus = [ MemTest(clock = '2GHz', atomic=False, percent_functional=50,
                  percent_uncacheable=0, suppress_func_warnings=True) \
          for i in xrange(nb_cores) ]
 
