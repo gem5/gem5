@@ -58,6 +58,7 @@
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
 #include "sim/byteswap.hh"
@@ -81,7 +82,7 @@ System::System(Params *p)
       virtProxy(_systemPort),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
-      physmem(p->memories),
+      physmem(name() + ".physmem", p->memories),
       memoryMode(p->mem_mode),
       workItemsBegin(0),
       workItemsEnd(0),
@@ -342,6 +343,10 @@ System::serialize(ostream &os)
     SERIALIZE_SCALAR(pagePtr);
     SERIALIZE_SCALAR(nextPID);
     serializeSymtab(os);
+
+    // also serialize the memories in the system
+    nameOut(os, csprintf("%s.physmem", name()));
+    physmem.serialize(os);
 }
 
 
@@ -353,6 +358,9 @@ System::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(pagePtr);
     UNSERIALIZE_SCALAR(nextPID);
     unserializeSymtab(cp, section);
+
+    // also unserialize the memories in the system
+    physmem.unserialize(cp, csprintf("%s.physmem", name()));
 }
 
 void

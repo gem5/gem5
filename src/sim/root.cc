@@ -146,7 +146,7 @@ Root::unserialize(Checkpoint *cp, const std::string &section)
         warn("!!!! Checkpoint ver %#x is older than current ver %#x !!!!\n",
                 cpt_ver, gem5CheckpointVersion);
         warn("You might experience some issues when restoring and should run "
-             "the checkpoint upgrader (util/cpt_upgrade.py) on your "
+             "the checkpoint upgrader (util/cpt_upgrader.py) on your "
              "checkpoint\n");
         warn("**********************************************************\n");
     } else if (cpt_ver > gem5CheckpointVersion) {

@@ -57,6 +57,43 @@
 class System;
 
 /**
+ * Locked address class that represents a physical address and a
+ * context id.
+ */
+class LockedAddr {
+
+  private:
+
+    // on alpha, minimum LL/SC granularity is 16 bytes, so lower
+    // bits need to masked off.
+    static const Addr Addr_Mask = 0xf;
+
+  public:
+
+    // locked address
+    Addr addr;
+
+    // locking hw context
+    const int contextId;
+
+    static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
+
+    // check for matching execution context
+    bool matchesContext(Request *req) const
+    {
+        return (contextId == req->contextId());
+    }
+
+    LockedAddr(Request *req) : addr(mask(req->getPaddr())),
+                               contextId(req->contextId())
+    {}
+
+    // constructor for unserialization use
+    LockedAddr(Addr _addr, int _cid) : addr(_addr), contextId(_cid)
+    {}
+};
+
+/**
  * An abstract memory represents a contiguous block of physical
  * memory, with an associated address range, and also provides basic
  * functionality for reading and writing this memory without any
@@ -78,34 +115,6 @@ class AbstractMemory : public MemObject
 
     // Should the memory appear in the global address map
     bool inAddrMap;
-
-    class LockedAddr {
-
-      public:
-        // on alpha, minimum LL/SC granularity is 16 bytes, so lower
-        // bits need to masked off.
-        static const Addr Addr_Mask = 0xf;
-
-        static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
-
-        Addr addr;      // locked address
-        int contextId;     // locking hw context
-
-        // check for matching execution context
-        bool matchesContext(Request *req)
-        {
-            return (contextId == req->contextId());
-        }
-
-        LockedAddr(Request *req) : addr(mask(req->getPaddr())),
-                                   contextId(req->contextId())
-        {
-        }
-        // constructor for unserialization use
-        LockedAddr(Addr _addr, int _cid) : addr(_addr), contextId(_cid)
-        {
-        }
-    };
 
     std::list<LockedAddr> lockedAddrList;
 
@@ -183,7 +192,41 @@ class AbstractMemory : public MemObject
     typedef AbstractMemoryParams Params;
 
     AbstractMemory(const Params* p);
-    virtual ~AbstractMemory();
+    virtual ~AbstractMemory() {}
+
+    /**
+     * See if this is a null memory that should never store data and
+     * always return zero.
+     *
+     * @return true if null
+     */
+    bool isNull() const { return params()->null; }
+
+    /**
+     * See if this memory should be initialized to zero or not.
+     *
+     * @return true if zero
+     */
+    bool initToZero() const { return params()->zero; }
+
+    /**
+     * Set the host memory backing store to be used by this memory
+     * controller.
+     *
+     * @param pmem_addr Pointer to a segment of host memory
+     */
+    void setBackingStore(uint8_t* pmem_addr);
+
+    /**
+     * Get the list of locked addresses to allow checkpointing.
+     */
+    const std::list<LockedAddr>& getLockedAddrList() const
+    { return lockedAddrList; }
+
+    /**
+     * Add a locked address to allow for checkpointing.
+     */
+    void addLockedAddr(LockedAddr addr) { lockedAddrList.push_back(addr); }
 
     /** read the system pointer
      * Implemented for completeness with the setter
@@ -264,9 +307,6 @@ class AbstractMemory : public MemObject
      * Register Statistics
      */
     virtual void regStats();
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
 };
 

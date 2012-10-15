@@ -41,18 +41,36 @@
 #define __PHYSICAL_MEMORY_HH__
 
 #include "base/addr_range_map.hh"
-#include "mem/abstract_mem.hh"
-#include "mem/packet.hh"
+#include "mem/port.hh"
+
+/**
+ * Forward declaration to avoid header dependencies.
+ */
+class AbstractMemory;
 
 /**
  * The physical memory encapsulates all memories in the system and
  * provides basic functionality for accessing those memories without
  * going through the memory system and interconnect.
+ *
+ * The physical memory is also responsible for providing the host
+ * system backingstore used by the memories in the simulated guest
+ * system. When the system is created, the physical memory allocates
+ * the backing store based on the address ranges that are populated in
+ * the system, and does so indepentent of how those map to actual
+ * memory controllers. Thus, the physical memory completely abstracts
+ * the mapping of the backing store of the host system and the address
+ * mapping in the guest system. This enables us to arbitrarily change
+ * the number of memory controllers, and their address mapping, as
+ * long as the ranges stay the same.
  */
-class PhysicalMemory
+class PhysicalMemory : public Serializable
 {
 
   private:
+
+    // Name for debugging
+    std::string _name;
 
     // Global address map
     AddrRangeMap<AbstractMemory*> addrMap;
@@ -66,23 +84,45 @@ class PhysicalMemory
     // The total memory size
     uint64_t size;
 
+    // The physical memory used to provide the memory in the simulated
+    // system
+    std::vector<std::pair<AddrRange, uint8_t*> > backingStore;
+
     // Prevent copying
     PhysicalMemory(const PhysicalMemory&);
 
     // Prevent assignment
     PhysicalMemory& operator=(const PhysicalMemory&);
 
+    /**
+     * Create the memory region providing the backing store for a
+     * given address range that corresponds to a set of memories in
+     * the simulated system.
+     *
+     * @param range The address range covered
+     * @param memories The memories this range maps to
+     */
+    void createBackingStore(AddrRange range,
+                            const std::vector<AbstractMemory*>& _memories);
+
   public:
 
     /**
      * Create a physical memory object, wrapping a number of memories.
      */
-    PhysicalMemory(const std::vector<AbstractMemory*>& _memories);
+    PhysicalMemory(const std::string& _name,
+                   const std::vector<AbstractMemory*>& _memories);
 
     /**
-     * Nothing to destruct.
+     * Unmap all the backing store we have used.
      */
-    ~PhysicalMemory() { }
+    ~PhysicalMemory();
+
+    /**
+     * Return the name for debugging and for creation of sections for
+     * checkpointing.
+     */
+    const std::string name() const { return _name; }
 
     /**
      * Check if a physical address is within a range of a memory that
@@ -108,14 +148,72 @@ class PhysicalMemory
      */
     uint64_t totalSize() const { return size; }
 
-    /**
+     /**
+     * Get the pointers to the backing store for external host
+     * access. Note that memory in the guest should be accessed using
+     * access() or functionalAccess(). This interface is primarily
+     * intended for CPU models using hardware virtualization. Note
+     * that memories that are null are not present, and that the
+     * backing store may also contain memories that are not part of
+     * the OS-visible global address map and thus are allowed to
+     * overlap.
      *
+     * @return Pointers to the memory backing store
+     */
+    std::vector<std::pair<AddrRange, uint8_t*> > getBackingStore() const
+    { return backingStore; }
+
+    /**
+     * Perform an untimed memory access and update all the state
+     * (e.g. locked addresses) and statistics accordingly. The packet
+     * is turned into a response if required.
+     *
+     * @param pkt Packet performing the access
      */
     void access(PacketPtr pkt);
+
+    /**
+     * Perform an untimed memory read or write without changing
+     * anything but the memory itself. No stats are affected by this
+     * access. In addition to normal accesses this also facilitates
+     * print requests.
+     *
+     * @param pkt Packet performing the access
+     */
     void functionalAccess(PacketPtr pkt);
+
+    /**
+     * Serialize all the memories in the system. This is independent
+     * of the logical memory layout, and the serialization only sees
+     * the contigous backing store, independent of how this maps to
+     * logical memories in the guest system.
+     *
+     * @param os stream to serialize to
+     */
+    void serialize(std::ostream& os);
+
+    /**
+     * Serialize a specific store.
+     *
+     * @param store_id Unique identifier of this backing store
+     * @param range The address range of this backing store
+     * @param pmem The host pointer to this backing store
+     */
+    void serializeStore(std::ostream& os, unsigned int store_id,
+                        AddrRange range, uint8_t* pmem);
+
+    /**
+     * Unserialize the memories in the system. As with the
+     * serialization, this action is independent of how the address
+     * ranges are mapped to logical memories in the guest system.
+     */
+    void unserialize(Checkpoint* cp, const std::string& section);
+
+    /**
+     * Unserialize a specific backing store, identified by a section.
+     */
+    void unserializeStore(Checkpoint* cp, const std::string& section);
+
 };
-
-
-
 
 #endif //__PHYSICAL_MEMORY_HH__

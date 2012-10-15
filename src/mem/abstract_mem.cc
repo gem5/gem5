@@ -42,19 +42,6 @@
  *          Andreas Hansson
  */
 
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/user.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <zlib.h>
-
-#include <cerrno>
-#include <cstdio>
-#include <climits>
-#include <iostream>
-#include <string>
-
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 #include "debug/LLSC.hh"
@@ -72,29 +59,12 @@ AbstractMemory::AbstractMemory(const Params *p) :
 {
     if (size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
-
-    if (params()->null)
-        return;
-
-    int map_flags = MAP_ANON | MAP_PRIVATE;
-    pmemAddr = (uint8_t *)mmap(NULL, size(),
-                               PROT_READ | PROT_WRITE, map_flags, -1, 0);
-
-    if (pmemAddr == (void *)MAP_FAILED) {
-        perror("mmap");
-        fatal("Could not mmap!\n");
-    }
-
-    //If requested, initialize all the memory to 0
-    if (p->zero)
-        memset(pmemAddr, 0, size());
 }
 
-
-AbstractMemory::~AbstractMemory()
+void
+AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 {
-    if (pmemAddr)
-        munmap((char*)pmemAddr, size());
+    pmemAddr = pmem_addr;
 }
 
 void
@@ -442,147 +412,4 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         panic("AbstractMemory: unimplemented functional command %s",
               pkt->cmdString());
     }
-}
-
-void
-AbstractMemory::serialize(ostream &os)
-{
-    if (!pmemAddr)
-        return;
-
-    gzFile compressedMem;
-    string filename = name() + ".physmem";
-    long _size = range.size();
-
-    SERIALIZE_SCALAR(filename);
-    SERIALIZE_SCALAR(_size);
-
-    // write memory file
-    string thefile = Checkpoint::dir() + "/" + filename.c_str();
-    int fd = creat(thefile.c_str(), 0664);
-    if (fd < 0) {
-        perror("creat");
-        fatal("Can't open physical memory checkpoint file '%s'\n", filename);
-    }
-
-    compressedMem = gzdopen(fd, "wb");
-    if (compressedMem == NULL)
-        fatal("Insufficient memory to allocate compression state for %s\n",
-                filename);
-
-    uint64_t pass_size = 0;
-    // gzwrite fails if (int)len < 0 (gzwrite returns int)
-    for (uint64_t written = 0; written < size(); written += pass_size) {
-        pass_size = (uint64_t)INT_MAX < (size() - written) ?
-            (uint64_t)INT_MAX : (size() - written);
-
-        if (gzwrite(compressedMem, pmemAddr + written,
-                    (unsigned int) pass_size) != (int)pass_size) {
-            fatal("Write failed on physical memory checkpoint file '%s'\n",
-                  filename);
-        }
-    }
-
-    if (gzclose(compressedMem))
-        fatal("Close failed on physical memory checkpoint file '%s'\n",
-              filename);
-
-    list<LockedAddr>::iterator i = lockedAddrList.begin();
-
-    vector<Addr> lal_addr;
-    vector<int> lal_cid;
-    while (i != lockedAddrList.end()) {
-        lal_addr.push_back(i->addr);
-        lal_cid.push_back(i->contextId);
-        i++;
-    }
-    arrayParamOut(os, "lal_addr", lal_addr);
-    arrayParamOut(os, "lal_cid", lal_cid);
-}
-
-void
-AbstractMemory::unserialize(Checkpoint *cp, const string &section)
-{
-    if (!pmemAddr)
-        return;
-
-    gzFile compressedMem;
-    long *tempPage;
-    long *pmem_current;
-    uint64_t curSize;
-    uint32_t bytesRead;
-    const uint32_t chunkSize = 16384;
-
-    string filename;
-
-    UNSERIALIZE_SCALAR(filename);
-
-    filename = cp->cptDir + "/" + filename;
-
-    // mmap memoryfile
-    int fd = open(filename.c_str(), O_RDONLY);
-    if (fd < 0) {
-        perror("open");
-        fatal("Can't open physical memory checkpoint file '%s'", filename);
-    }
-
-    compressedMem = gzdopen(fd, "rb");
-    if (compressedMem == NULL)
-        fatal("Insufficient memory to allocate compression state for %s\n",
-                filename);
-
-    // unmap file that was mmapped in the constructor
-    // This is done here to make sure that gzip and open don't muck with our
-    // nice large space of memory before we reallocate it
-    munmap((char*)pmemAddr, size());
-
-    long _size;
-    UNSERIALIZE_SCALAR(_size);
-    if (_size > params()->range.size())
-        fatal("Memory size has changed! size %lld, param size %lld\n",
-              _size, params()->range.size());
-
-    pmemAddr = (uint8_t *)mmap(NULL, size(),
-        PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-
-    if (pmemAddr == (void *)MAP_FAILED) {
-        perror("mmap");
-        fatal("Could not mmap physical memory!\n");
-    }
-
-    curSize = 0;
-    tempPage = (long*)malloc(chunkSize);
-    if (tempPage == NULL)
-        fatal("Unable to malloc memory to read file %s\n", filename);
-
-    /* Only copy bytes that are non-zero, so we don't give the VM system hell */
-    while (curSize < size()) {
-        bytesRead = gzread(compressedMem, tempPage, chunkSize);
-        if (bytesRead == 0)
-            break;
-
-        assert(bytesRead % sizeof(long) == 0);
-
-        for (uint32_t x = 0; x < bytesRead / sizeof(long); x++)
-        {
-             if (*(tempPage+x) != 0) {
-                 pmem_current = (long*)(pmemAddr + curSize + x * sizeof(long));
-                 *pmem_current = *(tempPage+x);
-             }
-        }
-        curSize += bytesRead;
-    }
-
-    free(tempPage);
-
-    if (gzclose(compressedMem))
-        fatal("Close failed on physical memory checkpoint file '%s'\n",
-              filename);
-
-    vector<Addr> lal_addr;
-    vector<int> lal_cid;
-    arrayParamIn(cp, section, "lal_addr", lal_addr);
-    arrayParamIn(cp, section, "lal_cid", lal_cid);
-    for(int i = 0; i < lal_addr.size(); i++)
-        lockedAddrList.push_front(LockedAddr(lal_addr[i], lal_cid[i]));
 }
