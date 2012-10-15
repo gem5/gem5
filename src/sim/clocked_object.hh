@@ -119,6 +119,18 @@ class ClockedObject : public SimObject
      */
     virtual ~ClockedObject() { }
 
+    /**
+     * Reset the object's clock using the current global tick value. Likely
+     * to be used only when the global clock is reset. Currently, this done
+     * only when Ruby is done warming up the memory system.
+     */
+    void resetClock() const
+    {
+        Cycles elapsedCycles(divCeil(curTick(), clock));
+        cycle = elapsedCycles;
+        tick = elapsedCycles * clock;
+    }
+
   public:
 
     /**

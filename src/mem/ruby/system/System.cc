@@ -354,8 +354,9 @@ RubySystem::startup()
         Tick curtick_original = curTick();
         // save the event queue head
         Event* eventq_head = eventq->replaceHead(NULL);
-        // set curTick to 0
+        // set curTick to 0 and reset Ruby System's clock
         curTick(0);
+        resetClock();
 
         // Schedule an event to start cache warmup
         enqueueRubyEvent(curTick());
@@ -369,8 +370,9 @@ RubySystem::startup()
         m_memory_controller->reset();
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
-        // Restore curTick
+        // Restore curTick and Ruby System's clock
         curTick(curtick_original);
+        resetClock();
     }
 }
 
