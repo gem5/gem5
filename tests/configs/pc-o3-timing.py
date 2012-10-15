@@ -90,28 +90,25 @@ cpu = DerivO3CPU(cpu_id=0)
 mdesc = SysConfig(disk = 'linux-x86.img')
 system = FSConfig.makeLinuxX86System('timing', mdesc=mdesc)
 system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')
+
+system.cpu = cpu
+
+#create the iocache
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 
-system.cpu = cpu
-#create the l1/l2 bus
-system.toL2Bus = CoherentBus()
-
-#connect up the l2 cache
-system.l2c = L2(size='4MB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.master
-system.l2c.mem_side = system.membus.slave
-
-#connect up the cpu and l1s
-cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
-                            L1(size = '32kB', assoc = 4),
-                            PageTableWalkerCache(),
-                            PageTableWalkerCache())
+#connect up the cpu and caches
+cpu.addTwoLevelCacheHierarchy(L1(size = '32kB', assoc = 1),
+                              L1(size = '32kB', assoc = 4),
+                              L2(size = '4MB', assoc = 8),
+                              PageTableWalkerCache(),
+                              PageTableWalkerCache())
 # create the interrupt controller
 cpu.createInterruptController()
-# connect cpu level-1 caches to shared level-2 cache
-cpu.connectAllPorts(system.toL2Bus, system.membus)
+# connect cpu and caches to the rest of the system
+cpu.connectAllPorts(system.membus)
+# set the cpu clock along with the caches and l1-l2 bus
 cpu.clock = '2GHz'
 
 root = Root(full_system=True, system=system)
