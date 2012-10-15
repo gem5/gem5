@@ -37,9 +37,13 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
 
 class ClockedObject(SimObject):
     type = 'ClockedObject'
     abstract = True
 
-    clock = Param.Clock('1t', "Clock speed")
+    # Clock period of this object, with the default value being the
+    # clock period of the parent object, unproxied at instantiation
+    # time
+    clock = Param.Clock(Parent.clock, "Clock speed")
