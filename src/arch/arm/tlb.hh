@@ -224,7 +224,7 @@ class TLB : public BaseTLB
      *
      * @return A pointer to the walker master port
      */
-    virtual MasterPort* getMasterPort();
+    virtual BaseMasterPort* getMasterPort();
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

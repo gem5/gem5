@@ -105,8 +105,8 @@ BaseBus::init()
         warn_once("Block size is neither 16, 32, 64 or 128 bytes.\n");
 }
 
-MasterPort &
-BaseBus::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+BaseBus::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master" && idx < masterPorts.size()) {
         // the master port index translates directly to the vector position
@@ -118,8 +118,8 @@ BaseBus::getMasterPort(const std::string &if_name, int idx)
     }
 }
 
-SlavePort &
-BaseBus::getSlavePort(const std::string &if_name, int idx)
+BaseSlavePort &
+BaseBus::getSlavePort(const std::string &if_name, PortID idx)
 {
     if (if_name == "slave" && idx < slavePorts.size()) {
         // the slave port index translates directly to the vector position

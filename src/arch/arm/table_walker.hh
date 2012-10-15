@@ -399,8 +399,8 @@ class TableWalker : public MemObject
     void completeDrain();
     virtual unsigned int drain(Event *de);
     virtual void resume();
-    virtual MasterPort& getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort& getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     Fault walk(RequestPtr req, ThreadContext *tc, uint8_t cid, TLB::Mode mode,
             TLB::Translation *_trans, bool timing, bool functional = false);

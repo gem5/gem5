@@ -254,8 +254,8 @@ DmaPort::sendDma()
         panic("Unknown memory mode.");
 }
 
-MasterPort &
-DmaDevice::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+DmaDevice::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "dma") {
         return dmaPort;

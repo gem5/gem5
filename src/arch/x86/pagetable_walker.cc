@@ -173,8 +173,8 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
     return port.sendTimingReq(pkt);
 }
 
-MasterPort &
-Walker::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+Walker::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port")
         return port;

@@ -147,7 +147,7 @@ namespace X86ISA
          *
          * @return A pointer to the walker master port
          */
-        virtual MasterPort *getMasterPort();
+        virtual BaseMasterPort *getMasterPort();
     };
 }
 

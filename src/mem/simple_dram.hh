@@ -461,8 +461,8 @@ class SimpleDRAM : public AbstractMemory
 
     unsigned int drain(Event* de);
 
-    virtual SlavePort& getSlavePort(const std::string& if_name,
-                                    int idx = InvalidPortID);
+    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
+                                        PortID idx = InvalidPortID);
 
     virtual void init();
     virtual void startup();

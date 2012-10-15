@@ -59,8 +59,8 @@ AddrMapper::init()
               slavePort.peerBlockSize(), masterPort.peerBlockSize());
 }
 
-MasterPort&
-AddrMapper::getMasterPort(const std::string& if_name, int idx)
+BaseMasterPort&
+AddrMapper::getMasterPort(const std::string& if_name, PortID idx)
 {
     if (if_name == "master") {
         return masterPort;
@@ -69,8 +69,8 @@ AddrMapper::getMasterPort(const std::string& if_name, int idx)
     }
 }
 
-SlavePort&
-AddrMapper::getSlavePort(const std::string& if_name, int idx)
+BaseSlavePort&
+AddrMapper::getSlavePort(const std::string& if_name, PortID idx)
 {
     if (if_name == "slave") {
         return slavePort;
@@ -192,7 +192,7 @@ AddrMapper::recvTimingSnoopResp(PacketPtr pkt)
 bool
 AddrMapper::isSnooping() const
 {
-    if (slavePort.getMasterPort().isSnooping())
+    if (slavePort.isSnooping())
         fatal("AddrMapper doesn't support remapping of snooping requests\n");
     return false;
 }
@@ -266,7 +266,7 @@ AddrRangeList
 RangeAddrMapper::getAddrRanges() const
 {
     AddrRangeList ranges;
-    AddrRangeList actualRanges = masterPort.getSlavePort().getAddrRanges();
+    AddrRangeList actualRanges = masterPort.getAddrRanges();
 
     for (AddrRangeIter r = actualRanges.begin(); r != actualRanges.end(); ++r) {
         AddrRange range = *r;

@@ -117,7 +117,8 @@ class System : public MemObject
     /**
      * Additional function to return the Port of a memory object.
      */
-    MasterPort& getMasterPort(const std::string &if_name, int idx = -1);
+    BaseMasterPort& getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID);
 
     static const char *MemoryModeStrings[3];
 

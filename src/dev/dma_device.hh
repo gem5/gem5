@@ -156,8 +156,8 @@ class DmaDevice : public PioDevice
 
     unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
 
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     friend class DmaPort;
 };

@@ -97,8 +97,8 @@ NetworkTest::NetworkTest(const Params *p)
             name(), id);
 }
 
-MasterPort &
-NetworkTest::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+NetworkTest::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "test")
         return cachePort;

@@ -597,8 +597,8 @@ class TrafficGen : public MemObject
 
     ~TrafficGen() {}
 
-    virtual MasterPort& getMasterPort(const std::string &if_name,
-                                      int idx = InvalidPortID);
+    virtual BaseMasterPort& getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     void init();
 

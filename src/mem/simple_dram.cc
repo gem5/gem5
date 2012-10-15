@@ -1186,8 +1186,8 @@ SimpleDRAM::recvFunctional(PacketPtr pkt)
     functionalAccess(pkt);
 }
 
-SlavePort&
-SimpleDRAM::getSlavePort(const string &if_name, int idx)
+BaseSlavePort&
+SimpleDRAM::getSlavePort(const string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return MemObject::getSlavePort(if_name, idx);

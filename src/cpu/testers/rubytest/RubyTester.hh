@@ -89,8 +89,8 @@ class RubyTester : public MemObject
     RubyTester(const Params *p);
     ~RubyTester();
 
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     bool isInstReadableCpuPort(int idx);
 

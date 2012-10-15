@@ -361,8 +361,10 @@ class BaseBus : public MemObject
     virtual void init();
 
     /** A function used to return the port associated with this bus object. */
-    virtual MasterPort& getMasterPort(const std::string& if_name, int idx = -1);
-    virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
+    BaseMasterPort& getMasterPort(const std::string& if_name,
+                                  PortID idx = InvalidPortID);
+    BaseSlavePort& getSlavePort(const std::string& if_name,
+                                PortID idx = InvalidPortID);
 
     virtual unsigned int drain(Event *de) = 0;
 

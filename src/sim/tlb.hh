@@ -49,7 +49,7 @@
 #include "sim/sim_object.hh"
 
 class ThreadContext;
-class MasterPort;
+class BaseMasterPort;
 
 class BaseTLB : public SimObject
 {
@@ -73,7 +73,7 @@ class BaseTLB : public SimObject
      *
      * @return A pointer to the walker master port or NULL if not present
      */
-    virtual MasterPort* getMasterPort() { return NULL; }
+    virtual BaseMasterPort* getMasterPort() { return NULL; }
 
     class Translation
     {

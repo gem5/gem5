@@ -74,8 +74,8 @@ CommMonitor::init()
         fatal("Communication monitor is not connected on both sides.\n");
 }
 
-MasterPort&
-CommMonitor::getMasterPort(const std::string& if_name, int idx)
+BaseMasterPort&
+CommMonitor::getMasterPort(const std::string& if_name, PortID idx)
 {
     if (if_name == "master") {
         return masterPort;
@@ -84,8 +84,8 @@ CommMonitor::getMasterPort(const std::string& if_name, int idx)
     }
 }
 
-SlavePort&
-CommMonitor::getSlavePort(const std::string& if_name, int idx)
+BaseSlavePort&
+CommMonitor::getSlavePort(const std::string& if_name, PortID idx)
 {
     if (if_name == "slave") {
         return slavePort;

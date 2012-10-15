@@ -117,15 +117,67 @@ class Port
 };
 
 /** Forward declaration */
+class BaseSlavePort;
+
+/**
+ * A BaseMasterPort is a protocol-agnostic master port, responsible
+ * only for the structural connection to a slave port. The final
+ * master port that inherits from the base class must override the
+ * bind member function for the specific slave port class.
+ */
+class BaseMasterPort : public Port
+{
+
+  protected:
+
+    BaseSlavePort* _baseSlavePort;
+
+    BaseMasterPort(const std::string& name, MemObject* owner,
+                   PortID id = InvalidPortID);
+    virtual ~BaseMasterPort();
+
+  public:
+
+    virtual void bind(BaseSlavePort& slave_port) = 0;
+    virtual void unbind() = 0;
+    BaseSlavePort& getSlavePort() const;
+    bool isConnected() const;
+
+};
+
+/**
+ * A BaseSlavePort is a protocol-agnostic slave port, responsible
+ * only for the structural connection to a master port.
+ */
+class BaseSlavePort : public Port
+{
+
+  protected:
+
+    BaseMasterPort* _baseMasterPort;
+
+    BaseSlavePort(const std::string& name, MemObject* owner,
+                  PortID id = InvalidPortID);
+    virtual ~BaseSlavePort();
+
+  public:
+
+    BaseMasterPort& getMasterPort() const;
+    bool isConnected() const;
+
+};
+
+/** Forward declaration */
 class SlavePort;
 
 /**
- * A MasterPort is a specialisation of a port. In addition to the
- * basic functionality of sending packets to its slave peer, it also
- * has functions specific to a master, e.g. to receive range changes
- * or determine if the port is snooping or not.
+ * A MasterPort is a specialisation of a BaseMasterPort, which
+ * implements the default protocol for the three different level of
+ * transport functions. In addition to the basic functionality of
+ * sending packets, it also has functions to receive range changes or
+ * determine if the port is snooping or not.
  */
-class MasterPort : public Port
+class MasterPort : public BaseMasterPort
 {
 
     friend class SlavePort;
@@ -144,15 +196,12 @@ class MasterPort : public Port
      * Bind this master port to a slave port. This also does the
      * mirror action and binds the slave port to the master port.
      */
-    void bind(SlavePort& slave_port);
+    void bind(BaseSlavePort& slave_port);
 
     /**
      * Unbind this master port and the associated slave port.
      */
     void unbind();
-
-    SlavePort& getSlavePort() const;
-    bool isConnected() const;
 
     /**
      * Send an atomic request packet, where the data is moved and the
@@ -292,7 +341,7 @@ class MasterPort : public Port
  * has functions specific to a slave, e.g. to send range changes
  * and get the address ranges that the port responds to.
  */
-class SlavePort : public Port
+class SlavePort : public BaseSlavePort
 {
 
     friend class MasterPort;
@@ -306,9 +355,6 @@ class SlavePort : public Port
     SlavePort(const std::string& name, MemObject* owner,
               PortID id = InvalidPortID);
     virtual ~SlavePort();
-
-    MasterPort& getMasterPort() const;
-    bool isConnected() const;
 
     /**
      * Send an atomic snoop request packet, where the data is moved

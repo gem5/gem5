@@ -78,8 +78,8 @@ RubyPort::init()
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
 }
 
-MasterPort &
-RubyPort::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+RubyPort::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "pio_port") {
         return pio_port;
@@ -91,7 +91,7 @@ RubyPort::getMasterPort(const std::string &if_name, int idx)
         // pass it along to our super class
         return MemObject::getMasterPort(if_name, idx);
     } else {
-        if (idx >= static_cast<int>(master_ports.size())) {
+        if (idx >= static_cast<PortID>(master_ports.size())) {
             panic("RubyPort::getMasterPort: unknown index %d\n", idx);
         }
 
@@ -99,8 +99,8 @@ RubyPort::getMasterPort(const std::string &if_name, int idx)
     }
 }
 
-SlavePort &
-RubyPort::getSlavePort(const std::string &if_name, int idx)
+BaseSlavePort &
+RubyPort::getSlavePort(const std::string &if_name, PortID idx)
 {
     // used by the CPUs to connect the caches to the interconnect, and
     // for the x86 case also the interrupt master
@@ -108,7 +108,7 @@ RubyPort::getSlavePort(const std::string &if_name, int idx)
         // pass it along to our super class
         return MemObject::getSlavePort(if_name, idx);
     } else {
-        if (idx >= static_cast<int>(slave_ports.size())) {
+        if (idx >= static_cast<PortID>(slave_ports.size())) {
             panic("RubyPort::getSlavePort: unknown index %d\n", idx);
         }
 

@@ -102,8 +102,8 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     }
 
     // generic master/slave port connection
-    MasterPort& masterPort = mo1->getMasterPort(name1, i1);
-    SlavePort& slavePort   = mo2->getSlavePort(name2, i2);
+    BaseMasterPort& masterPort = mo1->getMasterPort(name1, i1);
+    BaseSlavePort& slavePort   = mo2->getSlavePort(name2, i2);
 
     masterPort.bind(slavePort);
 

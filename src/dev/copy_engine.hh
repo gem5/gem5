@@ -94,7 +94,7 @@ class CopyEngine : public PciDev
       public:
         CopyEngineChannel(CopyEngine *_ce, int cid);
         virtual ~CopyEngineChannel();
-        MasterPort &getMasterPort();
+        BaseMasterPort &getMasterPort();
 
         std::string name() { assert(ce); return ce->name() + csprintf("-chan%d", channelId); }
         virtual Tick read(PacketPtr pkt)
@@ -196,8 +196,8 @@ class CopyEngine : public PciDev
 
     void regStats();
 
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

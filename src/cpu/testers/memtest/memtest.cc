@@ -131,8 +131,8 @@ MemTest::MemTest(const Params *p)
     dmaOutstanding = false;
 }
 
-MasterPort &
-MemTest::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+MemTest::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "functional")
         return funcPort;

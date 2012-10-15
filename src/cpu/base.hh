@@ -171,7 +171,8 @@ class BaseCPU : public MemObject
      *
      * @return a reference to the port with the given name
      */
-    MasterPort &getMasterPort(const std::string &if_name, int idx = -1);
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID);
 
     inline void workItemBegin() { numWorkItemsStarted++; }
     inline void workItemEnd() { numWorkItemsCompleted++; }

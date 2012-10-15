@@ -110,8 +110,8 @@ TableWalker::resume()
     }
 }
 
-MasterPort&
-TableWalker::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort&
+TableWalker::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         return port;

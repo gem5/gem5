@@ -66,8 +66,8 @@ TrafficGenParams::create()
     return new TrafficGen(this);
 }
 
-MasterPort&
-TrafficGen::getMasterPort(const string& if_name, int idx)
+BaseMasterPort&
+TrafficGen::getMasterPort(const string& if_name, PortID idx)
 {
     if (if_name == "port") {
         return port;

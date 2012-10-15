@@ -118,8 +118,8 @@ BaseCache::init()
     cpuSidePort->sendRangeChange();
 }
 
-MasterPort &
-BaseCache::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+BaseCache::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "mem_side") {
         return *memSidePort;
@@ -128,8 +128,8 @@ BaseCache::getMasterPort(const std::string &if_name, int idx)
     }
 }
 
-SlavePort &
-BaseCache::getSlavePort(const std::string &if_name, int idx)
+BaseSlavePort &
+BaseCache::getSlavePort(const std::string &if_name, PortID idx)
 {
     if (if_name == "cpu_side") {
         return *cpuSidePort;

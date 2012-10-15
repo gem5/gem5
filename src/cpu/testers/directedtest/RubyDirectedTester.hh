@@ -68,8 +68,8 @@ class RubyDirectedTester : public MemObject
     RubyDirectedTester(const Params *p);
     ~RubyDirectedTester();
 
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     MasterPort* getCpuPort(int idx);
 

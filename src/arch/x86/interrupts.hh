@@ -238,7 +238,8 @@ class Interrupts : public BasicPioDevice, IntDev
     AddrRangeList getAddrRanges() const;
     AddrRangeList getIntAddrRange() const;
 
-    MasterPort &getMasterPort(const std::string &if_name, int idx = -1)
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID)
     {
         if (if_name == "int_master") {
             return intMasterPort;
@@ -246,7 +247,8 @@ class Interrupts : public BasicPioDevice, IntDev
         return BasicPioDevice::getMasterPort(if_name, idx);
     }
 
-    SlavePort &getSlavePort(const std::string &if_name, int idx = -1)
+    BaseSlavePort &getSlavePort(const std::string &if_name,
+                                PortID idx = InvalidPortID)
     {
         if (if_name == "int_slave") {
             return intSlavePort;

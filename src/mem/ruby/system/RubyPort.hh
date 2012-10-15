@@ -126,8 +126,10 @@ class RubyPort : public MemObject
 
     void init();
 
-    MasterPort &getMasterPort(const std::string &if_name, int idx);
-    SlavePort &getSlavePort(const std::string &if_name, int idx);
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID);
+    BaseSlavePort &getSlavePort(const std::string &if_name,
+                                PortID idx = InvalidPortID);
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;

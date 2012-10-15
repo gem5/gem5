@@ -165,8 +165,8 @@ SimpleMemory::release()
     }
 }
 
-SlavePort &
-SimpleMemory::getSlavePort(const std::string &if_name, int idx)
+BaseSlavePort &
+SimpleMemory::getSlavePort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return MemObject::getSlavePort(if_name, idx);

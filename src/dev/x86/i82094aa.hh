@@ -120,7 +120,8 @@ class I82094AA : public PioDevice, public IntDev
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
-    MasterPort &getMasterPort(const std::string &if_name, int idx = -1)
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID)
     {
         if (if_name == "int_master")
             return intMasterPort;

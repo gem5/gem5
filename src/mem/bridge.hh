@@ -338,9 +338,10 @@ class Bridge : public MemObject
 
   public:
 
-    virtual MasterPort& getMasterPort(const std::string& if_name,
-                                      int idx = -1);
-    virtual SlavePort& getSlavePort(const std::string& if_name, int idx = -1);
+    virtual BaseMasterPort& getMasterPort(const std::string& if_name,
+                                          PortID idx = InvalidPortID);
+    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
+                                        PortID idx = InvalidPortID);
 
     virtual void init();
 

@@ -110,8 +110,8 @@ CopyEngine::CopyEngineChannel::~CopyEngineChannel()
     delete [] copyBuffer;
 }
 
-MasterPort &
-CopyEngine::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+CopyEngine::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "dma") {
         // pass it along to our super class
@@ -126,7 +126,7 @@ CopyEngine::getMasterPort(const std::string &if_name, int idx)
 }
 
 
-MasterPort &
+BaseMasterPort &
 CopyEngine::CopyEngineChannel::getMasterPort()
 {
     return cePort;

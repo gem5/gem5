@@ -171,8 +171,8 @@ System::init()
         panic("System port on %s is not connected.\n", name());
 }
 
-MasterPort&
-System::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort&
+System::getMasterPort(const std::string &if_name, PortID idx)
 {
     // no need to distinguish at the moment (besides checking)
     return _systemPort;

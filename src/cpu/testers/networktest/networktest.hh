@@ -54,8 +54,8 @@ class NetworkTest : public MemObject
     // main simulation loop (one cycle)
     void tick();
 
-    virtual MasterPort &getMasterPort(const std::string &if_name,
-                                      int idx = -1);
+    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
+                                          PortID idx = InvalidPortID);
 
     /**
      * Print state of address in memory system via PrintReq (for

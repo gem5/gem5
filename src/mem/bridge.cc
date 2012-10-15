@@ -83,8 +83,8 @@ Bridge::Bridge(Params *p)
 {
 }
 
-MasterPort&
-Bridge::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort&
+Bridge::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master")
         return masterPort;
@@ -93,8 +93,8 @@ Bridge::getMasterPort(const std::string &if_name, int idx)
         return MemObject::getMasterPort(if_name, idx);
 }
 
-SlavePort&
-Bridge::getSlavePort(const std::string &if_name, int idx)
+BaseSlavePort&
+Bridge::getSlavePort(const std::string &if_name, PortID idx)
 {
     if (if_name == "slave")
         return slavePort;

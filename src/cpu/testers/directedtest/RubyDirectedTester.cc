@@ -74,8 +74,8 @@ RubyDirectedTester::init()
     generator->setDirectedTester(this);
 }
 
-MasterPort &
-RubyDirectedTester::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+RubyDirectedTester::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpuPort") {
         // pass it along to our super class

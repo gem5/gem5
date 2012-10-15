@@ -48,14 +48,14 @@ MemObject::MemObject(const Params *params)
 {
 }
 
-MasterPort&
-MemObject::getMasterPort(const std::string& if_name, int idx)
+BaseMasterPort&
+MemObject::getMasterPort(const std::string& if_name, PortID idx)
 {
     fatal("%s does not have any master port named %s\n", name(), if_name);
 }
 
-SlavePort&
-MemObject::getSlavePort(const std::string& if_name, int idx)
+BaseSlavePort&
+MemObject::getSlavePort(const std::string& if_name, PortID idx)
 {
     fatal("%s does not have any slave port named %s\n", name(), if_name);
 }

@@ -59,11 +59,63 @@ Port::~Port()
 {
 }
 
+BaseMasterPort::BaseMasterPort(const std::string& name, MemObject* owner,
+                               PortID _id)
+    : Port(name, *owner, _id), _baseSlavePort(NULL)
+{
+}
+
+BaseMasterPort::~BaseMasterPort()
+{
+}
+
+BaseSlavePort&
+BaseMasterPort::getSlavePort() const
+{
+    if(_baseSlavePort == NULL)
+        panic("Cannot getSlavePort on master port %s that is not connected\n",
+              name());
+
+    return *_baseSlavePort;
+}
+
+bool
+BaseMasterPort::isConnected() const
+{
+    return _baseSlavePort != NULL;
+}
+
+BaseSlavePort::BaseSlavePort(const std::string& name, MemObject* owner,
+                             PortID _id)
+    : Port(name, *owner, _id), _baseMasterPort(NULL)
+{
+}
+
+BaseSlavePort::~BaseSlavePort()
+{
+}
+
+BaseMasterPort&
+BaseSlavePort::getMasterPort() const
+{
+    if(_baseMasterPort == NULL)
+        panic("Cannot getMasterPort on slave port %s that is not connected\n",
+              name());
+
+    return *_baseMasterPort;
+}
+
+bool
+BaseSlavePort::isConnected() const
+{
+    return _baseMasterPort != NULL;
+}
+
 /**
  * Master port
  */
 MasterPort::MasterPort(const std::string& name, MemObject* owner, PortID _id)
-    : Port(name, *owner, _id), _slavePort(NULL)
+    : BaseMasterPort(name, owner, _id), _slavePort(NULL)
 {
 }
 
@@ -71,14 +123,25 @@ MasterPort::~MasterPort()
 {
 }
 
-SlavePort&
-MasterPort::getSlavePort() const
+void
+MasterPort::bind(BaseSlavePort& slave_port)
 {
-    if(_slavePort == NULL)
-        panic("Cannot getSlavePort on master port %s that is not connected\n",
-              name());
+    // bind on the level of the base ports
+    _baseSlavePort = &slave_port;
 
-    return *_slavePort;
+    // also attempt to base the slave to the appropriate type
+    SlavePort* cast_slave_port = dynamic_cast<SlavePort*>(&slave_port);
+
+    // if this port is compatible, then proceed with the binding
+    if (cast_slave_port != NULL) {
+        // master port keeps track of the slave port
+        _slavePort = cast_slave_port;
+        // slave port also keeps track of master port
+        _slavePort->bind(*this);
+    } else {
+        fatal("Master port %s cannot bind to %s\n", name(),
+              slave_port.name());
+    }
 }
 
 void
@@ -89,26 +152,7 @@ MasterPort::unbind()
               name());
     _slavePort->unbind();
     _slavePort = NULL;
-}
-
-void
-MasterPort::bind(SlavePort& slave_port)
-{
-    if (_slavePort != NULL)
-        panic("Attempting to bind master port %s that is already connected\n",
-              name());
-
-    // master port keeps track of the slave port
-    _slavePort = &slave_port;
-
-    // slave port also keeps track of master port
-    _slavePort->bind(*this);
-}
-
-bool
-MasterPort::isConnected() const
-{
-    return _slavePort != NULL;
+    _baseSlavePort = NULL;
 }
 
 unsigned
@@ -172,7 +216,7 @@ MasterPort::printAddr(Addr a)
  * Slave port
  */
 SlavePort::SlavePort(const std::string& name, MemObject* owner, PortID id)
-    : Port(name, *owner, id), _masterPort(NULL)
+    : BaseSlavePort(name, owner, id), _masterPort(NULL)
 {
 }
 
@@ -183,35 +227,21 @@ SlavePort::~SlavePort()
 void
 SlavePort::unbind()
 {
+    _baseMasterPort = NULL;
     _masterPort = NULL;
 }
 
 void
 SlavePort::bind(MasterPort& master_port)
 {
+    _baseMasterPort = &master_port;
     _masterPort = &master_port;
-}
-
-MasterPort&
-SlavePort::getMasterPort() const
-{
-    if (_masterPort == NULL)
-        panic("Cannot getMasterPort on slave port %s that is not connected\n",
-              name());
-
-    return *_masterPort;
 }
 
 unsigned
 SlavePort::peerBlockSize() const
 {
     return _masterPort->deviceBlockSize();
-}
-
-bool
-SlavePort::isConnected() const
-{
-    return _masterPort != NULL;
 }
 
 Tick

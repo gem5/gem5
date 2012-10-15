@@ -435,7 +435,7 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 
-MasterPort *
+BaseMasterPort *
 TLB::getMasterPort()
 {
     return &walker->getMasterPort("port");

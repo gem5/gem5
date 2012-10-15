@@ -111,8 +111,8 @@ RubyTester::init()
     m_checkTable_ptr = new CheckTable(m_num_writers, m_num_readers, this);
 }
 
-MasterPort &
-RubyTester::getMasterPort(const std::string &if_name, int idx)
+BaseMasterPort &
+RubyTester::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpuInstPort" && if_name != "cpuDataPort") {
         // pass it along to our super class
@@ -134,7 +134,7 @@ RubyTester::getMasterPort(const std::string &if_name, int idx)
             // index
             //
             int read_idx = idx + m_num_inst_ports;
-            if (read_idx >= static_cast<int>(readPorts.size())) {
+            if (read_idx >= static_cast<PortID>(readPorts.size())) {
                 panic("RubyTester::getMasterPort: unknown data port idx %d\n",
                       idx);
             }
