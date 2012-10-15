@@ -151,6 +151,10 @@ class AttrProxy(BaseProxy):
     def find(self, obj):
         try:
             val = getattr(obj, self._attr)
+            # for any additional unproxying to be done, pass the
+            # current, rather than the original object so that proxy
+            # has the right context
+            obj = val
         except:
             return None, False
         while isproxy(val):
