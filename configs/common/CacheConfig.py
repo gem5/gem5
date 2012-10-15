@@ -36,14 +36,22 @@ from O3_ARM_v7a import *
 
 def config_cache(options, system):
     if options.l2cache:
+        # Provide a clock for the L2 and the L1-to-L2 bus here as they
+        # are not connected using addTwoLevelCacheHierarchy. Use the
+        # same clock as the CPUs, and set the L1-to-L2 bus width to 32
+        # bytes (256 bits).
         if options.cpu_type == "arm_detailed":
-            system.l2 = O3_ARM_v7aL2(size = options.l2_size, assoc = options.l2_assoc,
-                                block_size=options.cacheline_size)
+            system.l2 = O3_ARM_v7aL2(clock = options.clock,
+                                     size = options.l2_size,
+                                     assoc = options.l2_assoc,
+                                     block_size=options.cacheline_size)
         else:
-            system.l2 = L2Cache(size = options.l2_size, assoc = options.l2_assoc,
-                                block_size=options.cacheline_size)
+            system.l2 = L2Cache(clock = options.clock,
+                                size = options.l2_size,
+                                assoc = options.l2_assoc,
+                                block_size = options.cacheline_size)
 
-        system.tol2bus = CoherentBus()
+        system.tol2bus = CoherentBus(clock = options.clock, width = 32)
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
 
@@ -51,11 +59,11 @@ def config_cache(options, system):
         if options.caches:
             if options.cpu_type == "arm_detailed":
                 icache = O3_ARM_v7a_ICache(size = options.l1i_size,
-                                     assoc = options.l1i_assoc,
-                                     block_size=options.cacheline_size)
+                                           assoc = options.l1i_assoc,
+                                           block_size=options.cacheline_size)
                 dcache = O3_ARM_v7a_DCache(size = options.l1d_size,
-                                     assoc = options.l1d_assoc,
-                                     block_size=options.cacheline_size)
+                                           assoc = options.l1d_assoc,
+                                           block_size=options.cacheline_size)
             else:
                 icache = L1Cache(size = options.l1i_size,
                                  assoc = options.l1i_assoc,
@@ -64,6 +72,8 @@ def config_cache(options, system):
                                  assoc = options.l1d_assoc,
                                  block_size=options.cacheline_size)
 
+            # When connecting the caches, the clock is also inherited
+            # from the CPU in question
             if buildEnv['TARGET_ISA'] == 'x86':
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
                                                       PageTableWalkerCache(),

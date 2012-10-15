@@ -236,7 +236,10 @@ class BaseCPU(MemObject):
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
-        self.toL2Bus = CoherentBus()
+        # Override the default bus clock of 1 GHz and uses the CPU
+        # clock for the L1-to-L2 bus, and also set a width of 32 bytes
+        # (256-bits), which is four times that of the default bus.
+        self.toL2Bus = CoherentBus(clock = Parent.clock, width = 32)
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side
