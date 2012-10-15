@@ -61,114 +61,114 @@ system.realview.nvmem.bw_inst_read::cpu.inst            9                       
 system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
 system.realview.nvmem.bw_total::cpu.inst            9                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
-system.l2c.replacements                         62243                       # number of replacements
-system.l2c.tagsinuse                     50007.272909                       # Cycle average of tags in use
-system.l2c.total_refs                         1669922                       # Total number of references to valid blocks.
-system.l2c.sampled_refs                        127628                       # Sample count of references to valid blocks.
-system.l2c.avg_refs                         13.084292                       # Average number of references to valid blocks.
-system.l2c.warmup_cycle                  2316901489000                       # Cycle when the warmup percentage was hit.
-system.l2c.occ_blocks::writebacks        36899.582990                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu.dtb.walker        2.960148                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu.itb.walker        0.993931                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu.inst           7014.720482                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu.data           6089.015357                       # Average occupied blocks per requestor
-system.l2c.occ_percent::writebacks           0.563043                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu.dtb.walker       0.000045                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu.itb.walker       0.000015                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu.inst             0.107036                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu.data             0.092911                       # Average percentage of cache occupancy
-system.l2c.occ_percent::total                0.763050                       # Average percentage of cache occupancy
-system.l2c.ReadReq_hits::cpu.dtb.walker          7507                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu.itb.walker          3129                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu.inst              838871                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu.data              366771                       # number of ReadReq hits
-system.l2c.ReadReq_hits::total                1216278                       # number of ReadReq hits
-system.l2c.Writeback_hits::writebacks          592643                       # number of Writeback hits
-system.l2c.Writeback_hits::total               592643                       # number of Writeback hits
-system.l2c.UpgradeReq_hits::cpu.data               26                       # number of UpgradeReq hits
-system.l2c.UpgradeReq_hits::total                  26                       # number of UpgradeReq hits
-system.l2c.ReadExReq_hits::cpu.data            113739                       # number of ReadExReq hits
-system.l2c.ReadExReq_hits::total               113739                       # number of ReadExReq hits
-system.l2c.demand_hits::cpu.dtb.walker           7507                       # number of demand (read+write) hits
-system.l2c.demand_hits::cpu.itb.walker           3129                       # number of demand (read+write) hits
-system.l2c.demand_hits::cpu.inst               838871                       # number of demand (read+write) hits
-system.l2c.demand_hits::cpu.data               480510                       # number of demand (read+write) hits
-system.l2c.demand_hits::total                 1330017                       # number of demand (read+write) hits
-system.l2c.overall_hits::cpu.dtb.walker          7507                       # number of overall hits
-system.l2c.overall_hits::cpu.itb.walker          3129                       # number of overall hits
-system.l2c.overall_hits::cpu.inst              838871                       # number of overall hits
-system.l2c.overall_hits::cpu.data              480510                       # number of overall hits
-system.l2c.overall_hits::total                1330017                       # number of overall hits
-system.l2c.ReadReq_misses::cpu.dtb.walker            5                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu.itb.walker            3                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu.inst             10604                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu.data              9871                       # number of ReadReq misses
-system.l2c.ReadReq_misses::total                20483                       # number of ReadReq misses
-system.l2c.UpgradeReq_misses::cpu.data           2919                       # number of UpgradeReq misses
-system.l2c.UpgradeReq_misses::total              2919                       # number of UpgradeReq misses
-system.l2c.ReadExReq_misses::cpu.data          133468                       # number of ReadExReq misses
-system.l2c.ReadExReq_misses::total             133468                       # number of ReadExReq misses
-system.l2c.demand_misses::cpu.dtb.walker            5                       # number of demand (read+write) misses
-system.l2c.demand_misses::cpu.itb.walker            3                       # number of demand (read+write) misses
-system.l2c.demand_misses::cpu.inst              10604                       # number of demand (read+write) misses
-system.l2c.demand_misses::cpu.data             143339                       # number of demand (read+write) misses
-system.l2c.demand_misses::total                153951                       # number of demand (read+write) misses
-system.l2c.overall_misses::cpu.dtb.walker            5                       # number of overall misses
-system.l2c.overall_misses::cpu.itb.walker            3                       # number of overall misses
-system.l2c.overall_misses::cpu.inst             10604                       # number of overall misses
-system.l2c.overall_misses::cpu.data            143339                       # number of overall misses
-system.l2c.overall_misses::total               153951                       # number of overall misses
-system.l2c.ReadReq_accesses::cpu.dtb.walker         7512                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu.itb.walker         3132                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu.inst          849475                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu.data          376642                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::total            1236761                       # number of ReadReq accesses(hits+misses)
-system.l2c.Writeback_accesses::writebacks       592643                       # number of Writeback accesses(hits+misses)
-system.l2c.Writeback_accesses::total           592643                       # number of Writeback accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::cpu.data         2945                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::total            2945                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.ReadExReq_accesses::cpu.data        247207                       # number of ReadExReq accesses(hits+misses)
-system.l2c.ReadExReq_accesses::total           247207                       # number of ReadExReq accesses(hits+misses)
-system.l2c.demand_accesses::cpu.dtb.walker         7512                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::cpu.itb.walker         3132                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::cpu.inst           849475                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::cpu.data           623849                       # number of demand (read+write) accesses
-system.l2c.demand_accesses::total             1483968                       # number of demand (read+write) accesses
-system.l2c.overall_accesses::cpu.dtb.walker         7512                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::cpu.itb.walker         3132                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::cpu.inst          849475                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::cpu.data          623849                       # number of overall (read+write) accesses
-system.l2c.overall_accesses::total            1483968                       # number of overall (read+write) accesses
-system.l2c.ReadReq_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu.itb.walker     0.000958                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu.inst       0.012483                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu.data       0.026208                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::total          0.016562                       # miss rate for ReadReq accesses
-system.l2c.UpgradeReq_miss_rate::cpu.data     0.991171                       # miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_miss_rate::total       0.991171                       # miss rate for UpgradeReq accesses
-system.l2c.ReadExReq_miss_rate::cpu.data     0.539904                       # miss rate for ReadExReq accesses
-system.l2c.ReadExReq_miss_rate::total        0.539904                       # miss rate for ReadExReq accesses
-system.l2c.demand_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::cpu.itb.walker     0.000958                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::cpu.inst        0.012483                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::cpu.data        0.229766                       # miss rate for demand accesses
-system.l2c.demand_miss_rate::total           0.103743                       # miss rate for demand accesses
-system.l2c.overall_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::cpu.itb.walker     0.000958                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::cpu.inst       0.012483                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::cpu.data       0.229766                       # miss rate for overall accesses
-system.l2c.overall_miss_rate::total          0.103743                       # miss rate for overall accesses
-system.l2c.blocked_cycles::no_mshrs                 0                       # number of cycles access was blocked
-system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
-system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
-system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
-system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.l2c.fast_writes                              0                       # number of fast writes performed
-system.l2c.cache_copies                             0                       # number of cache copies performed
-system.l2c.writebacks::writebacks               57863                       # number of writebacks
-system.l2c.writebacks::total                    57863                       # number of writebacks
-system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
+system.cpu.l2cache.replacements                         62243                       # number of replacements
+system.cpu.l2cache.tagsinuse                     50007.272909                       # Cycle average of tags in use
+system.cpu.l2cache.total_refs                         1669922                       # Total number of references to valid blocks.
+system.cpu.l2cache.sampled_refs                        127628                       # Sample count of references to valid blocks.
+system.cpu.l2cache.avg_refs                         13.084292                       # Average number of references to valid blocks.
+system.cpu.l2cache.warmup_cycle                  2316901489000                       # Cycle when the warmup percentage was hit.
+system.cpu.l2cache.occ_blocks::writebacks        36899.582990                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.dtb.walker        2.960148                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.itb.walker        0.993931                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.inst           7014.720482                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.data           6089.015357                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_percent::writebacks           0.563043                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::cpu.dtb.walker       0.000045                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::cpu.itb.walker       0.000015                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::cpu.inst             0.107036                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::cpu.data             0.092911                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::total                0.763050                       # Average percentage of cache occupancy
+system.cpu.l2cache.ReadReq_hits::cpu.dtb.walker          7507                       # number of ReadReq hits
+system.cpu.l2cache.ReadReq_hits::cpu.itb.walker          3129                       # number of ReadReq hits
+system.cpu.l2cache.ReadReq_hits::cpu.inst              838871                       # number of ReadReq hits
+system.cpu.l2cache.ReadReq_hits::cpu.data              366771                       # number of ReadReq hits
+system.cpu.l2cache.ReadReq_hits::total                1216278                       # number of ReadReq hits
+system.cpu.l2cache.Writeback_hits::writebacks          592643                       # number of Writeback hits
+system.cpu.l2cache.Writeback_hits::total               592643                       # number of Writeback hits
+system.cpu.l2cache.UpgradeReq_hits::cpu.data               26                       # number of UpgradeReq hits
+system.cpu.l2cache.UpgradeReq_hits::total                  26                       # number of UpgradeReq hits
+system.cpu.l2cache.ReadExReq_hits::cpu.data            113739                       # number of ReadExReq hits
+system.cpu.l2cache.ReadExReq_hits::total               113739                       # number of ReadExReq hits
+system.cpu.l2cache.demand_hits::cpu.dtb.walker           7507                       # number of demand (read+write) hits
+system.cpu.l2cache.demand_hits::cpu.itb.walker           3129                       # number of demand (read+write) hits
+system.cpu.l2cache.demand_hits::cpu.inst               838871                       # number of demand (read+write) hits
+system.cpu.l2cache.demand_hits::cpu.data               480510                       # number of demand (read+write) hits
+system.cpu.l2cache.demand_hits::total                 1330017                       # number of demand (read+write) hits
+system.cpu.l2cache.overall_hits::cpu.dtb.walker          7507                       # number of overall hits
+system.cpu.l2cache.overall_hits::cpu.itb.walker          3129                       # number of overall hits
+system.cpu.l2cache.overall_hits::cpu.inst              838871                       # number of overall hits
+system.cpu.l2cache.overall_hits::cpu.data              480510                       # number of overall hits
+system.cpu.l2cache.overall_hits::total                1330017                       # number of overall hits
+system.cpu.l2cache.ReadReq_misses::cpu.dtb.walker            5                       # number of ReadReq misses
+system.cpu.l2cache.ReadReq_misses::cpu.itb.walker            3                       # number of ReadReq misses
+system.cpu.l2cache.ReadReq_misses::cpu.inst             10604                       # number of ReadReq misses
+system.cpu.l2cache.ReadReq_misses::cpu.data              9871                       # number of ReadReq misses
+system.cpu.l2cache.ReadReq_misses::total                20483                       # number of ReadReq misses
+system.cpu.l2cache.UpgradeReq_misses::cpu.data           2919                       # number of UpgradeReq misses
+system.cpu.l2cache.UpgradeReq_misses::total              2919                       # number of UpgradeReq misses
+system.cpu.l2cache.ReadExReq_misses::cpu.data          133468                       # number of ReadExReq misses
+system.cpu.l2cache.ReadExReq_misses::total             133468                       # number of ReadExReq misses
+system.cpu.l2cache.demand_misses::cpu.dtb.walker            5                       # number of demand (read+write) misses
+system.cpu.l2cache.demand_misses::cpu.itb.walker            3                       # number of demand (read+write) misses
+system.cpu.l2cache.demand_misses::cpu.inst              10604                       # number of demand (read+write) misses
+system.cpu.l2cache.demand_misses::cpu.data             143339                       # number of demand (read+write) misses
+system.cpu.l2cache.demand_misses::total                153951                       # number of demand (read+write) misses
+system.cpu.l2cache.overall_misses::cpu.dtb.walker            5                       # number of overall misses
+system.cpu.l2cache.overall_misses::cpu.itb.walker            3                       # number of overall misses
+system.cpu.l2cache.overall_misses::cpu.inst             10604                       # number of overall misses
+system.cpu.l2cache.overall_misses::cpu.data            143339                       # number of overall misses
+system.cpu.l2cache.overall_misses::total               153951                       # number of overall misses
+system.cpu.l2cache.ReadReq_accesses::cpu.dtb.walker         7512                       # number of ReadReq accesses(hits+misses)
+system.cpu.l2cache.ReadReq_accesses::cpu.itb.walker         3132                       # number of ReadReq accesses(hits+misses)
+system.cpu.l2cache.ReadReq_accesses::cpu.inst          849475                       # number of ReadReq accesses(hits+misses)
+system.cpu.l2cache.ReadReq_accesses::cpu.data          376642                       # number of ReadReq accesses(hits+misses)
+system.cpu.l2cache.ReadReq_accesses::total            1236761                       # number of ReadReq accesses(hits+misses)
+system.cpu.l2cache.Writeback_accesses::writebacks       592643                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.Writeback_accesses::total           592643                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.UpgradeReq_accesses::cpu.data         2945                       # number of UpgradeReq accesses(hits+misses)
+system.cpu.l2cache.UpgradeReq_accesses::total            2945                       # number of UpgradeReq accesses(hits+misses)
+system.cpu.l2cache.ReadExReq_accesses::cpu.data        247207                       # number of ReadExReq accesses(hits+misses)
+system.cpu.l2cache.ReadExReq_accesses::total           247207                       # number of ReadExReq accesses(hits+misses)
+system.cpu.l2cache.demand_accesses::cpu.dtb.walker         7512                       # number of demand (read+write) accesses
+system.cpu.l2cache.demand_accesses::cpu.itb.walker         3132                       # number of demand (read+write) accesses
+system.cpu.l2cache.demand_accesses::cpu.inst           849475                       # number of demand (read+write) accesses
+system.cpu.l2cache.demand_accesses::cpu.data           623849                       # number of demand (read+write) accesses
+system.cpu.l2cache.demand_accesses::total             1483968                       # number of demand (read+write) accesses
+system.cpu.l2cache.overall_accesses::cpu.dtb.walker         7512                       # number of overall (read+write) accesses
+system.cpu.l2cache.overall_accesses::cpu.itb.walker         3132                       # number of overall (read+write) accesses
+system.cpu.l2cache.overall_accesses::cpu.inst          849475                       # number of overall (read+write) accesses
+system.cpu.l2cache.overall_accesses::cpu.data          623849                       # number of overall (read+write) accesses
+system.cpu.l2cache.overall_accesses::total            1483968                       # number of overall (read+write) accesses
+system.cpu.l2cache.ReadReq_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for ReadReq accesses
+system.cpu.l2cache.ReadReq_miss_rate::cpu.itb.walker     0.000958                       # miss rate for ReadReq accesses
+system.cpu.l2cache.ReadReq_miss_rate::cpu.inst       0.012483                       # miss rate for ReadReq accesses
+system.cpu.l2cache.ReadReq_miss_rate::cpu.data       0.026208                       # miss rate for ReadReq accesses
+system.cpu.l2cache.ReadReq_miss_rate::total          0.016562                       # miss rate for ReadReq accesses
+system.cpu.l2cache.UpgradeReq_miss_rate::cpu.data     0.991171                       # miss rate for UpgradeReq accesses
+system.cpu.l2cache.UpgradeReq_miss_rate::total       0.991171                       # miss rate for UpgradeReq accesses
+system.cpu.l2cache.ReadExReq_miss_rate::cpu.data     0.539904                       # miss rate for ReadExReq accesses
+system.cpu.l2cache.ReadExReq_miss_rate::total        0.539904                       # miss rate for ReadExReq accesses
+system.cpu.l2cache.demand_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for demand accesses
+system.cpu.l2cache.demand_miss_rate::cpu.itb.walker     0.000958                       # miss rate for demand accesses
+system.cpu.l2cache.demand_miss_rate::cpu.inst        0.012483                       # miss rate for demand accesses
+system.cpu.l2cache.demand_miss_rate::cpu.data        0.229766                       # miss rate for demand accesses
+system.cpu.l2cache.demand_miss_rate::total           0.103743                       # miss rate for demand accesses
+system.cpu.l2cache.overall_miss_rate::cpu.dtb.walker     0.000666                       # miss rate for overall accesses
+system.cpu.l2cache.overall_miss_rate::cpu.itb.walker     0.000958                       # miss rate for overall accesses
+system.cpu.l2cache.overall_miss_rate::cpu.inst       0.012483                       # miss rate for overall accesses
+system.cpu.l2cache.overall_miss_rate::cpu.data       0.229766                       # miss rate for overall accesses
+system.cpu.l2cache.overall_miss_rate::total          0.103743                       # miss rate for overall accesses
+system.cpu.l2cache.blocked_cycles::no_mshrs                 0                       # number of cycles access was blocked
+system.cpu.l2cache.blocked_cycles::no_targets               0                       # number of cycles access was blocked
+system.cpu.l2cache.blocked::no_mshrs                        0                       # number of cycles access was blocked
+system.cpu.l2cache.blocked::no_targets                      0                       # number of cycles access was blocked
+system.cpu.l2cache.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
+system.cpu.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
+system.cpu.l2cache.fast_writes                              0                       # number of fast writes performed
+system.cpu.l2cache.cache_copies                             0                       # number of cache copies performed
+system.cpu.l2cache.writebacks::writebacks               57863                       # number of writebacks
+system.cpu.l2cache.writebacks::total                    57863                       # number of writebacks
+system.cpu.l2cache.no_allocate_misses                       0                       # Number of misses that were no-allocate
 system.cf0.dma_read_full_pages                      0                       # Number of full page size DMA reads (not PRD).
 system.cf0.dma_read_bytes                           0                       # Number of bytes transfered via DMA reads (not PRD).
 system.cf0.dma_read_txs                             0                       # Number of DMA read transactions (not PRD).
