@@ -190,6 +190,3 @@ class MemTest : public MemObject
 };
 
 #endif // __CPU_MEMTEST_MEMTEST_HH__
-
-
-

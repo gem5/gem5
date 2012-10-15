@@ -183,7 +183,7 @@ MemTest::completeRequest(PacketPtr pkt)
 
     if (pkt->isError()) {
         if (!suppress_func_warnings) {
-          warn("Functional Access failed for %x at %x\n",
+          warn("Functional %s access failed at %#x\n",
                pkt->isWrite() ? "write" : "read", req->getPaddr());
         }
     } else {
@@ -280,7 +280,6 @@ MemTest::tick()
     access_size = 0;
     dma_access_size = 0;
 
-    Request *req = new Request();
     Request::Flags flags;
     Addr paddr;
 
@@ -290,7 +289,17 @@ MemTest::tick()
     } else  {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
+
+    // For now we only allow one outstanding request per address
+    // per tester This means we assume CPU does write forwarding
+    // to reads that alias something in the cpu store buffer.
+    if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
+        return;
+    }
+
     bool do_functional = (random() % 100 < percentFunctional) && !uncacheable;
+    Request *req = new Request();
+    uint8_t *result = new uint8_t[8];
 
     if (issueDmas) {
         paddr &= ~((1 << dma_access_size) - 1);
@@ -303,20 +312,8 @@ MemTest::tick()
     }
     assert(req->getSize() == 1);
 
-    uint8_t *result = new uint8_t[8];
-
     if (cmd < percentReads) {
         // read
-
-        // For now we only allow one outstanding request per address
-        // per tester This means we assume CPU does write forwarding
-        // to reads that alias something in the cpu store buffer.
-        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
-            delete [] result;
-            delete req;
-            return;
-        }
-
         outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
@@ -342,16 +339,6 @@ MemTest::tick()
         }
     } else {
         // write
-
-        // For now we only allow one outstanding request per addreess
-        // per tester.  This means we assume CPU does write forwarding
-        // to reads that alias something in the cpu store buffer.
-        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
-            delete [] result;
-            delete req;
-            return;
-        }
-
         outstandingAddrs.insert(paddr);
 
         DPRINTF(MemTest, "initiating %swrite at addr %x (blk %x) value %x\n",
