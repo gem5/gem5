@@ -100,8 +100,8 @@ BaseBus::init()
         blockSize = peer_block_size;
 
     // check if the block size is a value known to work
-    if (blockSize != 16 || blockSize != 32 || blockSize != 64 ||
-        blockSize != 128)
+    if (!(blockSize == 16 || blockSize == 32 || blockSize == 64 ||
+          blockSize == 128))
         warn_once("Block size is neither 16, 32, 64 or 128 bytes.\n");
 }
 
