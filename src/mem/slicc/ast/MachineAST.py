@@ -76,7 +76,7 @@ class MachineAST(DeclAST):
     def findMachines(self):
         # Add to MachineType enumeration
         machine_type = self.symtab.find("MachineType", Type)
-        if not machine_type.enumAdd(self.ident, self.pairs_ast.pairs):
+        if not machine_type.addEnum(self.ident, self.pairs_ast.pairs):
             self.error("Duplicate machine name: %s:%s" % (machine_type,
                                                           self.ident))
 

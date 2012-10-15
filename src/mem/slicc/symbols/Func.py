@@ -30,7 +30,7 @@ from slicc.symbols.Type import Type
 
 class Func(Symbol):
     def __init__(self, table, ident, location, return_type, param_types,
-                 param_strings, body, pairs, machine):
+                 param_strings, body, pairs):
         super(Func, self).__init__(table, ident, location, pairs)
         self.return_type = return_type
         self.param_types = param_types
@@ -38,12 +38,7 @@ class Func(Symbol):
         self.body = body
         self.isInternalMachineFunc = False
         self.c_ident = ident
-
-        if machine is None or "external" in self or "primitive" in self:
-            pass
-        else:
-            self.machineStr = str(machine)
-            self.isInternalMachineFunc = True
+        self.class_name = ""
 
     def __repr__(self):
         return ""
@@ -81,16 +76,11 @@ class Func(Symbol):
         if "return_by_pointer" in self and self.return_type != void_type:
             return_type += "*"
 
-        if self.isInternalMachineFunc:
-            klass = "%s_Controller" % self.machineStr
-        else:
-            self.error("No class found for the function %s" % self.ident)
-
         params = ', '.join(self.param_strings)
 
         code('''
 $return_type
-${klass}::${{self.c_ident}}($params)
+${{self.class_name}}::${{self.c_ident}}($params)
 {
 ${{self.body}}
 }

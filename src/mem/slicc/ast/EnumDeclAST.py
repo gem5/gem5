@@ -67,5 +67,5 @@ class EnumDeclAST(DeclAST):
         pairs = { "external" : "yes" }
         func = Func(self.symtab, func_id, self.location,
                     self.symtab.find("std::string", Type), [ t ], [], "",
-                    pairs, None)
+                    pairs)
         self.symtab.newSymbol(func)

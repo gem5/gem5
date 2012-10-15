@@ -66,7 +66,7 @@ class StateDeclAST(DeclAST):
         pairs = { "external" : "yes" }
         func = Func(self.symtab, func_id, self.location,
                     self.symtab.find("std::string", Type), [ t ], [], "",
-                    pairs, None)
+                    pairs)
         self.symtab.newSymbol(func)
 
         # Add the State_to_permission method
@@ -75,5 +75,5 @@ class StateDeclAST(DeclAST):
         pairs = { "external" : "yes" }
         func = Func(self.symtab, func_id, self.location,
                     self.symtab.find("AccessPermission", Type), [ t ], [], "",
-                    pairs, None)
+                    pairs)
         self.symtab.newSymbol(func)

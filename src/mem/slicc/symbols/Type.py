@@ -107,6 +107,7 @@ class Type(Symbol):
 
         # Methods
         self.methods = {}
+        self.functions = {}
 
         # Enums
         self.enums = orderdict()
@@ -143,7 +144,7 @@ class Type(Symbol):
         return "interface" in self
 
     # Return false on error
-    def dataMemberAdd(self, ident, type, pairs, init_code):
+    def addDataMember(self, ident, type, pairs, init_code):
         if ident in self.data_members:
             return False
 
@@ -164,7 +165,7 @@ class Type(Symbol):
     def statePermPairAdd(self, state_name, perm_name):
         self.statePermPairs.append([state_name, perm_name])
 
-    def methodAdd(self, name, return_type, param_type_vec):
+    def addMethod(self, name, return_type, param_type_vec):
         ident = self.methodId(name, param_type_vec)
         if ident in self.methods:
             return False
@@ -172,7 +173,18 @@ class Type(Symbol):
         self.methods[ident] = Method(return_type, param_type_vec)
         return True
 
-    def enumAdd(self, ident, pairs):
+    # Ideally either this function or the one above should exist. But
+    # methods and functions have different structures right now.
+    # Hence, these are different, at least for the time being.
+    def addFunc(self, func):
+        ident = self.methodId(func.ident, func.param_types)
+        if ident in self.functions:
+            return False
+
+        self.functions[ident] = func
+        return True
+
+    def addEnum(self, ident, pairs):
         if ident in self.enums:
             return False
 
@@ -368,6 +380,12 @@ set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
 
                 code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init;')
 
+        # Prototypes for functions defined for the Type
+        for item in self.functions:
+            proto = self.functions[item].prototype
+            if proto:
+                code('$proto')
+
         code.dedent()
         code('};')
 
@@ -422,6 +440,10 @@ ${{self.c_ident}}::print(ostream& out) const
         code('''
     out << "]";
 }''')
+
+        # print the code for the functions in the type
+        for item in self.functions:
+            code(self.functions[item].generateCode())
 
         code.write(path, "%s.cc" % self.c_ident)
 

@@ -28,12 +28,14 @@
 from slicc.ast.TypeFieldAST import TypeFieldAST
 
 class TypeFieldMethodAST(TypeFieldAST):
-    def __init__(self, slicc, return_type_ast, ident, type_asts, pairs):
+    def __init__(self, slicc, return_type_ast, ident, type_asts, pairs,
+        statements = None):
         super(TypeFieldMethodAST, self).__init__(slicc, pairs)
 
         self.return_type_ast = return_type_ast
         self.ident = ident
         self.type_asts = type_asts
+        self.statements = statements
 
     def __repr__(self):
         return ""
@@ -46,5 +48,5 @@ class TypeFieldMethodAST(TypeFieldAST):
         types = [ t.type for t in self.type_asts ]
 
         # Add method
-        if not type.methodAdd(self.ident, return_type, types):
+        if not type.addMethod(self.ident, return_type, types):
             self.error("Duplicate method: %s:%s()" % (type, self.ident))

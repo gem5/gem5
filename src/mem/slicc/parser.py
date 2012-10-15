@@ -315,14 +315,23 @@ class SLICC(Grammar):
         "decl : type ident pairs SEMI"
         p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3])
 
+    # Function definition and declaration
     def p_decl__func_decl(self, p):
-        """decl : void ident '(' params ')' pairs SEMI
+        "decl : func_decl"
+        p[0] = p[1]
+
+    def p_func_decl__0(self, p):
+        """func_decl :  void ident '(' params ')' pairs SEMI
                 | type ident '(' params ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
     def p_decl__func_def(self, p):
-        """decl : void ident '(' params ')' pairs statements
-                | type ident '(' params ')' pairs statements"""
+        "decl : func_def"
+        p[0] = p[1]
+
+    def p_func_def__0(self, p):
+        """func_def : void ident '(' params ')' pairs statements
+            | type ident '(' params ')' pairs statements"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
 
     # Type fields
@@ -337,6 +346,10 @@ class SLICC(Grammar):
     def p_type_method__0(self, p):
         "type_member : type_or_void ident '(' types ')' pairs SEMI"
         p[0] = ast.TypeFieldMethodAST(self, p[1], p[2], p[4], p[6])
+
+    def p_type_method__1(self, p):
+        "type_member : type_or_void ident '(' params ')' pairs statements"
+        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
 
     def p_type_member__1(self, p):
         "type_member : type_or_void ident pairs SEMI"

@@ -91,7 +91,7 @@ class InPortDeclAST(DeclAST):
         # Add the trigger method - FIXME, this is a bit dirty
         pairs = { "external" : "yes" }
         func = Func(self.symtab, "trigger", self.location, void_type,
-                    param_types, [], "", pairs, None)
+                    param_types, [], "", pairs)
         symtab.newSymbol(func)
 
         param_types = []
@@ -117,13 +117,13 @@ class InPortDeclAST(DeclAST):
         # checks before calling double trigger to ensure that won't
         # happen
         func = Func(self.symtab, "doubleTrigger", self.location, void_type,
-                    param_types, [], "", pairs, None)
+                    param_types, [], "", pairs)
         symtab.newSymbol(func)
 
         # Add the continueProcessing method - this hack supports
         # messages that don't trigger events
         func = Func(self.symtab, "continueProcessing", self.location,
-                    void_type, [], [], "", pairs, None)
+                    void_type, [], [], "", pairs)
         symtab.newSymbol(func)
 
         if self.statements is not None:

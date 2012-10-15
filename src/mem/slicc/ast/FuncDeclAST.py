@@ -43,7 +43,7 @@ class FuncDeclAST(DeclAST):
     def files(self, parent=None):
         return set()
 
-    def generate(self):
+    def generate(self, parent = None):
         types = []
         params = []
         void_type = self.symtab.find("void", Type)
@@ -71,9 +71,16 @@ class FuncDeclAST(DeclAST):
 
         machine = self.state_machine
         func = Func(self.symtab, self.ident, self.location, return_type,
-                    types, params, str(body), self.pairs, machine)
+                    types, params, str(body), self.pairs)
 
-        if machine is not None:
+        if parent is not None:
+            if not parent.addFunc(func):
+                self.error("Duplicate method: %s:%s()" % (parent, self.ident))
+            func.class_name = parent.c_ident
+
+        elif machine is not None:
             machine.addFunc(func)
+            func.isInternalMachineFunc = True
+            func.class_name = "%s_Controller" % machine
         else:
             self.symtab.newSymbol(func)

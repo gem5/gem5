@@ -45,7 +45,7 @@ class TypeFieldStateAST(TypeFieldAST):
             self.error("State Declaration must be of type State.")
         
         # Add enumeration
-        if not type.enumAdd(self.field_id, self.pairs_ast.pairs):
+        if not type.addEnum(self.field_id, self.pairs_ast.pairs):
             self.error("Duplicate enumeration: %s:%s" % (type, self.field_id))
 
         # Fill machine info
