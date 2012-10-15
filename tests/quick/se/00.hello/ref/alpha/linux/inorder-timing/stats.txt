@@ -4,11 +4,11 @@ sim_seconds                                  0.000022                       # Nu
 sim_ticks                                    21628500                       # Number of ticks simulated
 final_tick                                   21628500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  48865                       # Simulator instruction rate (inst/s)
-host_op_rate                                    48859                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              165354272                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 218640                       # Number of bytes of host memory used
-host_seconds                                     0.13                       # Real time elapsed on the host
+host_inst_rate                                  34038                       # Simulator instruction rate (inst/s)
+host_op_rate                                    34033                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              115179622                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 212112                       # Number of bytes of host memory used
+host_seconds                                     0.19                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             19264                       # Number of bytes read from this memory
@@ -270,11 +270,11 @@ system.cpu.dcache.demand_avg_miss_latency::total 56590.517241                   
 system.cpu.dcache.overall_avg_miss_latency::cpu.data 56590.517241                       # average overall miss latency
 system.cpu.dcache.overall_avg_miss_latency::total 56590.517241                       # average overall miss latency
 system.cpu.dcache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
-system.cpu.dcache.blocked_cycles::no_targets      1690000                       # number of cycles access was blocked
+system.cpu.dcache.blocked_cycles::no_targets         3380                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_mshrs                 0                       # number of cycles access was blocked
 system.cpu.dcache.blocked::no_targets              37                       # number of cycles access was blocked
 system.cpu.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
-system.cpu.dcache.avg_blocked_cycles::no_targets 45675.675676                       # average number of cycles each access was blocked
+system.cpu.dcache.avg_blocked_cycles::no_targets    91.351351                       # average number of cycles each access was blocked
 system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
 system.cpu.dcache.cache_copies                      0                       # number of cache copies performed
 system.cpu.dcache.ReadReq_mshr_hits::cpu.data            2                       # number of ReadReq MSHR hits
