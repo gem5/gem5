@@ -68,7 +68,7 @@ class LRU : public BaseTags
     /** The associativity of the cache. */
     const unsigned assoc;
     /** The hit latency. */
-    const unsigned hitLatency;
+    const Cycles hitLatency;
 
     /** The cache sets. */
     CacheSet *sets;
@@ -139,7 +139,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    BlkType* accessBlock(Addr addr, int &lat, int context_src);
+    BlkType* accessBlock(Addr addr, Cycles &lat, int context_src);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -221,7 +221,7 @@ public:
      * Return the hit latency.
      * @return the hit latency.
      */
-    int getHitLatency() const
+    Cycles getHitLatency() const
     {
         return hitLatency;
     }

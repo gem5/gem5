@@ -85,7 +85,7 @@ class FALRU : public BaseTags
     /** The size of the cache. */
     const unsigned size;
     /** The hit latency of the cache. */
-    const unsigned hitLatency;
+    const Cycles hitLatency;
 
     /** Array of pointers to blocks at the cache size  boundaries. */
     FALRUBlk **cacheBoundaries;
@@ -155,7 +155,7 @@ public:
      * @param size The size of the cache.
      * @param hit_latency The hit latency of the cache.
      */
-    FALRU(unsigned blkSize, unsigned size, unsigned hit_latency);
+    FALRU(unsigned blkSize, unsigned size, Cycles hit_latency);
     ~FALRU();
 
     /**
@@ -181,7 +181,7 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* accessBlock(Addr addr, int &lat, int context_src, int *inCache = 0);
+    FALRUBlk* accessBlock(Addr addr, Cycles &lat, int context_src, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -205,7 +205,7 @@ public:
      * Return the hit latency of this cache.
      * @return The hit latency.
      */
-    int getHitLatency() const
+    Cycles getHitLatency() const
     {
         return hitLatency;
     }

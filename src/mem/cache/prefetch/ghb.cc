@@ -40,7 +40,7 @@
 
 void
 GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                                 std::list<Tick> &delays)
+                                 std::list<Cycles> &delays)
 {
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
     int master_id = useMasterId ? pkt->req->masterId() : 0;

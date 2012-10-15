@@ -49,7 +49,7 @@ class TaggedPrefetcher : public BasePrefetcher
     ~TaggedPrefetcher() {}
 
     void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                           std::list<Tick> &delays);
+                           std::list<Cycles> &delays);
 };
 
 #endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__

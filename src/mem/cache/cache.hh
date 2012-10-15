@@ -206,7 +206,7 @@ class Cache : public BaseCache
      * @return Boolean indicating whether the request was satisfied.
      */
     bool access(PacketPtr pkt, BlkType *&blk,
-                int &lat, PacketList &writebacks);
+                Cycles &lat, PacketList &writebacks);
 
     /**
      *Handle doing the Compare and Swap function for SPARC.
@@ -272,7 +272,7 @@ class Cache : public BaseCache
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
-     * @return The result of the access.
+     * @return The number of ticks required for the access.
      */
     Tick atomicAccess(PacketPtr pkt);
 
@@ -299,9 +299,9 @@ class Cache : public BaseCache
      * Snoop for the provided request in the cache and return the estimated
      * time of completion.
      * @param pkt The memory request to snoop
-     * @return The estimated completion time.
+     * @return The number of cycles required for the snoop.
      */
-    Tick snoopAtomic(PacketPtr pkt);
+    Cycles snoopAtomic(PacketPtr pkt);
 
     /**
      * Squash all requests associated with specified thread.

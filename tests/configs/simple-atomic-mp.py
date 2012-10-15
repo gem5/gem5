@@ -34,8 +34,8 @@ from m5.objects import *
 # ====================
 
 class L1(BaseCache):
-    hit_latency = '1ns'
-    response_latency = '1ns'
+    hit_latency = 2
+    response_latency = 2
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
@@ -47,8 +47,8 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    hit_latency = '10ns'
-    response_latency = '10ns'
+    hit_latency = 20
+    response_latency = 20
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -62,8 +62,8 @@ system = System(cpu = cpus,
                 membus = CoherentBus())
 
 # l2cache & bus
-system.toL2Bus = CoherentBus()
-system.l2c = L2(size='4MB', assoc=8)
+system.toL2Bus = CoherentBus(clock = '2GHz')
+system.l2c = L2(clock = '2GHz', size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 
 # connect l2c to membus

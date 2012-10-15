@@ -75,7 +75,7 @@ class StridePrefetcher : public BasePrefetcher
     ~StridePrefetcher() {}
 
     void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                           std::list<Tick> &delays);
+                           std::list<Cycles> &delays);
 };
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__

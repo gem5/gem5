@@ -41,11 +41,11 @@
 #include "base/statistics.hh"
 #include "mem/packet.hh"
 #include "params/BaseCache.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class BaseCache;
 
-class BasePrefetcher : public SimObject
+class BasePrefetcher : public ClockedObject
 {
   protected:
 
@@ -64,7 +64,7 @@ class BasePrefetcher : public SimObject
     int blkSize;
 
     /** The latency before a prefetch is issued */
-    Tick latency;
+    const Cycles latency;
 
     /** The number of prefetches to issue */
     unsigned degree;
@@ -133,7 +133,7 @@ class BasePrefetcher : public SimObject
 
     virtual void calculatePrefetch(PacketPtr &pkt,
                                    std::list<Addr> &addresses,
-                                   std::list<Tick> &delays) = 0;
+                                   std::list<Cycles> &delays) = 0;
 
     std::list<PacketPtr>::iterator inPrefetch(Addr address);
 

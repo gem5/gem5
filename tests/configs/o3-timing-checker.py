@@ -42,8 +42,8 @@ m5.util.addToPath('../configs/common')
 class MyCache(BaseCache):
     assoc = 2
     block_size = 64
-    hit_latency = '1ns'
-    response_latency = '1ns'
+    hit_latency = 2
+    response_latency = 2
     mshrs = 10
     tgts_per_mshr = 5
 
@@ -57,6 +57,9 @@ cpu.addCheckerCpu()
 cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
                               MyL1Cache(size = '256kB'),
                               MyCache(size = '2MB'))
+# @todo Note that the L2 latency here is unmodified and 2 cycles,
+# should set hit latency and response latency to 20 cycles as for
+# other scripts
 cpu.clock = '2GHz'
 
 system = System(cpu = cpu,

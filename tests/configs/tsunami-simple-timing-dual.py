@@ -36,8 +36,8 @@ import FSConfig
 # ====================
 
 class L1(BaseCache):
-    hit_latency = '1ns'
-    response_latency = '1ns'
+    hit_latency = 2
+    response_latency = 2
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
@@ -49,8 +49,8 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    hit_latency = '10ns'
-    response_latency = '10ns'
+    hit_latency = 20
+    response_latency = 20
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -61,8 +61,8 @@ class L2(BaseCache):
 class IOCache(BaseCache):
     assoc = 8
     block_size = 64
-    hit_latency = '50ns'
-    response_latency = '50ns'
+    hit_latency = 50
+    response_latency = 50
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
@@ -74,16 +74,16 @@ class IOCache(BaseCache):
 cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
 #the system
 system = FSConfig.makeLinuxAlphaSystem('timing')
-system.iocache = IOCache()
+system.iocache = IOCache(clock = '1GHz')
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 
 system.cpu = cpus
 #create the l1/l2 bus
-system.toL2Bus = CoherentBus()
+system.toL2Bus = CoherentBus(clock = '2GHz')
 
 #connect up the l2 cache
-system.l2c = L2(size='4MB', assoc=8)
+system.l2c = L2(clock = '2GHz', size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 system.l2c.mem_side = system.membus.slave
 

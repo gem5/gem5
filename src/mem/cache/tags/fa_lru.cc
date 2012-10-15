@@ -42,7 +42,7 @@
 
 using namespace std;
 
-FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
+FALRU::FALRU(unsigned _blkSize, unsigned _size, Cycles hit_latency)
     : blkSize(_blkSize), size(_size), hitLatency(hit_latency)
 {
     if (!isPowerOf2(blkSize))
@@ -159,7 +159,7 @@ FALRU::invalidate(FALRU::BlkType *blk)
 }
 
 FALRUBlk*
-FALRU::accessBlock(Addr addr, int &lat, int context_src, int *inCache)
+FALRU::accessBlock(Addr addr, Cycles &lat, int context_src, int *inCache)
 {
     accesses++;
     int tmp_in_cache = 0;

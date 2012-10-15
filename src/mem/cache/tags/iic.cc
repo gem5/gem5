@@ -220,11 +220,11 @@ IIC::regStats(const string &name)
 
 
 IICTag*
-IIC::accessBlock(Addr addr, int &lat, int context_src)
+IIC::accessBlock(Addr addr, Cycles &lat, int context_src)
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
-    int set_lat;
+    Cycles set_lat;
 
     unsigned long chain_ptr = tagNull;
 
@@ -232,11 +232,11 @@ IIC::accessBlock(Addr addr, int &lat, int context_src)
         setAccess.sample(set);
 
     IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
-    set_lat = 1;
+    set_lat = Cycles(1);
     if (tag_ptr == NULL && chain_ptr != tagNull) {
         int secondary_depth;
         tag_ptr = secondaryChain(tag, chain_ptr, &secondary_depth);
-        set_lat += secondary_depth;
+        set_lat += Cycles(secondary_depth);
         // set depth for statistics fix this later!!! egh
         sets[set].depth = set_lat;
 
@@ -250,9 +250,7 @@ IIC::accessBlock(Addr addr, int &lat, int context_src)
         }
 
     }
-    // @todo: is hashDelay is really cycles, then
-    // multiply with period
-    set_lat = set_lat * hashDelay + hitLatency;
+    set_lat = Cycles(set_lat * hashDelay + hitLatency);
     if (tag_ptr != NULL) {
         // IIC replacement: if this is not the first element of
         //   list, reorder
@@ -263,8 +261,9 @@ IIC::accessBlock(Addr addr, int &lat, int context_src)
         hitDepthTotal += sets[set].depth;
         tag_ptr->status |= BlkReferenced;
         lat = set_lat;
-        if (tag_ptr->whenReady > curTick() && tag_ptr->whenReady - curTick() > set_lat) {
-            lat = tag_ptr->whenReady - curTick();
+        if (tag_ptr->whenReady > curTick() &&
+            cache->ticksToCycles(tag_ptr->whenReady - curTick()) > set_lat) {
+            lat = cache->ticksToCycles(tag_ptr->whenReady - curTick());
         }
 
         tag_ptr->refCount += 1;

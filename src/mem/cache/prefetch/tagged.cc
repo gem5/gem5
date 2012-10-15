@@ -43,7 +43,7 @@ TaggedPrefetcher::TaggedPrefetcher(const Params *p)
 void
 TaggedPrefetcher::
 calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
+                  std::list<Cycles> &delays)
 {
     Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 

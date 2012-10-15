@@ -81,6 +81,10 @@ BaseCache::BaseCache(const Params *p)
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
+    // ensure the clock is not running at an unreasonable clock speed
+    if (clock == 1)
+        panic("Cache %s has a cycle time of 1 tick. Specify a clock.\n",
+              name());
 }
 
 void

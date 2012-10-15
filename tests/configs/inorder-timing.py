@@ -33,8 +33,8 @@ m5.util.addToPath('../configs/common')
 class MyCache(BaseCache):
     assoc = 2
     block_size = 64
-    hit_latency = '1ns'
-    response_latency = '1ns'
+    hit_latency = 2
+    response_latency = 2
     mshrs = 10
     tgts_per_mshr = 5
 
@@ -44,8 +44,8 @@ class MyL1Cache(MyCache):
 cpu = InOrderCPU(cpu_id=0)
 cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
                               MyL1Cache(size = '256kB'),
-                              MyCache(size = '2MB', hit_latency='10ns',
-                                      response_latency='10ns'))
+                              MyCache(size = '2MB', hit_latency = 20,
+                                      response_latency = 20))
 
 cpu.clock = '2GHz'
 

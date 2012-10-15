@@ -45,7 +45,7 @@
 #include "sim/system.hh"
 
 BasePrefetcher::BasePrefetcher(const Params *p)
-    : SimObject(p), size(p->size), latency(p->latency), degree(p->degree),
+    : ClockedObject(p), size(p->size), latency(p->latency), degree(p->degree),
       useMasterId(p->use_master_id), pageStop(!p->cross_pages),
       serialSquash(p->serial_squash), onlyData(p->data_accesses_only),
       system(p->sys), masterId(system->getMasterId(name()))
@@ -212,11 +212,11 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
 
 
         std::list<Addr> addresses;
-        std::list<Tick> delays;
+        std::list<Cycles> delays;
         calculatePrefetch(pkt, addresses, delays);
 
         std::list<Addr>::iterator addrIter = addresses.begin();
-        std::list<Tick>::iterator delayIter = delays.begin();
+        std::list<Cycles>::iterator delayIter = delays.begin();
         for (; addrIter != addresses.end(); ++addrIter, ++delayIter) {
             Addr addr = *addrIter;
 
@@ -241,7 +241,7 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             prefetch->req->setThreadContext(pkt->req->contextId(),
                                             pkt->req->threadId());
 
-            prefetch->time = time + (*delayIter); // @todo ADD LATENCY HERE
+            prefetch->time = time + clock * *delayIter;
 
             // We just remove the head if we are full
             if (pf.size() == size) {

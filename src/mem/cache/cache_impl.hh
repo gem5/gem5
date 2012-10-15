@@ -275,7 +275,7 @@ Cache<TagStore>::squash(int threadNum)
 template<class TagStore>
 bool
 Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
-                        int &lat, PacketList &writebacks)
+                        Cycles &lat, PacketList &writebacks)
 {
     if (pkt->req->isUncacheable()) {
         if (pkt->req->isClearLL()) {
@@ -392,7 +392,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     pendingDelete.clear();
 
     // we charge hitLatency for doing just about anything here
-    Tick time =  curTick() + hitLatency;
+    Tick time = clockEdge(hitLatency);
 
     if (pkt->isResponse()) {
         // must be cache-to-cache response from upper to lower level
@@ -463,7 +463,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         return true;
     }
 
-    int lat = hitLatency;
+    Cycles lat = hitLatency;
     BlkType *blk = NULL;
     PacketList writebacks;
 
@@ -505,7 +505,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
         if (needsResponse) {
             pkt->makeTimingResponse();
-            cpuSidePort->schedTimingResp(pkt, curTick()+lat);
+            cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
         } else {
             /// @todo nominally we should just delete the packet here,
             /// however, until 4-phase stuff we can't because sending
@@ -637,7 +637,7 @@ template<class TagStore>
 Tick
 Cache<TagStore>::atomicAccess(PacketPtr pkt)
 {
-    int lat = hitLatency;
+    Cycles lat = hitLatency;
 
     // @TODO: make this a parameter
     bool last_level_cache = false;
@@ -657,7 +657,7 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
             if (!last_level_cache) {
                 DPRINTF(Cache, "forwarding mem-inhibited %s on 0x%x\n",
                         pkt->cmdString(), pkt->getAddr());
-                lat += memSidePort->sendAtomic(pkt);
+                lat += ticksToCycles(memSidePort->sendAtomic(pkt));
             }
         } else {
             DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: not responding\n",
@@ -693,7 +693,7 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         CacheBlk::State old_state = blk ? blk->status : 0;
 #endif
 
-        lat += memSidePort->sendAtomic(bus_pkt);
+        lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
 
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(), old_state);
@@ -821,7 +821,7 @@ template<class TagStore>
 void
 Cache<TagStore>::handleResponse(PacketPtr pkt)
 {
-    Tick time = curTick() + hitLatency;
+    Tick time = clockEdge(hitLatency);
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     bool is_error = pkt->isError();
 
@@ -901,7 +901,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency +
+                completion_time = responseLatency * clock +
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
@@ -917,13 +917,13 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency + pkt->finishTime;
+                completion_time = responseLatency * clock + pkt->finishTime;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
-                completion_time = responseLatency + pkt->finishTime;
+                completion_time = responseLatency * clock + pkt->finishTime;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
                 }
@@ -1173,7 +1173,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
         // invalidate it.
         pkt->cmd = MemCmd::ReadRespWithInvalidate;
     }
-    memSidePort->schedTimingSnoopResp(pkt, curTick() + hitLatency);
+    memSidePort->schedTimingSnoopResp(pkt, clockEdge(hitLatency));
 }
 
 template<class TagStore>
@@ -1366,7 +1366,7 @@ Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 }
 
 template<class TagStore>
-Tick
+Cycles
 Cache<TagStore>::snoopAtomic(PacketPtr pkt)
 {
     if (pkt->req->isUncacheable() || pkt->cmd == MemCmd::Writeback) {

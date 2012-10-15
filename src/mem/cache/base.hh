@@ -229,7 +229,7 @@ class BaseCache : public MemObject
     /**
      * The latency of a hit in this device.
      */
-    const Tick hitLatency;
+    const Cycles hitLatency;
 
     /**
      * The latency of sending reponse to its upper level cache/core on a
@@ -237,7 +237,7 @@ class BaseCache : public MemObject
      * miss is much quicker that the hit latency. The responseLatency parameter
      * tries to capture this latency.
      */
-    const Tick responseLatency;
+    const Cycles responseLatency;
 
     /** The number of targets for each MSHR. */
     const int numTarget;
@@ -260,7 +260,7 @@ class BaseCache : public MemObject
     uint64_t order;
 
     /** Stores time the cache blocked for statistics. */
-    Tick blockedCycle;
+    Cycles blockedCycle;
 
     /** Pointer to the MSHR that has no targets. */
     MSHR *noTargetMSHR;
@@ -492,7 +492,7 @@ class BaseCache : public MemObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             blocked_causes[cause]++;
-            blockedCycle = curTick();
+            blockedCycle = curCycle();
             cpuSidePort->setBlocked();
         }
         blocked |= flag;
@@ -512,7 +512,7 @@ class BaseCache : public MemObject
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
-            blocked_cycles[cause] += curTick() - blockedCycle;
+            blocked_cycles[cause] += curCycle() - blockedCycle;
             cpuSidePort->clearBlocked();
         }
     }

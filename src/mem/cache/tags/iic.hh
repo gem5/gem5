@@ -176,7 +176,7 @@ class IIC : public BaseTags
     /** The associativity of the primary table. */
     const unsigned assoc;
     /** The base hit latency. */
-    const unsigned hitLatency;
+    const Cycles hitLatency;
     /** The subblock size, used for compression. */
     const unsigned subSize;
 
@@ -278,9 +278,9 @@ class IIC : public BaseTags
         /** The associativity of the primary table. */
         unsigned assoc;
         /** The number of cycles for each hash lookup. */
-        unsigned hashDelay;
+        Cycles hashDelay;
         /** The number of cycles to read the data. */
-        unsigned hitLatency;
+        Cycles hitLatency;
         /** The replacement policy. */
         Repl *rp;
         /** The subblock size in bytes. */
@@ -420,7 +420,7 @@ class IIC : public BaseTags
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* accessBlock(Addr addr, int &lat, int context_src);
+    IICTag* accessBlock(Addr addr, Cycles &lat, int context_src);
 
     /**
      * Find the block, do not update the replacement data.
