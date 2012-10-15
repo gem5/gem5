@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -66,6 +65,16 @@ structure(PersistentMsg, desc="...", interface="NetworkMessage") {
   MessageSizeType MessageSize, desc="size category of the message";
   RubyAccessMode AccessMode,    desc="user/supervisor access type";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
+
+  bool functionalRead(Packet *pkt) {
+    // No data in persistent messages
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No data in persistent messages
+    return false;
+  }
 }
 
 // RequestMsg
@@ -79,6 +88,16 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   MessageSizeType MessageSize, desc="size category of the message";
   RubyAccessMode AccessMode,    desc="user/supervisor access type";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
+
+  bool functionalRead(Packet *pkt) {
+    // No data in request messages
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No data in request messages
+    return false;
+  }
 }
 
 // ResponseMsg
@@ -91,6 +110,16 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   DataBlock DataBlk,           desc="data for the cache line";
   bool Dirty,                  desc="Is the data dirty (different than memory)?";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    // No check being carried out on the message type. Would be added later.
+    return testAndRead(Address, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check required since all messages are written.
+    return testAndWrite(Address, DataBlk, pkt);
+  }
 }
 
 enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {
@@ -114,6 +143,14 @@ structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
   DataBlock DataBlk,         desc="DataBlk attached to this request";
   int Len,                   desc="The length of the request";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
 }
 
 structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
@@ -123,4 +160,12 @@ structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,       desc="Destination";
   DataBlock DataBlk,         desc="DataBlk attached to this request";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
 }

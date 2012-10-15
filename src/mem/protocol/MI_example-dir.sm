@@ -172,6 +172,11 @@ machine(Directory, "Directory protocol")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    }
+
     return getDirectoryEntry(addr).DataBlk;
   }
 
@@ -506,7 +511,6 @@ machine(Directory, "Directory protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.MessageSize := in_msg.MessageSize;
-        //out_msg.Prefetch := in_msg.Prefetch;
 
         DPRINTF(RubySlicc,"%s\n", out_msg);
       }
@@ -518,12 +522,8 @@ machine(Directory, "Directory protocol")
   }
 
   action(w_writeDataToMemoryFromTBE, "\w", desc="Write date to directory memory from TBE") {
-    //getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
     assert(is_valid(tbe));
-    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, 
-                                addressOffset(tbe.PhysicalAddress), 
-                                tbe.Len);
-
+    getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
   }
 
   // TRANSITIONS
@@ -633,7 +633,6 @@ machine(Directory, "Directory protocol")
   }
 
   transition(M, PUTX, MI) {
-    l_writeDataToMemory;
     c_clearOwner;
     v_allocateTBEFromRequestNet;
     l_queueMemoryWBRequest;

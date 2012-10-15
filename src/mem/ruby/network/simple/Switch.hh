@@ -74,6 +74,9 @@ class Switch : public BasicRouter
     void print(std::ostream& out) const;
     void init_net_ptr(SimpleNetwork* net_ptr) { m_network_ptr = net_ptr; }
 
+    bool functionalRead(Packet *);
+    uint32_t functionalWrite(Packet *);
+
   private:
     // Private copy constructor and assignment operator
     Switch(const Switch& obj);

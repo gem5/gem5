@@ -232,6 +232,11 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    TBE tbe := L2_TBEs[addr];
+    if(is_valid(tbe)) {
+        return tbe.DataBlk;
+    }
+
     return getCacheEntry(addr).DataBlk;
   }
 

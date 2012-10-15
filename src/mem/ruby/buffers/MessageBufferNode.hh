@@ -31,7 +31,6 @@
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
 class MessageBufferNode

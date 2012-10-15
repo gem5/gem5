@@ -193,7 +193,7 @@ machine(L2Cache, "Token protocol")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address Address,                      desc="Physical address for this TBE";
+    Address address,                      desc="Physical address for this TBE";
     State TBEState,                       desc="Transient state";
     Address PC,                           desc="Program counter of request";
     DataBlock DataBlk,                    desc="Buffer for the data block";
@@ -512,11 +512,6 @@ machine(L2Cache, "Token protocol")
       return L2Cache_State_to_permission(cache_entry.CacheState);
     }
 
-    else if (localDirectory.isTagPresent(addr)) {
-      DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(localDirectory[addr].DirState));
-      return L2Cache_State_to_permission(localDirectory[addr].DirState);
-    }
-
     DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
     return AccessPermission:NotPresent;
   }
@@ -528,6 +523,11 @@ machine(L2Cache, "Token protocol")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+        return tbe.DataBlk;
+    }
+
     return getCacheEntry(addr).DataBlk;
   }
 
@@ -1451,6 +1451,8 @@ machine(L2Cache, "Token protocol")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, cache_entry.DataBlk);
       if ((cache_entry.Dirty == false) && in_msg.Dirty) {
         cache_entry.Dirty := in_msg.Dirty;
       }

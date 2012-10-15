@@ -327,3 +327,41 @@ SimpleNetworkParams::create()
 {
     return new SimpleNetwork(this);
 }
+
+/*
+ * The simple network has an array of switches. These switches have buffers
+ * that need to be accessed for functional reads and writes. Also the links
+ * between different switches have buffers that need to be accessed.
+ */
+bool
+SimpleNetwork::functionalRead(Packet *pkt)
+{
+    for (unsigned int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        if (m_switch_ptr_vector[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
+        if (m_buffers_to_free[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+uint32_t
+SimpleNetwork::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (unsigned int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        num_functional_writes += m_switch_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
+        num_functional_writes += m_buffers_to_free[i]->functionalWrite(pkt);
+    }
+    return num_functional_writes;
+}

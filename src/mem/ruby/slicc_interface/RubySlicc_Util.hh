@@ -35,6 +35,7 @@
 
 #include <cassert>
 
+#include "debug/RubySlicc.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
@@ -127,6 +128,62 @@ inline int
 mod(int val, int mod)
 {
     return val % mod;
+}
+
+/**
+ * This function accepts an address, a data block and a packet. If the address
+ * range for the data block contains the address which the packet needs to
+ * read, then the data from the data block is written to the packet. True is
+ * returned if the data block was read, otherwise false is returned.
+ */
+inline bool
+testAndRead(Address addr, DataBlock& blk, Packet *pkt)
+{
+    Address pktLineAddr(pkt->getAddr());
+    pktLineAddr.makeLineAddress();
+
+    Address lineAddr = addr;
+    lineAddr.makeLineAddress();
+
+    if (pktLineAddr == lineAddr) {
+        uint8_t *data = pkt->getPtr<uint8_t>(true);
+        unsigned int size_in_bytes = pkt->getSize();
+        unsigned startByte = pkt->getAddr() - lineAddr.getAddress();
+
+        for (unsigned i = 0; i < size_in_bytes; ++i) {
+            data[i] = blk.getByte(i + startByte);
+        }
+        return true;
+    }
+    return false;
+}
+
+/**
+ * This function accepts an address, a data block and a packet. If the address
+ * range for the data block contains the address which the packet needs to
+ * write, then the data from the packet is written to the data block. True is
+ * returned if the data block was written, otherwise false is returned.
+ */
+inline bool
+testAndWrite(Address addr, DataBlock& blk, Packet *pkt)
+{
+    Address pktLineAddr(pkt->getAddr());
+    pktLineAddr.makeLineAddress();
+
+    Address lineAddr = addr;
+    lineAddr.makeLineAddress();
+
+    if (pktLineAddr == lineAddr) {
+        uint8_t *data = pkt->getPtr<uint8_t>(true);
+        unsigned int size_in_bytes = pkt->getSize();
+        unsigned startByte = pkt->getAddr() - lineAddr.getAddress();
+
+        for (unsigned i = 0; i < size_in_bytes; ++i) {
+            blk.setByte(i + startByte, data[i]);
+        }
+        return true;
+    }
+    return false;
 }
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__

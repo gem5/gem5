@@ -96,6 +96,8 @@ class RubyMemoryControl : public MemoryControl
     int getRanksPerDimm() { return m_ranks_per_dimm; };
     int getDimmsPerChannel() { return m_dimms_per_channel; }
 
+    bool functionalReadBuffers(Packet *pkt);
+    uint32_t functionalWriteBuffers(Packet *pkt);
 
   private:
     void enqueueToDirectory(MemoryNode req, int latency);

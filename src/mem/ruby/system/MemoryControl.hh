@@ -35,18 +35,13 @@
 #include <string>
 
 #include "mem/protocol/MemoryControlRequestType.hh"
-#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/MemoryNode.hh"
-#include "mem/ruby/system/System.hh"
 #include "params/MemoryControl.hh"
 #include "sim/clocked_object.hh"
 
 //////////////////////////////////////////////////////////////////////////////
-
-class Consumer;
 
 class MemoryControl : public ClockedObject, public Consumer
 {
@@ -96,6 +91,11 @@ class MemoryControl : public ClockedObject, public Consumer
     virtual int getDimmsPerChannel() = 0;
 
     virtual void recordRequestType(MemoryControlRequestType requestType);
+
+    virtual bool functionalReadBuffers(Packet *pkt)
+    { fatal("Functional read access not implemented!");}
+    virtual uint32_t functionalWriteBuffers(Packet *pkt)
+    { fatal("Functional read access not implemented!");}
 
 protected:
     class MemCntrlEvent : public Event

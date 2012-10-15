@@ -27,24 +27,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-// defines
+// Declarations of external types that are common to all protocols
 external_type(int, primitive="yes", default="0");
 external_type(bool, primitive="yes", default="false");
 external_type(std::string, primitive="yes");
 external_type(uint64, primitive="yes");
 external_type(Time, primitive="yes", default="0");
+external_type(PacketPtr, primitive="yes");
+external_type(Packet, primitive="yes");
 external_type(Address);
+
 structure(DataBlock, external = "yes", desc="..."){
   void clear();
   void copyPartial(DataBlock, int, int);
 }
 
-// Declarations of external types that are common to all protocols
+bool testAndRead(Address addr, DataBlock datablk, Packet *pkt);
+bool testAndWrite(Address addr, DataBlock datablk, Packet *pkt);
 
 // AccessPermission
 // The following five states define the access permission of all memory blocks.
@@ -265,6 +264,14 @@ structure(SequencerMsg, desc="...", interface="Message") {
   DataBlock DataBlk,         desc="Data";
   int Len,                   desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(PhysicalAddress, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(PhysicalAddress, DataBlk, pkt);
+  }
 }
 
 // MaskPredictorType

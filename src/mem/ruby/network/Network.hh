@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "mem/packet.hh"
 #include "mem/protocol/LinkDirection.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/TypeDefines.hh"
@@ -81,7 +82,7 @@ class Network : public SimObject
                              bool isReconfiguration) = 0;
     virtual void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
                             LinkDirection direction,
-                            const NetDest& routing_table_entry, 
+                            const NetDest& routing_table_entry,
                             bool isReconfiguration) = 0;
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                   LinkDirection direction,
@@ -93,6 +94,16 @@ class Network : public SimObject
     virtual void printStats(std::ostream& out) const = 0;
     virtual void clearStats() = 0;
     virtual void print(std::ostream& out) const = 0;
+
+    /*
+     * Virtual functions for functionally reading and writing packets in
+     * the network. Each network needs to implement these for functional
+     * accesses to work correctly.
+     */
+    virtual bool functionalRead(Packet *pkt)
+    { fatal("Functional read not implemented.\n"); }
+    virtual uint32_t functionalWrite(Packet *pkt)
+    { fatal("Functional write not implemented.\n"); }
 
   protected:
     // Private copy constructor and assignment operator

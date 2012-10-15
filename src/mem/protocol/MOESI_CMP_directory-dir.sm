@@ -473,6 +473,9 @@ machine(Directory, "Directory protocol")
       // implementation.  We include the data in the "dataless"
       // message so we can assert the clean data matches the datablock
       // in memory
+      DPRINTF(RubySlicc, "Address: %s, MsgDataBlock: %s MemoryDataBlock: %s\n",
+              in_msg.Address, in_msg.DataBlk,
+              getDirectoryEntry(in_msg.Address).DataBlk);
       assert(getDirectoryEntry(in_msg.Address).DataBlk == in_msg.DataBlk);
     }
   }

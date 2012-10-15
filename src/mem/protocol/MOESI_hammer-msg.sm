@@ -73,6 +73,16 @@ enumeration(TriggerType, desc="...") {
 structure(TriggerMsg, desc="...", interface="Message") {
   Address Address,             desc="Physical address for this request";
   TriggerType Type,            desc="Type of trigger";
+
+  bool functionalRead(Packet *pkt) {
+    // Trigger messages do not hold any data!
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Trigger messages do not hold any data!
+    return false;
+  }
 }
 
 // RequestMsg (and also forwarded requests)
@@ -87,6 +97,16 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
   Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
   int SilentAcks, default="0", desc="silent acks from the full-bit directory";
+
+  bool functionalRead(Packet *pkt) {
+    // Request messages do not hold any data
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Request messages do not hold any data
+    return false;
+  }
 }
 
 // ResponseMsg (and also unblock requests)
@@ -103,6 +123,27 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
   Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
   int SilentAcks, default="0", desc="silent acks from the full-bit directory";
+
+  bool functionalRead(Packet *pkt) {
+    // The check below ensures that data is read only from messages that
+    // actually hold data.
+    if (Type == CoherenceResponseType:DATA ||
+        Type == CoherenceResponseType:DATA_SHARED ||
+        Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+        Type == CoherenceResponseType:WB_DIRTY ||
+        Type == CoherenceResponseType:WB_EXCLUSIVE_DIRTY) {
+        return testAndRead(Address, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Message type does not matter since all messages are written.
+    // If a protocol reads data from a packet that is not supposed
+    // to hold the data, then the fault lies with the protocol.
+    return testAndWrite(Address, DataBlk, pkt);
+  }
 }
 
 enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {
@@ -126,6 +167,14 @@ structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
   DataBlock DataBlk,         desc="DataBlk attached to this request";
   int Len,                   desc="The length of the request";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(LineAddress, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
 }
 
 structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
@@ -135,4 +184,12 @@ structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,       desc="Destination";
   DataBlock DataBlk,         desc="DataBlk attached to this request";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(LineAddress, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
 }

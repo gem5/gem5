@@ -417,7 +417,7 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     // In this loop we count the number of controllers that have the given
     // address in read only, read write and busy states.
-    for (int i = 0; i < num_controllers; ++i) {
+    for (unsigned int i = 0; i < num_controllers; ++i) {
         access_perm = m_abs_cntrl_vec[i]-> getAccessPermission(line_address);
         if (access_perm == AccessPermission_Read_Only)
             num_ro++;
@@ -452,7 +452,7 @@ RubySystem::functionalRead(PacketPtr pkt)
     if (num_invalid == (num_controllers - 1) &&
             num_backing_store == 1) {
         DPRINTF(RubySystem, "only copy in Backing_Store memory, read from it\n");
-        for (int i = 0; i < num_controllers; ++i) {
+        for (unsigned int i = 0; i < num_controllers; ++i) {
             access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_address);
             if (access_perm == AccessPermission_Backing_Store) {
                 DataBlock& block = m_abs_cntrl_vec[i]->
@@ -466,7 +466,7 @@ RubySystem::functionalRead(PacketPtr pkt)
                 return true;
             }
         }
-    } else {
+    } else if (num_ro > 0 || num_rw == 1) {
         // In Broadcast/Snoop protocols, this covers if you know the block
         // exists somewhere in the caching hierarchy, then you want to read any
         // valid RO or RW block.  In directory protocols, same thing, you want
@@ -476,7 +476,7 @@ RubySystem::functionalRead(PacketPtr pkt)
         // In this loop, we try to figure which controller has a read only or
         // a read write copy of the given address. Any valid copy would suffice
         // for a functional read.
-        for (int i = 0;i < num_controllers;++i) {
+        for (unsigned int i = 0;i < num_controllers;++i) {
             access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_address);
             if (access_perm == AccessPermission_Read_Only ||
                 access_perm == AccessPermission_Read_Write) {
@@ -492,9 +492,34 @@ RubySystem::functionalRead(PacketPtr pkt)
             }
         }
     }
+
+    // Since we are here, this means that none of the controllers hold this
+    // address in a stable/base state. The function searches through all the
+    // buffers that exist in different cache, directory and memory
+    // controllers, and in the network components and reads the data portion
+    // of the first message that holds address specified in the packet.
+    for (unsigned int i = 0; i < num_controllers;++i) {
+        if (m_abs_cntrl_vec[i]->functionalReadBuffers(pkt)) {
+            return true;
+        }
+    }
+
+    for (unsigned int i = 0; i < m_memory_controller_vec.size(); ++i) {
+        if (m_memory_controller_vec[i]->functionalReadBuffers(pkt)) {
+            return true;
+        }
+    }
+
+    if (m_network_ptr->functionalRead(pkt)) {
+        return true;
+    }
     return false;
 }
 
+// The function searches through all the buffers that exist in different
+// cache, directory and memory controllers, and in the network components
+// and writes the data portion of those that hold the address specified
+// in the packet.
 bool
 RubySystem::functionalWrite(PacketPtr pkt)
 {
@@ -505,69 +530,36 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     DPRINTF(RubySystem, "Functional Write request for %s\n",addr);
 
-    unsigned int num_ro = 0;
-    unsigned int num_rw = 0;
-    unsigned int num_busy = 0;
-    unsigned int num_backing_store = 0;
-    unsigned int num_invalid = 0;
-
-    // In this loop we count the number of controllers that have the given
-    // address in read only, read write and busy states.
-    for (int i = 0;i < num_controllers;++i) {
-        access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_addr);
-        if (access_perm == AccessPermission_Read_Only)
-            num_ro++;
-        else if (access_perm == AccessPermission_Read_Write)
-            num_rw++;
-        else if (access_perm == AccessPermission_Busy)
-            num_busy++;
-        else if (access_perm == AccessPermission_Backing_Store)
-            // See RubySlicc_Exports.sm for details, but Backing_Store is meant
-            // to represent blocks in memory *for Broadcast/Snooping protocols*,
-            // where memory has no idea whether it has an exclusive copy of data
-            // or not.
-            num_backing_store++;
-        else if (access_perm == AccessPermission_Invalid ||
-                 access_perm == AccessPermission_NotPresent)
-            num_invalid++;
-    }
-
-    // If the number of read write copies is more than 1, then there is bug in
-    // coherence protocol. Otherwise, if all copies are in stable states, i.e.
-    // num_busy == 0, we update all the copies. If there is at least one copy
-    // in busy state, then we check if there is read write copy. If yes, then
-    // also we let the access go through. Or, if there is no copy in the cache
-    // hierarchy at all, we still want to do the write to the memory
-    // (Backing_Store) instead of failing.
-
-    DPRINTF(RubySystem, "num_busy = %d, num_ro = %d, num_rw = %d\n",
-            num_busy, num_ro, num_rw);
-    assert(num_rw <= 1);
-
     uint8_t *data = pkt->getPtr<uint8_t>(true);
     unsigned int size_in_bytes = pkt->getSize();
     unsigned startByte = addr.getAddress() - line_addr.getAddress();
 
-    if ((num_busy == 0 && num_ro > 0) || num_rw == 1 ||
-        (num_invalid == (num_controllers - 1) && num_backing_store == 1)) {
-        for (int i = 0; i < num_controllers;++i) {
-            access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_addr);
-            if (access_perm == AccessPermission_Read_Only ||
-                access_perm == AccessPermission_Read_Write||
-                access_perm == AccessPermission_Maybe_Stale ||
-                access_perm == AccessPermission_Backing_Store) {
+    for (unsigned int i = 0; i < num_controllers;++i) {
+        m_abs_cntrl_vec[i]->functionalWriteBuffers(pkt);
 
-                DataBlock& block = m_abs_cntrl_vec[i]->getDataBlock(line_addr);
-                DPRINTF(RubySystem, "%s\n",block);
-                for (unsigned i = 0; i < size_in_bytes; ++i) {
-                  block.setByte(i + startByte, data[i]);
-                }
-                DPRINTF(RubySystem, "%s\n",block);
+        access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_addr);
+        if (access_perm != AccessPermission_Invalid &&
+            access_perm != AccessPermission_NotPresent) {
+
+            DataBlock& block = m_abs_cntrl_vec[i]->getDataBlock(line_addr);
+            DPRINTF(RubySystem, "%s\n",block);
+            for (unsigned i = 0; i < size_in_bytes; ++i) {
+              block.setByte(i + startByte, data[i]);
             }
+            DPRINTF(RubySystem, "%s\n",block);
         }
-        return true;
     }
-    return false;
+
+    uint32_t M5_VAR_USED num_functional_writes = 0;
+    for (unsigned int i = 0; i < m_memory_controller_vec.size() ;++i) {
+        num_functional_writes +=
+            m_memory_controller_vec[i]->functionalWriteBuffers(pkt);
+    }
+
+    num_functional_writes += m_network_ptr->functionalWrite(pkt);
+    DPRINTF(RubySystem, "Messages written = %u\n", num_functional_writes);
+
+    return true;
 }
 
 #ifdef CHECK_COHERENCE

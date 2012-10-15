@@ -217,6 +217,28 @@ Switch::print(std::ostream& out) const
     // FIXME printing
     out << "[Switch]";
 }
+bool
+Switch::functionalRead(Packet *pkt)
+{
+    // Access the buffers in the switch for performing a functional read
+    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
+        if (m_buffers_to_free[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint32_t
+Switch::functionalWrite(Packet *pkt)
+{
+    // Access the buffers in the switch for performing a functional write
+    uint32_t num_functional_writes = 0;
+    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
+        num_functional_writes += m_buffers_to_free[i]->functionalWrite(pkt);
+    }
+    return num_functional_writes;
+}
 
 Switch *
 SwitchParams::create()

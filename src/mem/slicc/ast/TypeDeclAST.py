@@ -60,7 +60,10 @@ class TypeDeclAST(DeclAST):
             machine.addType(new_type)
 
         self.symtab.newSymbol(new_type)
+        self.symtab.pushFrame()
 
         # Add all of the fields of the type to it
         for field in self.field_asts:
             field.generate(new_type)
+
+        self.symtab.popFrame()

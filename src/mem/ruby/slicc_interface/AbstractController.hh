@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 
+#include "mem/packet.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -68,6 +69,15 @@ class AbstractController : public SimObject, public Consumer
     virtual void clearStats() = 0;
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getSequencer() const = 0;
+
+    //! These functions are used by ruby system to read/write the message
+    //! queues that exist with in the controller.
+    //! The boolean return value indicates if the read was performed
+    //! successfully.
+    virtual bool functionalReadBuffers(PacketPtr&) = 0;
+    //! The return value indicates the number of messages written with the
+    //! data from the packet.
+    virtual uint32_t functionalWriteBuffers(PacketPtr&) = 0;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

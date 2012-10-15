@@ -61,4 +61,12 @@ structure(MemoryMsg, desc="...", interface="Message") {
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
   bool ReadX,                   desc="Exclusive";
   int Acks,                     desc="How many acks to expect";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(Address, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(Address, DataBlk, pkt);
+  }
 }

@@ -29,6 +29,7 @@ from m5.util import orderdict
 
 from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
+from slicc.symbols.Var import Var
 
 class DataMember(PairContainer):
     def __init__(self, ident, type, pairs, init_code):
@@ -151,6 +152,9 @@ class Type(Symbol):
         member = DataMember(ident, type, pairs, init_code)
         self.data_members[ident] = member
 
+        var = Var(self.symtab, ident, self.location, type,
+                "m_%s" % ident, {}, None)
+        self.symtab.registerSym(ident, var)
         return True
 
     def dataMemberType(self, ident):
@@ -415,6 +419,7 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 
 #include "mem/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
 using namespace std;
 ''')

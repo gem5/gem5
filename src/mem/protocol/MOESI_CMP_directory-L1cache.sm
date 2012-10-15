@@ -219,7 +219,17 @@ machine(L1Cache, "Directory protocol")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    return getCacheEntry(addr).DataBlk;
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+        return cache_entry.DataBlk;
+    }
+
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    }
+
+    error("Data block missing!");
   }
 
   Event mandatory_request_type_to_event(RubyRequestType type) {

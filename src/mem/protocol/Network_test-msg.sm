@@ -40,4 +40,8 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,             desc="Multicast destination mask";
   DataBlock DataBlk,           desc="data for the cache line";
   MessageSizeType MessageSize, desc="size category of the message";
+
+  void functionalWrite(Packet *pkt) {
+    error("Network test does not support functional accesses!");
+  }
 }

@@ -41,10 +41,10 @@
 #include <string>
 #include <vector>
 
+#include "mem/packet.hh"
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
 class MessageBuffer
@@ -65,12 +65,7 @@ class MessageBuffer
     void stallMessage(const Address& addr);
 
     // TRUE if head of queue timestamp <= SystemTime
-    bool
-    isReady() const
-    {
-        return ((m_prio_heap.size() > 0) &&
-                (m_prio_heap.front().m_time <= g_system_ptr->getTime()));
-    }
+    bool isReady() const;
 
     void
     delayHead()
@@ -144,6 +139,17 @@ class MessageBuffer
 
     void setIncomingLink(int link_id) { m_input_link_id = link_id; }
     void setVnet(int net) { m_vnet_id = net; }
+
+    // Function for figuring out if any of the messages in the buffer can
+    // satisfy the read request for the address in the packet.
+    // Return value, if true, indicates that the request was fulfilled.
+    bool functionalRead(Packet *pkt);
+
+    // Function for figuring out if any of the messages in the buffer need
+    // to be updated with the data from the packet.
+    // Return value indicates the number of messages that were updated.
+    // This required for debugging the code.
+    uint32_t functionalWrite(Packet *pkt);
 
   private:
     //added by SS

@@ -27,18 +27,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/cast.hh"
-#include "base/cprintf.hh"
 #include "debug/RubyStats.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/network/Network.hh"
-#include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/MemoryControl.hh"
-#include "mem/ruby/system/RubyMemoryControl.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -54,10 +46,4 @@ void
 MemoryControl::recordRequestType(MemoryControlRequestType request) {
     DPRINTF(RubyStats, "Recorded request: %s\n",
             MemoryControlRequestType_to_string(request));
-}
-
-RubyMemoryControl *
-RubyMemoryControlParams::create()
-{
-    return new RubyMemoryControl(this);
 }

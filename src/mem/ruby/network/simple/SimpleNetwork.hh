@@ -86,6 +86,9 @@ class SimpleNetwork : public Network
 
     void print(std::ostream& out) const;
 
+    bool functionalRead(Packet *pkt);
+    uint32_t functionalWrite(Packet *pkt);
+
   private:
     void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
     void addLink(SwitchID src, SwitchID dest, int link_latency);

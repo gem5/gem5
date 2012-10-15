@@ -126,6 +126,9 @@ class RubyRequest : public Message
     }
 
     void print(std::ostream& out) const;
+
+    bool functionalRead(Packet *pkt);
+    bool functionalWrite(Packet *pkt);
 };
 
 inline std::ostream&

@@ -61,6 +61,18 @@ class Message : public RefCounted
     virtual void setIncomingLink(int) {}
     virtual void setVnet(int) {}
 
+    /**
+     * The two functions below are used for reading / writing the message
+     * functionally. The methods return true if the address in the packet
+     * matches the address / address range in the message. Each message
+     * class that can be potentially searched for the address needs to
+     * implement these methods.
+     */
+    virtual bool functionalRead(Packet *pkt) = 0;
+    //{ fatal("Read functional access not implemented!"); }
+    virtual bool functionalWrite(Packet *pkt) = 0;
+    //{ fatal("Write functional access not implemented!"); }
+
     void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
     const int& getDelayedCycles() const {return m_DelayedCycles;}
     int& getDelayedCycles() {return m_DelayedCycles;}

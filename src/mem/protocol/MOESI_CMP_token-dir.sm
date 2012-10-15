@@ -677,6 +677,7 @@ machine(Directory, "Token protocol")
     enqueue(memQueue_out, MemoryMsg, latency="1") {
       out_msg.Address := address;
       out_msg.Type := MemoryRequestType:MEMORY_WB;
+      out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }

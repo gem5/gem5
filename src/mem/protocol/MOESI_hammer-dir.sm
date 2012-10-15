@@ -87,7 +87,7 @@ machine(Directory, "AMD Hammer-like protocol")
     O_DR_B, AccessPermission:Busy, desc="Owner, Dma Read waiting for cache responses";
     WB, AccessPermission:Busy, desc="Blocked on a writeback";
     WB_O_W, AccessPermission:Busy, desc="Blocked on memory write, will go to O";
-    WB_E_W, AccessPermission:Read_Write, desc="Blocked on memory write, will go to E";
+    WB_E_W, AccessPermission:Busy, desc="Blocked on memory write, will go to E";
 
     NO_F,  AccessPermission:Busy, desc="Blocked on a flush";
     NO_F_W, AccessPermission:Busy, desc="Not Owner, Blocked, waiting for Dram";
@@ -199,7 +199,17 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    return getDirectoryEntry(addr).DataBlk;
+    Entry dir_entry := getDirectoryEntry(addr);
+    if(is_valid(dir_entry)) {
+        return dir_entry.DataBlk;
+    }
+
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    }
+
+    error("Data block missing!");
   }
 
   PfEntry getProbeFilterEntry(Address addr), return_by_pointer="yes" {
@@ -222,7 +232,7 @@ machine(Directory, "AMD Hammer-like protocol")
       return getDirectoryEntry(addr).DirectoryState;
     }
   }
-  
+
   void setState(TBE tbe, PfEntry pf_entry, Address addr, State state) {
     if (is_valid(tbe)) {
       tbe.TBEState := state;
@@ -1168,9 +1178,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(l_writeDataToMemory, "l", desc="Write PUTX/PUTO data to memory") {
-    peek(unblockNetwork_in, ResponseMsg) {
-      assert(in_msg.Dirty);
-      assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
+    peek(memQueue_in, MemoryMsg) {
       getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
       DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
               in_msg.Address, in_msg.DataBlk);
@@ -1236,8 +1244,11 @@ machine(Directory, "AMD Hammer-like protocol")
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(unblockNetwork_in, ResponseMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
+        assert(in_msg.Dirty);
+        assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.DataBlk := in_msg.DataBlk;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -1854,26 +1865,26 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // WB State Transistions
   transition(WB, Writeback_Dirty, WB_O_W) {
-    l_writeDataToMemory;
     rs_removeSharer;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB, Writeback_Exclusive_Dirty, WB_E_W) {
-    l_writeDataToMemory;
     rs_removeSharer;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB_E_W, Memory_Ack, E) {
+    l_writeDataToMemory;
     pfd_probeFilterDeallocate;
     k_wakeUpDependents;
     l_popMemQueue;
   }
 
   transition(WB_O_W, Memory_Ack, O) {
+    l_writeDataToMemory;
     k_wakeUpDependents;
     l_popMemQueue;
   }

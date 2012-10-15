@@ -139,7 +139,7 @@ machine(L1Cache, "Token protocol")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address Address,                      desc="Physical address for this TBE";
+    Address address,                      desc="Physical address for this TBE";
     State TBEState,                       desc="Transient state";
     int IssueCount,      default="0",     desc="The number of times we've issued a request for this line.";
     Address PC,                           desc="Program counter of request";

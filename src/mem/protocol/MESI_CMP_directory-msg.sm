@@ -35,11 +35,9 @@ enumeration(CoherenceRequestType, desc="...") {
   GETS,      desc="Get Shared";
   GET_INSTR, desc="Get Instruction";
   INV,       desc="INValidate";
-  PUTX,      desc="replacement message";
+  PUTX,      desc="Replacement message";
 
   WB_ACK,    desc="Writeback ack";
-  WB_NACK,   desc="Writeback neg. ack";
-  FWD,      desc="Generic FWD";
 
   DMA_READ, desc="DMA Read";
   DMA_WRITE, desc="DMA Write";
@@ -47,14 +45,14 @@ enumeration(CoherenceRequestType, desc="...") {
 
 // CoherenceResponseType
 enumeration(CoherenceResponseType, desc="...") {
-  MEMORY_ACK,  desc="Ack from memory controller";
-  DATA,      desc="Data";
-  DATA_EXCLUSIVE,      desc="Data";
-  MEMORY_DATA,    desc="Data";
-  ACK,            desc="Generic invalidate ack";
-  WB_ACK,            desc="writeback ack";
-  UNBLOCK,         desc="unblock";
-  EXCLUSIVE_UNBLOCK,         desc="exclusive unblock";
+  MEMORY_ACK, desc="Ack from memory controller";
+  DATA, desc="Data block for L1 cache in S state";
+  DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
+  MEMORY_DATA, desc="Data block from / to main memory";
+  ACK, desc="Generic invalidate ack";
+  WB_ACK, desc="writeback ack";
+  UNBLOCK, desc="unblock";
+  EXCLUSIVE_UNBLOCK, desc="exclusive unblock";
   INV, desc="Invalidate from directory";
 }
 
@@ -70,6 +68,21 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   int Len;
   bool Dirty, default="false",  desc="Dirty bit";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
+
+  bool functionalRead(Packet *pkt) {
+    // Only PUTX messages contains the data block
+    if (Type == CoherenceRequestType:PUTX) {
+        return testAndRead(Address, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(Address, DataBlk, pkt);
+  }
 }
 
 // ResponseMsg
@@ -82,4 +95,22 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   bool Dirty, default="false",  desc="Dirty bit";
   int AckCount, default="0",  desc="number of acks in this message";
   MessageSizeType MessageSize,  desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    // Valid data block is only present in message with following types
+    if (Type == CoherenceResponseType:DATA ||
+        Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+        Type == CoherenceResponseType:MEMORY_DATA) {
+
+        return testAndRead(Address, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(Address, DataBlk, pkt);
+  }
 }

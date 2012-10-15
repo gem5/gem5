@@ -269,6 +269,9 @@ class $c_ident : public AbstractController
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
     Sequencer* getSequencer() const;
 
+    bool functionalReadBuffers(PacketPtr&);
+    uint32_t functionalWriteBuffers(PacketPtr&);
+
 private:
 ''')
 
@@ -986,6 +989,39 @@ $c_ident::${{action.ident}}(const Address& addr)
 ''')
         for func in self.functions:
             code(func.generateCode())
+
+        # Function for functional reads from messages buffered in the controller
+        code('''
+bool
+$c_ident::functionalReadBuffers(PacketPtr& pkt)
+{
+''')
+        for var in self.objects:
+            vtype = var.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.c_ident
+                code('if ($vid->functionalRead(pkt)) { return true; }')
+        code('''
+                return false;
+}
+''')
+
+        # Function for functional writes to messages buffered in the controller
+        code('''
+uint32_t
+$c_ident::functionalWriteBuffers(PacketPtr& pkt)
+{
+    uint32_t num_functional_writes = 0;
+''')
+        for var in self.objects:
+            vtype = var.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.c_ident
+                code('num_functional_writes += $vid->functionalWrite(pkt);')
+        code('''
+    return num_functional_writes;
+}
+''')
 
         code.write(path, "%s.cc" % c_ident)
 

@@ -33,7 +33,6 @@
 
 #include "base/refcnt.hh"
 #include "mem/protocol/MessageSizeType.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 

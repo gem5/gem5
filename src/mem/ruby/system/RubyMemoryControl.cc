@@ -708,3 +708,91 @@ RubyMemoryControl::wakeup()
     }
 }
 
+/**
+ * This function reads the different buffers that exist in the Ruby Memory
+ * Controller, and figures out if any of the buffers hold a message that
+ * contains the data for the address provided in the packet. True is returned
+ * if any of the messages was read, otherwise false is returned.
+ *
+ * I think we should move these buffers to being message buffers, instead of
+ * being lists.
+ */
+bool
+RubyMemoryControl::functionalReadBuffers(Packet *pkt)
+{
+    for (std::list<MemoryNode>::iterator it = m_input_queue.begin();
+         it != m_input_queue.end(); ++it) {
+        Message* msg_ptr = (*it).m_msgptr.get();
+        if (msg_ptr->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    for (std::list<MemoryNode>::iterator it = m_response_queue.begin();
+         it != m_response_queue.end(); ++it) {
+        Message* msg_ptr = (*it).m_msgptr.get();
+        if (msg_ptr->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
+        for (std::list<MemoryNode>::iterator it = m_bankQueues[bank].begin();
+             it != m_bankQueues[bank].end(); ++it) {
+            Message* msg_ptr = (*it).m_msgptr.get();
+            if (msg_ptr->functionalRead(pkt)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * This function reads the different buffers that exist in the Ruby Memory
+ * Controller, and figures out if any of the buffers hold a message that
+ * needs to functionally written with the data in the packet.
+ *
+ * The number of messages written is returned at the end. This is required
+ * for debugging purposes.
+ */
+uint32_t
+RubyMemoryControl::functionalWriteBuffers(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (std::list<MemoryNode>::iterator it = m_input_queue.begin();
+         it != m_input_queue.end(); ++it) {
+        Message* msg_ptr = (*it).m_msgptr.get();
+        if (msg_ptr->functionalWrite(pkt)) {
+            num_functional_writes++;
+        }
+    }
+
+    for (std::list<MemoryNode>::iterator it = m_response_queue.begin();
+         it != m_response_queue.end(); ++it) {
+        Message* msg_ptr = (*it).m_msgptr.get();
+        if (msg_ptr->functionalWrite(pkt)) {
+            num_functional_writes++;
+        }
+    }
+
+    for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
+        for (std::list<MemoryNode>::iterator it = m_bankQueues[bank].begin();
+             it != m_bankQueues[bank].end(); ++it) {
+            Message* msg_ptr = (*it).m_msgptr.get();
+            if (msg_ptr->functionalWrite(pkt)) {
+                num_functional_writes++;
+            }
+        }
+    }
+
+    return num_functional_writes;
+}
+
+RubyMemoryControl *
+RubyMemoryControlParams::create()
+{
+    return new RubyMemoryControl(this);
+}

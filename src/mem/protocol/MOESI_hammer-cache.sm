@@ -198,7 +198,17 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    return getCacheEntry(addr).DataBlk;
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+        return cache_entry.DataBlk;
+    }
+
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    }
+
+    error("Missing data block");
   }
 
   Entry getL2CacheEntry(Address address), return_by_pointer="yes" {
@@ -879,6 +889,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
                               tbe.ForwardRequestTime,
                               tbe.FirstResponseTime);
     }
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     cache_entry.Dirty := true;
   }
 
