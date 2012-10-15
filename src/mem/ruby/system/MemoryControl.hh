@@ -39,7 +39,6 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/system/AbstractMemOrCache.hh"
 #include "mem/ruby/system/MemoryNode.hh"
 #include "mem/ruby/system/System.hh"
 #include "params/MemoryControl.hh"
@@ -49,8 +48,7 @@
 
 class Consumer;
 
-class MemoryControl :
-    public ClockedObject, public Consumer, public AbstractMemOrCache
+class MemoryControl : public ClockedObject, public Consumer
 {
   public:
     typedef MemoryControlParams Params;

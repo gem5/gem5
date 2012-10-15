@@ -40,7 +40,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/system/AbstractMemOrCache.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 #include "mem/ruby/system/MemoryNode.hh"
 #include "mem/ruby/system/System.hh"
