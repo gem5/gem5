@@ -93,45 +93,6 @@ GenRepl::getRepl()
     return 0xffffffff;
 }
 
-unsigned long *
-GenRepl::getNRepl(int n)
-{
-    unsigned long *tmp;
-    GenReplEntry *re;
-    int i;
-    if (!(num_pool_entries>(n-1))) {
-        fatal("Not enough blks available to replace");
-    }
-    num_entries -= n;
-    num_pool_entries -= n;
-    tmp = new unsigned long[n]; /* array of cache_blk pointers */
-    int blk_index = 0;
-    for (i = 0; i < num_pools && blk_index < n; i++) {
-        while (blk_index < n && (re = pools[i].pop())) {
-            // Remove invalidated entries
-            if (!re->valid) {
-                delete re;
-                continue;
-            }
-            if (iic->clearRef(re->tag_ptr)) {
-                pools[(((i+1)== num_pools)? i :i+1)].push(re, misses);
-            }
-            else {
-                tmp[blk_index] = re->tag_ptr;
-                blk_index++;
-                delete re;
-                repl_pool.sample(i);
-            }
-        }
-    }
-    if (blk_index >= n)
-        return tmp;
-    /* search the fresh pool */
-
-    fatal("No N  replacements found");
-    return NULL;
-}
-
 void
 GenRepl::doAdvance(std::list<unsigned long> &demoted)
 {

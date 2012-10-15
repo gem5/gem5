@@ -154,40 +154,43 @@ LinuxArmSystem::initState()
             warn("DTB file specified, but no device tree support in kernel\n");
         }
 
-        AtagCore *ac = new AtagCore;
-        ac->flags(1); // read-only
-        ac->pagesize(8192);
-        ac->rootdev(0);
+        AtagCore ac;
+        ac.flags(1); // read-only
+        ac.pagesize(8192);
+        ac.rootdev(0);
 
         AddrRangeList atagRanges = physmem.getConfAddrRanges();
         if (atagRanges.size() != 1) {
             fatal("Expected a single ATAG memory entry but got %d\n",
                   atagRanges.size());
         }
-        AtagMem *am = new AtagMem;
-        am->memSize(atagRanges.begin()->size());
-        am->memStart(atagRanges.begin()->start);
+        AtagMem am;
+        am.memSize(atagRanges.begin()->size());
+        am.memStart(atagRanges.begin()->start);
 
-        AtagCmdline *ad = new AtagCmdline;
-        ad->cmdline(params()->boot_osflags);
+        AtagCmdline ad;
+        ad.cmdline(params()->boot_osflags);
 
-        DPRINTF(Loader, "boot command line %d bytes: %s\n", ad->size() <<2, params()->boot_osflags.c_str());
+        DPRINTF(Loader, "boot command line %d bytes: %s\n",
+                ad.size() <<2, params()->boot_osflags.c_str());
 
-        AtagNone *an = new AtagNone;
+        AtagNone an;
 
-        uint32_t size = ac->size() + am->size() + ad->size() + an->size();
+        uint32_t size = ac.size() + am.size() + ad.size() + an.size();
         uint32_t offset = 0;
         uint8_t *boot_data = new uint8_t[size << 2];
 
-        offset += ac->copyOut(boot_data + offset);
-        offset += am->copyOut(boot_data + offset);
-        offset += ad->copyOut(boot_data + offset);
-        offset += an->copyOut(boot_data + offset);
+        offset += ac.copyOut(boot_data + offset);
+        offset += am.copyOut(boot_data + offset);
+        offset += ad.copyOut(boot_data + offset);
+        offset += an.copyOut(boot_data + offset);
 
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
         physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
+
+        delete[] boot_data;
     }
 
     for (int i = 0; i < threadContexts.size(); i++) {

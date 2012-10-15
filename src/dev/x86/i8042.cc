@@ -490,7 +490,7 @@ X86ISA::PS2Keyboard::serialize(const std::string &base, std::ostream &os)
     }
     arrayParamOut(os, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
-    delete buffer;
+    delete[] buffer;
 }
 
 void
@@ -506,7 +506,7 @@ X86ISA::PS2Keyboard::unserialize(const std::string &base, Checkpoint *cp,
     for (int i = 0; i < bufferSize; ++i) {
         outBuffer.push(buffer[i]);
     }
-    delete buffer;
+    delete[] buffer;
 }
 
 void
@@ -523,7 +523,7 @@ X86ISA::PS2Mouse::serialize(const std::string &base, std::ostream &os)
     }
     arrayParamOut(os, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
-    delete buffer;
+    delete[] buffer;
     paramOut(os, base + ".status", statusData);
     paramOut(os, base + ".resolution", resolution);
     paramOut(os, base + ".sampleRate", sampleRate);
@@ -543,7 +543,7 @@ X86ISA::PS2Mouse::unserialize(const std::string &base, Checkpoint *cp,
     for (int i = 0; i < bufferSize; ++i) {
         outBuffer.push(buffer[i]);
     }
-    delete buffer;
+    delete[] buffer;
     paramIn(cp, section, base + ".status", statusData);
     paramIn(cp, section, base + ".resolution", resolution);
     paramIn(cp, section, base + ".sampleRate", sampleRate);

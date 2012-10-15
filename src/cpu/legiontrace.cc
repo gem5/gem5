@@ -536,7 +536,7 @@ Trace::LegionTraceRecord::dump()
                     }
                     if (diffTlb) {
                         printColumnLabels(outs);
-                        char label[8];
+                        char label[9];
                         for (int x = 0; x < 64; x++) {
                             if (shared_data->itb[x] !=
                                     ULL(0xFFFFFFFFFFFFFFFF) ||

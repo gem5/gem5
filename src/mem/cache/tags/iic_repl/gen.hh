@@ -186,13 +186,6 @@ class GenRepl : public Repl
     virtual unsigned long getRepl();
 
     /**
-     * Return an array of N tag pointers to replace.
-     * @param n The number of tag pointer to return.
-     * @return An array of tag pointers to replace.
-     */
-    virtual unsigned long *getNRepl(int n);
-
-    /**
      * Update replacement data
      */
     virtual void doAdvance(std::list<unsigned long> &demoted);

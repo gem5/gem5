@@ -79,13 +79,6 @@ class Repl : public SimObject
     virtual unsigned long getRepl() = 0;
 
     /**
-     * Return an array of N tag pointers to replace.
-     * @param n The number of tag pointer to return.
-     * @return An array of tag pointers to replace.
-     */
-    virtual unsigned long  *getNRepl(int n) = 0;
-
-    /**
      * Update replacement data
      */
     virtual void doAdvance(std::list<unsigned long> &demoted) = 0;
