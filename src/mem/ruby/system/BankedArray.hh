@@ -35,37 +35,32 @@
 #include <vector>
 
 #include "mem/ruby/common/TypeDefines.hh"
-#include "sim/eventq.hh"
+#include "sim/core.hh"
 
-
-
-class BankedArray : public EventManager
+class BankedArray
 {
-private:
+  private:
     unsigned int banks;
     Cycles accessLatency;
     unsigned int bankBits;
     unsigned int startIndexBit;
 
-    //std::vector<bool> busyBanks;
-
-    class TickEvent : public Event
+    class AccessRecord
     {
-    public:
-        TickEvent() : Event() {}
-        void process() {}
+      public:
+        AccessRecord() : idx(0), startAccess(0), endAccess(0) {}
         Index idx;
         Tick startAccess;
+        Tick endAccess;
     };
-    friend class TickEvent;
 
     // If the tick event is scheduled then the bank is busy
     // otherwise, schedule the event and wait for it to complete
-    std::vector<TickEvent> busyBanks;
+    std::vector<AccessRecord> busyBanks;
 
     unsigned int mapIndexToBank(Index idx);
 
-public:
+  public:
     BankedArray(unsigned int banks, Cycles accessLatency, unsigned int startIndexBit);
 
     // Note: We try the access based on the cache index, not the address

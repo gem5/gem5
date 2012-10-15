@@ -29,15 +29,12 @@
  *
  */
 
-#include <vector>
-
 #include "base/intmath.hh"
-#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/system/BankedArray.hh"
-#include "sim/eventq.hh"
+#include "mem/ruby/system/System.hh"
 
-BankedArray::BankedArray(unsigned int banks, Cycles accessLatency, unsigned int startIndexBit) :
-    EventManager(&mainEventQueue)
+BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
+                         unsigned int startIndexBit)
 {
     this->banks = banks;
     this->accessLatency = accessLatency;
@@ -59,19 +56,21 @@ BankedArray::tryAccess(Index idx)
     unsigned int bank = mapIndexToBank(idx);
     assert(bank < banks);
 
-    if (busyBanks[bank].scheduled()) {
-        if (!(busyBanks[bank].startAccess == curTick() && busyBanks[bank].idx == idx)) {
+    if (busyBanks[bank].endAccess >= curTick()) {
+        if (!(busyBanks[bank].startAccess == curTick() &&
+            busyBanks[bank].idx == idx)) {
             return false;
         } else {
-            return true;  // We tried to allocate resources twice in the same cycle for the same addr
+            // We tried to allocate resources twice
+            // in the same cycle for the same addr
+            return true;
         }
     }
 
     busyBanks[bank].idx = idx;
     busyBanks[bank].startAccess = curTick();
-
-    // substract 1 so that next cycle the resource available
-    schedule(busyBanks[bank], curTick()+accessLatency-1);
+    busyBanks[bank].endAccess = curTick() +
+        (accessLatency-1) * g_system_ptr->clockPeriod();
 
     return true;
 }
