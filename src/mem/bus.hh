@@ -51,7 +51,7 @@
 #ifndef __MEM_BUS_HH__
 #define __MEM_BUS_HH__
 
-#include <list>
+#include <deque>
 #include <set>
 
 #include "base/addr_range_map.hh"
@@ -213,7 +213,7 @@ class BaseBus : public MemObject
          * An array of ports that retry should be called
          * on because the original send failed for whatever reason.
          */
-        std::list<PortClass*> retryList;
+        std::deque<PortClass*> retryList;
 
         /**
          * Release the bus layer after being occupied and return to an
