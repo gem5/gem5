@@ -236,7 +236,7 @@ class BaseBus : public MemObject
     typedef AddrRangeMap<PortID>::const_iterator PortMapConstIter;
     AddrRangeMap<PortID> portMap;
 
-    AddrRangeList defaultRange;
+    AddrRange defaultRange;
 
     /**
      * Function called by the port when the bus is recieving a range change.
@@ -256,25 +256,21 @@ class BaseBus : public MemObject
     struct PortCache {
         bool valid;
         PortID id;
-        Addr start;
-        Addr end;
+        AddrRange range;
     };
 
     PortCache portCache[3];
 
     // Checks the cache and returns the id of the port that has the requested
     // address within its range
-    inline PortID checkPortCache(Addr addr) {
-        if (portCache[0].valid && addr >= portCache[0].start &&
-            addr < portCache[0].end) {
+    inline PortID checkPortCache(Addr addr) const {
+        if (portCache[0].valid && portCache[0].range == addr) {
             return portCache[0].id;
         }
-        if (portCache[1].valid && addr >= portCache[1].start &&
-                   addr < portCache[1].end) {
+        if (portCache[1].valid && portCache[1].range == addr) {
             return portCache[1].id;
         }
-        if (portCache[2].valid && addr >= portCache[2].start &&
-            addr < portCache[2].end) {
+        if (portCache[2].valid && portCache[2].range == addr) {
             return portCache[2].id;
         }
 
@@ -282,21 +278,18 @@ class BaseBus : public MemObject
     }
 
     // Clears the earliest entry of the cache and inserts a new port entry
-    inline void updatePortCache(short id, Addr start, Addr end) {
+    inline void updatePortCache(short id, const AddrRange& range) {
         portCache[2].valid = portCache[1].valid;
         portCache[2].id    = portCache[1].id;
-        portCache[2].start = portCache[1].start;
-        portCache[2].end   = portCache[1].end;
+        portCache[2].range = portCache[1].range;
 
         portCache[1].valid = portCache[0].valid;
         portCache[1].id    = portCache[0].id;
-        portCache[1].start = portCache[0].start;
-        portCache[1].end   = portCache[0].end;
+        portCache[1].range = portCache[0].range;
 
         portCache[0].valid = true;
         portCache[0].id    = id;
-        portCache[0].start = start;
-        portCache[0].end   = end;
+        portCache[0].range = range;
     }
 
     // Clears the cache. Needs to be called in constructor.
@@ -329,7 +322,14 @@ class BaseBus : public MemObject
      */
     unsigned deviceBlockSize() const;
 
-    std::set<PortID> inRecvRangeChange;
+    /**
+     * Remember for each of the master ports of the bus if we got an
+     * address range from the connected slave. For convenience, also
+     * keep track of if we got ranges from all the slave modules or
+     * not.
+     */
+    std::vector<bool> gotAddrRanges;
+    bool gotAllAddrRanges;
 
     /** The master and slave ports of the bus */
     std::vector<SlavePort*> slavePorts;

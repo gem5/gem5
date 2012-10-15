@@ -69,6 +69,33 @@ class AddrRange
 
     Addr size() const { return end - start + 1; }
     bool valid() const { return start < end; }
+
+    /**
+     * Determine if another range intersects this one, i.e. if there
+     * is an address that is both in this range and the other
+     * range. No check is made to ensure either range is valid.
+     *
+     * @param r Range to intersect with
+     * @return true if the intersection of the two ranges is not empty
+     */
+    bool intersects(const AddrRange& r) const
+    {
+        return (start <= r.start && end >= r.start) ||
+            (start <= r.end && end >= r.end);
+    }
+
+    /**
+     * Determine if this range is a subset of another range, i.e. if
+     * every address in this range is also in the other range. No
+     * check is made to ensure either range is valid.
+     *
+     * @param r Range to compare with
+     * @return true if the this range is a subset of the other one
+     */
+    bool isSubset(const AddrRange& r) const
+    {
+        return start >= r.start && end <= r.end;
+    }
 };
 
 /**

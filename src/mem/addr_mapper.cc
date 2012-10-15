@@ -272,14 +272,10 @@ RangeAddrMapper::getAddrRanges() const
         AddrRange range = *r;
 
         for (int j = 0; j < originalRanges.size(); ++j) {
-            if ((range.start < originalRanges[j].start &&
-                 range.end >= originalRanges[j].start) ||
-                (range.start < originalRanges[j].end &&
-                 range.end >= originalRanges[j].end))
+            if (range.intersects(originalRanges[j]))
                 fatal("Cannot remap range that intersects the original"
                       " ranges but are not a subset.\n");
-            if (range.start >= originalRanges[j].start &&
-                range.end <= originalRanges[j].end) {
+            if (range.isSubset(originalRanges[j])) {
                 // range is a subset
                 Addr offset = range.start - originalRanges[j].start;
                 range.start -= offset;
