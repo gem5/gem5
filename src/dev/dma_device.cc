@@ -49,8 +49,8 @@
 #include "sim/system.hh"
 
 DmaPort::DmaPort(MemObject *dev, System *s)
-    : MasterPort(dev->name() + ".dma", dev), device(dev), sys(s),
-      masterId(s->getMasterId(dev->name())),
+    : MasterPort(dev->name() + ".dma", dev), device(dev), sendEvent(this),
+      sys(s), masterId(s->getMasterId(dev->name())),
       pendingCount(0), drainEvent(NULL),
       inRetry(false)
 { }
@@ -152,24 +152,7 @@ void
 DmaPort::recvRetry()
 {
     assert(transmitList.size());
-    bool result = true;
-    do {
-        PacketPtr pkt = transmitList.front();
-        DPRINTF(DMA, "Retry on %s addr %#x\n",
-                pkt->cmdString(), pkt->getAddr());
-        result = sendTimingReq(pkt);
-        if (result) {
-            DPRINTF(DMA, "-- Done\n");
-            transmitList.pop_front();
-            inRetry = false;
-        } else {
-            inRetry = true;
-            DPRINTF(DMA, "-- Failed, queued\n");
-        }
-    } while (result && transmitList.size());
-
-    DPRINTF(DMA, "TransmitList: %d, inRetry: %d\n",
-            transmitList.size(), inRetry);
+    trySendTimingReq();
 }
 
 void
@@ -198,6 +181,11 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                 gen.size());
         queueDma(pkt);
     }
+
+    // in zero time also initiate the sending of the packets we have
+    // just created, for atomic this involves actually completing all
+    // the requests
+    sendDma();
 }
 
 void
@@ -208,8 +196,35 @@ DmaPort::queueDma(PacketPtr pkt)
     // remember that we have another packet pending, this will only be
     // decremented once a response comes back
     pendingCount++;
+}
 
-    sendDma();
+void
+DmaPort::trySendTimingReq()
+{
+    // send the first packet on the transmit list and schedule the
+    // following send if it is successful
+    PacketPtr pkt = transmitList.front();
+
+    DPRINTF(DMA, "Trying to send %s addr %#x\n", pkt->cmdString(),
+            pkt->getAddr());
+
+    inRetry = !sendTimingReq(pkt);
+    if (!inRetry) {
+        transmitList.pop_front();
+        DPRINTF(DMA, "-- Done\n");
+        // if there is more to do, then do so
+        if (!transmitList.empty())
+            // this should ultimately wait for as many cycles as the
+            // device needs to send the packet, but currently the port
+            // does not have any known width so simply wait a single
+            // cycle
+            device->schedule(sendEvent, device->clockEdge(Cycles(1)));
+    } else {
+        DPRINTF(DMA, "-- Failed, waiting for retry\n");
+    }
+
+    DPRINTF(DMA, "TransmitList: %d, inRetry: %d\n",
+            transmitList.size(), inRetry);
 }
 
 void
@@ -219,37 +234,29 @@ DmaPort::sendDma()
     // more work is going to have to be done to make
     // switching actually work
     assert(transmitList.size());
-    PacketPtr pkt = transmitList.front();
 
     Enums::MemoryMode state = sys->getMemoryMode();
     if (state == Enums::timing) {
-        if (inRetry) {
-            DPRINTF(DMA, "Can't send immediately, waiting for retry\n");
+        // if we are either waiting for a retry or are still waiting
+        // after sending the last packet, then do not proceed
+        if (inRetry || sendEvent.scheduled()) {
+            DPRINTF(DMA, "Can't send immediately, waiting to send\n");
             return;
         }
 
-        DPRINTF(DMA, "Attempting to send %s addr %#x\n",
-                pkt->cmdString(), pkt->getAddr());
-
-        bool result;
-        do {
-            result = sendTimingReq(pkt);
-            if (result) {
-                transmitList.pop_front();
-                DPRINTF(DMA, "-- Done\n");
-            } else {
-                inRetry = true;
-                DPRINTF(DMA, "-- Failed: queued\n");
-            }
-        } while (result && transmitList.size());
+        trySendTimingReq();
     } else if (state == Enums::atomic) {
-        transmitList.pop_front();
+        // send everything there is to send in zero time
+        while (!transmitList.empty()) {
+            PacketPtr pkt = transmitList.front();
+            transmitList.pop_front();
 
-        DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
-                pkt->req->getPaddr(), pkt->req->getSize());
-        Tick lat = sendAtomic(pkt);
+            DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
+                    pkt->req->getPaddr(), pkt->req->getSize());
+            Tick lat = sendAtomic(pkt);
 
-        handleResp(pkt, lat);
+            handleResp(pkt, lat);
+        }
     } else
         panic("Unknown memory mode.");
 }

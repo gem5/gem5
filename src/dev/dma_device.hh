@@ -51,49 +51,24 @@
 
 class DmaPort : public MasterPort
 {
-  protected:
-    struct DmaReqState : public Packet::SenderState
-    {
-        /** Event to call on the device when this transaction (all packets)
-         * complete. */
-        Event *completionEvent;
+  private:
 
-        /** Total number of bytes that this transaction involves. */
-        Addr totBytes;
+    /**
+     * Take the first packet of the transmit list and attempt to send
+     * it as a timing request. If it is successful, schedule the
+     * sending of the next packet, otherwise remember that we are
+     * waiting for a retry.
+     */
+    void trySendTimingReq();
 
-        /** Number of bytes that have been acked for this transaction. */
-        Addr numBytes;
-
-        /** Amount to delay completion of dma by */
-        Tick delay;
-
-        DmaReqState(Event *ce, Addr tb, Tick _delay)
-            : completionEvent(ce), totBytes(tb), numBytes(0), delay(_delay)
-        {}
-    };
-
-    MemObject *device;
-
-    /** Use a deque as we never to any insertion or removal in the middle */
-    std::deque<PacketPtr> transmitList;
-
-    /** The system that device/port are in. This is used to select which mode
-     * we are currently operating in. */
-    System *sys;
-
-    /** Id for all requests */
-    MasterID masterId;
-
-    /** Number of outstanding packets the dma port has. */
-    uint32_t pendingCount;
-
-    /** If we need to drain, keep the drain event around until we're done
-     * here.*/
-    Event *drainEvent;
-
-    /** If the port is currently waiting for a retry before it can
-     * send whatever it is that it's sending. */
-    bool inRetry;
+    /**
+     * For timing, attempt to send the first item on the transmit
+     * list, and if it is successful and there are more packets
+     * waiting, then schedule the sending of the next packet. For
+     * atomic, simply send and process everything on the transmit
+     * list.
+     */
+    void sendDma();
 
     /**
      * Handle a response packet by updating the corresponding DMA
@@ -107,11 +82,59 @@ class DmaPort : public MasterPort
      */
     void handleResp(PacketPtr pkt, Tick delay = 0);
 
+    struct DmaReqState : public Packet::SenderState
+    {
+        /** Event to call on the device when this transaction (all packets)
+         * complete. */
+        Event *completionEvent;
+
+        /** Total number of bytes that this transaction involves. */
+        const Addr totBytes;
+
+        /** Number of bytes that have been acked for this transaction. */
+        Addr numBytes;
+
+        /** Amount to delay completion of dma by */
+        const Tick delay;
+
+        DmaReqState(Event *ce, Addr tb, Tick _delay)
+            : completionEvent(ce), totBytes(tb), numBytes(0), delay(_delay)
+        {}
+    };
+
+    /** The device that owns this port. */
+    MemObject *device;
+
+    /** Use a deque as we never do any insertion or removal in the middle */
+    std::deque<PacketPtr> transmitList;
+
+    /** Event used to schedule a future sending from the transmit list. */
+    EventWrapper<DmaPort, &DmaPort::sendDma> sendEvent;
+
+    /** The system that device/port are in. This is used to select which mode
+     * we are currently operating in. */
+    System *sys;
+
+    /** Id for all requests */
+    const MasterID masterId;
+
+    /** Number of outstanding packets the dma port has. */
+    uint32_t pendingCount;
+
+    /** If we need to drain, keep the drain event around until we're done
+     * here.*/
+    Event *drainEvent;
+
+    /** If the port is currently waiting for a retry before it can
+     * send whatever it is that it's sending. */
+    bool inRetry;
+
+  protected:
+
     bool recvTimingResp(PacketPtr pkt);
     void recvRetry() ;
 
     void queueDma(PacketPtr pkt);
-    void sendDma();
 
   public:
 
@@ -148,7 +171,7 @@ class DmaDevice : public PioDevice
         dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
     }
 
-    bool dmaPending() { return dmaPort.dmaPending(); }
+    bool dmaPending() const { return dmaPort.dmaPending(); }
 
     virtual void init();
 
@@ -159,7 +182,6 @@ class DmaDevice : public PioDevice
     virtual BaseMasterPort &getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
 
-    friend class DmaPort;
 };
 
 #endif // __DEV_DMA_DEVICE_HH__
