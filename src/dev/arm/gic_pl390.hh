@@ -256,6 +256,7 @@ class Pl390 : public BaseGic
     }
     Pl390(const Params *p);
 
+    /** @{ */
     /** Return the address ranges used by the Gic
      * This is the distributor address + all cpu addresses
      */
@@ -270,7 +271,36 @@ class Pl390 : public BaseGic
      * writeDistributor() or writeCpu()
      */
     virtual Tick write(PacketPtr pkt);
+    /** @} */
 
+    /** @{ */
+    /** Post an interrupt from a device that is connected to the Gic.
+     * Depending on the configuration, the gic will pass this interrupt
+     * on through to a CPU.
+     * @param number number of interrupt to send */
+    void sendInt(uint32_t number);
+
+    /** Interface call for private peripheral interrupts  */
+    void sendPPInt(uint32_t num, uint32_t cpu);
+
+    /** Clear an interrupt from a device that is connected to the Gic
+     * Depending on the configuration, the gic may de-assert it's cpu line
+     * @param number number of interrupt to send */
+    void clearInt(uint32_t number);
+    /** @} */
+
+    /** @{ */
+    /* Various functions fer testing and debugging */
+    void driveSPI(uint32_t spi);
+    void driveLegIRQ(bool state);
+    void driveLegFIQ(bool state);
+    void driveIrqEn(bool state);
+    /** @} */
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  protected:
     /** Handle a read to the distributor poriton of the GIC
      * @param pkt packet to respond to
      */
@@ -290,30 +320,6 @@ class Pl390 : public BaseGic
      * @param pkt packet to respond to
      */
     Tick writeCpu(PacketPtr pkt);
-
-    /** Post an interrupt from a device that is connected to the Gic.
-     * Depending on the configuration, the gic will pass this interrupt
-     * on through to a CPU.
-     * @param number number of interrupt to send */
-    void sendInt(uint32_t number);
-
-    /** Interface call for private peripheral interrupts  */
-    void sendPPInt(uint32_t num, uint32_t cpu);
-
-    /** Clear an interrupt from a device that is connected to the Gic
-     * Depending on the configuration, the gic may de-assert it's cpu line
-     * @param number number of interrupt to send */
-    void clearInt(uint32_t number);
-
-    /* Various functions fer testing and debugging */
-    void driveSPI(uint32_t spi);
-    void driveLegIRQ(bool state);
-    void driveLegFIQ(bool state);
-    void driveIrqEn(bool state);
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
 };
 
 #endif //__DEV_ARM_GIC_H__
