@@ -4,11 +4,11 @@ sim_seconds                                  1.910582                       # Nu
 sim_ticks                                1910582068000                       # Number of ticks simulated
 final_tick                               1910582068000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1092208                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1092208                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            37180157619                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 321564                       # Number of bytes of host memory used
-host_seconds                                    51.39                       # Real time elapsed on the host
+host_inst_rate                                 942466                       # Simulator instruction rate (inst/s)
+host_op_rate                                   942466                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            32082735017                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 321492                       # Number of bytes of host memory used
+host_seconds                                    59.55                       # Real time elapsed on the host
 sim_insts                                    56125446                       # Number of instructions simulated
 sim_ops                                      56125446                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            850560                       # Number of bytes read from this memory
@@ -815,12 +815,12 @@ system.cpu.l2cache.demand_mshr_miss_latency::total  12860525290                 
 system.cpu.l2cache.overall_mshr_miss_latency::cpu.inst    561273079                       # number of overall MSHR miss cycles
 system.cpu.l2cache.overall_mshr_miss_latency::cpu.data  12299252211                       # number of overall MSHR miss cycles
 system.cpu.l2cache.overall_mshr_miss_latency::total  12860525290                       # number of overall MSHR miss cycles
-system.cpu.l2cache.ReadReq_mshr_uncacheable_latency::cpu.data   1331550000                       # number of ReadReq MSHR uncacheable cycles
-system.cpu.l2cache.ReadReq_mshr_uncacheable_latency::total   1331550000                       # number of ReadReq MSHR uncacheable cycles
-system.cpu.l2cache.WriteReq_mshr_uncacheable_latency::cpu.data   1891670000                       # number of WriteReq MSHR uncacheable cycles
-system.cpu.l2cache.WriteReq_mshr_uncacheable_latency::total   1891670000                       # number of WriteReq MSHR uncacheable cycles
-system.cpu.l2cache.overall_mshr_uncacheable_latency::cpu.data   3223220000                       # number of overall MSHR uncacheable cycles
-system.cpu.l2cache.overall_mshr_uncacheable_latency::total   3223220000                       # number of overall MSHR uncacheable cycles
+system.cpu.l2cache.ReadReq_mshr_uncacheable_latency::cpu.data   1334146000                       # number of ReadReq MSHR uncacheable cycles
+system.cpu.l2cache.ReadReq_mshr_uncacheable_latency::total   1334146000                       # number of ReadReq MSHR uncacheable cycles
+system.cpu.l2cache.WriteReq_mshr_uncacheable_latency::cpu.data   1895221500                       # number of WriteReq MSHR uncacheable cycles
+system.cpu.l2cache.WriteReq_mshr_uncacheable_latency::total   1895221500                       # number of WriteReq MSHR uncacheable cycles
+system.cpu.l2cache.overall_mshr_uncacheable_latency::cpu.data   3229367500                       # number of overall MSHR uncacheable cycles
+system.cpu.l2cache.overall_mshr_uncacheable_latency::total   3229367500                       # number of overall MSHR uncacheable cycles
 system.cpu.l2cache.ReadReq_mshr_miss_rate::cpu.inst     0.014319                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_miss_rate::cpu.data     0.250366                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_miss_rate::total     0.141600                       # mshr miss rate for ReadReq accesses
