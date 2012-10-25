@@ -45,14 +45,15 @@
  * Implementiation of a PL390 GIC
  */
 
-#ifndef __DEV_ARM_GIC_H__
-#define __DEV_ARM_GIC_H__
+#ifndef __DEV_ARM_GIC_PL390_H__
+#define __DEV_ARM_GIC_PL390_H__
 
 #include "base/bitunion.hh"
+#include "cpu/intr_control.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"
-#include "cpu/intr_control.hh"
-#include "params/Gic.hh"
+#include "params/Pl390.hh"
 
 /** @todo this code only assumes one processor for now. Low word
  * of intEnabled and pendingInt need to be replicated per CPU.
@@ -60,7 +61,7 @@
  * for interrupt priority register, processor target registers
  * interrupt config registers  */
 
-class Gic : public PioDevice
+class Pl390 : public BaseGic
 {
   protected:
     // distributor memory addresses
@@ -122,8 +123,6 @@ class Gic : public PioDevice
         Bitfield<9,0> ack_id;
         Bitfield<12,10> cpu_id;
     EndBitUnion(IAR)
-
-    Platform *platform;
 
     /** Distributor address GIC listens at */
     Addr distAddr;
@@ -249,13 +248,13 @@ class Gic : public PioDevice
     PostIntEvent *postIntEvent[CPU_MAX];
 
   public:
-   typedef GicParams Params;
-   const Params *
+    typedef Pl390Params Params;
+    const Params *
     params() const
     {
         return dynamic_cast<const Params *>(_params);
     }
-    Gic(const Params *p);
+    Pl390(const Params *p);
 
     /** Return the address ranges used by the Gic
      * This is the distributor address + all cpu addresses

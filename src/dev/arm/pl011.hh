@@ -54,7 +54,7 @@
 #include "dev/uart.hh"
 #include "params/Pl011.hh"
 
-class Gic;
+class BaseGic;
 
 class Pl011 : public Uart
 {
@@ -121,7 +121,7 @@ class Pl011 : public Uart
     int intNum;
 
     /** Gic to use for interrupting */
-    Gic *gic;
+    BaseGic *gic;
 
     /** Should the simulation end on an EOT */
     bool endOnEOT;

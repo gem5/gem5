@@ -45,10 +45,11 @@
 #include "debug/PL111.hh"
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
-#include "dev/arm/gic.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/pl111.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/system.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std

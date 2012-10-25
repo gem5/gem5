@@ -49,7 +49,7 @@
 #ifndef __DEV_ARM_AMBA_DEVICE_HH__
 #define __DEV_ARM_AMBA_DEVICE_HH__
 
-#include "dev/arm/gic.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/dma_device.hh"
 #include "dev/io_device.hh"
 #include "mem/packet.hh"
@@ -86,7 +86,7 @@ class AmbaIntDevice : public AmbaDevice
 {
   protected:
     int intNum;
-    Gic *gic;
+    BaseGic *gic;
     Tick intDelay;
 
   public:
@@ -102,7 +102,7 @@ class AmbaDmaDevice : public DmaDevice
     Addr     pioSize;
     Tick     pioDelay;
     int      intNum;
-    Gic      *gic;
+    BaseGic  *gic;
 
   public:
     typedef AmbaDmaDeviceParams Params;

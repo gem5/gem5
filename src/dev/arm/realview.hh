@@ -52,7 +52,7 @@
 #include "dev/platform.hh"
 #include "params/RealView.hh"
 
-class Gic;
+class BaseGic;
 class IdeController;
 class System;
 
@@ -62,7 +62,7 @@ class RealView : public Platform
     /** Pointer to the system */
     System *system;
 
-    Gic *gic;
+    BaseGic *gic;
 
   public:
     typedef RealViewParams Params;
@@ -80,7 +80,7 @@ class RealView : public Platform
     RealView(const Params *p);
 
     /** Give platform a pointer to interrupt controller */
-    void setGic(Gic *_gic) { gic = _gic; }
+    void setGic(BaseGic *_gic) { gic = _gic; }
 
     /**
      * Cause the cpu to post a serial interrupt to the CPU.

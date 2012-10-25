@@ -52,7 +52,6 @@
 #include "params/Pl111.hh"
 #include "sim/serialize.hh"
 
-class Gic;
 class VncInput;
 class Bitmap;
 

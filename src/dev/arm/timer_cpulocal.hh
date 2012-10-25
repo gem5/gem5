@@ -50,7 +50,7 @@
  * Technical Reference Manual rev r2p2 (ARM DDI 0407F)
  */
 
-class Gic;
+class BaseGic;
 
 class CpuLocalTimer : public BasicPioDevice
 {
@@ -157,7 +157,7 @@ class CpuLocalTimer : public BasicPioDevice
     static const int CPU_MAX = 8;
 
     /** Pointer to the GIC for causing an interrupt */
-    Gic *gic;
+    BaseGic *gic;
 
     /** Timers that do the actual work */
     Timer localTimer[CPU_MAX];

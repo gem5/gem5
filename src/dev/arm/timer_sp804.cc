@@ -41,7 +41,7 @@
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Timer.hh"
-#include "dev/arm/gic.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/timer_sp804.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

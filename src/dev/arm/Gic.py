@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 ARM Limited
+# Copyright (c) 2012 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,29 +33,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('Gic.py')
-    SimObject('RealView.py')
+from Device import PioDevice
+from Platform import Platform
 
-    Source('a9scu.cc')
-    Source('amba_device.cc')
-    Source('amba_fake.cc')
-    Source('base_gic.cc')
-    Source('gic_pl390.cc')
-    Source('pl011.cc')
-    Source('pl111.cc')
-    Source('kmi.cc')
-    Source('timer_sp804.cc')
-    Source('rv_ctrl.cc')
-    Source('realview.cc')
-    Source('rtc_pl031.cc')
-    Source('timer_cpulocal.cc')
+class BaseGic(PioDevice):
+    type = 'BaseGic'
+    abstract = True
+    cxx_header = "dev/arm/base_gic.hh"
 
-    DebugFlag('AMBA')
-    DebugFlag('PL111')
-    DebugFlag('Pl050')
-    DebugFlag('GIC')
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
+
+class Pl390(BaseGic):
+    type = 'Pl390'
+    cxx_header = "dev/arm/gic_pl390.hh"
+
+    dist_addr = Param.Addr(0x1f001000, "Address for distributor")
+    cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
+    dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")
+    cpu_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to cpu interface")
+    int_latency = Param.Latency('10ns', "Delay for interrupt to get to CPU")
+    it_lines = Param.UInt32(128, "Number of interrupt lines supported (max = 1020)")
+

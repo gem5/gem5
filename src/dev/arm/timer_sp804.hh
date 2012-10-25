@@ -47,7 +47,7 @@
  * This implements the dual Sp804 timer block
  */
 
-class Gic;
+class BaseGic;
 
 class Sp804 : public AmbaDevice
 {
@@ -127,7 +127,7 @@ class Sp804 : public AmbaDevice
     };
 
     /** Pointer to the GIC for causing an interrupt */
-    Gic *gic;
+    BaseGic *gic;
 
     /** Timers that do the actual work */
     Timer timer0;

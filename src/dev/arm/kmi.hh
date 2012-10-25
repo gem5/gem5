@@ -54,8 +54,6 @@
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
-class Gic;
-
 class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
 {
   protected:

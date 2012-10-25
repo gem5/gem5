@@ -46,14 +46,14 @@
 #include "debug/GIC.hh"
 #include "debug/IPI.hh"
 #include "debug/Interrupt.hh"
-#include "dev/arm/gic.hh"
+#include "dev/arm/gic_pl390.hh"
 #include "dev/arm/realview.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-Gic::Gic(const Params *p)
-    : PioDevice(p), platform(p->platform), distAddr(p->dist_addr),
+Pl390::Pl390(const Params *p)
+    : BaseGic(p), distAddr(p->dist_addr),
       cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
       enabled(false), itLines(p->it_lines)
@@ -108,7 +108,7 @@ Gic::Gic(const Params *p)
 }
 
 Tick
-Gic::read(PacketPtr pkt)
+Pl390::read(PacketPtr pkt)
 {
 
     Addr addr = pkt->getAddr();
@@ -123,7 +123,7 @@ Gic::read(PacketPtr pkt)
 
 
 Tick
-Gic::write(PacketPtr pkt)
+Pl390::write(PacketPtr pkt)
 {
 
     Addr addr = pkt->getAddr();
@@ -137,7 +137,7 @@ Gic::write(PacketPtr pkt)
 }
 
 Tick
-Gic::readDistributor(PacketPtr pkt)
+Pl390::readDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
     pkt->allocate();
@@ -267,7 +267,7 @@ done:
 }
 
 Tick
-Gic::readCpu(PacketPtr pkt)
+Pl390::readCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - cpuAddr;
     pkt->allocate();
@@ -353,7 +353,7 @@ Gic::readCpu(PacketPtr pkt)
 
 
 Tick
-Gic::writeDistributor(PacketPtr pkt)
+Pl390::writeDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
     pkt->allocate();
@@ -477,7 +477,7 @@ done:
 }
 
 Tick
-Gic::writeCpu(PacketPtr pkt)
+Pl390::writeCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - cpuAddr;
     pkt->allocate();
@@ -532,7 +532,7 @@ Gic::writeCpu(PacketPtr pkt)
 }
 
 void
-Gic::softInt(int ctx_id, SWI swi)
+Pl390::softInt(int ctx_id, SWI swi)
 {
     switch (swi.list_type) {
       case 1:
@@ -564,7 +564,7 @@ Gic::softInt(int ctx_id, SWI swi)
 }
 
 uint64_t
-Gic::genSwiMask(int cpu)
+Pl390::genSwiMask(int cpu)
 {
     if (cpu > 7)
         panic("Invalid CPU ID\n");
@@ -572,7 +572,7 @@ Gic::genSwiMask(int cpu)
 }
 
 void
-Gic::updateIntState(int hint)
+Pl390::updateIntState(int hint)
 {
     for (int cpu = 0; cpu < CPU_MAX; cpu++) {
         if (!cpuEnabled[cpu])
@@ -647,7 +647,7 @@ Gic::updateIntState(int hint)
 }
 
 void
-Gic::updateRunPri()
+Pl390::updateRunPri()
 {
     for (int cpu = 0; cpu < CPU_MAX; cpu++) {
         if (!cpuEnabled[cpu])
@@ -674,7 +674,7 @@ Gic::updateRunPri()
 }
 
 void
-Gic::sendInt(uint32_t num)
+Pl390::sendInt(uint32_t num)
 {
     DPRINTF(Interrupt, "Received Interupt number %d,  cpuTarget %#x: \n",
             num, cpuTarget[num]);
@@ -686,7 +686,7 @@ Gic::sendInt(uint32_t num)
 }
 
 void
-Gic::sendPPInt(uint32_t num, uint32_t cpu)
+Pl390::sendPPInt(uint32_t num, uint32_t cpu)
 {
     DPRINTF(Interrupt, "Received Interrupt number %d, cpuTarget %#x: \n",
             num, cpu);
@@ -695,20 +695,20 @@ Gic::sendPPInt(uint32_t num, uint32_t cpu)
 }
 
 void
-Gic::clearInt(uint32_t number)
+Pl390::clearInt(uint32_t number)
 {
     /* @todo assume edge triggered only at the moment. Nothing to do. */
 }
 
 void
-Gic::postInt(uint32_t cpu, Tick when)
+Pl390::postInt(uint32_t cpu, Tick when)
 {
     if (!(postIntEvent[cpu]->scheduled()))
         eventq->schedule(postIntEvent[cpu], when);
 }
 
 AddrRangeList
-Gic::getAddrRanges() const
+Pl390::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeSize(distAddr, DIST_SIZE));
@@ -718,7 +718,7 @@ Gic::getAddrRanges() const
 
 
 void
-Gic::serialize(std::ostream &os)
+Pl390::serialize(std::ostream &os)
 {
     DPRINTF(Checkpoint, "Serializing Arm GIC\n");
 
@@ -758,7 +758,7 @@ Gic::serialize(std::ostream &os)
 }
 
 void
-Gic::unserialize(Checkpoint *cp, const std::string &section)
+Pl390::unserialize(Checkpoint *cp, const std::string &section)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 
@@ -797,15 +797,15 @@ Gic::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-Gic *
-GicParams::create()
+Pl390 *
+Pl390Params::create()
 {
-    return new Gic(this);
+    return new Pl390(this);
 }
 
 /* Functions for debugging and testing */
 void
-Gic::driveSPI(unsigned int spiVect)
+Pl390::driveSPI(unsigned int spiVect)
 {
     DPRINTF(GIC, "Received SPI Vector:%x Enable: %d\n", spiVect, irqEnable);
     pendingInt[1] |= spiVect;
@@ -815,7 +815,7 @@ Gic::driveSPI(unsigned int spiVect)
 }
 
 void
-Gic::driveIrqEn( bool state)
+Pl390::driveIrqEn( bool state)
 {
     irqEnable = state;
     DPRINTF(GIC, " Enabling Irq\n");
@@ -823,7 +823,7 @@ Gic::driveIrqEn( bool state)
 }
 
 void
-Gic::driveLegIRQ(bool state)
+Pl390::driveLegIRQ(bool state)
 {
     if (irqEnable && !(!enabled && cpuEnabled[0])) {
         if (state) {
@@ -835,7 +835,7 @@ Gic::driveLegIRQ(bool state)
 }
 
 void
-Gic::driveLegFIQ(bool state)
+Pl390::driveLegFIQ(bool state)
 {
     if (state)
         platform->intrctrl->post(0, ArmISA::INT_FIQ, 0);

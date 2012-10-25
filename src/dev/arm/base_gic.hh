@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,86 +34,61 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Andreas Sandberg
  */
 
 /** @file
- * Implementation of RealView platform.
+ * Base class for ARM GIC implementations
  */
 
-#include <deque>
-#include <string>
-#include <vector>
+#ifndef __DEV_ARM_BASE_GIC_H__
+#define __DEV_ARM_BASE_GIC_H__
 
-#include "config/the_isa.hh"
-#include "cpu/intr_control.hh"
-#include "dev/arm/base_gic.hh"
-#include "dev/arm/realview.hh"
-#include "dev/terminal.hh"
-#include "sim/system.hh"
+#include "dev/io_device.hh"
 
-using namespace std;
-using namespace TheISA;
+class Platform;
 
-RealView::RealView(const Params *p)
-    : Platform(p), system(p->system)
-{}
-
-void
-RealView::postConsoleInt()
+class BaseGic :  public PioDevice
 {
-    warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
-}
+  public:
+    typedef struct BaseGicParams Params;
 
-void
-RealView::clearConsoleInt()
-{
-    warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
-}
+    BaseGic(const Params *p);
+    virtual ~BaseGic();
 
-void
-RealView::postPciInt(int line)
-{
-    gic->sendInt(line);
-}
+    const Params * params() const;
 
-void
-RealView::clearPciInt(int line)
-{
-    gic->clearInt(line);
-}
+    /**
+     * Post an interrupt from a device that is connected to the GIC.
+     *
+     * Depending on the configuration, the GIC will pass this interrupt
+     * on through to a CPU.
+     *
+     * @param num number of interrupt to send
+     */
+    virtual void sendInt(uint32_t num) = 0;
 
-Addr
-RealView::pciToDma(Addr pciAddr) const
-{
-    return pciAddr;
-}
+    /**
+     * Interface call for private peripheral interrupts.
+     *
+     * @param num number of interrupt to send
+     * @param cpu CPU to forward interrupt to
+     */
+    virtual void sendPPInt(uint32_t num, uint32_t cpu) = 0;
 
+    /**
+     * Clear an interrupt from a device that is connected to the GIC.
+     *
+     * Depending on the configuration, the GIC may de-assert it's CPU
+     * line.
+     *
+     * @param num number of interrupt to send
+     */
+    virtual void clearInt(uint32_t num) = 0;
 
-Addr
-RealView::calcPciConfigAddr(int bus, int dev, int func)
-{
-    if (bus != 0)
-        return ULL(-1);
-    return params()->pci_cfg_base | ((func & 7) << 16) | ((dev & 0x1f) << 19);
-}
+  protected:
+    /** Platform this GIC belongs to. */
+    Platform *platform;
+};
 
-Addr
-RealView::calcPciIOAddr(Addr addr)
-{
-    return addr;
-}
-
-Addr
-RealView::calcPciMemAddr(Addr addr)
-{
-    return addr;
-}
-
-RealView *
-RealViewParams::create()
-{
-    return new RealView(this);
-}
+#endif
