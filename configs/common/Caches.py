@@ -40,32 +40,29 @@
 
 from m5.objects import *
 
-class L1Cache(BaseCache):
+# Base implementations of L1, L2, IO and TLB-walker caches. There are
+# used in the regressions and also as base components in the
+# system-configuration scripts. The values are meant to serve as a
+# starting point, and specific parameters can be overridden in the
+# specific instantiations.
+
+class L1(BaseCache):
     assoc = 2
-    block_size = 64
     hit_latency = 2
     response_latency = 2
-    mshrs = 10
+    block_size = 64
+    mshrs = 4
     tgts_per_mshr = 20
     is_top_level = True
 
-class L2Cache(BaseCache):
+class L2(BaseCache):
     assoc = 8
     block_size = 64
     hit_latency = 20
     response_latency = 20
-    mshrs = 20
-    tgts_per_mshr = 12
-
-class PageTableWalkerCache(BaseCache):
-    assoc = 2
-    block_size = 64
-    hit_latency = 2
-    response_latency = 2
-    mshrs = 10
-    size = '1kB'
-    tgts_per_mshr = 12
-    is_top_level = True
+    mshrs = 92
+    tgts_per_mshr = 16
+    write_buffers = 8
 
 class IOCache(BaseCache):
     assoc = 8
@@ -77,3 +74,14 @@ class IOCache(BaseCache):
     tgts_per_mshr = 12
     forward_snoops = False
     is_top_level = True
+
+class PageTableWalkerCache(BaseCache):
+    assoc = 2
+    block_size = 64
+    hit_latency = 2
+    response_latency = 2
+    mshrs = 10
+    size = '1kB'
+    tgts_per_mshr = 12
+    is_top_level = True
+

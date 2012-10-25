@@ -31,50 +31,13 @@ from m5.objects import *
 m5.util.addToPath('../configs/common')
 import FSConfig
 from Benchmarks import *
-
-# --------------------
-# Base L1 Cache
-# ====================
-
-class L1(BaseCache):
-    hit_latency = 2
-    response_latency = 2
-    block_size = 64
-    mshrs = 4
-    tgts_per_mshr = 8
-    is_top_level = True
-
-# ----------------------
-# Base L2 Cache
-# ----------------------
-
-class L2(BaseCache):
-    block_size = 64
-    hit_latency = 20
-    response_latency = 20
-    mshrs = 92
-    tgts_per_mshr = 16
-    write_buffers = 8
-
-# ---------------------
-# I/O Cache
-# ---------------------
-class IOCache(BaseCache):
-    assoc = 8
-    block_size = 64
-    hit_latency = 50
-    response_latency = 50
-    mshrs = 20
-    size = '1kB'
-    tgts_per_mshr = 12
-    addr_ranges = [AddrRange(0, size='256MB')]
-    forward_snoops = False
+from Caches import *
 
 #cpu
 cpus = [AtomicSimpleCPU(cpu_id=i) for i in xrange(2) ]
 #the system
 system = FSConfig.makeArmSystem('atomic', "RealView_PBX", None, False)
-system.iocache = IOCache(clock = '1GHz')
+system.iocache = IOCache(clock = '1GHz', addr_ranges = [AddrRange('256MB')])
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 

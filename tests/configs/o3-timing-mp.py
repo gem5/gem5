@@ -29,30 +29,7 @@
 import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
-
-# --------------------
-# Base L1 Cache
-# ====================
-
-class L1(BaseCache):
-    hit_latency = 2
-    response_latency = 2
-    block_size = 64
-    mshrs = 4
-    tgts_per_mshr = 20
-    is_top_level = True
-
-# ----------------------
-# Base L2 Cache
-# ----------------------
-
-class L2(BaseCache):
-    block_size = 64
-    hit_latency = 20
-    response_latency = 20
-    mshrs = 92
-    tgts_per_mshr = 16
-    write_buffers = 8
+from Caches import *
 
 nb_cores = 4
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]

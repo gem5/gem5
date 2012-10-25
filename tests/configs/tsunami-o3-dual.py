@@ -30,46 +30,7 @@ import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
 import FSConfig
-
-
-# --------------------
-# Base L1 Cache
-# ====================
-
-class L1(BaseCache):
-    hit_latency = 2
-    response_latency = 2
-    block_size = 64
-    mshrs = 4
-    tgts_per_mshr = 20
-    is_top_level = True
-
-# ----------------------
-# Base L2 Cache
-# ----------------------
-
-class L2(BaseCache):
-    block_size = 64
-    hit_latency = 20
-    response_latency = 20
-    mshrs = 92
-    tgts_per_mshr = 16
-    write_buffers = 8
-
-# ---------------------
-# I/O Cache
-# ---------------------
-class IOCache(BaseCache):
-    assoc = 8
-    block_size = 64
-    hit_latency = 50
-    response_latency = 50
-    mshrs = 20
-    size = '1kB'
-    tgts_per_mshr = 12
-    addr_ranges = [AddrRange(0, size='8GB')]
-    forward_snoops = False
-    is_top_level = True
+from Caches import *
 
 #cpu
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(2) ]
@@ -79,7 +40,7 @@ system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpus
 #create the l1/l2 bus
 system.toL2Bus = CoherentBus(clock = '2GHz')
-system.iocache = IOCache(clock = '1GHz')
+system.iocache = IOCache(clock = '1GHz', addr_ranges = [AddrRange('8GB')])
 system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 
