@@ -2,44 +2,202 @@
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.200392                       # Number of seconds simulated
 sim_ticks                                200392337000                       # Number of ticks simulated
-final_tick                               4320161594000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+final_tick                               4320161528000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                              246693534                       # Simulator instruction rate (inst/s)
-host_op_rate                                246690485                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                           182041258854                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 459700                       # Number of bytes of host memory used
-host_seconds                                     1.10                       # Real time elapsed on the host
-sim_insts                                   271555592                       # Number of instructions simulated
-sim_ops                                     271555592                       # Number of ops (including micro ops) simulated
-testsys.physmem.bytes_read::cpu.inst         13229896                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::cpu.data          4514804                       # Number of bytes read from this memory
+host_inst_rate                               90899186                       # Simulator instruction rate (inst/s)
+host_op_rate                                 90898450                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            67078334403                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 463260                       # Number of bytes of host memory used
+host_seconds                                     2.99                       # Real time elapsed on the host
+sim_insts                                   271551386                       # Number of instructions simulated
+sim_ops                                     271551386                       # Number of ops (including micro ops) simulated
+testsys.physmem.bytes_read::cpu.inst         13230208                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::cpu.data          4514888                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet         1464                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::total            17746164                       # Number of bytes read from this memory
-testsys.physmem.bytes_inst_read::cpu.inst     13229896                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_inst_read::total       13229896                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_written::cpu.data       3697636                       # Number of bytes written to this memory
+testsys.physmem.bytes_read::total            17746560                       # Number of bytes read from this memory
+testsys.physmem.bytes_inst_read::cpu.inst     13230208                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_inst_read::total       13230208                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_written::cpu.data       3697656                       # Number of bytes written to this memory
 testsys.physmem.bytes_written::tsunami.ethernet          902                       # Number of bytes written to this memory
-testsys.physmem.bytes_written::total          3698538                       # Number of bytes written to this memory
-testsys.physmem.num_reads::cpu.inst           3307474                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::cpu.data            615757                       # Number of read requests responded to by this memory
+testsys.physmem.bytes_written::total          3698558                       # Number of bytes written to this memory
+testsys.physmem.num_reads::cpu.inst           3307552                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::cpu.data            615769                       # Number of read requests responded to by this memory
 testsys.physmem.num_reads::tsunami.ethernet           43                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::total              3923274                       # Number of read requests responded to by this memory
-testsys.physmem.num_writes::cpu.data           478509                       # Number of write requests responded to by this memory
+testsys.physmem.num_reads::total              3923364                       # Number of read requests responded to by this memory
+testsys.physmem.num_writes::cpu.data           478513                       # Number of write requests responded to by this memory
 testsys.physmem.num_writes::tsunami.ethernet           31                       # Number of write requests responded to by this memory
-testsys.physmem.num_writes::total              478540                       # Number of write requests responded to by this memory
-testsys.physmem.bw_read::cpu.inst            66019970                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::cpu.data            22529824                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.num_writes::total              478544                       # Number of write requests responded to by this memory
+testsys.physmem.bw_read::cpu.inst            66021527                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::cpu.data            22530243                       # Total read bandwidth from this memory (bytes/s)
 testsys.physmem.bw_read::tsunami.ethernet         7306                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::total               88557099                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::cpu.inst       66019970                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::total          66019970                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::cpu.data           18451983                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::total               88559075                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::cpu.inst       66021527                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::total          66021527                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_write::cpu.data           18452083                       # Write bandwidth from this memory (bytes/s)
 testsys.physmem.bw_write::tsunami.ethernet         4501                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::total              18456484                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.inst           66019970                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.data           40981807                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_write::total              18456584                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.inst           66021527                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.data           40982326                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::tsunami.ethernet        11807                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::total             107013583                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::total             107015659                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.readReqs                            0                       # Total number of read requests seen
+testsys.physmem.writeReqs                           0                       # Total number of write requests seen
+testsys.physmem.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
+testsys.physmem.bytesRead                           0                       # Total number of bytes read from memory
+testsys.physmem.bytesWritten                        0                       # Total number of bytes written to memory
+testsys.physmem.bytesConsumedRd                     0                       # bytesRead derated as per pkt->getSize()
+testsys.physmem.bytesConsumedWr                     0                       # bytesWritten derated as per pkt->getSize()
+testsys.physmem.servicedByWrQ                       0                       # Number of read reqs serviced by write Q
+testsys.physmem.neitherReadNorWrite                 0                       # Reqs where no action is needed
+testsys.physmem.perBankRdReqs::0                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::1                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::2                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::3                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::4                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::5                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::6                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::7                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::8                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::9                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::10                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::11                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::12                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::13                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::14                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::15                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankWrReqs::0                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::1                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::2                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::3                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::4                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::5                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::6                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::7                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::8                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::9                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::10                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::11                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::12                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::13                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::14                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::15                   0                       # Track writes on a per bank basis
+testsys.physmem.numRdRetry                          0                       # Number of times rd buffer was full causing retry
+testsys.physmem.numWrRetry                          0                       # Number of times wr buffer was full causing retry
+testsys.physmem.totGap                              0                       # Total gap between requests
+testsys.physmem.readPktSize::0                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::1                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::2                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::3                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::4                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::5                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::6                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::7                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::8                      0                       # Categorize read packet sizes
+testsys.physmem.writePktSize::0                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::1                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::2                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::3                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::4                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::5                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::6                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::7                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::8                     0                       # categorize write packet sizes
+testsys.physmem.neitherpktsize::0                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::1                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::2                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::3                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::4                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::5                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::6                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::7                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::8                   0                       # categorize neither packet sizes
+testsys.physmem.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::3                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::4                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::5                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::6                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::7                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::8                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::9                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::10                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::11                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::12                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::13                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::14                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::15                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::16                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::17                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::18                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::19                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::20                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::21                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::22                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::23                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::24                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::25                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::26                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::27                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::28                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::32                       0                       # What read queue length does an incoming req see
+testsys.physmem.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::3                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::4                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::5                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::6                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::7                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::8                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::9                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::10                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::11                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::12                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::13                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::14                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::15                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::16                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::17                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::18                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::19                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::20                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::21                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::22                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::23                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::24                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::25                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::26                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::27                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::28                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::32                       0                       # What write queue length does an incoming req see
+testsys.physmem.totQLat                             0                       # Total cycles spent in queuing delays
+testsys.physmem.totMemAccLat                        0                       # Sum of mem lat for all requests
+testsys.physmem.totBusLat                           0                       # Total cycles spent in databus access
+testsys.physmem.totBankLat                          0                       # Total cycles spent in bank access
+testsys.physmem.avgQLat                           nan                       # Average queueing delay per request
+testsys.physmem.avgBankLat                        nan                       # Average bank access latency per request
+testsys.physmem.avgBusLat                         nan                       # Average bus latency per request
+testsys.physmem.avgMemAccLat                      nan                       # Average memory access latency
+testsys.physmem.avgRdBW                          0.00                       # Average achieved read bandwidth in MB/s
+testsys.physmem.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
+testsys.physmem.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
+testsys.physmem.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
+testsys.physmem.peakBW                       16000.00                       # Theoretical peak bandwidth in MB/s
+testsys.physmem.busUtil                          0.00                       # Data bus utilization in percentage
+testsys.physmem.avgRdQLen                        0.00                       # Average read queue length over time
+testsys.physmem.avgWrQLen                        0.00                       # Average write queue length over time
+testsys.physmem.readRowHits                         0                       # Number of row buffer hits during reads
+testsys.physmem.writeRowHits                        0                       # Number of row buffer hits during writes
+testsys.physmem.readRowHitRate                    nan                       # Row buffer hit rate for reads
+testsys.physmem.writeRowHitRate                   nan                       # Row buffer hit rate for writes
+testsys.physmem.avgGap                            nan                       # Average gap between requests
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -56,22 +214,22 @@ testsys.cpu.dtb.fetch_hits                          0                       # IT
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
 testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
-testsys.cpu.dtb.read_hits                      611875                       # DTB read hits
+testsys.cpu.dtb.read_hits                      611887                       # DTB read hits
 testsys.cpu.dtb.read_misses                      3287                       # DTB read misses
 testsys.cpu.dtb.read_acv                           80                       # DTB read access violations
 testsys.cpu.dtb.read_accesses                  225414                       # DTB read accesses
-testsys.cpu.dtb.write_hits                     478325                       # DTB write hits
+testsys.cpu.dtb.write_hits                     478329                       # DTB write hits
 testsys.cpu.dtb.write_misses                      528                       # DTB write misses
 testsys.cpu.dtb.write_acv                          81                       # DTB write access violations
 testsys.cpu.dtb.write_accesses                 109988                       # DTB write accesses
-testsys.cpu.dtb.data_hits                     1090200                       # DTB hits
+testsys.cpu.dtb.data_hits                     1090216                       # DTB hits
 testsys.cpu.dtb.data_misses                      3815                       # DTB misses
 testsys.cpu.dtb.data_acv                          161                       # DTB access violations
 testsys.cpu.dtb.data_accesses                  335402                       # DTB accesses
-testsys.cpu.itb.fetch_hits                    1215641                       # ITB hits
+testsys.cpu.itb.fetch_hits                    1215659                       # ITB hits
 testsys.cpu.itb.fetch_misses                     1497                       # ITB misses
 testsys.cpu.itb.fetch_acv                          69                       # ITB acv
-testsys.cpu.itb.fetch_accesses                1217138                       # ITB accesses
+testsys.cpu.itb.fetch_accesses                1217156                       # ITB accesses
 testsys.cpu.itb.read_hits                           0                       # DTB read hits
 testsys.cpu.itb.read_misses                         0                       # DTB read misses
 testsys.cpu.itb.read_acv                            0                       # DTB read access violations
@@ -84,51 +242,51 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
-testsys.cpu.numCycles                       399134827                       # number of cpu cycles simulated
+testsys.cpu.numCycles                       399134959                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.committedInsts                    3303498                       # Number of instructions committed
-testsys.cpu.committedOps                      3303498                       # Number of ops (including micro ops) committed
-testsys.cpu.num_int_alu_accesses              3114409                       # Number of integer alu accesses
+testsys.cpu.committedInsts                    3303576                       # Number of instructions committed
+testsys.cpu.committedOps                      3303576                       # Number of ops (including micro ops) committed
+testsys.cpu.num_int_alu_accesses              3114478                       # Number of integer alu accesses
 testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
-testsys.cpu.num_func_calls                      87506                       # number of times a function call or return occured
-testsys.cpu.num_conditional_control_insts       347031                       # number of instructions that are conditional controls
-testsys.cpu.num_int_insts                     3114409                       # number of integer instructions
+testsys.cpu.num_func_calls                      87508                       # number of times a function call or return occured
+testsys.cpu.num_conditional_control_insts       347037                       # number of instructions that are conditional controls
+testsys.cpu.num_int_insts                     3114478                       # number of integer instructions
 testsys.cpu.num_fp_insts                        17380                       # number of float instructions
-testsys.cpu.num_int_register_reads            4292439                       # number of times the integer registers were read
-testsys.cpu.num_int_register_writes           2256595                       # number of times the integer registers were written
+testsys.cpu.num_int_register_reads            4292532                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes           2256656                       # number of times the integer registers were written
 testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
 testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
-testsys.cpu.num_mem_refs                      1099884                       # number of memory refs
-testsys.cpu.num_load_insts                     619431                       # Number of load instructions
-testsys.cpu.num_store_insts                    480453                       # Number of store instructions
-testsys.cpu.num_idle_cycles              395839404.829048                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              3295422.170952                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.008256                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.991744                       # Percentage of idle cycles
+testsys.cpu.num_mem_refs                      1099900                       # number of memory refs
+testsys.cpu.num_load_insts                     619443                       # Number of load instructions
+testsys.cpu.num_store_insts                    480457                       # Number of store instructions
+testsys.cpu.num_idle_cycles              395839458.060266                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              3295500.939734                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.008257                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.991743                       # Percentage of idle cycles
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                     213                       # number of quiesce instructions executed
-testsys.cpu.kern.inst.hwrei                     16709                       # number of hwrei instructions executed
-testsys.cpu.kern.ipl_count::0                    4122     40.57%     40.57% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::21                     54      0.53%     41.10% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::22                    205      2.02%     43.12% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::31                   5779     56.88%    100.00% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::total               10160                       # number of times we switched to this ipl
+testsys.cpu.kern.inst.hwrei                     16711                       # number of hwrei instructions executed
+testsys.cpu.kern.ipl_count::0                    4122     40.56%     40.56% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::21                     54      0.53%     41.09% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::22                    205      2.02%     43.11% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::31                   5781     56.89%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::total               10162                       # number of times we switched to this ipl
 testsys.cpu.kern.ipl_good::0                     4116     48.47%     48.47% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::21                      54      0.64%     49.11% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::22                     205      2.41%     51.53% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::31                    4116     48.47%    100.00% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::total                 8491                       # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks::0            199321085500     99.88%     99.88% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::0            199321108000     99.88%     99.88% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks::21                4521000      0.00%     99.88% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks::22                8815000      0.00%     99.88% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::31              233213000      0.12%    100.00% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::total        199567634500                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::31              233256500      0.12%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::total        199567700500                       # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_used::0                 0.998544                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::31                0.712234                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::total             0.835728                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::31                0.711988                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::total             0.835564                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.syscall::2                         3      3.61%      3.61% # number of syscalls executed
 testsys.cpu.kern.syscall::3                         7      8.43%     12.05% # number of syscalls executed
 testsys.cpu.kern.syscall::4                         1      1.20%     13.25% # number of syscalls executed
@@ -151,16 +309,16 @@ testsys.cpu.kern.syscall::104                       1      1.20%     93.98% # nu
 testsys.cpu.kern.syscall::105                       3      3.61%     97.59% # number of syscalls executed
 testsys.cpu.kern.syscall::118                       2      2.41%    100.00% # number of syscalls executed
 testsys.cpu.kern.syscall::total                    83                       # number of syscalls executed
-testsys.cpu.kern.callpal::swpctx                  438      4.02%      4.02% # number of callpals executed
+testsys.cpu.kern.callpal::swpctx                  438      4.01%      4.01% # number of callpals executed
 testsys.cpu.kern.callpal::tbi                      20      0.18%      4.20% # number of callpals executed
-testsys.cpu.kern.callpal::swpipl                 8990     82.42%     86.62% # number of callpals executed
+testsys.cpu.kern.callpal::swpipl                 8992     82.42%     86.62% # number of callpals executed
 testsys.cpu.kern.callpal::rdps                    359      3.29%     89.91% # number of callpals executed
-testsys.cpu.kern.callpal::wrusp                     3      0.03%     89.93% # number of callpals executed
+testsys.cpu.kern.callpal::wrusp                     3      0.03%     89.94% # number of callpals executed
 testsys.cpu.kern.callpal::rdusp                     3      0.03%     89.96% # number of callpals executed
 testsys.cpu.kern.callpal::rti                     911      8.35%     98.31% # number of callpals executed
 testsys.cpu.kern.callpal::callsys                 140      1.28%     99.60% # number of callpals executed
 testsys.cpu.kern.callpal::imb                      44      0.40%    100.00% # number of callpals executed
-testsys.cpu.kern.callpal::total                 10908                       # number of callpals executed
+testsys.cpu.kern.callpal::total                 10910                       # number of callpals executed
 testsys.cpu.kern.mode_switch::kernel             1133                       # number of protection mode switches
 testsys.cpu.kern.mode_switch::user                647                       # number of protection mode switches
 testsys.cpu.kern.mode_switch::idle                217                       # number of protection mode switches
@@ -171,9 +329,9 @@ testsys.cpu.kern.mode_switch_good::kernel     0.575463                       # f
 testsys.cpu.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_switch_good::idle      0.023041                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_switch_good::total     0.652979                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_ticks::kernel         931595000     57.07%     57.07% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::user           532793000     32.64%     89.71% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::idle           168009000     10.29%    100.00% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::kernel         931596000     57.08%     57.08% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::user           532793000     32.64%     89.72% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::idle           167721000     10.28%    100.00% # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                     438                       # number of times the context was actually changed
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
 testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
@@ -253,6 +411,164 @@ drivesys.physmem.bw_total::cpu.inst          39070237                       # To
 drivesys.physmem.bw_total::cpu.data          21904410                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::tsunami.ethernet        11448                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::total             60986094                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.readReqs                           0                       # Total number of read requests seen
+drivesys.physmem.writeReqs                          0                       # Total number of write requests seen
+drivesys.physmem.cpureqs                            0                       # Reqs generatd by CPU via cache - shady
+drivesys.physmem.bytesRead                          0                       # Total number of bytes read from memory
+drivesys.physmem.bytesWritten                       0                       # Total number of bytes written to memory
+drivesys.physmem.bytesConsumedRd                    0                       # bytesRead derated as per pkt->getSize()
+drivesys.physmem.bytesConsumedWr                    0                       # bytesWritten derated as per pkt->getSize()
+drivesys.physmem.servicedByWrQ                      0                       # Number of read reqs serviced by write Q
+drivesys.physmem.neitherReadNorWrite                0                       # Reqs where no action is needed
+drivesys.physmem.perBankRdReqs::0                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::1                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::2                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::3                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::4                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::5                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::6                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::7                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::8                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::9                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::10                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::11                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::12                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::13                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::14                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::15                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankWrReqs::0                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::1                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::2                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::3                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::4                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::5                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::6                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::7                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::8                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::9                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::10                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::11                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::12                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::13                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::14                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::15                  0                       # Track writes on a per bank basis
+drivesys.physmem.numRdRetry                         0                       # Number of times rd buffer was full causing retry
+drivesys.physmem.numWrRetry                         0                       # Number of times wr buffer was full causing retry
+drivesys.physmem.totGap                             0                       # Total gap between requests
+drivesys.physmem.readPktSize::0                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::1                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::2                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::3                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::4                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::5                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::6                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::7                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::8                     0                       # Categorize read packet sizes
+drivesys.physmem.writePktSize::0                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::1                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::2                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::3                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::4                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::5                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::6                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::7                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::8                    0                       # categorize write packet sizes
+drivesys.physmem.neitherpktsize::0                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::1                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::2                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::3                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::4                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::5                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::6                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::7                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::8                  0                       # categorize neither packet sizes
+drivesys.physmem.rdQLenPdf::0                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::1                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::2                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::3                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::4                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::5                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::6                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::7                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::8                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::9                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::10                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::11                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::12                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::13                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::14                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::15                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::16                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::17                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::18                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::19                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::20                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::21                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::22                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::23                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::24                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::25                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::26                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::27                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::28                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::29                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::30                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::31                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::32                      0                       # What read queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::0                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::1                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::2                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::3                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::4                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::5                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::6                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::7                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::8                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::9                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::10                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::11                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::12                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::13                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::14                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::15                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::16                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::17                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::18                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::19                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::20                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::21                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::22                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::23                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::24                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::25                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::26                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::27                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::28                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::29                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::30                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::31                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::32                      0                       # What write queue length does an incoming req see
+drivesys.physmem.totQLat                            0                       # Total cycles spent in queuing delays
+drivesys.physmem.totMemAccLat                       0                       # Sum of mem lat for all requests
+drivesys.physmem.totBusLat                          0                       # Total cycles spent in databus access
+drivesys.physmem.totBankLat                         0                       # Total cycles spent in bank access
+drivesys.physmem.avgQLat                          nan                       # Average queueing delay per request
+drivesys.physmem.avgBankLat                       nan                       # Average bank access latency per request
+drivesys.physmem.avgBusLat                        nan                       # Average bus latency per request
+drivesys.physmem.avgMemAccLat                     nan                       # Average memory access latency
+drivesys.physmem.avgRdBW                         0.00                       # Average achieved read bandwidth in MB/s
+drivesys.physmem.avgWrBW                         0.00                       # Average achieved write bandwidth in MB/s
+drivesys.physmem.avgConsumedRdBW                 0.00                       # Average consumed read bandwidth in MB/s
+drivesys.physmem.avgConsumedWrBW                 0.00                       # Average consumed write bandwidth in MB/s
+drivesys.physmem.peakBW                      16000.00                       # Theoretical peak bandwidth in MB/s
+drivesys.physmem.busUtil                         0.00                       # Data bus utilization in percentage
+drivesys.physmem.avgRdQLen                       0.00                       # Average read queue length over time
+drivesys.physmem.avgWrQLen                       0.00                       # Average write queue length over time
+drivesys.physmem.readRowHits                        0                       # Number of row buffer hits during reads
+drivesys.physmem.writeRowHits                       0                       # Number of row buffer hits during writes
+drivesys.physmem.readRowHitRate                   nan                       # Row buffer hit rate for reads
+drivesys.physmem.writeRowHitRate                  nan                       # Row buffer hit rate for writes
+drivesys.physmem.avgGap                           nan                       # Average gap between requests
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -376,7 +692,7 @@ drivesys.cpu.kern.mode_switch_good::idle     0.018265                       # fr
 drivesys.cpu.kern.mode_switch_good::total     0.441352                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_ticks::kernel         66889000      2.31%      2.31% # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::user          319585750     11.03%     13.34% # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks::idle         2511439250     86.66%    100.00% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks::idle         2511080250     86.66%    100.00% # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                     72                       # number of times the context was actually changed
 drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
 drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
@@ -433,15 +749,15 @@ drivesys.tsunami.ethernet.droppedPackets            0                       # nu
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000390                       # Number of seconds simulated
 sim_ticks                                   390393500                       # Number of ticks simulated
-final_tick                               4320551987500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+final_tick                               4320551921500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                           309018358448                       # Simulator instruction rate (inst/s)
-host_op_rate                             304755215914                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                           428792748186                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 459700                       # Number of bytes of host memory used
+host_inst_rate                           123937139701                       # Simulator instruction rate (inst/s)
+host_op_rate                             122659857960                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                           174562814371                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 463260                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-sim_insts                                   271558535                       # Number of instructions simulated
-sim_ops                                     271558535                       # Number of ops (including micro ops) simulated
+sim_insts                                   271554329                       # Number of instructions simulated
+sim_ops                                     271554329                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read::cpu.inst             5888                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::cpu.data             2272                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::total                8160                       # Number of bytes read from this memory
@@ -464,6 +780,164 @@ testsys.physmem.bw_write::total               3299235                       # Wr
 testsys.physmem.bw_total::cpu.inst           15082218                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::cpu.data            9119004                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::total              24201223                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.readReqs                            0                       # Total number of read requests seen
+testsys.physmem.writeReqs                           0                       # Total number of write requests seen
+testsys.physmem.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
+testsys.physmem.bytesRead                           0                       # Total number of bytes read from memory
+testsys.physmem.bytesWritten                        0                       # Total number of bytes written to memory
+testsys.physmem.bytesConsumedRd                     0                       # bytesRead derated as per pkt->getSize()
+testsys.physmem.bytesConsumedWr                     0                       # bytesWritten derated as per pkt->getSize()
+testsys.physmem.servicedByWrQ                       0                       # Number of read reqs serviced by write Q
+testsys.physmem.neitherReadNorWrite                 0                       # Reqs where no action is needed
+testsys.physmem.perBankRdReqs::0                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::1                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::2                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::3                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::4                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::5                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::6                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::7                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::8                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::9                    0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::10                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::11                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::12                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::13                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::14                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankRdReqs::15                   0                       # Track reads on a per bank basis
+testsys.physmem.perBankWrReqs::0                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::1                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::2                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::3                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::4                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::5                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::6                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::7                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::8                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::9                    0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::10                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::11                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::12                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::13                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::14                   0                       # Track writes on a per bank basis
+testsys.physmem.perBankWrReqs::15                   0                       # Track writes on a per bank basis
+testsys.physmem.numRdRetry                          0                       # Number of times rd buffer was full causing retry
+testsys.physmem.numWrRetry                          0                       # Number of times wr buffer was full causing retry
+testsys.physmem.totGap                              0                       # Total gap between requests
+testsys.physmem.readPktSize::0                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::1                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::2                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::3                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::4                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::5                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::6                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::7                      0                       # Categorize read packet sizes
+testsys.physmem.readPktSize::8                      0                       # Categorize read packet sizes
+testsys.physmem.writePktSize::0                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::1                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::2                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::3                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::4                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::5                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::6                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::7                     0                       # categorize write packet sizes
+testsys.physmem.writePktSize::8                     0                       # categorize write packet sizes
+testsys.physmem.neitherpktsize::0                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::1                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::2                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::3                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::4                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::5                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::6                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::7                   0                       # categorize neither packet sizes
+testsys.physmem.neitherpktsize::8                   0                       # categorize neither packet sizes
+testsys.physmem.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::3                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::4                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::5                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::6                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::7                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::8                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::9                        0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::10                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::11                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::12                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::13                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::14                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::15                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::16                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::17                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::18                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::19                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::20                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::21                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::22                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::23                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::24                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::25                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::26                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::27                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::28                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
+testsys.physmem.rdQLenPdf::32                       0                       # What read queue length does an incoming req see
+testsys.physmem.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::3                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::4                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::5                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::6                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::7                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::8                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::9                        0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::10                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::11                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::12                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::13                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::14                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::15                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::16                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::17                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::18                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::19                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::20                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::21                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::22                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::23                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::24                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::25                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::26                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::27                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::28                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
+testsys.physmem.wrQLenPdf::32                       0                       # What write queue length does an incoming req see
+testsys.physmem.totQLat                             0                       # Total cycles spent in queuing delays
+testsys.physmem.totMemAccLat                        0                       # Sum of mem lat for all requests
+testsys.physmem.totBusLat                           0                       # Total cycles spent in databus access
+testsys.physmem.totBankLat                          0                       # Total cycles spent in bank access
+testsys.physmem.avgQLat                           nan                       # Average queueing delay per request
+testsys.physmem.avgBankLat                        nan                       # Average bank access latency per request
+testsys.physmem.avgBusLat                         nan                       # Average bus latency per request
+testsys.physmem.avgMemAccLat                      nan                       # Average memory access latency
+testsys.physmem.avgRdBW                          0.00                       # Average achieved read bandwidth in MB/s
+testsys.physmem.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
+testsys.physmem.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
+testsys.physmem.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
+testsys.physmem.peakBW                       16000.00                       # Theoretical peak bandwidth in MB/s
+testsys.physmem.busUtil                          0.00                       # Data bus utilization in percentage
+testsys.physmem.avgRdQLen                        0.00                       # Average read queue length over time
+testsys.physmem.avgWrQLen                        0.00                       # Average write queue length over time
+testsys.physmem.readRowHits                         0                       # Number of row buffer hits during reads
+testsys.physmem.writeRowHits                        0                       # Number of row buffer hits during writes
+testsys.physmem.readRowHitRate                    nan                       # Row buffer hit rate for reads
+testsys.physmem.writeRowHitRate                   nan                       # Row buffer hit rate for writes
+testsys.physmem.avgGap                            nan                       # Average gap between requests
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -620,6 +1094,164 @@ drivesys.physmem.bw_write::total              3299235                       # Wr
 drivesys.physmem.bw_total::cpu.inst          15071972                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::cpu.data           9119004                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::total             24190977                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.readReqs                           0                       # Total number of read requests seen
+drivesys.physmem.writeReqs                          0                       # Total number of write requests seen
+drivesys.physmem.cpureqs                            0                       # Reqs generatd by CPU via cache - shady
+drivesys.physmem.bytesRead                          0                       # Total number of bytes read from memory
+drivesys.physmem.bytesWritten                       0                       # Total number of bytes written to memory
+drivesys.physmem.bytesConsumedRd                    0                       # bytesRead derated as per pkt->getSize()
+drivesys.physmem.bytesConsumedWr                    0                       # bytesWritten derated as per pkt->getSize()
+drivesys.physmem.servicedByWrQ                      0                       # Number of read reqs serviced by write Q
+drivesys.physmem.neitherReadNorWrite                0                       # Reqs where no action is needed
+drivesys.physmem.perBankRdReqs::0                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::1                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::2                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::3                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::4                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::5                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::6                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::7                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::8                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::9                   0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::10                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::11                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::12                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::13                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::14                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankRdReqs::15                  0                       # Track reads on a per bank basis
+drivesys.physmem.perBankWrReqs::0                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::1                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::2                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::3                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::4                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::5                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::6                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::7                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::8                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::9                   0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::10                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::11                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::12                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::13                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::14                  0                       # Track writes on a per bank basis
+drivesys.physmem.perBankWrReqs::15                  0                       # Track writes on a per bank basis
+drivesys.physmem.numRdRetry                         0                       # Number of times rd buffer was full causing retry
+drivesys.physmem.numWrRetry                         0                       # Number of times wr buffer was full causing retry
+drivesys.physmem.totGap                             0                       # Total gap between requests
+drivesys.physmem.readPktSize::0                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::1                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::2                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::3                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::4                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::5                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::6                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::7                     0                       # Categorize read packet sizes
+drivesys.physmem.readPktSize::8                     0                       # Categorize read packet sizes
+drivesys.physmem.writePktSize::0                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::1                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::2                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::3                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::4                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::5                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::6                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::7                    0                       # categorize write packet sizes
+drivesys.physmem.writePktSize::8                    0                       # categorize write packet sizes
+drivesys.physmem.neitherpktsize::0                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::1                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::2                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::3                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::4                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::5                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::6                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::7                  0                       # categorize neither packet sizes
+drivesys.physmem.neitherpktsize::8                  0                       # categorize neither packet sizes
+drivesys.physmem.rdQLenPdf::0                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::1                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::2                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::3                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::4                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::5                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::6                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::7                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::8                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::9                       0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::10                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::11                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::12                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::13                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::14                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::15                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::16                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::17                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::18                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::19                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::20                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::21                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::22                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::23                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::24                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::25                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::26                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::27                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::28                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::29                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::30                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::31                      0                       # What read queue length does an incoming req see
+drivesys.physmem.rdQLenPdf::32                      0                       # What read queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::0                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::1                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::2                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::3                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::4                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::5                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::6                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::7                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::8                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::9                       0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::10                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::11                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::12                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::13                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::14                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::15                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::16                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::17                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::18                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::19                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::20                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::21                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::22                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::23                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::24                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::25                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::26                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::27                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::28                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::29                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::30                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::31                      0                       # What write queue length does an incoming req see
+drivesys.physmem.wrQLenPdf::32                      0                       # What write queue length does an incoming req see
+drivesys.physmem.totQLat                            0                       # Total cycles spent in queuing delays
+drivesys.physmem.totMemAccLat                       0                       # Sum of mem lat for all requests
+drivesys.physmem.totBusLat                          0                       # Total cycles spent in databus access
+drivesys.physmem.totBankLat                         0                       # Total cycles spent in bank access
+drivesys.physmem.avgQLat                          nan                       # Average queueing delay per request
+drivesys.physmem.avgBankLat                       nan                       # Average bank access latency per request
+drivesys.physmem.avgBusLat                        nan                       # Average bus latency per request
+drivesys.physmem.avgMemAccLat                     nan                       # Average memory access latency
+drivesys.physmem.avgRdBW                         0.00                       # Average achieved read bandwidth in MB/s
+drivesys.physmem.avgWrBW                         0.00                       # Average achieved write bandwidth in MB/s
+drivesys.physmem.avgConsumedRdBW                 0.00                       # Average consumed read bandwidth in MB/s
+drivesys.physmem.avgConsumedWrBW                 0.00                       # Average consumed write bandwidth in MB/s
+drivesys.physmem.peakBW                      16000.00                       # Theoretical peak bandwidth in MB/s
+drivesys.physmem.busUtil                         0.00                       # Data bus utilization in percentage
+drivesys.physmem.avgRdQLen                       0.00                       # Average read queue length over time
+drivesys.physmem.avgWrQLen                       0.00                       # Average write queue length over time
+drivesys.physmem.readRowHits                        0                       # Number of row buffer hits during reads
+drivesys.physmem.writeRowHits                       0                       # Number of row buffer hits during writes
+drivesys.physmem.readRowHitRate                   nan                       # Row buffer hit rate for reads
+drivesys.physmem.writeRowHitRate                  nan                       # Row buffer hit rate for writes
+drivesys.physmem.avgGap                           nan                       # Average gap between requests
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
