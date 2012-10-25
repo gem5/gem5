@@ -73,7 +73,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     # base address (including the PCI config space)
     self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
-    self.physmem = SimpleMemory(range = AddrRange(mdesc.mem()))
+    self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
     self.physmem.port = self.membus.master
@@ -109,7 +109,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                             pci_func=0, pci_dev=0, pci_bus=0)
         
-    physmem = SimpleMemory(range = AddrRange(mdesc.mem()))
+    physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
     self = LinuxAlphaSystem(physmem = physmem)
     if not mdesc:
         # generic system
@@ -178,9 +178,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)
-    self.physmem = SimpleMemory(range = AddrRange(Addr('1MB'), size = '64MB'),
+    self.physmem = SimpleDRAM(range = AddrRange(Addr('1MB'), size = '64MB'),
                                 zero = True)
-    self.physmem2 = SimpleMemory(range = AddrRange(Addr('2GB'), size ='256MB'),
+    self.physmem2 = SimpleDRAM(range = AddrRange(Addr('2GB'), size ='256MB'),
                                  zero = True)
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -271,7 +271,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.physmem = SimpleMemory(range = AddrRange(Addr(mdesc.mem())),
+        self.physmem = SimpleDRAM(range = AddrRange(Addr(mdesc.mem())),
                                     zero = True)
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
@@ -285,7 +285,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
                      'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
 
-        self.physmem = SimpleMemory(range =
+        self.physmem = SimpleDRAM(range =
                                     AddrRange(self.realview.mem_start_addr,
                                               size = mdesc.mem()),
                                     conf_table_reported = True)
@@ -323,7 +323,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.iobus = NoncoherentBus()
     self.membus = MemBus()
     self.bridge = Bridge(delay='50ns')
-    self.physmem = SimpleMemory(range = AddrRange('1GB'))
+    self.physmem = SimpleDRAM(range = AddrRange('1GB'))
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
     self.physmem.port = self.membus.master
@@ -428,7 +428,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     self.mem_mode = mem_mode
 
     # Physical memory
-    self.physmem = SimpleMemory(range = AddrRange(mdesc.mem()))
+    self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
 
     # Platform
     self.pc = Pc()
