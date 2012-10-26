@@ -46,14 +46,14 @@ system.iocache.mem_side = system.membus.slave
 
 
 #connect up the l2 cache
-system.l2c = L2(clock = '2GHz', size='4MB', assoc=8)
+system.l2c = L2Cache(clock = '2GHz', size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 system.l2c.mem_side = system.membus.slave
 
 #connect up the cpu and l1s
 for c in cpus:
-    c.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
-                                L1(size = '32kB', assoc = 4))
+    c.addPrivateSplitL1Caches(L1Cache(size = '32kB', assoc = 1),
+                              L1Cache(size = '32kB', assoc = 4))
     # create the interrupt controller
     c.createInterruptController()
     # connect cpu level-1 caches to shared level-2 cache

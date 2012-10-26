@@ -46,7 +46,7 @@ from m5.objects import *
 # starting point, and specific parameters can be overridden in the
 # specific instantiations.
 
-class L1(BaseCache):
+class L1Cache(BaseCache):
     assoc = 2
     hit_latency = 2
     response_latency = 2
@@ -55,7 +55,7 @@ class L1(BaseCache):
     tgts_per_mshr = 20
     is_top_level = True
 
-class L2(BaseCache):
+class L2Cache(BaseCache):
     assoc = 8
     block_size = 64
     hit_latency = 20
@@ -84,4 +84,3 @@ class PageTableWalkerCache(BaseCache):
     size = '1kB'
     tgts_per_mshr = 12
     is_top_level = True
-

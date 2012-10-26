@@ -48,9 +48,9 @@ system.iocache.cpu_side = system.iobus.master
 system.iocache.mem_side = system.membus.slave
 
 #connect up the cpu and caches
-cpu.addTwoLevelCacheHierarchy(L1(size = '32kB', assoc = 1),
-                              L1(size = '32kB', assoc = 4),
-                              L2(size = '4MB', assoc = 8))
+cpu.addTwoLevelCacheHierarchy(L1Cache(size = '32kB', assoc = 1),
+                              L1Cache(size = '32kB', assoc = 4),
+                              L2Cache(size = '4MB', assoc = 8))
 # create the interrupt controller
 cpu.createInterruptController()
 # connect cpu and caches to the rest of the system
