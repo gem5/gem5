@@ -160,8 +160,11 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 membus = CoherentBus(), mem_mode = test_mem_mode)
 
 # Sanity check
-if options.fastmem and (options.caches or options.l2cache):
-    fatal("You cannot use fastmem in combination with caches!")
+if options.fastmem:
+    if CPUClass != AtomicSimpleCPU:
+        fatal("Fastmem can only be used with atomic CPU!")
+    if (options.caches or options.l2cache):
+        fatal("You cannot use fastmem in combination with caches!")
 
 for i in xrange(np):
     if options.smt:

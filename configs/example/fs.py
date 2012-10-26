@@ -128,8 +128,11 @@ else:
     test_sys.iobridge.master = test_sys.membus.slave
 
 # Sanity check
-if options.fastmem and (options.caches or options.l2cache):
-    fatal("You cannot use fastmem in combination with caches!")
+if options.fastmem:
+    if TestCPUClass != AtomicSimpleCPU:
+        fatal("Fastmem can only be used with atomic CPU!")
+    if (options.caches or options.l2cache):
+        fatal("You cannot use fastmem in combination with caches!")
 
 for i in xrange(np):
     if options.fastmem:
