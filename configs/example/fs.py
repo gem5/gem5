@@ -117,10 +117,6 @@ test_sys.init_param = options.init_param
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
-if bm[0]:
-    mem_size = bm[0].mem()
-else:
-    mem_size = SysConfig().mem()
 if options.caches or options.l2cache:
     test_sys.iocache = IOCache(clock = '1GHz',
                                addr_ranges=[test_sys.physmem.range])
