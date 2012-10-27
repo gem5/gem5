@@ -3,8 +3,8 @@ Redirecting stderr to build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-bo
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 10 2012 23:16:41
-gem5 started Sep 10 2012 23:16:46
+gem5 compiled Oct 27 2012 15:33:48
+gem5 started Oct 27 2012 15:33:58
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86_MESI_CMP_directory/gem5.opt -d build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory -re tests/run.py build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory
 warning: add_child('terminal'): child 'terminal' already has parent
@@ -12,4 +12,4 @@ Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9.smp
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5205006924000 because m5_exit instruction encountered
+Exiting @ tick 5205006494000 because m5_exit instruction encountered
