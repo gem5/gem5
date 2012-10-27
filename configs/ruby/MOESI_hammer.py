@@ -145,18 +145,18 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
     dir_bits = int(math.log(options.num_dirs, 2))
     pf_bits = int(math.log(pf_size.value, 2))
     if options.numa_high_bit:
-        if options.numa_high_bit > 0:
+        if options.pf_on or options.dir_on:
             # if numa high bit explicitly set, make sure it does not overlap
             # with the probe filter index
             assert(options.numa_high_bit - dir_bits > pf_bits)
 
         # set the probe filter start bit to just above the block offset
-        pf_start_bit = 6
+        pf_start_bit = block_size_bits
     else:
         if dir_bits > 0:
-            pf_start_bit = dir_bits + 5
+            pf_start_bit = dir_bits + block_size_bits - 1
         else:
-            pf_start_bit = 6
+            pf_start_bit = block_size_bits
 
     for i in xrange(options.num_dirs):
         #

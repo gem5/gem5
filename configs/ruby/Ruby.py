@@ -173,16 +173,16 @@ def create_system(options, system, piobus = None, dma_ports = []):
     total_mem_size = MemorySize('0B')
 
     dir_bits = int(math.log(options.num_dirs, 2))
+    ruby.block_size_bytes = options.cacheline_size
+    block_size_bits = int(math.log(options.cacheline_size, 2))
 
     if options.numa_high_bit:
         numa_bit = options.numa_high_bit
     else:
-        # if not specified, use the lowest bits above the block offest
-        if dir_bits > 0:
-            # add 5 because bits 0-5 are the block offset
-            numa_bit = dir_bits + 5
-        else:
-            numa_bit = 6
+        # if the numa_bit is not specified, set the directory bits as the
+        # lowest bits above the block offset bits, and the numa_bit as the
+        # highest of those directory bits
+        numa_bit = block_size_bits + dir_bits - 1
 
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
