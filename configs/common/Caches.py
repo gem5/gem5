@@ -60,8 +60,8 @@ class L2Cache(BaseCache):
     block_size = 64
     hit_latency = 20
     response_latency = 20
-    mshrs = 92
-    tgts_per_mshr = 16
+    mshrs = 20
+    tgts_per_mshr = 12
     write_buffers = 8
 
 class IOCache(BaseCache):

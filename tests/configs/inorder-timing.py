@@ -29,23 +29,12 @@
 import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
-
-class MyCache(BaseCache):
-    assoc = 2
-    block_size = 64
-    hit_latency = 2
-    response_latency = 2
-    mshrs = 10
-    tgts_per_mshr = 5
-
-class MyL1Cache(MyCache):
-    is_top_level = True
+from Caches import *
 
 cpu = InOrderCPU(cpu_id=0)
-cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
-                              MyL1Cache(size = '256kB'),
-                              MyCache(size = '2MB', hit_latency = 20,
-                                      response_latency = 20))
+cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
+                              L1Cache(size = '256kB'),
+                              L2Cache(size = '2MB'))
 
 cpu.clock = '2GHz'
 

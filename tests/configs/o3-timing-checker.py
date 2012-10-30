@@ -38,25 +38,14 @@
 import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
-
-class MyCache(BaseCache):
-    assoc = 2
-    block_size = 64
-    hit_latency = 2
-    response_latency = 2
-    mshrs = 10
-    tgts_per_mshr = 5
-
-class MyL1Cache(MyCache):
-    is_top_level = True
-    tgts_per_mshr = 20
+from Caches import *
 
 cpu = DerivO3CPU(cpu_id=0)
 cpu.createInterruptController()
 cpu.addCheckerCpu()
-cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
-                              MyL1Cache(size = '256kB'),
-                              MyCache(size = '2MB'))
+cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
+                              L1Cache(size = '256kB'),
+                              L2Cache(size = '2MB'))
 # @todo Note that the L2 latency here is unmodified and 2 cycles,
 # should set hit latency and response latency to 20 cycles as for
 # other scripts
