@@ -327,9 +327,9 @@ class MasterPort : public BaseMasterPort
 
     /**
      * Called to receive an address range change from the peer slave
-     * port. the default implementation ignored the change and does
+     * port. The default implementation ignores the change and does
      * nothing. Override this function in a derived class if the owner
-     * needs to be aware of he laesddress ranges, e.g. in an
+     * needs to be aware of the address ranges, e.g. in an
      * interconnect component like a bus.
      */
     virtual void recvRangeChange() { }
