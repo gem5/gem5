@@ -41,7 +41,7 @@ system = System(cpu = cpus,
 
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock = '2GHz')
-system.l2c = L2Caches(clock = '2GHz', size='4MB', assoc=8)
+system.l2c = L2Cache(clock = '2GHz', size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 
 # connect l2c to membus
@@ -49,7 +49,7 @@ system.l2c.mem_side = system.membus.slave
 
 # add L1 caches
 for cpu in cpus:
-    cpu.addPrivateSplitL1Caches(L1Caches(size = '32kB', assoc = 1),
+    cpu.addPrivateSplitL1Caches(L1Cache(size = '32kB', assoc = 1),
                                 L1Caches(size = '32kB', assoc = 4))
     # create the interrupt controller
     cpu.createInterruptController()
