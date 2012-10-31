@@ -50,7 +50,7 @@ system.l2c.mem_side = system.membus.slave
 # add L1 caches
 for cpu in cpus:
     cpu.addPrivateSplitL1Caches(L1Cache(size = '32kB', assoc = 1),
-                                L1Caches(size = '32kB', assoc = 4))
+                                L1Cache(size = '32kB', assoc = 4))
     # create the interrupt controller
     cpu.createInterruptController()
     # connect cpu level-1 caches to shared level-2 cache
