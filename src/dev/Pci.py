@@ -41,6 +41,7 @@ class PciConfigAll(PioDevice):
 
 class PciDevice(DmaDevice):
     type = 'PciDevice'
+    cxx_class = 'PciDev'
     abstract = True
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     config = SlavePort("PCI configuration space port")
