@@ -38,7 +38,7 @@
  *          Ali Saidi
  */
 
-#include "base/vnc/vncserver.hh"
+#include "base/vnc/vncinput.hh"
 #include "base/bitmap.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
@@ -64,7 +64,7 @@ Pl111::Pl111(const Params *p)
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
-      vncserver(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
+      vnc(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
       dmaDoneEvent(maxOutstandingDma, this), intEvent(this)
@@ -80,8 +80,8 @@ Pl111::Pl111(const Params *p)
     memset(cursorImage, 0, sizeof(cursorImage));
     memset(dmaBuffer, 0, buffer_size);
 
-    if (vncserver)
-        vncserver->setFramebufferAddr(dmaBuffer);
+    if (vnc)
+        vnc->setFramebufferAddr(dmaBuffer);
 }
 
 Pl111::~Pl111()
@@ -386,18 +386,18 @@ Pl111::updateVideoParams()
             bytesPerPixel = 2;
         }
 
-        if (vncserver) {
+        if (vnc) {
             if (lcdControl.lcdbpp == bpp24 && lcdControl.bgr)
-                vncserver->setFrameBufferParams(VideoConvert::bgr8888, width,
+                vnc->setFrameBufferParams(VideoConvert::bgr8888, width,
                        height);
             else if (lcdControl.lcdbpp == bpp24 && !lcdControl.bgr)
-                vncserver->setFrameBufferParams(VideoConvert::rgb8888, width,
+                vnc->setFrameBufferParams(VideoConvert::rgb8888, width,
                        height);
             else if (lcdControl.lcdbpp == bpp16m565 && lcdControl.bgr)
-                vncserver->setFrameBufferParams(VideoConvert::bgr565, width,
+                vnc->setFrameBufferParams(VideoConvert::bgr565, width,
                        height);
             else if (lcdControl.lcdbpp == bpp16m565 && !lcdControl.bgr)
-                vncserver->setFrameBufferParams(VideoConvert::rgb565, width,
+                vnc->setFrameBufferParams(VideoConvert::rgb565, width,
                        height);
             else
                 panic("Unimplemented video mode\n");
@@ -489,8 +489,8 @@ Pl111::dmaDone()
         }
 
         assert(!readEvent.scheduled());
-        if (vncserver)
-            vncserver->setDirty();
+        if (vnc)
+            vnc->setDirty();
 
         DPRINTF(PL111, "-- write out frame buffer into bmp\n");
 
@@ -710,8 +710,8 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
 
     if (lcdControl.lcdpwr) {
         updateVideoParams();
-        if (vncserver)
-            vncserver->setDirty();
+        if (vnc)
+            vnc->setDirty();
     }
 }
 

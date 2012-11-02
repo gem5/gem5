@@ -41,7 +41,7 @@
  *          William Wang
  */
 
-#include "base/vnc/vncserver.hh"
+#include "base/vnc/vncinput.hh"
 #include "base/trace.hh"
 #include "debug/Pl050.hh"
 #include "dev/arm/amba_device.hh"

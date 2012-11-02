@@ -41,6 +41,7 @@ Import('*')
 
 Source('convert.cc')
 
-SimObject('VncServer.py')
+SimObject('Vnc.py')
+Source('vncinput.cc')
 Source('vncserver.cc')
 DebugFlag('VNC')

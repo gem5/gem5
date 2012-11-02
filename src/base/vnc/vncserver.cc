@@ -66,6 +66,10 @@
 
 using namespace std;
 
+/** @file
+ * Implementiation of a VNC server
+ */
+
 /**
  * Poll event for the listen socket
  */
@@ -101,11 +105,8 @@ VncServer::DataEvent::process(int revent)
  * VncServer
  */
 VncServer::VncServer(const Params *p)
-    : SimObject(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
-      dataFd(-1), _videoWidth(1), _videoHeight(1), clientRfb(0), keyboard(NULL),
-      mouse(NULL), sendUpdate(false), videoMode(VideoConvert::UnknownMode),
-      vc(NULL), captureEnabled(p->frame_capture), captureCurrentFrame(0),
-      captureLastHash(0), captureBitmap(0)
+    : VncInput(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
+      dataFd(-1), sendUpdate(false)
 {
     if (p->port)
         listen(p->port);
@@ -126,15 +127,6 @@ VncServer::VncServer(const Params *p)
     pixelFormat.redshift = 16;
     pixelFormat.greenshift = 8;
     pixelFormat.blueshift = 0;
-
-    if (captureEnabled) {
-        // remove existing frame output directory if it exists, then create a
-        //   clean empty directory
-        const string FRAME_OUTPUT_SUBDIR = "frames_" + name();
-        simout.remove(FRAME_OUTPUT_SUBDIR, true);
-        captureOutputDirectory = simout.createSubdirectory(
-                                FRAME_OUTPUT_SUBDIR);
-    }
 
     DPRINTF(VNC, "Vnc server created at port %d\n", p->port);
 }
@@ -465,7 +457,6 @@ VncServer::sendServerInit()
     curState = NormalPhase;
 }
 
-
 void
 VncServer::setPixelFormat()
 {
@@ -608,7 +599,7 @@ void
 VncServer::sendFrameBufferUpdate()
 {
 
-    if (!clientRfb || dataFd <= 0 || curState != NormalPhase || !sendUpdate) {
+    if (!fbPtr || dataFd <= 0 || curState != NormalPhase || !sendUpdate) {
         DPRINTF(VNC, "NOT sending framebuffer update\n");
         return;
     }
@@ -643,9 +634,9 @@ VncServer::sendFrameBufferUpdate()
     write(&fbu);
     write(&fbr);
 
-    assert(clientRfb);
+    assert(fbPtr);
 
-    uint8_t *tmp = vc->convert(clientRfb);
+    uint8_t *tmp = vc->convert(fbPtr);
     write(tmp, videoWidth() * videoHeight() * sizeof(uint32_t));
     delete [] tmp;
 
@@ -654,7 +645,7 @@ VncServer::sendFrameBufferUpdate()
 void
 VncServer::sendFrameBufferResized()
 {
-    assert(clientRfb && dataFd > 0 && curState == NormalPhase);
+    assert(fbPtr && dataFd > 0 && curState == NormalPhase);
     DPRINTF(VNC, "Sending framebuffer resize\n");
 
     FrameBufferUpdate fbu;
@@ -684,33 +675,13 @@ VncServer::sendFrameBufferResized()
 }
 
 void
-VncServer::setFrameBufferParams(VideoConvert::Mode mode, int width, int height)
+VncServer::setFrameBufferParams(VideoConvert::Mode mode, uint16_t width,
+    uint16_t height)
 {
-    DPRINTF(VNC, "Updating video params: mode: %d width: %d height: %d\n", mode,
-            width, height);
+    VncInput::setFrameBufferParams(mode, width, height);
 
     if (mode != videoMode || width != videoWidth() || height != videoHeight()) {
-        videoMode = mode;
-        _videoWidth = width;
-        _videoHeight = height;
-
-        if (vc)
-            delete vc;
-
-        vc = new VideoConvert(mode, VideoConvert::rgb8888, videoWidth(),
-                videoHeight());
-
-        if (captureEnabled) {
-            // create bitmap of the frame with new attributes
-            if (captureBitmap)
-                delete captureBitmap;
-
-            assert(clientRfb);
-            captureBitmap = new Bitmap(videoMode, width, height, clientRfb);
-            assert(captureBitmap);
-        }
-
-        if (dataFd > 0 && clientRfb && curState == NormalPhase) {
+        if (dataFd > 0 && fbPtr && curState == NormalPhase) {
             if (supportsResizeEnc)
                 sendFrameBufferResized();
             else
@@ -727,28 +698,3 @@ VncServerParams::create()
     return new VncServer(this);
 }
 
-void
-VncServer::captureFrameBuffer()
-{
-    assert(captureBitmap);
-
-    // skip identical frames
-    uint64_t new_hash = captureBitmap->getHash();
-    if (captureLastHash == new_hash)
-        return;
-    captureLastHash = new_hash;
-
-    // get the filename for the current frame
-    char frameFilenameBuffer[64];
-    snprintf(frameFilenameBuffer, 64, "fb.%06d.%lld.bmp.gz",
-            captureCurrentFrame, static_cast<long long int>(curTick()));
-    const string frameFilename(frameFilenameBuffer);
-
-    // create the compressed framebuffer file
-    ostream *fb_out = simout.create(captureOutputDirectory + frameFilename,
-                    true);
-    captureBitmap->write(fb_out);
-    simout.close(fb_out);
-
-    ++captureCurrentFrame;
-}

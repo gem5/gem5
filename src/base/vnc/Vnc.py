@@ -37,10 +37,12 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from m5.proxy import *
 
-class VncServer(SimObject):
+class VncInput(SimObject):
+    type = 'VncInput'
+    frame_capture = Param.Bool(False, "capture changed frames to files")
+
+class VncServer(VncInput):
     type = 'VncServer'
     port = Param.TcpPort(5900, "listen port")
     number = Param.Int(0, "vnc client number")
-    frame_capture = Param.Bool(False, "capture changed frames to files")

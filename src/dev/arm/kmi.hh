@@ -50,7 +50,7 @@
 
 #include <list>
 
-#include "base/vnc/vncserver.hh"
+#include "base/vnc/vncinput.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
@@ -118,7 +118,7 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
     bool shiftDown;
 
     /** The vnc server we're connected to (if any) */
-    VncServer *vnc;
+    VncInput *vnc;
 
     /** If the linux driver has initialized the device yet and thus can we send
      * mouse data */

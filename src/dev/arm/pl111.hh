@@ -53,7 +53,7 @@
 #include "sim/serialize.hh"
 
 class Gic;
-class VncServer;
+class VncInput;
 class Bitmap;
 
 class Pl111: public AmbaDmaDevice
@@ -228,7 +228,7 @@ class Pl111: public AmbaDmaDevice
     InterruptReg clcdCrsrMis;
 
     /** VNC server */
-    VncServer *vncserver;
+    VncInput *vnc;
 
     /** Helper to write out bitmaps */
     Bitmap *bmp;

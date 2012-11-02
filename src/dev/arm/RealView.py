@@ -128,7 +128,7 @@ class PL031(AmbaIntDevice):
 
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
-    vnc = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
+    vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     is_mouse = Param.Bool(False, "Is this interface a mouse, if not a keyboard")
     int_delay = '1us'
     amba_id = 0x00141050
@@ -137,7 +137,7 @@ class Pl111(AmbaDmaDevice):
     type = 'Pl111'
     # Override the default clock
     clock = '24MHz'
-    vnc   = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
+    vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
 
 class RealView(Platform):

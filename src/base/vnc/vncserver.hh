@@ -42,12 +42,13 @@
  * Declaration of a VNC server
  */
 
-#ifndef __DEV_VNC_SERVER_HH__
-#define __DEV_VNC_SERVER_HH__
+#ifndef __BASE_VNC_VNC_SERVER_HH__
+#define __BASE_VNC_VNC_SERVER_HH__
 
 #include <iostream>
 
 #include "base/vnc/convert.hh"
+#include "base/vnc/vncinput.hh"
 #include "base/bitmap.hh"
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
@@ -56,39 +57,11 @@
 #include "params/VncServer.hh"
 #include "sim/sim_object.hh"
 
-
-/**
- * A device that expects to receive input from the vnc server should derrive
- * (through mulitple inheritence if necessary from VncKeyboard or VncMouse
- * and call setKeyboard() or setMouse() respectively on the vnc server.
+/** @file
+ * Declaration of a VNC server
  */
-class VncKeyboard
-{
-  public:
-    /**
-     * Called when the vnc server receives a key press event from the
-     * client.
-     * @param key the key passed is an x11 keysym
-     * @param down is the key now down or up?
-     */
-    virtual void keyPress(uint32_t key, bool down) = 0;
-};
 
-class VncMouse
-{
-  public:
-    /**
-     * called whenever the mouse moves or it's button state changes
-     * buttons is a simple mask with each button (0-8) corresponding to
-     * a bit position in the byte with 1 being down and 0 being up
-     * @param x the x position of the mouse
-     * @param y the y position of the mouse
-     * @param buttos the button state as described above
-     */
-    virtual void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) = 0;
-};
-
-class VncServer : public SimObject
+class VncServer : public VncInput
 {
   public:
 
@@ -102,16 +75,6 @@ class VncServer : public SimObject
 
     /** Error conditions */
     const static uint32_t VncOK   = 0;
-
-    /** Client -> Server message IDs */
-    enum ClientMessages {
-        ClientSetPixelFormat    = 0,
-        ClientSetEncodings      = 2,
-        ClientFrameBufferUpdate = 3,
-        ClientKeyEvent          = 4,
-        ClientPointerEvent      = 5,
-        ClientCutText           = 6
-    };
 
     /** Server -> Client message IDs */
     enum ServerMessages {
@@ -149,67 +112,12 @@ class VncServer : public SimObject
         NormalPhase
     };
 
-    struct PixelFormat {
-        uint8_t bpp;
-        uint8_t depth;
-        uint8_t bigendian;
-        uint8_t truecolor;
-        uint16_t redmax;
-        uint16_t greenmax;
-        uint16_t bluemax;
-        uint8_t redshift;
-        uint8_t greenshift;
-        uint8_t blueshift;
-        uint8_t padding[3];
-    } M5_ATTR_PACKED;
-
     struct ServerInitMsg {
         uint16_t fbWidth;
         uint16_t fbHeight;
         PixelFormat px;
         uint32_t namelen;
         char name[2]; // just to put M5 in here
-    } M5_ATTR_PACKED;
-
-    struct PixelFormatMessage {
-        uint8_t type;
-        uint8_t padding[3];
-        PixelFormat px;
-    } M5_ATTR_PACKED;
-
-    struct PixelEncodingsMessage {
-        uint8_t type;
-        uint8_t padding;
-        uint16_t num_encodings;
-    } M5_ATTR_PACKED;
-
-    struct FrameBufferUpdateReq {
-        uint8_t type;
-        uint8_t incremental;
-        uint16_t x;
-        uint16_t y;
-        uint16_t width;
-        uint16_t height;
-    } M5_ATTR_PACKED;
-
-    struct KeyEventMessage {
-        uint8_t type;
-        uint8_t down_flag;
-        uint8_t padding[2];
-        uint32_t key;
-    } M5_ATTR_PACKED;
-
-    struct PointerEventMessage {
-        uint8_t type;
-        uint8_t button_mask;
-        uint16_t x;
-        uint16_t y;
-    } M5_ATTR_PACKED;
-
-    struct ClientCutTextMessage {
-        uint8_t type;
-        uint8_t padding[3];
-        uint32_t length;
     } M5_ATTR_PACKED;
 
     struct FrameBufferUpdate {
@@ -284,21 +192,6 @@ class VncServer : public SimObject
     /** The rfb prototol state the connection is in */
     ConnectionState curState;
 
-    /** the width of the frame buffer we are sending to the client */
-    uint16_t _videoWidth;
-
-    /** the height of the frame buffer we are sending to the client */
-    uint16_t _videoHeight;
-
-    /** pointer to the actual data that is stored in the frame buffer device */
-    uint8_t* clientRfb;
-
-    /** The device to notify when we get key events */
-    VncKeyboard *keyboard;
-
-    /** The device to notify when we get mouse events */
-    VncMouse *mouse;
-
     /** An update needs to be sent to the client. Without doing this the
      * client will constantly request data that is pointless */
     bool sendUpdate;
@@ -312,31 +205,7 @@ class VncServer : public SimObject
     /** If the vnc client supports the desktop resize command */
     bool supportsResizeEnc;
 
-    /** The mode of data we're getting frame buffer in */
-    VideoConvert::Mode videoMode;
-
-    /** The video converter that transforms data for us */
-    VideoConvert *vc;
-
-    /** Flag indicating whether to capture snapshots of frame buffer or not */
-    bool captureEnabled;
-
-    /** Current frame number being captured to a file */
-    int captureCurrentFrame;
-
-    /** Directory to store captured frames to */
-    std::string captureOutputDirectory;
-
-    /** Computed hash of the last captured frame */
-    uint64_t captureLastHash;
-
-    /** Cached bitmap object for writing out frame buffers to file */
-    Bitmap *captureBitmap;
-
   protected:
-    /** Captures the current frame buffer to a file */
-    void captureFrameBuffer();
-
     /**
      * vnc client Interface
      */
@@ -438,29 +307,6 @@ class VncServer : public SimObject
     void sendFrameBufferResized();
 
   public:
-    /** Set the address of the frame buffer we are going to show.
-     * To avoid copying, just have the display controller
-     * tell us where the data is instead of constanly copying it around
-     * @param rfb frame buffer that we're going to use
-     */
-    void
-    setFramebufferAddr(uint8_t* rfb)
-    {
-        clientRfb = rfb;
-    }
-
-    /** Set up the device that would like to receive notifications when keys are
-     * pressed in the vnc client keyboard
-     * @param _keyboard an object that derrives from VncKeyboard
-     */
-    void setKeyboard(VncKeyboard *_keyboard) { keyboard = _keyboard; }
-
-    /** Setup the device that would like to receive notifications when mouse
-     * movements or button presses are received from the vnc client.
-     * @param _mouse an object that derrives from VncMouse
-     */
-    void setMouse(VncMouse *_mouse) { mouse = _mouse; }
-
     /** The frame buffer uses this call to notify the vnc server that
      * the frame buffer has been updated and a new image needs to be sent to the
      * client
@@ -468,30 +314,16 @@ class VncServer : public SimObject
     void
     setDirty()
     {
+        VncInput::setDirty();
         sendUpdate = true;
-        if (captureEnabled)
-            captureFrameBuffer();
         sendFrameBufferUpdate();
     }
-
-    /** What is the width of the screen we're displaying.
-     * This is used for pointer/tablet devices that need to know to calculate
-     * the correct value to send to the device driver.
-     * @return the width of the simulated screen
-     */
-    uint16_t videoWidth() { return _videoWidth; }
-
-    /** What is the height of the screen we're displaying.
-     * This is used for pointer/tablet devices that need to know to calculate
-     * the correct value to send to the device driver.
-     * @return the height of the simulated screen
-     */
-    uint16_t videoHeight() { return _videoHeight; }
 
     /** Set the mode of the data the frame buffer will be sending us
      * @param mode the mode
      */
-    void setFrameBufferParams(VideoConvert::Mode mode, int width, int height);
+    void setFrameBufferParams(VideoConvert::Mode mode, uint16_t width,
+        uint16_t height);
 };
 
 #endif
