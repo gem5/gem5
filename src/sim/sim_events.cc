@@ -56,7 +56,7 @@ SimLoopExitEvent::process()
     // queue.
     if (!isFlagSet(IsMainQueue)) {
         exitSimLoop(cause, code);
-        delete this;
+        setFlags(AutoDelete);
     }
 
     // otherwise do nothing... the IsExitEvent flag takes care of

@@ -203,7 +203,8 @@ EventQueue::serviceOne()
     if (!event->squashed()) {
         event->process();
         if (event->isExitEvent()) {
-            assert(!event->flags.isSet(Event::AutoDelete)); // would be silly
+            assert(!event->flags.isSet(Event::AutoDelete) ||
+                   !event->flags.isSet(Event::IsMainQueue)); // would be silly
             return event;
         }
     } else {
