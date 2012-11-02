@@ -118,6 +118,12 @@ class SimpleMemory : public AbstractMemory
 
     EventWrapper<SimpleMemory, &SimpleMemory::release> releaseEvent;
 
+    /** @todo this is a temporary workaround until the 4-phase code is
+     * committed. upstream caches needs this packet until true is returned, so
+     * hold onto it for deletion until a subsequent call
+     */
+    std::vector<PacketPtr> pendingDelete;
+
   public:
 
     SimpleMemory(const SimpleMemoryParams *p);

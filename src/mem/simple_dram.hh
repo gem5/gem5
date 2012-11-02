@@ -453,6 +453,12 @@ class SimpleDRAM : public AbstractMemory
     Stats::Formula writeRowHitRate;
     Stats::Formula avgGap;
 
+    /** @todo this is a temporary workaround until the 4-phase code is
+     * committed. upstream caches needs this packet until true is returned, so
+     * hold onto it for deletion until a subsequent call
+     */
+    std::vector<PacketPtr> pendingDelete;
+
   public:
 
     void regStats();

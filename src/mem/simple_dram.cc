@@ -474,6 +474,13 @@ SimpleDRAM::printQs() const {
 bool
 SimpleDRAM::recvTimingReq(PacketPtr pkt)
 {
+    /// @todo temporary hack to deal with memory corruption issues until
+    /// 4-phase transactions are complete
+    for (int x = 0; x < pendingDelete.size(); x++)
+        delete pendingDelete[x];
+    pendingDelete.clear();
+
+
     // This is where we enter from the outside world
     DPRINTF(DRAM, "Inside recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(),pkt->getAddr(), pkt->getSize());
@@ -495,7 +502,7 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
     // simply drop inhibited packets for now
     if (pkt->memInhibitAsserted()) {
         DPRINTF(DRAM,"Inhibited packet -- Dropping it now\n");
-        delete pkt;
+        pendingDelete.push_back(pkt);
         return true;
     }
 
