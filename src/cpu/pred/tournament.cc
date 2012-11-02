@@ -167,7 +167,7 @@ TournamentBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
     globalHistory = globalHistory & (globalHistoryMask - 1);
     //Update Local History to Not Taken
     localHistoryTable[local_history_idx] =
-       localHistoryTable[local_history_idx] & (localPredictorMask - 1);
+       localHistoryTable[local_history_idx] & (localPredictorMask & ~ULL(1));
 }
 
 bool
@@ -263,8 +263,14 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history,
         // Update may also be called if the Branch target is incorrect even if
         // the prediction is correct. In that case do not update the counters.
         bool historyPred = false;
-        unsigned old_local_pred_index = history->localHistory
-                      & localPredictorMask;
+        unsigned old_local_pred_index = history->localHistory &
+                localPredictorMask;
+
+        bool old_local_pred_valid = history->localHistory !=
+            invalidPredictorIndex;
+
+        assert(old_local_pred_index < localPredictorSize);
+
         if (history->globalUsed) {
            historyPred = history->globalPredTaken;
         } else {
@@ -291,12 +297,12 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history,
              // need to be updated.
              if (taken) {
                   globalCtrs[history->globalHistory].increment();
-                  if (old_local_pred_index != invalidPredictorIndex) {
+                  if (old_local_pred_valid) {
                           localCtrs[old_local_pred_index].increment();
                   }
              } else {
                   globalCtrs[history->globalHistory].decrement();
-                  if (old_local_pred_index != invalidPredictorIndex) {
+                  if (old_local_pred_valid) {
                           localCtrs[old_local_pred_index].decrement();
                   }
              }
@@ -305,15 +311,15 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history,
              if (taken) {
                 globalHistory = (history->globalHistory << 1) | 1;
                 globalHistory = globalHistory & globalHistoryMask;
-                if (old_local_pred_index != invalidPredictorIndex) {
-                    localHistoryTable[old_local_pred_index] =
+                if (old_local_pred_valid) {
+                    localHistoryTable[local_history_idx] =
                      (history->localHistory << 1) | 1;
                 }
              } else {
                 globalHistory = (history->globalHistory << 1);
                 globalHistory = globalHistory & globalHistoryMask;
-                if (old_local_pred_index != invalidPredictorIndex) {
-                     localHistoryTable[old_local_pred_index] =
+                if (old_local_pred_valid) {
+                     localHistoryTable[local_history_idx] =
                      history->localHistory << 1;
                 }
              }
