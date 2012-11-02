@@ -45,6 +45,7 @@ def x86IOAddress(port):
 
 class SouthBridge(SimObject):
     type = 'SouthBridge'
+    cxx_header = "dev/x86/south_bridge.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of")
 
     _pic1 = I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master')

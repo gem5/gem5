@@ -34,9 +34,11 @@ from Pci import PciDevice
 class EtherObject(SimObject):
     type = 'EtherObject'
     abstract = True
+    cxx_header = "dev/etherobject.hh"
 
 class EtherLink(EtherObject):
     type = 'EtherLink'
+    cxx_header = "dev/etherlink.hh"
     int0 = SlavePort("interface 0")
     int1 = SlavePort("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
@@ -46,29 +48,34 @@ class EtherLink(EtherObject):
 
 class EtherBus(EtherObject):
     type = 'EtherBus'
+    cxx_header = "dev/etherbus.hh"
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
 class EtherTap(EtherObject):
     type = 'EtherTap'
+    cxx_header = "dev/ethertap.hh"
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     port = Param.UInt16(3500, "tap port")
 
 class EtherDump(SimObject):
     type = 'EtherDump'
+    cxx_header = "dev/etherdump.hh"
     file = Param.String("dump file")
     maxlen = Param.Int(96, "max portion of packet data to dump")
 
 class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
+    cxx_header = "dev/etherdevice.hh"
     interface = MasterPort("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above
     type = 'IGbE'
+    cxx_header = "dev/i8254xGBe.hh"
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
     use_flow_control = Param.Bool(False,
@@ -149,6 +156,7 @@ class EtherDevBase(EtherDevice):
 
 class NSGigE(EtherDevBase):
     type = 'NSGigE'
+    cxx_header = "dev/ns_gige.hh"
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
@@ -178,6 +186,7 @@ class NSGigE(EtherDevBase):
 class Sinic(EtherDevBase):
     type = 'Sinic'
     cxx_class = 'Sinic::Device'
+    cxx_header = "dev/sinic.hh"
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")
     tx_max_copy = Param.MemorySize('16kB', "tx max copy")

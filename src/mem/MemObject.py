@@ -31,3 +31,4 @@ from ClockedObject import ClockedObject
 class MemObject(ClockedObject):
     type = 'MemObject'
     abstract = True
+    cxx_header = "mem/mem_object.hh"

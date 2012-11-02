@@ -53,11 +53,13 @@ class OpClass(Enum):
 
 class OpDesc(SimObject):
     type = 'OpDesc'
+    cxx_header = "cpu/func_unit.hh"
     issueLat = Param.Cycles(1, "cycles until another can be issued")
     opClass = Param.OpClass("type of operation")
     opLat = Param.Cycles(1, "cycles until result is available")
 
 class FUDesc(SimObject):
     type = 'FUDesc'
+    cxx_header = "cpu/func_unit.hh"
     count = Param.Int("number of these FU's available")
     opList = VectorParam.OpDesc("operation classes for this FU type")

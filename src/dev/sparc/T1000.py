@@ -36,22 +36,26 @@ from Uart import Uart8250
 
 class MmDisk(BasicPioDevice):
     type = 'MmDisk'
+    cxx_header = "dev/sparc/mm_disk.hh"
     image = Param.DiskImage("Disk Image")
     pio_addr = 0x1F40000000
 
 class DumbTOD(BasicPioDevice):
     type = 'DumbTOD'
+    cxx_header = "dev/sparc/dtod.hh"
     time = Param.Time('01/01/2009', "System time to use ('Now' for real time)")
     pio_addr = 0xfff0c1fff8
 
 class Iob(PioDevice):
     type = 'Iob'
+    cxx_header = "dev/sparc/iob.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     pio_latency = Param.Latency('1ns', "Programed IO latency")
 
 
 class T1000(Platform):
     type = 'T1000'
+    cxx_header = "dev/sparc/t1000.hh"
     system = Param.System(Parent.any, "system")
 
     fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000)

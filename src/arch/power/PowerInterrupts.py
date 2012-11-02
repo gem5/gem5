@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class PowerInterrupts(SimObject):
     type = 'PowerInterrupts'
     cxx_class = 'PowerISA::Interrupts'
+    cxx_header = 'arch/power/interrupts.hh'

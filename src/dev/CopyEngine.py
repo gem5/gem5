@@ -33,6 +33,7 @@ from Pci import PciDevice
 
 class CopyEngine(PciDevice):
     type = 'CopyEngine'
+    cxx_header = "dev/copy_engine.hh"
     dma = VectorMasterPort("Copy engine DMA port")
     VendorID = 0x8086
     DeviceID = 0x1a38

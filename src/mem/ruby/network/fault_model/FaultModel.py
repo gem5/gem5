@@ -39,6 +39,7 @@ from m5.SimObject import SimObject
 class FaultModel(SimObject):
     type = 'FaultModel'
     cxx_class = 'FaultModel' 
+    cxx_header = "mem/ruby/network/fault_model/FaultModel.hh"
     
     baseline_fault_vector_database = VectorParam.Float([
         5, 40, 0.080892, 0.109175, 0.018864, 0.130408, 0.059724, 0.077571, 0.034830, 0.083430, 0.067500, 0.121500,

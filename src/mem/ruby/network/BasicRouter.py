@@ -32,4 +32,5 @@ from m5.SimObject import SimObject
 
 class BasicRouter(SimObject):
     type = 'BasicRouter'
+    cxx_header = "mem/ruby/network/BasicRouter.hh"
     router_id = Param.Int("ID in relation to other routers")

@@ -33,3 +33,4 @@ from InstTracer import InstTracer
 class InOrderTrace(InstTracer):
     type = 'InOrderTrace'
     cxx_class = 'Trace::InOrderTrace'
+    cxx_header = "cpu/inorder/inorder_trace.hh"

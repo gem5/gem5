@@ -42,13 +42,13 @@
 #include "config/the_isa.hh"
 #include "cpu/op_class.hh"
 #include "cpu/static_inst_fwd.hh"
+#include "cpu/thread_context.hh"
 #include "sim/fault_fwd.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;
 struct OzoneImpl;
 struct SimpleImpl;
-class ThreadContext;
 class DynInst;
 class Packet;
 

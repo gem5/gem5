@@ -32,6 +32,7 @@ from m5.proxy import *
 
 class MemTest(MemObject):
     type = 'MemTest'
+    cxx_header = "cpu/testers/memtest/memtest.hh"
     max_loads = Param.Counter(0, "number of loads to execute")
     atomic = Param.Bool(False, "Execute tester in atomic mode? (or timing)\n")
     memory_size = Param.Int(65536, "memory size")

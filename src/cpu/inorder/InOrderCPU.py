@@ -35,6 +35,7 @@ class ThreadModel(Enum):
 
 class InOrderCPU(BaseCPU):
     type = 'InOrderCPU'
+    cxx_header = "cpu/inorder/cpu.hh"
     activity = Param.Unsigned(0, "Initial count")
 
     threadModel = Param.ThreadModel('SMT', "Multithreading model (SE-MODE only)")

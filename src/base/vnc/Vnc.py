@@ -40,9 +40,11 @@ from m5.params import *
 
 class VncInput(SimObject):
     type = 'VncInput'
+    cxx_header = "base/vnc/vncinput.hh"
     frame_capture = Param.Bool(False, "capture changed frames to files")
 
 class VncServer(VncInput):
     type = 'VncServer'
+    cxx_header = "base/vnc/vncserver.hh"
     port = Param.TcpPort(5900, "listen port")
     number = Param.Int(0, "vnc client number")

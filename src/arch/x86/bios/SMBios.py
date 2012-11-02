@@ -41,6 +41,7 @@ from m5.SimObject import SimObject
 class X86SMBiosSMBiosStructure(SimObject):
     type = 'X86SMBiosSMBiosStructure'
     cxx_class = 'X86ISA::SMBios::SMBiosStructure'
+    cxx_header = 'arch/x86/bios/smbios.hh'
     abstract = True
 
 class Characteristic(Enum):
@@ -93,6 +94,7 @@ class ExtCharacteristic(Enum):
 class X86SMBiosBiosInformation(X86SMBiosSMBiosStructure):
     type = 'X86SMBiosBiosInformation'
     cxx_class = 'X86ISA::SMBios::BiosInformation'
+    cxx_header = 'arch/x86/bios/smbios.hh'
 
     vendor = Param.String("", "vendor name string")
     version = Param.String("", "version string")
@@ -115,6 +117,7 @@ class X86SMBiosBiosInformation(X86SMBiosSMBiosStructure):
 class X86SMBiosSMBiosTable(SimObject):
     type = 'X86SMBiosSMBiosTable'
     cxx_class = 'X86ISA::SMBios::SMBiosTable'
+    cxx_header = 'arch/x86/bios/smbios.hh'
 
     major_version = Param.UInt8(2, "major version number")
     minor_version = Param.UInt8(5, "minor version number")

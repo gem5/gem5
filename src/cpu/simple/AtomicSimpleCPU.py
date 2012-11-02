@@ -43,6 +43,7 @@ from BaseSimpleCPU import BaseSimpleCPU
 
 class AtomicSimpleCPU(BaseSimpleCPU):
     type = 'AtomicSimpleCPU'
+    cxx_header = "cpu/simple/atomic.hh"
     width = Param.Int(1, "CPU width")
     simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
     simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")

@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class SparcInterrupts(SimObject):
     type = 'SparcInterrupts'
     cxx_class = 'SparcISA::Interrupts'
+    cxx_header = 'arch/sparc/interrupts.hh'

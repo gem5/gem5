@@ -185,6 +185,7 @@ from Controller import RubyController
 
 class $py_ident(RubyController):
     type = '$py_ident'
+    cxx_header = 'mem/protocol/${c_ident}.hh'
 ''')
         code.indent()
         for param in self.config_parameters:

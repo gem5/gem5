@@ -41,6 +41,7 @@ from m5.SimObject import SimObject
 class X86ACPISysDescTable(SimObject):
     type = 'X86ACPISysDescTable'
     cxx_class = 'X86ISA::ACPI::SysDescTable'
+    cxx_header = 'arch/x86/bios/acpi.hh'
     abstract = True
 
     oem_id = Param.String('', 'string identifying the oem')
@@ -55,12 +56,14 @@ class X86ACPISysDescTable(SimObject):
 class X86ACPIRSDT(X86ACPISysDescTable):
     type = 'X86ACPIRSDT'
     cxx_class = 'X86ISA::ACPI::RSDT'
+    cxx_header = 'arch/x86/bios/acpi.hh'
 
     entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
 
 class X86ACPIXSDT(X86ACPISysDescTable):
     type = 'X86ACPIXSDT'
     cxx_class = 'X86ISA::ACPI::XSDT'
+    cxx_header = 'arch/x86/bios/acpi.hh'
 
     entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
 
@@ -68,6 +71,7 @@ class X86ACPIXSDT(X86ACPISysDescTable):
 class X86ACPIRSDP(SimObject):
     type = 'X86ACPIRSDP'
     cxx_class = 'X86ISA::ACPI::RSDP'
+    cxx_header = 'arch/x86/bios/acpi.hh'
 
     oem_id = Param.String('', 'string identifying the oem')
     # Because 0 encodes ACPI 1.0, 2 encodes ACPI 3.0, the version implemented

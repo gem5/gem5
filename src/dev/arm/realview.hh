@@ -52,6 +52,7 @@
 #include "dev/platform.hh"
 #include "params/RealView.hh"
 
+class Gic;
 class IdeController;
 class System;
 

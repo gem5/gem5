@@ -34,6 +34,8 @@ from BasicLink import BasicIntLink, BasicExtLink
 
 class SimpleExtLink(BasicExtLink):
     type = 'SimpleExtLink'
+    cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
 
 class SimpleIntLink(BasicIntLink):
     type = 'SimpleIntLink'
+    cxx_header = "mem/ruby/network/simple/SimpleLink.hh"

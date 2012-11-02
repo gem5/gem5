@@ -35,12 +35,11 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "debug/ExecEnable.hh"
 #include "debug/ExecSpeculative.hh"
 #include "params/IntelTrace.hh"
 #include "sim/insttracer.hh"
-
-class ThreadContext;
 
 namespace Trace {
 

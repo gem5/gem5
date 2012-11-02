@@ -57,6 +57,7 @@ class PageManage(Enum): vals = ['open', 'close']
 # itself.
 class SimpleDRAM(AbstractMemory):
     type = 'SimpleDRAM'
+    cxx_header = "mem/simple_dram.hh"
 
     # single-ported on the system interface side, instantiate with a
     # bus in front of the controller for multiple ports

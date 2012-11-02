@@ -43,6 +43,7 @@ from MemObject import MemObject
 # with periodic dumping and resetting of stats using schedStatEvent
 class CommMonitor(MemObject):
     type = 'CommMonitor'
+    cxx_header = "mem/comm_monitor.hh"
 
     # one port in each direction
     master = MasterPort("Master port")

@@ -50,6 +50,7 @@
 
 #include <vector>
 
+#include "base/cp_annotate.hh"
 #include "base/statistics.hh"
 #include "dev/copy_engine_defs.hh"
 #include "dev/pcidev.hh"

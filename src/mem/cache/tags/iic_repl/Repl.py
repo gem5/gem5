@@ -31,9 +31,11 @@ from m5.params import *
 class Repl(SimObject):
     type = 'Repl'
     abstract = True
+    cxx_header = "mem/cache/tags/iic_repl/repl.hh"
 
 class GenRepl(Repl):
     type = 'GenRepl'
+    cxx_header = "mem/cache/tags/iic_repl/gen.hh"
     fresh_res = Param.Int("Fresh pool residency time")
     num_pools = Param.Int("Number of priority pools")
     pool_res = Param.Int("Pool residency time")

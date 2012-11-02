@@ -34,5 +34,6 @@ class MemoryControl(ClockedObject):
     abstract = True
     type = 'MemoryControl'
     cxx_class = 'MemoryControl'
+    cxx_header = "mem/ruby/system/MemoryControl.hh"
     version = Param.Int("");
     ruby_system = Param.RubySystem("")

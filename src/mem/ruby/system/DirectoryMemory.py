@@ -34,6 +34,7 @@ from m5.SimObject import SimObject
 class RubyDirectoryMemory(SimObject):
     type = 'RubyDirectoryMemory'
     cxx_class = 'DirectoryMemory'
+    cxx_header = "mem/ruby/system/DirectoryMemory.hh"
     version = Param.Int(0, "")
     size = Param.MemorySize("1GB", "capacity in bytes")
     use_map = Param.Bool(False, "enable sparse memory")

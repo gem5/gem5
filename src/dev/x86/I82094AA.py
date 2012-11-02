@@ -34,6 +34,7 @@ from X86IntPin import X86IntSinkPin
 class I82094AA(BasicPioDevice):
     type = 'I82094AA'
     cxx_class = 'X86ISA::I82094AA'
+    cxx_header = "dev/x86/i82094aa.hh"
     apic_id = Param.Int(1, 'APIC id for this IO APIC')
     int_master = MasterPort("Port for sending interrupt messages")
     int_latency = Param.Latency('1ns', \

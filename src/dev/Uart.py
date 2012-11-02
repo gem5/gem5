@@ -33,8 +33,10 @@ from Device import BasicPioDevice
 class Uart(BasicPioDevice):
     type = 'Uart'
     abstract = True
+    cxx_header = "dev/uart.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     terminal = Param.Terminal(Parent.any, "The terminal")
 
 class Uart8250(Uart):
     type = 'Uart8250'
+    cxx_header = "dev/uart8250.hh"

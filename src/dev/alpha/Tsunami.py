@@ -37,10 +37,12 @@ from Uart import Uart8250
 
 class TsunamiCChip(BasicPioDevice):
     type = 'TsunamiCChip'
+    cxx_header = "dev/alpha/tsunami_cchip.hh"
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
 
 class TsunamiIO(BasicPioDevice):
     type = 'TsunamiIO'
+    cxx_header = "dev/alpha/tsunami_io.hh"
     time = Param.Time('01/01/2009',
         "System time to use ('Now' for actual time)")
     year_is_bcd = Param.Bool(False,
@@ -50,10 +52,12 @@ class TsunamiIO(BasicPioDevice):
 
 class TsunamiPChip(BasicPioDevice):
     type = 'TsunamiPChip'
+    cxx_header = "dev/alpha/tsunami_pchip.hh"
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
 
 class Tsunami(Platform):
     type = 'Tsunami'
+    cxx_header = "dev/alpha/tsunami.hh"
     system = Param.System(Parent.any, "system")
 
     cchip = TsunamiCChip(pio_addr=0x801a0000000)

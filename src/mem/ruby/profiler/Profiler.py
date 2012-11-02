@@ -33,6 +33,7 @@ from m5.SimObject import SimObject
 class RubyProfiler(SimObject):
     type = 'RubyProfiler'
     cxx_class = 'Profiler'
+    cxx_header = "mem/ruby/profiler/Profiler.hh"
     hot_lines = Param.Bool(False, "")
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")

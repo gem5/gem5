@@ -33,3 +33,4 @@ class InstTracer(SimObject):
     type = 'InstTracer'
     cxx_class = 'Trace::InstTracer'
     abstract = True
+    cxx_header = "sim/insttracer.hh"

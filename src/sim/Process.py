@@ -33,6 +33,7 @@ from m5.proxy import *
 class Process(SimObject):
     type = 'Process'
     abstract = True
+    cxx_header = "sim/process.hh"
     input = Param.String('cin', "filename for stdin")
     output = Param.String('cout', 'filename for stdout')
     errout = Param.String('cerr', 'filename for stderr')
@@ -40,15 +41,12 @@ class Process(SimObject):
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 
     @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "sim/process.hh"')
-
-    @classmethod
     def export_methods(cls, code):
         code('bool map(Addr vaddr, Addr paddr, int size);')
 
 class LiveProcess(Process):
     type = 'LiveProcess'
+    cxx_header = "sim/process.hh"
     executable = Param.String('', "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String([], "environment settings")

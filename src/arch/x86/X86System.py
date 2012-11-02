@@ -44,6 +44,7 @@ from System import System
 
 class X86System(System):
     type = 'X86System'
+    cxx_header = 'arch/x86/system.hh'
     smbios_table = Param.X86SMBiosSMBiosTable(
             X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
     intel_mp_pointer = Param.X86IntelMPFloatingPointer(
@@ -58,6 +59,7 @@ class X86System(System):
 
 class LinuxX86System(X86System):
     type = 'LinuxX86System'
+    cxx_header = 'arch/x86/linux/system.hh'
 
     e820_table = Param.X86E820Table(
             X86E820Table(), 'E820 map of physical memory')

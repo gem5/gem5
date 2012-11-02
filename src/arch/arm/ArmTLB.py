@@ -45,6 +45,7 @@ from MemObject import MemObject
 class ArmTableWalker(MemObject):
     type = 'ArmTableWalker'
     cxx_class = 'ArmISA::TableWalker'
+    cxx_header = "arch/arm/table_walker.hh"
     port = MasterPort("Port for TableWalker to do walk the translation with")
     sys = Param.System(Parent.any, "system object parameter")
     num_squash_per_cycle = Param.Unsigned(2,
@@ -53,5 +54,6 @@ class ArmTableWalker(MemObject):
 class ArmTLB(SimObject):
     type = 'ArmTLB'
     cxx_class = 'ArmISA::TLB'
+    cxx_header = "arch/arm/tlb.hh"
     size = Param.Int(64, "TLB size")
     walker = Param.ArmTableWalker(ArmTableWalker(), "HW Table walker")

@@ -32,4 +32,5 @@ from m5.proxy import *
 class Platform(SimObject):
     type = 'Platform'
     abstract = True
+    cxx_header = "dev/platform.hh"
     intrctrl = Param.IntrControl(Parent.any, "interrupt controller")

@@ -33,3 +33,4 @@ from InstTracer import InstTracer
 class LegionTrace(InstTracer):
     type = 'LegionTrace'
     cxx_class = 'Trace::LegionTrace'
+    cxx_header = "cpu/legiontrace.hh"

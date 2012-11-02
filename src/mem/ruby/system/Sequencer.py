@@ -34,6 +34,7 @@ from MemObject import MemObject
 class RubyPort(MemObject):
     type = 'RubyPort'
     abstract = True
+    cxx_header = "mem/ruby/system/RubyPort.hh"
     slave = VectorSlavePort("CPU slave port")
     master = VectorMasterPort("CPU master port")
     version = Param.Int(0, "")
@@ -50,10 +51,12 @@ class RubyPort(MemObject):
 
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'
+    cxx_header = "mem/ruby/system/RubyPortProxy.hh"
     
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
     cxx_class = 'Sequencer'
+    cxx_header = "mem/ruby/system/Sequencer.hh"
     icache = Param.RubyCache("")
     dcache = Param.RubyCache("")
     max_outstanding_requests = Param.Int(16,
@@ -63,3 +66,4 @@ class RubySequencer(RubyPort):
 
 class DMASequencer(RubyPort):
     type = 'DMASequencer'
+    cxx_header = "mem/ruby/system/DMASequencer.hh"

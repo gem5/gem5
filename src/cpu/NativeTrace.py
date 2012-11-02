@@ -34,3 +34,4 @@ class NativeTrace(ExeTracer):
     abstract = True
     type = 'NativeTrace'
     cxx_class = 'Trace::NativeTrace'
+    cxx_header = "cpu/nativetrace.hh"

@@ -32,6 +32,7 @@ from System import System
 
 class AlphaSystem(System):
     type = 'AlphaSystem'
+    cxx_header = "arch/alpha/system.hh"
     console = Param.String("file that contains the console code")
     pal = Param.String("file that contains palcode")
     system_type = Param.UInt64("Type of system we are emulating")
@@ -40,6 +41,7 @@ class AlphaSystem(System):
 
 class LinuxAlphaSystem(AlphaSystem):
     type = 'LinuxAlphaSystem'
+    cxx_header = "arch/alpha/linux/system.hh"
     system_type = 34
     system_rev = 1 << 10
 
@@ -48,10 +50,12 @@ class LinuxAlphaSystem(AlphaSystem):
 
 class FreebsdAlphaSystem(AlphaSystem):
     type = 'FreebsdAlphaSystem'
+    cxx_header = "arch/alpha/freebsd/system.hh"
     system_type = 34
     system_rev = 1 << 10
 
 class Tru64AlphaSystem(AlphaSystem):
     type = 'Tru64AlphaSystem'
+    cxx_header = "arch/alpha/tru64/system.hh"
     system_type = 12
     system_rev = 2<<1

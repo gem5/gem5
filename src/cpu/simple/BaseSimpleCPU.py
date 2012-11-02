@@ -34,6 +34,7 @@ from DummyChecker import DummyChecker
 class BaseSimpleCPU(BaseCPU):
     type = 'BaseSimpleCPU'
     abstract = True
+    cxx_header = "cpu/simple/base.hh"
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:

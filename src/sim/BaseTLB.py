@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class BaseTLB(SimObject):
     type = 'BaseTLB'
     abstract = True
+    cxx_header = "sim/tlb.hh"

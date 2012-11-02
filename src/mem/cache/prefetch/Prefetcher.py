@@ -45,6 +45,7 @@ from m5.proxy import *
 class BasePrefetcher(ClockedObject):
     type = 'BasePrefetcher'
     abstract = True
+    cxx_header = "mem/cache/prefetch/base.hh"
     size = Param.Int(100,
          "Number of entries in the hardware prefetch queue")
     cross_pages = Param.Bool(False,
@@ -63,14 +64,17 @@ class BasePrefetcher(ClockedObject):
 class GHBPrefetcher(BasePrefetcher):
     type = 'GHBPrefetcher'
     cxx_class = 'GHBPrefetcher'
+    cxx_header = "mem/cache/prefetch/ghb.hh"
 
 class StridePrefetcher(BasePrefetcher):
     type = 'StridePrefetcher'
     cxx_class = 'StridePrefetcher'
+    cxx_header = "mem/cache/prefetch/stride.hh"
 
 class TaggedPrefetcher(BasePrefetcher):
     type = 'TaggedPrefetcher'
     cxx_class = 'TaggedPrefetcher'
+    cxx_header = "mem/cache/prefetch/tagged.hh"
 
 
 

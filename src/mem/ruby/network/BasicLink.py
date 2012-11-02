@@ -32,6 +32,7 @@ from m5.SimObject import SimObject
 
 class BasicLink(SimObject):
     type = 'BasicLink'
+    cxx_header = "mem/ruby/network/BasicLink.hh"
     link_id = Param.Int("ID in relation to other links")
     latency = Param.Int(1, "latency")
     # The following banwidth factor does not translate to the same value for
@@ -43,12 +44,14 @@ class BasicLink(SimObject):
 
 class BasicExtLink(BasicLink):
     type = 'BasicExtLink'
+    cxx_header = "mem/ruby/network/BasicLink.hh"
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
     bandwidth_factor = 16
 
 class BasicIntLink(BasicLink):
     type = 'BasicIntLink'
+    cxx_header = "mem/ruby/network/BasicLink.hh"
     node_a = Param.BasicRouter("Router on one end")
     node_b = Param.BasicRouter("Router on other end")
     bandwidth_factor = 16

@@ -44,6 +44,7 @@ from MemObject import MemObject
 
 class Bridge(MemObject):
     type = 'Bridge'
+    cxx_header = "mem/bridge.hh"
     slave = SlavePort('Slave port')
     master = MasterPort('Master port')
     req_size = Param.Int(16, "The number of requests to buffer")

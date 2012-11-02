@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class AlphaInterrupts(SimObject):
     type = 'AlphaInterrupts'
     cxx_class = 'AlphaISA::Interrupts'
+    cxx_header = "arch/alpha/interrupts.hh"

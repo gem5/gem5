@@ -33,6 +33,7 @@ from Device import BasicPioDevice
 
 class AlphaBackdoor(BasicPioDevice):
     type = 'AlphaBackdoor'
+    cxx_header = "dev/alpha/backdoor.hh"
     cpu = Param.BaseCPU(Parent.cpu[0], "Processor")
     disk = Param.SimpleDisk("Simple Disk")
     terminal = Param.Terminal(Parent.any, "The console terminal")

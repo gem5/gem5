@@ -32,6 +32,7 @@ from ClockedObject import ClockedObject
 
 class RubySystem(ClockedObject):
     type = 'RubySystem'
+    cxx_header = "mem/ruby/system/System.hh"
     random_seed = Param.Int(1234, "random seed used by the simulation");
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times");

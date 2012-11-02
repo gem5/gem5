@@ -33,5 +33,6 @@ from BaseGarnetNetwork import BaseGarnetNetwork
 
 class GarnetNetwork_d(BaseGarnetNetwork):
     type = 'GarnetNetwork_d'
+    cxx_header = "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
     buffers_per_data_vc = Param.Int(4, "buffers per data virtual channel");
     buffers_per_ctrl_vc = Param.Int(1, "buffers per ctrl virtual channel");

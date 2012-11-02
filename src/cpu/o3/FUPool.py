@@ -33,6 +33,7 @@ from FuncUnitConfig import *
 
 class FUPool(SimObject):
     type = 'FUPool'
+    cxx_header = "cpu/o3/fu_pool.hh"
     FUList = VectorParam.FUDesc("list of FU's for this pool")
 
 class DefaultFUPool(FUPool):

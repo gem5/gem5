@@ -32,6 +32,7 @@ from m5.proxy import *
 
 class RubyTester(MemObject):
     type = 'RubyTester'
+    cxx_header = "cpu/testers/rubytest/RubyTester.hh"
     num_cpus = Param.Int("number of cpus / RubyPorts")
     cpuDataPort = VectorMasterPort("the cpu data cache ports")
     cpuInstPort = VectorMasterPort("the cpu inst cache ports")

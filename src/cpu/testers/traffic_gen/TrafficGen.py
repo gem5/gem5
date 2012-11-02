@@ -61,6 +61,7 @@ from MemObject import MemObject
 # probabilities, effectively making it a Markov Chain.
 class TrafficGen(MemObject):
     type = 'TrafficGen'
+    cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
 
     # Port used for sending requests and receiving responses
     port = MasterPort("Master port")

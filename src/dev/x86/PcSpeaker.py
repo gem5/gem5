@@ -33,4 +33,5 @@ from Device import BasicPioDevice
 class PcSpeaker(BasicPioDevice):
     type = 'PcSpeaker'
     cxx_class = 'X86ISA::Speaker'
+    cxx_header = "dev/x86/speaker.hh"
     i8254 = Param.I8254('Timer that drives the speaker')

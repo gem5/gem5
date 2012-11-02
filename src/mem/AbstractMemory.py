@@ -45,6 +45,7 @@ from MemObject import MemObject
 class AbstractMemory(MemObject):
     type = 'AbstractMemory'
     abstract = True
+    cxx_header = "mem/abstract_mem.hh"
     range = Param.AddrRange(AddrRange('128MB'), "Address range")
     null = Param.Bool(False, "Do not store data, always return zero")
     zero = Param.Bool(False, "Initialize memory with zeros")

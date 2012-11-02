@@ -54,11 +54,13 @@ from SimpleMemory import SimpleMemory
 class AmbaDevice(BasicPioDevice):
     type = 'AmbaDevice'
     abstract = True
+    cxx_header = "dev/arm/amba_device.hh"
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
 class AmbaIntDevice(AmbaDevice):
     type = 'AmbaIntDevice'
     abstract = True
+    cxx_header = "dev/arm/amba_device.hh"
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
     int_num = Param.UInt32("Interrupt number that connects to GIC")
     int_delay = Param.Latency("100ns",
@@ -67,6 +69,7 @@ class AmbaIntDevice(AmbaDevice):
 class AmbaDmaDevice(DmaDevice):
     type = 'AmbaDmaDevice'
     abstract = True
+    cxx_header = "dev/arm/amba_device.hh"
     pio_addr = Param.Addr("Address for AMBA slave interface")
     pio_latency = Param.Latency("10ns", "Time between action and write/read result by AMBA DMA Device")
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
@@ -75,15 +78,18 @@ class AmbaDmaDevice(DmaDevice):
 
 class A9SCU(BasicPioDevice):
     type = 'A9SCU'
+    cxx_header = "dev/arm/a9scu.hh"
 
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
+    cxx_header = "dev/arm/rv_ctrl.hh"
     proc_id0 = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
 class Gic(PioDevice):
     type = 'Gic'
+    cxx_header = "dev/arm/gic.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     dist_addr = Param.Addr(0x1f001000, "Address for distributor")
     cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
@@ -94,11 +100,13 @@ class Gic(PioDevice):
 
 class AmbaFake(AmbaDevice):
     type = 'AmbaFake'
+    cxx_header = "dev/arm/amba_fake.hh"
     ignore_access = Param.Bool(False, "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)")
     amba_id = 0;
 
 class Pl011(Uart):
     type = 'Pl011'
+    cxx_header = "dev/arm/pl011.hh"
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
     int_num = Param.UInt32("Interrupt number that connects to GIC")
     end_on_eot = Param.Bool(False, "End the simulation when a EOT is received on the UART")
@@ -106,6 +114,7 @@ class Pl011(Uart):
 
 class Sp804(AmbaDevice):
     type = 'Sp804'
+    cxx_header = "dev/arm/timer_sp804.hh"
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
     int_num0 = Param.UInt32("Interrupt number that connects to GIC")
     clock0 = Param.Clock('1MHz', "Clock speed of the input")
@@ -115,6 +124,7 @@ class Sp804(AmbaDevice):
 
 class CpuLocalTimer(BasicPioDevice):
     type = 'CpuLocalTimer'
+    cxx_header = "dev/arm/timer_cpulocal.hh"
     gic = Param.Gic(Parent.any, "Gic to use for interrupting")
     int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
@@ -123,11 +133,13 @@ class CpuLocalTimer(BasicPioDevice):
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
+    cxx_header = "dev/arm/rtc_pl031.hh"
     time = Param.Time('01/01/2009', "System time to use ('Now' for actual time)")
     amba_id = 0x00341031
 
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
+    cxx_header = "dev/arm/kmi.hh"
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     is_mouse = Param.Bool(False, "Is this interface a mouse, if not a keyboard")
     int_delay = '1us'
@@ -135,6 +147,7 @@ class Pl050(AmbaIntDevice):
 
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
+    cxx_header = "dev/arm/pl111.hh"
     # Override the default clock
     clock = '24MHz'
     vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
@@ -142,6 +155,7 @@ class Pl111(AmbaDmaDevice):
 
 class RealView(Platform):
     type = 'RealView'
+    cxx_header = "dev/arm/realview.hh"
     system = Param.System(Parent.any, "system")
     pci_cfg_base = Param.Addr(0, "Base address of PCI Configuraiton Space")
     mem_start_addr = Param.Addr(0, "Start address of main memory")

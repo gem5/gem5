@@ -34,6 +34,7 @@ from X86IntPin import X86IntSourcePin
 class Cmos(BasicPioDevice):
     type = 'Cmos'
     cxx_class='X86ISA::Cmos'
+    cxx_header = "dev/x86/cmos.hh"
     time = Param.Time('01/01/2012',
         "System time to use ('Now' for actual time)")
     int_pin = Param.X86IntSourcePin(X86IntSourcePin(),

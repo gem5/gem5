@@ -33,6 +33,7 @@ from BasicLink import BasicLink
 
 class Topology(SimObject):
     type = 'Topology'
+    cxx_header = "mem/ruby/network/Topology.hh"
     description = Param.String("Not Specified",
                                "the name of the imported topology module")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
@@ -44,6 +45,7 @@ class Topology(SimObject):
 class RubyNetwork(SimObject):
     type = 'RubyNetwork'
     cxx_class = 'Network'
+    cxx_header = "mem/ruby/network/Network.hh"
     abstract = True
     number_of_virtual_networks = Param.Int(10, "");
     topology = Param.Topology("");

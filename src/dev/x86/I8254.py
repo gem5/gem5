@@ -34,5 +34,6 @@ from X86IntPin import X86IntSourcePin
 class I8254(BasicPioDevice):
     type = 'I8254'
     cxx_class = 'X86ISA::I8254'
+    cxx_header = "dev/x86/i8254.hh"
     int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
             'Pin to signal timer interrupts to')

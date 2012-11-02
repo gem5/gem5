@@ -32,3 +32,4 @@ from m5.SimObject import SimObject
 class RubyWireBuffer(SimObject):
     type = 'RubyWireBuffer'
     cxx_class = 'WireBuffer'
+    cxx_header = "mem/ruby/system/WireBuffer.hh"

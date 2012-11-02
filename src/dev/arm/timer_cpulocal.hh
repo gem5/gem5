@@ -41,6 +41,7 @@
 #ifndef __DEV_ARM_LOCALTIMER_HH__
 #define __DEV_ARM_LOCALTIMER_HH__
 
+#include "base/bitunion.hh"
 #include "dev/io_device.hh"
 #include "params/CpuLocalTimer.hh"
 

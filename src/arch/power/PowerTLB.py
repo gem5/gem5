@@ -34,4 +34,5 @@ from m5.params import *
 class PowerTLB(SimObject):
     type = 'PowerTLB'
     cxx_class = 'PowerISA::TLB'
+    cxx_header = 'arch/power/tlb.hh'
     size = Param.Int(64, "TLB size")

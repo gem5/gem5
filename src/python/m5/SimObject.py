@@ -105,6 +105,9 @@ allClasses = {}
 # dict to look up SimObjects based on path
 instanceDict = {}
 
+# Did any of the SimObjects lack a header file?
+noCxxHeader = False
+
 def public_value(key, value):
     return key.startswith('_') or \
                isinstance(value, (FunctionType, MethodType, ModuleType,
@@ -119,6 +122,7 @@ class MetaSimObject(type):
     init_keywords = { 'abstract' : bool,
                       'cxx_class' : str,
                       'cxx_type' : str,
+                      'cxx_header' : str,
                       'type' : str }
     # Attributes that can be set any time
     keywords = { 'check' : FunctionType }
@@ -202,6 +206,12 @@ class MetaSimObject(type):
                 cls._value_dict['cxx_class'] = cls._value_dict['type']
 
             cls._value_dict['cxx_type'] = '%s *' % cls._value_dict['cxx_class']
+
+            if 'cxx_header' not in cls._value_dict:
+                global noCxxHeader
+                noCxxHeader = True
+                print >> sys.stderr, \
+                    "warning: No header file specified for SimObject: %s" % name
 
         # Export methods are automatically inherited via C++, so we
         # don't want the method declarations to get inherited on the
@@ -407,6 +417,7 @@ class MetaSimObject(type):
         code('#include "params/$cls.hh"')
         for param in params:
             param.cxx_predecls(code)
+        code('#include "${{cls.cxx_header}}"')
         cls.export_method_cxx_predecls(code)
         code('''\
 /**
@@ -568,15 +579,7 @@ class SimObject(object):
     __metaclass__ = MetaSimObject
     type = 'SimObject'
     abstract = True
-
-    @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('''
-#include <Python.h>
-
-#include "sim/serialize.hh"
-#include "sim/sim_object.hh"
-''')
+    cxx_header = "sim/sim_object.hh"
 
     @classmethod
     def export_method_swig_predecls(cls, code):
@@ -1099,10 +1102,11 @@ baseClasses = allClasses.copy()
 baseInstances = instanceDict.copy()
 
 def clear():
-    global allClasses, instanceDict
+    global allClasses, instanceDict, noCxxHeader
 
     allClasses = baseClasses.copy()
     instanceDict = baseInstances.copy()
+    noCxxHeader = False
 
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably

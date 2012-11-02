@@ -42,6 +42,7 @@ from m5.proxy import *
 class ClockedObject(SimObject):
     type = 'ClockedObject'
     abstract = True
+    cxx_header = "sim/clocked_object.hh"
 
     # Clock period of this object, with the default value being the
     # clock period of the parent object, unproxied at instantiation

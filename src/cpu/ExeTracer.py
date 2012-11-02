@@ -33,3 +33,4 @@ from InstTracer import InstTracer
 class ExeTracer(InstTracer):
     type = 'ExeTracer'
     cxx_class = 'Trace::ExeTracer'
+    cxx_header = "cpu/exetrace.hh"

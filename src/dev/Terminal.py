@@ -32,6 +32,7 @@ from m5.proxy import *
 
 class Terminal(SimObject):
     type = 'Terminal'
+    cxx_header = "dev/terminal.hh"
     intr_control = Param.IntrControl(Parent.any, "interrupt controller")
     port = Param.TcpPort(3456, "listen port")
     number = Param.Int(0, "terminal number")

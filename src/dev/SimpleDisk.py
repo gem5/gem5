@@ -31,5 +31,6 @@ from m5.params import *
 from m5.proxy import *
 class SimpleDisk(SimObject):
     type = 'SimpleDisk'
+    cxx_header = "dev/simple_disk.hh"
     disk = Param.DiskImage("Disk Image")
     system = Param.System(Parent.any, "System Pointer")

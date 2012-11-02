@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class MipsInterrupts(SimObject):
     type = 'MipsInterrupts'
     cxx_class = 'MipsISA::Interrupts'
+    cxx_header = 'arch/mips/interrupts.hh'

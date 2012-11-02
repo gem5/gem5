@@ -33,3 +33,4 @@ from NativeTrace import NativeTrace
 class X86NativeTrace(NativeTrace):
     type = 'X86NativeTrace'
     cxx_class = 'Trace::X86NativeTrace'
+    cxx_header = 'arch/x86/nativetrace.hh'

@@ -32,6 +32,7 @@ from BaseCPU import BaseCPU
 class CheckerCPU(BaseCPU):
     type = 'CheckerCPU'
     abstract = True
+    cxx_header = "cpu/checker/cpu.hh"
     exitOnError = Param.Bool(False, "Exit on an error")
     updateOnError = Param.Bool(False,
         "Update the checker with the main CPU's state on an error")

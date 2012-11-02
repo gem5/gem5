@@ -32,24 +32,28 @@ from MemObject import MemObject
 
 class PioDevice(MemObject):
     type = 'PioDevice'
+    cxx_header = "dev/io_device.hh"
     abstract = True
     pio = SlavePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
 
 class BasicPioDevice(PioDevice):
     type = 'BasicPioDevice'
+    cxx_header = "dev/io_device.hh"
     abstract = True
     pio_addr = Param.Addr("Device Address")
     pio_latency = Param.Latency('100ns', "Programmed IO latency")
 
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
+    cxx_header = "dev/io_device.hh"
     abstract = True
     dma = MasterPort("DMA port")
 
 
 class IsaFake(BasicPioDevice):
     type = 'IsaFake'
+    cxx_header = "dev/io_device.hh"
     pio_size = Param.Addr(0x8, "Size of address range")
     ret_data8 = Param.UInt8(0xFF, "Default data to return")
     ret_data16 = Param.UInt16(0xFFFF, "Default data to return")

@@ -46,6 +46,7 @@ from MemObject import MemObject
 # currently not modified.
 class AddrMapper(MemObject):
     type = 'AddrMapper'
+    cxx_header = 'mem/addr_mapper.hh'
     abstract = True
 
     # one port in each direction
@@ -58,6 +59,7 @@ class AddrMapper(MemObject):
 # (original and remapped), only with an offset.
 class RangeAddrMapper(AddrMapper):
     type = 'RangeAddrMapper'
+    cxx_header = 'mem/addr_mapper.hh'
 
     # These two vectors should be the exact same length and each range
     # should be the exact same size. Each range in original_ranges is

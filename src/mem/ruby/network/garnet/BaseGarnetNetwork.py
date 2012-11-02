@@ -33,6 +33,7 @@ from Network import RubyNetwork
 
 class BaseGarnetNetwork(RubyNetwork):
     type = 'BaseGarnetNetwork'
+    cxx_header = "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
     abstract = True
     ni_flit_size = Param.Int(16, "network interface flit size in bytes")
     vcs_per_vnet = Param.Int(4, "virtual channels per virtual network");

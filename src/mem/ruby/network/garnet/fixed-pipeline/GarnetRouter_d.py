@@ -35,6 +35,7 @@ from BasicRouter import BasicRouter
 class GarnetRouter_d(BasicRouter):
     type = 'GarnetRouter_d'
     cxx_class = 'Router_d'
+    cxx_header = "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
     vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
                               "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,

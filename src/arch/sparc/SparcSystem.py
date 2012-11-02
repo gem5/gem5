@@ -33,6 +33,7 @@ from System import System
 
 class SparcSystem(System):
     type = 'SparcSystem'
+    cxx_header = 'arch/sparc/system.hh'
     _rom_base = 0xfff0000000
     _nvram_base = 0x1f11000000
     _hypervisor_desc_base = 0x1f12080000

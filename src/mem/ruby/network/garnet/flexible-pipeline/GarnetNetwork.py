@@ -33,6 +33,7 @@ from BaseGarnetNetwork import BaseGarnetNetwork
 
 class GarnetNetwork(BaseGarnetNetwork):
     type = 'GarnetNetwork'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering");
     number_of_pipe_stages = Param.Int(4, "router pipeline stages");

@@ -35,6 +35,7 @@ from BasicLink import BasicIntLink, BasicExtLink
 
 class NetworkLink(SimObject):
     type = 'NetworkLink'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
     link_id = Param.Int(Parent.link_id, "link id")
     link_latency = Param.Int(Parent.latency, "link latency")
     vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
@@ -47,6 +48,7 @@ class NetworkLink(SimObject):
 # Interior fixed pipeline links between routers
 class GarnetIntLink(BasicIntLink):
     type = 'GarnetIntLink'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/GarnetLink.hh"
     # The flexible pipeline bi-directional link only include two main
     # forward links and no backward flow-control links
     nls = []
@@ -59,6 +61,7 @@ class GarnetIntLink(BasicIntLink):
 # Exterior fixed pipeline links between a router and a controller
 class GarnetExtLink(BasicExtLink):
     type = 'GarnetExtLink'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/GarnetLink.hh"
     # The flexible pipeline bi-directional link only include two main
     # forward links and no backward flow-control links
     nls = []

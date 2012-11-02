@@ -31,3 +31,4 @@ from BaseSimpleCPU import BaseSimpleCPU
 
 class TimingSimpleCPU(BaseSimpleCPU):
     type = 'TimingSimpleCPU'
+    cxx_header = "cpu/simple/timing.hh"

@@ -45,6 +45,7 @@ from m5.params import *
 class BaseBus(MemObject):
     type = 'BaseBus'
     abstract = True
+    cxx_header = "mem/bus.hh"
     slave = VectorSlavePort("vector port for connecting masters")
     master = VectorMasterPort("vector port for connecting slaves")
     header_cycles = Param.Cycles(1, "cycles of overhead per transaction")
@@ -66,6 +67,8 @@ class BaseBus(MemObject):
 
 class NoncoherentBus(BaseBus):
     type = 'NoncoherentBus'
+    cxx_header = "mem/noncoherent_bus.hh"
 
 class CoherentBus(BaseBus):
     type = 'CoherentBus'
+    cxx_header = "mem/coherent_bus.hh"

@@ -32,6 +32,7 @@ from m5.proxy import *
 
 class NetworkTest(MemObject):
     type = 'NetworkTest'
+    cxx_header = "cpu/testers/networktest/networktest.hh"
     block_offset = Param.Int(6, "block offset in bits")
     num_memories = Param.Int(1, "Num Memories")
     memory_size = Param.Int(65536, "memory size")

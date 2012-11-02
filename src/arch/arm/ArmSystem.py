@@ -48,6 +48,7 @@ class ArmMachineType(Enum):
 
 class ArmSystem(System):
     type = 'ArmSystem'
+    cxx_header = "arch/arm/system.hh"
     load_addr_mask = 0xffffffff
     # 0x35 Implementor is '5' from "M5"
     # 0x0 Variant
@@ -62,6 +63,7 @@ class ArmSystem(System):
 
 class LinuxArmSystem(ArmSystem):
     type = 'LinuxArmSystem'
+    cxx_header = "arch/arm/linux/system.hh"
     load_addr_mask = 0x0fffffff
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")

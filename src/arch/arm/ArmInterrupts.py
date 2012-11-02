@@ -31,3 +31,4 @@ from m5.SimObject import SimObject
 class ArmInterrupts(SimObject):
     type = 'ArmInterrupts'
     cxx_class = 'ArmISA::Interrupts'
+    cxx_header = "arch/arm/interrupts.hh"

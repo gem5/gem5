@@ -36,6 +36,7 @@ from System import System
 
 class MipsSystem(System):
     type = 'MipsSystem'
+    cxx_header = 'arch/mips/system.hh'
     console = Param.String("file that contains the console code")
     bare_iron = Param.Bool(False, "Using Bare Iron Mode?")
     hex_file_name = Param.String("test.hex","hex file that contains [address,data] pairs")
@@ -45,6 +46,7 @@ class MipsSystem(System):
 
 class LinuxMipsSystem(MipsSystem):
     type = 'LinuxMipsSystem'
+    cxx_header = 'arch/mips/linux/system.hh'
     system_type = 34
     system_rev = 1 << 10
 
@@ -53,6 +55,7 @@ class LinuxMipsSystem(MipsSystem):
 
 class BareIronMipsSystem(MipsSystem):
     type = 'BareIronMipsSystem'
+    cxx_header = 'arch/mips/bare_iron/system.hh'
     bare_iron = True
     system_type = 34
     system_rev = 1 << 10

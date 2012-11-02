@@ -34,6 +34,7 @@ from BaseTLB import BaseTLB
 class AlphaTLB(BaseTLB):
     type = 'AlphaTLB'
     cxx_class = 'AlphaISA::TLB'
+    cxx_header = "arch/alpha/tlb.hh"
     size = Param.Int("TLB size")
 
 class AlphaDTB(AlphaTLB):

@@ -46,6 +46,7 @@ from Prefetcher import BasePrefetcher
 
 class BaseCache(MemObject):
     type = 'BaseCache'
+    cxx_header = "mem/cache/base.hh"
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
     hit_latency = Param.Cycles("The hit latency for this cache")

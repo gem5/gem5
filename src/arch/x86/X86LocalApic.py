@@ -46,6 +46,7 @@ from Device import BasicPioDevice
 class X86LocalApic(BasicPioDevice):
     type = 'X86LocalApic'
     cxx_class = 'X86ISA::Interrupts'
+    cxx_header = 'arch/x86/interrupts.hh'
     int_master = MasterPort("Port for sending interrupt messages")
     int_slave = SlavePort("Port for receiving interrupt messages")
     int_latency = Param.Latency('1ns', \

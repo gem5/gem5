@@ -34,6 +34,7 @@ from MemoryControl import MemoryControl
 class RubyMemoryControl(MemoryControl):
     type = 'RubyMemoryControl'
     cxx_class = 'RubyMemoryControl'
+    cxx_header = "mem/ruby/system/RubyMemoryControl.hh"
     version = Param.Int("");
 
     # Override the default clock

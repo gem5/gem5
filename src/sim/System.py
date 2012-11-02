@@ -39,6 +39,7 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
 class System(MemObject):
     type = 'System'
+    cxx_header = "sim/system.hh"
     system_port = MasterPort("System port")
 
     # Override the clock from the ClockedObject which looks at the

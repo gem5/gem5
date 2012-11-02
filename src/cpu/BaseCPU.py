@@ -76,11 +76,7 @@ elif buildEnv['TARGET_ISA'] == 'power':
 class BaseCPU(MemObject):
     type = 'BaseCPU'
     abstract = True
-
-    @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "cpu/base.hh"')
-
+    cxx_header = "cpu/base.hh"
 
     @classmethod
     def export_methods(cls, code):

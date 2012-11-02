@@ -33,6 +33,7 @@ from m5.SimObject import SimObject
 class RubyController(SimObject):
     type = 'RubyController'
     cxx_class = 'AbstractController'
+    cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
     version = Param.Int("")
     cntrl_id = Param.Int("")

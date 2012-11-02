@@ -58,6 +58,7 @@ class Root(SimObject):
         return 'root'
 
     type = 'Root'
+    cxx_header = "sim/root.hh"
 
     full_system = Param.Bool("if this is a full system simulation")
 

@@ -34,20 +34,24 @@ from m5.proxy import *
 class DirectedGenerator(SimObject):
     type = 'DirectedGenerator'
     abstract = True
+    cxx_header = "cpu/testers/directedtest/DirectedGenerator.hh"
     num_cpus = Param.Int("num of cpus")
     system = Param.System(Parent.any, "System we belong to")
 
 class SeriesRequestGenerator(DirectedGenerator):
     type = 'SeriesRequestGenerator'
+    cxx_header = "cpu/testers/directedtest/SeriesRequestGenerator.hh"
     addr_increment_size = Param.Int(64, "address increment size")
     issue_writes = Param.Bool(True, "issue writes if true, otherwise reads")
 
 class InvalidateGenerator(DirectedGenerator):
     type = 'InvalidateGenerator'
+    cxx_header = "cpu/testers/directedtest/InvalidateGenerator.hh"
     addr_increment_size = Param.Int(64, "address increment size")
 
 class RubyDirectedTester(MemObject):
     type = 'RubyDirectedTester'
+    cxx_header = "cpu/testers/directedtest/RubyDirectedTester.hh"
     cpuPort = VectorMasterPort("the cpu ports")
     requests_to_complete = Param.Int("checks to complete")
     generator = Param.DirectedGenerator("the request generator")

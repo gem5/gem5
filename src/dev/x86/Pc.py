@@ -42,6 +42,7 @@ def x86IOAddress(port):
 
 class Pc(Platform):
     type = 'Pc'
+    cxx_header = "dev/x86/pc.hh"
     system = Param.System(Parent.any, "system")
 
     pciconfig = PciConfigAll()

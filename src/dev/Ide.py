@@ -34,12 +34,14 @@ class IdeID(Enum): vals = ['master', 'slave']
 
 class IdeDisk(SimObject):
     type = 'IdeDisk'
+    cxx_header = "dev/ide_disk.hh"
     delay = Param.Latency('1us', "Fixed disk delay in microseconds")
     driveID = Param.IdeID('master', "Drive ID")
     image = Param.DiskImage("Disk image")
 
 class IdeController(PciDevice):
     type = 'IdeController'
+    cxx_header = "dev/ide_ctrl.hh"
     disks = VectorParam.IdeDisk("IDE disks attached to this controller")
 
     VendorID = 0x8086

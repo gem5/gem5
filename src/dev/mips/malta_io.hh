@@ -38,6 +38,7 @@
 #define __DEV_MALTA_IO_HH__
 
 #include "dev/mips/malta.hh"
+#include "dev/mips/malta_cchip.hh"
 #include "dev/intel_8254_timer.hh"
 #include "dev/io_device.hh"
 #include "dev/mc146818.hh"

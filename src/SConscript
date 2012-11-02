@@ -451,6 +451,12 @@ sys.meta_path.remove(importer)
 sim_objects = m5.SimObject.allClasses
 all_enums = m5.params.allEnums
 
+if m5.SimObject.noCxxHeader:
+    print >> sys.stderr, \
+        "warning: At least one SimObject lacks a header specification. " \
+        "This can cause unexpected results in the generated SWIG " \
+        "wrappers."
+
 # Find param types that need to be explicitly wrapped with swig.
 # These will be recognized because the ParamDesc will have a
 # swig_decl() method.  Most param types are based on types that don't
