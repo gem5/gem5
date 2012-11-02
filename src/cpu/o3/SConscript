@@ -46,7 +46,7 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('bpred_unit.cc')
     Source('commit.cc')
     Source('cpu.cc')
-    Source('cpu_builder.cc')
+    Source('deriv.cc')
     Source('decode.cc')
     Source('dyn_inst.cc')
     Source('fetch.cc')

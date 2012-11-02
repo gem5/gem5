@@ -35,6 +35,8 @@ from O3Checker import O3Checker
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
+    cxx_header = 'cpu/o3/deriv.hh'
+
     activity = Param.Unsigned(0, "Initial count")
 
     cachePorts = Param.Unsigned(200, "Cache Ports")
