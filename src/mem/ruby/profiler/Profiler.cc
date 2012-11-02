@@ -438,6 +438,7 @@ void
 Profiler::clearStats()
 {
     m_ruby_start = g_system_ptr->getTime();
+    m_real_time_start_time = time(NULL);
 
     m_cycles_executed_at_start.resize(m_num_of_sequencers);
     for (int i = 0; i < m_num_of_sequencers; i++) {

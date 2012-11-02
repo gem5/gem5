@@ -36,6 +36,7 @@
 #define __MEM_RUBY_SYSTEM_SYSTEM_HH__
 
 #include "base/callback.hh"
+#include "base/output.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
@@ -103,7 +104,7 @@ class RubySystem : public ClockedObject
     }
 
     void printStats(std::ostream& out);
-    void clearStats() const;
+    void resetStats();
 
     uint64 getInstructionCount(int thread) { return 1; }
 
@@ -172,18 +173,19 @@ operator<<(std::ostream& out, const RubySystem& obj)
     return out;
 }
 
-class RubyExitCallback : public Callback
+class RubyDumpStatsCallback : public Callback
 {
   private:
-    std::string stats_filename;
+    std::ostream *os;
     RubySystem *ruby_system;
 
   public:
-    virtual ~RubyExitCallback() {}
+    virtual ~RubyDumpStatsCallback() {}
 
-    RubyExitCallback(const std::string& _stats_filename, RubySystem *system)
+    RubyDumpStatsCallback(const std::string& _stats_filename,
+                          RubySystem *system)
     {
-        stats_filename = _stats_filename;
+        os = simout.create(_stats_filename);
         ruby_system = system;
     }
 

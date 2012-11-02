@@ -32,7 +32,7 @@
 #include <cstdio>
 
 #include "base/intmath.hh"
-#include "base/output.hh"
+#include "base/statistics.hh"
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubySystem.hh"
 #include "mem/ruby/common/Address.hh"
@@ -80,8 +80,9 @@ RubySystem::RubySystem(const Params *p)
         m_mem_vec_ptr->resize(m_memory_size_bytes);
     }
 
-    // Print ruby configuration and stats at exit
-    registerExitCallback(new RubyExitCallback(p->stats_filename, this));
+    // Print ruby configuration and stats at exit and when asked for
+    Stats::registerDumpCallback(new RubyDumpStatsCallback(p->stats_filename,
+                                                          this));
 
     m_warmup_enabled = false;
     m_cooldown_enabled = false;
@@ -91,6 +92,7 @@ void
 RubySystem::init()
 {
     m_profiler_ptr->clearStats();
+    m_network_ptr->clearStats();
 }
 
 void
@@ -297,7 +299,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     // that the profiler can correctly set its start time to the unserialized
     // value of curTick()
     //
-    clearStats();
+    resetStats();
     uint8_t *uncompressed_trace = NULL;
 
     if (m_mem_vec_ptr != NULL) {
@@ -391,7 +393,7 @@ RubySystem::RubyEvent::process()
 }
 
 void
-RubySystem::clearStats() const
+RubySystem::resetStats()
 {
     m_profiler_ptr->clearStats();
     m_network_ptr->clearStats();
@@ -625,8 +627,7 @@ RubySystemParams::create()
  * queue is executed.
  */
 void
-RubyExitCallback::process()
+RubyDumpStatsCallback::process()
 {
-    std::ostream *os = simout.create(stats_filename);
     ruby_system->printStats(*os);
 }
