@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Andreas Sandberg
  */
 
 /** @file
@@ -39,11 +52,12 @@
 
 #include "mem/cache/mshr.hh"
 #include "mem/packet.hh"
+#include "sim/drain.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
  */
-class MSHRQueue
+class MSHRQueue : public Drainable
 {
   private:
     /** Local label (for functional print requests) */
@@ -71,6 +85,9 @@ class MSHRQueue
      * operations can allocate upto 4 entries at one time.
      */
     const int numReserve;
+
+    /** Drain manager to inform of a completed drain */
+    DrainManager *drainManager;
 
     MSHR::Iterator addToReadyList(MSHR *mshr);
 
@@ -209,6 +226,8 @@ class MSHRQueue
     {
         return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
+
+    unsigned int drain(DrainManager *dm);
 };
 
 #endif //__MEM__CACHE__MISS__MSHR_QUEUE_HH__

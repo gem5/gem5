@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Andreas Sandberg
  */
 
 /** @file
@@ -297,6 +310,64 @@ class CacheBlkPrintWrapper : public Printable
                const std::string &prefix = "") const;
 };
 
+/**
+ * Wrap a method and present it as a cache block visitor.
+ *
+ * For example the forEachBlk method in the tag arrays expects a
+ * callable object/function as their parameter. This class wraps a
+ * method in an object and presents  callable object that adheres to
+ * the cache block visitor protocol.
+ */
+template <typename T, typename BlkType>
+class CacheBlkVisitorWrapper
+{
+  public:
+    typedef bool (T::*visitorPtr)(BlkType &blk);
 
+    CacheBlkVisitorWrapper(T &_obj, visitorPtr _visitor)
+        : obj(_obj), visitor(_visitor) {}
+
+    bool operator()(BlkType &blk) {
+        return (obj.*visitor)(blk);
+    }
+
+  private:
+    T &obj;
+    visitorPtr visitor;
+};
+
+/**
+ * Cache block visitor that determines if there are dirty blocks in a
+ * cache.
+ *
+ * Use with the forEachBlk method in the tag array to determine if the
+ * array contains dirty blocks.
+ */
+template <typename BlkType>
+class CacheBlkIsDirtyVisitor
+{
+  public:
+    CacheBlkIsDirtyVisitor()
+        : _isDirty(false) {}
+
+    bool operator()(BlkType &blk) {
+        if (blk.isDirty()) {
+            _isDirty = true;
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Does the array contain a dirty line?
+     *
+     * \return true if yes, false otherwise.
+     */
+    bool isDirty() const { return _isDirty; };
+
+  private:
+    bool _isDirty;
+};
 
 #endif //__CACHE_BLK_HH__

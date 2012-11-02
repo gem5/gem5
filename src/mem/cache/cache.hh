@@ -76,6 +76,7 @@ class Cache : public BaseCache
     typedef typename TagStore::BlkList BlkList;
 
   protected:
+    typedef CacheBlkVisitorWrapper<Cache<TagStore>, BlkType> WrappedBlkVisitor;
 
     /**
      * The CPU-side port extends the base cache slave port with access
@@ -255,6 +256,27 @@ class Cache : public BaseCache
      * @return The writeback request for the block.
      */
     PacketPtr writebackBlk(BlkType *blk);
+
+
+    void memWriteback();
+    void memInvalidate();
+    bool isDirty() const;
+
+    /**
+     * Cache block visitor that writes back dirty cache blocks using
+     * functional writes.
+     *
+     * \return Always returns true.
+     */
+    bool writebackVisitor(BlkType &blk);
+    /**
+     * Cache block visitor that invalidates all blocks in the cache.
+     *
+     * @warn Dirty cache lines will not be written back to memory.
+     *
+     * \return Always returns true.
+     */
+    bool invalidateVisitor(BlkType &blk);
 
   public:
     /** Instantiates a basic cache object. */

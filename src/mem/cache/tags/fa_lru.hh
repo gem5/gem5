@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -287,6 +299,26 @@ public:
      *Needed to clear all lock tracking at once
      */
     virtual void clearLocks();
+
+    /**
+     * Visit each block in the tag store and apply a visitor to the
+     * block.
+     *
+     * The visitor should be a function (or object that behaves like a
+     * function) that takes a cache block reference as its parameter
+     * and returns a bool. A visitor can request the traversal to be
+     * stopped by returning false, returning true causes it to be
+     * called for the next block in the tag store.
+     *
+     * \param visitor Visitor to call on each block.
+     */
+    template <typename V>
+    void forEachBlk(V &visitor) {
+        for (int i = 0; i < numBlocks; i++) {
+            if (!visitor(blks[i]))
+                return;
+        }
+    }
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__

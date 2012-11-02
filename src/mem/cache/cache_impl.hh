@@ -43,6 +43,7 @@
  *          Nathan Binkert
  *          Steve Reinhardt
  *          Ron Dreslinski
+ *          Andreas Sandberg
  */
 
 /**
@@ -1035,6 +1036,69 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     return writeback;
 }
 
+template<class TagStore>
+void
+Cache<TagStore>::memWriteback()
+{
+    WrappedBlkVisitor visitor(*this, &Cache<TagStore>::writebackVisitor);
+    tags->forEachBlk(visitor);
+}
+
+template<class TagStore>
+void
+Cache<TagStore>::memInvalidate()
+{
+    WrappedBlkVisitor visitor(*this, &Cache<TagStore>::invalidateVisitor);
+    tags->forEachBlk(visitor);
+}
+
+template<class TagStore>
+bool
+Cache<TagStore>::isDirty() const
+{
+    CacheBlkIsDirtyVisitor<BlkType> visitor;
+    tags->forEachBlk(visitor);
+
+    return visitor.isDirty();
+}
+
+template<class TagStore>
+bool
+Cache<TagStore>::writebackVisitor(BlkType &blk)
+{
+    if (blk.isDirty()) {
+        assert(blk.isValid());
+
+        Request request(tags->regenerateBlkAddr(blk.tag, blk.set),
+                        blkSize, 0, Request::funcMasterId);
+
+        Packet packet(&request, MemCmd::WriteReq);
+        packet.dataStatic(blk.data);
+
+        memSidePort->sendFunctional(&packet);
+
+        blk.status &= ~BlkDirty;
+    }
+
+    return true;
+}
+
+template<class TagStore>
+bool
+Cache<TagStore>::invalidateVisitor(BlkType &blk)
+{
+
+    if (blk.isDirty())
+        warn_once("Invalidating dirty cache lines. Expect things to break.\n");
+
+    if (blk.isValid()) {
+        assert(!blk.isDirty());
+        tags->invalidate(dynamic_cast< BlkType *>(&blk));
+        blk.invalidate();
+    }
+
+    return true;
+}
 
 template<class TagStore>
 typename Cache<TagStore>::BlkType*
@@ -1565,16 +1629,20 @@ template<class TagStore>
 void
 Cache<TagStore>::serialize(std::ostream &os)
 {
-    warn("*** Creating checkpoints with caches is not supported. ***\n");
-    warn("    Remove any caches before taking checkpoints\n");
-    warn("    This checkpoint will not restore correctly and dirty data in "
-         "the cache will be lost!\n");
+    bool dirty(isDirty());
 
-    // Since we don't write back the data dirty in the caches to the physical
-    // memory if caches exist in the system we won't be able to restore
-    // from the checkpoint as any data dirty in the caches will be lost.
+    if (dirty) {
+        warn("*** The cache still contains dirty data. ***\n");
+        warn("    Make sure to drain the system using the correct flags.\n");
+        warn("    This checkpoint will not restore correctly and dirty data in "
+             "the cache will be lost!\n");
+    }
 
-    bool bad_checkpoint = true;
+    // Since we don't checkpoint the data in the cache, any dirty data
+    // will be lost when restoring from a checkpoint of a system that
+    // wasn't drained properly. Flag the checkpoint as invalid if the
+    // cache contains dirty data.
+    bool bad_checkpoint(dirty);
     SERIALIZE_SCALAR(bad_checkpoint);
 }
 
@@ -1585,9 +1653,9 @@ Cache<TagStore>::unserialize(Checkpoint *cp, const std::string &section)
     bool bad_checkpoint;
     UNSERIALIZE_SCALAR(bad_checkpoint);
     if (bad_checkpoint) {
-        fatal("Restoring from checkpoints with caches is not supported in the "
-              "classic memory system. Please remove any caches before taking "
-              "checkpoints.\n");
+        fatal("Restoring from checkpoints with dirty caches is not supported "
+              "in the classic memory system. Please remove any caches or "
+              " drain them properly before taking checkpoints.\n");
     }
 }
 
