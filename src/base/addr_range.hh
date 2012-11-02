@@ -45,6 +45,8 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
+#include <utility> // pair & make_pair
+
 #include "base/types.hh"
 
 class AddrRange
