@@ -595,7 +595,7 @@ class SimObject(object):
     abstract = True
     cxx_header = "sim/sim_object.hh"
 
-    cxx_bases = [ "Drainable" ]
+    cxx_bases = [ "Drainable", "Serializable" ]
 
     @classmethod
     def export_method_swig_predecls(cls, code):
@@ -603,6 +603,7 @@ class SimObject(object):
 %include <std_string.i>
 
 %import "python/swig/drain.i"
+%import "python/swig/serialize.i"
 ''')
 
     @classmethod

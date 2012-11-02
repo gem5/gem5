@@ -39,6 +39,8 @@
 #include "sim/simulate.hh"
 %}
 
+%import "python/swig/serialize.i"
+
 #pragma SWIG nowarn=350,351
 
 %extend EventQueue {
@@ -72,8 +74,6 @@
 
 %include <std_string.i>
 %include <stdint.i>
-
-%import "sim/serialize.hh"
 
 %include "base/types.hh"
 %include "sim/eventq.hh"
