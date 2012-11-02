@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -46,6 +58,24 @@
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
+
+/**
+ * Special TaskIds that are used for per-context-switch stats dumps
+ * and Cache Occupancy. Having too many tasks seems to be a problem
+ * with vector stats. 1024 seems to be a reasonable number that
+ * doesn't cause a problem with stats and is large enough to realistic
+ * benchmarks (Linux/Android boot, BBench, etc.)
+ */
+
+namespace ContextSwitchTaskId {
+    enum TaskId {
+        MaxNormalTaskId = 1021, /* Maximum number of normal tasks */
+        Prefetcher = 1022, /* For cache lines brought in by prefetcher */
+        DMA = 1023, /* Mostly Table Walker */
+        Unknown = 1024,
+        NumTaskId
+    };
+}
 
 class Request;
 
@@ -116,6 +146,10 @@ class Request
      * @todo C++1x replace with numeric_limits when constexpr is added  */
     static const MasterID invldMasterId = USHRT_MAX;
     /** @} */
+
+    /** Invalid or unknown Pid. Possible when operating system is not present
+     *  or has not assigned a pid yet */
+    static const uint32_t invldPid = UINT_MAX;
 
   private:
     typedef uint8_t PrivateFlagsType;

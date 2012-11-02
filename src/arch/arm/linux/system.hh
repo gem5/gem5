@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,15 +43,24 @@
 #ifndef __ARCH_ARM_LINUX_SYSTEM_HH__
 #define __ARCH_ARM_LINUX_SYSTEM_HH__
 
+#include <cstdio>
+#include <map>
 #include <string>
 #include <vector>
 
 #include "arch/arm/system.hh"
+#include "base/output.hh"
 #include "kern/linux/events.hh"
 #include "params/LinuxArmSystem.hh"
+#include "sim/core.hh"
+
+class DumpStatsPCEvent;
 
 class LinuxArmSystem : public ArmSystem
 {
+  protected:
+    DumpStatsPCEvent *dumpStatsPCEvent;
+
   public:
     /** Boilerplate params code */
     typedef LinuxArmSystemParams Params;
@@ -61,12 +70,32 @@ class LinuxArmSystem : public ArmSystem
         return dynamic_cast<const Params *>(_params);
     }
 
+    /** When enabled, dump stats/task info on context switches for
+     *  Streamline and per-thread cache occupancy studies, etc. */
+    bool enableContextSwitchStatsDump;
+
+    /** This map stores a mapping of OS process IDs to internal Task IDs. The
+     * mapping is done because the stats system doesn't tend to like vectors
+     * that are much greater than 1000 items and the entire process space is
+     * 65K. */
+    std::map<uint32_t, uint32_t> taskMap;
+
+    /** This is a file that is placed in the run directory that prints out
+     * mappings between taskIds and OS process IDs */
+    std::ostream* taskFile;
+
     LinuxArmSystem(Params *p);
     ~LinuxArmSystem();
 
     void initState();
 
     bool adderBootUncacheable(Addr a);
+
+    void startup();
+
+    /** This function creates a new task Id for the given pid.
+     * @param tc thread context that is currentyl executing  */
+    void mapPid(ThreadContext* tc, uint32_t pid);
 
   private:
 #ifndef NDEBUG
@@ -96,6 +125,17 @@ class LinuxArmSystem : public ArmSystem
     Addr secDataAddr;
     Addr penReleaseAddr;
 };
+
+class DumpStatsPCEvent : public PCEvent
+{
+  public:
+    DumpStatsPCEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr)
+    {}
+
+    virtual void process(ThreadContext* tc);
+};
+
 
 #endif // __ARCH_ARM_LINUX_SYSTEM_HH__
 

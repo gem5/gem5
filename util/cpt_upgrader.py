@@ -105,9 +105,22 @@ def from_1(cpt):
             # the system, thus starting at 0
             raise ValueError("more than one memory detected (" + sec + ")")
 
+def from_2(cpt):
+    for sec in cpt.sections():
+        import re
+        # Search for a CPUs
+        if re.search('.*sys.*cpu', sec):
+            try:
+                junk = cpt.get(sec, 'instCnt')
+                cpt.set(sec, '_pid', '0')
+            except ConfigParser.NoOptionError:
+                pass
+
+
 migrations = []
 migrations.append(from_0)
 migrations.append(from_1)
+migrations.append(from_2)
 
 verbose_print = False
 

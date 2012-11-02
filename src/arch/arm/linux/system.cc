@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,19 +44,24 @@
 #include "arch/arm/linux/system.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
+#include "arch/generic/linux/threadinfo.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "cpu/base.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "kern/linux/events.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
+#include "sim/stat_control.hh"
 
 using namespace ArmISA;
 using namespace Linux;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
-    : ArmSystem(p)
+    : ArmSystem(p),
+      enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
 {
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
@@ -206,6 +211,9 @@ LinuxArmSystem::~LinuxArmSystem()
         delete uDelaySkipEvent;
     if (constUDelaySkipEvent)
         delete constUDelaySkipEvent;
+
+    if (dumpStatsPCEvent)
+        delete dumpStatsPCEvent;
 }
 
 LinuxArmSystem *
@@ -213,3 +221,95 @@ LinuxArmSystemParams::create()
 {
     return new LinuxArmSystem(this);
 }
+
+void
+LinuxArmSystem::startup()
+{
+    if (enableContextSwitchStatsDump) {
+        dumpStatsPCEvent = addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        if (!dumpStatsPCEvent)
+           panic("dumpStatsPCEvent not created!");
+
+        std::string task_filename = "tasks.txt";
+        taskFile = simout.create(name() + "." + task_filename);
+
+        for (int i = 0; i < _numContexts; i++) {
+            ThreadContext *tc = threadContexts[i];
+            uint32_t pid = tc->getCpuPtr()->getPid();
+            if (pid != Request::invldPid) {
+                mapPid(tc, pid);
+                tc->getCpuPtr()->taskId(taskMap[pid]);
+            }
+        }
+    }
+}
+
+void
+LinuxArmSystem::mapPid(ThreadContext *tc, uint32_t pid)
+{
+    // Create a new unique identifier for this pid
+    std::map<uint32_t, uint32_t>::iterator itr = taskMap.find(pid);
+    if (itr == taskMap.end()) {
+        uint32_t map_size = taskMap.size();
+        if (map_size > ContextSwitchTaskId::MaxNormalTaskId + 1) {
+            warn_once("Error out of identifiers for cache occupancy stats");
+            taskMap[pid] = ContextSwitchTaskId::Unknown;
+        } else {
+            taskMap[pid] = map_size;
+        }
+    }
+}
+
+/** This function is called whenever the the kernel function
+ *  "__switch_to" is called to change running tasks.
+ *
+ *  r0 = task_struct of the previously running process
+ *  r1 = task_info of the previously running process
+ *  r2 = task_info of the next process to run
+ */
+void
+DumpStatsPCEvent::process(ThreadContext *tc)
+{
+    Linux::ThreadInfo ti(tc);
+    Addr task_descriptor = tc->readIntReg(2);
+    uint32_t pid = ti.curTaskPID(task_descriptor);
+    uint32_t tgid = ti.curTaskTGID(task_descriptor);
+    std::string next_task_str = ti.curTaskName(task_descriptor);
+
+    // Streamline treats pid == -1 as the kernel process.
+    // Also pid == 0 implies idle process (except during Linux boot)
+    int32_t mm = ti.curTaskMm(task_descriptor);
+    bool is_kernel = (mm == 0);
+    if (is_kernel && (pid != 0)) {
+        pid = -1;
+        tgid = -1;
+        next_task_str = "kernel";
+    }
+
+    LinuxArmSystem* sys = dynamic_cast<LinuxArmSystem *>(tc->getSystemPtr());
+    if (!sys) {
+        panic("System is not LinuxArmSystem while getting Linux process info!");
+    }
+    std::map<uint32_t, uint32_t>& taskMap = sys->taskMap;
+
+    // Create a new unique identifier for this pid
+    sys->mapPid(tc, pid);
+
+    // Set cpu task id, output process info, and dump stats
+    tc->getCpuPtr()->taskId(taskMap[pid]);
+    tc->getCpuPtr()->setPid(pid);
+
+    std::ostream* taskFile = sys->taskFile;
+
+    // Task file is read by cache occupancy plotting script or
+    // Streamline conversion script.
+    ccprintf(*taskFile,
+             "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
+             curTick(), taskMap[pid], tc->cpuId(), (int) pid, (int) tgid,
+             next_task_str);
+    taskFile->flush();
+
+    // Dump and reset statistics
+    Stats::schedStatEvent(true, true, curTick(), 0);
+}
+

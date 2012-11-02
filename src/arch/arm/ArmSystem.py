@@ -71,3 +71,4 @@ class LinuxArmSystem(ArmSystem):
         "File that contains the Device Tree Blob. Don't use DTB if empty.")
     early_kernel_symbols = Param.Bool(False,
         "enable early kernel symbol tables before MMU")
+    enable_context_switch_stats_dump = Param.Bool(False, "enable stats/task info dumping at context switch boundaries")

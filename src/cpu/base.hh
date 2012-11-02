@@ -103,6 +103,17 @@ class BaseCPU : public MemObject
     /** data side request id that must be placed in all requests */
     MasterID _dataMasterId;
 
+    /** An intrenal representation of a task identifier within gem5. This is
+     * used so the CPU can add which taskId (which is an internal representation
+     * of the OS process ID) to each request so components in the memory system
+     * can track which process IDs are ultimately interacting with them
+     */
+    uint32_t _taskId;
+
+    /** The current OS process ID that is executing on this processor. This is
+     * used to generate a taskId */
+    uint32_t _pid;
+
     /**
      * Define a base class for the CPU ports (instruction and data)
      * that is refined in the subclasses. This class handles the
@@ -173,6 +184,14 @@ class BaseCPU : public MemObject
      */
     BaseMasterPort &getMasterPort(const std::string &if_name,
                                   PortID idx = InvalidPortID);
+
+    /** Get cpu task id */
+    uint32_t taskId() const { return _taskId; }
+    /** Set cpu task id */
+    void taskId(uint32_t id) { _taskId = id; }
+
+    uint32_t getPid() const { return _pid; }
+    void setPid(uint32_t pid) { _pid = pid; }
 
     inline void workItemBegin() { numWorkItemsStarted++; }
     inline void workItemEnd() { numWorkItemsCompleted++; }

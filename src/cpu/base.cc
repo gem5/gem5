@@ -118,6 +118,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     : MemObject(p), instCnt(0), _cpuId(p->cpu_id),
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
+      _taskId(ContextSwitchTaskId::Unknown), _pid(Request::invldPid),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system)
 {
@@ -359,6 +360,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
     assert(_cpuId == oldCPU->cpuId());
+    _pid = oldCPU->getPid();
+    _taskId = oldCPU->taskId();
 
     ThreadID size = threadContexts.size();
     for (ThreadID i = 0; i < size; ++i) {
@@ -489,6 +492,13 @@ void
 BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(instCnt);
+
+    /* Unlike _pid, _taskId is not serialized, as they are dynamically
+     * assigned unique ids that are only meaningful for the duration of
+     * a specific run. We will need to serialize the entire taskMap in
+     * system. */
+    SERIALIZE_SCALAR(_pid);
+
     interrupts->serialize(os);
 }
 
@@ -496,6 +506,7 @@ void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(instCnt);
+    UNSERIALIZE_SCALAR(_pid);
     interrupts->unserialize(cp, section);
 }
 
