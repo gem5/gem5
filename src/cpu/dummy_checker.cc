@@ -37,26 +37,8 @@
  * Authors: Geoffrey Blake
  */
 
-#include <string>
-
-#include "cpu/checker/cpu.hh"
-#include "cpu/inst_seq.hh"
+#include "cpu/dummy_checker.hh"
 #include "params/DummyChecker.hh"
-#include "sim/process.hh"
-#include "sim/sim_object.hh"
-
-class MemObject;
-
-/**
- * Specific non-templated derived class used for SimObject configuration.
- */
-class DummyChecker : public CheckerCPU
-{
-  public:
-    DummyChecker(Params *p)
-          : CheckerCPU(p)
-    { }
-};
 
 ////////////////////////////////////////////////////////////////////////
 //

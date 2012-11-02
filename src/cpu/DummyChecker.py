@@ -40,3 +40,4 @@ from BaseCPU import BaseCPU
 
 class DummyChecker(BaseCPU):
     type = 'DummyChecker'
+    cxx_header = 'cpu/dummy_checker.hh'

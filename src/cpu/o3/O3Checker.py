@@ -31,6 +31,8 @@ from BaseCPU import BaseCPU
 
 class O3Checker(BaseCPU):
     type = 'O3Checker'
+    cxx_header = 'cpu/o3/checker.hh'
+
     exitOnError = Param.Bool(False, "Exit on an error")
     updateOnError = Param.Bool(False,
         "Update the checker with the main CPU's state on an error")

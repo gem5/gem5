@@ -79,4 +79,4 @@ if 'O3CPU' in env['CPU_MODELS']:
         'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
 
     SimObject('O3Checker.py')
-    Source('checker_builder.cc')
+    Source('checker.cc')

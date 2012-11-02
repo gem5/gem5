@@ -127,7 +127,7 @@ if env['TARGET_ISA'] == 'sparc':
 
 SimObject('DummyChecker.py')
 Source('checker/cpu.cc')
-Source('dummy_checker_builder.cc')
+Source('dummy_checker.cc')
 DebugFlag('Checker')
 
 DebugFlag('Activity')
