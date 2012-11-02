@@ -181,6 +181,14 @@ def drain(root):
     while (not all_drained):
         all_drained = _drain()
 
+def memWriteback(root):
+    for obj in root.descendants():
+        obj.memWriteback()
+
+def memInvalidate(root):
+    for obj in root.descendants():
+        obj.memInvalidate()
+
 def resume(root):
     for obj in root.descendants(): obj.drainResume()
 
@@ -189,6 +197,7 @@ def checkpoint(dir):
     if not isinstance(root, objects.Root):
         raise TypeError, "Checkpoint must be called on a root object."
     drain(root)
+    memWriteback(root)
     print "Writing checkpoint"
     internal.core.serializeAll(dir)
     resume(root)
