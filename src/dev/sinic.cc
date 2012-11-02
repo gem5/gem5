@@ -78,7 +78,7 @@ const char *TxStateStrings[] =
 // Sinic PCI Device
 //
 Base::Base(const Params *p)
-    : PciDev(p), rxEnable(false), txEnable(false),
+    : EtherDevBase(p), rxEnable(false), txEnable(false),
       intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
       cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {
@@ -104,171 +104,7 @@ Device::~Device()
 void
 Device::regStats()
 {
-    rxBytes
-        .name(name() + ".rxBytes")
-        .desc("Bytes Received")
-        .prereq(rxBytes)
-        ;
-
-    rxBandwidth
-        .name(name() + ".rxBandwidth")
-        .desc("Receive Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    rxPackets
-        .name(name() + ".rxPackets")
-        .desc("Number of Packets Received")
-        .prereq(rxBytes)
-        ;
-
-    rxPacketRate
-        .name(name() + ".rxPPS")
-        .desc("Packet Reception Rate (packets/s)")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    rxIpPackets
-        .name(name() + ".rxIpPackets")
-        .desc("Number of IP Packets Received")
-        .prereq(rxBytes)
-        ;
-
-    rxTcpPackets
-        .name(name() + ".rxTcpPackets")
-        .desc("Number of Packets Received")
-        .prereq(rxBytes)
-        ;
-
-    rxUdpPackets
-        .name(name() + ".rxUdpPackets")
-        .desc("Number of UDP Packets Received")
-        .prereq(rxBytes)
-        ;
-
-    rxIpChecksums
-        .name(name() + ".rxIpChecksums")
-        .desc("Number of rx IP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    rxTcpChecksums
-        .name(name() + ".rxTcpChecksums")
-        .desc("Number of rx TCP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    rxUdpChecksums
-        .name(name() + ".rxUdpChecksums")
-        .desc("Number of rx UDP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    totBandwidth
-        .name(name() + ".totBandwidth")
-        .desc("Total Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totPackets
-        .name(name() + ".totPackets")
-        .desc("Total Packets")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totBytes
-        .name(name() + ".totBytes")
-        .desc("Total Bytes")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totPacketRate
-        .name(name() + ".totPPS")
-        .desc("Total Tranmission Rate (packets/s)")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    txBytes
-        .name(name() + ".txBytes")
-        .desc("Bytes Transmitted")
-        .prereq(txBytes)
-        ;
-
-    txBandwidth
-        .name(name() + ".txBandwidth")
-        .desc("Transmit Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    txPackets
-        .name(name() + ".txPackets")
-        .desc("Number of Packets Transmitted")
-        .prereq(txBytes)
-        ;
-
-    txPacketRate
-        .name(name() + ".txPPS")
-        .desc("Packet Tranmission Rate (packets/s)")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    txIpPackets
-        .name(name() + ".txIpPackets")
-        .desc("Number of IP Packets Transmitted")
-        .prereq(txBytes)
-        ;
-
-    txTcpPackets
-        .name(name() + ".txTcpPackets")
-        .desc("Number of TCP Packets Transmitted")
-        .prereq(txBytes)
-        ;
-
-    txUdpPackets
-        .name(name() + ".txUdpPackets")
-        .desc("Number of Packets Transmitted")
-        .prereq(txBytes)
-        ;
-
-    txIpChecksums
-        .name(name() + ".txIpChecksums")
-        .desc("Number of tx IP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    txTcpChecksums
-        .name(name() + ".txTcpChecksums")
-        .desc("Number of tx TCP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    txUdpChecksums
-        .name(name() + ".txUdpChecksums")
-        .desc("Number of tx UDP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    txBandwidth = txBytes * Stats::constant(8) / simSeconds;
-    rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
-    totBandwidth = txBandwidth + rxBandwidth;
-    totBytes = txBytes + rxBytes;
-    totPackets = txPackets + rxPackets;
-    txPacketRate = txPackets / simSeconds;
-    rxPacketRate = rxPackets / simSeconds;
+    Base::regStats();
 
     _maxVnicDistance = 0;
 
@@ -297,6 +133,8 @@ Device::regStats()
 void
 Device::resetStats()
 {
+    Base::resetStats();
+
     _maxVnicDistance = 0;
 }
 

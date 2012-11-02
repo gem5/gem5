@@ -33,6 +33,7 @@
 
 #include "base/inet.hh"
 #include "base/statistics.hh"
+#include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/io_device.hh"
@@ -45,7 +46,7 @@
 namespace Sinic {
 
 class Interface;
-class Base : public PciDev
+class Base : public EtherDevBase
 {
   protected:
     bool rxEnable;
@@ -281,32 +282,6 @@ class Device : public Base
  * Statistics
  */
   private:
-    Stats::Scalar rxBytes;
-    Stats::Formula  rxBandwidth;
-    Stats::Scalar rxPackets;
-    Stats::Formula  rxPacketRate;
-    Stats::Scalar rxIpPackets;
-    Stats::Scalar rxTcpPackets;
-    Stats::Scalar rxUdpPackets;
-    Stats::Scalar rxIpChecksums;
-    Stats::Scalar rxTcpChecksums;
-    Stats::Scalar rxUdpChecksums;
-
-    Stats::Scalar txBytes;
-    Stats::Formula  txBandwidth;
-    Stats::Formula totBandwidth;
-    Stats::Formula totPackets;
-    Stats::Formula totBytes;
-    Stats::Formula totPacketRate;
-    Stats::Scalar txPackets;
-    Stats::Formula  txPacketRate;
-    Stats::Scalar txIpPackets;
-    Stats::Scalar txTcpPackets;
-    Stats::Scalar txUdpPackets;
-    Stats::Scalar txIpChecksums;
-    Stats::Scalar txTcpChecksums;
-    Stats::Scalar txUdpChecksums;
-
     Stats::Scalar totalVnicDistance;
     Stats::Scalar numVnicDistance;
     Stats::Scalar maxVnicDistance;

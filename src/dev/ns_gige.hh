@@ -118,7 +118,7 @@ class Packet;
 /**
  * NS DP83820 Ethernet device model
  */
-class NSGigE : public EtherDevice
+class NSGigE : public EtherDevBase
 {
   public:
     /** Transmit State Machine states */
@@ -346,7 +346,10 @@ class NSGigE : public EtherDevice
 
   public:
     typedef NSGigEParams Params;
-    const Params *params() const { return (const Params *)_params; }
+    const Params *params() const {
+        return dynamic_cast<const Params *>(_params);
+    }
+
     NSGigE(Params *params);
     ~NSGigE();
 

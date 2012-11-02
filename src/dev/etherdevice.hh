@@ -39,6 +39,7 @@
 #include "base/statistics.hh"
 #include "dev/pcidev.hh"
 #include "params/EtherDevice.hh"
+#include "params/EtherDevBase.hh"
 #include "sim/sim_object.hh"
 
 class EtherInt;
@@ -118,6 +119,33 @@ class EtherDevice : public PciDev
     Stats::Formula coalescedTotal;
     Stats::Scalar postedInterrupts;
     Stats::Scalar droppedPackets;
+};
+
+/**
+ * Dummy class to keep the Python class hierarchy in sync with the C++
+ * object hierarchy.
+ *
+ * The Python object hierarchy includes the EtherDevBase class which
+ * is used by some ethernet devices as a way to share common
+ * configuration information in the generated param structs. Since the
+ * Python hierarchy is used to generate a SWIG interface for all C++
+ * SimObjects, we need to reflect this in the C++ object hierarchy. If
+ * we don't, SWIG might end up doing 'bad things' when it down casts
+ * ethernet objects to their base class(es).
+ */
+class EtherDevBase : public EtherDevice
+{
+  public:
+    EtherDevBase(const EtherDevBaseParams *params)
+        : EtherDevice(params)
+    {}
+
+    const EtherDevBaseParams *
+    params() const
+    {
+        return dynamic_cast<const EtherDevBaseParams *>(_params);
+    }
+
 };
 
 #endif //__DEV_ETHERDEVICE_HH__

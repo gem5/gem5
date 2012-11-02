@@ -95,7 +95,7 @@ using namespace TheISA;
 // NSGigE PCI Device
 //
 NSGigE::NSGigE(Params *p)
-    : EtherDevice(p), ioEnable(false),
+    : EtherDevBase(p), ioEnable(false),
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), rxDmaFree(false), txDmaFree(false),

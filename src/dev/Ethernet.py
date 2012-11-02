@@ -132,6 +132,8 @@ class IGbE_igb(IGbE):
 class EtherDevBase(EtherDevice):
     type = 'EtherDevBase'
     abstract = True
+    cxx_header = "dev/etherdevice.hh"
+
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
