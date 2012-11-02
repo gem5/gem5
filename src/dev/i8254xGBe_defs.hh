@@ -232,23 +232,23 @@ const uint8_t TXD_DATA = 0x1;
 const uint8_t TXD_ADVCNXT = 0x2;
 const uint8_t TXD_ADVDATA = 0x3;
 
-bool isLegacy(TxDesc *d) { return !bits(d->d2,29,29); }
-uint8_t getType(TxDesc *d) { return bits(d->d2, 23,20); }
-bool isType(TxDesc *d, uint8_t type) { return getType(d) == type; }
-bool isTypes(TxDesc *d, uint8_t t1, uint8_t t2) { return isType(d, t1) || isType(d, t2); }
-bool isAdvDesc(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_ADVDATA,TXD_ADVCNXT);  }
-bool isContext(TxDesc *d) { return !isLegacy(d) && isTypes(d,TXD_CNXT, TXD_ADVCNXT); }
-bool isData(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_DATA, TXD_ADVDATA); }
+inline bool isLegacy(TxDesc *d) { return !bits(d->d2,29,29); }
+inline uint8_t getType(TxDesc *d) { return bits(d->d2, 23,20); }
+inline bool isType(TxDesc *d, uint8_t type) { return getType(d) == type; }
+inline bool isTypes(TxDesc *d, uint8_t t1, uint8_t t2) { return isType(d, t1) || isType(d, t2); }
+inline bool isAdvDesc(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_ADVDATA,TXD_ADVCNXT);  }
+inline bool isContext(TxDesc *d) { return !isLegacy(d) && isTypes(d,TXD_CNXT, TXD_ADVCNXT); }
+inline bool isData(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_DATA, TXD_ADVDATA); }
 
-Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
-Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
-void setDd(TxDesc *d) { replaceBits(d->d2, 35, 32, ULL(1)); }
+inline Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
+inline Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
+inline void setDd(TxDesc *d) { replaceBits(d->d2, 35, 32, ULL(1)); }
 
-bool ide(TxDesc *d)  { return bits(d->d2, 31,31) && (getType(d) == TXD_DATA || isLegacy(d)); }
-bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }
-bool rs(TxDesc *d)   { return bits(d->d2, 27,27); }
-bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 26,26); }
-bool tse(TxDesc *d)  { 
+inline bool ide(TxDesc *d)  { return bits(d->d2, 31,31) && (getType(d) == TXD_DATA || isLegacy(d)); }
+inline bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }
+inline bool rs(TxDesc *d)   { return bits(d->d2, 27,27); }
+inline bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 26,26); }
+inline bool tse(TxDesc *d)  {
     if (isTypes(d, TXD_CNXT, TXD_DATA))
         return bits(d->d2, 26,26); 
     if (isType(d, TXD_ADVDATA))
@@ -256,33 +256,33 @@ bool tse(TxDesc *d)  {
     return false;
 }
 
-bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
-bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 24,24); }
-bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 25,25); }
-bool tcp(TxDesc *d)  { assert(isContext(d)); return bits(d->d2, 24,24); }
+inline bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
+inline bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 24,24); }
+inline bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 25,25); }
+inline bool tcp(TxDesc *d)  { assert(isContext(d)); return bits(d->d2, 24,24); }
 
-uint8_t getCso(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 23,16); }
-uint8_t getCss(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 47,40); }
+inline uint8_t getCso(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 23,16); }
+inline uint8_t getCss(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 47,40); }
 
-bool ixsm(TxDesc *d)  { return isData(d) && bits(d->d2, 40,40); }
-bool txsm(TxDesc *d)  { return isData(d) && bits(d->d2, 41,41); }
+inline bool ixsm(TxDesc *d)  { return isData(d) && bits(d->d2, 40,40); }
+inline bool txsm(TxDesc *d)  { return isData(d) && bits(d->d2, 41,41); }
 
-int tucse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,63,48); }
-int tucso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,47,40); }
-int tucss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,39,32); }
-int ipcse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,31,16); }
-int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
-int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
-int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
-int hdrlen(TxDesc *d) { 
+inline int tucse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,63,48); }
+inline int tucso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,47,40); }
+inline int tucss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,39,32); }
+inline int ipcse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,31,16); }
+inline int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
+inline int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
+inline int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
+inline int hdrlen(TxDesc *d) {
     assert(isContext(d)); 
     if (!isAdvDesc(d))
         return bits(d->d2,47,40);
     return bits(d->d2, 47,40) + bits(d->d1, 8,0) + bits(d->d1, 15, 9); 
 }
 
-int getTsoLen(TxDesc *d) { assert(isType(d, TXD_ADVDATA)); return bits(d->d2, 63,46); }
-int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
+inline int getTsoLen(TxDesc *d) { assert(isType(d, TXD_ADVDATA)); return bits(d->d2, 63,46); }
+inline int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
 } // namespace TxdOp
 
 
