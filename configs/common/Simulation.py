@@ -453,7 +453,6 @@ def run(options, root, testsys, cpu_class):
         # manually.  You DON'T need to resume after just switching
         # CPUs if you haven't changed anything on the system level.
 
-        m5.doDrain(testsys)
         m5.changeToTiming(testsys)
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
