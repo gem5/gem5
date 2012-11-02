@@ -66,6 +66,7 @@ PySource('m5.util', 'm5/util/terminal.py')
 
 SwigSource('m5.internal', 'swig/core.i')
 SwigSource('m5.internal', 'swig/debug.i')
+SwigSource('m5.internal', 'swig/drain.i')
 SwigSource('m5.internal', 'swig/event.i')
 SwigSource('m5.internal', 'swig/pyobject.i')
 SwigSource('m5.internal', 'swig/range.i')

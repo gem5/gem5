@@ -161,7 +161,8 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
 template <typename PortClass>
 BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name,
                                  Tick _clock) :
-    bus(_bus), _name(_name), state(IDLE), clock(_clock), drainEvent(NULL),
+    Drainable(),
+    bus(_bus), _name(_name), state(IDLE), clock(_clock), drainManager(NULL),
     releaseEvent(this)
 {
 }
@@ -266,12 +267,12 @@ BaseBus::Layer<PortClass>::releaseLayer()
         // busy, and in the latter case the bus may be released before
         // we see a retry from the destination
         retryWaiting();
-    } else if (drainEvent) {
-        DPRINTF(Drain, "Bus done draining, processing drain event\n");
+    } else if (drainManager) {
+        DPRINTF(Drain, "Bus done draining, signaling drain manager\n");
         //If we weren't able to drain before, do it now.
-        drainEvent->process();
+        drainManager->signalDrainDone();
         // Clear the drain event once we're done with it.
-        drainEvent = NULL;
+        drainManager = NULL;
     }
 }
 
@@ -522,14 +523,14 @@ BaseBus::deviceBlockSize() const
 
 template <typename PortClass>
 unsigned int
-BaseBus::Layer<PortClass>::drain(Event * de)
+BaseBus::Layer<PortClass>::drain(DrainManager *dm)
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
     if (!retryList.empty() || state != IDLE) {
         DPRINTF(Drain, "Bus not drained\n");
-        drainEvent = de;
+        drainManager = dm;
         return 1;
     }
     return 0;

@@ -45,7 +45,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void init();
 
   public:
-    Event *drainEvent;
+    DrainManager *drainManager;
 
   private:
 
@@ -109,7 +109,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         void
         markDelayed()
         {
-            assert(cpu->_status == Running);
+            assert(cpu->_status == BaseSimpleCPU::Running);
             cpu->_status = ITBWaitResponse;
         }
 
@@ -249,8 +249,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    virtual unsigned int drain(Event *drain_event);
-    virtual void resume();
+    unsigned int drain(DrainManager *drain_manager);
+    void drainResume();
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);

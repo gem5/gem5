@@ -271,7 +271,7 @@ class Device : public Base
   public:
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
-    virtual void resume();
+    virtual void drainResume();
 
     void prepareIO(int cpu, int index);
     void prepareRead(int cpu, int index);

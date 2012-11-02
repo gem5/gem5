@@ -169,19 +169,19 @@ def doDrain(root):
 # be drained.
 def drain(root):
     all_drained = False
-    drain_event = internal.event.createCountedDrain()
-    unready_objs = sum(obj.drain(drain_event) for obj in root.descendants())
+    dm = internal.drain.createDrainManager()
+    unready_objs = sum(obj.drain(dm) for obj in root.descendants())
     # If we've got some objects that can't drain immediately, then simulate
     if unready_objs > 0:
-        drain_event.setCount(unready_objs)
+        dm.setCount(unready_objs)
         simulate()
     else:
         all_drained = True
-    internal.event.cleanupCountedDrain(drain_event)
+    internal.drain.cleanupDrainManager(dm)
     return all_drained
 
 def resume(root):
-    for obj in root.descendants(): obj.resume()
+    for obj in root.descendants(): obj.drainResume()
 
 def checkpoint(dir):
     root = objects.Root.getInstance()

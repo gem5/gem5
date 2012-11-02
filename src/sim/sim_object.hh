@@ -45,6 +45,7 @@
 
 #include "enums/MemoryMode.hh"
 #include "params/SimObject.hh"
+#include "sim/drain.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
@@ -72,40 +73,7 @@ class Event;
  *     </ul>
  * <li>SimObject::resetStats()
  * <li>SimObject::startup()
- * <li>SimObject::resume() if resuming from a checkpoint.
- * </ol>
- *
- * An object's internal state needs to be drained when creating a
- * checkpoint, switching between CPU models, or switching between
- * timing models. Once the internal state has been drained from
- * <i>all</i> objects in the system, the objects are serialized to
- * disc or the configuration change takes place. The process works as
- * follows (see simulate.py for details):
- *
- * <ol>
- * <li>An instance of a CountedDrainEvent is created to keep track of
- *     how many objects need to be drained. The object maintains an
- *     internal counter that is decreased every time its
- *     CountedDrainEvent::process() method is called. When the counter
- *     reaches zero, the simulation is stopped.
- *
- * <li>Call SimObject::drain() for every object in the
- *     system. Draining has completed if all of them return
- *     zero. Otherwise, the sum of the return values is loaded into
- *     the counter of the CountedDrainEvent. A pointer of the drain
- *     event is passed as an argument to the drain() method.
- *
- * <li>Continue simulation. When an object has finished draining its
- *     internal state, it calls CountedDrainEvent::process() on the
- *     CountedDrainEvent. When counter in the CountedDrainEvent reaches
- *     zero, the simulation stops.
- *
- * <li>Check if any object still needs draining, if so repeat the
- *     process above.
- *
- * <li>Serialize objects, switch CPU model, or change timing model.
- *
- * <li>Call SimObject::resume() and continue the simulation.
+ * <li>Drainable::drainResume() if resuming from a checkpoint.
  * </ol>
  *
  * @note Whenever a method is called on all objects in the simulator's
@@ -114,42 +82,8 @@ class Event;
  * SimObject.py). This has the effect of calling the method on the
  * parent node <i>before</i> its children.
  */
-class SimObject : public EventManager, public Serializable
+class SimObject : public EventManager, public Serializable, public Drainable
 {
-  public:
-    /**
-     * Object drain/handover states
-     *
-     * An object starts out in the Running state. When the simulator
-     * prepares to take a snapshot or prepares a CPU for handover, it
-     * calls the drain() method to transfer the object into the
-     * Draining or Drained state. If any object enters the Draining
-     * state (drain() returning >0), simulation continues until it all
-     * objects have entered the Drained.
-     *
-     * The before resuming simulation, the simulator calls resume() to
-     * transfer the object to the Running state.
-     *
-     * \note Even though the state of an object (visible to the rest
-     * of the world through getState()) could be used to determine if
-     * all objects have entered the Drained state, the protocol is
-     * actually a bit more elaborate. See drain() for details.
-     */
-    enum State {
-        Running,  /** Running normally */
-        Draining, /** Draining buffers pending serialization/handover */
-        Drained   /** Buffers drained, ready for serialization/handover */
-    };
-
-  private:
-    State state;
-
-  protected:
-    void changeState(State new_state) { state = new_state; }
-
-  public:
-    State getState() { return state; }
-
   private:
     typedef std::vector<SimObject *> SimObjectList;
 
@@ -217,43 +151,16 @@ class SimObject : public EventManager, public Serializable
     virtual void startup();
 
     /**
+     * Provide a default implementation of the drain interface that
+     * simply returns 0 (draining completed) and sets the drain state
+     * to Drained.
+     */
+    unsigned int drain(DrainManager *drainManger);
+
+    /**
      * Serialize all SimObjects in the system.
      */
     static void serializeAll(std::ostream &os);
-
-    /**
-     * Determine if an object needs draining and register a drain
-     * event.
-     *
-     * When draining the state of an object, the simulator calls drain
-     * with a pointer to a drain event. If the object does not need
-     * further simulation to drain internal buffers, it switched to
-     * the Drained state and returns 0, otherwise it switches to the
-     * Draining state and returns the number of times that it will
-     * call Event::process() on the drain event. Most objects are
-     * expected to return either 0 or 1.
-     *
-     * The default implementation simply switches to the Drained state
-     * and returns 0.
-     *
-     * @note An object that has entered the Drained state can be
-     * disturbed by other objects in the system and consequently be
-     * forced to enter the Draining state again. The simulator
-     * therefore repeats the draining process until all objects return
-     * 0 on the first call to drain().
-     *
-     * @param drain_event Event to use to inform the simulator when
-     * the draining has completed.
-     *
-     * @return 0 if the object is ready for serialization now, >0 if
-     * it needs further simulation.
-     */
-    virtual unsigned int drain(Event *drain_event);
-
-    /**
-     * Switch an object in the Drained stated into the Running state.
-     */
-    virtual void resume();
 
 #ifdef DEBUG
   public:

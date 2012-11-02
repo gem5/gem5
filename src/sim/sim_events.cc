@@ -83,17 +83,6 @@ exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
     mainEventQueue.schedule(event, when);
 }
 
-CountedDrainEvent::CountedDrainEvent()
-    : count(0)
-{ }
-
-void
-CountedDrainEvent::process()
-{
-    if (--count == 0)
-        exitSimLoop("Finished drain", 0);
-}
-
 //
 // constructor: automatically schedules at specified time
 //

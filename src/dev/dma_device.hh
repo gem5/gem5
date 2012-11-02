@@ -48,6 +48,7 @@
 
 #include "dev/io_device.hh"
 #include "params/DmaDevice.hh"
+#include "sim/drain.hh"
 
 class DmaPort : public MasterPort
 {
@@ -123,7 +124,7 @@ class DmaPort : public MasterPort
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     /** If the port is currently waiting for a retry before it can
      * send whatever it is that it's sending. */
@@ -146,7 +147,7 @@ class DmaPort : public MasterPort
     bool dmaPending() const { return pendingCount > 0; }
 
     unsigned cacheBlockSize() const { return peerBlockSize(); }
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *drainManger);
 };
 
 class DmaDevice : public PioDevice
@@ -175,7 +176,7 @@ class DmaDevice : public PioDevice
 
     virtual void init();
 
-    virtual unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *drainManger);
 
     unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
 

@@ -82,7 +82,7 @@ CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
       ce(_ce), channelId(cid), busy(false), underReset(false),
     refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
     latAfterCompletion(ce->params()->latAfterCompletion),
-    completionDataReg(0), nextState(Idle), drainEvent(NULL),
+    completionDataReg(0), nextState(Idle), drainManager(NULL),
     fetchCompleteEvent(this), addrCompleteEvent(this),
     readCompleteEvent(this), writeCompleteEvent(this),
     statusCompleteEvent(this)
@@ -140,12 +140,12 @@ CopyEngine::CopyEngineChannel::recvCommand()
         cr.status.dma_transfer_status(0);
         nextState = DescriptorFetch;
         fetchAddress = cr.descChainAddr;
-        if (ce->getState() == SimObject::Running)
+        if (ce->getDrainState() == Drainable::Running)
             fetchDescriptor(cr.descChainAddr);
     } else if (cr.command.append_dma()) {
         if (!busy) {
             nextState = AddressFetch;
-            if (ce->getState() == SimObject::Running)
+            if (ce->getDrainState() == Drainable::Running)
                 fetchNextAddr(lastDescriptorAddr);
         } else
             refreshNext = true;
@@ -637,41 +637,41 @@ CopyEngine::CopyEngineChannel::fetchAddrComplete()
 bool
 CopyEngine::CopyEngineChannel::inDrain()
 {
-    if (ce->getState() == SimObject::Draining) {
+    if (ce->getDrainState() == Drainable::Draining) {
         DPRINTF(Drain, "CopyEngine done draining, processing drain event\n");
-        assert(drainEvent);
-        drainEvent->process();
-        drainEvent = NULL;
+        assert(drainManager);
+        drainManager->signalDrainDone();
+        drainManager = NULL;
     }
 
-    return ce->getState() != SimObject::Running;
+    return ce->getDrainState() != Drainable::Running;
 }
 
 unsigned int
-CopyEngine::CopyEngineChannel::drain(Event *de)
+CopyEngine::CopyEngineChannel::drain(DrainManager *dm)
 {
-    if (nextState == Idle || ce->getState() != SimObject::Running)
+    if (nextState == Idle || ce->getDrainState() != Drainable::Running)
         return 0;
     unsigned int count = 1;
-    count += cePort.drain(de);
+    count += cePort.drain(dm);
 
     DPRINTF(Drain, "CopyEngineChannel not drained\n");
-    drainEvent = de;
+    this->drainManager = dm;
     return count;
 }
 
 unsigned int
-CopyEngine::drain(Event *de)
+CopyEngine::drain(DrainManager *dm)
 {
     unsigned int count;
-    count = pioPort.drain(de) + dmaPort.drain(de) + configPort.drain(de);
+    count = pioPort.drain(dm) + dmaPort.drain(dm) + configPort.drain(dm);
     for (int x = 0;x < chan.size(); x++)
-        count += chan[x]->drain(de);
+        count += chan[x]->drain(dm);
 
     if (count)
-        changeState(Draining);
+        setDrainState(Draining);
     else
-        changeState(Drained);
+        setDrainState(Drained);
 
     DPRINTF(Drain, "CopyEngine not drained\n");
     return count;
@@ -760,16 +760,16 @@ CopyEngine::CopyEngineChannel::restartStateMachine()
 }
 
 void
-CopyEngine::resume()
+CopyEngine::drainResume()
 {
-    SimObject::resume();
+    Drainable::drainResume();
     for (int x = 0;x < chan.size(); x++)
-        chan[x]->resume();
+        chan[x]->drainResume();
 }
 
 
 void
-CopyEngine::CopyEngineChannel::resume()
+CopyEngine::CopyEngineChannel::drainResume()
 {
     DPRINTF(DMACopyEngine, "Restarting state machine at state %d\n", nextState);
     restartStateMachine();

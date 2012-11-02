@@ -68,7 +68,7 @@ class IGbE : public EtherDevice
     uint16_t flash[iGbReg::EEPROM_SIZE];
 
     // The drain event if we have one
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     // cached parameters from params struct
     bool useFlowControl;
@@ -347,7 +347,7 @@ class IGbE : public EtherDevice
         virtual void updateHead(long h) { igbe->regs.rdh(h); }
         virtual void enableSm();
         virtual void fetchAfterWb() {
-            if (!igbe->rxTick && igbe->getState() == SimObject::Running)
+            if (!igbe->rxTick && igbe->getDrainState() == Drainable::Running)
                 fetchDescriptors();
         }
 
@@ -409,7 +409,7 @@ class IGbE : public EtherDevice
         virtual void enableSm();
         virtual void actionAfterWb();
         virtual void fetchAfterWb() {
-            if (!igbe->txTick && igbe->getState() == SimObject::Running)
+            if (!igbe->txTick && igbe->getDrainState() == Drainable::Running)
                 fetchDescriptors();
         }
         
@@ -535,8 +535,9 @@ class IGbE : public EtherDevice
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-    virtual unsigned int drain(Event *de);
-    virtual void resume();
+
+    unsigned int drain(DrainManager *dm);
+    void drainResume();
 
 };
 

@@ -77,7 +77,7 @@ BaseCache::BaseCache(const Params *p)
       blocked(0),
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
-      drainEvent(NULL),
+      drainManager(NULL),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
@@ -749,19 +749,19 @@ BaseCache::regStats()
 }
 
 unsigned int
-BaseCache::drain(Event *de)
+BaseCache::drain(DrainManager *dm)
 {
-    int count = memSidePort->drain(de) + cpuSidePort->drain(de);
+    int count = memSidePort->drain(dm) + cpuSidePort->drain(dm);
 
     // Set status
     if (count != 0) {
-        drainEvent = de;
+        drainManager = dm;
 
-        changeState(SimObject::Draining);
+        setDrainState(Drainable::Draining);
         DPRINTF(Drain, "Cache not drained\n");
         return count;
     }
 
-    changeState(SimObject::Drained);
+    setDrainState(Drainable::Drained);
     return 0;
 }

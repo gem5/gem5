@@ -123,7 +123,8 @@ class MetaSimObject(type):
                       'cxx_class' : str,
                       'cxx_type' : str,
                       'cxx_header' : str,
-                      'type' : str }
+                      'type' : str,
+                      'cxx_bases' : list }
     # Attributes that can be set any time
     keywords = { 'check' : FunctionType }
 
@@ -148,6 +149,8 @@ class MetaSimObject(type):
                 value_dict[key] = val
         if 'abstract' not in value_dict:
             value_dict['abstract'] = False
+        if 'cxx_bases' not in value_dict:
+            value_dict['cxx_bases'] = []
         cls_dict['_value_dict'] = value_dict
         cls = super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
         if 'type' in value_dict:
@@ -414,6 +417,7 @@ class MetaSimObject(type):
         code('%module(package="m5.internal") param_$cls')
         code()
         code('%{')
+        code('#include "sim/sim_object.hh"')
         code('#include "params/$cls.hh"')
         for param in params:
             param.cxx_predecls(code)
@@ -458,7 +462,17 @@ using std::ptrdiff_t;
         code('%nodefault $classname;')
         code('class $classname')
         if cls._base:
-            code('    : public ${{cls._base.cxx_class}}')
+            bases = [ cls._base.cxx_class ] + cls.cxx_bases
+        else:
+            bases = cls.cxx_bases
+        base_first = True
+        for base in bases:
+            if base_first:
+                code('    : public ${{base}}')
+                base_first = False
+            else:
+                code('    , public ${{base}}')
+
         code('{')
         code('  public:')
         cls.export_methods(code)
@@ -581,30 +595,25 @@ class SimObject(object):
     abstract = True
     cxx_header = "sim/sim_object.hh"
 
+    cxx_bases = [ "Drainable" ]
+
     @classmethod
     def export_method_swig_predecls(cls, code):
         code('''
 %include <std_string.i>
+
+%import "python/swig/drain.i"
 ''')
 
     @classmethod
     def export_methods(cls, code):
         code('''
-    enum State {
-      Running,
-      Draining,
-      Drained
-    };
-
     void init();
     void loadState(Checkpoint *cp);
     void initState();
     void regStats();
     void resetStats();
     void startup();
-
-    unsigned int drain(Event *drain_event);
-    void resume();
 ''')
 
     # Initialize new instance.  For objects with SimObject-valued

@@ -31,3 +31,4 @@ import debug
 import event
 import stats
 import trace
+from drain import DrainManager, Drainable

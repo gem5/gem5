@@ -207,7 +207,7 @@ class NoncoherentBus : public BaseBus
 
     NoncoherentBus(const NoncoherentBusParams *p);
 
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *dm);
 
 };
 

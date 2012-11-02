@@ -94,7 +94,7 @@ class BaseBus : public MemObject
      * whereas a response layer holds master ports.
      */
     template <typename PortClass>
-    class Layer
+    class Layer : public Drainable
     {
 
       public:
@@ -118,7 +118,7 @@ class BaseBus : public MemObject
          *
          * @return 1 if busy or waiting to retry, or 0 if idle
          */
-        unsigned int drain(Event *de);
+        unsigned int drain(DrainManager *dm);
 
         /**
          * Get the bus layer's name
@@ -206,8 +206,8 @@ class BaseBus : public MemObject
         /** the clock speed for the bus layer */
         Tick clock;
 
-        /** event for signalling when drained */
-        Event * drainEvent;
+        /** manager to signal when drained */
+        DrainManager *drainManager;
 
         /**
          * An array of ports that retry should be called
@@ -366,7 +366,7 @@ class BaseBus : public MemObject
     BaseSlavePort& getSlavePort(const std::string& if_name,
                                 PortID idx = InvalidPortID);
 
-    virtual unsigned int drain(Event *de) = 0;
+    virtual unsigned int drain(DrainManager *dm) = 0;
 
 };
 

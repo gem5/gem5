@@ -55,11 +55,12 @@
 #include "dev/copy_engine_defs.hh"
 #include "dev/pcidev.hh"
 #include "params/CopyEngine.hh"
+#include "sim/drain.hh"
 #include "sim/eventq.hh"
 
 class CopyEngine : public PciDev
 {
-    class CopyEngineChannel
+    class CopyEngineChannel : public Drainable
     {
       private:
         DmaPort cePort;
@@ -91,7 +92,7 @@ class CopyEngine : public PciDev
 
         ChannelState nextState;
 
-        Event *drainEvent;
+        DrainManager *drainManager;
       public:
         CopyEngineChannel(CopyEngine *_ce, int cid);
         virtual ~CopyEngineChannel();
@@ -106,8 +107,9 @@ class CopyEngine : public PciDev
         void channelRead(PacketPtr pkt, Addr daddr, int size);
         void channelWrite(PacketPtr pkt, Addr daddr, int size);
 
-        unsigned int drain(Event *de);
-        void resume();
+        unsigned int drain(DrainManager *drainManger);
+        void drainResume();
+
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 
@@ -205,8 +207,9 @@ class CopyEngine : public PciDev
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-    virtual unsigned int drain(Event *de);
-    virtual void resume();
+
+    unsigned int drain(DrainManager *drainManger);
+    void drainResume();
 };
 
 #endif //__DEV_COPY_ENGINE_HH__

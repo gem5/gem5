@@ -57,7 +57,7 @@ using namespace iGbReg;
 using namespace Net;
 
 IGbE::IGbE(const Params *p)
-    : EtherDevice(p), etherInt(NULL),  drainEvent(NULL),
+    : EtherDevice(p), etherInt(NULL),  drainManager(NULL),
       useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
       txTick(false), txFifoTick(false), rxDmaPacket(false), pktOffset(0),
@@ -588,7 +588,7 @@ IGbE::write(PacketPtr pkt)
       case REG_RDT:
         regs.rdt = val;
         DPRINTF(EthernetSM, "RXS: RDT Updated.\n");
-        if (getState() == SimObject::Running) {
+        if (getDrainState() == Drainable::Running) {
             DPRINTF(EthernetSM, "RXS: RDT Fetching Descriptors!\n");
             rxDescCache.fetchDescriptors();
         } else {
@@ -628,7 +628,7 @@ IGbE::write(PacketPtr pkt)
       case REG_TDT:
         regs.tdt = val;
         DPRINTF(EthernetSM, "TXS: TX Tail pointer updated\n");
-        if (getState() == SimObject::Running) {
+        if (getDrainState() == Drainable::Running) {
             DPRINTF(EthernetSM, "TXS: TDT Fetching Descriptors!\n");
             txDescCache.fetchDescriptors();
         } else {
@@ -906,7 +906,7 @@ void
 IGbE::DescCache<T>::writeback1()
 {
     // If we're draining delay issuing this DMA
-    if (igbe->getState() != SimObject::Running) {
+    if (igbe->getDrainState() != Drainable::Running) {
         igbe->schedule(wbDelayEvent, curTick() + igbe->wbDelay);
         return;
     }
@@ -987,7 +987,7 @@ void
 IGbE::DescCache<T>::fetchDescriptors1()
 {
     // If we're draining delay issuing this DMA
-    if (igbe->getState() != SimObject::Running) {
+    if (igbe->getDrainState() != Drainable::Running) {
         igbe->schedule(fetchDelayEvent, curTick() + igbe->fetchDelay);
         return;
     }
@@ -1493,7 +1493,7 @@ IGbE::RxDescCache::pktComplete()
 void
 IGbE::RxDescCache::enableSm()
 {
-    if (!igbe->drainEvent) {
+    if (!igbe->drainManager) {
         igbe->rxTick = true;
         igbe->restartClock();
     }
@@ -2029,7 +2029,7 @@ IGbE::TxDescCache::packetAvailable()
 void
 IGbE::TxDescCache::enableSm()
 {
-    if (!igbe->drainEvent) {
+    if (!igbe->drainManager) {
         igbe->txTick = true;
         igbe->restartClock();
     }
@@ -2049,19 +2049,19 @@ void
 IGbE::restartClock()
 {
     if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) &&
-        getState() == SimObject::Running)
+        getDrainState() == Drainable::Running)
         schedule(tickEvent, clockEdge(Cycles(1)));
 }
 
 unsigned int
-IGbE::drain(Event *de)
+IGbE::drain(DrainManager *dm)
 {
     unsigned int count;
-    count = pioPort.drain(de) + dmaPort.drain(de);
+    count = pioPort.drain(dm) + dmaPort.drain(dm);
     if (rxDescCache.hasOutstandingEvents() ||
         txDescCache.hasOutstandingEvents()) {
         count++;
-        drainEvent = de;
+        drainManager = dm;
     }
 
     txFifoTick = false;
@@ -2073,17 +2073,17 @@ IGbE::drain(Event *de)
 
     if (count) {
         DPRINTF(Drain, "IGbE not drained\n");
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     } else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
 
     return count;
 }
 
 void
-IGbE::resume()
+IGbE::drainResume()
 {
-    SimObject::resume();
+    Drainable::drainResume();
 
     txFifoTick = true;
     txTick = true;
@@ -2096,7 +2096,7 @@ IGbE::resume()
 void
 IGbE::checkDrain()
 {
-    if (!drainEvent)
+    if (!drainManager)
         return;
 
     txFifoTick = false;
@@ -2105,8 +2105,8 @@ IGbE::checkDrain()
     if (!rxDescCache.hasOutstandingEvents() &&
         !txDescCache.hasOutstandingEvents()) {
         DPRINTF(Drain, "IGbE done draining, processing drain event\n");
-        drainEvent->process();
-        drainEvent = NULL;
+        drainManager->signalDrainDone();
+        drainManager = NULL;
     }
 }
 
@@ -2130,7 +2130,7 @@ IGbE::txStateMachine()
         bool success =
 #endif
             txFifo.push(txPacket);
-        txFifoTick = true && !drainEvent;
+        txFifoTick = true && !drainManager;
         assert(success);
         txPacket = NULL;
         anBegin("TXS", "Desc Writeback");
@@ -2229,7 +2229,7 @@ IGbE::ethRxPkt(EthPacketPtr pkt)
     }
 
     // restart the state machines if they are stopped
-    rxTick = true && !drainEvent;
+    rxTick = true && !drainManager;
     if ((rxTick || txTick) && !tickEvent.scheduled()) {
         DPRINTF(EthernetSM,
                 "RXS: received packet into fifo, starting ticking\n");
@@ -2442,8 +2442,8 @@ IGbE::ethTxDone()
     // restart the tx state machines if they are stopped
     // fifo to send another packet
     // tx sm to put more data into the fifo
-    txFifoTick = true && !drainEvent;
-    if (txDescCache.descLeft() != 0 && !drainEvent)
+    txFifoTick = true && !drainManager;
+    if (txDescCache.descLeft() != 0 && !drainManager)
         txTick = true;
 
     restartClock();

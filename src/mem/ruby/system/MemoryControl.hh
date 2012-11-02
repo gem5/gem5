@@ -56,8 +56,6 @@ class MemoryControl : public ClockedObject, public Consumer
 
     ~MemoryControl();
 
-    unsigned int drain(Event *de) = 0;
-
     virtual void wakeup() = 0;
 
     virtual void setConsumer(Consumer* consumer_ptr) = 0;

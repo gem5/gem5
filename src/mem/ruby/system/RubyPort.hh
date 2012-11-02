@@ -142,7 +142,7 @@ class RubyPort : public MemObject
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     int getId() { return m_version; }
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *dm);
 
   protected:
     const std::string m_name;
@@ -166,7 +166,7 @@ class RubyPort : public MemObject
         }
     }
 
-    unsigned int getChildDrainCount(Event *de);
+    unsigned int getChildDrainCount(DrainManager *dm);
 
     uint16_t m_port_id;
     uint64_t m_request_cnt;
@@ -176,7 +176,7 @@ class RubyPort : public MemObject
     std::vector<M5Port*> slave_ports;
     std::vector<PioPort*> master_ports;
 
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     RubySystem* ruby_system;
     System* system;

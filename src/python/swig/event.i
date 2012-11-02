@@ -81,11 +81,6 @@
 // This must follow eventq.hh
 %include "python/swig/pyevent.hh"
 
-struct CountedDrainEvent : public Event
-{
-    void setCount(int _count);
-};
-
 // minimal definition of SimExitEvent interface to wrap
 class SimLoopExitEvent : public Event
 {

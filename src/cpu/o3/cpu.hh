@@ -431,10 +431,10 @@ class FullO3CPU : public BaseO3CPU
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
-    virtual unsigned int drain(Event *drain_event);
+    unsigned int drain(DrainManager *drain_manager);
 
     /** Resumes execution after a drain. */
-    virtual void resume();
+    void drainResume();
 
     /** Signals to this CPU that a stage has completed switching out. */
     void signalDrained();
@@ -730,8 +730,8 @@ class FullO3CPU : public BaseO3CPU
     /** Pointer to the system. */
     System *system;
 
-    /** Event to call process() on once draining has completed. */
-    Event *drainEvent;
+    /** DrainManager to notify when draining has completed. */
+    DrainManager *drainManager;
 
     /** Counter of how many stages have completed draining. */
     int drainCount;

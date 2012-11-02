@@ -51,7 +51,7 @@
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(this, params()->sys), drainEvent(NULL),
+    : MemObject(p), port(this, params()->sys), drainManager(NULL),
       tlb(NULL), currState(NULL), pending(false),
       masterId(p->sys->getMasterId(name())),
       numSquashable(p->num_squash_per_cycle),
@@ -68,30 +68,30 @@ TableWalker::~TableWalker()
 void
 TableWalker::completeDrain()
 {
-    if (drainEvent && stateQueueL1.empty() && stateQueueL2.empty() &&
+    if (drainManager && stateQueueL1.empty() && stateQueueL2.empty() &&
         pendingQueue.empty()) {
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
         DPRINTF(Drain, "TableWalker done draining, processing drain event\n");
-        drainEvent->process();
-        drainEvent = NULL;
+        drainManager->signalDrainDone();
+        drainManager = NULL;
     }
 }
 
 unsigned int
-TableWalker::drain(Event *de)
+TableWalker::drain(DrainManager *dm)
 {
-    unsigned int count = port.drain(de);
+    unsigned int count = port.drain(dm);
 
     if (stateQueueL1.empty() && stateQueueL2.empty() &&
         pendingQueue.empty()) {
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
         DPRINTF(Drain, "TableWalker free, no need to drain\n");
 
         // table walker is drained, but its ports may still need to be drained
         return count;
     } else {
-        drainEvent = de;
-        changeState(Draining);
+        drainManager = dm;
+        setDrainState(Drainable::Draining);
         DPRINTF(Drain, "TableWalker not drained\n");
 
         // return port drain count plus the table walker itself needs to drain
@@ -101,9 +101,9 @@ TableWalker::drain(Event *de)
 }
 
 void
-TableWalker::resume()
+TableWalker::drainResume()
 {
-    MemObject::resume();
+    Drainable::drainResume();
     if ((params()->sys->getMemoryMode() == Enums::timing) && currState) {
         delete currState;
         currState = NULL;

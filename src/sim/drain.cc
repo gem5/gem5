@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,43 +34,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Andreas Sandberg
  */
 
-#include <Python.h>
+#include "sim/drain.hh"
+#include "sim/sim_exit.hh"
 
-#include "python/swig/pyevent.hh"
-#include "sim/async.hh"
-
-PythonEvent::PythonEvent(PyObject *obj, Priority priority)
-    : Event(priority), object(obj)
+DrainManager::DrainManager()
+    : _count(0)
 {
-    if (object == NULL)
-        panic("Passed in invalid object");
 }
 
-PythonEvent::~PythonEvent()
+DrainManager::~DrainManager()
 {
 }
 
 void
-PythonEvent::process()
+DrainManager::drainCycleDone()
 {
-    PyObject *args = PyTuple_New(0);
-    PyObject *result = PyObject_Call(object, args, NULL);
-    Py_DECREF(args);
+    exitSimLoop("Finished drain", 0);
+}
 
-    if (result) {
-        // Nothing to do just decrement the reference count
-        Py_DECREF(result);
-    } else {
-        // Somethign should be done to signal back to the main interpreter
-        // that there's been an exception.
-        async_event = true;
-        async_exception = true;
-    }
 
-    // Since the object has been removed from the event queue, its
-    // reference count must be decremented.
-    Py_DECREF(object);
+
+Drainable::Drainable()
+    : _drainState(Running)
+{
+}
+
+Drainable::~Drainable()
+{
+}
+
+void
+Drainable::drainResume()
+{
+    _drainState = Running;
 }

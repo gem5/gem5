@@ -364,7 +364,7 @@ class TableWalker : public MemObject
     SnoopingDmaPort port;
 
     /** If we're draining keep the drain event around until we're drained */
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     /** TLB that is initiating these table walks */
     TLB *tlb;
@@ -397,8 +397,8 @@ class TableWalker : public MemObject
 
     /** Checks if all state is cleared and if so, completes drain */
     void completeDrain();
-    virtual unsigned int drain(Event *de);
-    virtual void resume();
+    unsigned int drain(DrainManager *dm);
+    void drainResume();
     virtual BaseMasterPort& getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
 

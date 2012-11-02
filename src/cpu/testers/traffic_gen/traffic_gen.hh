@@ -604,7 +604,7 @@ class TrafficGen : public MemObject
 
     void initState();
 
-    unsigned int drain(Event *drain_event);
+    unsigned int drain(DrainManager *dm);
 
     void serialize(std::ostream &os);
 

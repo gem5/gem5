@@ -51,7 +51,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     retryRdReq(false), retryWrReq(false),
     rowHitFlag(false), stopReads(false),
     writeEvent(this), respondEvent(this),
-    refreshEvent(this), nextReqEvent(this), drainEvent(NULL),
+    refreshEvent(this), nextReqEvent(this), drainManager(NULL),
     bytesPerCacheLine(0),
     linesPerRowBuffer(p->lines_per_rowbuffer),
     ranksPerChannel(p->ranks_per_channel),
@@ -346,9 +346,9 @@ SimpleDRAM::processWriteEvent()
 
     // if there is nothing left in any queue, signal a drain
     if (dramWriteQueue.empty() && dramReadQueue.empty() &&
-        dramRespQueue.empty () && drainEvent) {
-        drainEvent->process();
-        drainEvent = NULL;
+        dramRespQueue.empty () && drainManager) {
+        drainManager->signalDrainDone();
+        drainManager = NULL;
     }
 
     // Once you're done emptying the write queue, check if there's
@@ -595,9 +595,9 @@ SimpleDRAM::processRespondEvent()
      } else {
          // if there is nothing left in any queue, signal a drain
          if (dramWriteQueue.empty() && dramReadQueue.empty() &&
-             drainEvent) {
-             drainEvent->process();
-             drainEvent = NULL;
+             drainManager) {
+             drainManager->signalDrainDone();
+             drainManager = NULL;
          }
      }
 }
@@ -1197,22 +1197,22 @@ SimpleDRAM::getSlavePort(const string &if_name, PortID idx)
 }
 
 unsigned int
-SimpleDRAM::drain(Event *de)
+SimpleDRAM::drain(DrainManager *dm)
 {
-    unsigned int count = port.drain(de);
+    unsigned int count = port.drain(dm);
 
     // if there is anything in any of our internal queues, keep track
     // of that as well
     if (!(dramWriteQueue.empty() && dramReadQueue.empty() &&
           dramRespQueue.empty())) {
         ++count;
-        drainEvent = de;
+        drainManager = dm;
     }
 
     if (count)
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
     return count;
 }
 

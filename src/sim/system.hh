@@ -382,7 +382,9 @@ class System : public MemObject
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
-    virtual void resume();
+
+    unsigned int drain(DrainManager *dm);
+    void drainResume();
 
   public:
     Counter totalNumInsts;

@@ -299,7 +299,7 @@ class CoherentBus : public BaseBus
 
     CoherentBus(const CoherentBusParams *p);
 
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *dm);
 };
 
 #endif //__MEM_COHERENT_BUS_HH__

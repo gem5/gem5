@@ -341,10 +341,10 @@ class SimpleDRAM : public AbstractMemory
      */
     std::list<DRAMPacket*> dramRespQueue;
 
-    /** If we need to drain, keep the drain event around until we're done
+    /** If we need to drain, keep the drain manager around until we're done
      * here.
      */
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     /**
      * Multi-dimensional vector of banks, first dimension is ranks,
@@ -459,7 +459,7 @@ class SimpleDRAM : public AbstractMemory
 
     SimpleDRAM(const SimpleDRAMParams* p);
 
-    unsigned int drain(Event* de);
+    unsigned int drain(DrainManager* dm);
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);

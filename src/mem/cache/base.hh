@@ -269,7 +269,7 @@ class BaseCache : public MemObject
     Counter missCount;
 
     /** The drain event. */
-    Event *drainEvent;
+    DrainManager *drainManager;
 
     /**
      * The address range to which the cache responds on the CPU side.
@@ -542,7 +542,7 @@ class BaseCache : public MemObject
         // interesting again.
     }
 
-    virtual unsigned int drain(Event *de);
+    virtual unsigned int drain(DrainManager *dm);
 
     virtual bool inCache(Addr addr) = 0;
 

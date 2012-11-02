@@ -67,7 +67,6 @@ SimObject::SimObject(const Params *p)
 #endif
 
     simObjectList.push_back(this);
-    state = Running;
 }
 
 void
@@ -151,17 +150,12 @@ debugObjectBreak(const char *objs)
 #endif
 
 unsigned int
-SimObject::drain(Event *drain_event)
+SimObject::drain(DrainManager *drain_manager)
 {
-    state = Drained;
+    setDrainState(Drained);
     return 0;
 }
 
-void
-SimObject::resume()
-{
-    state = Running;
-}
 
 SimObject *
 SimObject::find(const char *name)

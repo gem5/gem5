@@ -157,14 +157,14 @@ PciDev::init()
 }
 
 unsigned int
-PciDev::drain(Event *de)
+PciDev::drain(DrainManager *dm)
 {
     unsigned int count;
-    count = pioPort.drain(de) + dmaPort.drain(de) + configPort.drain(de);
+    count = pioPort.drain(dm) + dmaPort.drain(dm) + configPort.drain(dm);
     if (count)
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
     return count;
 }
 

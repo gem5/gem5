@@ -123,7 +123,7 @@ class SimpleMemory : public AbstractMemory
     SimpleMemory(const SimpleMemoryParams *p);
     virtual ~SimpleMemory() { }
 
-    unsigned int drain(Event* de);
+    unsigned int drain(DrainManager *dm);
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);

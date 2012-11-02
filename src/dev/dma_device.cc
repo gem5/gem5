@@ -51,7 +51,7 @@
 DmaPort::DmaPort(MemObject *dev, System *s)
     : MasterPort(dev->name() + ".dma", dev), device(dev), sendEvent(this),
       sys(s), masterId(s->getMasterId(dev->name())),
-      pendingCount(0), drainEvent(NULL),
+      pendingCount(0), drainManager(NULL),
       inRetry(false)
 { }
 
@@ -98,9 +98,9 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
     delete pkt;
 
     // we might be drained at this point, if so signal the drain event
-    if (pendingCount == 0 && drainEvent) {
-        drainEvent->process();
-        drainEvent = NULL;
+    if (pendingCount == 0 && drainManager) {
+        drainManager->signalDrainDone();
+        drainManager = NULL;
     }
 }
 
@@ -128,22 +128,22 @@ DmaDevice::init()
 }
 
 unsigned int
-DmaDevice::drain(Event *de)
+DmaDevice::drain(DrainManager *dm)
 {
-    unsigned int count = pioPort.drain(de) + dmaPort.drain(de);
+    unsigned int count = pioPort.drain(dm) + dmaPort.drain(dm);
     if (count)
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
     return count;
 }
 
 unsigned int
-DmaPort::drain(Event *de)
+DmaPort::drain(DrainManager *dm)
 {
     if (pendingCount == 0)
         return 0;
-    drainEvent = de;
+    drainManager = dm;
     DPRINTF(Drain, "DmaPort not drained\n");
     return 1;
 }

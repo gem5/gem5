@@ -144,8 +144,14 @@ void fromSimObject(T &t, SimObject *s)
     fromSimObject(objptr, sptr);                        \
   } while (0)
 
-/*
+/**
  * Basic support for object serialization.
+ *
+ * @note Many objects that support serialization need to be put in a
+ * consistent state when serialization takes place. We refer to the
+ * action of forcing an object into a consistent state as
+ * 'draining'. Objects that need draining inherit from Drainable. See
+ * Drainable for more information.
  */
 class Serializable
 {

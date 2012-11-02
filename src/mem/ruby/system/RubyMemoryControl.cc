@@ -684,7 +684,7 @@ RubyMemoryControl::executeCycle()
 }
 
 unsigned int
-RubyMemoryControl::drain(Event *de)
+RubyMemoryControl::drain(DrainManager *dm)
 {
     DPRINTF(RubyMemory, "MemoryController drain\n");
     if(m_event.scheduled()) {

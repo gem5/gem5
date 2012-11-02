@@ -62,7 +62,7 @@ class RubyMemoryControl : public MemoryControl
 
     ~RubyMemoryControl();
 
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *dm);
 
     void wakeup();
 

@@ -212,10 +212,10 @@ NoncoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
 }
 
 unsigned int
-NoncoherentBus::drain(Event *de)
+NoncoherentBus::drain(DrainManager *dm)
 {
     // sum up the individual layers
-    return reqLayer.drain(de) + respLayer.drain(de);
+    return reqLayer.drain(dm) + respLayer.drain(dm);
 }
 
 NoncoherentBus*

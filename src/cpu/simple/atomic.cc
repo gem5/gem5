@@ -123,7 +123,7 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 void
 AtomicSimpleCPU::serialize(ostream &os)
 {
-    SimObject::State so_state = SimObject::getState();
+    Drainable::State so_state(getDrainState());
     SERIALIZE_ENUM(so_state);
     SERIALIZE_SCALAR(locked);
     BaseSimpleCPU::serialize(os);
@@ -134,15 +134,22 @@ AtomicSimpleCPU::serialize(ostream &os)
 void
 AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    SimObject::State so_state;
+    Drainable::State so_state;
     UNSERIALIZE_ENUM(so_state);
     UNSERIALIZE_SCALAR(locked);
     BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
 
+unsigned int
+AtomicSimpleCPU::drain(DrainManager *drain_manager)
+{
+    setDrainState(Drainable::Drained);
+    return 0;
+}
+
 void
-AtomicSimpleCPU::resume()
+AtomicSimpleCPU::drainResume()
 {
     if (_status == Idle || _status == SwitchedOut)
         return;
@@ -150,7 +157,7 @@ AtomicSimpleCPU::resume()
     DPRINTF(SimpleCPU, "Resume\n");
     assert(system->getMemoryMode() == Enums::atomic);
 
-    changeState(SimObject::Running);
+    setDrainState(Drainable::Running);
     if (thread->status() == ThreadContext::Active) {
         if (!tickEvent.scheduled())
             schedule(tickEvent, nextCycle());
@@ -161,7 +168,7 @@ AtomicSimpleCPU::resume()
 void
 AtomicSimpleCPU::switchOut()
 {
-    assert(_status == Running || _status == Idle);
+    assert(_status == BaseSimpleCPU::Running || _status == Idle);
     _status = SwitchedOut;
 
     tickEvent.squash();
@@ -180,13 +187,14 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     ThreadID size = threadContexts.size();
     for (ThreadID i = 0; i < size; ++i) {
         ThreadContext *tc = threadContexts[i];
-        if (tc->status() == ThreadContext::Active && _status != Running) {
-            _status = Running;
+        if (tc->status() == ThreadContext::Active &&
+            _status != BaseSimpleCPU::Running) {
+            _status = BaseSimpleCPU::Running;
             schedule(tickEvent, nextCycle());
             break;
         }
     }
-    if (_status != Running) {
+    if (_status != BaseSimpleCPU::Running) {
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
@@ -212,7 +220,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
 
     //Make sure ticks are still on multiples of cycles
     schedule(tickEvent, clockEdge(delay));
-    _status = Running;
+    _status = BaseSimpleCPU::Running;
 }
 
 
@@ -227,7 +235,7 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
     if (_status == Idle)
         return;
 
-    assert(_status == Running);
+    assert(_status == BaseSimpleCPU::Running);
 
     // tick event may not be scheduled if this gets called from inside
     // an instruction's execution, e.g. "quiesce"

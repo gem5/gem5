@@ -57,12 +57,13 @@
 
 #include "mem/port.hh"
 #include "sim/eventq.hh"
+#include "sim/drain.hh"
 
 /**
  * A packet queue is a class that holds deferred packets and later
  * sends them using the associated slave port or master port.
  */
-class PacketQueue
+class PacketQueue : public Drainable
 {
   private:
     /** A deferred packet, buffered to transmit later. */
@@ -95,9 +96,9 @@ class PacketQueue
      **/
     EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
 
-    /** If we need to drain, keep the drain event around until we're done
+    /** If we need to drain, keep the drain manager around until we're done
      * here.*/
-    Event *drainEvent;
+    DrainManager *drainManager;
 
   protected:
 
@@ -207,13 +208,7 @@ class PacketQueue
      */
     void retry();
 
-    /**
-     * Hook for draining the packet queue.
-     *
-     * @param de An event which is used to signal back to the caller
-     * @return A number indicating how many times process will be called
-     */
-    unsigned int drain(Event *de);
+    unsigned int drain(DrainManager *dm);
 };
 
 class MasterPacketQueue : public PacketQueue

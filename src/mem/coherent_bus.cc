@@ -508,10 +508,10 @@ CoherentBus::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
 }
 
 unsigned int
-CoherentBus::drain(Event *de)
+CoherentBus::drain(DrainManager *dm)
 {
     // sum up the individual layers
-    return reqLayer.drain(de) + respLayer.drain(de) + snoopRespLayer.drain(de);
+    return reqLayer.drain(dm) + respLayer.drain(dm) + snoopRespLayer.drain(dm);
 }
 
 CoherentBus *

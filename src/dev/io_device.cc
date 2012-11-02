@@ -89,14 +89,14 @@ PioDevice::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 unsigned int
-PioDevice::drain(Event *de)
+PioDevice::drain(DrainManager *dm)
 {
     unsigned int count;
-    count = pioPort.drain(de);
+    count = pioPort.drain(dm);
     if (count)
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
     return count;
 }
 

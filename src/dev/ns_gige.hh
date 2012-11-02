@@ -369,7 +369,7 @@ class NSGigE : public EtherDevBase
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    virtual void resume();
+    void drainResume();
 };
 
 /*

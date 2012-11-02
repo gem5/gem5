@@ -97,13 +97,7 @@ class QueuedSlavePort : public SlavePort
      * functional request. */
     bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
 
-    /**
-     * Hook for draining the queued port.
-     *
-     * @param de an event which is used to signal back to the caller
-     * @returns a number indicating how many times process will be called
-     */
-    unsigned int drain(Event *de) { return queue.drain(de); }
+    unsigned int drain(DrainManager *dm) { return queue.drain(dm); }
 };
 
 class QueuedMasterPort : public MasterPort
@@ -156,13 +150,7 @@ class QueuedMasterPort : public MasterPort
      * functional request. */
     bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
 
-    /**
-     * Hook for draining the queued port.
-     *
-     * @param de an event which is used to signal back to the caller
-     * @returns a number indicating how many times process will be called
-     */
-    unsigned int drain(Event *de) { return queue.drain(de); }
+    unsigned int drain(DrainManager *dm) { return queue.drain(dm); }
 };
 
 #endif // __MEM_QPORT_HH__

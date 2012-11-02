@@ -176,14 +176,14 @@ SimpleMemory::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 unsigned int
-SimpleMemory::drain(Event *de)
+SimpleMemory::drain(DrainManager *dm)
 {
-    int count = port.drain(de);
+    int count = port.drain(dm);
 
     if (count)
-        changeState(Draining);
+        setDrainState(Drainable::Draining);
     else
-        changeState(Drained);
+        setDrainState(Drainable::Drained);
     return count;
 }
 

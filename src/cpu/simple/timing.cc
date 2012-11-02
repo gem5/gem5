@@ -92,7 +92,7 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
 {
     _status = Idle;
 
-    changeState(SimObject::Running);
+    setDrainState(Drainable::Running);
     system->totalNumInsts = 0;
 }
 
@@ -104,7 +104,7 @@ TimingSimpleCPU::~TimingSimpleCPU()
 void
 TimingSimpleCPU::serialize(ostream &os)
 {
-    SimObject::State so_state = SimObject::getState();
+    Drainable::State so_state(getDrainState());
     SERIALIZE_ENUM(so_state);
     BaseSimpleCPU::serialize(os);
 }
@@ -112,29 +112,31 @@ TimingSimpleCPU::serialize(ostream &os)
 void
 TimingSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    SimObject::State so_state;
+    Drainable::State so_state;
     UNSERIALIZE_ENUM(so_state);
     BaseSimpleCPU::unserialize(cp, section);
 }
 
 unsigned int
-TimingSimpleCPU::drain(Event *drain_event)
+TimingSimpleCPU::drain(DrainManager *drain_manager)
 {
     // TimingSimpleCPU is ready to drain if it's not waiting for
     // an access to complete.
-    if (_status == Idle || _status == Running || _status == SwitchedOut) {
-        changeState(SimObject::Drained);
+    if (_status == Idle ||
+        _status == BaseSimpleCPU::Running ||
+        _status == SwitchedOut) {
+        setDrainState(Drainable::Drained);
         return 0;
     } else {
-        changeState(SimObject::Draining);
-        drainEvent = drain_event;
+        setDrainState(Drainable::Draining);
+        drainManager = drain_manager;
         DPRINTF(Drain, "CPU not drained\n");
         return 1;
     }
 }
 
 void
-TimingSimpleCPU::resume()
+TimingSimpleCPU::drainResume()
 {
     DPRINTF(SimpleCPU, "Resume\n");
     if (_status != SwitchedOut && _status != Idle) {
@@ -146,13 +148,13 @@ TimingSimpleCPU::resume()
         schedule(fetchEvent, nextCycle());
     }
 
-    changeState(SimObject::Running);
+    setDrainState(Drainable::Running);
 }
 
 void
 TimingSimpleCPU::switchOut()
 {
-    assert(_status == Running || _status == Idle);
+    assert(_status == BaseSimpleCPU::Running || _status == Idle);
     _status = SwitchedOut;
     numCycles += curCycle() - previousCycle;
 
@@ -172,13 +174,14 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     // running and schedule its tick event.
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
-        if (tc->status() == ThreadContext::Active && _status != Running) {
-            _status = Running;
+        if (tc->status() == ThreadContext::Active &&
+            _status != BaseSimpleCPU::Running) {
+            _status = BaseSimpleCPU::Running;
             break;
         }
     }
 
-    if (_status != Running) {
+    if (_status != BaseSimpleCPU::Running) {
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
@@ -197,7 +200,7 @@ TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
     assert(_status == Idle);
 
     notIdleFraction++;
-    _status = Running;
+    _status = BaseSimpleCPU::Running;
 
     // kick things off by initiating the fetch of the next instruction
     schedule(fetchEvent, clockEdge(delay));
@@ -215,7 +218,7 @@ TimingSimpleCPU::suspendContext(ThreadID thread_num)
     if (_status == Idle)
         return;
 
-    assert(_status == Running);
+    assert(_status == BaseSimpleCPU::Running);
 
     // just change status to Idle... if status != Running,
     // completeInst() will not initiate fetch of next instruction.
@@ -330,7 +333,7 @@ TimingSimpleCPU::translationFault(Fault fault)
 
     postExecute();
 
-    if (getState() == SimObject::Draining) {
+    if (getDrainState() == Drainable::Draining) {
         advancePC(fault);
         completeDrain();
     } else {
@@ -511,7 +514,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 void
 TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
 {
-    _status = Running;
+    _status = BaseSimpleCPU::Running;
 
     if (state->getFault() != NoFault) {
         if (state->isPrefetch()) {
@@ -552,7 +555,7 @@ TimingSimpleCPU::fetch()
     bool needToFetch = !isRomMicroPC(pcState.microPC()) && !curMacroStaticInst;
 
     if (needToFetch) {
-        _status = Running;
+        _status = BaseSimpleCPU::Running;
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
@@ -592,7 +595,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
         DPRINTF(SimpleCPU, "Translation of addr %#x faulted\n", req->getVaddr());
         delete req;
         // fetch fault: advance directly to next instruction (fault handler)
-        _status = Running;
+        _status = BaseSimpleCPU::Running;
         advanceInst(fault);
     }
 
@@ -620,7 +623,7 @@ TimingSimpleCPU::advanceInst(Fault fault)
     if (!stayAtPC)
         advancePC(fault);
 
-    if (_status == Running) {
+    if (_status == BaseSimpleCPU::Running) {
         // kick off fetch of next instruction... callback from icache
         // response will cause that instruction to be executed,
         // keeping the CPU running.
@@ -641,12 +644,12 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
     assert(!pkt || !pkt->isError());
     assert(_status == IcacheWaitResponse);
 
-    _status = Running;
+    _status = BaseSimpleCPU::Running;
 
     numCycles += curCycle() - previousCycle;
     previousCycle = curCycle();
 
-    if (getState() == SimObject::Draining) {
+    if (getDrainState() == Drainable::Draining) {
         if (pkt) {
             delete pkt->req;
             delete pkt;
@@ -664,7 +667,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         // If we're not running now the instruction will complete in a dcache
         // response callback or the instruction faulted and has started an
         // ifetch
-        if (_status == Running) {
+        if (_status == BaseSimpleCPU::Running) {
             if (fault != NoFault && traceData) {
                 // If there was a fault, we shouldn't trace this instruction.
                 delete traceData;
@@ -778,7 +781,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
         }
     }
 
-    _status = Running;
+    _status = BaseSimpleCPU::Running;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
@@ -802,7 +805,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     postExecute();
 
-    if (getState() == SimObject::Draining) {
+    if (getDrainState() == Drainable::Draining) {
         advancePC(fault);
         completeDrain();
 
@@ -817,8 +820,8 @@ void
 TimingSimpleCPU::completeDrain()
 {
     DPRINTF(Drain, "CPU done draining, processing drain event\n");
-    changeState(SimObject::Drained);
-    drainEvent->process();
+    setDrainState(Drainable::Drained);
+    drainManager->signalDrainDone();
 }
 
 bool

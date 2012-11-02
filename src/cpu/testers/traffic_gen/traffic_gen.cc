@@ -110,11 +110,11 @@ TrafficGen::initState()
 }
 
 unsigned int
-TrafficGen::drain(Event* drain_event)
+TrafficGen::drain(DrainManager *dm)
 {
     // @todo we should also stop putting new requests in the queue and
     // either interrupt the current state or wait for a transition
-    return port.drain(drain_event);
+    return port.drain(dm);
 }
 
 void

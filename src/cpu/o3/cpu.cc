@@ -619,7 +619,7 @@ FullO3CPU<Impl>::tick()
 
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut ||
-            getState() == SimObject::Drained) {
+            getDrainState() == Drainable::Drained) {
             DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
             lastRunningCycle = curCycle();
@@ -1077,7 +1077,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::serialize(std::ostream &os)
 {
-    SimObject::State so_state = SimObject::getState();
+    Drainable::State so_state(getDrainState());
     SERIALIZE_ENUM(so_state);
     BaseCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
@@ -1100,7 +1100,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
-    SimObject::State so_state;
+    Drainable::State so_state;
     UNSERIALIZE_ENUM(so_state);
     BaseCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
@@ -1120,7 +1120,7 @@ FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 
 template <class Impl>
 unsigned int
-FullO3CPU<Impl>::drain(Event *drain_event)
+FullO3CPU<Impl>::drain(DrainManager *drain_manager)
 {
     DPRINTF(O3CPU, "Switching out\n");
 
@@ -1137,12 +1137,12 @@ FullO3CPU<Impl>::drain(Event *drain_event)
 
     // Wake the CPU and record activity so everything can drain out if
     // the CPU was not able to immediately drain.
-    if (getState() != SimObject::Drained) {
-        // A bit of a hack...set the drainEvent after all the drain()
+    if (getDrainState() != Drainable::Drained) {
+        // A bit of a hack...set the drainManager after all the drain()
         // calls have been made, that way if all of the stages drain
         // immediately, the signalDrained() function knows not to call
         // process on the drain event.
-        drainEvent = drain_event;
+        drainManager = drain_manager;
 
         wakeCPU();
         activityRec.activity();
@@ -1157,7 +1157,7 @@ FullO3CPU<Impl>::drain(Event *drain_event)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::resume()
+FullO3CPU<Impl>::drainResume()
 {
     fetch.resume();
     decode.resume();
@@ -1165,7 +1165,7 @@ FullO3CPU<Impl>::resume()
     iew.resume();
     commit.resume();
 
-    changeState(SimObject::Running);
+    setDrainState(Drainable::Running);
 
     if (_status == SwitchedOut)
         return;
@@ -1185,14 +1185,14 @@ FullO3CPU<Impl>::signalDrained()
         if (tickEvent.scheduled())
             tickEvent.squash();
 
-        changeState(SimObject::Drained);
+        setDrainState(Drainable::Drained);
 
         BaseCPU::switchOut();
 
-        if (drainEvent) {
+        if (drainManager) {
             DPRINTF(Drain, "CPU done draining, processing drain event\n");
-            drainEvent->process();
-            drainEvent = NULL;
+            drainManager->signalDrainDone();
+            drainManager = NULL;
         }
     }
     assert(drainCount <= 5);
