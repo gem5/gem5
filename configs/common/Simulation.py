@@ -242,7 +242,7 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
             return exit_cause
 
         print "draining the system"
-        m5.doDrain(testsys)
+        m5.drain(testsys)
         m5.switchCpus(repeat_switch_cpu_list)
         m5.resume(testsys)
 
@@ -469,7 +469,7 @@ def run(options, root, testsys, cpu_class):
             print "Switching CPUS @ tick %s" % (m5.curTick())
             print "Simulation ends instruction count:%d" % \
                     (testsys.switch_cpus_1[0].max_insts_any_thread)
-            m5.doDrain(testsys)
+            m5.drain(testsys)
             m5.switchCpus(switch_cpu_list1)
             m5.resume(testsys)
 

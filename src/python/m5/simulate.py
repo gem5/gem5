@@ -157,28 +157,29 @@ atexit.register(stats.dump)
 # register our C++ exit callback function with Python
 atexit.register(internal.core.doExitCleanup)
 
-# This loops until all objects have been fully drained.
-def doDrain(root):
-    all_drained = drain(root)
-    while (not all_drained):
-        all_drained = drain(root)
-
-# Tries to drain all objects.  Draining might not be completed unless
-# all objects return that they are drained on the first call.  This is
-# because as objects drain they may cause other objects to no longer
-# be drained.
+# Drain the system in preparation of a checkpoint or memory mode
+# switch.
 def drain(root):
-    all_drained = False
-    dm = internal.drain.createDrainManager()
-    unready_objs = sum(obj.drain(dm) for obj in root.descendants())
-    # If we've got some objects that can't drain immediately, then simulate
-    if unready_objs > 0:
-        dm.setCount(unready_objs)
-        simulate()
-    else:
-        all_drained = True
-    internal.drain.cleanupDrainManager(dm)
-    return all_drained
+    # Try to drain all objects. Draining might not be completed unless
+    # all objects return that they are drained on the first call. This
+    # is because as objects drain they may cause other objects to no
+    # longer be drained.
+    def _drain():
+        all_drained = False
+        dm = internal.drain.createDrainManager()
+        unready_objs = sum(obj.drain(dm) for obj in root.descendants())
+        # If we've got some objects that can't drain immediately, then simulate
+        if unready_objs > 0:
+            dm.setCount(unready_objs)
+            simulate()
+        else:
+            all_drained = True
+        internal.drain.cleanupDrainManager(dm)
+        return all_drained
+
+    all_drained = _drain()
+    while (not all_drained):
+        all_drained = _drain()
 
 def resume(root):
     for obj in root.descendants(): obj.drainResume()
@@ -187,7 +188,7 @@ def checkpoint(dir):
     root = objects.Root.getInstance()
     if not isinstance(root, objects.Root):
         raise TypeError, "Checkpoint must be called on a root object."
-    doDrain(root)
+    drain(root)
     print "Writing checkpoint"
     internal.core.serializeAll(dir)
     resume(root)
@@ -197,7 +198,7 @@ def changeMemoryMode(system, mode):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
     if system.getMemoryMode() != mode:
-        doDrain(system)
+        drain(system)
         system.setMemoryMode(mode)
     else:
         print "System already in target mode. Memory mode unchanged."
