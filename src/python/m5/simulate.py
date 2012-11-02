@@ -192,24 +192,23 @@ def checkpoint(dir):
     internal.core.serializeAll(dir)
     resume(root)
 
-def changeToAtomic(system):
+def changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
-    if system.getMemoryMode() != objects.params.atomic:
+    if system.getMemoryMode() != mode:
         doDrain(system)
-        print "Changing memory mode to atomic"
-        system.setMemoryMode(objects.params.atomic)
+        system.setMemoryMode(mode)
+    else:
+        print "System already in target mode. Memory mode unchanged."
 
-def changeToTiming(system):
-    if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System)
+def changeToAtomic(system, **kwargs):
+    print "Changing memory mode to atomic"
+    changeMemoryMode(system, objects.params.atomic, **kwargs)
 
-    if system.getMemoryMode() != objects.params.timing:
-        doDrain(system)
-        print "Changing memory mode to timing"
-        system.setMemoryMode(objects.params.timing)
+def changeToTiming(system, **kwargs):
+    print "Changing memory mode to timing"
+    changeMemoryMode(system, objects.params.timing, **kwargs)
 
 def switchCpus(cpuList):
     print "switching cpus"
