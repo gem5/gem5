@@ -34,6 +34,7 @@
 
 namespace LittleEndianGuest {}
 
+#include "arch/alpha/ipr.hh"
 #include "arch/alpha/types.hh"
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
@@ -128,6 +129,9 @@ const ExtMachInst NoopMachInst = 0x2ffe0000;
 
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;
+
+const bool CurThreadInfoImplemented = true;
+const int CurThreadInfoReg = AlphaISA::IPR_PALtemp23;
 
 } // namespace AlphaISA
 

@@ -27,10 +27,11 @@
  *
  * Authors: Ali Saidi
  *          Nathan Binkert
+ *          Dam Sunwoo
  */
 
-#ifndef __ARCH_MIPS_LINUX_LINUX_TREADNIFO_HH__
-#define __ARCH_MIPS_LINUX_LINUX_TREADNIFO_HH__
+#ifndef __ARCH_GENERIC_LINUX_THREADINFO_HH__
+#define __ARCH_GENERIC_LINUX_THREADINFO_HH__
 
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
@@ -50,12 +51,16 @@ class ThreadInfo
     get_data(const char *symbol, T &data)
     {
         Addr addr = 0;
-        if (!sys->kernelSymtab->findAddress(symbol, addr))
+        if (!sys->kernelSymtab->findAddress(symbol, addr)) {
+            warn_once("Unable to find kernel symbol %s\n", symbol);
+            warn_once("Kernel not compiled with task_struct info; can't get "
+                      "currently executing task/process/thread name/ids!\n");
             return false;
+        }
 
         CopyOut(tc, &data, addr, sizeof(T));
 
-        data = MipsISA::gtoh(data);
+        data = TheISA::gtoh(data);
 
         return true;
     }
@@ -72,12 +77,14 @@ class ThreadInfo
     inline Addr
     curThreadInfo()
     {
-        panic("curThreadInfo not implemented for MIPS");
+        if (!TheISA::CurThreadInfoImplemented)
+            panic("curThreadInfo() not implemented for this ISA");
+
         Addr addr = pcbb;
         Addr sp;
 
         if (!addr)
-            addr = tc->readMiscRegNoEffect(0/*MipsISA::IPR_PALtemp23*/);
+            addr = tc->readMiscRegNoEffect(TheISA::CurThreadInfoReg);
 
         PortProxy &p = tc->getPhysProxy();
         p.readBlob(addr, (uint8_t *)&sp, sizeof(Addr));
@@ -104,7 +111,7 @@ class ThreadInfo
     int32_t
     curTaskPID(Addr thread_info = 0)
     {
-        Addr offset;
+        int32_t offset;
         if (!get_data("task_struct_pid", offset))
             return -1;
 
@@ -114,10 +121,23 @@ class ThreadInfo
         return pid;
     }
 
+    int32_t
+    curTaskTGID(Addr thread_info = 0)
+    {
+        int32_t offset;
+        if (!get_data("task_struct_tgid", offset))
+            return -1;
+
+        int32_t tgid;
+        CopyOut(tc, &tgid, curTaskInfo(thread_info) + offset, sizeof(tgid));
+
+        return tgid;
+    }
+
     int64_t
     curTaskStart(Addr thread_info = 0)
     {
-        Addr offset;
+        int32_t offset;
         if (!get_data("task_struct_start_time", offset))
             return -1;
 
@@ -146,8 +166,21 @@ class ThreadInfo
 
         return buffer;
     }
+
+    int32_t
+    curTaskMm(Addr thread_info = 0)
+    {
+        int32_t offset;
+        if (!get_data("task_struct_mm", offset))
+            return -1;
+
+        int32_t mm_ptr;
+        CopyOut(tc, &mm_ptr, curTaskInfo(thread_info) + offset, sizeof(mm_ptr));
+
+        return mm_ptr;
+    }
 };
 
 } // namespace Linux
 
-#endif // __ARCH_MIPS_LINUX_LINUX_THREADINFO_HH__
+#endif // __ARCH_GENERIC_LINUX_THREADINFO_HH__

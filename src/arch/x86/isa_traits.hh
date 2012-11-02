@@ -71,6 +71,9 @@ namespace X86ISA
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;
 
+    const bool CurThreadInfoImplemented = false;
+    const int CurThreadInfoReg = -1;
+
     const ExtMachInst NoopMachInst = {
         0x0,                            // No legacy prefixes.
         0x0,                            // No rex prefix.

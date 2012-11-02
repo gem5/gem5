@@ -33,7 +33,7 @@
 #include <stack>
 #include <string>
 
-#include "arch/alpha/linux/threadinfo.hh"
+#include "arch/generic/linux/threadinfo.hh"
 #include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"

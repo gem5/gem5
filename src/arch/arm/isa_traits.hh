@@ -114,6 +114,9 @@ namespace ArmISA
     // Memory accesses cannot be unaligned
     const bool HasUnalignedMemAcc = true;
 
+    const bool CurThreadInfoImplemented = false;
+    const int CurThreadInfoReg = -1;
+
     enum InterruptTypes
     {
         INT_RST,
