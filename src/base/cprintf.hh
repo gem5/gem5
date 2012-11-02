@@ -59,6 +59,7 @@ struct Print
 
     Format fmt;
     void process();
+    void process_flag();
 
   public:
     Print(std::ostream &stream, const std::string &format);

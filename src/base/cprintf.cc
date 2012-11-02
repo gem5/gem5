@@ -69,9 +69,10 @@ Print::process()
     while (*ptr) {
         switch (*ptr) {
           case '%':
-            if (ptr[1] != '%')
-                goto processing;
-
+            if (ptr[1] != '%') {
+                process_flag();
+                return;
+            }
             stream.put('%');
             ptr += 2;
             break;
@@ -93,10 +94,11 @@ Print::process()
             break;
         }
     }
+}
 
-    return;
-
-  processing:
+void
+Print::process_flag()
+{
     bool done = false;
     bool end_number = false;
     bool have_precision = false;
@@ -248,7 +250,20 @@ Print::process()
             end_number = false;
             number = 0;
         }
-    }
+
+        if (done) {
+            if ((fmt.format == Format::integer) && have_precision) {
+                // specified a . but not a float, set width
+                fmt.width = fmt.precision;
+                // precision requries digits for width, must fill with 0
+                fmt.fill_zero = true;
+            } else if ((fmt.format == Format::floating) && !have_precision &&
+                        fmt.fill_zero) {
+                // ambiguous case, matching printf
+                fmt.precision = fmt.width;
+            }
+        }
+    } // end while
 
     ++ptr;
 }
