@@ -38,6 +38,7 @@
  *          Ani Udipi
  */
 
+#include "debug/Drain.hh"
 #include "debug/DRAM.hh"
 #include "debug/DRAMWR.hh"
 #include "mem/simple_dram.hh"
@@ -934,14 +935,17 @@ SimpleDRAM::scheduleNextReq()
     DPRINTF(DRAM, "Reached scheduleNextReq()\n");
 
     // Figure out which request goes next, and move it to front()
-    if (!chooseNextReq())
-        return;
-
-    doDRAMAccess(dramReadQueue.front());
+    if (!chooseNextReq()) {
+        // In the case there is no read request to go next, see if we
+        // are asked to drain, and if so trigger writes, this also
+        // ensures that if we hit the write limit we will do this
+        // multiple times until we are completely drained
+        if (drainManager && !dramWriteQueue.empty() && !writeEvent.scheduled())
+            triggerWrites();
+    } else {
+        doDRAMAccess(dramReadQueue.front());
+    }
 }
-
-
-
 
 Tick
 SimpleDRAM::maxBankFreeAt() const
@@ -1212,8 +1216,18 @@ SimpleDRAM::drain(DrainManager *dm)
     // of that as well
     if (!(dramWriteQueue.empty() && dramReadQueue.empty() &&
           dramRespQueue.empty())) {
+        DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
+                " resp: %d\n", dramWriteQueue.size(), dramReadQueue.size(),
+                dramRespQueue.size());
         ++count;
         drainManager = dm;
+        // the only part that is not drained automatically over time
+        // is the write queue, thus trigger writes if there are any
+        // waiting and no reads waiting, otherwise wait until the
+        // reads are done
+        if (dramReadQueue.empty() && !dramWriteQueue.empty() &&
+            !writeEvent.scheduled())
+            triggerWrites();
     }
 
     if (count)
