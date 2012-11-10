@@ -157,6 +157,18 @@ NetworkLink::consumeLink()
     return linkBuffer->getTopFlit();
 }
 
+bool
+NetworkLink::functionalRead(Packet *pkt)
+{
+    return linkBuffer->functionalRead(pkt);
+}
+
+uint32_t
+NetworkLink::functionalWrite(Packet *pkt)
+{
+    return linkBuffer->functionalWrite(pkt);
+}
+
 NetworkLink *
 NetworkLinkParams::create()
 {

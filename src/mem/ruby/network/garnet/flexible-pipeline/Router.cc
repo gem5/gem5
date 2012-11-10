@@ -415,6 +415,48 @@ Router::check_arbiter_reschedule()
     }
 }
 
+bool
+Router::functionalRead(Packet *pkt)
+{
+    // Access the buffers in the router for performing a functional read
+    for (unsigned int i = 0; i < m_router_buffers.size(); i++) {
+        for (unsigned int j = 0; j < m_router_buffers[i].size(); ++j) {
+            if (m_router_buffers[i][j]->functionalRead(pkt)) {
+                return true;
+            }
+        }
+    }
+
+    // Access the link queues for performing a functional read
+    for (unsigned int i = 0; i < m_out_src_queue.size(); i++) {
+        if (m_out_src_queue[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint32_t
+Router::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    // Access the buffers in the router for performing a functional write
+    for (unsigned int i = 0; i < m_router_buffers.size(); i++) {
+        for (unsigned int j = 0; j < m_router_buffers[i].size(); ++j) {
+            num_functional_writes +=
+                m_router_buffers[i][j]->functionalWrite(pkt);
+        }
+    }
+
+    // Access the link queues for performing a functional write
+    for (unsigned int i = 0; i < m_out_src_queue.size(); i++) {
+        num_functional_writes += m_out_src_queue[i]->functionalWrite(pkt);
+    }
+
+    return num_functional_writes;
+}
+
 void
 Router::print(ostream& out) const
 {

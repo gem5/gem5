@@ -74,6 +74,9 @@ class Router : public BasicRouter, public FlexibleConsumer
         m_net_ptr = net_ptr; 
     }
 
+    bool functionalRead(Packet *);
+    uint32_t functionalWrite(Packet *);
+
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork *m_net_ptr;

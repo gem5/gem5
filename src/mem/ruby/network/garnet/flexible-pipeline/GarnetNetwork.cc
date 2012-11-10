@@ -192,6 +192,54 @@ GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
     m_in_use[network_num] = true;
 }
 
+/*
+ * Go through all the routers, network interfaces and the interconnecting
+ * links for reading/writing all the messages.
+ */
+bool
+GarnetNetwork::functionalRead(Packet *pkt)
+{
+    for (unsigned int i = 0; i < m_router_ptr_vector.size(); i++) {
+        if (m_router_ptr_vector[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    for (unsigned int i = 0; i < m_ni_ptr_vector.size(); ++i) {
+        if (m_ni_ptr_vector[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    for (unsigned int i = 0; i < m_link_ptr_vector.size(); ++i) {
+        if (m_link_ptr_vector[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+uint32_t
+GarnetNetwork::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (unsigned int i = 0; i < m_router_ptr_vector.size(); i++) {
+        num_functional_writes += m_router_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    for (unsigned int i = 0; i < m_ni_ptr_vector.size(); ++i) {
+        num_functional_writes += m_ni_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    for (unsigned int i = 0; i < m_link_ptr_vector.size(); ++i) {
+        num_functional_writes += m_link_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    return num_functional_writes;
+}
+
 void
 GarnetNetwork::printLinkStats(ostream& out) const
 {

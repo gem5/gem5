@@ -66,6 +66,9 @@ class flit
             return (n1->get_time() > n2->get_time());
     }
 
+    bool functionalRead(Packet *pkt);
+    bool functionalWrite(Packet *pkt);
+
   private:
     int m_id;
     int m_vnet;

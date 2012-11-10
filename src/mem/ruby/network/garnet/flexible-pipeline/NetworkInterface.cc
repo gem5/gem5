@@ -338,6 +338,36 @@ NetworkInterface::checkReschedule()
     }
 }
 
+bool
+NetworkInterface::functionalRead(Packet *pkt)
+{
+    // Go through the internal buffers
+    for (unsigned int i = 0; i < m_ni_buffers.size(); ++i) {
+        if (m_ni_buffers[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+
+    // Go through the buffer between this network interface and the router
+    if (outSrcQueue->functionalRead(pkt)) {
+        return true;
+    }
+
+    return false;
+}
+
+uint32_t
+NetworkInterface::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+    for (unsigned int i = 0; i < m_ni_buffers.size(); ++i) {
+        num_functional_writes += m_ni_buffers[i]->functionalWrite(pkt);
+    }
+
+    num_functional_writes += outSrcQueue->functionalWrite(pkt);
+    return num_functional_writes;
+}
+
 void
 NetworkInterface::print(std::ostream& out) const
 {

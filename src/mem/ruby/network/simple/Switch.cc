@@ -217,6 +217,7 @@ Switch::print(std::ostream& out) const
     // FIXME printing
     out << "[Switch]";
 }
+
 bool
 Switch::functionalRead(Packet *pkt)
 {

@@ -53,6 +53,9 @@ class flitBuffer
     void insert(flit *flt);
     void print(std::ostream& out) const;
 
+    bool functionalRead(Packet *);
+    uint32_t functionalWrite(Packet *);
+
   private:
     std::vector<flit *> m_buffer;
     int size, max_size;

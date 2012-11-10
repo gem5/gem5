@@ -81,6 +81,14 @@ class GarnetNetwork : public BaseGarnetNetwork
                           const NetDest& routing_table_entry, 
                           bool isReconfiguration);
 
+    //! Function for performing a functional read. The return value
+    //! indicates if a message was found that had the required address.
+    bool functionalRead(Packet *pkt);
+
+    //! Function for performing a functional write. The return value
+    //! indicates the number of messages that were written.
+    uint32_t functionalWrite(Packet *pkt);
+
   private:
     void checkNetworkAllocation(NodeID id, bool ordered, int network_num,
                                 std::string vnet_type);
@@ -105,4 +113,3 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
 }
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_GARNET_NETWORK_HH__
-

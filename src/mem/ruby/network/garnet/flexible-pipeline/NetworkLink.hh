@@ -77,6 +77,9 @@ class NetworkLink : public SimObject, public FlexibleConsumer
         m_net_ptr = net_ptr; 
     }
 
+    bool functionalRead(Packet *);
+    uint32_t functionalWrite(Packet *);
+
   protected:
     int m_id, m_latency;
     int m_in_port, m_out_port;

@@ -72,6 +72,9 @@ class NetworkInterface : public FlexibleConsumer
 
     void print(std::ostream& out) const;
 
+    bool functionalRead(Packet *);
+    uint32_t functionalWrite(Packet *);
+
   private:
     GarnetNetwork *m_net_ptr;
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;

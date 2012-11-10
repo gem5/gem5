@@ -135,3 +135,17 @@ flit::print(std::ostream& out) const
     out << "Enqueue Time=" << m_enqueue_time << " ";
     out << "]";
 }
+
+bool
+flit::functionalRead(Packet *pkt)
+{
+    Message *msg = m_msg_ptr.get();
+    return msg->functionalRead(pkt);
+}
+
+bool
+flit::functionalWrite(Packet *pkt)
+{
+    Message *msg = m_msg_ptr.get();
+    return msg->functionalWrite(pkt);
+}

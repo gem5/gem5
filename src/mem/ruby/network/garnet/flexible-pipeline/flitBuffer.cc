@@ -112,3 +112,27 @@ flitBuffer::print(std::ostream& out) const
     out << "[flitBuffer: ";
     out << m_buffer.size() << "] " << std::endl;
 }
+
+bool
+flitBuffer::functionalRead(Packet *pkt)
+{
+    for (unsigned int i = 0; i < m_buffer.size(); ++i) {
+        if (m_buffer[i]->functionalRead(pkt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint32_t
+flitBuffer::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (unsigned int i = 0; i < m_buffer.size(); ++i) {
+        if (m_buffer[i]->functionalWrite(pkt)) {
+            num_functional_writes++;
+        }
+    }
+    return num_functional_writes;
+}
