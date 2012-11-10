@@ -495,26 +495,6 @@ RubySystem::functionalRead(PacketPtr pkt)
         }
     }
 
-    // Since we are here, this means that none of the controllers hold this
-    // address in a stable/base state. The function searches through all the
-    // buffers that exist in different cache, directory and memory
-    // controllers, and in the network components and reads the data portion
-    // of the first message that holds address specified in the packet.
-    for (unsigned int i = 0; i < num_controllers;++i) {
-        if (m_abs_cntrl_vec[i]->functionalReadBuffers(pkt)) {
-            return true;
-        }
-    }
-
-    for (unsigned int i = 0; i < m_memory_controller_vec.size(); ++i) {
-        if (m_memory_controller_vec[i]->functionalReadBuffers(pkt)) {
-            return true;
-        }
-    }
-
-    if (m_network_ptr->functionalRead(pkt)) {
-        return true;
-    }
     return false;
 }
 
