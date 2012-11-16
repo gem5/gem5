@@ -46,6 +46,7 @@
 
 #include "base/vnc/vncinput.hh"
 #include "base/output.hh" //simout
+#include "base/trace.hh"
 #include "debug/VNC.hh"
 
 using namespace std;

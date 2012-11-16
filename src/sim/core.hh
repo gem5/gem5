@@ -39,12 +39,10 @@
 #include <string>
 
 #include "base/types.hh"
+#include "sim/eventq.hh"
 
 /// The universal simulation clock.
-extern Tick _curTick;
-
-inline Tick curTick() { return _curTick; }
-inline void curTick(Tick newVal) { _curTick = newVal; }
+inline Tick curTick() { return mainEventQueue.getCurTick(); }
 
 const Tick retryTime = 1000;
 

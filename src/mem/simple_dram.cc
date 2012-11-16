@@ -38,6 +38,7 @@
  *          Ani Udipi
  */
 
+#include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/DRAM.hh"
 #include "debug/DRAMWR.hh"

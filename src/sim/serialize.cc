@@ -465,7 +465,7 @@ Globals::unserialize(Checkpoint *cp, const std::string &section)
 {
     Tick tick;
     paramIn(cp, section, "curTick", tick);
-    curTick(tick);
+    mainEventQueue.setCurTick(tick);
 
     mainEventQueue.unserialize(cp, "MainEventQueue");
 }

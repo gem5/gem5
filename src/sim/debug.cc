@@ -36,7 +36,7 @@
 
 #include "base/debug.hh"
 #include "sim/debug.hh"
-#include "sim/eventq.hh"
+#include "sim/eventq_impl.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 

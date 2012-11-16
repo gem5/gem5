@@ -33,7 +33,7 @@
 #ifndef __DEV_MC146818_HH__
 #define __DEV_MC146818_HH__
 
-#include "sim/eventq.hh"
+#include "sim/eventq_impl.hh"
 
 /** Real-Time Clock (MC146818) */
 class MC146818 : public EventManager

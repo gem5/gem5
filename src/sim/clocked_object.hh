@@ -47,6 +47,7 @@
 
 #include "base/intmath.hh"
 #include "params/ClockedObject.hh"
+#include "sim/core.hh"
 #include "sim/sim_object.hh"
 
 /**

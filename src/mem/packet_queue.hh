@@ -56,8 +56,8 @@
 #include <list>
 
 #include "mem/port.hh"
-#include "sim/eventq.hh"
 #include "sim/drain.hh"
+#include "sim/eventq_impl.hh"
 
 /**
  * A packet queue is a class that holds deferred packets and later

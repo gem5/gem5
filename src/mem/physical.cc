@@ -50,6 +50,7 @@
 #include <iostream>
 #include <string>
 
+#include "base/trace.hh"
 #include "debug/BusAddrRanges.hh"
 #include "debug/Checkpoint.hh"
 #include "mem/abstract_mem.hh"

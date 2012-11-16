@@ -42,7 +42,7 @@
 #include "cpu/smt.hh"
 #include "debug/Config.hh"
 #include "sim/core.hh"
-#include "sim/eventq.hh"
+#include "sim/eventq_impl.hh"
 
 using namespace std;
 
@@ -201,6 +201,9 @@ EventQueue::serviceOne()
 
     // handle action
     if (!event->squashed()) {
+        // forward current cycle to the time when this event occurs.
+        setCurTick(event->when());
+
         event->process();
         if (event->isExitEvent()) {
             assert(!event->flags.isSet(Event::AutoDelete) ||
@@ -429,5 +432,5 @@ Event::dump() const
 }
 
 EventQueue::EventQueue(const string &n)
-    : objName(n), head(NULL)
+    : objName(n), head(NULL), _curTick(0)
 {}

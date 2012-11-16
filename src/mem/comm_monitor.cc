@@ -38,6 +38,7 @@
  *          Andreas Hansson
  */
 
+#include "base/trace.hh"
 #include "debug/CommMonitor.hh"
 #include "mem/comm_monitor.hh"
 #include "sim/stats.hh"

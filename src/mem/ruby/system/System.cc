@@ -226,7 +226,7 @@ RubySystem::serialize(std::ostream &os)
     // Restore eventq head
     eventq_head = eventq->replaceHead(eventq_head);
     // Restore curTick
-    curTick(curtick_original);
+    setCurTick(curtick_original);
 
     uint8_t *raw_data = NULL;
 
@@ -357,7 +357,7 @@ RubySystem::startup()
         // save the event queue head
         Event* eventq_head = eventq->replaceHead(NULL);
         // set curTick to 0 and reset Ruby System's clock
-        curTick(0);
+        setCurTick(0);
         resetClock();
 
         // Schedule an event to start cache warmup
@@ -377,7 +377,7 @@ RubySystem::startup()
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
         // Restore curTick and Ruby System's clock
-        curTick(curtick_original);
+        setCurTick(curtick_original);
         resetClock();
     }
 }

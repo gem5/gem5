@@ -28,6 +28,7 @@
 
 #include <cassert>
 
+#include "base/trace.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/NetDest.hh"

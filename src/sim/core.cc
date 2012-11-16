@@ -35,10 +35,9 @@
 #include "base/callback.hh"
 #include "base/output.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 
 using namespace std;
-
-Tick _curTick = 0;
 
 namespace SimClock {
 /// The simulated frequency of curTick(). (In ticks per second)

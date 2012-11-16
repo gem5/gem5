@@ -44,7 +44,6 @@
 
 #include "base/flags.hh"
 #include "base/misc.hh"
-#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/Event.hh"
 #include "sim/serialize.hh"
@@ -361,6 +360,7 @@ class EventQueue : public Serializable
   private:
     std::string objName;
     Event *head;
+    Tick _curTick;
 
     void insert(Event *event);
     void remove(Event *event);
@@ -379,6 +379,9 @@ class EventQueue : public Serializable
     void reschedule(Event *event, Tick when, bool always = false);
 
     Tick nextTick() const { return head->when(); }
+    void setCurTick(Tick newVal) { _curTick = newVal; }
+    Tick getCurTick() { return _curTick; }
+
     Event *serviceOne();
 
     // process all events up to the given timestamp.  we inline a
@@ -398,6 +401,8 @@ class EventQueue : public Serializable
             //assert(head->when() >= when && "event scheduled in the past");
             serviceOne();
         }
+
+        setCurTick(when);
     }
 
     // return true if no events are queued
@@ -476,67 +481,9 @@ class EventManager
     {
         eventq->reschedule(event, when, always);
     }
+
+    void setCurTick(Tick newVal) { eventq->setCurTick(newVal); }
 };
-
-inline void
-EventQueue::schedule(Event *event, Tick when)
-{
-    assert(when >= curTick());
-    assert(!event->scheduled());
-    assert(event->initialized());
-
-    event->setWhen(when, this);
-    insert(event);
-    event->flags.set(Event::Scheduled);
-    if (this == &mainEventQueue)
-        event->flags.set(Event::IsMainQueue);
-    else
-        event->flags.clear(Event::IsMainQueue);
-
-    if (DTRACE(Event))
-        event->trace("scheduled");
-}
-
-inline void
-EventQueue::deschedule(Event *event)
-{
-    assert(event->scheduled());
-    assert(event->initialized());
-
-    remove(event);
-
-    event->flags.clear(Event::Squashed);
-    event->flags.clear(Event::Scheduled);
-
-    if (DTRACE(Event))
-        event->trace("descheduled");
-
-    if (event->flags.isSet(Event::AutoDelete))
-        delete event;
-}
-
-inline void
-EventQueue::reschedule(Event *event, Tick when, bool always)
-{
-    assert(when >= curTick());
-    assert(always || event->scheduled());
-    assert(event->initialized());
-
-    if (event->scheduled())
-        remove(event);
-            
-    event->setWhen(when, this);
-    insert(event);
-    event->flags.clear(Event::Squashed);
-    event->flags.set(Event::Scheduled);
-    if (this == &mainEventQueue)
-        event->flags.set(Event::IsMainQueue);
-    else
-        event->flags.clear(Event::IsMainQueue);
-
-    if (DTRACE(Event))
-        event->trace("rescheduled");
-}
 
 template <class T, void (T::* F)()>
 void
