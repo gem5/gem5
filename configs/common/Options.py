@@ -85,7 +85,7 @@ def addCommonOptions(parser):
     ###Note that performing checkpointing via python script files will override
     ###checkpoint instructions built into binaries.
     parser.add_option("--take-checkpoints", action="store", type="string",
-        help="<M,N> will take checkpoint at cycle M and every N cycles thereafter")
+        help="<M,N> take checkpoints at tick M and every N ticks thereafter")
     parser.add_option("--max-checkpoints", action="store", type="int",
         help="the maximum number of checkpoints to drop", default=5)
     parser.add_option("--checkpoint-dir", action="store", type="string",
