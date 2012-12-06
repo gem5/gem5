@@ -90,7 +90,6 @@ class O3_ARM_v7a_FUP(FUPool):
 
 class O3_ARM_v7a_3(DerivO3CPU):
     predType = "tournament"
-    localPredictorSize = 64
     localCtrBits = 2
     localHistoryTableSize = 64
     localHistoryBits = 6

@@ -53,8 +53,7 @@ BPredUnit::BPredUnit(Resource *_res, ThePipeline::Params *params)
                               params->instShiftAmt);
         predictor = Local;
     } else if (params->predType == "tournament") {
-        tournamentBP = new TournamentBP(params->localPredictorSize,
-                                        params->localCtrBits,
+        tournamentBP = new TournamentBP(params->localCtrBits,
                                         params->localHistoryTableSize,
                                         params->localHistoryBits,
                                         params->globalPredictorSize,

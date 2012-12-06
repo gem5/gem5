@@ -63,8 +63,7 @@ class TournamentBP
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(unsigned localPredictorSize,
-                 unsigned localCtrBits,
+    TournamentBP(unsigned localCtrBits,
                  unsigned localHistoryTableSize,
                  unsigned localHistoryBits,
                  unsigned globalPredictorSize,
@@ -181,10 +180,10 @@ class TournamentBP
     /** Local counters. */
     std::vector<SatCounter> localCtrs;
 
-    /** Size of the local predictor. */
+    /** Number of counters in the local predictor. */
     unsigned localPredictorSize;
 
-    /** Mask to get the proper index bits into the predictor. */
+    /** Mask to truncate values stored in the local history table. */
     unsigned localPredictorMask;
 
     /** Number of bits of the local predictor's counters. */
@@ -193,42 +192,49 @@ class TournamentBP
     /** Array of local history table entries. */
     std::vector<unsigned> localHistoryTable;
 
-    /** Size of the local history table. */
+    /** Number of entries in the local history table. */
     unsigned localHistoryTableSize;
 
-    /** Number of bits for each entry of the local history table.
-     *  @todo Doesn't this come from the size of the local predictor?
-     */
+    /** Number of bits for each entry of the local history table. */
     unsigned localHistoryBits;
-
-    /** Mask to get the proper local history. */
-    unsigned localHistoryMask;
 
     /** Array of counters that make up the global predictor. */
     std::vector<SatCounter> globalCtrs;
 
-    /** Size of the global predictor. */
+    /** Number of entries in the global predictor. */
     unsigned globalPredictorSize;
 
     /** Number of bits of the global predictor's counters. */
     unsigned globalCtrBits;
 
-    /** Global history register. */
+    /** Global history register. Contains as much history as specified by
+     *  globalHistoryBits. Actual number of bits used is determined by
+     *  globalHistoryMask and choiceHistoryMask. */
     unsigned globalHistory;
 
-    /** Number of bits for the global history. */
+    /** Number of bits for the global history. Determines maximum number of
+        entries in global and choice predictor tables. */
     unsigned globalHistoryBits;
 
-    /** Mask to get the proper global history. */
+    /** Mask to apply to globalHistory to access global history table.
+     *  Based on globalPredictorSize.*/
     unsigned globalHistoryMask;
+
+    /** Mask to apply to globalHistory to access choice history table.
+     *  Based on choicePredictorSize.*/
+    unsigned choiceHistoryMask;
+
+    /** Mask to control how much history is stored. All of it might not be
+     *  used. */
+    unsigned historyRegisterMask;
 
     /** Array of counters that make up the choice predictor. */
     std::vector<SatCounter> choiceCtrs;
 
-    /** Size of the choice predictor (identical to the global predictor). */
+    /** Number of entries in the choice predictor. */
     unsigned choicePredictorSize;
 
-    /** Number of bits of the choice predictor's counters. */
+    /** Number of bits in the choice predictor's counters. */
     unsigned choiceCtrBits;
 
     /** Number of bits to shift the instruction over to get rid of the word
@@ -236,10 +242,12 @@ class TournamentBP
      */
     unsigned instShiftAmt;
 
-    /** Threshold for the counter value; above the threshold is taken,
+    /** Thresholds for the counter value; above the threshold is taken,
      *  equal to or below the threshold is not taken.
      */
-    unsigned threshold;
+    unsigned localThreshold;
+    unsigned globalThreshold;
+    unsigned choiceThreshold;
 };
 
 #endif // __CPU_O3_TOURNAMENT_PRED_HH__
