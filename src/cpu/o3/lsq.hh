@@ -198,12 +198,6 @@ class LSQ {
     int numStores(ThreadID tid)
     { return thread[tid].numStores(); }
 
-    /** Returns the total number of loads that are ready. */
-    int numLoadsReady();
-    /** Returns the number of loads that are ready for a single thread. */
-    int numLoadsReady(ThreadID tid)
-    { return thread[tid].numLoadsReady(); }
-
     /** Returns the number of free entries. */
     unsigned numFreeEntries();
     /** Returns the number of free entries for a specific thread. */

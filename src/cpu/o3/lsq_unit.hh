@@ -192,9 +192,6 @@ class LSQUnit {
     /** Returns the number of free entries (min of free LQ and SQ entries). */
     unsigned numFreeEntries();
 
-    /** Returns the number of loads ready to execute. */
-    int numLoadsReady();
-
     /** Returns the number of loads in the LQ. */
     int numLoads() { return loads; }
 

@@ -420,24 +420,6 @@ LSQUnit<Impl>::numFreeEntries()
 }
 
 template <class Impl>
-int
-LSQUnit<Impl>::numLoadsReady()
-{
-    int load_idx = loadHead;
-    int retval = 0;
-
-    while (load_idx != loadTail) {
-        assert(loadQueue[load_idx]);
-
-        if (loadQueue[load_idx]->readyToIssue()) {
-            ++retval;
-        }
-    }
-
-    return retval;
-}
-
-template <class Impl>
 void
 LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 {

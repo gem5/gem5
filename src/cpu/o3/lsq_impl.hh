@@ -400,24 +400,6 @@ LSQ<Impl>::numStores()
 }
 
 template<class Impl>
-int
-LSQ<Impl>::numLoadsReady()
-{
-    unsigned total = 0;
-
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        total += thread[tid].numLoadsReady();
-    }
-
-    return total;
-}
-
-template<class Impl>
 unsigned
 LSQ<Impl>::numFreeEntries()
 {
