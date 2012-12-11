@@ -41,9 +41,6 @@ class ObjDeclAST(DeclAST):
     def generate(self):
         machineComponentSym = False
 
-        if "hack" in self:
-            warning("'hack=' is now deprecated")
-
         if "network" in self and "virtual_network" not in self:
             self.error("Network queues require a 'virtual_network' attribute")
 

@@ -41,7 +41,8 @@ python_class_map = {"int": "Int",
                     "Sequencer": "RubySequencer",
                     "DirectoryMemory": "RubyDirectoryMemory",
                     "MemoryControl": "MemoryControl",
-                    "DMASequencer": "DMASequencer"
+                    "DMASequencer": "DMASequencer",
+                    "Prefetcher":"Prefetcher"
                     }
 
 class StateMachine(Symbol):
@@ -49,6 +50,7 @@ class StateMachine(Symbol):
         super(StateMachine, self).__init__(symtab, ident, location, pairs)
         self.table = None
         self.config_parameters = config_parameters
+        self.prefetchers = []
 
         for param in config_parameters:
             if param.pointer:
@@ -58,6 +60,8 @@ class StateMachine(Symbol):
                 var = Var(symtab, param.name, location, param.type_ast.type,
                           "m_%s" % param.name, {}, self)
             self.symtab.registerSym(param.name, var)
+            if str(param.type_ast.type) == "Prefetcher":
+                self.prefetchers.append(var)
 
         self.states = orderdict()
         self.events = orderdict()
@@ -69,8 +73,8 @@ class StateMachine(Symbol):
         self.objects = []
         self.TBEType   = None
         self.EntryType = None
-
         self.message_buffer_names = []
+
 
     def __repr__(self):
         return "[StateMachine: %s]" % self.ident
@@ -629,6 +633,10 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
                 else:
                     code('$vid->setRecycleLatency(m_recycle_latency);')
 
+        # Set the prefetchers
+        code()
+        for prefetcher in self.prefetchers:
+            code('${{prefetcher.code}}.setController(this);')
 
         # Set the queue consumers
         code()

@@ -87,6 +87,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                             start_index_bit = block_size_bits,
                             is_icache = False)
 
+        prefetcher = RubyPrefetcher.Prefetcher()
+
         l1_cntrl = L1Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
                                       L1IcacheMemory = l1i_cache,
@@ -94,7 +96,9 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                       l2_select_num_bits = l2_bits,
                                       send_evictions = (
                                           options.cpu_type == "detailed"),
-                                      ruby_system = ruby_system)
+                                      prefetcher = prefetcher,
+                                      ruby_system = ruby_system,
+                                      enable_prefetch = False)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
