@@ -78,6 +78,10 @@ class AbstractController : public SimObject, public Consumer
     //! The return value indicates the number of messages written with the
     //! data from the packet.
     virtual uint32_t functionalWriteBuffers(PacketPtr&) = 0;
+
+    //! Function for enqueuing a prefetch request
+    virtual void enqueuePrefetch(const Address&, const RubyRequestType&)
+    { fatal("Prefetches not implemented!");}
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
