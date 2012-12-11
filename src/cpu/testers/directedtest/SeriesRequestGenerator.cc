@@ -33,13 +33,13 @@
 #include "debug/DirectedTest.hh"
 
 SeriesRequestGenerator::SeriesRequestGenerator(const Params *p)
-    : DirectedGenerator(p)
+    : DirectedGenerator(p),
+      m_addr_increment_size(p->addr_increment_size),
+      m_percent_writes(p->percent_writes)
 {
     m_status = SeriesRequestGeneratorStatus_Thinking;
     m_active_node = 0;
     m_address = 0x0;
-    m_addr_increment_size = p->addr_increment_size;
-    m_issue_writes = p->issue_writes;
 }
 
 SeriesRequestGenerator::~SeriesRequestGenerator()
@@ -60,11 +60,13 @@ SeriesRequestGenerator::initiate()
     Request *req = new Request(m_address, 1, flags, masterId);
 
     Packet::Command cmd;
-    if (m_issue_writes) {
+    bool do_write = ((random() % 100) < m_percent_writes);
+    if (do_write) {
         cmd = MemCmd::WriteReq;
     } else {
         cmd = MemCmd::ReadReq;
     }
+
     PacketPtr pkt = new Packet(req, cmd);
     uint8_t* dummyData = new uint8_t;
     *dummyData = 0;

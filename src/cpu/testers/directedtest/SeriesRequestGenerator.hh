@@ -56,7 +56,7 @@ class SeriesRequestGenerator : public DirectedGenerator
     Addr m_address;
     uint32_t m_active_node;
     uint32_t m_addr_increment_size;
-    bool m_issue_writes;
+    uint32_t m_percent_writes;
 };
 
 #endif //__CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__

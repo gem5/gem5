@@ -52,16 +52,17 @@ parser.add_option("-l", "--requests", metavar="N", default=100,
                   help="Stop after N requests")
 parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
                   help="Wakeup every N cycles")
-parser.add_option("--test-type", type="string", default="SeriesGetx",
-                  help="SeriesGetx|SeriesGets|Invalidate")
+parser.add_option("--test-type", type="choice", default="SeriesGetx",
+                  choices = ["SeriesGetx", "SeriesGets", "SeriesGetMixed",
+                             "Invalidate"],
+                  help = "Type of test")
+parser.add_option("--percent-writes", type="int", default=100,
+                  help="percentage of accesses that should be writes")
 
 #
 # Add the ruby specific and protocol specific options
 #
 Ruby.define_options(parser)
-
-execfile(os.path.join(config_root, "common", "Options.py"))
-
 (options, args) = parser.parse_args()
 
 if args:
@@ -73,10 +74,13 @@ if args:
 #
 if options.test_type == "SeriesGetx":
     generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
-                                             issue_writes = True)
+                                       percent_writes = 100)
 elif options.test_type == "SeriesGets":
     generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
-                                             issue_writes = False)
+                                       percent_writes = 0)
+elif options.test_type == "SeriesGetMixed":
+    generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
+                                       percent_writes = options.percent_writes)
 elif options.test_type == "Invalidate":
     generator = InvalidateGenerator(num_cpus = options.num_cpus)
 else:

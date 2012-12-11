@@ -42,7 +42,9 @@ class SeriesRequestGenerator(DirectedGenerator):
     type = 'SeriesRequestGenerator'
     cxx_header = "cpu/testers/directedtest/SeriesRequestGenerator.hh"
     addr_increment_size = Param.Int(64, "address increment size")
-    issue_writes = Param.Bool(True, "issue writes if true, otherwise reads")
+    num_series = Param.UInt32(1,
+        "number of different address streams to generate")
+    percent_writes = Param.Percent(50, "percent of access that are writes")
 
 class InvalidateGenerator(DirectedGenerator):
     type = 'InvalidateGenerator'
