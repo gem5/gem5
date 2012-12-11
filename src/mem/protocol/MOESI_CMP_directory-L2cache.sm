@@ -224,8 +224,7 @@ machine(L2Cache, "Token protocol")
     bool isTagPresent(Address);
   }
 
-
-  TBETable TBEs, template="<L2Cache_TBE>";
+  TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
   PerfectCacheMemory localDirectory, template="<L2Cache_DirEntry>";
 
   void set_cache_entry(AbstractCacheEntry b);

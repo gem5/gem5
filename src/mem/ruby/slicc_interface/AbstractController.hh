@@ -32,13 +32,14 @@
 #include <iostream>
 #include <string>
 
-#include "mem/packet.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/packet.hh"
 #include "params/RubyController.hh"
 #include "sim/sim_object.hh"
 
@@ -82,6 +83,24 @@ class AbstractController : public SimObject, public Consumer
     //! Function for enqueuing a prefetch request
     virtual void enqueuePrefetch(const Address&, const RubyRequestType&)
     { fatal("Prefetches not implemented!");}
+
+  protected:
+    int m_transitions_per_cycle;
+    int m_buffer_size;
+    int m_recycle_latency;
+    std::string m_name;
+    std::map<std::string, std::string> m_cfg;
+    NodeID m_version;
+    Network* m_net_ptr;
+    MachineID m_machineID;
+    bool m_is_blocking;
+    std::map<Address, MessageBuffer*> m_block_map;
+    typedef std::vector<MessageBuffer*> MsgVecType;
+    typedef std::map< Address, MsgVecType* > WaitingBufType;
+    WaitingBufType m_waiting_buffers;
+    int m_max_in_port_rank;
+    int m_cur_in_port_rank;
+    int m_number_of_TBEs;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -119,7 +118,7 @@ machine(Directory, "Directory protocol")
   }
 
   // ** OBJECTS **
-  TBETable TBEs, template="<Directory_TBE>";
+  TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
   void set_tbe(TBE b);
   void unset_tbe();

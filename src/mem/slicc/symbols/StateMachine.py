@@ -33,6 +33,7 @@ import slicc.generate.html as html
 import re
 
 python_class_map = {"int": "Int",
+                    "uint32_t" : "UInt32",
                     "std::string": "String",
                     "bool": "Bool",
                     "CacheMemory": "RubyCache",
@@ -261,7 +262,6 @@ class $c_ident : public AbstractController
     void wakeUpAllBuffers();
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
     void print(std::ostream& out) const;
-    void printConfig(std::ostream& out) const;
     void wakeup();
     void printStats(std::ostream& out) const;
     void clearStats();
@@ -285,8 +285,6 @@ private:
                 code('${{param.type_ast.type}} m_${{param.ident}};')
 
         code('''
-int m_number_of_TBEs;
-
 TransitionResult doTransition(${ident}_Event event,
 ''')
 
@@ -319,21 +317,6 @@ TransitionResult doTransitionWorker(${ident}_Event event,
         code('''
                                     const Address& addr);
 
-std::string m_name;
-int m_transitions_per_cycle;
-int m_buffer_size;
-int m_recycle_latency;
-std::map<std::string, std::string> m_cfg;
-NodeID m_version;
-Network* m_net_ptr;
-MachineID m_machineID;
-bool m_is_blocking;
-std::map<Address, MessageBuffer*> m_block_map;
-typedef std::vector<MessageBuffer*> MsgVecType;
-typedef std::map< Address, MsgVecType* > WaitingBufType;
-WaitingBufType m_waiting_buffers;
-int m_max_in_port_rank;
-int m_cur_in_port_rank;
 static ${ident}_ProfileDumper s_profileDumper;
 ${ident}_Profiler m_profiler;
 static int m_num_controllers;
@@ -465,12 +448,6 @@ stringstream ${ident}_transitionComment;
 $c_ident::$c_ident(const Params *p)
     : AbstractController(p)
 {
-    m_version = p->version;
-    m_transitions_per_cycle = p->transitions_per_cycle;
-    m_buffer_size = p->buffer_size;
-    m_recycle_latency = p->recycle_latency;
-    m_number_of_TBEs = p->number_of_TBEs;
-    m_is_blocking = false;
     m_name = "${ident}";
 ''')
         #
@@ -574,14 +551,9 @@ $c_ident::init()
                     elif var.ident.find("mandatoryQueue") < 0:
                         th = var.get("template", "")
                         expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
-
                         args = ""
                         if "non_obj" not in vtype and not vtype.isEnumeration:
-                            if expr.find("TBETable") >= 0:
-                                args = "m_number_of_TBEs"
-                            else:
-                                args = var.get("constructor_hack", "")
-
+                            args = var.get("constructor", "")
                         code('$expr($args);')
 
                     code('assert($vid != NULL);')
@@ -823,16 +795,6 @@ void
 $c_ident::print(ostream& out) const
 {
     out << "[$c_ident " << m_version << "]";
-}
-
-void
-$c_ident::printConfig(ostream& out) const
-{
-    out << "$c_ident config: " << m_name << endl;
-    out << "  version: " << m_version << endl;
-    map<string, string>::const_iterator it;
-    for (it = m_cfg.begin(); it != m_cfg.end(); it++)
-        out << "  " << it->first << ": " << it->second << endl;
 }
 
 void

@@ -105,7 +105,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   // ** OBJECTS **
 
-  TBETable TBEs, template="<Directory_TBE>";
+  TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
   void set_tbe(TBE tbe);
   void unset_tbe();

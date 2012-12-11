@@ -157,7 +157,7 @@ machine(Directory, "Token protocol")
   PersistentTable persistentTable;
   TimerTable reissueTimerTable;
 
-  TBETable TBEs, template="<Directory_TBE>";
+  TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
   bool starving, default="false";
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";

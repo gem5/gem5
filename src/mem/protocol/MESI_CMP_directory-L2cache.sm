@@ -151,7 +151,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     bool isPresent(Address);
   }
 
-  TBETable L2_TBEs, template="<L2Cache_TBE>";
+  TBETable L2_TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
 
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();

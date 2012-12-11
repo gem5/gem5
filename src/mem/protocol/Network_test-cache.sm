@@ -66,25 +66,6 @@ machine(L1Cache, "Network_test L1 Cache")
     DataBlock DataBlk,       desc="Data in the block";
   }
 
-  // TBE fields
-  structure(TBE, desc="...") {
-    State TBEState,          desc="Transient state";
-    DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
-  }
-
-  structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
-  }
-
-
-  // STRUCTURES
-
-  TBETable TBEs, template="<L1Cache_TBE>";
-
-
   // FUNCTIONS
 
   // cpu/testers/networktest/networktest.cc generates packets of the type
@@ -112,11 +93,11 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(Entry cache_entry, Address addr) {
     return State:I;
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(Entry cache_entry, Address addr, State state) {
 
   }
 
@@ -146,9 +127,7 @@ machine(L1Cache, "Network_test L1 Cache")
     if (mandatoryQueue_in.isReady()) {
       peek(mandatoryQueue_in, RubyRequest) {
         trigger(mandatory_request_type_to_event(in_msg.Type),
-                in_msg.LineAddress,
-                getCacheEntry(in_msg.LineAddress),
-                TBEs[in_msg.LineAddress]);
+                in_msg.LineAddress, getCacheEntry(in_msg.LineAddress));
       }
     }
   }

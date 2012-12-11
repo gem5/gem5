@@ -32,5 +32,11 @@
 AbstractController::AbstractController(const Params *p)
     : SimObject(p), Consumer(this)
 {
-  p->ruby_system->registerAbstractController(this);
+    m_version = p->version;
+    m_transitions_per_cycle = p->transitions_per_cycle;
+    m_buffer_size = p->buffer_size;
+    m_recycle_latency = p->recycle_latency;
+    m_number_of_TBEs = p->number_of_TBEs;
+    m_is_blocking = false;
+    p->ruby_system->registerAbstractController(this);
 }
