@@ -4,9 +4,9 @@ sim_seconds                                  0.007257                       # Nu
 sim_ticks                                     7257449                       # Number of ticks simulated
 final_tick                                    7257449                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  69452                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 419088                       # Number of bytes of host memory used
-host_seconds                                   104.50                       # Real time elapsed on the host
+host_tick_rate                                  44253                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 419632                       # Number of bytes of host memory used
+host_seconds                                   164.00                       # Real time elapsed on the host
 system.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -19,6 +19,15 @@ system.l1_cntrl4.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl4.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl4.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl4.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl4.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl4.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl4.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl4.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl4.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl4.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl4.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl4.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl4.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl5.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl5.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl5.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -31,6 +40,15 @@ system.l1_cntrl5.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl5.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl5.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl5.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl5.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl5.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl5.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl5.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl5.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl5.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl5.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl5.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl5.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl6.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl6.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl6.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -43,6 +61,15 @@ system.l1_cntrl6.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl6.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl6.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl6.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl6.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl6.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl6.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl6.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl6.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl6.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl6.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl6.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl6.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl7.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl7.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl7.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -55,6 +82,15 @@ system.l1_cntrl7.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl7.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl7.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl7.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl7.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl7.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl7.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl7.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl7.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl7.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl7.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl7.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl7.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -67,6 +103,15 @@ system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl0.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -79,6 +124,15 @@ system.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl1.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl1.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl1.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl2.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl2.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl2.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -91,6 +145,15 @@ system.l1_cntrl2.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl2.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl2.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl2.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl2.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl2.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl2.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl2.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl2.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl2.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl2.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl2.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl2.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl3.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl3.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl3.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -103,6 +166,15 @@ system.l1_cntrl3.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl3.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl3.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl3.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl3.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl3.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl3.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl3.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl3.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl3.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl3.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl3.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl3.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads

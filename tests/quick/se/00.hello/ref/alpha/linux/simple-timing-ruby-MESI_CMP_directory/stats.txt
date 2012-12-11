@@ -4,11 +4,11 @@ sim_seconds                                  0.000139                       # Nu
 sim_ticks                                      138616                       # Number of ticks simulated
 final_tick                                     138616                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  27614                       # Simulator instruction rate (inst/s)
-host_op_rate                                    27611                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 598893                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 266140                       # Number of bytes of host memory used
-host_seconds                                     0.23                       # Real time elapsed on the host
+host_inst_rate                                  20296                       # Simulator instruction rate (inst/s)
+host_op_rate                                    20294                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 440211                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 275840                       # Number of bytes of host memory used
+host_seconds                                     0.32                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             25600                       # Number of bytes read from this memory
@@ -45,6 +45,15 @@ system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl0.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads

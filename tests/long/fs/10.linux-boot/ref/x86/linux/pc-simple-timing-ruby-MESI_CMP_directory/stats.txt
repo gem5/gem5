@@ -4,11 +4,11 @@ sim_seconds                                  5.205006                       # Nu
 sim_ticks                                5205006494000                       # Number of ticks simulated
 final_tick                               5205006494000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 176611                       # Simulator instruction rate (inst/s)
-host_op_rate                                   338881                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8497542071                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 459536                       # Number of bytes of host memory used
-host_seconds                                   612.53                       # Real time elapsed on the host
+host_inst_rate                                 150447                       # Simulator instruction rate (inst/s)
+host_op_rate                                   288677                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7238673236                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 507056                       # Number of bytes of host memory used
+host_seconds                                   719.06                       # Real time elapsed on the host
 sim_insts                                   108179755                       # Number of instructions simulated
 sim_ops                                     207574747                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide        35216                       # Number of bytes read from this memory
@@ -242,6 +242,15 @@ system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl0.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -254,6 +263,15 @@ system.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                
 system.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
 system.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
 system.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
+system.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.l1_cntrl1.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.l1_cntrl1.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.l1_cntrl1.prefetcher.hits                    0                       # number of prefetched blocks accessed
+system.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 system.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads

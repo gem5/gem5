@@ -1,4 +1,4 @@
-Real time: Sep/01/2012 14:05:06
+Real time: Dec/11/2012 09:10:20
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.52
-Virtual_time_in_minutes: 0.00866667
-Virtual_time_in_hours:   0.000144444
-Virtual_time_in_days:    6.01852e-06
+Virtual_time_in_seconds: 0.56
+Virtual_time_in_minutes: 0.00933333
+Virtual_time_in_hours:   0.000155556
+Virtual_time_in_days:    6.48148e-06
 
 Ruby_current_time: 318321
 Ruby_start_time: 0
 Ruby_cycles: 318321
 
-mbytes_resident: 44.9961
-mbytes_total: 254.652
-resident_ratio: 0.176758
+mbytes_resident: 49.5391
+mbytes_total: 264.797
+resident_ratio: 0.187128
 
 ruby_cycles_executed: [ 318322 ]
 
@@ -83,11 +83,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 8497
+page_reclaims: 9268
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 80
+block_outputs: 88
 
 Network Stats
 -------------
@@ -201,6 +201,9 @@ Data_all_Acks [874 ] 874
 Ack [0 ] 0
 Ack_all [1 ] 1
 WB_Ack [755 ] 755
+PF_Load [0 ] 0
+PF_Ifetch [0 ] 0
+PF_Store [0 ] 0
 
  - Transitions -
 NP  Load [42 ] 42
@@ -208,18 +211,26 @@ NP  Ifetch [56 ] 56
 NP  Store [818 ] 818
 NP  Inv [1 ] 1
 NP  L1_Replacement [0 ] 0
+NP  PF_Load [0 ] 0
+NP  PF_Ifetch [0 ] 0
+NP  PF_Store [0 ] 0
 
 I  Load [0 ] 0
 I  Ifetch [0 ] 0
 I  Store [0 ] 0
 I  Inv [0 ] 0
 I  L1_Replacement [145 ] 145
+I  PF_Load [0 ] 0
+I  PF_Ifetch [0 ] 0
+I  PF_Store [0 ] 0
 
 S  Load [0 ] 0
 S  Ifetch [0 ] 0
 S  Store [1 ] 1
 S  Inv [31 ] 31
 S  L1_Replacement [11 ] 11
+S  PF_Load [0 ] 0
+S  PF_Store [0 ] 0
 
 E  Load [0 ] 0
 E  Ifetch [0 ] 0
@@ -229,6 +240,8 @@ E  L1_Replacement [34 ] 34
 E  Fwd_GETX [0 ] 0
 E  Fwd_GETS [0 ] 0
 E  Fwd_GET_INSTR [0 ] 0
+E  PF_Load [0 ] 0
+E  PF_Store [0 ] 0
 
 M  Load [2 ] 2
 M  Ifetch [0 ] 0
@@ -238,6 +251,8 @@ M  L1_Replacement [722 ] 722
 M  Fwd_GETX [0 ] 0
 M  Fwd_GETS [0 ] 0
 M  Fwd_GET_INSTR [0 ] 0
+M  PF_Load [0 ] 0
+M  PF_Store [0 ] 0
 
 IS  Load [0 ] 0
 IS  Ifetch [0 ] 0
@@ -247,6 +262,8 @@ IS  L1_Replacement [374 ] 374
 IS  Data_Exclusive [41 ] 41
 IS  DataS_fromL1 [0 ] 0
 IS  Data_all_Acks [43 ] 43
+IS  PF_Load [0 ] 0
+IS  PF_Store [0 ] 0
 
 IM  Load [0 ] 0
 IM  Ifetch [0 ] 0
@@ -256,6 +273,8 @@ IM  L1_Replacement [9112 ] 9112
 IM  Data [0 ] 0
 IM  Data_all_Acks [817 ] 817
 IM  Ack [0 ] 0
+IM  PF_Load [0 ] 0
+IM  PF_Store [0 ] 0
 
 SM  Load [0 ] 0
 SM  Ifetch [0 ] 0
@@ -264,6 +283,8 @@ SM  Inv [0 ] 0
 SM  L1_Replacement [0 ] 0
 SM  Ack [0 ] 0
 SM  Ack_all [1 ] 1
+SM  PF_Load [0 ] 0
+SM  PF_Store [0 ] 0
 
 IS_I  Load [0 ] 0
 IS_I  Ifetch [0 ] 0
@@ -273,6 +294,8 @@ IS_I  L1_Replacement [0 ] 0
 IS_I  Data_Exclusive [0 ] 0
 IS_I  DataS_fromL1 [0 ] 0
 IS_I  Data_all_Acks [14 ] 14
+IS_I  PF_Load [0 ] 0
+IS_I  PF_Store [0 ] 0
 
 M_I  Load [0 ] 0
 M_I  Ifetch [10 ] 10
@@ -283,6 +306,8 @@ M_I  Fwd_GETX [0 ] 0
 M_I  Fwd_GETS [0 ] 0
 M_I  Fwd_GET_INSTR [0 ] 0
 M_I  WB_Ack [340 ] 340
+M_I  PF_Load [0 ] 0
+M_I  PF_Store [0 ] 0
 
 SINK_WB_ACK  Load [0 ] 0
 SINK_WB_ACK  Ifetch [1 ] 1
@@ -290,6 +315,46 @@ SINK_WB_ACK  Store [0 ] 0
 SINK_WB_ACK  Inv [0 ] 0
 SINK_WB_ACK  L1_Replacement [0 ] 0
 SINK_WB_ACK  WB_Ack [415 ] 415
+SINK_WB_ACK  PF_Load [0 ] 0
+SINK_WB_ACK  PF_Store [0 ] 0
+
+PF_IS  Load [0 ] 0
+PF_IS  Ifetch [0 ] 0
+PF_IS  Store [0 ] 0
+PF_IS  Inv [0 ] 0
+PF_IS  L1_Replacement [0 ] 0
+PF_IS  Data_Exclusive [0 ] 0
+PF_IS  DataS_fromL1 [0 ] 0
+PF_IS  Data_all_Acks [0 ] 0
+PF_IS  PF_Load [0 ] 0
+PF_IS  PF_Store [0 ] 0
+
+PF_IM  Load [0 ] 0
+PF_IM  Ifetch [0 ] 0
+PF_IM  Store [0 ] 0
+PF_IM  Inv [0 ] 0
+PF_IM  L1_Replacement [0 ] 0
+PF_IM  Data [0 ] 0
+PF_IM  Data_all_Acks [0 ] 0
+PF_IM  Ack [0 ] 0
+PF_IM  PF_Load [0 ] 0
+PF_IM  PF_Store [0 ] 0
+
+PF_SM  Load [0 ] 0
+PF_SM  Ifetch [0 ] 0
+PF_SM  Store [0 ] 0
+PF_SM  Inv [0 ] 0
+PF_SM  L1_Replacement [0 ] 0
+PF_SM  Ack [0 ] 0
+PF_SM  Ack_all [0 ] 0
+
+PF_IS_I  Load [0 ] 0
+PF_IS_I  Store [0 ] 0
+PF_IS_I  Inv [0 ] 0
+PF_IS_I  L1_Replacement [0 ] 0
+PF_IS_I  Data_Exclusive [0 ] 0
+PF_IS_I  DataS_fromL1 [0 ] 0
+PF_IS_I  Data_all_Acks [0 ] 0
 
 Cache Stats: system.l2_cntrl0.L2cacheMemory
   system.l2_cntrl0.L2cacheMemory_total_misses: 874
