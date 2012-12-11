@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/System.hh"
 
@@ -134,3 +136,24 @@ Address::operator=(const Address& obj)
     return *this;
 }
 
+void
+Address::makePageAddress()
+{
+    m_address = maskLowOrderBits(TheISA::LogVMPageSize);
+}
+
+Address
+page_address(const Address& addr)
+{
+    Address temp = addr;
+    temp.makePageAddress();
+    return temp;
+}
+
+Address
+next_stride_address(const Address& addr, int stride)
+{
+    Address temp = addr;
+    temp.makeNextStrideAddress(stride);
+    return temp;
+}

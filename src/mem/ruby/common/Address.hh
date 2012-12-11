@@ -36,7 +36,7 @@
 #include "base/hashmap.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
-const int ADDRESS_WIDTH = 64; // address width in bytes
+const uint32_t ADDRESS_WIDTH = 64; // address width in bytes
 
 class Address;
 typedef Address PhysAddress;
@@ -69,6 +69,7 @@ class Address
     physical_address_t getLineAddress() const;
     physical_address_t getOffset() const;
     void makeLineAddress();
+    void makePageAddress();
     void makeNextStrideAddress(int stride);
 
     int getBankSetNum() const;
@@ -201,6 +202,9 @@ Address::shiftLowOrderBits(int number) const
 {
     return (m_address >> number);
 }
+
+Address next_stride_address(const Address& addr, int stride);
+Address page_address(const Address& addr);
 
 __hash_namespace_begin
 template <> struct hash<Address>
