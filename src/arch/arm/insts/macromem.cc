@@ -145,6 +145,10 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
         // register.
         if (load && reg == INTREG_PC && exception_ret) {
             *++uop = new MicroUopRegMovRet(machInst, 0, INTREG_UREG1);
+            if (!(condCode == COND_AL || condCode == COND_UC))
+                (*uop)->setFlag(StaticInst::IsCondControl);
+            else
+                (*uop)->setFlag(StaticInst::IsUncondControl);
         } else if (load) {
             *++uop = new MicroUopRegMov(machInst, regIdx, INTREG_UREG1);
             if (reg == INTREG_PC) {
