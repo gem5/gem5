@@ -135,9 +135,12 @@ def template MicroSetPCCPSRConstructor {{
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
+            flags[IsCondControl] = true;
             for (int x = 0; x < _numDestRegs; x++) {
                 _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
             }
+        } else {
+            flags[IsUncondControl] = true;
         }
     }
 }};
