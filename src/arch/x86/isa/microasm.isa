@@ -207,6 +207,12 @@ let {{
     assembler.symbols["sti"] = stack_index("env.reg")
     assembler.symbols["stim"] = stack_index("env.regm")
 
+    def readFpReg(reg_name):
+        return regIdx("MISCREG_%s" % reg_name)
+
+    assembler.symbols["fsw"] = readFpReg("FSW")
+    assembler.symbols["fcw"] = readFpReg("FCW")
+
     macroopDict = assembler.assemble(microcode)
 
     decoder_output += mainRom.getDefinition()

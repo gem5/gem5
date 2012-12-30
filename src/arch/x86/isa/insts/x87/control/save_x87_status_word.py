@@ -36,6 +36,22 @@
 # Authors: Gabe Black
 
 microcode = '''
+
 # FSTSW
-# FNSTSW
+
+def macroop FNSTSW_R {
+    rdval t1, fsw
+    mov rax, rax, t1, dataSize=2
+};
+
+def macroop FNSTSW_M {
+    rdval t1, fsw
+    st t1, seg, sib, disp, dataSize=2
+};
+
+def macroop FNSTSW_P {
+    rdip t7
+    rdval t1, fsw
+    st t1, seg, riprel, disp, dataSize=2
+};
 '''

@@ -127,6 +127,13 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
     if (miscReg == MISCREG_TSC) {
         return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
     }
+
+    if (miscReg == MISCREG_FSW) {
+        MiscReg fsw = regVal[MISCREG_FSW];
+        MiscReg top = regVal[MISCREG_X87_TOP];
+        return (fsw & (~(7ULL << 11))) + (top << 11);
+    }
+
     return readMiscRegNoEffect(miscReg);
 }
 

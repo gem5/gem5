@@ -112,7 +112,7 @@ format WarnUnimpl {
                     0x6: fsin();
                     0x7: fcos();
                 }
-                default: fnstcw_Mw();
+                default: Inst::FNSTCW(Mw);
             }
         }
         //0x2: esc2();
@@ -247,7 +247,7 @@ format WarnUnimpl {
             }
             0x7: decode MODRM_MOD {
                 0x3: Inst::UD2();
-                default: fnstsw();
+                default: Inst::FNSTSW(Mw);
             }
         }
         //0x6: esc6();
@@ -310,7 +310,7 @@ format WarnUnimpl {
             }
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
-                    0x0: fnstsw();
+                    0x0: Inst::FNSTSW(rAw);
                     default: Inst::UD2();
                 }
                 default: fbld();

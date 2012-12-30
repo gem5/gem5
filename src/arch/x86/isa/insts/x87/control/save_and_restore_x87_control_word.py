@@ -38,5 +38,15 @@
 microcode = '''
 # FLDCW
 # FSTCW
-# FNSTCW
+
+def macroop FNSTCW_M {
+    rdval t1, fcw
+    st t1, seg, sib, disp, dataSize=2
+};
+
+def macroop FNSTCW_P {
+    rdip t7
+    rdval t1, fcw
+    st t1, seg, sib, disp, dataSize=2
+};
 '''
