@@ -106,7 +106,7 @@ format WarnUnimpl {
                     0x0: fprem();
                     0x1: fyl2xp1();
                     0x2: fsqrt();
-                    0x3: fsincos();
+                    0x3: Inst::FSINCOS();
                     0x4: frndint();
                     0x5: fscale();
                     0x6: fsin();

@@ -174,8 +174,40 @@ let {{
 
             return cls
 
+    class FpUnaryOp(X86Microop):
+        __metaclass__ = FpOpMeta
+        # This class itself doesn't act as a microop
+        abstract = True
 
-    class FpOp(X86Microop):
+        # Default template parameter values
+        flag_code = ""
+        cond_check = "true"
+        else_code = ";"
+
+        def __init__(self, dest, src1, spm=0, \
+                SetStatus=False, dataSize="env.dataSize"):
+            self.dest = dest
+            self.src1 = src1
+            self.src2 = "InstRegIndex(0)"
+            self.spm = spm
+            self.dataSize = dataSize
+            if SetStatus:
+                self.className += "Flags"
+            if spm:
+                self.className += "Top"
+
+        def getAllocator(self, microFlags):
+            return '''new %(class_name)s(machInst, macrocodeBlock,
+                    %(flags)s, %(src1)s, %(src2)s, %(dest)s,
+                    %(dataSize)s, %(spm)d)''' % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags),
+                "src1" : self.src1, "src2" : self.src2,
+                "dest" : self.dest,
+                "dataSize" : self.dataSize,
+                "spm" : self.spm}
+
+    class FpBinaryOp(X86Microop):
         __metaclass__ = FpOpMeta
         # This class itself doesn't act as a microop
         abstract = True
@@ -208,24 +240,27 @@ let {{
                 "dataSize" : self.dataSize,
                 "spm" : self.spm}
 
-    class Movfp(FpOp):
-        def __init__(self, dest, src1, spm=0, \
-                SetStatus=False, dataSize="env.dataSize"):
-            super(Movfp, self).__init__(dest, src1, "InstRegIndex(0)", \
-                    spm, SetStatus, dataSize)
+    class Movfp(FpUnaryOp):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                      ecfBit | ezfBit, src2)"
 
-    class Xorfp(FpOp):
+    class Xorfp(FpBinaryOp):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;'
 
-    class Sqrtfp(FpOp):
+    class Sqrtfp(FpBinaryOp):
         code = 'FpDestReg = sqrt(FpSrcReg2);'
 
+    class Cosfp(FpUnaryOp):
+        code = 'FpDestReg = cos(FpSrcReg1);'
+
+    class Sinfp(FpUnaryOp):
+        code = 'FpDestReg = sin(FpSrcReg1);'
+
+
     # Conversion microops
-    class ConvOp(FpOp):
+    class ConvOp(FpBinaryOp):
         abstract = True
         def __init__(self, dest, src1):
             super(ConvOp, self).__init__(dest, src1, \
@@ -258,19 +293,19 @@ let {{
 
     # These need to consider size at some point. They'll always use doubles
     # for the moment.
-    class addfp(FpOp):
+    class addfp(FpBinaryOp):
         code = 'FpDestReg = FpSrcReg1 + FpSrcReg2;'
 
-    class mulfp(FpOp):
+    class mulfp(FpBinaryOp):
         code = 'FpDestReg = FpSrcReg1 * FpSrcReg2;'
 
-    class divfp(FpOp):
+    class divfp(FpBinaryOp):
         code = 'FpDestReg = FpSrcReg1 / FpSrcReg2;'
 
-    class subfp(FpOp):
+    class subfp(FpBinaryOp):
         code = 'FpDestReg = FpSrcReg1 - FpSrcReg2;'
 
-    class Compfp(FpOp):
+    class Compfp(FpBinaryOp):
         def __init__(self, src1, src2, spm=0, setStatus=False, \
                 dataSize="env.dataSize"):
             super(Compfp, self).__init__("InstRegIndex(FLOATREG_MICROFP0)", \

@@ -38,7 +38,14 @@
 microcode = '''
 # FSIN
 # FCOS
-# FSINCOS
+
+def macroop FSINCOS {
+    sinfp ufp1, st(0)
+    cosfp ufp2, st(0)
+    movfp st(0), ufp1
+    movfp st(-1), ufp2, spm=-1
+};
+
 # FPTAN
 # FPATAN
 '''
