@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atom
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 10 2012 22:29:00
-gem5 started Sep 10 2012 22:29:08
+gem5 compiled Dec 30 2012 00:35:18
+gem5 started Dec 30 2012 00:50:19
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic -re tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/simple-atomic/smred.sav
@@ -26,4 +26,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 131393067000 because target called exit()
+122 123 124 Exiting @ tick 131393067500 because target called exit()

@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/long/se/10.mcf/x86/linux/simple-timing
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 10 2012 22:29:00
-gem5 started Sep 10 2012 23:03:49
+gem5 compiled Dec 30 2012 00:35:18
+gem5 started Dec 30 2012 00:35:30
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/10.mcf/x86/linux/simple-timing -re tests/run.py build/X86/tests/opt/long/se/10.mcf/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
@@ -25,4 +25,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 368209206000 because target called exit()
+Exiting @ tick 365989064000 because target called exit()

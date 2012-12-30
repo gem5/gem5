@@ -1,4 +1,3 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: instruction 'fnstcw_Mw' unimplemented
 warn: instruction 'fldcw_Mw' unimplemented
 hack: be nice to actually delete the event here

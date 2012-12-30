@@ -3,11 +3,11 @@ Redirecting stderr to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-ato
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 10 2012 21:50:34
-gem5 started Sep 10 2012 21:50:39
+gem5 compiled Dec 30 2012 00:35:18
+gem5 started Dec 30 2012 01:20:22
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic -re tests/run.py build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 5614000 because target called exit()
+Exiting @ tick 5614500 because target called exit()

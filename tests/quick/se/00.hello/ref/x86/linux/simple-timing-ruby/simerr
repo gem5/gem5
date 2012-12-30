@@ -1,4 +1,7 @@
+Warning: rounding error > tolerance
+    0.072760 rounded to 0
+Warning: rounding error > tolerance
+    0.072760 rounded to 0
 warn: Sockets disabled, not accepting gdb connections
-warn: instruction 'fnstcw_Mw' unimplemented
 warn: instruction 'fldcw_Mw' unimplemented
 hack: be nice to actually delete the event here
