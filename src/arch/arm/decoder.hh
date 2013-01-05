@@ -58,6 +58,9 @@ class Decoder
     bool foundIt;
     ITSTATE itBits;
 
+    int fpscrLen;
+    int fpscrStride;
+
   public:
     void reset()
     {
@@ -69,7 +72,8 @@ class Decoder
         foundIt = false;
     }
 
-    Decoder(ThreadContext * _tc) : tc(_tc), data(0)
+    Decoder(ThreadContext * _tc) : tc(_tc), data(0),
+        fpscrLen(0), fpscrStride(0)
     {
         reset();
     }
@@ -119,6 +123,12 @@ class Decoder
     int getInstSize() const
     {
         return (!emi.thumb || emi.bigThumb) ? 4 : 2;
+    }
+
+    void setContext(FPSCR fpscr)
+    {
+        fpscrLen = fpscr.len;
+        fpscrStride = fpscr.stride;
     }
 
   protected:

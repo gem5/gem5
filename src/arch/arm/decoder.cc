@@ -113,9 +113,8 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     data = inst;
     offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
     emi.thumb = pc.thumb();
-    FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
-    emi.fpscrLen = fpscr.len;
-    emi.fpscrStride = fpscr.stride;
+    emi.fpscrLen = fpscrLen;
+    emi.fpscrStride = fpscrStride;
 
     outOfBytes = false;
     process();

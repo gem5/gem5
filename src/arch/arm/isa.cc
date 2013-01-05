@@ -381,6 +381,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 fpscrMask.n = ones;
                 newVal = (newVal & (uint32_t)fpscrMask) |
                          (miscRegs[MISCREG_FPSCR] & ~(uint32_t)fpscrMask);
+                tc->getDecodePtr()->setContext(newVal);
             }
             break;
           case MISCREG_CPSR_Q:

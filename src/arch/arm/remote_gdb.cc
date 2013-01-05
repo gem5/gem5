@@ -293,7 +293,7 @@ RemoteGDB::setregs()
     }
 
     //FPSCR
-    context->setMiscRegNoEffect(MISCREG_FPSCR, gdbregs.regs[REG_FPSCR]>>32);
+    context->setMiscReg(MISCREG_FPSCR, gdbregs.regs[REG_FPSCR]>>32);
 }
 
 void
