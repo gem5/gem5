@@ -4,11 +4,11 @@ sim_seconds                                  0.000105                       # Nu
 sim_ticks                                   104830500                       # Number of ticks simulated
 final_tick                                  104830500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 100032                       # Simulator instruction rate (inst/s)
-host_op_rate                                   100032                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               10132772                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 236868                       # Number of bytes of host memory used
-host_seconds                                    10.35                       # Real time elapsed on the host
+host_inst_rate                                 112424                       # Simulator instruction rate (inst/s)
+host_op_rate                                   112424                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               11388036                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 275264                       # Number of bytes of host memory used
+host_seconds                                     9.21                       # Real time elapsed on the host
 sim_insts                                     1034897                       # Number of instructions simulated
 sim_ops                                       1034897                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu0.inst            22784                       # Number of bytes read from this memory
@@ -952,7 +952,7 @@ system.cpu1.int_regfile_reads                  422509                       # nu
 system.cpu1.int_regfile_writes                 197149                       # number of integer regfile writes
 system.cpu1.fp_regfile_writes                      64                       # number of floating regfile writes
 system.cpu1.misc_regfile_reads                 122869                       # number of misc regfile reads
-system.cpu1.misc_regfile_writes                   646                       # number of misc regfile writes
+system.cpu1.misc_regfile_writes                   648                       # number of misc regfile writes
 system.cpu1.icache.replacements                   317                       # number of replacements
 system.cpu1.icache.tagsinuse                85.783317                       # Cycle average of tags in use
 system.cpu1.icache.total_refs                   18178                       # Total number of references to valid blocks.
@@ -1426,7 +1426,7 @@ system.cpu2.int_regfile_reads                  319017                       # nu
 system.cpu2.int_regfile_writes                 150022                       # number of integer regfile writes
 system.cpu2.fp_regfile_writes                      64                       # number of floating regfile writes
 system.cpu2.misc_regfile_reads                  88362                       # number of misc regfile reads
-system.cpu2.misc_regfile_writes                   646                       # number of misc regfile writes
+system.cpu2.misc_regfile_writes                   648                       # number of misc regfile writes
 system.cpu2.icache.replacements                   319                       # number of replacements
 system.cpu2.icache.tagsinuse                80.119670                       # Cycle average of tags in use
 system.cpu2.icache.total_refs                   24566                       # Total number of references to valid blocks.
@@ -1900,7 +1900,7 @@ system.cpu3.int_regfile_reads                  427031                       # nu
 system.cpu3.int_regfile_writes                 198982                       # number of integer regfile writes
 system.cpu3.fp_regfile_writes                      64                       # number of floating regfile writes
 system.cpu3.misc_regfile_reads                 124365                       # number of misc regfile reads
-system.cpu3.misc_regfile_writes                   646                       # number of misc regfile writes
+system.cpu3.misc_regfile_writes                   648                       # number of misc regfile writes
 system.cpu3.icache.replacements                   318                       # number of replacements
 system.cpu3.icache.tagsinuse                83.493816                       # Cycle average of tags in use
 system.cpu3.icache.total_refs                   18731                       # Total number of references to valid blocks.
