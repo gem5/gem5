@@ -549,6 +549,9 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
     MiscReg new_val = val;
 
     switch (miscReg) {
+      case MISCREG_ASI:
+        tc->getDecodePtr()->setContext(val);
+        break;
       case MISCREG_STICK:
       case MISCREG_TICK:
         // stick and tick are same thing on niagra

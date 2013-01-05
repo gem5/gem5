@@ -94,7 +94,7 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 //            src->readMiscRegNoEffect(MISCREG_Y));
 //    dest->setMiscRegNoEffect(MISCREG_CCR,
 //            src->readMiscRegNoEffect(MISCREG_CCR));
-    dest->setMiscRegNoEffect(MISCREG_ASI,
+    dest->setMiscReg(MISCREG_ASI,
             src->readMiscRegNoEffect(MISCREG_ASI));
     dest->setMiscRegNoEffect(MISCREG_TICK,
             src->readMiscRegNoEffect(MISCREG_TICK));

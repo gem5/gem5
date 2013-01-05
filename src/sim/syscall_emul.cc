@@ -810,7 +810,7 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ctc->setMiscReg(MISCREG_CWP, 0);
             ctc->setIntReg(NumIntArchRegs + 7, 0);
             ctc->setMiscRegNoEffect(MISCREG_TL, 0);
-            ctc->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
+            ctc->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
 
             for (int y = 8; y < 32; y++)
                 ctc->setIntReg(y, tc->readIntReg(y));

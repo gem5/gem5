@@ -145,7 +145,7 @@ SparcLiveProcess::initState()
     // Set the trap level to 0
     tc->setMiscRegNoEffect(MISCREG_TL, 0);
     // Set the ASI register to something fixed
-    tc->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
+    tc->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
 
     /*
      * T1 specific registers
