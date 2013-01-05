@@ -35,35 +35,19 @@
 #include "arch/types.hh"
 #include "cpu/static_inst.hh"
 
-class ThreadContext;
-
 namespace PowerISA
 {
 
 class Decoder
 {
   protected:
-    ThreadContext * tc;
-
     // The extended machine instruction being generated
     ExtMachInst emi;
     bool instDone;
 
   public:
-    Decoder(ThreadContext * _tc) : tc(_tc), instDone(false)
+    Decoder() : instDone(false)
     {
-    }
-
-    ThreadContext *
-    getTC()
-    {
-        return tc;
-    }
-
-    void
-    setTC(ThreadContext * _tc)
-    {
-        tc = _tc;
     }
 
     void

@@ -44,8 +44,6 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decoder.hh"
 
-class ThreadContext;
-
 namespace X86ISA
 {
 
@@ -72,7 +70,6 @@ class Decoder
 
     static InstBytes dummy;
 
-    ThreadContext * tc;
     //The bytes to be predecoded
     MachInst fetchChunk;
     InstBytes *instBytes;
@@ -205,8 +202,7 @@ class Decoder
     static InstCacheMap instCacheMap;
 
   public:
-    Decoder(ThreadContext * _tc) :
-        tc(_tc), basePC(0), origPC(0), offset(0),
+    Decoder() : basePC(0), origPC(0), offset(0),
         outOfBytes(true), instDone(false),
         state(ResetState)
     {
@@ -257,16 +253,6 @@ class Decoder
     void reset()
     {
         state = ResetState;
-    }
-
-    ThreadContext * getTC()
-    {
-        return tc;
-    }
-
-    void setTC(ThreadContext * _tc)
-    {
-        tc = _tc;
     }
 
     void process();

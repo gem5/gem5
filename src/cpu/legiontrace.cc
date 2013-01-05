@@ -422,7 +422,6 @@ Trace::LegionTraceRecord::dump()
                          << endl;
 
                     TheISA::Decoder *decoder = thread->getDecoderPtr();
-                    decoder->setTC(thread);
                     decoder->moreBytes(m5Pc, m5Pc, shared_data->instruction);
 
                     assert(decoder->instReady());

@@ -59,7 +59,7 @@ FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
       instSize(sizeof(TheISA::MachInst)), fetchBuffSize(params->fetchBuffSize)
 {
     for (int tid = 0; tid < MaxThreads; tid++)
-        decoder[tid] = new Decoder(NULL);
+        decoder[tid] = new Decoder;
 }
 
 FetchUnit::~FetchUnit()
@@ -109,7 +109,6 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
     MachInst mach_inst =
         TheISA::gtoh(fetchInsts[fetch_offset]);
 
-    decoder[tid]->setTC(cpu->thread[tid]->getTC());
     decoder[tid]->moreBytes(instPC, inst->instAddr(), mach_inst);
     assert(decoder[tid]->instReady());
     inst->setStaticInst(decoder[tid]->decode(instPC));

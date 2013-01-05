@@ -35,9 +35,6 @@
 #include "arch/sparc/registers.hh"
 #include "arch/types.hh"
 #include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
-
-class ThreadContext;
 
 namespace SparcISA
 {
@@ -45,27 +42,14 @@ namespace SparcISA
 class Decoder
 {
   protected:
-    ThreadContext * tc;
     // The extended machine instruction being generated
     ExtMachInst emi;
     bool instDone;
     MiscReg asi;
 
   public:
-    Decoder(ThreadContext * _tc) : tc(_tc), instDone(false), asi(0)
+    Decoder() : instDone(false), asi(0)
     {}
-
-    ThreadContext *
-    getTC()
-    {
-        return tc;
-    }
-
-    void
-    setTC(ThreadContext * _tc)
-    {
-        tc = _tc;
-    }
 
     void process() {}
 

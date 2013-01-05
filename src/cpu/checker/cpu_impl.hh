@@ -306,7 +306,6 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                     StaticInstPtr instPtr = NULL;
 
                     //Predecode, ie bundle up an ExtMachInst
-                    thread->decoder.setTC(thread->getTC());
                     //If more fetch data is needed, pass it in.
                     Addr fetchPC = (pcState.instAddr() & PCMask) + fetchOffset;
                     thread->decoder.moreBytes(pcState, fetchPC, machInst);

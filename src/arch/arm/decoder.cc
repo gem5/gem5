@@ -32,7 +32,6 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
-#include "cpu/thread_context.hh"
 #include "debug/Decoder.hh"
 
 namespace ArmISA

@@ -134,7 +134,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
 
     for (int i = 0; i < Impl::MaxThreads; i++) {
         cacheData[i] = NULL;
-        decoder[i] = new TheISA::Decoder(NULL);
+        decoder[i] = new TheISA::Decoder;
     }
 }
 
@@ -1225,9 +1225,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 if (blkOffset >= numInsts)
                     break;
             }
-            MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
 
-            decoder[tid]->setTC(cpu->thread[tid]->getTC());
+            MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
             decoder[tid]->moreBytes(thisPC, fetchAddr, inst);
 
             if (decoder[tid]->needMoreBytes()) {

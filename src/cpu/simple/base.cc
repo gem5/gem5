@@ -380,8 +380,6 @@ BaseSimpleCPU::preExecute()
         TheISA::Decoder *decoder = &(thread->decoder);
 
         //Predecode, ie bundle up an ExtMachInst
-        //This should go away once the constructor can be set up properly
-        decoder->setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
         Addr fetchPC = (pcState.instAddr() & PCMask) + fetchOffset;
         //if(decoder->needMoreBytes())

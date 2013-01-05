@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/asi.hh"
+#include "arch/sparc/decoder.hh"
 #include "arch/sparc/isa.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
@@ -550,7 +551,7 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
 
     switch (miscReg) {
       case MISCREG_ASI:
-        tc->getDecodePtr()->setContext(val);
+        tc->getDecoderPtr()->setContext(val);
         break;
       case MISCREG_STICK:
       case MISCREG_TICK:
