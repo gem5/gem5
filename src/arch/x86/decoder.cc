@@ -38,10 +38,15 @@
 
 namespace X86ISA
 {
-void Decoder::doReset()
+
+Decoder::State
+Decoder::doResetState()
 {
     origPC = basePC + offset;
     DPRINTF(Decoder, "Setting origPC to %#x\n", origPC);
+    instBytes = &decodePages->lookup(origPC);
+    chunkIdx = 0;
+
     emi.rex = 0;
     emi.legacy = 0;
     emi.opcode.num = 0;
@@ -55,12 +60,17 @@ void Decoder::doReset()
 
     emi.modRM = 0;
     emi.sib = 0;
-    m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-    emi.mode.mode = m5Reg.mode;
-    emi.mode.submode = m5Reg.submode;
+
+    if (instBytes->si) {
+        return FromCacheState;
+    } else {
+        instBytes->chunks.clear();
+        return PrefixState;
+    }
 }
 
-void Decoder::process()
+void
+Decoder::process()
 {
     //This function drives the decoder state machine.
 
@@ -70,15 +80,18 @@ void Decoder::process()
     assert(!outOfBytes);
     assert(!instDone);
 
+    if (state == ResetState)
+        state = doResetState();
+    if (state == FromCacheState) {
+        state = doFromCacheState();
+    } else {
+        instBytes->chunks.push_back(fetchChunk);
+    }
+
     //While there's still something to do...
-    while(!instDone && !outOfBytes)
-    {
+    while (!instDone && !outOfBytes) {
         uint8_t nextByte = getNextByte();
-        switch(state)
-        {
-          case ResetState:
-            doReset();
-            state = PrefixState;
+        switch (state) {
           case PrefixState:
             state = doPrefixState(nextByte);
             break;
@@ -105,9 +118,42 @@ void Decoder::process()
     }
 }
 
+Decoder::State
+Decoder::doFromCacheState()
+{
+    DPRINTF(Decoder, "Looking at cache state.\n");
+    if ((fetchChunk & instBytes->masks[chunkIdx]) !=
+            instBytes->chunks[chunkIdx]) {
+        DPRINTF(Decoder, "Decode cache miss.\n");
+        // The chached chunks didn't match what was fetched. Fall back to the
+        // predecoder.
+        instBytes->chunks[chunkIdx] = fetchChunk;
+        instBytes->chunks.resize(chunkIdx + 1);
+        instBytes->si = NULL;
+        chunkIdx = 0;
+        fetchChunk = instBytes->chunks[0];
+        offset = origPC % sizeof(MachInst);
+        basePC = origPC - offset;
+        return PrefixState;
+    } else if (chunkIdx == instBytes->chunks.size() - 1) {
+        // We matched the cache, so use its value.
+        instDone = true;
+        offset = instBytes->lastOffset;
+        if (offset == sizeof(MachInst))
+            outOfBytes = true;
+        return ResetState;
+    } else {
+        // We matched so far, but need to check more chunks.
+        chunkIdx++;
+        outOfBytes = true;
+        return FromCacheState;
+    }
+}
+
 //Either get a prefix and record it in the ExtMachInst, or send the
 //state machine on to get the opcode(s).
-Decoder::State Decoder::doPrefixState(uint8_t nextByte)
+Decoder::State
+Decoder::doPrefixState(uint8_t nextByte)
 {
     uint8_t prefix = Prefixes[nextByte];
     State nextState = PrefixState;
@@ -164,7 +210,8 @@ Decoder::State Decoder::doPrefixState(uint8_t nextByte)
 
 //Load all the opcodes (currently up to 2) and then figure out
 //what immediate and/or ModRM is needed.
-Decoder::State Decoder::doOpcodeState(uint8_t nextByte)
+Decoder::State
+Decoder::doOpcodeState(uint8_t nextByte)
 {
     State nextState = ErrorState;
     emi.opcode.num++;
@@ -194,9 +241,9 @@ Decoder::State Decoder::doOpcodeState(uint8_t nextByte)
         if (emi.rex.w)
             logOpSize = 3; // 64 bit operand size
         else if (emi.legacy.op)
-            logOpSize = m5Reg.altOp;
+            logOpSize = altOp;
         else
-            logOpSize = m5Reg.defOp;
+            logOpSize = defOp;
 
         //Set the actual op size
         emi.opSize = 1 << logOpSize;
@@ -205,16 +252,16 @@ Decoder::State Decoder::doOpcodeState(uint8_t nextByte)
         //a fixed value at the decoder level.
         int logAddrSize;
         if(emi.legacy.addr)
-            logAddrSize = m5Reg.altAddr;
+            logAddrSize = altAddr;
         else
-            logAddrSize = m5Reg.defAddr;
+            logAddrSize = defAddr;
 
         //Set the actual address size
         emi.addrSize = 1 << logAddrSize;
 
         //Figure out the effective stack width. This can be overriden to
         //a fixed value at the decoder level.
-        emi.stackSize = 1 << m5Reg.stack;
+        emi.stackSize = 1 << stack;
 
         //Figure out how big of an immediate we'll retreive based
         //on the opcode.
@@ -242,13 +289,14 @@ Decoder::State Decoder::doOpcodeState(uint8_t nextByte)
 //Get the ModRM byte and determine what displacement, if any, there is.
 //Also determine whether or not to get the SIB byte, displacement, or
 //immediate next.
-Decoder::State Decoder::doModRMState(uint8_t nextByte)
+Decoder::State
+Decoder::doModRMState(uint8_t nextByte)
 {
     State nextState = ErrorState;
     ModRM modRM;
     modRM = nextByte;
     DPRINTF(Decoder, "Found modrm byte %#x.\n", nextByte);
-    if (m5Reg.defOp == 1) {
+    if (defOp == 1) {
         //figure out 16 bit displacement size
         if ((modRM.mod == 0 && modRM.rm == 6) || modRM.mod == 2)
             displacementSize = 2;
@@ -297,7 +345,8 @@ Decoder::State Decoder::doModRMState(uint8_t nextByte)
 //Get the SIB byte. We don't do anything with it at this point, other
 //than storing it in the ExtMachInst. Determine if we need to get a
 //displacement or immediate next.
-Decoder::State Decoder::doSIBState(uint8_t nextByte)
+Decoder::State
+Decoder::doSIBState(uint8_t nextByte)
 {
     State nextState = ErrorState;
     emi.sib = nextByte;
@@ -318,7 +367,8 @@ Decoder::State Decoder::doSIBState(uint8_t nextByte)
 
 //Gather up the displacement, or at least as much of it
 //as we can get.
-Decoder::State Decoder::doDisplacementState()
+Decoder::State
+Decoder::doDisplacementState()
 {
     State nextState = ErrorState;
 
@@ -365,7 +415,8 @@ Decoder::State Decoder::doDisplacementState()
 
 //Gather up the immediate, or at least as much of it
 //as we can get
-Decoder::State Decoder::doImmediateState()
+Decoder::State
+Decoder::doImmediateState()
 {
     State nextState = ErrorState;
 
@@ -408,24 +459,62 @@ Decoder::State Decoder::doImmediateState()
     return nextState;
 }
 
-DecodeCache::InstMap Decoder::instMap;
-DecodeCache::AddrMap<StaticInstPtr> Decoder::decodePages;
+Decoder::InstBytes Decoder::dummy;
+Decoder::InstCacheMap Decoder::instCacheMap;
 
 StaticInstPtr
 Decoder::decode(ExtMachInst mach_inst, Addr addr)
 {
-    StaticInstPtr &si = decodePages.lookup(addr);
-    if (si && (si->machInst == mach_inst))
+    DecodeCache::InstMap::iterator iter = instMap->find(mach_inst);
+    if (iter != instMap->end())
+        return iter->second;
+
+    StaticInstPtr si = decodeInst(mach_inst);
+    (*instMap)[mach_inst] = si;
+    return si;
+}
+
+StaticInstPtr
+Decoder::decode(PCState &nextPC)
+{
+    if (!instDone)
+        return NULL;
+    instDone = false;
+    updateNPC(nextPC);
+
+    StaticInstPtr &si = instBytes->si;
+    if (si)
         return si;
 
-    DecodeCache::InstMap::iterator iter = instMap.find(mach_inst);
-    if (iter != instMap.end()) {
-        si = iter->second;
-        return si;
+    // We didn't match in the AddrMap, but we still populated an entry. Fix
+    // up its byte masks.
+    const int chunkSize = sizeof(MachInst);
+
+    instBytes->lastOffset = offset;
+
+    Addr firstBasePC = basePC - (instBytes->chunks.size() - 1) * chunkSize;
+    Addr firstOffset = origPC - firstBasePC;
+    Addr totalSize = instBytes->lastOffset - firstOffset +
+        (instBytes->chunks.size() - 1) * chunkSize;
+    int start = firstOffset;
+    instBytes->masks.clear();
+
+    while (totalSize) {
+        int end = start + totalSize;
+        end = (chunkSize < end) ? chunkSize : end;
+        int size = end - start;
+        int idx = instBytes->masks.size();
+
+        MachInst maskVal = mask(size * 8) << (start * 8);
+        assert(maskVal);
+
+        instBytes->masks.push_back(maskVal);
+        instBytes->chunks[idx] &= instBytes->masks[idx];
+        totalSize -= size;
+        start = 0;
     }
 
-    si = decodeInst(mach_inst);
-    instMap[mach_inst] = si;
+    si = decode(emi, origPC);
     return si;
 }
 

@@ -50,7 +50,8 @@ namespace X86ISA
       protected:
         MiscReg regVal[NUM_MISCREGS];
         void updateHandyM5Reg(Efer efer, CR0 cr0,
-                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
+                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags,
+                ThreadContext *tc);
 
       public:
         void clear();

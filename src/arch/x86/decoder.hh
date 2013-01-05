@@ -32,6 +32,7 @@
 #define __ARCH_X86_DECODER_HH__
 
 #include <cassert>
+#include <vector>
 
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/types.hh"
@@ -58,9 +59,24 @@ class Decoder
     static const uint8_t SizeTypeToSize[3][10];
 
   protected:
+    struct InstBytes
+    {
+        StaticInstPtr si;
+        std::vector<MachInst> chunks;
+        std::vector<MachInst> masks;
+        int lastOffset;
+
+        InstBytes() : lastOffset(0)
+        {}
+    };
+
+    static InstBytes dummy;
+
     ThreadContext * tc;
     //The bytes to be predecoded
     MachInst fetchChunk;
+    InstBytes *instBytes;
+    int chunkIdx;
     //The pc of the start of fetchChunk
     Addr basePC;
     //The pc the current instruction started at
@@ -69,9 +85,16 @@ class Decoder
     int offset;
     //The extended machine instruction being generated
     ExtMachInst emi;
-    HandyM5Reg m5Reg;
+    //Predecoding state
+    X86Mode mode;
+    X86SubMode submode;
+    uint8_t altOp;
+    uint8_t defOp;
+    uint8_t altAddr;
+    uint8_t defAddr;
+    uint8_t stack;
 
-    inline uint8_t getNextByte()
+    uint8_t getNextByte()
     {
         return ((uint8_t *)&fetchChunk)[offset];
     }
@@ -99,23 +122,34 @@ class Decoder
         consumeBytes(toGet);
     }
 
-    inline void consumeByte()
+    void updateOffsetState()
+    {
+        assert(offset <= sizeof(MachInst));
+        if (offset == sizeof(MachInst)) {
+            DPRINTF(Decoder, "At the end of a chunk, idx = %d, chunks = %d.\n",
+                    chunkIdx, instBytes->chunks.size());
+            chunkIdx++;
+            if (chunkIdx == instBytes->chunks.size()) {
+                outOfBytes = true;
+            } else {
+                offset = 0;
+                fetchChunk = instBytes->chunks[chunkIdx];
+                basePC += sizeof(MachInst);
+            }
+        }
+    }
+
+    void consumeByte()
     {
         offset++;
-        assert(offset <= sizeof(MachInst));
-        if(offset == sizeof(MachInst))
-            outOfBytes = true;
+        updateOffsetState();
     }
 
-    inline void consumeBytes(int numBytes)
+    void consumeBytes(int numBytes)
     {
         offset += numBytes;
-        assert(offset <= sizeof(MachInst));
-        if(offset == sizeof(MachInst))
-            outOfBytes = true;
+        updateOffsetState();
     }
-
-    void doReset();
 
     //State machine state
   protected:
@@ -133,6 +167,7 @@ class Decoder
 
     enum State {
         ResetState,
+        FromCacheState,
         PrefixState,
         OpcodeState,
         ModRMState,
@@ -146,12 +181,28 @@ class Decoder
     State state;
 
     //Functions to handle each of the states
+    State doResetState();
+    State doFromCacheState();
     State doPrefixState(uint8_t);
     State doOpcodeState(uint8_t);
     State doModRMState(uint8_t);
     State doSIBState(uint8_t);
     State doDisplacementState();
     State doImmediateState();
+
+  protected:
+    /// Caching for decoded instruction objects.
+
+    typedef MiscReg CacheKey;
+
+    typedef DecodeCache::AddrMap<Decoder::InstBytes> DecodePages;
+    DecodePages *decodePages;
+    typedef m5::hash_map<CacheKey, DecodePages *> AddrCacheMap;
+    AddrCacheMap addrCacheMap;
+
+    DecodeCache::InstMap *instMap;
+    typedef m5::hash_map<CacheKey, DecodeCache::InstMap *> InstCacheMap;
+    static InstCacheMap instCacheMap;
 
   public:
     Decoder(ThreadContext * _tc) :
@@ -160,9 +211,47 @@ class Decoder
         state(ResetState)
     {
         memset(&emi, 0, sizeof(emi));
-        emi.mode.mode = LongMode;
-        emi.mode.submode = SixtyFourBitMode;
-        m5Reg = 0;
+        mode = LongMode;
+        submode = SixtyFourBitMode;
+        emi.mode.mode = mode;
+        emi.mode.submode = submode;
+        altOp = 0;
+        defOp = 0;
+        altAddr = 0;
+        defAddr = 0;
+        stack = 0;
+        instBytes = &dummy;
+        decodePages = NULL;
+        instMap = NULL;
+    }
+
+    void setM5Reg(HandyM5Reg m5Reg)
+    {
+        mode = (X86Mode)(uint64_t)m5Reg.mode;
+        submode = (X86SubMode)(uint64_t)m5Reg.submode;
+        emi.mode.mode = mode;
+        emi.mode.submode = submode;
+        altOp = m5Reg.altOp;
+        defOp = m5Reg.defOp;
+        altAddr = m5Reg.altAddr;
+        defAddr = m5Reg.defAddr;
+        stack = m5Reg.stack;
+
+        AddrCacheMap::iterator amIter = addrCacheMap.find(m5Reg);
+        if (amIter != addrCacheMap.end()) {
+            decodePages = amIter->second;
+        } else {
+            decodePages = new DecodePages;
+            addrCacheMap[m5Reg] = decodePages;
+        }
+
+        InstCacheMap::iterator imIter = instCacheMap.find(m5Reg);
+        if (imIter != instCacheMap.end()) {
+            instMap = imIter->second;
+        } else {
+            instMap = new DecodeCache::InstMap;
+            instCacheMap[m5Reg] = instMap;
+        }
     }
 
     void reset()
@@ -218,11 +307,6 @@ class Decoder
         }
     }
 
-  protected:
-    /// Caching for decoded instruction objects.
-    static DecodeCache::InstMap instMap;
-    static DecodeCache::AddrMap<StaticInstPtr> decodePages;
-
   public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
@@ -230,16 +314,7 @@ class Decoder
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
-
-    StaticInstPtr
-    decode(X86ISA::PCState &nextPC)
-    {
-        if (!instDone)
-            return NULL;
-        instDone = false;
-        updateNPC(nextPC);
-        return decode(emi, origPC);
-    }
+    StaticInstPtr decode(X86ISA::PCState &nextPC);
 };
 
 } // namespace X86ISA

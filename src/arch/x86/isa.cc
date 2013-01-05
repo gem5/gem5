@@ -28,6 +28,7 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/decoder.hh"
 #include "arch/x86/isa.hh"
 #include "arch/x86/tlb.hh"
 #include "cpu/base.hh"
@@ -39,7 +40,8 @@ namespace X86ISA
 
 void
 ISA::updateHandyM5Reg(Efer efer, CR0 cr0,
-                      SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
+                      SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags,
+                      ThreadContext *tc)
 {
     HandyM5Reg m5reg = 0;
     if (efer.lma) {
@@ -94,6 +96,8 @@ ISA::updateHandyM5Reg(Efer efer, CR0 cr0,
     }
 
     regVal[MISCREG_M5_REG] = m5reg;
+    if (tc)
+        tc->getDecoderPtr()->setM5Reg(m5reg);
 }
 
 void
@@ -184,7 +188,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
                              newCR0,
                              regVal[MISCREG_CS_ATTR],
                              regVal[MISCREG_SS_ATTR],
-                             regVal[MISCREG_RFLAGS]);
+                             regVal[MISCREG_RFLAGS],
+                             tc);
         }
         break;
       case MISCREG_CR2:
@@ -225,7 +230,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
                              regVal[MISCREG_CR0],
                              newCSAttr,
                              regVal[MISCREG_SS_ATTR],
-                             regVal[MISCREG_RFLAGS]);
+                             regVal[MISCREG_RFLAGS],
+                             tc);
         }
         break;
       case MISCREG_SS_ATTR:
@@ -233,7 +239,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
                          regVal[MISCREG_CR0],
                          regVal[MISCREG_CS_ATTR],
                          val,
-                         regVal[MISCREG_RFLAGS]);
+                         regVal[MISCREG_RFLAGS],
+                         tc);
         break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
@@ -340,7 +347,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
                          regVal[MISCREG_CR0],
                          regVal[MISCREG_CS_ATTR],
                          regVal[MISCREG_SS_ATTR],
-                         regVal[MISCREG_RFLAGS]);
+                         regVal[MISCREG_RFLAGS],
+                         tc);
         return;
       default:
         break;
@@ -363,7 +371,8 @@ ISA::unserialize(EventManager *em, Checkpoint * cp,
                      regVal[MISCREG_CR0],
                      regVal[MISCREG_CS_ATTR],
                      regVal[MISCREG_SS_ATTR],
-                     regVal[MISCREG_RFLAGS]);
+                     regVal[MISCREG_RFLAGS],
+                     NULL);
 }
 
 }
