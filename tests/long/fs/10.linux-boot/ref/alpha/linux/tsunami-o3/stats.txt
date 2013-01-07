@@ -4,11 +4,11 @@ sim_seconds                                  1.854350                       # Nu
 sim_ticks                                1854349611000                       # Number of ticks simulated
 final_tick                               1854349611000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 135035                       # Simulator instruction rate (inst/s)
-host_op_rate                                   135035                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             4724741522                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 327760                       # Number of bytes of host memory used
-host_seconds                                   392.48                       # Real time elapsed on the host
+host_inst_rate                                  55480                       # Simulator instruction rate (inst/s)
+host_op_rate                                    55480                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1941178876                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 331452                       # Number of bytes of host memory used
+host_seconds                                   955.27                       # Real time elapsed on the host
 sim_insts                                    52998188                       # Number of instructions simulated
 sim_ops                                      52998188                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            967168                       # Number of bytes read from this memory
@@ -601,7 +601,7 @@ system.cpu.int_regfile_reads                 73962724                       # nu
 system.cpu.int_regfile_writes                40347354                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                    166024                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                   167429                       # number of floating regfile writes
-system.cpu.misc_regfile_reads                 1993125                       # number of misc regfile reads
+system.cpu.misc_regfile_reads                 1994989                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                 947074                       # number of misc regfile writes
 system.tsunami.ethernet.descDMAReads                0                       # Number of descriptors the device read w/ DMA
 system.tsunami.ethernet.descDMAWrites               0                       # Number of descriptors the device wrote w/ DMA

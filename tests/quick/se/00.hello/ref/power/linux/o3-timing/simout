@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 30 2012 11:09:52
-gem5 started Oct 30 2012 13:58:22
-gem5 executing on u200540-lin
+gem5 compiled Jan  4 2013 21:14:12
+gem5 started Jan  4 2013 21:59:04
+gem5 executing on u200540
 command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing -re tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
