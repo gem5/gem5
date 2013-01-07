@@ -495,62 +495,91 @@ TrafficGen::StateGraph::RandomGen::nextExecuteTick()
     }
 }
 
+TrafficGen::StateGraph::TraceGen::InputStream::InputStream(const string&
+                                                           filename)
+{
+    trace.rdbuf()->pubsetbuf(readBuffer, 4 * 1024 * 1024);
+    trace.open(filename.c_str(), ifstream::in);
+
+    if (!trace.is_open()) {
+        fatal("Traffic generator trace file could not be"
+              " opened: %s\n", filename);
+    }
+}
+
+void
+TrafficGen::StateGraph::TraceGen::InputStream::reset()
+{
+    // seek to the start of the input trace file
+    trace.seekg(0, ifstream::beg);
+    trace.clear();
+}
+
+bool
+TrafficGen::StateGraph::TraceGen::InputStream::read(TraceElement& element)
+{
+    string buffer;
+    bool format_error = false;
+    assert(trace.good());
+    getline(trace, buffer);
+
+    // Check that we have something to process. This assumes no EOF at
+    // the end of the line.
+    if (buffer.size() > 0 && !trace.eof()) {
+        std::istringstream iss(buffer);
+
+        char rOrW, ch;
+        iss >> rOrW;
+        if (rOrW == 'r') {
+            element.cmd = MemCmd::ReadReq;
+        } else if (rOrW == 'w') {
+            element.cmd = MemCmd::WriteReq;
+        } else {
+            format_error = true;
+        }
+
+        // eat a comma, then get the address
+        iss >> ch;
+        format_error |= ch != ',';
+        iss >> element.addr;
+
+        // eat a comma, then get the blocksize
+        iss >> ch;
+        format_error |= ch != ',';
+        iss >> element.blocksize;
+
+        // eat a comma, then get the tick
+        iss >> ch;
+        format_error |= ch != ',';
+        iss >> element.tick;
+
+        if (format_error)
+            fatal("Trace format error in %s\n", buffer);
+
+        return true;
+    }
+
+    // We have reached the end of the file
+    return false;
+}
+
 Tick
 TrafficGen::StateGraph::TraceGen::nextExecuteTick() {
-    // We need to look at the next line to calculate the next time an
-    // event occurs, or potentially return MaxTick to signal that
-    // nothing has to be done.
-    string buffer;
-    if (!traceComplete && trace.good()){
-        getline(trace, buffer);
-        DPRINTF(TrafficGen, "Input trace: %s\n", buffer);
-    } else {
+    if (traceComplete)
         // We are at the end of the file, thus we have no more data in
         // the trace Return MaxTick to signal that there will be no
         // more transactions in this active period for the state.
         return MaxTick;
-    }
+
 
     //Reset the nextElement to the default values
     currElement = nextElement;
     nextElement.clear();
 
-    // Check that we have something to process. This assume no EOF at
-    // the end of the line.
-    if (buffer.size() > 0 && !trace.eof()) {
-        istringstream iss(buffer);
-
-        char rOrW, ch;
-        iss >> rOrW;
-        iss >> ch; assert(ch == ',');
-        iss >> nextElement.addr;
-        iss >> ch; assert(ch == ',');
-        iss >> nextElement.blocksize;
-        iss >> ch; assert(ch == ',');
-        iss >> nextElement.tick;
-
-        if (rOrW == 'r') {
-            nextElement.cmd = MemCmd::ReadReq;
-        } else if (rOrW == 'w') {
-            nextElement.cmd = MemCmd::WriteReq;
-        } else {
-            fatal("Incorrect trace file format!\n");
-        }
-    }
-
-    // Check that we have a valid request
-    if (!nextElement.isValid()) {
-        // If it is not valid, assume that we have reached the end of
-        // the trace.  Even if this is not the case, we do not know
-        // what to do with the request as it makes no sense.
-        if (trace.good()) {
-            // Trace is good, therefore we are not at the end of the
-            // file. This means that the input trace cannot be read
-            // correctly or it contains data that makes no sense.
-            warn("Unable to read the trace file format\n");
-            warn("%s", buffer);
-        }
-
+    // We need to look at the next line to calculate the next time an
+    // event occurs, or potentially return MaxTick to signal that
+    // nothing has to be done.
+    if (!trace.read(nextElement)) {
         traceComplete = true;
         return MaxTick;
     }
@@ -576,10 +605,6 @@ void
 TrafficGen::StateGraph::TraceGen::enter() {
     // update the trace offset to the time where the state was entered.
     tickOffset = curTick();
-
-    // seek to the start of the input trace file
-    trace.seekg(0, ifstream::beg);
-    trace.clear();
 
     // clear everything
     nextElement.clear();
@@ -621,13 +646,14 @@ TrafficGen::StateGraph::TraceGen::exit() {
     // Check if we reached the end of the trace file. If we did not
     // then we want to generate a warning stating that not the entire
     // trace was played.
-    if (!trace.eof()) {
+    if (!traceComplete) {
         warn("Trace player %s was unable to replay the entire trace!\n",
              name());
     }
 
-    // clear any previous error flags for the input trace file
-    trace.clear();
+    // Clear any flags and start over again from the beginning of the
+    // file
+    trace.reset();
 }
 
 bool

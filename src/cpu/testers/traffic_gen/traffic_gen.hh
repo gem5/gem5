@@ -439,6 +439,52 @@ class TrafficGen : public MemObject
                 }
             };
 
+            /**
+             * The InputStream encapsulates a trace file and the
+             * internal buffers and populates TraceElements based on
+             * the input.
+             */
+            class InputStream
+            {
+
+              private:
+
+                /// Input file stream for the ASCII trace
+                std::ifstream trace;
+
+                /**
+                 * Create a 4MB read buffer for the input trace
+                 * file. This is to reduce the number of disk accesses
+                 * and thereby speed up the execution.
+                 */
+                char readBuffer[4 * 1024 * 1024];
+
+              public:
+
+                /**
+                 * Create a trace input stream for a given file name.
+                 *
+                 * @param filename Path to the file to read from
+                 */
+                InputStream(const std::string& filename);
+
+                /**
+                 * Reset the stream such that it can be played once
+                 * again.
+                 */
+                void reset();
+
+                /**
+                 * Attempt to read a trace element from the stream,
+                 * and also notify the caller if the end of the file
+                 * was reached.
+                 *
+                 * @param element Trace element to populate
+                 * @return True if an element could be read successfully
+                 */
+                bool read(TraceElement& element);
+            };
+
           public:
 
            /**
@@ -454,28 +500,10 @@ class TrafficGen : public MemObject
                      Tick _duration, const std::string& trace_file,
                      Addr addr_offset)
                 : BaseGen(_port, master_id, _duration),
-                  traceFile(trace_file),
+                  trace(trace_file),
                   addrOffset(addr_offset),
                   traceComplete(false)
             {
-                /**
-                 * Create a 4MB read buffer for the input trace
-                 * file. This is to reduce the number of disk accesses
-                 * and thereby speed up the execution of the code.
-                 */
-                readBuffer = new char[4 * 1024 * 1024];
-                trace.rdbuf()->pubsetbuf(readBuffer, 4 * 1024 * 1024);
-                trace.open(traceFile.c_str(), std::ifstream::in);
-
-                if (!trace.is_open()) {
-                    fatal("Traffic generator %s trace file could not be"
-                          " opened: %s\n", name(), traceFile);
-                }
-            }
-
-            ~TraceGen() {
-                // free the memory used by the readBuffer
-                delete[] readBuffer;
             }
 
             void enter();
@@ -494,14 +522,8 @@ class TrafficGen : public MemObject
 
           private:
 
-            /** Path to the trace file */
-            std::string traceFile;
-
             /** Input stream used for reading the input trace file */
-            std::ifstream trace;
-
-            /** Larger buffer used for reading from the stream */
-            char* readBuffer;
+            InputStream trace;
 
             /** Store the current and next element in the trace */
             TraceElement currElement;
