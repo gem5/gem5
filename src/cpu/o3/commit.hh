@@ -195,7 +195,7 @@ class DefaultCommit
     void setROB(ROB *rob_ptr);
 
     /** Initializes stage by sending back the number of free entries. */
-    void initStage();
+    void startupStage();
 
     /** Initializes the draining of commit. */
     bool drain();

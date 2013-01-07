@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -348,7 +348,7 @@ DefaultCommit<Impl>::setROB(ROB *rob_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::initStage()
+DefaultCommit<Impl>::startupStage()
 {
     rob->setActiveThreads(activeThreads);
     rob->resetEntries();

@@ -283,7 +283,7 @@ DefaultIEW<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::initStage()
+DefaultIEW<Impl>::startupStage()
 {
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         toRename->iewInfo[tid].usedIQ = true;
@@ -408,7 +408,7 @@ DefaultIEW<Impl>::takeOverFrom()
     ldstQueue.takeOverFrom();
     fuPool->takeOver();
 
-    initStage();
+    startupStage();
     cpu->activityThisCycle();
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {

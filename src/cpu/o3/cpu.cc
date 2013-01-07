@@ -679,13 +679,17 @@ FullO3CPU<Impl>::init()
     for (int tid = 0; tid < numThreads; ++tid)
         thread[tid]->noSquashFromTC = false;
 
-    // Initialize stages.
-    fetch.initStage();
-    iew.initStage();
-    rename.initStage();
-    commit.initStage();
-
     commit.setThreads(thread);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::startup()
+{
+    fetch.startupStage();
+    iew.startupStage();
+    rename.startupStage();
+    commit.startupStage();
 }
 
 template <class Impl>

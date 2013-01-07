@@ -215,7 +215,7 @@ class DefaultFetch
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Initialize stage. */
-    void initStage();
+    void startupStage();
 
     /** Tells the fetch stage that the Icache is set. */
     void setIcache();

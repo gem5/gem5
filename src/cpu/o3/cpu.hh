@@ -369,6 +369,8 @@ class FullO3CPU : public BaseO3CPU
     /** Initialize the CPU */
     void init();
 
+    void startup();
+
     /** Returns the Number of Active Threads in the CPU */
     int numActiveThreads()
     { return activeThreads.size(); }

@@ -302,7 +302,7 @@ DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::initStage()
+DefaultFetch<Impl>::startupStage()
 {
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; tid++) {

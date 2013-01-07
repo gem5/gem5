@@ -133,7 +133,7 @@ class DefaultIEW
     void regStats();
 
     /** Initializes stage; sends back the number of free IQ and LSQ entries. */
-    void initStage();
+    void startupStage();
 
     /** Sets main time buffer used for backwards communication. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);

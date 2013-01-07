@@ -228,7 +228,7 @@ DefaultRename<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 
 template <class Impl>
 void
-DefaultRename<Impl>::initStage()
+DefaultRename<Impl>::startupStage()
 {
     // Grab the number of free entries directly from the stages.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -317,7 +317,7 @@ void
 DefaultRename<Impl>::takeOverFrom()
 {
     _status = Inactive;
-    initStage();
+    startupStage();
 
     // Reset all state prior to taking over from the other CPU.
     for (ThreadID tid = 0; tid < numThreads; tid++) {

@@ -143,7 +143,7 @@ class DefaultRename
 
   public:
     /** Initializes variables for the stage. */
-    void initStage();
+    void startupStage();
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
