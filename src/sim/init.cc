@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2000-2005 The Regents of The University of Michigan
  * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
@@ -42,9 +54,14 @@
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "config/have_protobuf.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
 #include "sim/init.hh"
+
+#if HAVE_PROTOBUF
+#include <google/protobuf/stubs/common.h>
+#endif
 
 using namespace std;
 
@@ -238,6 +255,13 @@ const char * __attribute__((weak)) m5MainCommands[] = {
 int
 m5Main(int argc, char **argv)
 {
+#if HAVE_PROTOBUF
+    // Verify that the version of the protobuf library that we linked
+    // against is compatible with the version of the headers we
+    // compiled against.
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+#endif
+
     PySys_SetArgv(argc, argv);
 
     // We have to set things up in the special __main__ module
@@ -262,6 +286,10 @@ m5Main(int argc, char **argv)
 
         command++;
     }
+
+#if HAVE_PROTOBUF
+    google::protobuf::ShutdownProtobufLibrary();
+#endif
 
     return 0;
 }
