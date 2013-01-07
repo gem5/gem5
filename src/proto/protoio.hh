@@ -40,7 +40,7 @@
 
 /**
  * @file
- * Declaration of a wrapper for protobuf output streams.
+ * Declaration of a wrapper for protobuf output streams and input streams.
  */
 
 #ifndef __PROTO_PROTOIO_HH__
@@ -54,6 +54,34 @@
 #include <fstream>
 
 /**
+ * A ProtoStream provides the shared functionality of the input and
+ * output streams. At the moment this is limited to magic number.
+ */
+class ProtoStream
+{
+
+  protected:
+
+    /// Use the ASCII characters gem5 as our magic number
+    static const uint32_t magicNumber = 0x356d6567;
+
+    /**
+     * Create a ProtoStream.
+     */
+    ProtoStream() {}
+
+  private:
+
+    /**
+     * Hide the copy constructor and assignment operator.
+     * @{
+     */
+    ProtoStream(const ProtoStream&);
+    ProtoStream& operator=(const ProtoStream&);
+    /** @} */
+};
+
+/**
  * A ProtoOutputStream wraps a coded stream, potentially with
  * compression, based on looking at the file name. Writing to the
  * stream is done to enable interaction with the file on a per-message
@@ -61,7 +89,7 @@
  * is made possible by encoding the length of each message in the
  * stream.
  */
-class ProtoOutputStream
+class ProtoOutputStream : public ProtoStream
 {
 
   public:
@@ -101,6 +129,77 @@ class ProtoOutputStream
 
     /// Top-level coded stream that messages are written to
     google::protobuf::io::CodedOutputStream* codedStream;
+
+};
+
+/**
+ * A ProtoInputStream wraps a coded stream, potentially with
+ * decompression, based on looking at the file name. Reading from the
+ * stream is done on a per-message basis to avoid having to deal with
+ * huge data structures. The latter assumes the length of each message
+ * is encoded in the stream when it is written.
+ */
+class ProtoInputStream : public ProtoStream
+{
+
+  public:
+
+    /**
+     * Create an input stream for a given file name. If the filename
+     * ends with .gz then the file will be decompressed accordingly.
+     *
+     * @param filename Path to the file to read from
+     */
+    ProtoInputStream(const std::string& filename);
+
+    /**
+     * Destruct the input stream, and also close the underlying file
+     * streams and coded streams.
+     */
+    ~ProtoInputStream();
+
+    /**
+     * Read a message from the stream.
+     *
+     * @param msg Message read from the stream
+     * @param return True if a message was read, false if reading fails
+     */
+    bool read(google::protobuf::Message& msg);
+
+    /**
+     * Reset the input stream and seek to the beginning of the file.
+     */
+    void reset();
+
+  private:
+
+    /**
+     * Create the internal streams that are wrapping the input file.
+     */
+    void createStreams();
+
+    /**
+     * Destroy the internal streams that are wrapping the input file.
+     */
+    void destroyStreams();
+
+    /// Underlying file input stream
+    std::ifstream fileStream;
+
+    /// Hold on to the file name for debug messages
+    const std::string fileName;
+
+    /// Boolean flag to remember whether we use gzip or not
+    bool useGzip;
+
+    /// Zero Copy stream wrapping the STL input stream
+    google::protobuf::io::IstreamInputStream* zeroCopyStream;
+
+    /// Optional Gzip stream to wrap the Zero Copy stream
+    google::protobuf::io::GzipInputStream* gzipStream;
+
+    /// Top-level coded stream that messages are read from
+    google::protobuf::io::CodedInputStream* codedStream;
 
 };
 
