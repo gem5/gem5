@@ -124,9 +124,6 @@ class FullO3CPU : public BaseO3CPU
     /** Overall CPU status. */
     Status _status;
 
-    /** Per-thread status in CPU, used for SMT.  */
-    Status _threadStatus[Impl::MaxThreads];
-
   private:
 
     /**
@@ -780,11 +777,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Get the dcache port (used to find block size for translations). */
     virtual CpuPort &getDataPort() { return dcachePort; }
-
-    Addr lockAddr;
-
-    /** Temporary fix for the lock flag, works in the UP case. */
-    bool lockFlag;
 
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;

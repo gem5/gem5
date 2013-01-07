@@ -89,7 +89,6 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 
         // Transfer kernel stats from one CPU to the other.
         thread->kernelStats = old_context->getKernelStats();
-        cpu->lockFlag = false;
     } else {
         thread->funcExeInst = old_context->readFuncExeInst();
     }
