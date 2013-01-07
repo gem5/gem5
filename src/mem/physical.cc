@@ -95,59 +95,24 @@ PhysicalMemory::PhysicalMemory(const string& _name,
         }
     }
 
-    // iterate over the increasing addresses and create as large
-    // chunks as possible of contigous space to be mapped to backing
-    // store, also remember what memories constitute the range so we
-    // can go and find out if we have to init their parts to zero
-    AddrRange curr_range;
+    // iterate over the increasing addresses and chunks of contigous
+    // space to be mapped to backing store, also remember what
+    // memories constitute the range so we can go and find out if we
+    // have to init their parts to zero
     vector<AbstractMemory*> curr_memories;
     for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
          r != addrMap.end(); ++r) {
         // simply skip past all memories that are null and hence do
         // not need any backing store
         if (!r->second->isNull()) {
-            // if the current range is valid, decide if we split or
-            // not
-            if (curr_range.valid()) {
-                // if the ranges are neighbours, then append, this
-                // will eventually be extended to include support for
-                // address striping and merge the interleaved ranges
-                if (curr_range.end + 1 == r->first.start) {
-                    DPRINTF(BusAddrRanges,
-                            "Merging neighbouring ranges %x:%x and %x:%x\n",
-                            curr_range.start, curr_range.end, r->first.start,
-                            r->first.end);
-                    // update the end of the range and add the current
-                    // memory to the list of memories
-                    curr_range.end = r->first.end;
-                    curr_memories.push_back(r->second);
-                } else {
-                    // what we already have is valid, and this is not
-                    // contigious, so create the backing store and
-                    // then start over
-                    createBackingStore(curr_range, curr_memories);
-
-                    // remember the current range and reset the current
-                    // set of memories to contain this one
-                    curr_range = r->first;
-                    curr_memories.clear();
-                    curr_memories.push_back(r->second);
-                }
-            } else {
-                // we haven't seen any valid ranges yet, so remember
-                // the current range and reset the current set of
-                // memories to contain this one
-                curr_range = r->first;
-                curr_memories.clear();
-                curr_memories.push_back(r->second);
-            }
+            // this will eventually be extended to support merging of
+            // interleaved address ranges, and although it might seem
+            // overly complicated at this point it will all be used
+            curr_memories.push_back(r->second);
+            createBackingStore(r->first, curr_memories);
+            curr_memories.clear();
         }
     }
-
-    // if we have a valid range upon finishing the iteration, then
-    // create the backing store
-    if (curr_range.valid())
-        createBackingStore(curr_range, curr_memories);
 }
 
 void
@@ -172,6 +137,10 @@ PhysicalMemory::createBackingStore(AddrRange range,
     // it appropriately
     backingStore.push_back(make_pair(range, pmem));
 
+    // count how many of the memories are to be zero initialized so we
+    // can see if some but not all have this parameter set
+    uint32_t init_to_zero = 0;
+
     // point the memories to their backing store, and if requested,
     // initialize the memory range to 0
     for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
@@ -181,11 +150,17 @@ PhysicalMemory::createBackingStore(AddrRange range,
         (*m)->setBackingStore(pmem);
 
         // if it should be zero, then go and make it so
-        if ((*m)->initToZero())
-            memset(pmem, 0, (*m)->size());
+        if ((*m)->initToZero()) {
+            ++init_to_zero;
+        }
+    }
 
-        // advance the pointer for the next memory in line
-        pmem += (*m)->size();
+    if (init_to_zero != 0) {
+        if (init_to_zero != _memories.size())
+            fatal("Some, but not all memories in range %x:%x are set zero\n",
+                  range.start, range.end);
+
+        memset(pmem, 0, range.size());
     }
 }
 
