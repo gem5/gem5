@@ -117,7 +117,7 @@ InorderBackEnd<Impl>::checkInterrupts()
     }
 
     if (ipl && ipl > thread->readMiscRegNoEffect(IPR_IPLR)) {
-        thread->inSyscall = true;
+        thread->noSquashFromTC = true;
 
         thread->setMiscRegNoEffect(IPR_ISR, summary);
         thread->setMiscRegNoEffect(IPR_INTID, ipl);
@@ -128,7 +128,7 @@ InorderBackEnd<Impl>::checkInterrupts()
         // May need to go 1 inst prior
         squashPending = true;
 
-        thread->inSyscall = false;
+        thread->noSquashFromTC = false;
 
         setSquashInfoFromXC();
     }
@@ -206,7 +206,7 @@ InorderBackEnd<Impl>::executeInsts()
             Addr oldpc;
             do {
                 if (count == 0)
-                    assert(!thread->inSyscall && !thread->trapPending);
+                    assert(!thread->noSquashFromTC && !thread->trapPending);
                 oldpc = thread->readPC();
                 cpu->system->pcEventQueue.service(
                     thread->getXCProxy());
@@ -291,16 +291,16 @@ InorderBackEnd<Impl>::executeInsts()
             DPRINTF(IBE, "Inst [sn:%lli] PC %#x has a fault\n",
                     inst->seqNum, inst->readPC());
 
-            assert(!thread->inSyscall);
+            assert(!thread->noSquashFromTC);
 
-            thread->inSyscall = true;
+            thread->noSquashFromTC = true;
 
             // Consider holding onto the trap and waiting until the trap event
             // happens for this to be executed.
             inst_fault->invoke(xc);
 
             // Exit state update mode to avoid accidental updating.
-            thread->inSyscall = false;
+            thread->noSquashFromTC = false;
 
             squashPending = true;
 
@@ -365,16 +365,16 @@ InorderBackEnd<Impl>::handleFault()
 {
     DPRINTF(Commit, "Handling fault from fetch\n");
 
-    assert(!thread->inSyscall);
+    assert(!thread->noSquashFromTC);
 
-    thread->inSyscall = true;
+    thread->noSquashFromTC = true;
 
     // Consider holding onto the trap and waiting until the trap event
     // happens for this to be executed.
     faultFromFetch->invoke(xc);
 
     // Exit state update mode to avoid accidental updating.
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
 
     squashPending = true;
 
@@ -415,8 +415,8 @@ InorderBackEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC)
     squashPending = false;
 
     // Probably want to make sure that this squash is the one that set the
-    // thread into inSyscall mode.
-    thread->inSyscall = false;
+    // thread into noSquashFromTC mode.
+    thread->noSquashFromTC = false;
 
     // Tell front end to squash, reset PC to new one.
     frontEnd->squash(squash_num, next_PC);
@@ -431,7 +431,7 @@ InorderBackEnd<Impl>::squashFromXC()
     // Record that I need to squash
     squashPending = true;
 
-    thread->inSyscall = true;
+    thread->noSquashFromTC = true;
 }
 
 template <class Impl>

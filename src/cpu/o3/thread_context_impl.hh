@@ -96,7 +96,7 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 
     old_context->setStatus(ThreadContext::Halted);
 
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
     thread->trapPending = false;
 }
 
@@ -207,9 +207,9 @@ void
 O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
     // Prevent squashing
-    thread->inSyscall = true;
+    thread->noSquashFromTC = true;
     TheISA::copyRegs(tc, this);
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
 
     if (!FullSystem)
         this->thread->funcExeInst = tc->readFuncExeInst();
@@ -253,10 +253,7 @@ O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
     reg_idx = cpu->isa[thread->threadId()].flattenIntIndex(reg_idx);
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -266,9 +263,7 @@ O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
     reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -278,10 +273,7 @@ O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
     reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -290,10 +282,7 @@ O3ThreadContext<Impl>::pcState(const TheISA::PCState &val)
 {
     cpu->pcState(val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -302,10 +291,7 @@ O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
 {
     cpu->pcState(val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -328,10 +314,7 @@ O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 
 template <class Impl>
@@ -340,9 +323,6 @@ O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
+    conditionalSquash();
 }
 

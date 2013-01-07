@@ -90,10 +90,10 @@ InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
     copyArchRegs(old_context);
 
     thread->funcExeInst = old_context->readFuncExeInst();
- 
+
     old_context->setStatus(ThreadContext::Halted);
 
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
     thread->trapPending = false;
 }
 
@@ -159,7 +159,7 @@ InOrderThreadContext::serialize(std::ostream &os)
 void
 InOrderThreadContext::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("unserialize unimplemented");    
+    panic("unserialize unimplemented");
 }
 
 

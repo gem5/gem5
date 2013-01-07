@@ -573,12 +573,12 @@ Checker<Impl>::validateState()
              "registers from main CPU", curTick(), unverifiedInst->instAddr());
 
         // Terribly convoluted way to make sure O3 model does not implode
-        bool inSyscall = unverifiedInst->thread->inSyscall;
-        unverifiedInst->thread->inSyscall = true;
+        bool no_squash_from_TC = unverifiedInst->thread->noSquashFromTC;
+        unverifiedInst->thread->noSquashFromTC = true;
 
         // Heavy-weight copying of all registers
         thread->copyArchRegs(unverifiedInst->tcBase());
-        unverifiedInst->thread->inSyscall = inSyscall;
+        unverifiedInst->thread->noSquashFromTC = no_squash_from_TC;
 
         // Set curStaticInst to unverifiedInst->staticInst
         curStaticInst = unverifiedInst->staticInst;

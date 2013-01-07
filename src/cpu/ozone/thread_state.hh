@@ -65,7 +65,7 @@ struct OzoneThreadState : public ThreadState {
 
     OzoneThreadState(CPUType *_cpu, int _thread_num)
         : ThreadState(_cpu, -1, _thread_num),
-          intrflag(0), cpu(_cpu), inSyscall(0), trapPending(0)
+          intrflag(0), cpu(_cpu), noSquashFromTC(false), trapPending(false)
     {
         if (cpu->params->profile) {
             profile = new FunctionProfile(cpu->params->system->kernelSymtab);
@@ -85,7 +85,7 @@ struct OzoneThreadState : public ThreadState {
 
     OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process)
         : ThreadState(_cpu, -1, _thread_num, _process),
-          cpu(_cpu), inSyscall(0), trapPending(0)
+          cpu(_cpu), noSquashFromTC(false), trapPending(false)
     {
         miscRegFile.clear();
     }
@@ -102,7 +102,7 @@ struct OzoneThreadState : public ThreadState {
 
     typename Impl::CPUType *cpu;
 
-    bool inSyscall;
+    bool noSquashFromTC;
 
     bool trapPending;
 

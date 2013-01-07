@@ -61,10 +61,15 @@ class InOrderThreadState : public ThreadState {
     InOrderCPU *cpu;
 
   public:
-    /** Whether or not the thread is currently in syscall mode, and
-     * thus able to be externally updated without squashing.
+    /* This variable controls if writes to a thread context should cause a all
+     * dynamic/speculative state to be thrown away. Nominally this is the
+     * desired behavior because the external thread context write has updated
+     * some state that could be used by an inflight instruction, however there
+     * are some cases like in a fault/trap handler where this behavior would
+     * lead to successive restarts and forward progress couldn't be made. This
+     * variable controls if the squashing will occur.
      */
-    bool inSyscall;
+    bool noSquashFromTC;
 
     /** Whether or not the thread is currently waiting on a trap, and
      * thus able to be externally updated without squashing.
@@ -75,7 +80,8 @@ class InOrderThreadState : public ThreadState {
                        Process *_process)
         : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), _thread_num,
                       _process),
-          cpu(_cpu), inSyscall(0), trapPending(0), lastGradIsBranch(false)
+          cpu(_cpu), noSquashFromTC(false), trapPending(false),
+          lastGradIsBranch(false)
     { }
 
     /** Handles the syscall. */

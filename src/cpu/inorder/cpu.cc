@@ -786,9 +786,9 @@ InOrderCPU::init()
     BaseCPU::init();
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        // Set inSyscall so that the CPU doesn't squash when initially
+        // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.
-        thread[tid]->inSyscall = true;
+        thread[tid]->noSquashFromTC = true;
         // Initialise the ThreadContext's memory proxies
         thread[tid]->initMemProxies(thread[tid]->getTC());
     }
@@ -800,9 +800,9 @@ InOrderCPU::init()
         }
     }
 
-    // Clear inSyscall.
+    // Clear noSquashFromTC.
     for (ThreadID tid = 0; tid < numThreads; ++tid)
-        thread[tid]->inSyscall = false;
+        thread[tid]->noSquashFromTC = false;
 
     // Call Initializiation Routine for Resource Pool
     resPool->init();

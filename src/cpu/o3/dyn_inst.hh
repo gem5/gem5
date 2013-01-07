@@ -183,14 +183,14 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         // using the TC during an instruction's execution (specifically for
         // instructions that have side-effects that use the TC).  Fix this.
         // See cpu/o3/dyn_inst_impl.hh.
-        bool in_syscall = this->thread->inSyscall;
-        this->thread->inSyscall = true;
+        bool no_squash_from_TC = this->thread->noSquashFromTC;
+        this->thread->noSquashFromTC = true;
 
         for (int i = 0; i < _numDestMiscRegs; i++)
             this->cpu->setMiscReg(
                 _destMiscRegIdx[i], _destMiscRegVal[i], this->threadNumber);
 
-        this->thread->inSyscall = in_syscall;
+        this->thread->noSquashFromTC = no_squash_from_TC;
     }
 
     void forwardOldRegs()

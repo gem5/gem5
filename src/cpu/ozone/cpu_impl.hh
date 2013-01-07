@@ -110,7 +110,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     ozoneTC.cpu = this;
     ozoneTC.thread = &thread;
 
-    thread.inSyscall = false;
+    thread.noSquashFromTC = false;
 
     itb = p->itb;
     dtb = p->dtb;
@@ -236,7 +236,7 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     BaseCPU::takeOverFrom(oldCPU);
 
     thread.trapPending = false;
-    thread.inSyscall = false;
+    thread.noSquashFromTC = false;
 
     backEnd->takeOverFrom();
     frontEnd->takeOverFrom();
@@ -375,7 +375,7 @@ OzoneCPU<Impl>::init()
     BaseCPU::init();
 
     // Mark this as in syscall so it won't need to squash
-    thread.inSyscall = true;
+    thread.noSquashFromTC = true;
     if (FullSystem) {
         for (int i = 0; i < threadContexts.size(); ++i) {
             ThreadContext *tc = threadContexts[i];
@@ -387,7 +387,7 @@ OzoneCPU<Impl>::init()
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
-    thread.inSyscall = false;
+    thread.noSquashFromTC = false;
 }
 
 template <class Impl>
@@ -476,7 +476,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::squashFromTC()
 {
-    thread.inSyscall = true;
+    thread.noSquashFromTC = true;
     backEnd->generateTCEvent();
 }
 
@@ -487,7 +487,7 @@ OzoneCPU<Impl>::syscall(uint64_t &callnum)
     // Not sure this copy is needed, depending on how the TC proxy is made.
     thread.renameTable.copyFrom(backEnd->renameTable);
 
-    thread.inSyscall = true;
+    thread.noSquashFromTC = true;
 
     thread.funcExeInst++;
 
@@ -497,7 +497,7 @@ OzoneCPU<Impl>::syscall(uint64_t &callnum)
 
     thread.funcExeInst--;
 
-    thread.inSyscall = false;
+    thread.noSquashFromTC = false;
 
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
@@ -774,7 +774,7 @@ OzoneCPU<Impl>::OzoneTC::setIntReg(int reg_idx, uint64_t val)
 {
     thread->renameTable[reg_idx]->setIntResult(val);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }
@@ -787,7 +787,7 @@ OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val)
 
     thread->renameTable[idx]->setDoubleResult(val);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }
@@ -806,7 +806,7 @@ OzoneCPU<Impl>::OzoneTC::setPC(Addr val)
     thread->PC = val;
     cpu->frontEnd->setPC(val);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }
@@ -818,7 +818,7 @@ OzoneCPU<Impl>::OzoneTC::setNextPC(Addr val)
     thread->nextPC = val;
     cpu->frontEnd->setNextPC(val);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }
@@ -844,7 +844,7 @@ OzoneCPU<Impl>::OzoneTC::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     // Needs to setup a squash event unless we're in syscall mode
     thread->miscRegFile.setRegNoEffect(misc_reg, val);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }
@@ -856,7 +856,7 @@ OzoneCPU<Impl>::OzoneTC::setMiscReg(int misc_reg, const MiscReg &val)
     // Needs to setup a squash event unless we're in syscall mode
     thread->miscRegFile.setReg(misc_reg, val, this);
 
-    if (!thread->inSyscall) {
+    if (!thread->noSquashFromTC) {
         cpu->squashFromTC();
     }
 }

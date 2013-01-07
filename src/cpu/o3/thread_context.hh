@@ -257,6 +257,16 @@ class O3ThreadContext : public ThreadContext
     {
         return this->thread->quiesceEvent;
     }
+    /** check if the cpu is currently in state update mode and squash if not.
+     * This function will return true if a trap is pending or if a fault or
+     * similar is currently writing to the thread context and doesn't want
+     * reset all the state (see noSquashFromTC).
+     */
+    inline void conditionalSquash()
+    {
+        if (!thread->trapPending && !thread->noSquashFromTC)
+            cpu->squashFromTC(thread->threadId());
+    }
 
 };
 

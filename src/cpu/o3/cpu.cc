@@ -644,9 +644,9 @@ FullO3CPU<Impl>::init()
     BaseCPU::init();
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        // Set inSyscall so that the CPU doesn't squash when initially
+        // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.
-        thread[tid]->inSyscall = true;
+        thread[tid]->noSquashFromTC = true;
         // Initialise the ThreadContext's memory proxies
         thread[tid]->initMemProxies(thread[tid]->getTC());
     }
@@ -665,9 +665,9 @@ FullO3CPU<Impl>::init()
         }
     }
 
-    // Clear inSyscall.
+    // Clear noSquashFromTC.
     for (int tid = 0; tid < numThreads; ++tid)
-        thread[tid]->inSyscall = false;
+        thread[tid]->noSquashFromTC = false;
 
     // Initialize stages.
     fetch.initStage();
@@ -1464,7 +1464,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::squashFromTC(ThreadID tid)
 {
-    this->thread[tid]->inSyscall = true;
+    this->thread[tid]->noSquashFromTC = true;
     this->commit.generateTCEvent(tid);
 }
 

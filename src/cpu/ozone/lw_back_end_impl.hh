@@ -531,8 +531,8 @@ LWBackEnd<Impl>::checkInterrupts()
 
             // Not sure which thread should be the one to interrupt.  For now
             // always do thread 0.
-            assert(!thread->inSyscall);
-            thread->inSyscall = true;
+            assert(!thread->noSquashFromTC);
+            thread->noSquashFromTC = true;
 
             // CPU will handle implementation of the interrupt.
             cpu->processInterrupts();
@@ -541,7 +541,7 @@ LWBackEnd<Impl>::checkInterrupts()
             commitStatus = TrapPending;
 
             // Exit state update mode to avoid accidental updating.
-            thread->inSyscall = false;
+            thread->noSquashFromTC = false;
 
             // Generate trap squash event.
             generateTrapEvent();
@@ -559,16 +559,16 @@ LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
 {
     DPRINTF(BE, "Handling fault!\n");
 
-    assert(!thread->inSyscall);
+    assert(!thread->noSquashFromTC);
 
-    thread->inSyscall = true;
+    thread->noSquashFromTC = true;
 
     // Consider holding onto the trap and waiting until the trap event
     // happens for this to be executed.
     fault->invoke(thread->getTC());
 
     // Exit state update mode to avoid accidental updating.
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
 
     commitStatus = TrapPending;
 
@@ -1205,7 +1205,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         Addr oldpc;
         do {
             if (count == 0)
-                assert(!thread->inSyscall && !thread->trapPending);
+                assert(!thread->noSquashFromTC && !thread->trapPending);
             oldpc = thread->readPC();
             cpu->system->pcEventQueue.service(
                 thread->getTC());
@@ -1357,7 +1357,7 @@ LWBackEnd<Impl>::squashFromTC()
     frontEnd->interruptPending = false;
 
     thread->trapPending = false;
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
     tcSquash = false;
     commitStatus = Running;
 }
@@ -1373,7 +1373,7 @@ LWBackEnd<Impl>::squashFromTrap()
     frontEnd->interruptPending = false;
 
     thread->trapPending = false;
-    thread->inSyscall = false;
+    thread->noSquashFromTC = false;
     trapSquash = false;
     commitStatus = Running;
 }

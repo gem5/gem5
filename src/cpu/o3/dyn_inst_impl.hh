@@ -130,12 +130,12 @@ BaseO3DynInst<Impl>::execute()
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool in_syscall = this->thread->inSyscall;
-    this->thread->inSyscall = true;
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
 
     this->fault = this->staticInst->execute(this, this->traceData);
 
-    this->thread->inSyscall = in_syscall;
+    this->thread->noSquashFromTC = no_squash_from_TC;
 
     return this->fault;
 }
@@ -148,12 +148,12 @@ BaseO3DynInst<Impl>::initiateAcc()
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool in_syscall = this->thread->inSyscall;
-    this->thread->inSyscall = true;
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
 
     this->fault = this->staticInst->initiateAcc(this, this->traceData);
 
-    this->thread->inSyscall = in_syscall;
+    this->thread->noSquashFromTC = no_squash_from_TC;
 
     return this->fault;
 }
@@ -166,8 +166,8 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool in_syscall = this->thread->inSyscall;
-    this->thread->inSyscall = true;
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
 
     if (this->cpu->checker) {
         if (this->isStoreConditional()) {
@@ -177,7 +177,7 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
-    this->thread->inSyscall = in_syscall;
+    this->thread->noSquashFromTC = no_squash_from_TC;
 
     return this->fault;
 }

@@ -559,7 +559,7 @@ DefaultCommit<Impl>::squashFromTrap(ThreadID tid)
     DPRINTF(Commit, "Squashing from trap, restarting at PC %s\n", pc[tid]);
 
     thread[tid]->trapPending = false;
-    thread[tid]->inSyscall = false;
+    thread[tid]->noSquashFromTC = false;
     trapInFlight[tid] = false;
 
     trapSquash[tid] = false;
@@ -576,7 +576,7 @@ DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 
     DPRINTF(Commit, "Squashing from TC, restarting at PC %s\n", pc[tid]);
 
-    thread[tid]->inSyscall = false;
+    thread[tid]->noSquashFromTC = false;
     assert(!thread[tid]->trapPending);
 
     commitStatus[tid] = ROBSquashing;
@@ -721,8 +721,8 @@ DefaultCommit<Impl>::handleInterrupt()
         // Clear the interrupt now that it's going to be handled
         toIEW->commitInfo[0].clearInterrupt = true;
 
-        assert(!thread[0]->inSyscall);
-        thread[0]->inSyscall = true;
+        assert(!thread[0]->noSquashFromTC);
+        thread[0]->noSquashFromTC = true;
 
         if (cpu->checker) {
             cpu->checker->handlePendingInt();
@@ -731,7 +731,7 @@ DefaultCommit<Impl>::handleInterrupt()
         // CPU will handle interrupt.
         cpu->processInterrupts(interrupt);
 
-        thread[0]->inSyscall = false;
+        thread[0]->noSquashFromTC = false;
 
         commitStatus[0] = TrapPending;
 
@@ -1014,7 +1014,7 @@ DefaultCommit<Impl>::commitInsts()
                 Addr oldpc;
                 // Debug statement.  Checks to make sure we're not
                 // currently updating state while handling PC events.
-                assert(!thread[tid]->inSyscall && !thread[tid]->trapPending);
+                assert(!thread[tid]->noSquashFromTC && !thread[tid]->trapPending);
                 do {
                     oldpc = pc[tid].instAddr();
                     cpu->system->pcEventQueue.service(thread[tid]->getTC());
@@ -1140,11 +1140,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             cpu->checker->verify(head_inst);
         }
 
-        assert(!thread[tid]->inSyscall);
+        assert(!thread[tid]->noSquashFromTC);
 
         // Mark that we're in state update mode so that the trap's
         // execution doesn't generate extra squashes.
-        thread[tid]->inSyscall = true;
+        thread[tid]->noSquashFromTC = true;
 
         // Execute the trap.  Although it's slightly unrealistic in
         // terms of timing (as it doesn't wait for the full timing of
@@ -1155,7 +1155,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         cpu->trap(inst_fault, tid, head_inst->staticInst);
 
         // Exit state update mode to avoid accidental updating.
-        thread[tid]->inSyscall = false;
+        thread[tid]->noSquashFromTC = false;
 
         commitStatus[tid] = TrapPending;
 

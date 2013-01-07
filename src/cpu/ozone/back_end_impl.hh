@@ -1513,16 +1513,16 @@ BackEnd<Impl>::commitInst(int inst_num)
             DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
                     inst->seqNum, inst->readPC());
 
-//            assert(!thread->inSyscall);
+//            assert(!thread->noSquashFromTC);
 
-//            thread->inSyscall = true;
+//            thread->noSquashFromTC = true;
 
             // Consider holding onto the trap and waiting until the trap event
             // happens for this to be executed.
             inst_fault->invoke(thread->getXCProxy());
 
             // Exit state update mode to avoid accidental updating.
-//            thread->inSyscall = false;
+//            thread->noSquashFromTC = false;
 
 //            commitStatus = TrapPending;
 
@@ -1571,7 +1571,7 @@ BackEnd<Impl>::commitInst(int inst_num)
     Addr oldpc;
     do {
         if (count == 0)
-            assert(!thread->inSyscall && !thread->trapPending);
+            assert(!thread->noSquashFromTC && !thread->trapPending);
         oldpc = thread->readPC();
         cpu->system->pcEventQueue.service(
             thread->getXCProxy());
