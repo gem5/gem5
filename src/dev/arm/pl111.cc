@@ -68,7 +68,9 @@ Pl111::Pl111(const Params *p)
       vnc(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
-      dmaDoneEvent(maxOutstandingDma, this), intEvent(this)
+      dmaDoneEventAll(maxOutstandingDma, this),
+      dmaDoneEventFree(maxOutstandingDma),
+      intEvent(this)
 {
     pioSize = 0xFFFF;
 
@@ -80,6 +82,9 @@ Pl111::Pl111(const Params *p)
     memset(lcdPalette, 0, sizeof(lcdPalette));
     memset(cursorImage, 0, sizeof(cursorImage));
     memset(dmaBuffer, 0, buffer_size);
+
+    for (int i = 0; i < maxOutstandingDma; ++i)
+        dmaDoneEventFree[i] = &dmaDoneEventAll[i];
 
     if (vnc)
         vnc->setFramebufferAddr(dmaBuffer);
@@ -458,14 +463,17 @@ Pl111::fillFifo()
         // due to assertion in scheduling state
         ++dmaPendingNum;
 
-        assert(!dmaDoneEvent[dmaPendingNum-1].scheduled());
+        assert(!dmaDoneEventFree.empty());
+        DmaDoneEvent *event(dmaDoneEventFree.back());
+        dmaDoneEventFree.pop_back();
+        assert(!event->scheduled());
 
         // We use a uncachable request here because the requests from the CPU
         // will be uncacheable as well. If we have uncacheable and cacheable
         // requests in the memory system for the same address it won't be
         // pleased
         dmaPort.dmaAction(MemCmd::ReadReq, curAddr + startAddr, dmaSize,
-                          &dmaDoneEvent[dmaPendingNum-1], curAddr + dmaBuffer,
+                          event, curAddr + dmaBuffer,
                           0, Request::UNCACHEABLE);
         curAddr += dmaSize;
     }
@@ -599,8 +607,8 @@ Pl111::serialize(std::ostream &os)
     vector<Tick> dma_done_event_tick;
     dma_done_event_tick.resize(maxOutstandingDma);
     for (int x = 0; x < maxOutstandingDma; x++) {
-        dma_done_event_tick[x] = dmaDoneEvent[x].scheduled() ?
-            dmaDoneEvent[x].when() : 0;
+        dma_done_event_tick[x] = dmaDoneEventAll[x].scheduled() ?
+            dmaDoneEventAll[x].when() : 0;
     }
     arrayParamOut(os, "dma_done_event_tick", dma_done_event_tick);
 }
@@ -701,10 +709,14 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     vector<Tick> dma_done_event_tick;
     dma_done_event_tick.resize(maxOutstandingDma);
     arrayParamIn(cp, section, "dma_done_event_tick", dma_done_event_tick);
+    dmaDoneEventFree.clear();
     for (int x = 0; x < maxOutstandingDma; x++) {
         if (dma_done_event_tick[x])
-            schedule(dmaDoneEvent[x], dma_done_event_tick[x]);
+            schedule(dmaDoneEventAll[x], dma_done_event_tick[x]);
+        else
+            dmaDoneEventFree.push_back(&dmaDoneEventAll[x]);
     }
+    assert(maxOutstandingDma - dmaDoneEventFree.size() == dmaPendingNum);
 
     if (lcdControl.lcdpwr) {
         updateVideoParams();

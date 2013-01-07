@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -161,6 +161,31 @@ class Pl111: public AmbaDmaDevice
         Bitfield<16> watermark;
     EndBitUnion(ControlReg)
 
+    /**
+     * Event wrapper for dmaDone()
+     *
+     * This event calls pushes its this pointer onto the freeDoneEvent
+     * vector and calls dmaDone() when triggered.
+     */
+    class DmaDoneEvent : public Event
+    {
+      private:
+        Pl111 &obj;
+
+      public:
+        DmaDoneEvent(Pl111 *_obj)
+            : Event(), obj(*_obj) {}
+
+        void process() {
+            obj.dmaDoneEventFree.push_back(this);
+            obj.dmaDone();
+        }
+
+        const std::string name() const {
+            return obj.name() + ".DmaDoneEvent";
+        }
+    };
+
     /** Horizontal axis panel control register */
     TimingReg0 lcdTiming0;
 
@@ -296,8 +321,28 @@ class Pl111: public AmbaDmaDevice
     /** Fill fifo */
     EventWrapper<Pl111, &Pl111::fillFifo> fillFifoEvent;
 
-    /** DMA done event */
-    std::vector<EventWrapper<Pl111, &Pl111::dmaDone> > dmaDoneEvent;
+    /**@{*/
+    /**
+     * All pre-allocated DMA done events
+     *
+     * The PL111 model preallocates maxOutstandingDma number of
+     * DmaDoneEvents to avoid having to heap allocate every single
+     * event when it is needed. In order to keep track of which events
+     * are in flight and which are ready to be used, we use two
+     * different vectors. dmaDoneEventAll contains <i>all</i>
+     * DmaDoneEvents that the object may use, while dmaDoneEventFree
+     * contains a list of currently <i>unused</i> events. When an
+     * event needs to be scheduled, the last element of the
+     * dmaDoneEventFree is used and removed from the list. When an
+     * event fires, it is added to the end of the
+     * dmaEventFreeList. dmaDoneEventAll is never used except for in
+     * initialization and serialization.
+     */
+    std::vector<DmaDoneEvent> dmaDoneEventAll;
+
+    /** Unused DMA done events that are ready to be scheduled */
+    std::vector<DmaDoneEvent *> dmaDoneEventFree;
+    /**@}*/
 
     /** Wrapper to create an event out of the interrupt */
     EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;
