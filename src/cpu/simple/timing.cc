@@ -66,6 +66,12 @@ TimingSimpleCPU::init()
 {
     BaseCPU::init();
 
+    if (!params()->defer_registration &&
+        system->getMemoryMode() != Enums::timing) {
+        fatal("The timing CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
+
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
@@ -140,7 +146,10 @@ TimingSimpleCPU::drainResume()
 {
     DPRINTF(SimpleCPU, "Resume\n");
     if (_status != SwitchedOut && _status != Idle) {
-        assert(system->getMemoryMode() == Enums::timing);
+        if (system->getMemoryMode() != Enums::timing) {
+            fatal("The timing CPU requires the memory system to be in "
+                  "'timing' mode.\n");
+        }
 
         if (fetchEvent.scheduled())
            deschedule(fetchEvent);

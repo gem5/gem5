@@ -83,6 +83,12 @@ AtomicSimpleCPU::init()
 {
     BaseCPU::init();
 
+    if (!params()->defer_registration &&
+        system->getMemoryMode() != Enums::atomic) {
+        fatal("The atomic CPU requires the memory system to be in "
+              "'atomic' mode.\n");
+    }
+
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
@@ -155,7 +161,10 @@ AtomicSimpleCPU::drainResume()
         return;
 
     DPRINTF(SimpleCPU, "Resume\n");
-    assert(system->getMemoryMode() == Enums::atomic);
+    if (system->getMemoryMode() != Enums::atomic) {
+        fatal("The atomic CPU requires the memory system to be in "
+              "'atomic' mode.\n");
+    }
 
     setDrainState(Drainable::Running);
     if (thread->status() == ThreadContext::Active) {

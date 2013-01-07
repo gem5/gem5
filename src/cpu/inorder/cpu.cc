@@ -787,6 +787,12 @@ InOrderCPU::init()
 {
     BaseCPU::init();
 
+    if (!params()->defer_registration &&
+        system->getMemoryMode() != Enums::timing) {
+        fatal("The in-order CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
+
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.

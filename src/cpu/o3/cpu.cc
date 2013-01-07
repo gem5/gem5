@@ -647,6 +647,12 @@ FullO3CPU<Impl>::init()
 {
     BaseCPU::init();
 
+    if (!params()->defer_registration &&
+        system->getMemoryMode() != Enums::timing) {
+        fatal("The O3 CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
+
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.
@@ -1174,7 +1180,10 @@ FullO3CPU<Impl>::drainResume()
     if (_status == SwitchedOut)
         return;
 
-    assert(system->getMemoryMode() == Enums::timing);
+    if (system->getMemoryMode() != Enums::timing) {
+        fatal("The O3 CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
 
     if (!tickEvent.scheduled())
         schedule(tickEvent, nextCycle());
