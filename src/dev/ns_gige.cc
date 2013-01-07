@@ -1138,17 +1138,15 @@ NSGigE::rxKick()
     uint32_t &extsts = is64bit ? rxDesc64.extsts : rxDesc32.extsts;
 
   next:
-    if (clock) {
-        if (rxKickTick > curTick()) {
-            DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
-                    rxKickTick);
+    if (rxKickTick > curTick()) {
+        DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
+                rxKickTick);
 
-            goto exit;
-        }
-
-        // Go to the next state machine clock tick.
-        rxKickTick = curTick() + clockPeriod();
+        goto exit;
     }
+
+    // Go to the next state machine clock tick.
+    rxKickTick = clockEdge(Cycles(1));
 
     switch(rxDmaState) {
       case dmaReadWaiting:
@@ -1457,7 +1455,7 @@ NSGigE::rxKick()
     DPRINTF(EthernetSM, "rx state machine exited rxState=%s\n",
             NsRxStateStrings[rxState]);
 
-    if (clock && !rxKickEvent.scheduled())
+    if (!rxKickEvent.scheduled())
         schedule(rxKickEvent, rxKickTick);
 }
 
@@ -1586,16 +1584,14 @@ NSGigE::txKick()
     uint32_t &extsts = is64bit ? txDesc64.extsts : txDesc32.extsts;
 
   next:
-    if (clock) {
-        if (txKickTick > curTick()) {
-            DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
-                    txKickTick);
-            goto exit;
-        }
-
-        // Go to the next state machine clock tick.
-        txKickTick = curTick() + clockPeriod();
+    if (txKickTick > curTick()) {
+        DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
+                txKickTick);
+        goto exit;
     }
+
+    // Go to the next state machine clock tick.
+    txKickTick = clockEdge(Cycles(1));
 
     switch(txDmaState) {
       case dmaReadWaiting:
@@ -1900,7 +1896,7 @@ NSGigE::txKick()
     DPRINTF(EthernetSM, "tx state machine exited txState=%s\n",
             NsTxStateStrings[txState]);
 
-    if (clock && !txKickEvent.scheduled())
+    if (!txKickEvent.scheduled())
         schedule(txKickEvent, txKickTick);
 }
 
@@ -2015,7 +2011,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    reschedule(txEvent, curTick() + clockPeriod(), true);
+    reschedule(txEvent, clockEdge(Cycles(1)), true);
 }
 
 bool

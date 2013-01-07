@@ -138,7 +138,7 @@ class EtherDevBase(EtherDevice):
         "Ethernet Hardware Address")
 
     # Override the default clock
-    clock = '0ns'
+    clock = '500MHz'
 
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
