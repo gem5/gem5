@@ -183,9 +183,17 @@ use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                  'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PYTHONPATH',
                  'RANLIB', 'SWIG' ])
 
+use_prefixes = [
+    "M5",           # M5 configuration (e.g., path to kernels)
+    "DISTCC_",      # distcc (distributed compiler wrapper) configuration
+    "CCACHE_",      # ccache (caching compiler wrapper) configuration
+    "CCC_",         # clang static analyzer configuration
+    ]
+
 use_env = {}
 for key,val in os.environ.iteritems():
-    if key in use_vars or key.startswith("M5"):
+    if key in use_vars or \
+            any([key.startswith(prefix) for prefix in use_prefixes]):
         use_env[key] = val
 
 main = Environment(ENV=use_env)
