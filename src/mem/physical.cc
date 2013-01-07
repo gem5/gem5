@@ -293,7 +293,7 @@ PhysicalMemory::serializeStore(ostream& os, unsigned int store_id,
 {
     // we cannot use the address range for the name as the
     // memories that are not part of the address map can overlap
-    string filename = "store" + to_string(store_id) + ".pmem";
+    string filename = name() + ".store" + to_string(store_id) + ".pmem";
     long range_size = range.size();
 
     DPRINTF(Checkpoint, "Serializing physical memory %s with size %d\n",
