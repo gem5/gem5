@@ -74,7 +74,7 @@ void schedStatEvent(bool dump, bool reset, Tick when = curTick(),
  * temporal trends in the data.
  * @param period The period at which the dumping should occur.
  */
-void periodicStatDump(uint64_t period = 0);
+void periodicStatDump(Tick period = 0);
 } // namespace Stats
 
 #endif // __SIM_STAT_CONTROL_HH__

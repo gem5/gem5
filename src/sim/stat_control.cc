@@ -253,7 +253,7 @@ schedStatEvent(bool dump, bool reset, Tick when, Tick repeat)
 }
 
 void
-periodicStatDump(uint64_t period)
+periodicStatDump(Tick period)
 {
     /*
      * If the period is set to 0, then we do not want to dump periodically,
