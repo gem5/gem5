@@ -135,7 +135,9 @@ class PhysicalMemory : public Serializable
 
     /**
      * Get the memory ranges for all memories that are to be reported
-     * to the configuration table.
+     * to the configuration table. The ranges are merged before they
+     * are returned such that any interleaved ranges appear as a
+     * single range.
      *
      * @return All configuration table memory ranges
      */

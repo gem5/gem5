@@ -203,11 +203,32 @@ PhysicalMemory::getConfAddrRanges() const
     // this could be done once in the constructor, but since it is unlikely to
     // be called more than once the iteration should not be a problem
     AddrRangeList ranges;
-    for (vector<AbstractMemory*>::const_iterator m = memories.begin();
-         m != memories.end(); ++m) {
-        if ((*m)->isConfReported()) {
-            ranges.push_back((*m)->getAddrRange());
+    vector<AddrRange> intlv_ranges;
+    for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
+         r != addrMap.end(); ++r) {
+        if (r->second->isConfReported()) {
+            // if the range is interleaved then save it for now
+            if (r->first.interleaved()) {
+                // if we already got interleaved ranges that are not
+                // part of the same range, then first do a merge
+                // before we add the new one
+                if (!intlv_ranges.empty() &&
+                    !intlv_ranges.back().mergesWith(r->first)) {
+                    ranges.push_back(AddrRange(intlv_ranges));
+                    intlv_ranges.clear();
+                }
+                intlv_ranges.push_back(r->first);
+            } else {
+                // keep the current range
+                ranges.push_back(r->first);
+            }
         }
+    }
+
+    // if there is still interleaved ranges waiting to be merged,
+    // go ahead and do it
+    if (!intlv_ranges.empty()) {
+        ranges.push_back(AddrRange(intlv_ranges));
     }
 
     return ranges;
