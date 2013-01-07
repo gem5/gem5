@@ -163,6 +163,8 @@ TimingSimpleCPU::drainResume()
 void
 TimingSimpleCPU::switchOut()
 {
+    BaseSimpleCPU::switchOut();
+
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
     _status = SwitchedOut;
     numCycles += curCycle() - previousCycle;
@@ -177,7 +179,7 @@ TimingSimpleCPU::switchOut()
 void
 TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU);
+    BaseSimpleCPU::takeOverFrom(oldCPU);
 
     // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.

@@ -1192,8 +1192,6 @@ FullO3CPU<Impl>::signalDrained()
 
         setDrainState(Drainable::Drained);
 
-        BaseCPU::switchOut();
-
         if (drainManager) {
             DPRINTF(Drain, "CPU done draining, processing drain event\n");
             drainManager->signalDrainDone();
@@ -1207,6 +1205,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::switchOut()
 {
+    BaseCPU::switchOut();
+
     fetch.switchOut();
     rename.switchOut();
     iew.switchOut();

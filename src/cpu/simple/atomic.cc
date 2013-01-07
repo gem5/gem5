@@ -177,6 +177,8 @@ AtomicSimpleCPU::drainResume()
 void
 AtomicSimpleCPU::switchOut()
 {
+    BaseSimpleCPU::switchOut();
+
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
     _status = SwitchedOut;
 
@@ -187,7 +189,7 @@ AtomicSimpleCPU::switchOut()
 void
 AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU);
+    BaseSimpleCPU::takeOverFrom(oldCPU);
 
     assert(!tickEvent.scheduled());
 
