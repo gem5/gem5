@@ -520,7 +520,10 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
         if (mshr) {
-            // MSHR hit
+            /// MSHR hit
+            /// @note writebacks will be checked in getNextMSHR()
+            /// for any conflicting requests to the same block
+
             //@todo remove hw_pf here
             assert(pkt->req->masterId() < system->maxMasters());
             mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
