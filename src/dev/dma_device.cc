@@ -85,10 +85,7 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
     if (state->totBytes == state->numBytes) {
         if (state->completionEvent) {
             delay += state->delay;
-            if (delay)
-                device->schedule(state->completionEvent, curTick() + delay);
-            else
-                state->completionEvent->process();
+            device->schedule(state->completionEvent, curTick() + delay);
         }
         delete state;
     }
