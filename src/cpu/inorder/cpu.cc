@@ -230,6 +230,7 @@ InOrderCPU::InOrderCPU(Params *params)
       tickEvent(this),
       stageWidth(params->stageWidth),
       resPool(new ResourcePool(this, params)),
+      isa(numThreads, NULL),
       timeBuffer(2 , 2),
       dataPort(resPool->getDataUnit(), ".dcache_port"),
       instPort(resPool->getInstUnit(), ".icache_port"),
@@ -280,6 +281,7 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        isa[tid] = params->isa[tid];
         pc[tid].set(0);
         lastCommittedPC[tid].set(0);
 
@@ -358,7 +360,7 @@ InOrderCPU::InOrderCPU(Params *params)
 
         memset(intRegs[tid], 0, sizeof(intRegs[tid]));
         memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
-        isa[tid].clear();
+        isa[tid]->clear();
 
         // Define dummy instructions and resource requests to be used.
         dummyInst[tid] = new InOrderDynInst(this, 
@@ -1249,11 +1251,11 @@ InOrderCPU::flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid)
 {
     if (reg_idx < FP_Base_DepTag) {
         reg_type = IntType;
-        return isa[tid].flattenIntIndex(reg_idx);
+        return isa[tid]->flattenIntIndex(reg_idx);
     } else if (reg_idx < Ctrl_Base_DepTag) {
         reg_type = FloatType;
         reg_idx -= FP_Base_DepTag;
-        return isa[tid].flattenFloatIndex(reg_idx);
+        return isa[tid]->flattenFloatIndex(reg_idx);
     } else {
         reg_type = MiscType;
         return reg_idx - TheISA::Ctrl_Base_DepTag;
@@ -1369,25 +1371,25 @@ InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
 MiscReg
 InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
-    return isa[tid].readMiscRegNoEffect(misc_reg);
+    return isa[tid]->readMiscRegNoEffect(misc_reg);
 }
 
 MiscReg
 InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
-    return isa[tid].readMiscReg(misc_reg, tcBase(tid));
+    return isa[tid]->readMiscReg(misc_reg, tcBase(tid));
 }
 
 void
 InOrderCPU::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    isa[tid].setMiscRegNoEffect(misc_reg, val);
+    isa[tid]->setMiscRegNoEffect(misc_reg, val);
 }
 
 void
 InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
+    isa[tid]->setMiscReg(misc_reg, val, tcBase(tid));
 }
 
 

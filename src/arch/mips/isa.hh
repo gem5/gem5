@@ -39,19 +39,23 @@
 #include "arch/mips/types.hh"
 #include "sim/eventq.hh"
 #include "sim/fault_fwd.hh"
+#include "sim/sim_object.hh"
 
 class BaseCPU;
 class Checkpoint;
 class EventManager;
+struct MipsISAParams;
 class ThreadContext;
 
 namespace MipsISA
 {
-    class ISA
+    class ISA : public SimObject
     {
       public:
         // The MIPS name for this file is CP0 or Coprocessor 0
         typedef ISA CP0;
+
+        typedef MipsISAParams Params;
 
       protected:
         // Number of threads and vpes an individual ISA state can handle
@@ -69,8 +73,6 @@ namespace MipsISA
         std::vector<BankType> bankType;
 
       public:
-        ISA(uint8_t num_threads = 1, uint8_t num_vpes = 1);
-
         void clear();
 
         void configCP();
@@ -155,6 +157,9 @@ namespace MipsISA
         static std::string miscRegNames[NumMiscRegs];
 
       public:
+        const Params *params() const;
+
+        ISA(Params *p);
 
         int
         flattenIntIndex(int reg)

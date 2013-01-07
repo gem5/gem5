@@ -73,6 +73,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('utility.cc')
     Source('vtophys.cc')
 
+    SimObject('X86ISA.py')
     SimObject('X86LocalApic.py')
     SimObject('X86NativeTrace.py')
     SimObject('X86System.py')

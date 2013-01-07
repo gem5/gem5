@@ -139,6 +139,7 @@ for i in xrange(np):
         test_sys.cpu[i].fastmem = True
     if options.checker:
         test_sys.cpu[i].addCheckerCpu()
+    test_sys.cpu[i].createThreads()
 
 CacheConfig.config_cache(options, test_sys)
 
@@ -155,6 +156,7 @@ if len(bm) == 2:
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
 
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
+    drive_sys.cpu.createThreads()
     drive_sys.cpu.createInterruptController()
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.fastmem:

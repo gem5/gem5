@@ -36,6 +36,7 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
+#include "params/MipsISA.hh"
 
 namespace MipsISA
 {
@@ -87,11 +88,10 @@ ISA::miscRegNames[NumMiscRegs] =
     "LLFlag"
 };
 
-ISA::ISA(uint8_t num_threads, uint8_t num_vpes)
+ISA::ISA(Params *p)
+    : SimObject(p),
+      numThreads(p->num_threads), numVpes(p->num_vpes)
 {
-    numThreads = num_threads;
-    numVpes = num_vpes;
-
     miscRegFile.resize(NumMiscRegs);
     bankType.resize(NumMiscRegs);
 
@@ -140,6 +140,12 @@ ISA::ISA(uint8_t num_threads, uint8_t num_vpes)
     }
 
     clear();
+}
+
+const MipsISAParams *
+ISA::params() const
+{
+    return dynamic_cast<const Params *>(_params);
 }
 
 void
@@ -585,4 +591,10 @@ ISA::CP0Event::unscheduleEvent()
         squash();
 }
 
+}
+
+MipsISA::ISA *
+MipsISAParams::create()
+{
+    return new MipsISA::ISA(this);
 }

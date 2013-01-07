@@ -44,6 +44,7 @@ if env['TARGET_ISA'] == 'power':
     Source('interrupts.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
+    Source('isa.cc')
     Source('pagetable.cc')
     Source('process.cc')
     Source('stacktrace.cc')
@@ -52,6 +53,7 @@ if env['TARGET_ISA'] == 'power':
     Source('vtophys.cc')
 
     SimObject('PowerInterrupts.py')
+    SimObject('PowerISA.py')
     SimObject('PowerTLB.py')
 
     DebugFlag('Power')

@@ -59,6 +59,7 @@ if env['TARGET_ISA'] == 'alpha':
     Source('vtophys.cc')
 
     SimObject('AlphaInterrupts.py')
+    SimObject('AlphaISA.py')
     SimObject('AlphaSystem.py')
     SimObject('AlphaTLB.py')
 

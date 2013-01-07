@@ -230,6 +230,11 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
             profileEvent = new ProfileEvent(this, params()->profile);
     }
     tracer = params()->tracer;
+
+    if (params()->isa.size() != numThreads) {
+        fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
+              "of threads (%i).\n", params()->isa.size(), numThreads);
+    }
 }
 
 void

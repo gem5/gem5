@@ -77,6 +77,31 @@ maxtick = m5.MaxTick
 sys.path.append(joinpath(tests_root, category, mode, name))
 execfile(joinpath(tests_root, category, mode, name, 'test.py'))
 
+# Initialize all CPUs in a system
+def initCPUs(sys):
+    def initCPU(cpu):
+        # We might actually have a MemTest object or something similar
+        # here that just pretends to be a CPU.
+        if isinstance(cpu, BaseCPU):
+            cpu.createThreads()
+
+    # The CPU attribute doesn't exist in some cases, e.g. the Ruby
+    # testers.
+    if not hasattr(sys, "cpu"):
+        return
+
+    # The CPU can either be a list of CPUs or a single object.
+    if isinstance(sys.cpu, list):
+        [ initCPU(cpu) for cpu in sys.cpu ]
+    else:
+        initCPU(sys.cpu)
+
+# We might be creating a single system or a dual system. Try
+# initializing the CPUs in all known system attributes.
+for sysattr in [ "system", "testsys", "drivesys" ]:
+    if hasattr(root, sysattr):
+        initCPUs(getattr(root, sysattr))
+
 # instantiate configuration
 m5.instantiate()
 

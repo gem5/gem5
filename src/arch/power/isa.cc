@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2006 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,58 +34,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Andreas Sandberg
  */
 
-#include "cpu/checker/cpu_impl.hh"
-#include "cpu/o3/checker.hh"
-#include "params/O3Checker.hh"
+#include "arch/power/isa.hh"
+#include "params/PowerISA.hh"
 
-class MemObject;
-
-template
-class Checker<O3CPUImpl>;
-
-////////////////////////////////////////////////////////////////////////
-//
-//  CheckerCPU Simulation Object
-//
-O3Checker *
-O3CheckerParams::create()
+namespace PowerISA
 {
-    O3Checker::Params *params = new O3Checker::Params();
-    params->name = name;
-    params->numThreads = numThreads;
-    params->max_insts_any_thread = 0;
-    params->max_insts_all_threads = 0;
-    params->max_loads_any_thread = 0;
-    params->max_loads_all_threads = 0;
-    params->exitOnError = exitOnError;
-    params->updateOnError = updateOnError;
-    params->warnOnlyOnLoadError = warnOnlyOnLoadError;
-    params->clock = clock;
-    params->tracer = tracer;
-    // Hack to touch all parameters.  Consider not deriving Checker
-    // from BaseCPU..it's not really a CPU in the end.
-    Counter temp;
-    temp = max_insts_any_thread;
-    temp = max_insts_all_threads;
-    temp = max_loads_any_thread;
-    temp = max_loads_all_threads;
-    temp++;
-    Tick temp2 = progress_interval;
-    params->progress_interval = 0;
-    temp2++;
 
-    params->itb = itb;
-    params->dtb = dtb;
-    params->isa = isa;
-    params->system = system;
-    params->cpu_id = cpu_id;
-    params->profile = profile;
-    params->interrupts = NULL;
-    params->workload = workload;
-
-    O3Checker *cpu = new O3Checker(params);
-    return cpu;
+ISA::ISA(Params *p)
+    : SimObject(p)
+{
+    clear();
 }
+
+const PowerISAParams *
+ISA::params() const
+{
+    return dynamic_cast<const Params *>(_params);
+}
+
+}
+
+PowerISA::ISA *
+PowerISAParams::create()
+{
+    return new PowerISA::ISA(this);
+}
+

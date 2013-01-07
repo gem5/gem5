@@ -43,12 +43,28 @@
 #include "cpu/checker/cpu.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
+#include "params/ArmISA.hh"
 #include "sim/faults.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
 
 namespace ArmISA
 {
+
+ISA::ISA(Params *p)
+    : SimObject(p)
+{
+    SCTLR sctlr;
+    sctlr = 0;
+    miscRegs[MISCREG_SCTLR_RST] = sctlr;
+    clear();
+}
+
+const ArmISAParams *
+ISA::params() const
+{
+    return dynamic_cast<const Params *>(_params);
+}
 
 void
 ISA::clear()
@@ -640,4 +656,10 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
     setMiscRegNoEffect(misc_reg, newVal);
 }
 
+}
+
+ArmISA::ISA *
+ArmISAParams::create()
+{
+    return new ArmISA::ISA(this);
 }

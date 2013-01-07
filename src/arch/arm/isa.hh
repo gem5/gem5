@@ -47,14 +47,16 @@
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
 #include "debug/Checkpoint.hh"
+#include "sim/sim_object.hh"
 
+struct ArmISAParams;
 class ThreadContext;
 class Checkpoint;
 class EventManager;
 
 namespace ArmISA
 {
-    class ISA
+    class ISA : public SimObject
     {
       protected:
         MiscReg miscRegs[NumMiscRegs];
@@ -192,14 +194,11 @@ namespace ArmISA
             updateRegMap(tmp_cpsr);
         }
 
-        ISA()
-        {
-            SCTLR sctlr;
-            sctlr = 0;
-            miscRegs[MISCREG_SCTLR_RST] = sctlr;
+        typedef ArmISAParams Params;
 
-            clear();
-        }
+        const Params *params() const;
+
+        ISA(Params *p);
     };
 }
 

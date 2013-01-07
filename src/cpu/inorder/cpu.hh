@@ -325,7 +325,7 @@ class InOrderCPU : public BaseCPU
     TheISA::IntReg intRegs[ThePipeline::MaxThreads][TheISA::NumIntRegs];
 
     /** ISA state */
-    TheISA::ISA isa[ThePipeline::MaxThreads];
+    std::vector<TheISA::ISA *> isa;
 
     /** Dependency Tracker for Integer & Floating Point Regs */
     RegDepMap archRegDepMap[ThePipeline::MaxThreads];

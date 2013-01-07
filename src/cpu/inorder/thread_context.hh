@@ -254,10 +254,10 @@ class InOrderThreadContext : public ThreadContext
     void setMiscReg(int misc_reg, const MiscReg &val);
 
     int flattenIntIndex(int reg)
-    { return cpu->isa[thread->threadId()].flattenIntIndex(reg); }
+    { return cpu->isa[thread->threadId()]->flattenIntIndex(reg); }
 
     int flattenFloatIndex(int reg)
-    { return cpu->isa[thread->threadId()].flattenFloatIndex(reg); }
+    { return cpu->isa[thread->threadId()]->flattenFloatIndex(reg); }
 
     void activateContext(Cycles delay)
     { cpu->activateContext(thread->threadId(), delay); }

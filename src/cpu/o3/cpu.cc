@@ -241,6 +241,8 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
                  TheISA::NumMiscRegs * numThreads,
                  TheISA::ZeroReg),
 
+      isa(numThreads, NULL),
+
       icachePort(&fetch, this),
       dcachePort(&iew.ldstQueue, this),
 
@@ -339,6 +341,8 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         bool bindRegs = (tid <= active_threads - 1);
+
+        isa[tid] = params->isa[tid];
 
         commitRenameMap[tid].init(TheISA::NumIntRegs,
                                   params->numPhysIntRegs,
@@ -1285,7 +1289,7 @@ template <class Impl>
 TheISA::MiscReg
 FullO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
-    return this->isa[tid].readMiscRegNoEffect(misc_reg);
+    return this->isa[tid]->readMiscRegNoEffect(misc_reg);
 }
 
 template <class Impl>
@@ -1293,7 +1297,7 @@ TheISA::MiscReg
 FullO3CPU<Impl>::readMiscReg(int misc_reg, ThreadID tid)
 {
     miscRegfileReads++;
-    return this->isa[tid].readMiscReg(misc_reg, tcBase(tid));
+    return this->isa[tid]->readMiscReg(misc_reg, tcBase(tid));
 }
 
 template <class Impl>
@@ -1301,7 +1305,7 @@ void
 FullO3CPU<Impl>::setMiscRegNoEffect(int misc_reg,
         const TheISA::MiscReg &val, ThreadID tid)
 {
-    this->isa[tid].setMiscRegNoEffect(misc_reg, val);
+    this->isa[tid]->setMiscRegNoEffect(misc_reg, val);
 }
 
 template <class Impl>
@@ -1310,7 +1314,7 @@ FullO3CPU<Impl>::setMiscReg(int misc_reg,
         const TheISA::MiscReg &val, ThreadID tid)
 {
     miscRegfileWrites++;
-    this->isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
+    this->isa[tid]->setMiscReg(misc_reg, val, tcBase(tid));
 }
 
 template <class Impl>

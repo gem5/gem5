@@ -219,14 +219,14 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::clearArchRegs()
 {
-    cpu->isa[thread->threadId()].clear();
+    cpu->isa[thread->threadId()]->clear();
 }
 
 template <class Impl>
 uint64_t
 O3ThreadContext<Impl>::readIntReg(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenIntIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenIntIndex(reg_idx);
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
@@ -234,7 +234,7 @@ template <class Impl>
 TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
@@ -242,7 +242,7 @@ template <class Impl>
 TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
 }
 
@@ -250,7 +250,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenIntIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenIntIndex(reg_idx);
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
@@ -260,7 +260,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
@@ -270,7 +270,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
-    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
     conditionalSquash();
@@ -298,14 +298,14 @@ template <class Impl>
 int
 O3ThreadContext<Impl>::flattenIntIndex(int reg)
 {
-    return cpu->isa[thread->threadId()].flattenIntIndex(reg);
+    return cpu->isa[thread->threadId()]->flattenIntIndex(reg);
 }
 
 template <class Impl>
 int
 O3ThreadContext<Impl>::flattenFloatIndex(int reg)
 {
-    return cpu->isa[thread->threadId()].flattenFloatIndex(reg);
+    return cpu->isa[thread->threadId()]->flattenFloatIndex(reg);
 }
 
 template <class Impl>

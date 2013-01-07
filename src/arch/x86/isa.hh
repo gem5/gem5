@@ -38,14 +38,16 @@
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/registers.hh"
 #include "base/types.hh"
+#include "sim/sim_object.hh"
 
 class Checkpoint;
 class EventManager;
 class ThreadContext;
+struct X86ISAParams;
 
 namespace X86ISA
 {
-    class ISA
+    class ISA : public SimObject
     {
       protected:
         MiscReg regVal[NUM_MISCREGS];
@@ -54,12 +56,12 @@ namespace X86ISA
                 ThreadContext *tc);
 
       public:
+        typedef X86ISAParams Params;
+
         void clear();
 
-        ISA()
-        {
-            clear();
-        }
+        ISA(Params *p);
+        const Params *params() const;
 
         MiscReg readMiscRegNoEffect(int miscReg);
         MiscReg readMiscReg(int miscReg, ThreadContext *tc);

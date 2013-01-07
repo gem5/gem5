@@ -37,6 +37,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/MiscRegs.hh"
 #include "debug/Timer.hh"
+#include "params/SparcISA.hh"
 
 namespace SparcISA
 {
@@ -57,6 +58,22 @@ buildPstateMask()
 }
 
 static const PSTATE PstateMask = buildPstateMask();
+
+ISA::ISA(Params *p)
+    : SimObject(p)
+{
+    tickCompare = NULL;
+    sTickCompare = NULL;
+    hSTickCompare = NULL;
+
+    clear();
+}
+
+const SparcISAParams *
+ISA::params() const
+{
+    return dynamic_cast<const Params *>(_params);
+}
 
 void
 ISA::reloadRegMap()
@@ -779,4 +796,10 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
 
 }
 
+}
+
+SparcISA::ISA *
+SparcISAParams::create()
+{
+    return new SparcISA::ISA(this);
 }

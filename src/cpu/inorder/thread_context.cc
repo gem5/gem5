@@ -173,7 +173,7 @@ InOrderThreadContext::copyArchRegs(ThreadContext *src_tc)
 void
 InOrderThreadContext::clearArchRegs()
 {
-    cpu->isa[thread->threadId()].clear();
+    cpu->isa[thread->threadId()]->clear();
 }
 
 
@@ -181,7 +181,7 @@ uint64_t
 InOrderThreadContext::readIntReg(int reg_idx)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenIntIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenIntIndex(reg_idx);
     return cpu->readIntReg(reg_idx, tid);
 }
 
@@ -189,7 +189,7 @@ FloatReg
 InOrderThreadContext::readFloatReg(int reg_idx)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenFloatIndex(reg_idx);
     return cpu->readFloatReg(reg_idx, tid);
 }
 
@@ -197,7 +197,7 @@ FloatRegBits
 InOrderThreadContext::readFloatRegBits(int reg_idx)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenFloatIndex(reg_idx);
     return cpu->readFloatRegBits(reg_idx, tid);
 }
 
@@ -211,7 +211,7 @@ void
 InOrderThreadContext::setIntReg(int reg_idx, uint64_t val)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenIntIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenIntIndex(reg_idx);
     cpu->setIntReg(reg_idx, val, tid);
 }
 
@@ -219,7 +219,7 @@ void
 InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenFloatIndex(reg_idx);
     cpu->setFloatReg(reg_idx, val, tid);
 }
 
@@ -227,7 +227,7 @@ void
 InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     ThreadID tid = thread->threadId();
-    reg_idx = cpu->isa[tid].flattenFloatIndex(reg_idx);
+    reg_idx = cpu->isa[tid]->flattenFloatIndex(reg_idx);
     cpu->setFloatRegBits(reg_idx, val, tid);
 }
 

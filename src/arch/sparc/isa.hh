@@ -37,14 +37,16 @@
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "cpu/cpuevent.hh"
+#include "sim/sim_object.hh"
 
 class Checkpoint;
 class EventManager;
+struct SparcISAParams;
 class ThreadContext;
 
 namespace SparcISA
 {
-class ISA
+class ISA : public SimObject
 {
   private:
 
@@ -200,14 +202,10 @@ class ISA
         return reg;
     }
 
-    ISA()
-    {
-        tickCompare = NULL;
-        sTickCompare = NULL;
-        hSTickCompare = NULL;
+    typedef SparcISAParams Params;
+    const Params *params() const;
 
-        clear();
-    }
+    ISA(Params *p);
 };
 }
 

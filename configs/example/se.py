@@ -180,6 +180,8 @@ for i in xrange(np):
     if options.checker:
         system.cpu[i].addCheckerCpu()
 
+    system.cpu[i].createThreads()
+
 if options.ruby:
     if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
         print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"

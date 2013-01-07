@@ -69,6 +69,7 @@ DummyCheckerParams::create()
 
     params->itb = itb;
     params->dtb = dtb;
+    params->isa = isa;
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;

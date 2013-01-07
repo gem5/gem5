@@ -33,6 +33,7 @@
 #include "arch/x86/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "params/X86ISA.hh"
 #include "sim/serialize.hh"
 
 namespace X86ISA
@@ -108,6 +109,18 @@ ISA::clear()
     memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
     regVal[MISCREG_DR6] = (mask(8) << 4) | (mask(16) << 16);
     regVal[MISCREG_DR7] = 1 << 10;
+}
+
+ISA::ISA(Params *p)
+    : SimObject(p)
+{
+    clear();
+}
+
+const X86ISAParams *
+ISA::params() const
+{
+    return dynamic_cast<const Params *>(_params);
 }
 
 MiscReg
@@ -375,4 +388,10 @@ ISA::unserialize(EventManager *em, Checkpoint * cp,
                      NULL);
 }
 
+}
+
+X86ISA::ISA *
+X86ISAParams::create()
+{
+    return new X86ISA::ISA(this);
 }

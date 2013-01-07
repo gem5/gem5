@@ -61,9 +61,9 @@ using namespace std;
 // constructor
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, TheISA::TLB *_itb,
-                           TheISA::TLB *_dtb)
-    : ThreadState(_cpu, _thread_num, _process), system(_sys), itb(_itb),
-      dtb(_dtb)
+                           TheISA::TLB *_dtb, TheISA::ISA *_isa)
+    : ThreadState(_cpu, _thread_num, _process), isa(_isa), system(_sys),
+      itb(_itb), dtb(_dtb)
 {
     clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -71,8 +71,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
-                           bool use_kernel_stats)
-    : ThreadState(_cpu, _thread_num, NULL), system(_sys), itb(_itb), dtb(_dtb)
+                           TheISA::ISA *_isa, bool use_kernel_stats)
+    : ThreadState(_cpu, _thread_num, NULL), isa(_isa), system(_sys), itb(_itb),
+      dtb(_dtb)
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
 
@@ -99,7 +100,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 
 SimpleThread::SimpleThread()
-    : ThreadState(NULL, -1, NULL)
+    : ThreadState(NULL, -1, NULL), isa(NULL)
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
@@ -182,7 +183,7 @@ SimpleThread::serialize(ostream &os)
     // 
     // Now must serialize all the ISA dependent state
     //
-    isa.serialize(baseCpu, os);
+    isa->serialize(baseCpu, os);
 }
 
 
@@ -198,7 +199,7 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     // 
     // Now must unserialize all the ISA dependent state
     //
-    isa.unserialize(baseCpu, cp, section);
+    isa->unserialize(baseCpu, cp, section);
 }
 
 void

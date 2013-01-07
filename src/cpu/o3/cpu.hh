@@ -634,7 +634,7 @@ class FullO3CPU : public BaseO3CPU
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
 
-    TheISA::ISA isa[Impl::MaxThreads];
+    std::vector<TheISA::ISA *> isa;
 
     /** Instruction port. Note that it has to appear after the fetch stage. */
     IcachePort icachePort;
