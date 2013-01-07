@@ -45,32 +45,55 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
-#include <utility> // pair & make_pair
-
+#include "base/cprintf.hh"
 #include "base/types.hh"
 
 class AddrRange
 {
 
+  private:
+
+    /// Private fields for the start and end of the range. In the
+    /// future, these will be extended with interleaving functionality
+    /// and hence should never be manipulated directly.
+    Addr _start;
+    Addr _end;
+
   public:
 
-    Addr start;
-    Addr end;
-
     AddrRange()
-        : start(1), end(0)
+        : _start(1), _end(0)
     {}
 
     AddrRange(Addr _start, Addr _end)
-        : start(_start), end(_end)
+        : _start(_start), _end(_end)
     {}
 
-    AddrRange(const std::pair<Addr, Addr> &r)
-        : start(r.first), end(r.second)
-    {}
+    /**
+     * Get the size of the address range. For a case where
+     * interleaving is used this should probably cause a panic.
+     */
+    Addr size() const { return _end - _start + 1; }
 
-    Addr size() const { return end - start + 1; }
-    bool valid() const { return start < end; }
+    /**
+     * Determine if the range is valid.
+     */
+    bool valid() const { return _start < _end; }
+
+    /**
+     * Get the start address of the range.
+     */
+    Addr start() const { return _start; }
+
+    /**
+     * Get a string representation of the range. This could
+     * alternatively be implemented as a operator<<, but at the moment
+     * that seems like overkill.
+     */
+    std::string to_string() const
+    {
+        return csprintf("[%#llx : %#llx]", _start, _end);
+    }
 
     /**
      * Determine if another range intersects this one, i.e. if there
@@ -82,8 +105,7 @@ class AddrRange
      */
     bool intersects(const AddrRange& r) const
     {
-        return (start <= r.start && end >= r.start) ||
-            (start <= r.end && end >= r.end);
+        return _start <= r._end && _end >= r._start;
     }
 
     /**
@@ -96,60 +118,50 @@ class AddrRange
      */
     bool isSubset(const AddrRange& r) const
     {
-        return start >= r.start && end <= r.end;
+        return _start >= r._start && _end <= r._end;
     }
-};
+
+    /**
+     * Determine if the range contains an address.
+     *
+     * @param a Address to compare with
+     * @return true if the address is in the range
+     */
+    bool contains(const Addr& a) const
+    {
+        return a >= _start && a <= _end;
+    }
 
 /**
  * Keep the operators away from SWIG.
  */
 #ifndef SWIG
 
-/**
- * @param range1 is a range.
- * @param range2 is a range.
- * @return if range1 is less than range2 and does not overlap range1.
- */
-inline bool
-operator<(const AddrRange& range1, const AddrRange& range2)
-{
-    return range1.start < range2.start;
-}
+    /**
+     * Less-than operator used to turn an STL map into a binary search
+     * tree of non-overlapping address ranges.
+     *
+     * @param r Range to compare with
+     * @return true if the start address is less than that of the other range
+     */
+    bool operator<(const AddrRange& r) const
+    {
+        return _start < r._start;
+    }
 
-/**
- * @param addr address in the range
- * @param range range compared against.
- * @return indicates that the address is not within the range.
- */
-inline bool
-operator!=(const Addr& addr, const AddrRange& range)
-{
-    return addr < range.start || addr > range.end;
-}
-
-/**
- * @param range range compared against.
- * @param pos position compared to the range.
- * @return indicates that position pos is within the range.
- */
-inline bool
-operator==(const AddrRange& range, const Addr& addr)
-{
-    return addr >= range.start && addr <= range.end;
-}
+#endif // SWIG
+};
 
 inline AddrRange
 RangeEx(Addr start, Addr end)
-{ return std::make_pair(start, end - 1); }
+{ return AddrRange(start, end - 1); }
 
 inline AddrRange
 RangeIn(Addr start, Addr end)
-{ return std::make_pair(start, end); }
+{ return AddrRange(start, end); }
 
 inline AddrRange
 RangeSize(Addr start, Addr size)
-{ return std::make_pair(start, start + size - 1); }
-
-#endif // SWIG
+{ return AddrRange(start, start + size - 1); }
 
 #endif // __BASE_ADDR_RANGE_HH__

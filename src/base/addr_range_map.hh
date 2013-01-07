@@ -73,7 +73,7 @@ class AddrRangeMap
         i = tree.upper_bound(r);
 
         if (i == tree.begin()) {
-            if (i->first.start <= r.end && i->first.end >= r.start)
+            if (i->first.intersects(r))
                 return i;
             else
                 // Nothing could match, so return end()
@@ -82,7 +82,7 @@ class AddrRangeMap
 
         --i;
 
-        if (i->first.start <= r.end && i->first.end >= r.start)
+        if (i->first.intersects(r))
             return i;
 
         return tree.end();
@@ -96,7 +96,7 @@ class AddrRangeMap
         i = tree.upper_bound(r);
 
         if (i == tree.begin()) {
-            if (i->first.start <= r.end && i->first.end >= r.start)
+            if (i->first.intersects(r))
                 return i;
             else
                 // Nothing could match, so return end()
@@ -105,7 +105,7 @@ class AddrRangeMap
 
         --i;
 
-        if (i->first.start <= r.end && i->first.end >= r.start)
+        if (i->first.intersects(r))
             return i;
 
         return tree.end();

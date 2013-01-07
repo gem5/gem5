@@ -65,7 +65,7 @@ BadAddrEvent::process(ThreadContext *tc)
     // get the address ranges of the connected slave port
     AddrRangeList resp = dataPort.getAddrRanges();
     for (iter = resp.begin(); iter != resp.end(); iter++) {
-        if (*iter == (K0Seg2Phys(a0) & PAddrImplMask))
+        if (iter->contains(K0Seg2Phys(a0) & PAddrImplMask))
             found = true;
     }
 

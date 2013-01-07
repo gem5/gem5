@@ -357,7 +357,7 @@ BaseBus::findPort(Addr addr)
 
     // Check if this matches the default range
     if (useDefaultRange) {
-        if (defaultRange == addr) {
+        if (defaultRange.contains(addr)) {
             DPRINTF(BusAddrRanges, "  found addr %#llx on default\n",
                     addr);
             return defaultPortID;
@@ -430,8 +430,8 @@ BaseBus::recvRangeChange(PortID master_port_id)
         AddrRangeList ranges = masterPorts[master_port_id]->getAddrRanges();
 
         for (AddrRangeConstIter r = ranges.begin(); r != ranges.end(); ++r) {
-            DPRINTF(BusAddrRanges, "Adding range %#llx : %#llx for id %d\n",
-                    r->start, r->end, master_port_id);
+            DPRINTF(BusAddrRanges, "Adding range %s for id %d\n",
+                    r->to_string(), master_port_id);
             if (portMap.insert(*r, master_port_id) == portMap.end()) {
                 PortID conflict_id = portMap.find(*r)->second;
                 fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
@@ -466,9 +466,9 @@ BaseBus::recvRangeChange(PortID master_port_id)
                         // overlapping the default range
                         if (r->intersects(defaultRange) &&
                             !r->isSubset(defaultRange))
-                            fatal("Range %#llx : %#llx intersects the " \
+                            fatal("Range %s intersects the " \
                                   "default range of %s but is not a " \
-                                  "subset\n", r->start, r->end, name());
+                                  "subset\n", r->to_string(), name());
                     }
                 }
             }
@@ -497,18 +497,16 @@ BaseBus::getAddrRanges() const
     // start out with the default range
     AddrRangeList ranges;
     ranges.push_back(defaultRange);
-    DPRINTF(BusAddrRanges, "  -- %#llx : %#llx DEFAULT\n",
-            defaultRange.start, defaultRange.end);
+    DPRINTF(BusAddrRanges, "  -- %s DEFAULT\n", defaultRange.to_string());
 
     // add any range that is not a subset of the default range
     for (PortMapConstIter p = portMap.begin(); p != portMap.end(); ++p) {
         if (useDefaultRange && p->first.isSubset(defaultRange)) {
-            DPRINTF(BusAddrRanges, "  -- %#llx : %#llx is a SUBSET\n",
-                    p->first.start, p->first.end);
+            DPRINTF(BusAddrRanges, "  -- %s is a SUBSET\n",
+                    p->first.to_string());
         } else {
             ranges.push_back(p->first);
-            DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
-                    p->first.start, p->first.end);
+            DPRINTF(BusAddrRanges, "  -- %s\n", p->first.to_string());
         }
     }
 

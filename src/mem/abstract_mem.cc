@@ -303,8 +303,8 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
 void
 AbstractMemory::access(PacketPtr pkt)
 {
-    assert(pkt->getAddr() >= range.start &&
-           (pkt->getAddr() + pkt->getSize() - 1) <= range.end);
+    assert(AddrRange(pkt->getAddr(),
+                     pkt->getAddr() + pkt->getSize() - 1).isSubset(range));
 
     if (pkt->memInhibitAsserted()) {
         DPRINTF(MemoryAccess, "mem inhibited on 0x%x: not responding\n",
@@ -312,7 +312,7 @@ AbstractMemory::access(PacketPtr pkt)
         return;
     }
 
-    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start;
+    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->cmd == MemCmd::SwapReq) {
         TheISA::IntReg overwrite_val;
@@ -384,10 +384,10 @@ AbstractMemory::access(PacketPtr pkt)
 void
 AbstractMemory::functionalAccess(PacketPtr pkt)
 {
-    assert(pkt->getAddr() >= range.start &&
-           (pkt->getAddr() + pkt->getSize() - 1) <= range.end);
+    assert(AddrRange(pkt->getAddr(),
+                     pkt->getAddr() + pkt->getSize() - 1).isSubset(range));
 
-    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start;
+    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->isRead()) {
         if (pmemAddr)

@@ -264,13 +264,13 @@ class BaseBus : public MemObject
     // Checks the cache and returns the id of the port that has the requested
     // address within its range
     inline PortID checkPortCache(Addr addr) const {
-        if (portCache[0].valid && portCache[0].range == addr) {
+        if (portCache[0].valid && portCache[0].range.contains(addr)) {
             return portCache[0].id;
         }
-        if (portCache[1].valid && portCache[1].range == addr) {
+        if (portCache[1].valid && portCache[1].range.contains(addr)) {
             return portCache[1].id;
         }
-        if (portCache[2].valid && portCache[2].range == addr) {
+        if (portCache[2].valid && portCache[2].range.contains(addr)) {
             return portCache[2].id;
         }
 

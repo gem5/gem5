@@ -120,8 +120,8 @@ PhysicalMemory::createBackingStore(AddrRange range,
                                    const vector<AbstractMemory*>& _memories)
 {
     // perform the actual mmap
-    DPRINTF(BusAddrRanges, "Creating backing store for range %x:%x\n",
-            range.start, range.end);
+    DPRINTF(BusAddrRanges, "Creating backing store for range %s\n",
+            range.to_string());
     int map_flags = MAP_ANON | MAP_PRIVATE;
     uint8_t* pmem = (uint8_t*) mmap(NULL, range.size(),
                                     PROT_READ | PROT_WRITE,
@@ -129,8 +129,8 @@ PhysicalMemory::createBackingStore(AddrRange range,
 
     if (pmem == (uint8_t*) MAP_FAILED) {
         perror("mmap");
-        fatal("Could not mmap %d bytes for range %x:%x!\n", range.size(),
-              range.start, range.end);
+        fatal("Could not mmap %d bytes for range %s!\n", range.size(),
+              range.to_string());
     }
 
     // remember this backing store so we can checkpoint it and unmap
@@ -157,8 +157,8 @@ PhysicalMemory::createBackingStore(AddrRange range,
 
     if (init_to_zero != 0) {
         if (init_to_zero != _memories.size())
-            fatal("Some, but not all memories in range %x:%x are set zero\n",
-                  range.start, range.end);
+            fatal("Some, but not all memories in range %s are set zero\n",
+                  range.to_string());
 
         memset(pmem, 0, range.size());
     }
@@ -176,7 +176,7 @@ bool
 PhysicalMemory::isMemAddr(Addr addr) const
 {
     // see if the address is within the last matched range
-    if (addr != rangeCache) {
+    if (!rangeCache.contains(addr)) {
         // lookup in the interval tree
         AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.find(addr);
         if (r == addrMap.end()) {

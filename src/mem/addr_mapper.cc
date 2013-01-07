@@ -253,9 +253,9 @@ Addr
 RangeAddrMapper::remapAddr(Addr addr) const
 {
     for (int i = 0; i < originalRanges.size(); ++i) {
-        if (originalRanges[i] == addr) {
-            Addr offset = addr - originalRanges[i].start;
-            return offset + remappedRanges[i].start;
+        if (originalRanges[i].contains(addr)) {
+            Addr offset = addr - originalRanges[i].start();
+            return offset + remappedRanges[i].start();
         }
     }
 
@@ -277,11 +277,12 @@ RangeAddrMapper::getAddrRanges() const
                       " ranges but are not a subset.\n");
             if (range.isSubset(originalRanges[j])) {
                 // range is a subset
-                Addr offset = range.start - originalRanges[j].start;
-                range.start -= offset;
-                range.end -= offset;
+                Addr offset = range.start() - originalRanges[j].start();
+                Addr start = range.start() - offset;
+                ranges.push_back(AddrRange(start, start + range.size() - 1));
+            } else {
+                ranges.push_back(range);
             }
-            ranges.push_back(range);
         }
     }
 

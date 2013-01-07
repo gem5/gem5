@@ -266,7 +266,7 @@ class AbstractMemory : public MemObject
      *
      * @return the start address of the memory
      */
-    Addr start() const { return range.start; }
+    Addr start() const { return range.start(); }
 
     /**
      *  Should this memory be passed to the kernel and part of the OS

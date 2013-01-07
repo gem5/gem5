@@ -171,7 +171,7 @@ LinuxArmSystem::initState()
         }
         AtagMem am;
         am.memSize(atagRanges.begin()->size());
-        am.memStart(atagRanges.begin()->start);
+        am.memStart(atagRanges.begin()->start());
 
         AtagCmdline ad;
         ad.cmdline(params()->boot_osflags);
