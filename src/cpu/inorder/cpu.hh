@@ -856,9 +856,6 @@ class InOrderCPU : public BaseCPU
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
 
-    /** Whether or not the CPU should defer its registration. */
-    bool deferRegistration;
-
     /** Per-Stage Instruction Tracing */
     bool stageTracing;
 

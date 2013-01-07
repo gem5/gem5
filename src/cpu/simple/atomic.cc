@@ -83,7 +83,7 @@ AtomicSimpleCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->defer_registration &&
+    if (!params()->switched_out &&
         system->getMemoryMode() != Enums::atomic) {
         fatal("The atomic CPU requires the memory system to be in "
               "'atomic' mode.\n");
@@ -92,7 +92,7 @@ AtomicSimpleCPU::init()
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
-    if (FullSystem && !params()->defer_registration) {
+    if (FullSystem && !params()->switched_out) {
         ThreadID size = threadContexts.size();
         for (ThreadID i = 0; i < size; ++i) {
             ThreadContext *tc = threadContexts[i];

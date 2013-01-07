@@ -173,8 +173,9 @@ class BaseCPU(MemObject):
     progress_interval = Param.Frequency('0Hz',
         "frequency to print out the progress message")
 
-    defer_registration = Param.Bool(False,
-        "defer registration with system (for sampling)")
+    switched_out = Param.Bool(False,
+        "Leave the CPU switched out after startup (used when switching " \
+        "between CPU models)")
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 

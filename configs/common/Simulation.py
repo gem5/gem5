@@ -296,7 +296,7 @@ def run(options, root, testsys, cpu_class):
             testsys.cpu[i].max_insts_any_thread = options.maxinsts
 
     if cpu_class:
-        switch_cpus = [cpu_class(defer_registration=True, cpu_id=(i))
+        switch_cpus = [cpu_class(switched_out=True, cpu_id=(i))
                        for i in xrange(np)]
 
         for i in xrange(np):
@@ -321,23 +321,23 @@ def run(options, root, testsys, cpu_class):
                 print "O3 CPU must be used with caches"
                 sys.exit(1)
 
-            repeat_switch_cpus = [O3_ARM_v7a_3(defer_registration=True, \
+            repeat_switch_cpus = [O3_ARM_v7a_3(switched_out=True, \
                                   cpu_id=(i)) for i in xrange(np)]
         elif options.cpu_type == "detailed":
             if not options.caches:
                 print "O3 CPU must be used with caches"
                 sys.exit(1)
 
-            repeat_switch_cpus = [DerivO3CPU(defer_registration=True, \
+            repeat_switch_cpus = [DerivO3CPU(switched_out=True, \
                                   cpu_id=(i)) for i in xrange(np)]
         elif options.cpu_type == "inorder":
             print "inorder CPU switching not supported"
             sys.exit(1)
         elif options.cpu_type == "timing":
-            repeat_switch_cpus = [TimingSimpleCPU(defer_registration=True, \
+            repeat_switch_cpus = [TimingSimpleCPU(switched_out=True, \
                                   cpu_id=(i)) for i in xrange(np)]
         else:
-            repeat_switch_cpus = [AtomicSimpleCPU(defer_registration=True, \
+            repeat_switch_cpus = [AtomicSimpleCPU(switched_out=True, \
                                   cpu_id=(i)) for i in xrange(np)]
 
         for i in xrange(np):
@@ -361,9 +361,9 @@ def run(options, root, testsys, cpu_class):
                                       for i in xrange(np)]
 
     if options.standard_switch:
-        switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(i))
+        switch_cpus = [TimingSimpleCPU(switched_out=True, cpu_id=(i))
                        for i in xrange(np)]
-        switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(i))
+        switch_cpus_1 = [DerivO3CPU(switched_out=True, cpu_id=(i))
                         for i in xrange(np)]
 
         for i in xrange(np):

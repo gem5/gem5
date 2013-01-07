@@ -242,7 +242,6 @@ InOrderCPU::InOrderCPU(Params *params)
       resReqCount(0),
 #endif // DEBUG
       drainCount(0),
-      deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
       lastRunningCycle(0),
       instsPerSwitch(0)
@@ -386,7 +385,7 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     // InOrderCPU always requires an interrupt controller.
-    if (!params->defer_registration && !interrupts) {
+    if (!params->switched_out && !interrupts) {
         fatal("InOrderCPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }
@@ -787,7 +786,7 @@ InOrderCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->defer_registration &&
+    if (!params()->switched_out &&
         system->getMemoryMode() != Enums::timing) {
         fatal("The in-order CPU requires the memory system to be in "
               "'timing' mode.\n");
@@ -801,7 +800,7 @@ InOrderCPU::init()
         thread[tid]->initMemProxies(thread[tid]->getTC());
     }
 
-    if (FullSystem && !params()->defer_registration) {
+    if (FullSystem && !params()->switched_out) {
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());

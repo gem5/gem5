@@ -119,7 +119,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(Request::invldPid),
-      _switchedOut(p->defer_registration),
+      _switchedOut(p->switched_out),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system)
 {
@@ -217,7 +217,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
 
     // The interrupts should always be present unless this CPU is
     // switched in later or in case it is a checker CPU
-    if (!params()->defer_registration && !is_checker) {
+    if (!params()->switched_out && !is_checker) {
         if (interrupts) {
             interrupts->setCPU(this);
         } else {
@@ -254,7 +254,7 @@ BaseCPU::~BaseCPU()
 void
 BaseCPU::init()
 {
-    if (!params()->defer_registration)
+    if (!params()->switched_out)
         registerThreadContexts();
 }
 
@@ -262,7 +262,7 @@ void
 BaseCPU::startup()
 {
     if (FullSystem) {
-        if (!params()->defer_registration && profileEvent)
+        if (!params()->switched_out && profileEvent)
             schedule(profileEvent, curTick());
     }
 

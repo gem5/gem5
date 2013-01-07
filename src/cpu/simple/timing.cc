@@ -66,7 +66,7 @@ TimingSimpleCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->defer_registration &&
+    if (!params()->switched_out &&
         system->getMemoryMode() != Enums::timing) {
         fatal("The timing CPU requires the memory system to be in "
               "'timing' mode.\n");
@@ -75,7 +75,7 @@ TimingSimpleCPU::init()
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
-    if (FullSystem && !params()->defer_registration) {
+    if (FullSystem && !params()->switched_out) {
         for (int i = 0; i < threadContexts.size(); ++i) {
             ThreadContext *tc = threadContexts[i];
             // initialize CPU, including PC

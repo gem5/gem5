@@ -741,9 +741,6 @@ class FullO3CPU : public BaseO3CPU
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
 
-    /** Whether or not the CPU should defer its registration. */
-    bool deferRegistration;
-
     /** Is there a context switch pending? */
     bool contextSwitch;
 

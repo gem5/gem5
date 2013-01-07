@@ -258,10 +258,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       globalSeqNum(1),
       system(params->system),
       drainCount(0),
-      deferRegistration(params->defer_registration),
       lastRunningCycle(curCycle())
 {
-    if (!deferRegistration) {
+    if (!params->switched_out) {
         _status = Running;
     } else {
         _status = SwitchedOut;
@@ -461,7 +460,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     }
 
     // FullO3CPU always requires an interrupt controller.
-    if (!params->defer_registration && !interrupts) {
+    if (!params->switched_out && !interrupts) {
         fatal("FullO3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }
@@ -647,7 +646,7 @@ FullO3CPU<Impl>::init()
 {
     BaseCPU::init();
 
-    if (!params()->defer_registration &&
+    if (!params()->switched_out &&
         system->getMemoryMode() != Enums::timing) {
         fatal("The O3 CPU requires the memory system to be in "
               "'timing' mode.\n");
@@ -668,7 +667,7 @@ FullO3CPU<Impl>::init()
     if (icachePort.isConnected())
         fetch.setIcache();
 
-    if (FullSystem && !params()->defer_registration) {
+    if (FullSystem && !params()->switched_out) {
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());

@@ -72,7 +72,7 @@ OzoneCheckerParams::create()
     params->exitOnError = exitOnError;
     params->updateOnError = updateOnError;
     params->warnOnlyOnLoadError = warnOnlyOnLoadError;
-    params->deferRegistration = defer_registration;
+    params->switched_out = switched_out;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->clock = clock;

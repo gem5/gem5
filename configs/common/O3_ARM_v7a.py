@@ -141,7 +141,7 @@ class O3_ARM_v7a_3(DerivO3CPU):
     numIQEntries = 32
     numROBEntries = 40
 
-    defer_registration= False
+    switched_out = False
 
 # Instruction Cache
 class O3_ARM_v7a_ICache(BaseCache):
