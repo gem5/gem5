@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -113,6 +113,9 @@ class BaseCPU : public MemObject
     /** The current OS process ID that is executing on this processor. This is
      * used to generate a taskId */
     uint32_t _pid;
+
+    /** Is the CPU switched out or active? */
+    bool _switchedOut;
 
     /**
      * Define a base class for the CPU ports (instruction and data)
@@ -319,6 +322,13 @@ class BaseCPU : public MemObject
      * @param cpu CPU to initialize read state from.
      */
     virtual void takeOverFrom(BaseCPU *cpu);
+
+    /**
+     * Determine if the CPU is switched out.
+     *
+     * @return True if the CPU is switched out, false otherwise.
+     */
+    bool switchedOut() const { return _switchedOut; }
 
     /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).

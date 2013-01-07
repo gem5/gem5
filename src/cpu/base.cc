@@ -119,6 +119,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _instMasterId(p->system->getMasterId(name() + ".inst")),
       _dataMasterId(p->system->getMasterId(name() + ".data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(Request::invldPid),
+      _switchedOut(p->defer_registration),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system)
 {
@@ -356,6 +357,8 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::switchOut()
 {
+    assert(!_switchedOut);
+    _switchedOut = true;
     if (profileEvent && profileEvent->scheduled())
         deschedule(profileEvent);
 }
@@ -365,8 +368,11 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
     assert(_cpuId == oldCPU->cpuId());
+    assert(_switchedOut);
+    assert(oldCPU != this);
     _pid = oldCPU->getPid();
     _taskId = oldCPU->taskId();
+    _switchedOut = false;
 
     ThreadID size = threadContexts.size();
     for (ThreadID i = 0; i < size; ++i) {

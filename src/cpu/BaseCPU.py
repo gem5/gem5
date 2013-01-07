@@ -95,6 +95,7 @@ class BaseCPU(MemObject):
         code('''
     void switchOut();
     void takeOverFrom(BaseCPU *cpu);
+    bool switchedOut();
 ''')
 
     def takeOverFrom(self, old_cpu):

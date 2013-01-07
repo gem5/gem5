@@ -228,11 +228,21 @@ def switchCpus(cpuList):
         if not isinstance(item, tuple) or len(item) != 2:
             raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
 
+    old_cpu_set = set([old_cpu for old_cpu, new_cpu in cpuList])
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, objects.BaseCPU):
             raise TypeError, "%s is not of type BaseCPU" % old_cpu
         if not isinstance(new_cpu, objects.BaseCPU):
             raise TypeError, "%s is not of type BaseCPU" % new_cpu
+        if new_cpu in old_cpu_set:
+            raise RuntimeError, \
+                "New CPU (%s) is in the list of old CPUs." % (old_cpu,)
+        if not new_cpu.switchedOut():
+            raise RuntimeError, \
+                "New CPU (%s) is already active." % (new_cpu,)
+        if old_cpu.switchedOut():
+            raise RuntimeError, \
+                "Old CPU (%s) is inactive." % (new_cpu,)
 
     # Now all of the CPUs are ready to be switched out
     for old_cpu, new_cpu in cpuList:
