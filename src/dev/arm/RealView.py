@@ -345,7 +345,7 @@ class VExpress_EMM(RealView):
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
-    kmi1   = Pl050(pio_addr=0x1c070000, int_num=45)
+    kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
                             io_shift = 2, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
