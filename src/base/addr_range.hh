@@ -45,6 +45,8 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
+#include <vector>
+
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
@@ -85,6 +87,46 @@ class AddrRange
         : _start(_start), _end(_end), intlvHighBit(0), intlvBits(0),
           intlvMatch(0)
     {}
+
+    /**
+     * Create an address range by merging a collection of interleaved
+     * ranges.
+     *
+     * @param ranges Interleaved ranges to be merged
+     */
+    AddrRange(const std::vector<AddrRange>& ranges)
+        : _start(1), _end(0), intlvHighBit(0), intlvBits(0), intlvMatch(0)
+    {
+        if (!ranges.empty()) {
+            // get the values from the first one and check the others
+            _start = ranges.front()._start;
+            _end = ranges.front()._end;
+            intlvHighBit = ranges.front().intlvHighBit;
+            intlvBits = ranges.front().intlvBits;
+
+            if (ranges.size() != (ULL(1) << intlvBits))
+                fatal("Got %d ranges spanning %d interleaving bits\n",
+                      ranges.size(), intlvBits);
+
+            uint8_t match = 0;
+            for (std::vector<AddrRange>::const_iterator r = ranges.begin();
+                 r != ranges.end(); ++r) {
+                if (!mergesWith(*r))
+                    fatal("Can only merge ranges with the same start, end "
+                          "and interleaving bits\n");
+
+                if (r->intlvMatch != match)
+                    fatal("Expected interleave match %d but got %d when "
+                          "merging\n", match, r->intlvMatch);
+                ++match;
+            }
+
+            // our range is complete and we can turn this into a
+            // non-interleaved range
+            intlvHighBit = 0;
+            intlvBits = 0;
+        }
+    }
 
     /**
      * Determine if the range is interleaved or not.
