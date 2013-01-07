@@ -180,13 +180,12 @@ namespace ArmISA
             return reg;
         }
 
-        void serialize(EventManager *em, std::ostream &os)
+        void serialize(std::ostream &os)
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
             SERIALIZE_ARRAY(miscRegs, NumMiscRegs);
         }
-        void unserialize(EventManager *em, Checkpoint *cp,
-                const std::string &section)
+        void unserialize(Checkpoint *cp, const std::string &section)
         {
             DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
             UNSERIALIZE_ARRAY(miscRegs, NumMiscRegs);

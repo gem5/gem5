@@ -98,16 +98,6 @@ class ISA : public SimObject
         return reg;
     }
 
-    void
-    serialize(EventManager *em, std::ostream &os)
-    {
-    }
-
-    void
-    unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
-    {
-    }
-
     const Params *params() const;
 
     ISA(Params *p);

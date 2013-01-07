@@ -638,7 +638,7 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
 }
 
 void
-ISA::serialize(EventManager *em, std::ostream &os)
+ISA::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
@@ -714,7 +714,7 @@ ISA::serialize(EventManager *em, std::ostream &os)
 }
 
 void
-ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
+ISA::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tick);
@@ -781,15 +781,15 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
 
             if (tick_cmp) {
                 tickCompare = new TickCompareEvent(this, tc);
-                em->schedule(tickCompare, tick_cmp);
+                schedule(tickCompare, tick_cmp);
             }
             if (stick_cmp)  {
                 sTickCompare = new STickCompareEvent(this, tc);
-                em->schedule(sTickCompare, stick_cmp);
+                schedule(sTickCompare, stick_cmp);
             }
             if (hstick_cmp)  {
                 hSTickCompare = new HSTickCompareEvent(this, tc);
-                em->schedule(hSTickCompare, hstick_cmp);
+                schedule(hSTickCompare, hstick_cmp);
             }
         }
     }

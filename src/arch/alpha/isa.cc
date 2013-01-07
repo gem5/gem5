@@ -53,7 +53,7 @@ ISA::params() const
 }
 
 void
-ISA::serialize(EventManager *em, std::ostream &os)
+ISA::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(fpcr);
     SERIALIZE_SCALAR(uniq);
@@ -63,7 +63,7 @@ ISA::serialize(EventManager *em, std::ostream &os)
 }
 
 void
-ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
+ISA::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(fpcr);
     UNSERIALIZE_SCALAR(uniq);

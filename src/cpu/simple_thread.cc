@@ -179,11 +179,6 @@ SimpleThread::serialize(ostream &os)
     SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     _pcState.serialize(os);
     // thread_num and cpu_id are deterministic from the config
-
-    // 
-    // Now must serialize all the ISA dependent state
-    //
-    isa->serialize(baseCpu, os);
 }
 
 
@@ -195,11 +190,6 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     _pcState.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
-
-    // 
-    // Now must unserialize all the ISA dependent state
-    //
-    isa->unserialize(baseCpu, cp, section);
 }
 
 void

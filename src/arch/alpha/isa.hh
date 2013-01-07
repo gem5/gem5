@@ -88,9 +88,8 @@ namespace AlphaISA
             memset(ipr, 0, sizeof(ipr));
         }
 
-        void serialize(EventManager *em, std::ostream &os);
-        void unserialize(EventManager *em, Checkpoint *cp,
-                const std::string &section);
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
 
         int
         flattenIntIndex(int reg)

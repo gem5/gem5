@@ -370,14 +370,13 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
 }
 
 void
-ISA::serialize(EventManager *em, std::ostream & os)
+ISA::serialize(std::ostream & os)
 {
     SERIALIZE_ARRAY(regVal, NumMiscRegs);
 }
 
 void
-ISA::unserialize(EventManager *em, Checkpoint * cp,
-                 const std::string & section)
+ISA::unserialize(Checkpoint * cp, const std::string & section)
 {
     UNSERIALIZE_ARRAY(regVal, NumMiscRegs);
     updateHandyM5Reg(regVal[MISCREG_EFER],

@@ -167,10 +167,9 @@ class ISA : public SimObject
 
     void clear();
 
-    void serialize(EventManager *em, std::ostream & os);
+    void serialize(std::ostream & os);
 
-    void unserialize(EventManager *em, Checkpoint *cp,
-                     const std::string & section);
+    void unserialize(Checkpoint *cp, const std::string & section);
 
   protected:
 

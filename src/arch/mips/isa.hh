@@ -172,12 +172,6 @@ namespace MipsISA
         {
             return reg;
         }
-
-        void serialize(EventManager *em, std::ostream &os)
-        {}
-        void unserialize(EventManager *em, Checkpoint *cp,
-                const std::string &section)
-        {}
     };
 }
 
