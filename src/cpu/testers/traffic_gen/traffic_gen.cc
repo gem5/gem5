@@ -353,6 +353,27 @@ TrafficGen::StateGraph::BaseGen::BaseGen(QueuedMasterPort& _port,
 }
 
 void
+TrafficGen::StateGraph::BaseGen::send(Addr addr, unsigned size,
+                                      const MemCmd& cmd)
+{
+    // Create new request
+    Request::Flags flags;
+    Request *req = new Request(addr, size, flags, masterID);
+
+    // Embed it in a packet
+    PacketPtr pkt = new Packet(req, cmd);
+
+    uint8_t* pkt_data = new uint8_t[req->getSize()];
+    pkt->dataDynamicArray(pkt_data);
+
+    if (cmd.isWrite()) {
+        memset(pkt_data, 0xA, req->getSize());
+    }
+
+    port.schedTimingReq(pkt, curTick());
+}
+
+void
 TrafficGen::StateGraph::LinearGen::enter()
 {
     // reset the address and the data counter
@@ -380,21 +401,7 @@ TrafficGen::StateGraph::LinearGen::execute()
     DPRINTF(TrafficGen, "LinearGen::execute: %c to addr %x, size %d\n",
             isRead ? 'r' : 'w', nextAddr, blocksize);
 
-    // Create new request
-    Request::Flags flags;
-    Request *req = new Request(nextAddr, blocksize, flags, masterID);
-
-    PacketPtr pkt = new Packet(req, isRead ? MemCmd::ReadReq :
-                               MemCmd::WriteReq);
-
-    uint8_t* pkt_data = new uint8_t[req->getSize()];
-    pkt->dataDynamicArray(pkt_data);
-
-    if (!isRead) {
-        memset(pkt_data, 0xA, req->getSize());
-    }
-
-    port.schedTimingReq(pkt, curTick());
+    send(nextAddr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // increment the address
     nextAddr += blocksize;
@@ -459,21 +466,8 @@ TrafficGen::StateGraph::RandomGen::execute()
     DPRINTF(TrafficGen, "RandomGen::execute: %c to addr %x, size %d\n",
             isRead ? 'r' : 'w', addr, blocksize);
 
-    // create new request packet
-    Request::Flags flags;
-    Request *req = new Request(addr, blocksize, flags, masterID);
-
-    PacketPtr pkt = new Packet(req, isRead ? MemCmd::ReadReq :
-                               MemCmd::WriteReq);
-
-    uint8_t* pkt_data = new uint8_t[req->getSize()];
-    pkt->dataDynamicArray(pkt_data);
-
-    if (!isRead) {
-        memset(pkt_data, 0xA, req->getSize());
-    }
-
-    port.schedTimingReq(pkt, curTick());
+    // send a new request packet
+    send(addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // Add the amount of data manipulated to the total
     dataManipulated += blocksize;
@@ -596,20 +590,8 @@ TrafficGen::StateGraph::TraceGen::execute() {
             currElement.blocksize,
             currElement.tick);
 
-    Request::Flags flags;
-    Request *req = new Request(currElement.addr + addrOffset,
-                               currElement.blocksize, flags, masterID);
-
-    PacketPtr pkt = new Packet(req, currElement.cmd);
-
-    uint8_t* pkt_data = new uint8_t[req->getSize()];
-    pkt->dataDynamicArray(pkt_data);
-
-    if (currElement.cmd.isWrite()) {
-        memset(pkt_data, 0xA, req->getSize());
-    }
-
-    port.schedTimingReq(pkt, curTick());
+    send(currElement.addr + addrOffset, currElement.blocksize,
+         currElement.cmd);
 }
 
 void

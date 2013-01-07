@@ -171,6 +171,16 @@ class TrafficGen : public MemObject
             /** The MasterID used for generating requests */
             const MasterID masterID;
 
+            /**
+             * Create a new request and associated packet and schedule
+             * it to be sent in the current tick.
+             *
+             * @param addr Physical address to use
+             * @param size Size of the request
+             * @param cmd Memory command to send
+             */
+            void send(Addr addr, unsigned size, const MemCmd& cmd);
+
           public:
 
             /** Time to spend in this state */
