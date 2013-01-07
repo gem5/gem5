@@ -38,13 +38,6 @@ class ThreadContext;
 
 namespace PseudoInst {
 
-/**
- * @todo these externs are only here for a hack in fullCPU::takeOver...
- */
-extern bool doStatisticsInsts;
-extern bool doCheckpointInsts;
-extern bool doQuiesce;
-
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
 void quiesceSkip(ThreadContext *tc);
