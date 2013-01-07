@@ -264,6 +264,30 @@ class ThreadContext
 
     /** function to compare two thread contexts (for debugging) */
     static void compare(ThreadContext *one, ThreadContext *two);
+
+    /** @{ */
+    /**
+     * Flat register interfaces
+     *
+     * Some architectures have different registers visible in
+     * different modes. Such architectures "flatten" a register (see
+     * flattenIntIndex() and flattenFloatIndex()) to map it into the
+     * gem5 register file. This interface provides a flat interface to
+     * the underlying register file, which allows for example
+     * serialization code to access all registers.
+     */
+
+    virtual uint64_t readIntRegFlat(int idx) = 0;
+    virtual void setIntRegFlat(int idx, uint64_t val) = 0;
+
+    virtual FloatReg readFloatRegFlat(int idx) = 0;
+    virtual void setFloatRegFlat(int idx, FloatReg val) = 0;
+
+    virtual FloatRegBits readFloatRegBitsFlat(int idx) = 0;
+    virtual void setFloatRegBitsFlat(int idx, FloatRegBits val) = 0;
+
+    /** @} */
+
 };
 
 /**
@@ -429,6 +453,24 @@ class ProxyThreadContext : public ThreadContext
     { actualTC->syscall(callnum); }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
+
+    uint64_t readIntRegFlat(int idx)
+    { return actualTC->readIntRegFlat(idx); }
+
+    void setIntRegFlat(int idx, uint64_t val)
+    { actualTC->setIntRegFlat(idx, val); }
+
+    FloatReg readFloatRegFlat(int idx)
+    { return actualTC->readFloatRegFlat(idx); }
+
+    void setFloatRegFlat(int idx, FloatReg val)
+    { actualTC->setFloatRegFlat(idx, val); }
+
+    FloatRegBits readFloatRegBitsFlat(int idx)
+    { return actualTC->readFloatRegBitsFlat(idx); }
+
+    void setFloatRegBitsFlat(int idx, FloatRegBits val)
+    { actualTC->setFloatRegBitsFlat(idx, val); }
 };
 
 #endif

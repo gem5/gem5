@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -302,6 +302,24 @@ class CheckerThreadContext : public ThreadContext
     bool misspeculating() { return actualTC->misspeculating(); }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
+
+    uint64_t readIntRegFlat(int idx)
+    { return actualTC->readIntRegFlat(idx); }
+
+    void setIntRegFlat(int idx, uint64_t val)
+    { actualTC->setIntRegFlat(idx, val); }
+
+    FloatReg readFloatRegFlat(int idx)
+    { return actualTC->readFloatRegFlat(idx); }
+
+    void setFloatRegFlat(int idx, FloatReg val)
+    { actualTC->setFloatRegFlat(idx, val); }
+
+    FloatRegBits readFloatRegBitsFlat(int idx)
+    { return actualTC->readFloatRegBitsFlat(idx); }
+
+    void setFloatRegBitsFlat(int idx, FloatRegBits val)
+    { actualTC->setFloatRegBitsFlat(idx, val); }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

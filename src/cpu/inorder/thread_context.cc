@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -248,4 +260,47 @@ void
 InOrderThreadContext::setMiscReg(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
+}
+
+
+uint64_t
+InOrderThreadContext::readIntRegFlat(int idx)
+{
+    const ThreadID tid = thread->threadId();
+    return cpu->readIntReg(idx, tid);
+}
+
+void
+InOrderThreadContext::setIntRegFlat(int idx, uint64_t val)
+{
+    const ThreadID tid = thread->threadId();
+    cpu->setIntReg(idx, val, tid);
+}
+
+FloatReg
+InOrderThreadContext::readFloatRegFlat(int idx)
+{
+    const ThreadID tid = thread->threadId();
+    return cpu->readFloatReg(idx, tid);
+}
+
+void
+InOrderThreadContext::setFloatRegFlat(int idx, FloatReg val)
+{
+    const ThreadID tid = thread->threadId();
+    cpu->setFloatReg(idx, val, tid);
+}
+
+FloatRegBits
+InOrderThreadContext::readFloatRegBitsFlat(int idx)
+{
+    const ThreadID tid = thread->threadId();
+    return cpu->readFloatRegBits(idx, tid);
+}
+
+void
+InOrderThreadContext::setFloatRegBitsFlat(int idx, FloatRegBits val)
+{
+    const ThreadID tid = thread->threadId();
+    cpu->setFloatRegBits(idx, val, tid);
 }

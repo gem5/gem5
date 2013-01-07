@@ -237,7 +237,7 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa->flattenIntIndex(reg_idx);
         assert(flatIndex < TheISA::NumIntRegs);
-        uint64_t regVal = intRegs[flatIndex];
+        uint64_t regVal(readIntRegFlat(flatIndex));
         DPRINTF(IntRegs, "Reading int reg %d (%d) as %#x.\n",
                 reg_idx, flatIndex, regVal);
         return regVal;
@@ -247,7 +247,7 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
-        FloatReg regVal = floatRegs.f[flatIndex];
+        FloatReg regVal(readFloatRegFlat(flatIndex));
         DPRINTF(FloatRegs, "Reading float reg %d (%d) as %f, %#x.\n",
                 reg_idx, flatIndex, regVal, floatRegs.i[flatIndex]);
         return regVal;
@@ -257,7 +257,7 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
-        FloatRegBits regVal = floatRegs.i[flatIndex];
+        FloatRegBits regVal(readFloatRegBitsFlat(flatIndex));
         DPRINTF(FloatRegs, "Reading float reg %d (%d) bits as %#x, %f.\n",
                 reg_idx, flatIndex, regVal, floatRegs.f[flatIndex]);
         return regVal;
@@ -269,14 +269,14 @@ class SimpleThread : public ThreadState
         assert(flatIndex < TheISA::NumIntRegs);
         DPRINTF(IntRegs, "Setting int reg %d (%d) to %#x.\n",
                 reg_idx, flatIndex, val);
-        intRegs[flatIndex] = val;
+        setIntRegFlat(flatIndex, val);
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
-        floatRegs.f[flatIndex] = val;
+        setFloatRegFlat(flatIndex, val);
         DPRINTF(FloatRegs, "Setting float reg %d (%d) to %f, %#x.\n",
                 reg_idx, flatIndex, val, floatRegs.i[flatIndex]);
     }
@@ -288,7 +288,7 @@ class SimpleThread : public ThreadState
         // XXX: Fix array out of bounds compiler error for gem5.fast
         // when checkercpu enabled
         if (flatIndex < TheISA::NumFloatRegs)
-            floatRegs.i[flatIndex] = val;
+            setFloatRegBitsFlat(flatIndex, val);
         DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x, %#f.\n",
                 reg_idx, flatIndex, val, floatRegs.f[flatIndex]);
     }
@@ -384,6 +384,18 @@ class SimpleThread : public ThreadState
     {
         process->syscall(callnum, tc);
     }
+
+    uint64_t readIntRegFlat(int idx) { return intRegs[idx]; }
+    void setIntRegFlat(int idx, uint64_t val) { intRegs[idx] = val; }
+
+    FloatReg readFloatRegFlat(int idx) { return floatRegs.f[idx]; }
+    void setFloatRegFlat(int idx, FloatReg val) { floatRegs.f[idx] = val; }
+
+    FloatRegBits readFloatRegBitsFlat(int idx) { return floatRegs.i[idx]; }
+    void setFloatRegBitsFlat(int idx, FloatRegBits val) {
+        floatRegs.i[idx] = val;
+    }
+
 };
 
 

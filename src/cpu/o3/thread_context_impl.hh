@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -224,33 +224,29 @@ O3ThreadContext<Impl>::clearArchRegs()
 
 template <class Impl>
 uint64_t
-O3ThreadContext<Impl>::readIntReg(int reg_idx)
+O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenIntIndex(reg_idx);
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 TheISA::FloatReg
-O3ThreadContext<Impl>::readFloatReg(int reg_idx)
+O3ThreadContext<Impl>::readFloatRegFlat(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 TheISA::FloatRegBits
-O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
+O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
+O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenIntIndex(reg_idx);
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
@@ -258,9 +254,8 @@ O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
+O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, FloatReg val)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
@@ -268,9 +263,8 @@ O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
+O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, FloatRegBits val)
 {
-    reg_idx = cpu->isa[thread->threadId()]->flattenFloatIndex(reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
     conditionalSquash();
