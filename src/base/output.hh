@@ -52,16 +52,6 @@ class OutputDirectory
     /** System-specific path separator character */
     static const char PATH_SEPARATOR = '/';
 
-    /**
-     * Returns relative file names prepended with name of this directory.
-     * Returns absolute file names unaltered.
-     *
-     * @param name file name to prepend with directory name
-     * @return file name prepended with base directory name or unaltered
-     *          absolute file name
-     */
-    std::string resolve(const std::string &name) const;
-
   protected:
     /**
      * Determines whether given file name corresponds to standard output
@@ -79,6 +69,16 @@ class OutputDirectory
 
     /** Destructor. */
     ~OutputDirectory();
+
+    /**
+     * Returns relative file names prepended with name of this directory.
+     * Returns absolute file names unaltered.
+     *
+     * @param name file name to prepend with directory name
+     * @return file name prepended with base directory name or unaltered
+     *          absolute file name
+     */
+    std::string resolve(const std::string &name) const;
 
     /** Opens a file (optionally compressed).
      *

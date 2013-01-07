@@ -145,7 +145,7 @@ OutputDirectory::directory() const
     return dir;
 }
 
-inline string
+string
 OutputDirectory::resolve(const string &name) const
 {
     return (name[0] != PATH_SEPARATOR) ? dir + name : name;

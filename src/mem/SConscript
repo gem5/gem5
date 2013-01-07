@@ -30,17 +30,21 @@
 
 Import('*')
 
+# Only build the communication if we have support for protobuf as the
+# tracing relies on it
+if env['HAVE_PROTOBUF']:
+    SimObject('CommMonitor.py')
+    Source('comm_monitor.cc')
+
 SimObject('AddrMapper.py')
 SimObject('Bridge.py')
 SimObject('Bus.py')
-SimObject('CommMonitor.py')
 SimObject('MemObject.py')
 
 Source('addr_mapper.cc')
 Source('bridge.cc')
 Source('bus.cc')
 Source('coherent_bus.cc')
-Source('comm_monitor.cc')
 Source('mem_object.cc')
 Source('mport.cc')
 Source('noncoherent_bus.cc')
