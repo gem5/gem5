@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,6 +64,7 @@ Pl111::Pl111(const Params *p)
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
+      pixelClock(p->pixel_clock),
       vnc(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
@@ -440,13 +441,11 @@ Pl111::readFramebuffer()
         schedule(intEvent, nextCycle());
 
     curAddr = 0;
-    startTime = curCycle();
+    startTime = curTick();
 
     maxAddr = static_cast<Addr>(length * bytesPerPixel);
 
     DPRINTF(PL111, " lcd frame buffer size of %d bytes \n", maxAddr);
-
-    dmaPendingNum = 0;
 
     fillFifo();
 }
@@ -475,13 +474,15 @@ Pl111::fillFifo()
 void
 Pl111::dmaDone()
 {
-    Cycles maxFrameTime(lcdTiming2.cpl * height);
+    DPRINTF(PL111, "DMA Done\n");
+
+    Tick maxFrameTime = lcdTiming2.cpl * height * pixelClock;
 
     --dmaPendingNum;
 
     if (maxAddr == curAddr && !dmaPendingNum) {
-        if ((curCycle() - startTime) > maxFrameTime) {
-            warn("CLCD controller buffer underrun, took %d cycles when should"
+        if ((curTick() - startTime) > maxFrameTime) {
+            warn("CLCD controller buffer underrun, took %d ticks when should"
                  " have taken %d\n", curTick() - startTime, maxFrameTime);
             lcdRis.underflow = 1;
             if (!intEvent.scheduled())
@@ -500,14 +501,11 @@ Pl111::dmaDone()
 
         // schedule the next read based on when the last frame started
         // and the desired fps (i.e. maxFrameTime), we turn the
-        // argument into a relative number of cycles in the future by
-        // subtracting curCycle()
+        // argument into a relative number of cycles in the future
         if (lcdControl.lcden)
-            // @todo: This is a terrible way of doing the time
-            // keeping, make it all relative
-            schedule(readEvent,
-                     clockEdge(Cycles(startTime - curCycle() +
-                                      maxFrameTime)));
+            schedule(readEvent, clockEdge(ticksToCycles(startTime -
+                                                        curTick() +
+                                                        maxFrameTime)));
     }
 
     if (dmaPendingNum > (maxOutstandingDma - waterMark))

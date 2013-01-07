@@ -227,6 +227,9 @@ class Pl111: public AmbaDmaDevice
     /** Cursor masked interrupt status register - const */
     InterruptReg clcdCrsrMis;
 
+    /** Pixel clock */
+    Tick pixelClock;
+
     /** VNC server */
     VncInput *vnc;
 

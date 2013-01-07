@@ -148,8 +148,7 @@ class Pl050(AmbaIntDevice):
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
     cxx_header = "dev/arm/pl111.hh"
-    # Override the default clock
-    clock = '24MHz'
+    pixel_clock = Param.Clock('24MHz', "Pixel clock")
     vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
 
