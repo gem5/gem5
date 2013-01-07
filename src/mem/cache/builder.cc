@@ -51,10 +51,6 @@
 #include "mem/cache/tags/fa_lru.hh"
 #endif
 
-#if defined(USE_CACHE_IIC)
-#include "mem/cache/tags/iic.hh"
-#endif
-
 
 using namespace std;
 
@@ -87,50 +83,16 @@ using namespace std;
 #define BUILD_LRU_CACHE BUILD_CACHE_PANIC("lru cache")
 #endif
 
-#if defined(USE_CACHE_IIC)
-#define BUILD_IIC_CACHE do {                            \
-        IIC *tags = new IIC(iic_params);                \
-        BUILD_CACHE(IIC, tags);                         \
-    } while (0)
-#else
-#define BUILD_IIC_CACHE BUILD_CACHE_PANIC("iic")
-#endif
-
-#define BUILD_CACHES do {                               \
-        if (repl == NULL) {                             \
-            if (numSets == 1) {                         \
-                BUILD_FALRU_CACHE;                      \
-            } else {                                    \
-               BUILD_LRU_CACHE;                    \
-            }                                           \
-        } else {                                        \
-            BUILD_IIC_CACHE;                            \
-        }                                               \
-    } while (0)
-
 BaseCache *
 BaseCacheParams::create()
 {
     int numSets = size / (assoc * block_size);
-    if (subblock_size == 0) {
-        subblock_size = block_size;
+
+    if (numSets == 1) {
+        BUILD_FALRU_CACHE;
+    } else {
+        BUILD_LRU_CACHE;
     }
 
-#if defined(USE_CACHE_IIC)
-    // Build IIC params
-    IIC::Params iic_params;
-    iic_params.size = size;
-    iic_params.numSets = numSets;
-    iic_params.blkSize = block_size;
-    iic_params.assoc = assoc;
-    iic_params.hashDelay = hash_delay;
-    iic_params.hitLatency = hit_latency;
-    iic_params.rp = repl;
-    iic_params.subblockSize = subblock_size;
-#else
-    const void *repl = NULL;
-#endif
-
-    BUILD_CACHES;
     return NULL;
 }

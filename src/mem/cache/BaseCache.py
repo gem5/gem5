@@ -52,21 +52,14 @@ class BaseCache(MemObject):
     hit_latency = Param.Cycles("The hit latency for this cache")
     response_latency = Param.Cycles(
             "Additional cache latency for the return path to core on a miss");
-    hash_delay = Param.Cycles(1, "time in cycles of hash access")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
-    prioritizeRequests = Param.Bool(False,
-        "always service demand misses first")
-    repl = Param.Repl(NULL, "replacement policy")
     size = Param.MemorySize("capacity in bytes")
     forward_snoops = Param.Bool(True,
         "forward snoops from mem side to cpu side")
     is_top_level = Param.Bool(False, "Is this cache at the top level (e.g. L1)")
-    subblock_size = Param.Int(0,
-        "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")
-    trace_addr = Param.Addr(0, "address to trace")
     two_queue = Param.Bool(False,
         "whether the lifo should have two queue replacement")
     write_buffers = Param.Int(8, "number of write buffers")

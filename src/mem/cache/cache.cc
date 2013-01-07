@@ -46,10 +46,6 @@
 #include "mem/cache/tags/fa_lru.hh"
 #endif
 
-#if defined(USE_CACHE_IIC)
-#include "mem/cache/tags/iic.hh"
-#endif
-
 #include "mem/cache/cache_impl.hh"
 
 // Template Instantiations
@@ -58,10 +54,6 @@
 
 #if defined(USE_CACHE_FALRU)
 template class Cache<FALRU>;
-#endif
-
-#if defined(USE_CACHE_IIC)
-template class Cache<IIC>;
 #endif
 
 #if defined(USE_CACHE_LRU)
