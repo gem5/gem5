@@ -93,17 +93,9 @@ InOrderThreadContext::profileSample()
 void
 InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
 {
-    // some things should already be set up
-    assert(getSystemPtr() == old_context->getSystemPtr());
-    assert(getProcessPtr() == old_context->getProcessPtr());
-
-    // copy over functional state
-    setStatus(old_context->status());
-    copyArchRegs(old_context);
+    ::takeOverFrom(*this, *old_context);
 
     thread->funcExeInst = old_context->readFuncExeInst();
-
-    old_context->setStatus(ThreadContext::Halted);
 
     thread->noSquashFromTC = false;
     thread->trapPending = false;

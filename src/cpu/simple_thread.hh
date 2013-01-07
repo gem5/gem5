@@ -146,8 +146,6 @@ class SimpleThread : public ThreadState
 
     void regStats(const std::string &name);
 
-    void copyTC(ThreadContext *context);
-
     void copyState(ThreadContext *oldContext);
 
     void serialize(std::ostream &os);

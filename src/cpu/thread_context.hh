@@ -481,4 +481,17 @@ void unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section);
 
 /** @} */
 
+
+/**
+ * Copy state between thread contexts in preparation for CPU handover.
+ *
+ * @note This method modifies the old thread contexts as well as the
+ * new thread context. The old thread context will have its quiesce
+ * event descheduled if it is scheduled and its status set to halted.
+ *
+ * @param new_tc Destination ThreadContext.
+ * @param old_tc Source ThreadContext.
+ */
+void takeOverFrom(ThreadContext &new_tc, ThreadContext &old_tc);
+
 #endif

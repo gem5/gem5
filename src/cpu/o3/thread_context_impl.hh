@@ -66,34 +66,10 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 {
-    // some things should already be set up
-    assert(getSystemPtr() == old_context->getSystemPtr());
-    assert(getProcessPtr() == old_context->getProcessPtr());
+    ::takeOverFrom(*this, *old_context);
 
-    // copy over functional state
-    setStatus(old_context->status());
-    copyArchRegs(old_context);
-    setContextId(old_context->contextId());
-    setThreadId(old_context->threadId());
-
-    if (FullSystem) {
-        EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
-        if (other_quiesce) {
-            // Point the quiesce event's TC at this TC so that it wakes up
-            // the proper CPU.
-            other_quiesce->tc = this;
-        }
-        if (thread->quiesceEvent) {
-            thread->quiesceEvent->tc = this;
-        }
-
-        // Transfer kernel stats from one CPU to the other.
-        thread->kernelStats = old_context->getKernelStats();
-    } else {
-        thread->funcExeInst = old_context->readFuncExeInst();
-    }
-
-    old_context->setStatus(ThreadContext::Halted);
+    thread->kernelStats = old_context->getKernelStats();
+    thread->funcExeInst = old_context->readFuncExeInst();
 
     thread->noSquashFromTC = false;
     thread->trapPending = false;

@@ -107,49 +107,11 @@ SimpleThread::~SimpleThread()
 void
 SimpleThread::takeOverFrom(ThreadContext *oldContext)
 {
-    // some things should already be set up
-    if (FullSystem)
-        assert(system == oldContext->getSystemPtr());
-    assert(process == oldContext->getProcessPtr());
+    ::takeOverFrom(*tc, *oldContext);
 
-    copyState(oldContext);
-    if (FullSystem) {
-        EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
-        if (quiesce) {
-            // Point the quiesce event's TC at this TC so that it wakes up
-            // the proper CPU.
-            quiesce->tc = tc;
-        }
-        if (quiesceEvent) {
-            quiesceEvent->tc = tc;
-        }
-
-        TheISA::Kernel::Statistics *stats = oldContext->getKernelStats();
-        if (stats) {
-            kernelStats = stats;
-        }
-    }
-
+    kernelStats = oldContext->getKernelStats();
+    funcExeInst = oldContext->readFuncExeInst();
     storeCondFailures = 0;
-
-    oldContext->setStatus(ThreadContext::Halted);
-}
-
-void
-SimpleThread::copyTC(ThreadContext *context)
-{
-    copyState(context);
-
-    if (FullSystem) {
-        EndQuiesceEvent *quiesce = context->getQuiesceEvent();
-        if (quiesce) {
-            quiesceEvent = quiesce;
-        }
-        TheISA::Kernel::Statistics *stats = context->getKernelStats();
-        if (stats) {
-            kernelStats = stats;
-        }
-    }
 }
 
 void

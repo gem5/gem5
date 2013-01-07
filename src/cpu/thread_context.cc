@@ -43,8 +43,11 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
+#include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Context.hh"
+#include "sim/full_system.hh"
 
 void
 ThreadContext::compare(ThreadContext *one, ThreadContext *two)
@@ -135,4 +138,38 @@ unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section)
     tc.pcState(pcState);
 
     // thread_num and cpu_id are deterministic from the config
+}
+
+void
+takeOverFrom(ThreadContext &ntc, ThreadContext &otc)
+{
+    assert(ntc.getProcessPtr() == otc.getProcessPtr());
+
+    ntc.setStatus(otc.status());
+    ntc.copyArchRegs(&otc);
+    ntc.setContextId(otc.contextId());
+    ntc.setThreadId(otc.threadId());
+
+    if (FullSystem) {
+        assert(ntc.getSystemPtr() == otc.getSystemPtr());
+
+        BaseCPU *ncpu(ntc.getCpuPtr());
+        assert(ncpu);
+        EndQuiesceEvent *oqe(otc.getQuiesceEvent());
+        assert(oqe);
+        assert(oqe->tc == &otc);
+
+        BaseCPU *ocpu(otc.getCpuPtr());
+        assert(ocpu);
+        EndQuiesceEvent *nqe(ntc.getQuiesceEvent());
+        assert(nqe);
+        assert(nqe->tc == &ntc);
+
+        if (oqe->scheduled()) {
+            ncpu->schedule(nqe, oqe->when());
+            ocpu->deschedule(oqe);
+        }
+    }
+
+    otc.setStatus(ThreadContext::Halted);
 }
