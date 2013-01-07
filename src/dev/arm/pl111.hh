@@ -96,6 +96,8 @@ class Pl111: public AmbaDmaDevice
     static const int dmaSize            = 8;    // 64 bits
     static const int maxOutstandingDma  = 16;   // 16 deep FIFO of 64 bits
 
+    static const int buffer_size = LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
+
     enum LcdMode {
         bpp1 = 0,
         bpp2,

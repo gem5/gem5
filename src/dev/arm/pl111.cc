@@ -76,7 +76,6 @@ Pl111::Pl111(const Params *p)
 
     pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-    const int buffer_size = LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
     dmaBuffer = new uint8_t[buffer_size];
 
     memset(lcdPalette, 0, sizeof(lcdPalette));
@@ -581,7 +580,7 @@ Pl111::serialize(std::ostream &os)
     SERIALIZE_SCALAR(width);
     SERIALIZE_SCALAR(bytesPerPixel);
 
-    SERIALIZE_ARRAY(dmaBuffer, height * width);
+    SERIALIZE_ARRAY(dmaBuffer, buffer_size);
     SERIALIZE_SCALAR(startTime);
     SERIALIZE_SCALAR(startAddr);
     SERIALIZE_SCALAR(maxAddr);
@@ -683,7 +682,7 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(width);
     UNSERIALIZE_SCALAR(bytesPerPixel);
 
-    UNSERIALIZE_ARRAY(dmaBuffer, height * width);
+    UNSERIALIZE_ARRAY(dmaBuffer, buffer_size);
     UNSERIALIZE_SCALAR(startTime);
     UNSERIALIZE_SCALAR(startAddr);
     UNSERIALIZE_SCALAR(maxAddr);
