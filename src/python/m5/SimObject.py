@@ -872,13 +872,20 @@ class SimObject(object):
         all = {}
         # search children
         for child in self._children.itervalues():
-            if isinstance(child, ptype) and not isproxy(child) and \
-               not isNullPointer(child):
-                all[child] = True
-            if isSimObject(child):
-                # also add results from the child itself
-                child_all, done = child.find_all(ptype)
-                all.update(dict(zip(child_all, [done] * len(child_all))))
+            # a child could be a list, so ensure we visit each item
+            if isinstance(child, list):
+                children = child
+            else:
+                children = [child]
+
+            for child in children:
+                if isinstance(child, ptype) and not isproxy(child) and \
+                        not isNullPointer(child):
+                    all[child] = True
+                if isSimObject(child):
+                    # also add results from the child itself
+                    child_all, done = child.find_all(ptype)
+                    all.update(dict(zip(child_all, [done] * len(child_all))))
         # search param space
         for pname,pdesc in self._params.iteritems():
             if issubclass(pdesc.ptype, ptype):
