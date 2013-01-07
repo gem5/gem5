@@ -370,10 +370,11 @@ void
 TrafficGen::StateGraph::LinearGen::execute()
 {
     // choose if we generate a read or a write here
-    bool isRead = random_mt.random<uint8_t>(0, 100) < readPercent;
+    bool isRead = readPercent != 0 &&
+        (readPercent == 100 || random_mt.random<uint8_t>(0, 100) < readPercent);
 
-    if (readPercent == 0)
-        assert(!isRead);
+    assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
+           readPercent != 100);
 
     DPRINTF(TrafficGen, "LinearGen::execute: %c to addr %x, size %d\n",
             isRead ? 'r' : 'w', nextAddr, blocksize);
@@ -442,10 +443,11 @@ void
 TrafficGen::StateGraph::RandomGen::execute()
 {
     // choose if we generate a read or a write here
-    bool isRead = random_mt.random<uint8_t>(0, 100) < readPercent;
+    bool isRead = readPercent != 0 &&
+        (readPercent == 100 || random_mt.random<uint8_t>(0, 100) < readPercent);
 
-    if (readPercent == 0)
-        assert(!isRead);
+    assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
+           readPercent != 100);
 
     // address of the request
     Addr addr = random_mt.random<Addr>(startAddr, endAddr - 1);
