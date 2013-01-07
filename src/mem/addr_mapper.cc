@@ -265,27 +265,8 @@ RangeAddrMapper::remapAddr(Addr addr) const
 AddrRangeList
 RangeAddrMapper::getAddrRanges() const
 {
-    AddrRangeList ranges;
-    AddrRangeList actualRanges = masterPort.getAddrRanges();
-
-    for (AddrRangeIter r = actualRanges.begin(); r != actualRanges.end(); ++r) {
-        AddrRange range = *r;
-
-        for (int j = 0; j < originalRanges.size(); ++j) {
-            if (range.intersects(originalRanges[j]))
-                fatal("Cannot remap range that intersects the original"
-                      " ranges but are not a subset.\n");
-            if (range.isSubset(originalRanges[j])) {
-                // range is a subset
-                Addr offset = range.start() - originalRanges[j].start();
-                Addr start = range.start() - offset;
-                ranges.push_back(AddrRange(start, start + range.size() - 1));
-            } else {
-                ranges.push_back(range);
-            }
-        }
-    }
-
+    // Simply return the original ranges as given by the parameters
+    AddrRangeList ranges(originalRanges.begin(), originalRanges.end());
     return ranges;
 }
 
