@@ -69,8 +69,9 @@ ISA::params() const
 void
 ISA::clear()
 {
+    const Params *p(params());
+
     SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
-    uint32_t midr = miscRegs[MISCREG_MIDR];
     memset(miscRegs, 0, sizeof(miscRegs));
     CPSR cpsr = 0;
     cpsr.mode = MODE_USER;
@@ -88,9 +89,6 @@ ISA::clear()
     sctlr.rao4 = 1;
     miscRegs[MISCREG_SCTLR] = sctlr;
     miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
-
-    // Preserve MIDR across reset
-    miscRegs[MISCREG_MIDR] = midr;
 
     /* Start with an event in the mailbox */
     miscRegs[MISCREG_SEV_MAILBOX] = 1;
@@ -152,16 +150,28 @@ ISA::clear()
         0;          // 1:0
 
     miscRegs[MISCREG_CPACR] = 0;
-    miscRegs[MISCREG_FPSID] = 0x410430A0;
 
-    // See section B4.1.84 of ARM ARM
-    // All values are latest for ARMv7-A profile
-    miscRegs[MISCREG_ID_ISAR0] = 0x02101111;
-    miscRegs[MISCREG_ID_ISAR1] = 0x02112111;
-    miscRegs[MISCREG_ID_ISAR2] = 0x21232141;
-    miscRegs[MISCREG_ID_ISAR3] = 0x01112131;
-    miscRegs[MISCREG_ID_ISAR4] = 0x10010142;
-    miscRegs[MISCREG_ID_ISAR5] = 0x00000000;
+    // Initialize configurable default values
+    miscRegs[MISCREG_MIDR] = p->midr;
+
+    miscRegs[MISCREG_ID_PFR0] = p->id_pfr0;
+    miscRegs[MISCREG_ID_PFR1] = p->id_pfr1;
+
+    miscRegs[MISCREG_ID_MMFR0] = p->id_mmfr0;
+    miscRegs[MISCREG_ID_MMFR1] = p->id_mmfr1;
+    miscRegs[MISCREG_ID_MMFR2] = p->id_mmfr2;
+    miscRegs[MISCREG_ID_MMFR3] = p->id_mmfr3;
+
+    miscRegs[MISCREG_ID_ISAR0] = p->id_isar0;
+    miscRegs[MISCREG_ID_ISAR1] = p->id_isar1;
+    miscRegs[MISCREG_ID_ISAR2] = p->id_isar2;
+    miscRegs[MISCREG_ID_ISAR3] = p->id_isar3;
+    miscRegs[MISCREG_ID_ISAR4] = p->id_isar4;
+    miscRegs[MISCREG_ID_ISAR5] = p->id_isar5;
+
+
+    miscRegs[MISCREG_FPSID] = p->fpsid;
+
 
     //XXX We need to initialize the rest of the state.
 }
@@ -214,14 +224,6 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
                    tc->cpuId();
         }
         break;
-      case MISCREG_ID_MMFR0:
-        return 0x03; // VMSAv7 support
-      case MISCREG_ID_MMFR2:
-        return 0x01230000; // no HW access | WFI stalling | ISB and DSB
-                           // | all TLB maintenance | no Harvard
-      case MISCREG_ID_MMFR3:
-        return 0xF0102211; // SuperSec | Coherent TLB | Bcast Maint |
-                           // BP Maint | Cache Maint Set/way | Cache Maint MVA
       case MISCREG_CLIDR:
         warn_once("The clidr register always reports 0 caches.\n");
         warn_once("clidr LoUIS field of 0b001 to match current "
@@ -231,12 +233,6 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         warn_once("The ccsidr register isn't implemented and "
                 "always reads as 0.\n");
         break;
-      case MISCREG_ID_PFR0:
-        warn("Returning thumbEE disabled for now since we don't support CP14"
-             "config registers and jumping to ThumbEE vectors\n");
-        return 0x0031; // !ThumbEE | !Jazelle | Thumb | ARM
-      case MISCREG_ID_PFR1:
-        return 0x00001; // !Timer | !Virti | !M Profile | !TrustZone | ARMv4
       case MISCREG_CTR:
         {
             //all caches have the same line size in gem5
@@ -463,12 +459,29 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 }
                 return;
             }
+
+          case MISCREG_MIDR:
+          case MISCREG_ID_PFR0:
+          case MISCREG_ID_PFR1:
+          case MISCREG_ID_MMFR0:
+          case MISCREG_ID_MMFR1:
+          case MISCREG_ID_MMFR2:
+          case MISCREG_ID_MMFR3:
+          case MISCREG_ID_ISAR0:
+          case MISCREG_ID_ISAR1:
+          case MISCREG_ID_ISAR2:
+          case MISCREG_ID_ISAR3:
+          case MISCREG_ID_ISAR4:
+          case MISCREG_ID_ISAR5:
+
+          case MISCREG_MPIDR:
+          case MISCREG_FPSID:
           case MISCREG_TLBTR:
           case MISCREG_MVFR0:
           case MISCREG_MVFR1:
-          case MISCREG_MPIDR:
-          case MISCREG_FPSID:
+            // ID registers are constants.
             return;
+
           case MISCREG_TLBIALLIS:
           case MISCREG_TLBIALL:
             sys = tc->getSystemPtr();

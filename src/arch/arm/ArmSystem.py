@@ -50,12 +50,6 @@ class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
     load_addr_mask = 0xffffffff
-    # 0x35 Implementor is '5' from "M5"
-    # 0x0 Variant
-    # 0xf Architecture from CPUID scheme
-    # 0xc00 Primary part number ("c" or higher implies ARM v7)
-    # 0x0 Revision
-    midr_regval = Param.UInt32(0x350fc000, "MIDR value")
     multi_proc = Param.Bool(True, "Multiprocessor system?")
     boot_loader = Param.String("", "File that contains the boot loader code if any")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")

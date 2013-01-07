@@ -105,11 +105,6 @@ ArmSystem::initState()
         // Set the initial PC to be at start of the kernel code
         threadContexts[0]->pcState(kernelEntry & loadAddrMask);
     }
-
-    for (int i = 0; i < threadContexts.size(); i++) {
-        threadContexts[i]->setMiscReg(ArmISA::MISCREG_MIDR,
-                                      p->midr_regval);
-    }
 }
 
 ArmSystem::~ArmSystem()
