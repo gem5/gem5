@@ -378,6 +378,9 @@ BaseBus::findPort(Addr addr)
 void
 BaseBus::recvRangeChange(PortID master_port_id)
 {
+    DPRINTF(BusAddrRanges, "Received range change from slave port %s\n",
+            masterPorts[master_port_id]->getSlavePort().name());
+
     // remember that we got a range from this master port and thus the
     // connected slave module
     gotAddrRanges[master_port_id] = true;
@@ -391,15 +394,14 @@ BaseBus::recvRangeChange(PortID master_port_id)
         while (gotAllAddrRanges &&  r != gotAddrRanges.end()) {
             gotAllAddrRanges &= *r++;
         }
+        if (gotAllAddrRanges)
+            DPRINTF(BusAddrRanges, "Got address ranges from all slaves\n");
     }
 
     // note that we could get the range from the default port at any
     // point in time, and we cannot assume that the default range is
     // set before the other ones are, so we do additional checks once
     // all ranges are provided
-    DPRINTF(BusAddrRanges, "received RangeChange from slave port %s\n",
-            masterPorts[master_port_id]->getSlavePort().name());
-
     if (master_port_id == defaultPortID) {
         // only update if we are indeed checking ranges for the
         // default port since the port might not have a valid range
@@ -492,17 +494,24 @@ BaseBus::getAddrRanges() const
     // of the connected devices
     assert(gotAllAddrRanges);
 
-    DPRINTF(BusAddrRanges, "received address range request, returning:\n");
+    // at the moment, this never happens, as there are no cycles in
+    // the range queries and no devices on the master side of a bus
+    // (CPU, cache, bridge etc) actually care about the ranges of the
+    // ports they are connected to
+
+    DPRINTF(BusAddrRanges, "Received address range request, returning:\n");
 
     // start out with the default range
     AddrRangeList ranges;
-    ranges.push_back(defaultRange);
-    DPRINTF(BusAddrRanges, "  -- %s DEFAULT\n", defaultRange.to_string());
+    if (useDefaultRange) {
+        ranges.push_back(defaultRange);
+        DPRINTF(BusAddrRanges, "  -- Default %s\n", defaultRange.to_string());
+    }
 
     // add any range that is not a subset of the default range
     for (PortMapConstIter p = portMap.begin(); p != portMap.end(); ++p) {
         if (useDefaultRange && p->first.isSubset(defaultRange)) {
-            DPRINTF(BusAddrRanges, "  -- %s is a SUBSET\n",
+            DPRINTF(BusAddrRanges, "  -- %s is a subset of default\n",
                     p->first.to_string());
         } else {
             ranges.push_back(p->first);
