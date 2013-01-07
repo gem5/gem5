@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
-#include "cpu/inorder/params.hh"
 
 class InOrderDynInst;
 

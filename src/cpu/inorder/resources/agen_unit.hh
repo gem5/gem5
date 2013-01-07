@@ -38,7 +38,6 @@
 
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
-#include "cpu/inorder/params.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource.hh"
 
