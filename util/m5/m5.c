@@ -130,7 +130,7 @@ do_exit(int argc, char *argv[])
         usage();
 
     uint64_t ints[1];
-    parse_int_args(argc, argv, ints, 2);
+    parse_int_args(argc, argv, ints, 1);
     m5_exit(ints[0]);
 }
 
