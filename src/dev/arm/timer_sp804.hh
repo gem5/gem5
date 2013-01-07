@@ -83,10 +83,10 @@ class Sp804 : public AmbaDevice
         Sp804 *parent;
 
         /** Number of interrupt to cause/clear */
-        uint32_t intNum;
+        const uint32_t intNum;
 
         /** Number of ticks in a clock input */
-        Tick clock;
+        const Tick clock;
 
         /** Control register as specified above */
         CTRL control;

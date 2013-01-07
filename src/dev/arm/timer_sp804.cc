@@ -224,8 +224,6 @@ void
 Sp804::Timer::serialize(std::ostream &os)
 {
     DPRINTF(Checkpoint, "Serializing Arm Sp804\n");
-    SERIALIZE_SCALAR(intNum);
-    SERIALIZE_SCALAR(clock);
 
     uint32_t control_serial = control;
     SERIALIZE_SCALAR(control_serial);
@@ -248,9 +246,6 @@ void
 Sp804::Timer::unserialize(Checkpoint *cp, const std::string &section)
 {
     DPRINTF(Checkpoint, "Unserializing Arm Sp804\n");
-
-    UNSERIALIZE_SCALAR(intNum);
-    UNSERIALIZE_SCALAR(clock);
 
     uint32_t control_serial;
     UNSERIALIZE_SCALAR(control_serial);
