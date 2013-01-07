@@ -325,7 +325,8 @@ PhysicalMemory::unserialize(Checkpoint* cp, const string& section)
     arrayParamIn(cp, section, "lal_addr", lal_addr);
     arrayParamIn(cp, section, "lal_cid", lal_cid);
     for(size_t i = 0; i < lal_addr.size(); ++i) {
-        AddrRangeMap<AbstractMemory*>::iterator m = addrMap.find(lal_addr[i]);
+        AddrRangeMap<AbstractMemory*>::const_iterator m =
+            addrMap.find(lal_addr[i]);
         m->second->addLockedAddr(LockedAddr(lal_addr[i], lal_cid[i]));
     }
 

@@ -68,32 +68,10 @@ class AddrRangeMap
     const_iterator
     find(const AddrRange &r) const
     {
-        const_iterator i;
+        if (tree.empty())
+            return tree.end();
 
-        i = tree.upper_bound(r);
-
-        if (i == tree.begin()) {
-            if (i->first.intersects(r))
-                return i;
-            else
-                // Nothing could match, so return end()
-                return tree.end();
-        }
-
-        --i;
-
-        if (i->first.intersects(r))
-            return i;
-
-        return tree.end();
-    }
-
-    iterator
-    find(const AddrRange &r)
-    {
-        iterator i;
-
-        i = tree.upper_bound(r);
+        const_iterator i = tree.upper_bound(r);
 
         if (i == tree.begin()) {
             if (i->first.intersects(r))
@@ -117,35 +95,19 @@ class AddrRangeMap
         return find(RangeSize(r, 1));
     }
 
-    iterator
-    find(const Addr &r)
-    {
-        return find(RangeSize(r, 1));
-    }
-
     bool
-    intersect(const AddrRange &r)
+    intersect(const AddrRange &r) const
     {
-        iterator i;
-        i = find(r);
-        if (i != tree.end())
-            return true;
-        return false;
+        return find(r) != tree.end();
     }
 
-    iterator
+    const_iterator
     insert(const AddrRange &r, const V& d)
     {
         if (intersect(r))
             return tree.end();
 
         return tree.insert(std::make_pair(r, d)).first;
-    }
-
-    std::size_t
-    erase(Addr k)
-    {
-        return tree.erase(k);
     }
 
     void
