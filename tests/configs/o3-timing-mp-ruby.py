@@ -38,7 +38,8 @@ import ruby_config
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = CoherentBus())
+system = System(cpu = cpus, physmem = ruby_memory, membus = CoherentBus(),
+                mem_mode = "timing")
 
 for cpu in cpus:
     # create the interrupt controller

@@ -35,7 +35,10 @@ nb_cores = 4
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, physmem = SimpleDRAM(), membus = CoherentBus())
+system = System(cpu = cpus,
+                physmem = SimpleDRAM(),
+                membus = CoherentBus(),
+                mem_mode = "timing")
 
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock = '2GHz')

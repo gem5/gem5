@@ -37,7 +37,8 @@ cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
                               L2Cache(size = '2MB'))
 system = System(cpu = cpu,
                 physmem = SimpleMemory(),
-                membus = CoherentBus())
+                membus = CoherentBus(),
+                mem_mode = "timing")
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master
 # create the interrupt controller

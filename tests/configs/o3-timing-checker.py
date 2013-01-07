@@ -53,7 +53,8 @@ cpu.clock = '2GHz'
 
 system = System(cpu = cpu,
                 physmem = SimpleDRAM(),
-                membus = CoherentBus())
+                membus = CoherentBus(),
+                mem_mode = "timing")
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master
 cpu.connectAllPorts(system.membus)
