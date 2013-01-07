@@ -209,7 +209,6 @@ namespace ArmISA
         MISCREG_ID_ISAR3,
         MISCREG_ID_ISAR4,
         MISCREG_ID_ISAR5,
-        MISCREG_CPSR_MODE,
         MISCREG_LOCKFLAG,
         MISCREG_LOCKADDR,
         MISCREG_ID_PFR1,
@@ -311,7 +310,7 @@ namespace ArmISA
         "pmceid1", "pmc_other", "pmxevcntr",
         "pmuserenr", "pmintenset", "pmintenclr",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
-        "cpsr_mode", "lockflag", "lockaddr", "id_pfr1",
+        "lockflag", "lockaddr", "id_pfr1",
         "l2ctlr",
          // Unimplemented below
         "tcmtr",

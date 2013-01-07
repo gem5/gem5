@@ -654,13 +654,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             tc->getITBPtr()->invalidateMiscReg();
             tc->getDTBPtr()->invalidateMiscReg();
             break;
-          case MISCREG_CPSR_MODE:
-            // This miscreg is used by copy*Regs to set the CPSR mode
-            // without updating other CPSR variables. It's used to
-            // make sure the register map is in such a state that we can
-            // see all of the registers for the copy.
-            updateRegMap(val);
-            return;
           case MISCREG_L2CTLR:
             warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
                  miscRegName[misc_reg], uint32_t(val));

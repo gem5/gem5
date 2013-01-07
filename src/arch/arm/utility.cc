@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 ARM Limited
+ * Copyright (c) 2009-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -127,25 +127,13 @@ skipFunction(ThreadContext *tc)
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    int i;
+    for (int i = 0; i < TheISA::NumIntRegs; i++)
+        dest->setIntRegFlat(i, src->readIntRegFlat(i));
 
-    int saved_mode = ((CPSR)src->readMiscReg(MISCREG_CPSR)).mode;
+    for (int i = 0; i < TheISA::NumFloatRegs; i++)
+        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
 
-    // Make sure we're in user mode, so we can easily see all the registers
-    // in the copy loop
-    src->setMiscReg(MISCREG_CPSR_MODE, MODE_USER);
-    dest->setMiscReg(MISCREG_CPSR_MODE, MODE_USER);
-
-    for(i = 0; i < TheISA::NumIntRegs; i++)
-        dest->setIntReg(i, src->readIntReg(i));
-
-    // Restore us back to the old mode
-    src->setMiscReg(MISCREG_CPSR_MODE, saved_mode);
-    dest->setMiscReg(MISCREG_CPSR_MODE, saved_mode);
-
-    for(i = 0; i < TheISA::NumFloatRegs; i++)
-        dest->setFloatReg(i, src->readFloatReg(i));
-    for(i = 0; i < TheISA::NumMiscRegs; i++)
+    for (int i = 0; i < TheISA::NumMiscRegs; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     // setMiscReg "with effect" will set the misc register mapping correctly.

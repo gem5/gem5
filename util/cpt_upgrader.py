@@ -180,6 +180,19 @@ def from_3(cpt):
         for (key, value) in options:
             cpt.set(sec, key, value)
 
+# Version 5 of the checkpoint format removes the MISCREG_CPSR_MODE
+# register from the ARM register file.
+def from_4(cpt):
+    if cpt.get('root','isa') == 'arm':
+        for sec in cpt.sections():
+            import re
+            # Search for all ISA sections
+            if re.search('.*sys.*\.cpu.*\.isa', sec):
+                mr = cpt.get(sec, 'miscRegs').split()
+                # Remove MISCREG_CPSR_MODE
+                del mr[137]
+                cpt.set(sec, 'miscRegs', ' '.join(str(x) for x in mr))
+
 
 
 migrations = []
@@ -187,6 +200,7 @@ migrations.append(from_0)
 migrations.append(from_1)
 migrations.append(from_2)
 migrations.append(from_3)
+migrations.append(from_4)
 
 verbose_print = False
 
