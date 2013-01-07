@@ -509,10 +509,8 @@ CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
-main['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
-main['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
-if main['GCC'] + main['SUNCC'] + main['ICC'] + main['CLANG'] > 1:
+if main['GCC'] + main['CLANG'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
 
@@ -552,15 +550,6 @@ if main['GCC']:
             main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
                                    '-fuse-linker-plugin']
 
-elif main['ICC']:
-    pass #Fix me... add warning flags once we clean up icc warnings
-elif main['SUNCC']:
-    main.Append(CCFLAGS=['-Qoption ccfe'])
-    main.Append(CCFLAGS=['-features=gcc'])
-    main.Append(CCFLAGS=['-features=extensions'])
-    main.Append(CCFLAGS=['-library=stlport4'])
-    main.Append(CCFLAGS=['-xar'])
-    #main.Append(CCFLAGS=['-instances=semiexplicit'])
 elif main['CLANG']:
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.match(CXX_version)
@@ -597,7 +586,7 @@ else:
                termcap.Normal
     else:
         print CXX_version.replace('\n', '<nl>')
-    print "       If you're trying to use a compiler other than GCC, ICC, SunCC,"
+    print "       If you're trying to use a compiler other than GCC"
     print "       or clang, there appears to be something wrong with your"
     print "       environment."
     print "       "

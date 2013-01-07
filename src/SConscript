@@ -1006,17 +1006,6 @@ if env['GCC']:
 
     ccflags['fast'] += env['LTO_CCFLAGS']
     ldflags['fast'] += env['LTO_LDFLAGS']
-
-elif env['SUNCC']:
-    ccflags['debug'] += ['-g0']
-    ccflags['opt'] += ['-O']
-    for target in ['fast', 'prof', 'perf']:
-        ccflags[target] += ['-fast']
-elif env['ICC']:
-    ccflags['debug'] += ['-g', '-O0']
-    ccflags['opt'] += ['-O']
-    for target in ['fast', 'prof', 'perf']:
-        ccflags[target] += ['-fast']
 elif env['CLANG']:
     ccflags['debug'] += ['-g', '-O0']
     # opt, fast, prof and perf all share the same cc flags

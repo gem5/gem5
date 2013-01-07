@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -33,25 +45,13 @@
 
 #include "config/have_static_assert.hh"
 
-//http://msdn2.microsoft.com/en-us/library/ms937669.aspx
-//http://msdn2.microsoft.com/en-us/library/aa448724.aspx
-//http://docs.sun.com/source/819-3688/sun.specific.html#marker-998278
-//http://gcc.gnu.org/onlinedocs/gcc-3.3.1/gcc/Function-Attributes.html#Function%20Attributes
+// http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 
 #if defined(__GNUC__)
 #define M5_ATTR_NORETURN  __attribute__((noreturn))
 #define M5_PRAGMA_NORETURN(x)
 #define M5_DUMMY_RETURN
 #define M5_VAR_USED __attribute__((unused))
-#define M5_ATTR_PACKED __attribute__ ((__packed__))
-#define M5_NO_INLINE __attribute__ ((__noinline__))
-#elif defined(__SUNPRO_CC)
-// this doesn't do anything with sun cc, but why not
-#define M5_ATTR_NORETURN  __sun_attr__((__noreturn__))
-#define M5_DUMMY_RETURN return (0);
-#define DO_PRAGMA(x) _Pragma(#x)
-#define M5_VAR_USED
-#define M5_PRAGMA_NORETURN(x) DO_PRAGMA(does_not_return(x))
 #define M5_ATTR_PACKED __attribute__ ((__packed__))
 #define M5_NO_INLINE __attribute__ ((__noinline__))
 #else
