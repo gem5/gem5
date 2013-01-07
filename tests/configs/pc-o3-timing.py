@@ -1,5 +1,14 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2012 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,44 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Andreas Sandberg
 
-import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Benchmarks import SysConfig
-import FSConfig
-from Caches import *
+from x86_generic import *
 
-mem_size = '128MB'
-
-#cpu
-cpu = DerivO3CPU(cpu_id=0)
-#the system
-mdesc = SysConfig(disk = 'linux-x86.img')
-system = FSConfig.makeLinuxX86System('timing', mdesc=mdesc)
-system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')
-
-system.cpu = cpu
-
-#create the iocache
-system.iocache = IOCache(clock = '1GHz', addr_ranges = [AddrRange(mem_size)])
-system.iocache.cpu_side = system.iobus.master
-system.iocache.mem_side = system.membus.slave
-
-#connect up the cpu and caches
-cpu.addTwoLevelCacheHierarchy(L1Cache(size = '32kB', assoc = 1),
-                              L1Cache(size = '32kB', assoc = 4),
-                              L2Cache(size = '4MB', assoc = 8),
-                              PageTableWalkerCache(),
-                              PageTableWalkerCache())
-# create the interrupt controller
-cpu.createInterruptController()
-# connect cpu and caches to the rest of the system
-cpu.connectAllPorts(system.membus)
-# set the cpu clock along with the caches and l1-l2 bus
-cpu.clock = '2GHz'
-
-root = Root(full_system=True, system=system)
-m5.ticks.setGlobalFrequency('1THz')
-
+root = LinuxX86FSSystemUniprocessor(mem_mode='timing',
+                                    cpu_class=DerivO3CPU).create_root()

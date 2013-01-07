@@ -35,8 +35,61 @@
 #
 # Authors: Andreas Sandberg
 
+from abc import ABCMeta, abstractmethod
+import m5
 from m5.objects import *
-from alpha_generic import *
+from m5.proxy import *
+m5.util.addToPath('../configs/common')
+import FSConfig
+from Caches import *
+from base_config import *
 
-root = LinuxAlphaFSSystemUniprocessor(mem_mode='timing',
-                                      cpu_class=InOrderCPU).create_root()
+class LinuxArmSystemBuilder(object):
+    """Mix-in that implements create_system.
+
+    This mix-in is intended as a convenient way of adding an
+    ARM-specific create_system method to a class deriving from one of
+    the generic base systems.
+    """
+    def __init__(self, machine_type):
+        """
+        Arguments:
+          machine_type -- String describing the platform to simulate
+        """
+        self.machine_type = machine_type
+
+    def create_system(self):
+        system = FSConfig.makeArmSystem(self.mem_mode,
+                                        self.machine_type,
+                                        None, False)
+        self.init_system(system)
+        return system
+
+class LinuxArmFSSystem(LinuxArmSystemBuilder,
+                       BaseFSSystem):
+    """Basic ARM full system builder."""
+
+    def __init__(self, machine_type='RealView_PBX', **kwargs):
+        """Initialize an ARM system that supports full system simulation.
+
+        Note: Keyword arguments that are not listed below will be
+        passed to the BaseFSSystem.
+
+        Keyword Arguments:
+          machine_type -- String describing the platform to simulate
+        """
+        BaseSystem.__init__(self, **kwargs)
+        LinuxArmSystemBuilder.__init__(self, machine_type)
+
+class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
+                                   BaseFSSystemUniprocessor):
+    """Basic ARM full system builder for uniprocessor systems.
+
+    Note: This class is a specialization of the ArmFSSystem and is
+    only really needed to provide backwards compatibility for existing
+    test cases.
+    """
+
+    def __init__(self, machine_type='RealView_PBX', **kwargs):
+        BaseFSSystemUniprocessor.__init__(self, **kwargs)
+        LinuxArmSystemBuilder.__init__(self, machine_type)
