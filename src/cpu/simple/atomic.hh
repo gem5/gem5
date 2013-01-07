@@ -73,8 +73,46 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     const bool simulate_data_stalls;
     const bool simulate_inst_stalls;
 
+    /**
+     * Drain manager to use when signaling drain completion
+     *
+     * This pointer is non-NULL when draining and NULL otherwise.
+     */
+    DrainManager *drain_manager;
+
     // main simulation loop (one cycle)
     void tick();
+
+    /**
+     * Check if a system is in a drained state.
+     *
+     * We need to drain if:
+     * <ul>
+     * <li>We are in the middle of a microcode sequence as some CPUs
+     *     (e.g., HW accelerated CPUs) can't be started in the middle
+     *     of a gem5 microcode sequence.
+     *
+     * <li>The CPU is in a LLSC region. This shouldn't normally happen
+     *     as these are executed atomically within a single tick()
+     *     call. The only way this can happen at the moment is if
+     *     there is an event in the PC event queue that affects the
+     *     CPU state while it is in an LLSC region.
+     *
+     * <li>Stay at PC is true.
+     * </ul>
+     */
+    bool isDrained() {
+        return microPC() == 0 &&
+            !locked &&
+            !stayAtPC;
+    }
+
+    /**
+     * Try to complete a drain request.
+     *
+     * @returns true if the CPU is drained, false otherwise.
+     */
+    bool tryCompleteDrain();
 
     /**
      * An AtomicCPUPort overrides the default behaviour of the
@@ -119,9 +157,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     virtual CpuPort &getInstPort() { return icachePort; }
 
   public:
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     unsigned int drain(DrainManager *drain_manager);
     void drainResume();

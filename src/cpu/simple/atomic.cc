@@ -47,6 +47,7 @@
 #include "config/the_isa.hh"
 #include "cpu/simple/atomic.hh"
 #include "cpu/exetrace.hh"
+#include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
@@ -111,6 +112,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
+      drain_manager(NULL),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem)
@@ -126,37 +128,30 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
     }
 }
 
-void
-AtomicSimpleCPU::serialize(ostream &os)
-{
-    Drainable::State so_state(getDrainState());
-    SERIALIZE_ENUM(so_state);
-    SERIALIZE_SCALAR(locked);
-    BaseSimpleCPU::serialize(os);
-    nameOut(os, csprintf("%s.tickEvent", name()));
-    tickEvent.serialize(os);
-}
-
-void
-AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
-{
-    Drainable::State so_state;
-    UNSERIALIZE_ENUM(so_state);
-    UNSERIALIZE_SCALAR(locked);
-    BaseSimpleCPU::unserialize(cp, section);
-    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
-}
-
 unsigned int
-AtomicSimpleCPU::drain(DrainManager *drain_manager)
+AtomicSimpleCPU::drain(DrainManager *dm)
 {
-    setDrainState(Drainable::Drained);
-    return 0;
+    assert(!drain_manager);
+    if (_status == SwitchedOut)
+        return 0;
+
+    if (!isDrained()) {
+        DPRINTF(Drain, "Requesting drain: %s\n", pcState());
+        drain_manager = dm;
+        return 1;
+    } else {
+        if (tickEvent.scheduled())
+            deschedule(tickEvent);
+
+        DPRINTF(Drain, "Not executing microcode, no need to drain.\n");
+        return 0;
+    }
 }
 
 void
 AtomicSimpleCPU::drainResume()
 {
+    assert(!drain_manager);
     if (_status == Idle || _status == SwitchedOut)
         return;
 
@@ -166,23 +161,41 @@ AtomicSimpleCPU::drainResume()
               "'atomic' mode.\n");
     }
 
-    setDrainState(Drainable::Running);
-    if (thread->status() == ThreadContext::Active) {
-        if (!tickEvent.scheduled())
-            schedule(tickEvent, nextCycle());
-    }
+    assert(!tickEvent.scheduled());
+    if (thread->status() == ThreadContext::Active)
+        schedule(tickEvent, nextCycle());
+
     system->totalNumInsts = 0;
 }
+
+bool
+AtomicSimpleCPU::tryCompleteDrain()
+{
+    if (!drain_manager)
+        return false;
+
+    DPRINTF(Drain, "tryCompleteDrain: %s\n", pcState());
+    if (!isDrained())
+        return false;
+
+    DPRINTF(Drain, "CPU done draining, processing drain event\n");
+    drain_manager->signalDrainDone();
+    drain_manager = NULL;
+
+    return true;
+}
+
 
 void
 AtomicSimpleCPU::switchOut()
 {
     BaseSimpleCPU::switchOut();
 
+    assert(!tickEvent.scheduled());
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
-    _status = SwitchedOut;
+    assert(isDrained());
 
-    tickEvent.squash();
+    _status = SwitchedOut;
 }
 
 
@@ -191,24 +204,19 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseSimpleCPU::takeOverFrom(oldCPU);
 
+    // The tick event should have been descheduled by drain()
     assert(!tickEvent.scheduled());
 
-    // if any of this CPU's ThreadContexts are active, mark the CPU as
-    // running and schedule its tick event.
-    ThreadID size = threadContexts.size();
-    for (ThreadID i = 0; i < size; ++i) {
-        ThreadContext *tc = threadContexts[i];
-        if (tc->status() == ThreadContext::Active &&
-            _status != BaseSimpleCPU::Running) {
-            _status = BaseSimpleCPU::Running;
-            schedule(tickEvent, nextCycle());
-            break;
-        }
-    }
-    if (_status != BaseSimpleCPU::Running) {
+    assert(!threadContexts.empty());
+    if (threadContexts.size() > 1)
+        fatal("The atomic CPU only supports one thread.\n");
+
+    // If the ThreadContext is active, mark the CPU as running.
+    if (thread->status() == ThreadContext::Active)
+        _status = BaseSimpleCPU::Running;
+    else
         _status = Idle;
-    }
-    assert(threadContexts.size() == 1);
+
     ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
     data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
     data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
@@ -464,8 +472,10 @@ AtomicSimpleCPU::tick()
 
         checkPcEventQueue();
         // We must have just got suspended by a PC event
-        if (_status == Idle)
+        if (_status == Idle) {
+            tryCompleteDrain();
             return;
+        }
 
         Fault fault = NoFault;
 
@@ -548,6 +558,9 @@ AtomicSimpleCPU::tick()
         if(fault != NoFault || !stayAtPC)
             advancePC(fault);
     }
+
+    if (tryCompleteDrain())
+        return;
 
     // instruction takes at least one cycle
     if (latency < clockPeriod())
