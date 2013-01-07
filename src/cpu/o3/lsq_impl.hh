@@ -577,10 +577,10 @@ LSQ<Impl>::willWB()
 
 template<class Impl>
 void
-LSQ<Impl>::dumpInsts()
+LSQ<Impl>::dumpInsts() const
 {
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    list<ThreadID>::const_iterator threads = activeThreads->begin();
+    list<ThreadID>::const_iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;

@@ -1228,7 +1228,7 @@ LSQUnit<Impl>::recvRetry()
 
 template <class Impl>
 inline void
-LSQUnit<Impl>::incrStIdx(int &store_idx)
+LSQUnit<Impl>::incrStIdx(int &store_idx) const
 {
     if (++store_idx >= SQEntries)
         store_idx = 0;
@@ -1236,7 +1236,7 @@ LSQUnit<Impl>::incrStIdx(int &store_idx)
 
 template <class Impl>
 inline void
-LSQUnit<Impl>::decrStIdx(int &store_idx)
+LSQUnit<Impl>::decrStIdx(int &store_idx) const
 {
     if (--store_idx < 0)
         store_idx += SQEntries;
@@ -1244,7 +1244,7 @@ LSQUnit<Impl>::decrStIdx(int &store_idx)
 
 template <class Impl>
 inline void
-LSQUnit<Impl>::incrLdIdx(int &load_idx)
+LSQUnit<Impl>::incrLdIdx(int &load_idx) const
 {
     if (++load_idx >= LQEntries)
         load_idx = 0;
@@ -1252,7 +1252,7 @@ LSQUnit<Impl>::incrLdIdx(int &load_idx)
 
 template <class Impl>
 inline void
-LSQUnit<Impl>::decrLdIdx(int &load_idx)
+LSQUnit<Impl>::decrLdIdx(int &load_idx) const
 {
     if (--load_idx < 0)
         load_idx += LQEntries;
@@ -1260,7 +1260,7 @@ LSQUnit<Impl>::decrLdIdx(int &load_idx)
 
 template <class Impl>
 void
-LSQUnit<Impl>::dumpInsts()
+LSQUnit<Impl>::dumpInsts() const
 {
     cprintf("Load store queue: Dumping instructions.\n");
     cprintf("Load queue size: %i\n", loads);
@@ -1269,10 +1269,12 @@ LSQUnit<Impl>::dumpInsts()
     int load_idx = loadHead;
 
     while (load_idx != loadTail && loadQueue[load_idx]) {
-        cprintf("%s ", loadQueue[load_idx]->pcState());
+        const DynInstPtr &inst(loadQueue[load_idx]);
+        cprintf("%s.[sn:%i] ", inst->pcState(), inst->seqNum);
 
         incrLdIdx(load_idx);
     }
+    cprintf("\n");
 
     cprintf("Store queue size: %i\n", stores);
     cprintf("Store queue: ");
@@ -1280,7 +1282,8 @@ LSQUnit<Impl>::dumpInsts()
     int store_idx = storeHead;
 
     while (store_idx != storeTail && storeQueue[store_idx].inst) {
-        cprintf("%s ", storeQueue[store_idx].inst->pcState());
+        const DynInstPtr &inst(storeQueue[store_idx].inst);
+        cprintf("%s.[sn:%i] ", inst->pcState(), inst->seqNum);
 
         incrStIdx(store_idx);
     }

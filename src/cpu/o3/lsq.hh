@@ -263,9 +263,9 @@ class LSQ {
     { retryTid = tid; }
 
     /** Debugging function to print out all instructions. */
-    void dumpInsts();
+    void dumpInsts() const;
     /** Debugging function to print out instructions from a specific thread. */
-    void dumpInsts(ThreadID tid)
+    void dumpInsts(ThreadID tid) const
     { thread[tid].dumpInsts(); }
 
     /** Executes a read operation, using the load specified at the load

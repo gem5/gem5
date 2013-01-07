@@ -241,17 +241,17 @@ class LSQUnit {
     bool sendStore(PacketPtr data_pkt);
 
     /** Increments the given store index (circular queue). */
-    inline void incrStIdx(int &store_idx);
+    inline void incrStIdx(int &store_idx) const;
     /** Decrements the given store index (circular queue). */
-    inline void decrStIdx(int &store_idx);
+    inline void decrStIdx(int &store_idx) const;
     /** Increments the given load index (circular queue). */
-    inline void incrLdIdx(int &load_idx);
+    inline void incrLdIdx(int &load_idx) const;
     /** Decrements the given load index (circular queue). */
-    inline void decrLdIdx(int &load_idx);
+    inline void decrLdIdx(int &load_idx) const;
 
   public:
     /** Debugging function to dump instructions in the LSQ. */
-    void dumpInsts();
+    void dumpInsts() const;
 
   private:
     /** Pointer to the CPU. */
