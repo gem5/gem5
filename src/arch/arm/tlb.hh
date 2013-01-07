@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -207,6 +207,8 @@ class TLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     Fault translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);
+
+    void drainResume();
 
     // Checkpointing
     void serialize(std::ostream &os);
