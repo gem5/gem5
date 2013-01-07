@@ -361,6 +361,10 @@ BaseCPU::switchOut()
     _switchedOut = true;
     if (profileEvent && profileEvent->scheduled())
         deschedule(profileEvent);
+
+    // Flush all TLBs in the CPU to avoid having stale translations if
+    // it gets switched in later.
+    flushTLBs();
 }
 
 void
@@ -480,6 +484,22 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     BaseSlavePort &data_peer_port = oldCPU->getDataPort().getSlavePort();
     oldCPU->getDataPort().unbind();
     getDataPort().bind(data_peer_port);
+}
+
+void
+BaseCPU::flushTLBs()
+{
+    for (ThreadID i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext &tc(*threadContexts[i]);
+        CheckerCPU *checker(tc.getCheckerCpuPtr());
+
+        tc.getITBPtr()->flushAll();
+        tc.getDTBPtr()->flushAll();
+        if (checker) {
+            checker->getITBPtr()->flushAll();
+            checker->getDTBPtr()->flushAll();
+        }
+    }
 }
 
 

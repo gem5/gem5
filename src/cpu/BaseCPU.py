@@ -96,6 +96,7 @@ class BaseCPU(MemObject):
     void switchOut();
     void takeOverFrom(BaseCPU *cpu);
     bool switchedOut();
+    void flushTLBs();
 ''')
 
     def takeOverFrom(self, old_cpu):

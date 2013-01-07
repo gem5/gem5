@@ -114,6 +114,10 @@ class TLB : public BaseTLB
      */
     TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0,
             bool update_used = true);
+
+    /** Remove all entries from the TLB */
+    void flushAll();
+
   protected:
     /** Insert a PTE into the TLB. */
     void insert(Addr vpn, int partition_id, int context_id, bool real,
@@ -121,9 +125,6 @@ class TLB : public BaseTLB
 
     /** Given an entry id, read that tlb entries' tag. */
     uint64_t TagRead(int entry);
-
-    /** Remove all entries from the TLB */
-    void flushAll();
 
     /** Remove all non-locked entries from the tlb that match partition id. */
     void demapAll(int partition_id);

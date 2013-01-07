@@ -324,6 +324,17 @@ class BaseCPU : public MemObject
     virtual void takeOverFrom(BaseCPU *cpu);
 
     /**
+     * Flush all TLBs in the CPU.
+     *
+     * This method is mainly used to flush stale translations when
+     * switching CPUs. It is also exported to the Python world to
+     * allow it to request a TLB flush after draining the CPU to make
+     * it easier to compare traces when debugging
+     * handover/checkpointing.
+     */
+    void flushTLBs();
+
+    /**
      * Determine if the CPU is switched out.
      *
      * @return True if the CPU is switched out, false otherwise.
