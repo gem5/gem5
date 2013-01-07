@@ -26,6 +26,8 @@
 #
 # Authors: Steve Reinhardt
 
+require_sim_object("EioProcess")
+
 root.system.cpu.workload = EioProcess(file = binpath('anagram',
                                                      'anagram-vshort.eio.gz'))
 root.system.cpu.max_insts_any_thread = 500000

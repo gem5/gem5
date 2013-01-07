@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -34,6 +46,52 @@ import string
 from os.path import join as joinpath
 
 import m5
+
+def skip_test(reason=""):
+    """Signal that a test should be skipped and optionally print why.
+
+    Keyword arguments:
+      reason -- Reason why the test failed. Output is omitted if empty.
+    """
+
+    if reason:
+        print "Skipping test: %s" % reason
+    sys.exit(2)
+
+def has_sim_object(name):
+    """Test if a SimObject exists in the simulator.
+
+    Arguments:
+      name -- Name of SimObject (string)
+
+    Returns: True if the object exists, False otherwise.
+    """
+
+    try:
+        cls = getattr(m5.objects, name)
+        return issubclass(cls, m5.objects.SimObject)
+    except AttributeError:
+        return False
+
+def require_sim_object(name, fatal=False):
+    """Test if a SimObject exists and abort/skip test if not.
+
+    Arguments:
+      name -- Name of SimObject (string)
+
+    Keyword arguments:
+      fatal -- Set to True to indicate that the test should fail
+               instead of being skipped.
+    """
+
+    if has_sim_object(name):
+        return
+    else:
+        msg = "Test requires the '%s' SimObject." % name
+        if fatal:
+            m5.fatal(msg)
+        else:
+            skip_test(msg)
 
 # Since we're in batch mode, dont allow tcp socket connections
 m5.disableAllListeners()

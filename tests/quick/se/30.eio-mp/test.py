@@ -26,6 +26,8 @@
 #
 # Authors: Lisa Hsu
 
+require_sim_object("EioProcess")
+
 process = EioProcess(file = binpath('anagram', 'anagram-vshort.eio.gz'))
 
 for i in xrange(nb_cores):

@@ -150,6 +150,9 @@ def run_test(target, source, env):
                 # Hand the return status to scons and let scons decide what
                 # to do about it (typically terminate unless run with -k).
                 return status
+        elif status == 2:
+            # The test was skipped
+            pass
         else:
             print 'M5 exited with non-zero status', status
         # complete but failed execution (call to exit() with non-zero
@@ -159,6 +162,8 @@ def run_test(target, source, env):
     # Generate status file contents based on exit status of m5 or diff-out
     if status == 0:
         status_str = "passed."
+    elif status == 2:
+        status_str = "skipped."
     else:
         status_str = "FAILED!"
     f = file(str(target[0]), 'w')
@@ -188,6 +193,8 @@ def print_test(target, source, env):
         status = termcap.Red + status[:-1] + termcap.Normal + status[-1]
     elif status == "passed.":
         status = termcap.Green + status[:-1] + termcap.Normal + status[-1]
+    elif status == "skipped.":
+        status = termcap.Yellow + status[:-1] + termcap.Normal + status[-1]
 
     # put it back in the list and join with space
     words[-1] = status
