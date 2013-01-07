@@ -553,13 +553,29 @@ class AddrRange(ParamValue):
     cxx_type = 'AddrRange'
 
     def __init__(self, *args, **kwargs):
+        # Disable interleaving by default
+        self.intlvHighBit = 0
+        self.intlvBits = 0
+        self.intlvMatch = 0
+
         def handle_kwargs(self, kwargs):
+            # An address range needs to have an upper limit, specified
+            # either explicitly with an end, or as an offset using the
+            # size keyword.
             if 'end' in kwargs:
                 self.end = Addr(kwargs.pop('end'))
             elif 'size' in kwargs:
                 self.end = self.start + Addr(kwargs.pop('size')) - 1
             else:
                 raise TypeError, "Either end or size must be specified"
+
+            # Now on to the optional bit
+            if 'intlvHighBit' in kwargs:
+                self.intlvHighBit = int(kwargs.pop('intlvHighBit'))
+            if 'intlvBits' in kwargs:
+                self.intlvBits = int(kwargs.pop('intlvBits'))
+            if 'intlvMatch' in kwargs:
+                self.intlvMatch = int(kwargs.pop('intlvMatch'))
 
         if len(args) == 0:
             self.start = Addr(kwargs.pop('start'))
@@ -589,7 +605,8 @@ class AddrRange(ParamValue):
         return '%s:%s' % (self.start, self.end)
 
     def size(self):
-        return long(self.end) - long(self.start) + 1
+        # Divide the size by the size of the interleaving slice
+        return (long(self.end) - long(self.start) + 1) >> self.intlvBits
 
     @classmethod
     def cxx_predecls(cls, code):
@@ -605,7 +622,9 @@ class AddrRange(ParamValue):
         # by swig
         from m5.internal.range import AddrRange
 
-        return AddrRange(long(self.start), long(self.end))
+        return AddrRange(long(self.start), long(self.end),
+                         int(self.intlvHighBit), int(self.intlvBits),
+                         int(self.intlvMatch))
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and

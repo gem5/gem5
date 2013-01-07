@@ -119,9 +119,13 @@ void
 PhysicalMemory::createBackingStore(AddrRange range,
                                    const vector<AbstractMemory*>& _memories)
 {
+    if (range.interleaved())
+        panic("Cannot create backing store for interleaved range %s\n",
+              range.to_string());
+
     // perform the actual mmap
-    DPRINTF(BusAddrRanges, "Creating backing store for range %s\n",
-            range.to_string());
+    DPRINTF(BusAddrRanges, "Creating backing store for range %s with size %d\n",
+            range.to_string(), range.size());
     int map_flags = MAP_ANON | MAP_PRIVATE;
     uint8_t* pmem = (uint8_t*) mmap(NULL, range.size(),
                                     PROT_READ | PROT_WRITE,

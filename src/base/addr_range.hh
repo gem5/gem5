@@ -45,7 +45,9 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
+#include "base/bitfield.hh"
 #include "base/cprintf.hh"
+#include "base/misc.hh"
 #include "base/types.hh"
 
 class AddrRange
@@ -53,27 +55,68 @@ class AddrRange
 
   private:
 
-    /// Private fields for the start and end of the range. In the
-    /// future, these will be extended with interleaving functionality
-    /// and hence should never be manipulated directly.
+    /// Private fields for the start and end of the range
     Addr _start;
     Addr _end;
+
+    /// The high bit of the slice that is used for interleaving
+    uint8_t intlvHighBit;
+
+    /// The number of bits used for interleaving, set to 0 to disable
+    uint8_t intlvBits;
+
+    /// The value to compare the slice addr[high:(high - bits + 1)]
+    /// with.
+    uint8_t intlvMatch;
 
   public:
 
     AddrRange()
-        : _start(1), _end(0)
+        : _start(1), _end(0), intlvHighBit(0), intlvBits(0), intlvMatch(0)
+    {}
+
+    AddrRange(Addr _start, Addr _end, uint8_t _intlv_high_bit,
+              uint8_t _intlv_bits, uint8_t _intlv_match)
+        : _start(_start), _end(_end), intlvHighBit(_intlv_high_bit),
+          intlvBits(_intlv_bits), intlvMatch(_intlv_match)
     {}
 
     AddrRange(Addr _start, Addr _end)
-        : _start(_start), _end(_end)
+        : _start(_start), _end(_end), intlvHighBit(0), intlvBits(0),
+          intlvMatch(0)
     {}
 
     /**
-     * Get the size of the address range. For a case where
-     * interleaving is used this should probably cause a panic.
+     * Determine if the range is interleaved or not.
+     *
+     * @return true if interleaved
      */
-    Addr size() const { return _end - _start + 1; }
+    bool interleaved() const { return intlvBits != 0; }
+
+    /**
+     * Determing the interleaving granularity of the range.
+     *
+     * @return The size of the regions created by the interleaving bits
+     */
+    uint64_t granularity() const { return ULL(1) << intlvHighBit; }
+
+    /**
+     * Determine the number of interleaved address stripes this range
+     * is part of.
+     *
+     * @return The number of stripes spanned by the interleaving bits
+     */
+    uint32_t stripes() const { return ULL(1) << intlvBits; }
+
+    /**
+     * Get the size of the address range. For a case where
+     * interleaving is used we make the simplifying assumption that
+     * the size is a divisible by the size of the interleaving slice.
+     */
+    Addr size() const
+    {
+        return (_end - _start + 1) >> intlvBits;
+    }
 
     /**
      * Determine if the range is valid.
@@ -92,7 +135,27 @@ class AddrRange
      */
     std::string to_string() const
     {
-        return csprintf("[%#llx : %#llx]", _start, _end);
+        if (interleaved())
+            return csprintf("[%#llx : %#llx], [%d : %d] = %d", _start, _end,
+                            intlvHighBit, intlvHighBit - intlvBits + 1,
+                            intlvMatch);
+        else
+            return csprintf("[%#llx : %#llx]", _start, _end);
+    }
+
+    /**
+     * Determine if another range merges with the current one, i.e. if
+     * they are part of the same contigous range and have the same
+     * interleaving bits.
+     *
+     * @param r Range to evaluate merging with
+     * @return true if the two ranges would merge
+     */
+    bool mergesWith(const AddrRange& r) const
+    {
+        return r._start == _start && r._end == _end &&
+            r.intlvHighBit == intlvHighBit &&
+            r.intlvBits == intlvBits;
     }
 
     /**
@@ -105,7 +168,26 @@ class AddrRange
      */
     bool intersects(const AddrRange& r) const
     {
-        return _start <= r._end && _end >= r._start;
+        if (!interleaved()) {
+            return _start <= r._end && _end >= r._start;
+        }
+
+        // the current range is interleaved, split the check up in
+        // three cases
+        if (r.size() == 1)
+            // keep it simple and check if the address is within
+            // this range
+            return contains(r.start());
+        else if (!r.interleaved())
+            // be conservative and ignore the interleaving
+            return _start <= r._end && _end >= r._start;
+        else if (mergesWith(r))
+            // restrict the check to ranges that belong to the
+            // same chunk
+            return intlvMatch == r.intlvMatch;
+        else
+            panic("Cannot test intersection of interleaved range %s\n",
+                  to_string());
     }
 
     /**
@@ -118,6 +200,8 @@ class AddrRange
      */
     bool isSubset(const AddrRange& r) const
     {
+        if (interleaved())
+            panic("Cannot test subset of interleaved range %s\n", to_string());
         return _start >= r._start && _end <= r._end;
     }
 
@@ -129,7 +213,13 @@ class AddrRange
      */
     bool contains(const Addr& a) const
     {
-        return a >= _start && a <= _end;
+        // check if the address is in the range and if there is either
+        // no interleaving, or with interleaving also if the selected
+        // bits from the address match the interleaving value
+        return a >= _start && a <= _end &&
+            (interleaved() ||
+             (bits(a, intlvHighBit, intlvHighBit - intlvBits + 1) ==
+              intlvMatch));
     }
 
 /**
@@ -146,7 +236,12 @@ class AddrRange
      */
     bool operator<(const AddrRange& r) const
     {
-        return _start < r._start;
+        if (_start != r._start)
+            return _start < r._start;
+        else
+            // for now assume that the end is also the same, and that
+            // we are looking at the same interleaving bits
+            return intlvMatch < r.intlvMatch;
     }
 
 #endif // SWIG

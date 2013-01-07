@@ -74,17 +74,36 @@ class AddrRangeMap
         const_iterator i = tree.upper_bound(r);
 
         if (i == tree.begin()) {
-            if (i->first.intersects(r))
+            if (i->first.intersects(r)) {
                 return i;
-            else
-                // Nothing could match, so return end()
+            } else {
                 return tree.end();
+            }
         }
 
         --i;
 
         if (i->first.intersects(r))
             return i;
+
+        // if we are looking at an interleaved range, also step
+        // backwards through the ranges while we are looking at ranges
+        // that are part of the same contigous chunk
+        if (i->first.interleaved()) {
+            AddrRange orig_range = i->first;
+
+            while (i != tree.begin() && i->first.mergesWith(orig_range)) {
+                --i;
+                if (i->first.intersects(r)) {
+                    return i;
+                }
+            }
+
+            // we could leave the loop based on reaching the first
+            // element, so we must still check for an intersection
+            if (i->first.intersects(r))
+                return i;
+        }
 
         return tree.end();
     }
