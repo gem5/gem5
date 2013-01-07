@@ -108,12 +108,12 @@ class M5DebugFault : public FaultBase
     }
 };
 
-template <int func>
+template <int Func>
 class M5VarArgsFault : public M5DebugFault
 {
   public:
     M5VarArgsFault(const std::string &format, CPRINTF_DECLARATION) :
-        M5DebugFault((DebugFunc)func, csprintf(format, VARARGS_ALLARGS))
+        M5DebugFault((DebugFunc)Func, csprintf(format, VARARGS_ALLARGS))
     {}
 };
 
