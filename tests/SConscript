@@ -301,7 +301,8 @@ if env['TARGET_ISA'] == 'alpha':
                 'tsunami-simple-timing-dual',
                 'twosys-tsunami-simple-atomic',
                 'tsunami-o3', 'tsunami-o3-dual',
-                'tsunami-inorder']
+                'tsunami-inorder',
+                'tsunami-switcheroo-full']
 if env['TARGET_ISA'] == 'sparc':
     configs += ['t1000-simple-atomic',
                 't1000-simple-timing']
@@ -314,7 +315,11 @@ if env['TARGET_ISA'] == 'arm':
                 'realview-simple-timing-dual',
                 'realview-o3',
                 'realview-o3-checker',
-                'realview-o3-dual']
+                'realview-o3-dual',
+                'realview-switcheroo-atomic',
+                'realview-switcheroo-timing',
+                'realview-switcheroo-o3',
+                'realview-switcheroo-full']
 if env['TARGET_ISA'] == 'x86':
     configs += ['pc-simple-atomic',
                 'pc-simple-timing',

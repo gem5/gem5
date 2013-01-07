@@ -35,66 +35,14 @@
 #
 # Authors: Andreas Sandberg
 
-from abc import ABCMeta, abstractmethod
-import m5
 from m5.objects import *
-from m5.proxy import *
-m5.util.addToPath('../configs/common')
-import FSConfig
-from Caches import *
-from base_config import *
+from arm_generic import *
+import switcheroo
 
-class LinuxAlphaSystemBuilder(object):
-    """Mix-in that implements create_system.
+root = LinuxArmFSSwitcheroo(
+    cpu_classes=(DerivO3CPU, DerivO3CPU)
+    ).create_root()
 
-    This mix-in is intended as a convenient way of adding an
-    Alpha-specific create_system method to a class deriving from one of
-    the generic base systems.
-    """
-    def __init__(self):
-        """
-        Arguments:
-          machine_type -- String describing the platform to simulate
-        """
-        pass
-
-    def create_system(self):
-        system = FSConfig.makeLinuxAlphaSystem(self.mem_mode)
-        self.init_system(system)
-        return system
-
-class LinuxAlphaFSSystem(LinuxAlphaSystemBuilder,
-                         BaseFSSystem):
-    """Basic Alpha full system builder."""
-
-    def __init__(self, **kwargs):
-        """Initialize an Alpha system that supports full system simulation.
-
-        Note: Keyword arguments that are not listed below will be
-        passed to the BaseFSSystem.
-
-        Keyword Arguments:
-          -
-        """
-        BaseSystem.__init__(self, **kwargs)
-        LinuxAlphaSystemBuilder.__init__(self)
-
-class LinuxAlphaFSSystemUniprocessor(LinuxAlphaSystemBuilder,
-                                     BaseFSSystemUniprocessor):
-    """Basic Alpha full system builder for uniprocessor systems.
-
-    Note: This class is a specialization of the AlphaFSSystem and is
-    only really needed to provide backwards compatibility for existing
-    test cases.
-    """
-
-    def __init__(self, **kwargs):
-        BaseFSSystemUniprocessor.__init__(self, **kwargs)
-        LinuxAlphaSystemBuilder.__init__(self)
-
-class LinuxAlphaFSSwitcheroo(LinuxAlphaSystemBuilder, BaseFSSwitcheroo):
-    """Uniprocessor Alpha system prepared for CPU switching"""
-
-    def __init__(self, **kwargs):
-        BaseFSSwitcheroo.__init__(self, **kwargs)
-        LinuxAlphaSystemBuilder.__init__(self)
+# Setup a custom test method that uses the switcheroo tester that
+# switches between CPU models.
+run_test = switcheroo.run_test

@@ -121,10 +121,13 @@ class BaseSystem(object):
 
         sha_bus = self.create_caches_shared(system)
         for cpu in system.cpu:
-            self.create_caches_private(cpu)
-            self.init_cpu(system, cpu)
-            cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
-                                system.membus)
+            if not cpu.switched_out:
+                self.create_caches_private(cpu)
+                self.init_cpu(system, cpu)
+                cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
+                                    system.membus)
+            else:
+                self.init_cpu(system, cpu)
 
     @abstractmethod
     def create_system(self):
@@ -173,3 +176,16 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
 
     def create_caches_shared(self, system):
         return None
+
+class BaseFSSwitcheroo(BaseFSSystem):
+    """Uniprocessor system prepared for CPU switching"""
+
+    def __init__(self, cpu_classes, **kwargs):
+        BaseFSSystem.__init__(self, **kwargs)
+        self.cpu_classes = tuple(cpu_classes)
+
+    def create_cpus(self):
+        cpus = [ cclass(cpu_id=0, clock='2GHz', switched_out=True)
+                 for cclass in self.cpu_classes ]
+        cpus[0].switched_out = False
+        return cpus

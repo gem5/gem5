@@ -93,6 +93,16 @@ def require_sim_object(name, fatal=False):
         else:
             skip_test(msg)
 
+def run_test(root):
+    """Default run_test implementations. Scripts can override it."""
+
+    # instantiate configuration
+    m5.instantiate()
+
+    # simulate until program terminates
+    exit_event = m5.simulate(maxtick)
+    print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+
 # Since we're in batch mode, dont allow tcp socket connections
 m5.disableAllListeners()
 
@@ -160,10 +170,4 @@ for sysattr in [ "system", "testsys", "drivesys" ]:
     if hasattr(root, sysattr):
         initCPUs(getattr(root, sysattr))
 
-# instantiate configuration
-m5.instantiate()
-
-# simulate until program terminates
-exit_event = m5.simulate(maxtick)
-
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+run_test(root)

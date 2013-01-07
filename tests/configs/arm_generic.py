@@ -93,3 +93,11 @@ class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
     def __init__(self, machine_type='RealView_PBX', **kwargs):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(self, machine_type)
+
+
+class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
+    """Uniprocessor ARM system prepared for CPU switching"""
+
+    def __init__(self, machine_type='RealView_PBX', **kwargs):
+        BaseFSSwitcheroo.__init__(self, **kwargs)
+        LinuxArmSystemBuilder.__init__(self, machine_type)
