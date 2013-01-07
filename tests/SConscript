@@ -63,9 +63,9 @@ retry_signals = (signal.SIGTERM, signal.SIGKILL, signal.SIGINT,
 # regular expressions of lines to ignore when diffing outputs
 output_ignore_regexes = (
     '^command line:',		# for stdout file
-    '^M5 compiled ',		# for stderr file
-    '^M5 started ',		# for stderr file
-    '^M5 executing on ',	# for stderr file
+    '^gem5 compiled ',		# for stderr file
+    '^gem5 started ',		# for stderr file
+    '^gem5 executing on ',	# for stderr file
     '^Simulation complete at',	# for stderr file
     '^Listening for',		# for stderr file
     'listening for remote gdb',	# for stderr file
