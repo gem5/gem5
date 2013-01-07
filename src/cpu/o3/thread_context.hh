@@ -153,11 +153,6 @@ class O3ThreadContext : public ThreadContext
     /** Registers statistics associated with this TC. */
     virtual void regStats(const std::string &name);
 
-    /** Serializes state. */
-    virtual void serialize(std::ostream &os);
-    /** Unserializes state. */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
     /** Reads the last tick that this thread was activated on. */
     virtual Tick readLastActivate();
     /** Reads the last tick that this thread was suspended on. */

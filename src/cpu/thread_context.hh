@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -176,9 +176,6 @@ class ThreadContext
     virtual void takeOverFrom(ThreadContext *old_context) = 0;
 
     virtual void regStats(const std::string &name) = 0;
-
-    virtual void serialize(std::ostream &os) = 0;
-    virtual void unserialize(Checkpoint *cp, const std::string &section) = 0;
 
     virtual EndQuiesceEvent *getQuiesceEvent() = 0;
 
@@ -369,10 +366,6 @@ class ProxyThreadContext : public ThreadContext
 
     void regStats(const std::string &name) { actualTC->regStats(name); }
 
-    void serialize(std::ostream &os) { actualTC->serialize(os); }
-    void unserialize(Checkpoint *cp, const std::string &section)
-    { actualTC->unserialize(cp, section); }
-
     EndQuiesceEvent *getQuiesceEvent() { return actualTC->getQuiesceEvent(); }
 
     Tick readLastActivate() { return actualTC->readLastActivate(); }
@@ -472,5 +465,20 @@ class ProxyThreadContext : public ThreadContext
     void setFloatRegBitsFlat(int idx, FloatRegBits val)
     { actualTC->setFloatRegBitsFlat(idx, val); }
 };
+
+/** @{ */
+/**
+ * Thread context serialization helpers
+ *
+ * These helper functions provide a way to the data in a
+ * ThreadContext. They are provided as separate helper function since
+ * implementing them as members of the ThreadContext interface would
+ * be confusing when the ThreadContext is exported via a proxy.
+ */
+
+void serialize(ThreadContext &tc, std::ostream &os);
+void unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section);
+
+/** @} */
 
 #endif

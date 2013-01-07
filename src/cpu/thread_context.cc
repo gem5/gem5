@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -77,4 +89,50 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         panic("Context ids don't match, one: %d, two: %d", id1, id2);
 
 
+}
+
+void
+serialize(ThreadContext &tc, std::ostream &os)
+{
+    using namespace TheISA;
+
+    FloatRegBits floatRegs[NumFloatRegs];
+    for (int i = 0; i < NumFloatRegs; ++i)
+        floatRegs[i] = tc.readFloatRegBitsFlat(i);
+    // This is a bit ugly, but needed to maintain backwards
+    // compatibility.
+    arrayParamOut(os, "floatRegs.i", floatRegs, NumFloatRegs);
+
+    IntReg intRegs[NumIntRegs];
+    for (int i = 0; i < NumIntRegs; ++i)
+        intRegs[i] = tc.readIntRegFlat(i);
+    SERIALIZE_ARRAY(intRegs, NumIntRegs);
+
+    tc.pcState().serialize(os);
+
+    // thread_num and cpu_id are deterministic from the config
+}
+
+void
+unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section)
+{
+    using namespace TheISA;
+
+    FloatRegBits floatRegs[NumFloatRegs];
+    // This is a bit ugly, but needed to maintain backwards
+    // compatibility.
+    arrayParamIn(cp, section, "floatRegs.i", floatRegs, NumFloatRegs);
+    for (int i = 0; i < NumFloatRegs; ++i)
+        tc.setFloatRegBitsFlat(i, floatRegs[i]);
+
+    IntReg intRegs[NumIntRegs];
+    UNSERIALIZE_ARRAY(intRegs, NumIntRegs);
+    for (int i = 0; i < NumIntRegs; ++i)
+        tc.setIntRegFlat(i, intRegs[i]);
+
+    PCState pcState;
+    pcState.unserialize(cp, section);
+    tc.pcState(pcState);
+
+    // thread_num and cpu_id are deterministic from the config
 }

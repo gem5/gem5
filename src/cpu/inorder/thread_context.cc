@@ -160,21 +160,6 @@ InOrderThreadContext::regStats(const std::string &name)
     }
 }
 
-
-void
-InOrderThreadContext::serialize(std::ostream &os)
-{
-    panic("serialize unimplemented");
-}
-
-
-void
-InOrderThreadContext::unserialize(Checkpoint *cp, const std::string &section)
-{
-    panic("unserialize unimplemented");
-}
-
-
 void
 InOrderThreadContext::copyArchRegs(ThreadContext *src_tc)
 {

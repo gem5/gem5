@@ -1097,16 +1097,9 @@ FullO3CPU<Impl>::serialize(std::ostream &os)
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
 
-    // Use SimpleThread's ability to checkpoint to make it easier to
-    // write out the registers.  Also make this static so it doesn't
-    // get instantiated multiple times (causes a panic in statistics).
-    static SimpleThread temp;
-
-    ThreadID size = thread.size();
-    for (ThreadID i = 0; i < size; i++) {
+    for (ThreadID i = 0; i < thread.size(); i++) {
         nameOut(os, csprintf("%s.xc.%i", name(), i));
-        temp.copyTC(thread[i]->getTC());
-        temp.serialize(os);
+        thread[i]->serialize(os);
     }
 }
 
@@ -1119,16 +1112,11 @@ FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
     BaseCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 
-    // Use SimpleThread's ability to checkpoint to make it easier to
-    // read in the registers.  Also make this static so it doesn't
-    // get instantiated multiple times (causes a panic in statistics).
-    static SimpleThread temp;
-
-    ThreadID size = thread.size();
-    for (ThreadID i = 0; i < size; i++) {
-        temp.copyTC(thread[i]->getTC());
-        temp.unserialize(cp, csprintf("%s.xc.%i", section, i));
-        thread[i]->getTC()->copyArchRegs(temp.getTC());
+    for (ThreadID i = 0; i < thread.size(); i++) {
+        thread[i]->unserialize(cp,
+                               csprintf("%s.xc.%i", section, i));
+        if (thread[i]->status() == ThreadContext::Active)
+            activateThread(i);
     }
 }
 

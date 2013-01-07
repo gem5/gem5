@@ -159,22 +159,6 @@ O3ThreadContext<Impl>::regStats(const std::string &name)
 }
 
 template <class Impl>
-void
-O3ThreadContext<Impl>::serialize(std::ostream &os)
-{
-    if (FullSystem && thread->kernelStats)
-        thread->kernelStats->serialize(os);
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::unserialize(Checkpoint *cp, const std::string &section)
-{
-    if (FullSystem && thread->kernelStats)
-        thread->kernelStats->unserialize(cp, section);
-}
-
-template <class Impl>
 Tick
 O3ThreadContext<Impl>::readLastActivate()
 {

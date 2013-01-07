@@ -99,12 +99,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
         kernelStats = new TheISA::Kernel::Statistics(system);
 }
 
-SimpleThread::SimpleThread()
-    : ThreadState(NULL, -1, NULL), isa(NULL)
-{
-    tc = new ProxyThreadContext<SimpleThread>(this);
-}
-
 SimpleThread::~SimpleThread()
 {
     delete tc;
@@ -175,10 +169,7 @@ void
 SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
-    SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
-    SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
-    _pcState.serialize(os);
-    // thread_num and cpu_id are deterministic from the config
+    ::serialize(*tc, os);
 }
 
 
@@ -186,10 +177,7 @@ void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
-    UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
-    UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
-    _pcState.unserialize(cp, section);
-    // thread_num and cpu_id are deterministic from the config
+    ::unserialize(*tc, cp, section);
 }
 
 void

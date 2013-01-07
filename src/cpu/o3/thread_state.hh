@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -97,6 +109,27 @@ struct O3ThreadState : public ThreadState {
         static ProfileNode dummyNode;
         profileNode = &dummyNode;
         profilePC = 3;
+    }
+
+    void serialize(std::ostream &os)
+    {
+        ThreadState::serialize(os);
+        // Use the ThreadContext serialization helper to serialize the
+        // TC.
+        ::serialize(*tc, os);
+    }
+
+    void unserialize(Checkpoint *cp, const std::string &section)
+    {
+        // Prevent squashing - we don't have any instructions in
+        // flight that we need to squash since we just instantiated a
+        // clean system.
+        noSquashFromTC = true;
+        ThreadState::unserialize(cp, section);
+        // Use the ThreadContext serialization helper to unserialize
+        // the TC.
+        ::unserialize(*tc, cp, section);
+        noSquashFromTC = false;
     }
 
     /** Pointer to the ThreadContext of this thread. */

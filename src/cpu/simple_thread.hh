@@ -140,8 +140,6 @@ class SimpleThread : public ThreadState
                  Process *_process, TheISA::TLB *_itb, TheISA::TLB *_dtb,
                  TheISA::ISA *_isa);
 
-    SimpleThread();
-
     virtual ~SimpleThread();
 
     virtual void takeOverFrom(ThreadContext *oldContext);

@@ -191,12 +191,6 @@ class InOrderThreadContext : public ThreadContext
     /** Registers statistics associated with this TC. */
     void regStats(const std::string &name);
 
-    /** Serializes state. */
-    void serialize(std::ostream &os);
-
-    /** Unserializes state. */
-    void unserialize(Checkpoint *cp, const std::string &section);
-
     /** Returns this thread's ID number. */
     int getThreadNum() { return thread->threadId(); }
 
