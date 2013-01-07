@@ -279,16 +279,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         Cycles &lat, PacketList &writebacks)
 {
     if (pkt->req->isUncacheable()) {
-        if (pkt->req->isClearLL()) {
-            tags->clearLocks();
-        } else if (pkt->isWrite()) {
-           blk = tags->findBlock(pkt->getAddr());
-           if (blk != NULL) {
-               tags->invalidate(blk);
-               blk->invalidate();
-           }
-        }
-
+        uncacheableFlush(pkt);
         blk = NULL;
         lat = hitLatency;
         return false;
@@ -444,15 +435,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
-        if (pkt->req->isClearLL()) {
-            tags->clearLocks();
-        } else if (pkt->isWrite()) {
-            BlkType *blk = tags->findBlock(pkt->getAddr());
-            if (blk != NULL) {
-                tags->invalidate(blk);
-                blk->invalidate();
-            }
-        }
+        uncacheableFlush(pkt);
 
         // writes go in write buffer, reads use MSHR
         if (pkt->isWrite() && !pkt->isRead()) {
@@ -1102,6 +1085,25 @@ Cache<TagStore>::invalidateVisitor(BlkType &blk)
 
     return true;
 }
+
+template<class TagStore>
+void
+Cache<TagStore>::uncacheableFlush(PacketPtr pkt)
+{
+    DPRINTF(Cache, "%s%s %x uncacheable\n", pkt->cmdString(),
+            pkt->req->isInstFetch() ? " (ifetch)" : "",
+            pkt->getAddr());
+
+    if (pkt->req->isClearLL())
+        tags->clearLocks();
+
+    BlkType *blk(tags->findBlock(pkt->getAddr()));
+    if (blk) {
+        writebackVisitor(*blk);
+        invalidateVisitor(*blk);
+    }
+}
+
 
 template<class TagStore>
 typename Cache<TagStore>::BlkType*
