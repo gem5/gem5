@@ -233,6 +233,22 @@ class SwigSource(SourceFile):
         self.cc_source = Source(cc_file, swig=True, parent=self)
         self.py_source = PySource(package, py_file, parent=self)
 
+class ProtoBuf(SourceFile):
+    '''Add a Protocol Buffer to build'''
+
+    def __init__(self, source, **guards):
+        '''Specify the source file, and any guards'''
+        super(ProtoBuf, self).__init__(source, **guards)
+
+        # Get the file name and the extension
+        modname,ext = self.extname
+        assert ext == 'proto'
+
+        # Currently, we stick to generating the C++ headers, so we
+        # only need to track the source and header.
+        self.cc_file = File(joinpath(self.dirname, modname + '.pb.cc'))
+        self.hh_file = File(joinpath(self.dirname, modname + '.pb.h'))
+
 class UnitTest(object):
     '''Create a UnitTest'''
 
@@ -260,6 +276,7 @@ Export('Source')
 Export('PySource')
 Export('SimObject')
 Export('SwigSource')
+Export('ProtoBuf')
 Export('UnitTest')
 
 ########################################################################
@@ -675,6 +692,24 @@ for swig in SwigSource.all:
     env.Command(init_file, Value(swig.module),
                 MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
     Source(init_file, **swig.guards)
+
+# Build all protocol buffers if we have got protoc and protobuf available
+if env['HAVE_PROTOBUF']:
+    for proto in ProtoBuf.all:
+        # Use both the source and header as the target, and the .proto
+        # file as the source. When executing the protoc compiler, also
+        # specify the proto_path to avoid having the generated files
+        # include the path.
+        env.Command([proto.cc_file, proto.hh_file], proto.tnode,
+                    MakeAction('$PROTOC --cpp_out ${TARGET.dir} '
+                               '--proto_path ${SOURCE.dir} $SOURCE',
+                               Transform("PROTOC")))
+
+        # Add the C++ source file
+        Source(proto.cc_file, **proto.guards)
+elif ProtoBuf.all:
+    print 'Got protobuf to build, but lacks support!'
+    Exit(1)
 
 #
 # Handle debug flags

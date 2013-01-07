@@ -180,7 +180,8 @@ termcap = get_termcap(GetOption('use_colors'))
 #
 ########################################################################
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
-                 'LIBRARY_PATH', 'PATH', 'PYTHONPATH', 'RANLIB', 'SWIG' ])
+                 'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PYTHONPATH',
+                 'RANLIB', 'SWIG' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
@@ -363,6 +364,7 @@ global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('SWIG', 'SWIG tool', environ.get('SWIG', main['SWIG'])),
+    ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
@@ -613,6 +615,34 @@ if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
+# Check for the protobuf compiler
+protoc_version = readCommand([main['PROTOC'], '--version'],
+                             exception='').split()
+
+# First two words should be "libprotoc x.y.z"
+if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
+    print termcap.Yellow + termcap.Bold + \
+        'Warning: Protocol buffer compiler (protoc) not found.\n' + \
+        '         Please install protobuf-compiler for tracing support.' + \
+        termcap.Normal
+    main['PROTOC'] = False
+else:
+    # Determine the appropriate include path and library path using
+    # pkg-config, that means we also need to check for pkg-config
+    if not readCommand(['pkg-config', '--version'], exception=''):
+        print 'Error: pkg-config not found. Please install and retry.'
+        Exit(1)
+
+    main.ParseConfig('pkg-config --cflags --libs-only-L protobuf')
+
+    # Based on the availability of the compress stream wrappers,
+    # require 2.1.0
+    min_protoc_version = '2.1.0'
+    if compareVersions(protoc_version[1], min_protoc_version) < 0:
+        print 'Error: protoc version', min_protoc_version, 'or newer required.'
+        print '       Installed version:', protoc_version[1]
+        Exit(1)
+
 # Check for SWIG
 if not main.has_key('SWIG'):
     print 'Error: SWIG utility not found.'
@@ -814,6 +844,21 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
     print '       Please install zlib and try again.'
     Exit(1)
 
+# If we have the protobuf compiler, also make sure we have the
+# development libraries. If the check passes, libprotobuf will be
+# automatically added to the LIBS environment variable. After
+# this, we can use the HAVE_PROTOBUF flag to determine if we have
+# got both protoc and libprotobuf available.
+main['HAVE_PROTOBUF'] = main['PROTOC'] and \
+    conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
+                            'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
+
+# If we have the compiler but not the library, treat it as an error.
+if main['PROTOC'] and not main['HAVE_PROTOBUF']:
+    print 'Error: did not find protocol buffer library and/or headers.'
+    print '       Please install libprotobuf-dev and try again.'
+    Exit(1)
+
 # Check for librt.
 have_posix_clock = \
     conf.CheckLibWithHeader(None, 'time.h', 'C',
@@ -940,7 +985,7 @@ sticky_vars.AddVariables(
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP',
                 'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'PROTOCOL',
-                'HAVE_STATIC_ASSERT']
+                'HAVE_STATIC_ASSERT', 'HAVE_PROTOBUF']
 
 ###################################################
 #
