@@ -225,6 +225,7 @@ TableWalker::processWalkWrapper()
     // if we've still got pending translations schedule more work
     nextWalk(tc);
     currState = NULL;
+    completeDrain();
 }
 
 Fault
