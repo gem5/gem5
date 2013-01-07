@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -114,17 +126,14 @@ MemDepUnit<MemDepPred, Impl>::regStats()
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::switchOut()
+MemDepUnit<MemDepPred, Impl>::drainSanityCheck() const
 {
-    assert(instList[0].empty());
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
-    // Clear any state.
-    for (int i = 0; i < Impl::MaxThreads; ++i) {
-        instList[i].clear();
-    }
-    instsToReplay.clear();
-    memDepHash.clear();
+    for (int i = 0; i < Impl::MaxThreads; ++i)
+        assert(instList[i].empty());
+    assert(instsToReplay.empty());
+    assert(memDepHash.empty());
 }
 
 template <class MemDepPred, class Impl>

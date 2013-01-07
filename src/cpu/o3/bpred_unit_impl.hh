@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -131,12 +131,12 @@ BPredUnit<Impl>::regStats()
 
 template <class Impl>
 void
-BPredUnit<Impl>::switchOut()
+BPredUnit<Impl>::drainSanityCheck() const
 {
-    // Clear any state upon switch out.
-    for (int i = 0; i < Impl::MaxThreads; ++i) {
-        squash(0, i);
-    }
+    // We shouldn't have any outstanding requests when we resume from
+    // a drained system.
+    for (int i = 0; i < Impl::MaxThreads; ++i)
+        assert(predHist[i].empty());
 }
 
 template <class Impl>

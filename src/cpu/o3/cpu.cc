@@ -257,7 +257,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       globalSeqNum(1),
       system(params->system),
-      drainCount(0),
+      drainManager(NULL),
       lastRunningCycle(curCycle())
 {
     if (!params->switched_out) {
@@ -584,6 +584,8 @@ void
 FullO3CPU<Impl>::tick()
 {
     DPRINTF(O3CPU, "\n\nFullO3CPU: Ticking main, FullO3CPU.\n");
+    assert(!switchedOut());
+    assert(getDrainState() != Drainable::Drained);
 
     ++numCycles;
 
@@ -618,8 +620,7 @@ FullO3CPU<Impl>::tick()
     }
 
     if (!tickEvent.scheduled()) {
-        if (_status == SwitchedOut ||
-            getDrainState() == Drainable::Drained) {
+        if (_status == SwitchedOut) {
             DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
             lastRunningCycle = curCycle();
@@ -635,6 +636,8 @@ FullO3CPU<Impl>::tick()
 
     if (!FullSystem)
         updateThreadPriority();
+
+    tryDrain();
 }
 
 template <class Impl>
@@ -657,13 +660,6 @@ FullO3CPU<Impl>::init()
         thread[tid]->initMemProxies(thread[tid]->getTC());
     }
 
-    // this CPU could still be unconnected if we are restoring from a
-    // checkpoint and this CPU is to be switched in, thus we can only
-    // do this here if the instruction port is actually connected, if
-    // not we have to do it as part of takeOverFrom
-    if (icachePort.isConnected())
-        fetch.setIcache();
-
     if (FullSystem && !params()->switched_out) {
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
@@ -683,6 +679,7 @@ void
 FullO3CPU<Impl>::startup()
 {
     fetch.startupStage();
+    decode.startupStage();
     iew.startupStage();
     rename.startupStage();
     commit.startupStage();
@@ -696,6 +693,7 @@ FullO3CPU<Impl>::activateThread(ThreadID tid)
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i]: Calling activate thread.\n", tid);
+    assert(!switchedOut());
 
     if (isActive == activeThreads.end()) {
         DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
@@ -714,6 +712,7 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i]: Calling deactivate thread.\n", tid);
+    assert(!switchedOut());
 
     if (thread_it != activeThreads.end()) {
         DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
@@ -752,6 +751,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
 {
+    assert(!switchedOut());
+
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
@@ -760,6 +761,12 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
     } else {
         activateThread(tid);
     }
+
+    // We don't want to wake the CPU if it is drained. In that case,
+    // we just want to flag the thread as active and schedule the tick
+    // event from drainResume() instead.
+    if (getDrainState() == Drainable::Drained)
+        return;
 
     // If we are time 0 or if the last activation time is in the past,
     // schedule the next tick and wake up the fetch unit
@@ -807,6 +814,7 @@ void
 FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
+    assert(!switchedOut());
     bool deallocated = scheduleDeallocateContext(tid, false, Cycles(1));
     // If this was the last thread then unschedule the tick event.
     if ((activeThreads.size() == 1 && !deallocated) ||
@@ -824,6 +832,7 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
 {
     //For now, this is the same as deallocate
     DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
+    assert(!switchedOut());
     scheduleDeallocateContext(tid, true, Cycles(1));
 }
 
@@ -1120,26 +1129,26 @@ template <class Impl>
 unsigned int
 FullO3CPU<Impl>::drain(DrainManager *drain_manager)
 {
-    DPRINTF(O3CPU, "Switching out\n");
-
     // If the CPU isn't doing anything, then return immediately.
-    if (_status == SwitchedOut)
+    if (switchedOut()) {
+        setDrainState(Drainable::Drained);
         return 0;
+    }
 
-    drainCount = 0;
-    fetch.drain();
-    decode.drain();
-    rename.drain();
-    iew.drain();
+    DPRINTF(Drain, "Draining...\n");
+    setDrainState(Drainable::Draining);
+
+    // We only need to signal a drain to the commit stage as this
+    // initiates squashing controls the draining. Once the commit
+    // stage commits an instruction where it is safe to stop, it'll
+    // squash the rest of the instructions in the pipeline and force
+    // the fetch stage to stall. The pipeline will be drained once all
+    // in-flight instructions have retired.
     commit.drain();
 
     // Wake the CPU and record activity so everything can drain out if
     // the CPU was not able to immediately drain.
-    if (getDrainState() != Drainable::Drained) {
-        // A bit of a hack...set the drainManager after all the drain()
-        // calls have been made, that way if all of the stages drain
-        // immediately, the signalDrained() function knows not to call
-        // process on the drain event.
+    if (!isDrained())  {
         drainManager = drain_manager;
 
         wakeCPU();
@@ -1149,93 +1158,167 @@ FullO3CPU<Impl>::drain(DrainManager *drain_manager)
 
         return 1;
     } else {
+        setDrainState(Drainable::Drained);
+        DPRINTF(Drain, "CPU is already drained\n");
+        if (tickEvent.scheduled())
+            deschedule(tickEvent);
+
+        // Flush out any old data from the time buffers.  In
+        // particular, there might be some data in flight from the
+        // fetch stage that isn't visible in any of the CPU buffers we
+        // test in isDrained().
+        for (int i = 0; i < timeBuffer.getSize(); ++i) {
+            timeBuffer.advance();
+            fetchQueue.advance();
+            decodeQueue.advance();
+            renameQueue.advance();
+            iewQueue.advance();
+        }
+
+        drainSanityCheck();
         return 0;
     }
+}
+
+template <class Impl>
+bool
+FullO3CPU<Impl>::tryDrain()
+{
+    if (!drainManager || !isDrained())
+        return false;
+
+    if (tickEvent.scheduled())
+        deschedule(tickEvent);
+
+    DPRINTF(Drain, "CPU done draining, processing drain event\n");
+    drainManager->signalDrainDone();
+    drainManager = NULL;
+
+    return true;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::drainSanityCheck() const
+{
+    assert(isDrained());
+    fetch.drainSanityCheck();
+    decode.drainSanityCheck();
+    rename.drainSanityCheck();
+    iew.drainSanityCheck();
+    commit.drainSanityCheck();
+}
+
+template <class Impl>
+bool
+FullO3CPU<Impl>::isDrained() const
+{
+    bool drained(true);
+
+    for (ThreadID i = 0; i < thread.size(); ++i) {
+        if (activateThreadEvent[i].scheduled()) {
+            DPRINTF(Drain, "CPU not drained, tread %i has a "
+                    "pending activate event\n", i);
+            drained = false;
+        }
+        if (deallocateContextEvent[i].scheduled()) {
+            DPRINTF(Drain, "CPU not drained, tread %i has a "
+                    "pending deallocate context event\n", i);
+            drained = false;
+        }
+    }
+
+    if (!instList.empty() || !removeList.empty()) {
+        DPRINTF(Drain, "Main CPU structures not drained.\n");
+        drained = false;
+    }
+
+    if (!fetch.isDrained()) {
+        DPRINTF(Drain, "Fetch not drained.\n");
+        drained = false;
+    }
+
+    if (!decode.isDrained()) {
+        DPRINTF(Drain, "Decode not drained.\n");
+        drained = false;
+    }
+
+    if (!rename.isDrained()) {
+        DPRINTF(Drain, "Rename not drained.\n");
+        drained = false;
+    }
+
+    if (!iew.isDrained()) {
+        DPRINTF(Drain, "IEW not drained.\n");
+        drained = false;
+    }
+
+    if (!commit.isDrained()) {
+        DPRINTF(Drain, "Commit not drained.\n");
+        drained = false;
+    }
+
+    return drained;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::commitDrained(ThreadID tid)
+{
+    fetch.drainStall(tid);
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::drainResume()
 {
-    fetch.resume();
-    decode.resume();
-    rename.resume();
-    iew.resume();
-    commit.resume();
-
     setDrainState(Drainable::Running);
-
-    if (_status == SwitchedOut)
+    if (switchedOut())
         return;
+
+    DPRINTF(Drain, "Resuming...\n");
 
     if (system->getMemoryMode() != Enums::timing) {
         fatal("The O3 CPU requires the memory system to be in "
               "'timing' mode.\n");
     }
 
-    if (!tickEvent.scheduled())
-        schedule(tickEvent, nextCycle());
-    _status = Running;
-}
+    fetch.drainResume();
+    commit.drainResume();
 
-template <class Impl>
-void
-FullO3CPU<Impl>::signalDrained()
-{
-    if (++drainCount == NumStages) {
-        if (tickEvent.scheduled())
-            tickEvent.squash();
-
-        setDrainState(Drainable::Drained);
-
-        if (drainManager) {
-            DPRINTF(Drain, "CPU done draining, processing drain event\n");
-            drainManager->signalDrainDone();
-            drainManager = NULL;
+    _status = Idle;
+    for (ThreadID i = 0; i < thread.size(); i++) {
+        if (thread[i]->status() == ThreadContext::Active) {
+            DPRINTF(Drain, "Activating thread: %i\n", i);
+            activateThread(i);
+            _status = Running;
         }
     }
-    assert(drainCount <= 5);
+
+    assert(!tickEvent.scheduled());
+    if (_status == Running)
+        schedule(tickEvent, nextCycle());
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::switchOut()
 {
+    DPRINTF(O3CPU, "Switching out\n");
     BaseCPU::switchOut();
 
-    fetch.switchOut();
-    rename.switchOut();
-    iew.switchOut();
-    commit.switchOut();
-    instList.clear();
-    while (!removeList.empty()) {
-        removeList.pop();
-    }
+    activityRec.reset();
 
     _status = SwitchedOut;
 
     if (checker)
         checker->switchOut();
-
-    if (tickEvent.scheduled())
-        tickEvent.squash();
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
-    // Flush out any old data from the time buffers.
-    for (int i = 0; i < timeBuffer.getSize(); ++i) {
-        timeBuffer.advance();
-        fetchQueue.advance();
-        decodeQueue.advance();
-        renameQueue.advance();
-        iewQueue.advance();
-    }
-
-    activityRec.reset();
-
     BaseCPU::takeOverFrom(oldCPU);
 
     fetch.takeOverFrom();
@@ -1244,42 +1327,14 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     iew.takeOverFrom();
     commit.takeOverFrom();
 
-    assert(!tickEvent.scheduled() || tickEvent.squashed());
+    assert(!tickEvent.scheduled());
 
     FullO3CPU<Impl> *oldO3CPU = dynamic_cast<FullO3CPU<Impl>*>(oldCPU);
     if (oldO3CPU)
         globalSeqNum = oldO3CPU->globalSeqNum;
 
-    // @todo: Figure out how to properly select the tid to put onto
-    // the active threads list.
-    ThreadID tid = 0;
-
-    list<ThreadID>::iterator isActive =
-        std::find(activeThreads.begin(), activeThreads.end(), tid);
-
-    if (isActive == activeThreads.end()) {
-        //May Need to Re-code this if the delay variable is the delay
-        //needed for thread to activate
-        DPRINTF(O3CPU, "Adding Thread %i to active threads list\n",
-                tid);
-
-        activeThreads.push_back(tid);
-    }
-
-    // Set all statuses to active, schedule the CPU's tick event.
-    // @todo: Fix up statuses so this is handled properly
-    ThreadID size = threadContexts.size();
-    for (ThreadID i = 0; i < size; ++i) {
-        ThreadContext *tc = threadContexts[i];
-        if (tc->status() == ThreadContext::Active && _status != Running) {
-            _status = Running;
-            reschedule(tickEvent, nextCycle(), true);
-        }
-    }
-    if (!tickEvent.scheduled())
-        schedule(tickEvent, nextCycle());
-
     lastRunningCycle = curCycle();
+    _status = Idle;
 }
 
 template <class Impl>

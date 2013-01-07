@@ -66,9 +66,9 @@ template<class Impl>
 void
 LSQUnit<Impl>::WritebackEvent::process()
 {
-    if (!lsqPtr->isSwitchedOut()) {
-        lsqPtr->writeback(inst, pkt);
-    }
+    assert(!lsqPtr->cpu->switchedOut());
+
+    lsqPtr->writeback(inst, pkt);
 
     if (pkt->senderState)
         delete pkt->senderState;
@@ -102,7 +102,8 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
         return;
     }
 
-    if (isSwitchedOut() || inst->isSquashed()) {
+    assert(!cpu->switchedOut());
+    if (inst->isSquashed()) {
         iewStage->decrWb(inst->seqNum);
     } else {
         if (!state->noWB) {
@@ -147,10 +148,6 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
 
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
-    switchedOut = false;
-
-    cacheBlockMask = 0;
-
     lsq = lsq_ptr;
 
     lsqID = id;
@@ -164,19 +161,35 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
 
     depCheckShift = params->LSQDepCheckShift;
     checkLoads = params->LSQCheckLoads;
+    cachePorts = params->cachePorts;
+    needsTSO = params->needsTSO;
+
+    resetState();
+}
+
+
+template<class Impl>
+void
+LSQUnit<Impl>::resetState()
+{
+    loads = stores = storesToWB = 0;
 
     loadHead = loadTail = 0;
 
     storeHead = storeWBIdx = storeTail = 0;
 
     usedPorts = 0;
-    cachePorts = params->cachePorts;
 
     retryPkt = NULL;
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
-    needsTSO = params->needsTSO;
+
+    stalled = false;
+    isLoadBlocked = false;
+    loadBlockedHandled = false;
+
+    cacheBlockMask = 0;
 }
 
 template<class Impl>
@@ -258,40 +271,20 @@ LSQUnit<Impl>::clearSQ()
 
 template<class Impl>
 void
-LSQUnit<Impl>::switchOut()
+LSQUnit<Impl>::drainSanityCheck() const
 {
-    switchedOut = true;
-    for (int i = 0; i < loadQueue.size(); ++i) {
+    for (int i = 0; i < loadQueue.size(); ++i)
         assert(!loadQueue[i]);
-        loadQueue[i] = NULL;
-    }
 
     assert(storesToWB == 0);
+    assert(!retryPkt);
 }
 
 template<class Impl>
 void
 LSQUnit<Impl>::takeOverFrom()
 {
-    switchedOut = false;
-    loads = stores = storesToWB = 0;
-
-    loadHead = loadTail = 0;
-
-    storeHead = storeWBIdx = storeTail = 0;
-
-    usedPorts = 0;
-
-    memDepViolator = NULL;
-
-    blockedLoadSeqNum = 0;
-
-    stalled = false;
-    isLoadBlocked = false;
-    loadBlockedHandled = false;
-
-    // Just incase the memory system changed out from under us
-    cacheBlockMask = 0;
+    resetState();
 }
 
 template<class Impl>

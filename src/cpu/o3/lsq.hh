@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,8 +79,11 @@ class LSQ {
 
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
-    /** Switches out the LSQ. */
-    void switchOut();
+
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
+    /** Has the LSQ drained? */
+    bool isDrained() const;
     /** Takes over execution from another CPU's thread. */
     void takeOverFrom();
 
@@ -211,6 +214,13 @@ class LSQ {
      */
     bool isFull(ThreadID tid);
 
+    /** Returns if the LSQ is empty (both LQ and SQ are empty). */
+    bool isEmpty() const;
+    /** Returns if all of the LQs are empty. */
+    bool lqEmpty() const;
+    /** Returns if all of the SQs are empty. */
+    bool sqEmpty() const;
+
     /** Returns if any of the LQs are full. */
     bool lqFull();
     /** Returns if the LQ of a given thread is full. */
@@ -254,7 +264,7 @@ class LSQ {
     { return thread[tid].willWB(); }
 
     /** Returns if the cache is currently blocked. */
-    bool cacheBlocked()
+    bool cacheBlocked() const
     { return retryTid != InvalidThreadID; }
 
     /** Sets the retry thread id, indicating that one of the LSQUnits

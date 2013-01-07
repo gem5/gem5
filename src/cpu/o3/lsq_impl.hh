@@ -45,6 +45,7 @@
 #include <string>
 
 #include "cpu/o3/lsq.hh"
+#include "debug/Drain.hh"
 #include "debug/Fetch.hh"
 #include "debug/LSQ.hh"
 #include "debug/Writeback.hh"
@@ -143,11 +144,36 @@ LSQ<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 
 template <class Impl>
 void
-LSQ<Impl>::switchOut()
+LSQ<Impl>::drainSanityCheck() const
 {
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        thread[tid].switchOut();
+    assert(isDrained());
+
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        thread[tid].drainSanityCheck();
+}
+
+template <class Impl>
+bool
+LSQ<Impl>::isDrained() const
+{
+    bool drained(true);
+
+    if (!lqEmpty()) {
+        DPRINTF(Drain, "Not drained, LQ not empty.\n");
+        drained = false;
     }
+
+    if (!sqEmpty()) {
+        DPRINTF(Drain, "Not drained, SQ not empty.\n");
+        drained = false;
+    }
+
+    if (retryTid != InvalidThreadID) {
+        DPRINTF(Drain, "Not drained, the LSQ has blocked the caches.\n");
+        drained = false;
+    }
+
+    return drained;
 }
 
 template <class Impl>
@@ -454,6 +480,47 @@ LSQ<Impl>::isFull(ThreadID tid)
         return isFull();
     else
         return thread[tid].lqFull() || thread[tid].sqFull();
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::isEmpty() const
+{
+    return lqEmpty() && sqEmpty();
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::lqEmpty() const
+{
+    list<ThreadID>::const_iterator threads = activeThreads->begin();
+    list<ThreadID>::const_iterator end = activeThreads->end();
+
+    while (threads != end) {
+        ThreadID tid = *threads++;
+
+        if (!thread[tid].lqEmpty())
+            return false;
+    }
+
+    return true;
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::sqEmpty() const
+{
+    list<ThreadID>::const_iterator threads = activeThreads->begin();
+    list<ThreadID>::const_iterator end = activeThreads->end();
+
+    while (threads != end) {
+        ThreadID tid = *threads++;
+
+        if (!thread[tid].sqEmpty())
+            return false;
+    }
+
+    return true;
 }
 
 template<class Impl>

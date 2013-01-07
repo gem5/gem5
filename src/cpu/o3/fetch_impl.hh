@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,7 @@
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Activity.hh"
+#include "debug/Drain.hh"
 #include "debug/Fetch.hh"
 #include "mem/packet.hh"
 #include "params/DerivO3CPU.hh"
@@ -73,20 +74,15 @@ template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
-      numInst(0),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
       commitToFetchDelay(params->commitToFetchDelay),
       fetchWidth(params->fetchWidth),
-      cacheBlocked(false),
       retryPkt(NULL),
       retryTid(InvalidThreadID),
       numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
-      interruptPending(false),
-      drainPending(false),
-      switchedOut(false),
       finishTranslationEvent(this)
 {
     if (numThreads > Impl::MaxThreads)
@@ -97,9 +93,6 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         fatal("fetchWidth (%d) is larger than compiled limit (%d),\n"
              "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
              fetchWidth, static_cast<int>(Impl::MaxWidth));
-
-    // Set fetch stage's status to inactive.
-    _status = Inactive;
 
     std::string policy = params->smtFetchPolicy;
 
@@ -304,34 +297,52 @@ template<class Impl>
 void
 DefaultFetch<Impl>::startupStage()
 {
+    assert(priorityList.empty());
+    resetStage();
+
+    // Fetch needs to start fetching instructions at the very beginning,
+    // so it must start up in active state.
+    switchToActive();
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::resetStage()
+{
+    numInst = 0;
+    interruptPending = false;
+    cacheBlocked = false;
+
+    priorityList.clear();
+
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
+        fetchStatus[tid] = Running;
         pc[tid] = cpu->pcState(tid);
         fetchOffset[tid] = 0;
         macroop[tid] = NULL;
+
         delayedCommit[tid] = false;
-    }
-
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-
-        fetchStatus[tid] = Running;
-
-        priorityList.push_back(tid);
-
         memReq[tid] = NULL;
 
         stalls[tid].decode = false;
         stalls[tid].rename = false;
         stalls[tid].iew = false;
         stalls[tid].commit = false;
+        stalls[tid].drain = false;
+
+        priorityList.push_back(tid);
     }
 
-    // Schedule fetch to get the correct PC from the CPU
-    // scheduleFetchStartupEvent(1);
+    wroteToTimeBuffer = false;
+    _status = Inactive;
 
-    // Fetch needs to start fetching instructions at the very beginning,
-    // so it must start up in active state.
-    switchToActive();
+    // this CPU could still be unconnected if we are restoring from a
+    // checkpoint and this CPU is to be switched in, thus we can only
+    // do this here if the instruction port is actually connected, if
+    // not we have to do it as part of takeOverFrom.
+    if (cpu->getInstPort().isConnected())
+        setIcache();
 }
 
 template<class Impl>
@@ -362,12 +373,12 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     ThreadID tid = pkt->req->threadId();
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n", tid);
+    assert(!cpu->switchedOut());
 
     // Only change the status if it's still waiting on the icache access
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||
-        pkt->req != memReq[tid] ||
-        isSwitchedOut()) {
+        pkt->req != memReq[tid]) {
         ++fetchIcacheSquashes;
         delete pkt->req;
         delete pkt;
@@ -377,16 +388,14 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
     cacheDataValid[tid] = true;
 
-    if (!drainPending) {
-        // Wake up the CPU (if it went to sleep and was waiting on
-        // this completion event).
-        cpu->wakeCPU();
+    // Wake up the CPU (if it went to sleep and was waiting on
+    // this completion event).
+    cpu->wakeCPU();
 
-        DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
-                tid);
+    DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
+            tid);
 
-        switchToActive();
-    }
+    switchToActive();
 
     // Only switch to IcacheAccessComplete if we're not stalled as well.
     if (checkStall(tid)) {
@@ -402,54 +411,76 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 }
 
 template <class Impl>
+void
+DefaultFetch<Impl>::drainResume()
+{
+    for (ThreadID i = 0; i < Impl::MaxThreads; ++i)
+        stalls[i].drain = false;
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::drainSanityCheck() const
+{
+    assert(isDrained());
+    assert(retryPkt == NULL);
+    assert(retryTid == InvalidThreadID);
+    assert(cacheBlocked == false);
+    assert(interruptPending == false);
+
+    for (ThreadID i = 0; i < numThreads; ++i) {
+        assert(!memReq[i]);
+        assert(!stalls[i].decode);
+        assert(!stalls[i].rename);
+        assert(!stalls[i].iew);
+        assert(!stalls[i].commit);
+        assert(fetchStatus[i] == Idle || stalls[i].drain);
+    }
+
+    branchPred.drainSanityCheck();
+}
+
+template <class Impl>
 bool
-DefaultFetch<Impl>::drain()
+DefaultFetch<Impl>::isDrained() const
 {
-    // Fetch is ready to drain at any time.
-    cpu->signalDrained();
-    drainPending = true;
-    return true;
-}
+    /* Make sure that threads are either idle of that the commit stage
+     * has signaled that draining has completed by setting the drain
+     * stall flag. This effectively forces the pipeline to be disabled
+     * until the whole system is drained (simulation may continue to
+     * drain other components).
+     */
+    for (ThreadID i = 0; i < numThreads; ++i) {
+        if (!(fetchStatus[i] == Idle ||
+              (fetchStatus[i] == Blocked && stalls[i].drain)))
+            return false;
+    }
 
-template <class Impl>
-void
-DefaultFetch<Impl>::resume()
-{
-    drainPending = false;
-}
-
-template <class Impl>
-void
-DefaultFetch<Impl>::switchOut()
-{
-    switchedOut = true;
-    // Branch predictor needs to have its state cleared.
-    branchPred.switchOut();
+    /* The pipeline might start up again in the middle of the drain
+     * cycle if the finish translation event is scheduled, so make
+     * sure that's not the case.
+     */
+    return !finishTranslationEvent.scheduled();
 }
 
 template <class Impl>
 void
 DefaultFetch<Impl>::takeOverFrom()
 {
-    // the instruction port is now connected so we can get the block
-    // size
-    setIcache();
+    assert(cpu->getInstPort().isConnected());
+    resetStage();
 
-    // Reset all state
-    for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
-        stalls[i].decode = 0;
-        stalls[i].rename = 0;
-        stalls[i].iew = 0;
-        stalls[i].commit = 0;
-        pc[i] = cpu->pcState(i);
-        fetchStatus[i] = Running;
-    }
-    numInst = 0;
-    wroteToTimeBuffer = false;
-    _status = Inactive;
-    switchedOut = false;
-    interruptPending = false;
     branchPred.takeOverFrom();
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::drainStall(ThreadID tid)
+{
+    assert(cpu->isDraining());
+    assert(!stalls[tid].drain);
+    DPRINTF(Drain, "%i: Thread drained.\n", tid);
+    stalls[tid].drain = true;
 }
 
 template <class Impl>
@@ -536,14 +567,12 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
 {
     Fault fault = NoFault;
 
+    assert(!cpu->switchedOut());
+
     // @todo: not sure if these should block translation.
     //AlphaDep
     if (cacheBlocked) {
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
-                tid);
-        return false;
-    } else if (isSwitchedOut()) {
-        DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, switched out\n",
                 tid);
         return false;
     } else if (checkInterrupt(pc) && !delayedCommit[tid]) {
@@ -586,11 +615,13 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
     ThreadID tid = mem_req->threadId();
     Addr block_PC = mem_req->getVaddr();
 
+    assert(!cpu->switchedOut());
+
     // Wake up CPU if it was idle
     cpu->wakeCPU();
 
     if (fetchStatus[tid] != ItlbWait || mem_req != memReq[tid] ||
-        mem_req->getVaddr() != memReq[tid]->getVaddr() || isSwitchedOut()) {
+        mem_req->getVaddr() != memReq[tid]->getVaddr()) {
         DPRINTF(Fetch, "[tid:%i] Ignoring itlb completed after squash\n",
                 tid);
         ++fetchTlbSquashes;
@@ -756,6 +787,10 @@ DefaultFetch<Impl>::checkStall(ThreadID tid) const
 
     if (cpu->contextSwitch) {
         DPRINTF(Fetch,"[tid:%i]: Stalling for a context switch.\n",tid);
+        ret_val = true;
+    } else if (stalls[tid].drain) {
+        assert(cpu->isDraining());
+        DPRINTF(Fetch,"[tid:%i]: Drain stall detected.\n",tid);
         ret_val = true;
     } else if (stalls[tid].decode) {
         DPRINTF(Fetch,"[tid:%i]: Stall from Decode stage detected.\n",tid);
@@ -1097,7 +1132,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     //////////////////////////////////////////
     ThreadID tid = getFetchingThread(fetchPolicy);
 
-    if (tid == InvalidThreadID || drainPending) {
+    assert(!cpu->switchedOut());
+
+    if (tid == InvalidThreadID) {
         // Breaks looping condition in tick()
         threadFetched = numFetchingThreads;
 
@@ -1147,8 +1184,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             else
                 ++fetchMiscStallCycles;
             return;
-        } else if ((checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid])
-                   || isSwitchedOut()) {
+        } else if ((checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid])) {
             // Stall CPU if an interrupt is posted and we're not issuing
             // an delayed commit micro-op currently (delayed commit instructions
             // are not interruptable by interrupts, only faults)
@@ -1566,7 +1602,7 @@ DefaultFetch<Impl>::profileStall(ThreadID tid) {
 
     // @todo Per-thread stats
 
-    if (drainPending) {
+    if (stalls[tid].drain) {
         ++fetchPendingDrainCycles;
         DPRINTF(Fetch, "Fetch is waiting for a drain!\n");
     } else if (activeThreads->empty()) {

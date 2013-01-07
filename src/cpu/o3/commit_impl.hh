@@ -57,6 +57,7 @@
 #include "debug/Activity.hh"
 #include "debug/Commit.hh"
 #include "debug/CommitRate.hh"
+#include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
@@ -99,7 +100,6 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       commitWidth(params->commitWidth),
       numThreads(params->numThreads),
       drainPending(false),
-      switchedOut(false),
       trapLatency(params->trapLatency),
       canHandleInterrupts(true)
 {
@@ -369,35 +369,59 @@ DefaultCommit<Impl>::startupStage()
 }
 
 template <class Impl>
-bool
+void
 DefaultCommit<Impl>::drain()
 {
     drainPending = true;
-
-    return false;
 }
 
 template <class Impl>
 void
-DefaultCommit<Impl>::switchOut()
+DefaultCommit<Impl>::drainResume()
 {
-    switchedOut = true;
     drainPending = false;
-    rob->switchOut();
 }
 
 template <class Impl>
 void
-DefaultCommit<Impl>::resume()
+DefaultCommit<Impl>::drainSanityCheck() const
 {
-    drainPending = false;
+    assert(isDrained());
+    rob->drainSanityCheck();
+}
+
+template <class Impl>
+bool
+DefaultCommit<Impl>::isDrained() const
+{
+    /* Make sure no one is executing microcode. There are two reasons
+     * for this:
+     * - Hardware virtualized CPUs can't switch into the middle of a
+     *   microcode sequence.
+     * - The current fetch implementation will most likely get very
+     *   confused if it tries to start fetching an instruction that
+     *   is executing in the middle of a ucode sequence that changes
+     *   address mappings. This can happen on for example x86.
+     */
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        if (pc[tid].microPC() != 0)
+            return false;
+    }
+
+    /* Make sure that all instructions have finished committing before
+     * declaring the system as drained. We want the pipeline to be
+     * completely empty when we declare the CPU to be drained. This
+     * makes debugging easier since CPU handover and restoring from a
+     * checkpoint with a different CPU should have the same timing.
+     */
+    return rob->isEmpty() &&
+        interrupt == NoFault;
 }
 
 template <class Impl>
 void
 DefaultCommit<Impl>::takeOverFrom()
 {
-    switchedOut = false;
     _status = Active;
     _nextStatus = Inactive;
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -623,13 +647,6 @@ DefaultCommit<Impl>::tick()
 {
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
-
-    if (drainPending && cpu->instList.empty() && !iewStage->hasStoresToWB() &&
-        interrupt == NoFault) {
-        cpu->signalDrained();
-        drainPending = false;
-        return;
-    }
 
     if (activeThreads->empty())
         return;
@@ -1017,6 +1034,14 @@ DefaultCommit<Impl>::commitInsts()
                 // others squash everything and restart fetch
                 if (head_inst->isSquashAfter())
                     squashAfter(tid, head_inst);
+
+                if (drainPending) {
+                    DPRINTF(Drain, "Draining: %i:%s\n", tid, pc[tid]);
+                    if (pc[tid].microPC() == 0 && interrupt == NoFault) {
+                        squashAfter(tid, head_inst);
+                        cpu->commitDrained(tid);
+                    }
+                }
 
                 int count = 0;
                 Addr oldpc;

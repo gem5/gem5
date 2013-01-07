@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -150,20 +150,14 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
-    /** Drains IEW stage. */
-    bool drain();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
-    /** Resumes execution after a drain. */
-    void resume();
-
-    /** Completes switch out of IEW stage. */
-    void switchOut();
+    /** Has the stage drained? */
+    bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
-
-    /** Returns if IEW is switched out. */
-    bool isSwitchedOut() { return switchedOut; }
 
     /** Squashes instructions in IEW for a specific thread. */
     void squash(ThreadID tid);
@@ -469,9 +463,6 @@ class DefaultIEW
 
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
-
-    /** Is this stage switched out. */
-    bool switchedOut;
 
     /** Stat for total number of idle cycles. */
     Stats::Scalar iewIdleCycles;

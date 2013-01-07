@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -144,14 +144,11 @@ class InstructionQueue
     /** Sets the global time buffer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
-    /** Switches out the instruction queue. */
-    void switchOut();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
     /** Takes over execution from another CPU's thread. */
     void takeOverFrom();
-
-    /** Returns if the IQ is switched out. */
-    bool isSwitchedOut() { return switchedOut; }
 
     /** Number of entries needed for given amount of threads. */
     int entryAmount(ThreadID num_threads);
@@ -427,9 +424,6 @@ class InstructionQueue
      *  @todo: Make there be a distinction between the delays within IEW.
      */
     Cycles commitToIEWDelay;
-
-    /** Is the IQ switched out. */
-    bool switchedOut;
 
     /** The sequence number of the squashed instruction. */
     InstSeqNum squashedSeqNum[Impl::MaxThreads];

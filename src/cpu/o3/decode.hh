@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -89,6 +101,9 @@ class DefaultDecode
     /** DefaultDecode constructor. */
     DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params);
 
+    void startupStage();
+    void resetStage();
+
     /** Returns the name of decode. */
     std::string name() const;
 
@@ -107,17 +122,14 @@ class DefaultDecode
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
-    /** Drains the decode stage. */
-    bool drain();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
-    /** Resumes execution after a drain. */
-    void resume() { }
-
-    /** Switches out the decode stage. */
-    void switchOut() { }
+    /** Has the stage drained? */
+    bool isDrained() const { return true; }
 
     /** Takes over from another CPU's thread. */
-    void takeOverFrom();
+    void takeOverFrom() { resetStage(); }
 
     /** Ticks decode, processing all input signals and decoding as many
      * instructions as possible.
@@ -267,9 +279,6 @@ class DefaultDecode
 
     /** List of active thread ids */
     std::list<ThreadID> *activeThreads;
-
-    /** Number of branches in flight. */
-    unsigned branchCount[Impl::MaxThreads];
 
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;

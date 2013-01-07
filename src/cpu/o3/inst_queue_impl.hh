@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -92,8 +92,6 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
       commitToIEWDelay(params->commitToIEWDelay)
 {
     assert(fuPool);
-
-    switchedOut = false;
 
     numThreads = params->numThreads;
 
@@ -439,29 +437,19 @@ InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::switchOut()
+InstructionQueue<Impl>::drainSanityCheck() const
 {
-/*
-    if (!instList[0].empty() || (numEntries != freeEntries) ||
-        !readyInsts[0].empty() || !nonSpecInsts.empty() || !listOrder.empty()) {
-        dumpInsts();
-//        assert(0);
-    }
-*/
-    resetState();
-    dependGraph.reset();
-    instsToExecute.clear();
-    switchedOut = true;
-    for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        memDepUnit[tid].switchOut();
-    }
+    assert(dependGraph.empty());
+    assert(instsToExecute.empty());
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        memDepUnit[tid].drainSanityCheck();
 }
 
 template <class Impl>
 void
 InstructionQueue<Impl>::takeOverFrom()
 {
-    switchedOut = false;
+    resetState();
 }
 
 template <class Impl>
@@ -716,14 +704,9 @@ void
 InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
 {
     DPRINTF(IQ, "Processing FU completion [sn:%lli]\n", inst->seqNum);
+    assert(!cpu->switchedOut());
     // The CPU could have been sleeping until this op completed (*extremely*
     // long latency op).  Wake it if it was.  This may be overkill.
-    if (isSwitchedOut()) {
-        DPRINTF(IQ, "FU completion not processed, IQ is switched out [sn:%lli]\n",
-                inst->seqNum);
-        return;
-    }
-
     iewStage->wakeCPU();
 
     if (fu_idx > -1)

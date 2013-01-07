@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -157,14 +169,11 @@ class DefaultRename
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
 
-    /** Drains the rename stage. */
-    bool drain();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
-    /** Resumes execution after a drain. */
-    void resume() { }
-
-    /** Switches out the rename stage. */
-    void switchOut();
+    /** Has the stage drained? */
+    bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -181,6 +190,9 @@ class DefaultRename
     void dumpHistory();
 
   private:
+    /** Reset this pipeline stage */
+    void resetStage();
+
     /** Determines what to do based on rename's current status.
      * @param status_change rename() sets this variable if there was a status
      * change (ie switching from blocking to unblocking).

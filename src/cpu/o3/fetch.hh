@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -165,7 +165,6 @@ class DefaultFetch
         Fetching,
         TrapPending,
         QuiescePending,
-        SwitchOut,
         ItlbWait,
         IcacheWaitResponse,
         IcacheWaitRetry,
@@ -226,25 +225,36 @@ class DefaultFetch
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
 
-    /** Begins the drain of the fetch stage. */
-    bool drain();
+    /** Resume after a drain. */
+    void drainResume();
 
-    /** Resumes execution after a drain. */
-    void resume();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
-    /** Tells fetch stage to prepare to be switched out. */
-    void switchOut();
+    /** Has the stage drained? */
+    bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
-    /** Checks if the fetch stage is switched out. */
-    bool isSwitchedOut() { return switchedOut; }
+    /**
+     * Stall the fetch stage after reaching a safe drain point.
+     *
+     * The CPU uses this method to stop fetching instructions from a
+     * thread that has been drained. The drain stall is different from
+     * all other stalls in that it is signaled instantly from the
+     * commit stage (without the normal communication delay) when it
+     * has reached a safe point to drain from.
+     */
+    void drainStall(ThreadID tid);
 
     /** Tells fetch to wake up from a quiesce instruction. */
     void wakeFromQuiesce();
 
   private:
+    /** Reset this pipeline stage */
+    void resetStage();
+
     /** Changes the status of this stage to active, and indicates this
      * to the CPU.
      */
@@ -423,6 +433,7 @@ class DefaultFetch
         bool rename;
         bool iew;
         bool commit;
+        bool drain;
     };
 
     /** Tracks which stages are telling fetch to stall. */
@@ -489,12 +500,6 @@ class DefaultFetch
      * must stop once it is not fetching PAL instructions.
      */
     bool interruptPending;
-
-    /** Is there a drain pending. */
-    bool drainPending;
-
-    /** Records if fetch is switched out. */
-    bool switchedOut;
 
     /** Set to true if a pipelined I-cache request should be issued. */
     bool issuePipelinedIfetch[Impl::MaxThreads];

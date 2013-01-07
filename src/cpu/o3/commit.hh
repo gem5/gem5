@@ -199,13 +199,16 @@ class DefaultCommit
     void startupStage();
 
     /** Initializes the draining of commit. */
-    bool drain();
+    void drain();
 
     /** Resumes execution after draining. */
-    void resume();
+    void drainResume();
 
-    /** Completes the switch out of commit. */
-    void switchOut();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
+
+    /** Has the stage drained? */
+    bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -437,9 +440,6 @@ class DefaultCommit
 
     /** Is a drain pending. */
     bool drainPending;
-
-    /** Is commit switched out. */
-    bool switchedOut;
 
     /** The latency to handle a trap.  Used when scheduling trap
      * squash event.

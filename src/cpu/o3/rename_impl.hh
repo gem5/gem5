@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -61,31 +61,9 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
       commitToRenameDelay(params->commitToRenameDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
-      resumeSerialize(false),
-      resumeUnblocking(false),
       numThreads(params->numThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
 {
-    _status = Inactive;
-
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        renameStatus[tid] = Idle;
-
-        freeEntries[tid].iqEntries = 0;
-        freeEntries[tid].lsqEntries = 0;
-        freeEntries[tid].robEntries = 0;
-
-        stalls[tid].iew = false;
-        stalls[tid].commit = false;
-        serializeInst[tid] = NULL;
-
-        instsInProgress[tid] = 0;
-
-        emptyROB[tid] = true;
-
-        serializeOnNextInst[tid] = false;
-    }
-
     // @todo: Make into a parameter.
     skidBufferMax = (2 * (decodeToRenameDelay * params->decodeWidth)) + renameWidth;
 }
@@ -230,12 +208,34 @@ template <class Impl>
 void
 DefaultRename<Impl>::startupStage()
 {
+    resetStage();
+}
+
+template <class Impl>
+void
+DefaultRename<Impl>::resetStage()
+{
+    _status = Inactive;
+
+    resumeSerialize = false;
+    resumeUnblocking = false;
+
     // Grab the number of free entries directly from the stages.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
+        renameStatus[tid] = Idle;
+
         freeEntries[tid].iqEntries = iew_ptr->instQueue.numFreeEntries(tid);
         freeEntries[tid].lsqEntries = iew_ptr->ldstQueue.numFreeEntries(tid);
         freeEntries[tid].robEntries = commit_ptr->numROBFreeEntries(tid);
         emptyROB[tid] = true;
+
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
+        serializeInst[tid] = NULL;
+
+        instsInProgress[tid] = 0;
+
+        serializeOnNextInst[tid] = false;
     }
 }
 
@@ -271,67 +271,34 @@ DefaultRename<Impl>::setScoreboard(Scoreboard *_scoreboard)
 
 template <class Impl>
 bool
-DefaultRename<Impl>::drain()
+DefaultRename<Impl>::isDrained() const
 {
-    // Rename is ready to switch out at any time.
-    cpu->signalDrained();
-    return true;
-}
-
-template <class Impl>
-void
-DefaultRename<Impl>::switchOut()
-{
-    // Clear any state, fix up the rename map.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        typename std::list<RenameHistory>::iterator hb_it =
-            historyBuffer[tid].begin();
-
-        while (!historyBuffer[tid].empty()) {
-            assert(hb_it != historyBuffer[tid].end());
-
-            DPRINTF(Rename, "[tid:%u]: Removing history entry with sequence "
-                    "number %i.\n", tid, (*hb_it).instSeqNum);
-
-            // Tell the rename map to set the architected register to the
-            // previous physical register that it was renamed to.
-            renameMap[tid]->setEntry(hb_it->archReg, hb_it->prevPhysReg);
-
-            // Put the renamed physical register back on the free list.
-            freeList->addReg(hb_it->newPhysReg);
-
-            // Be sure to mark its register as ready if it's a misc register.
-            if (hb_it->newPhysReg >= maxPhysicalRegs) {
-                scoreboard->setReg(hb_it->newPhysReg);
-            }
-
-            historyBuffer[tid].erase(hb_it++);
-        }
-        insts[tid].clear();
-        skidBuffer[tid].clear();
+        if (instsInProgress[tid] != 0 ||
+            !historyBuffer[tid].empty() ||
+            !skidBuffer[tid].empty() ||
+            !insts[tid].empty())
+            return false;
     }
+    return true;
 }
 
 template <class Impl>
 void
 DefaultRename<Impl>::takeOverFrom()
 {
-    _status = Inactive;
-    startupStage();
+    resetStage();
+}
 
-    // Reset all state prior to taking over from the other CPU.
+template <class Impl>
+void
+DefaultRename<Impl>::drainSanityCheck() const
+{
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        renameStatus[tid] = Idle;
-
-        stalls[tid].iew = false;
-        stalls[tid].commit = false;
-        serializeInst[tid] = NULL;
-
-        instsInProgress[tid] = 0;
-
-        emptyROB[tid] = true;
-
-        serializeOnNextInst[tid] = false;
+        assert(historyBuffer[tid].empty());
+        assert(insts[tid].empty());
+        assert(skidBuffer[tid].empty());
+        assert(instsInProgress[tid] == 0);
     }
 }
 

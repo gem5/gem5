@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -47,12 +59,6 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
       numInstsInROB(0),
       numThreads(_numThreads)
 {
-    for (ThreadID tid = 0; tid  < numThreads; tid++) {
-        squashedSeqNum[tid] = 0;
-        doneSquashing[tid] = true;
-        threadEntries[tid] = 0;
-    }
-
     std::string policy = _smtROBPolicy;
 
     //Convert string to lowercase
@@ -95,10 +101,20 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
                     "Partitioned, Threshold}");
     }
 
-    // Set the per-thread iterators to the end of the instruction list.
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
+    resetState();
+}
+
+template <class Impl>
+void
+ROB<Impl>::resetState()
+{
+    for (ThreadID tid = 0; tid  < numThreads; tid++) {
+        doneSquashing[tid] = true;
+        threadEntries[tid] = 0;
         squashIt[tid] = instList[tid].end();
+        squashedSeqNum[tid] = 0;
     }
+    numInstsInROB = 0;
 
     // Initialize the "universal" ROB head & tail point to invalid
     // pointers
@@ -123,28 +139,18 @@ ROB<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 
 template <class Impl>
 void
-ROB<Impl>::switchOut()
+ROB<Impl>::drainSanityCheck() const
 {
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        instList[tid].clear();
-    }
+    for (ThreadID tid = 0; tid  < numThreads; tid++)
+        assert(instList[tid].empty());
+    assert(isEmpty());
 }
 
 template <class Impl>
 void
 ROB<Impl>::takeOverFrom()
 {
-    for (ThreadID tid = 0; tid  < numThreads; tid++) {
-        doneSquashing[tid] = true;
-        threadEntries[tid] = 0;
-        squashIt[tid] = instList[tid].end();
-    }
-    numInstsInROB = 0;
-
-    // Initialize the "universal" ROB head & tail point to invalid
-    // pointers
-    head = instList[0].end();
-    tail = instList[0].end();
+    resetState();
 }
 
 template <class Impl>

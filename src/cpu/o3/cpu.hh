@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -333,6 +333,33 @@ class FullO3CPU : public BaseO3CPU
     /** The tick event used for scheduling CPU ticks. */
     DeallocateContextEvent deallocateContextEvent[Impl::MaxThreads];
 
+    /**
+     * Check if the pipeline has drained and signal the DrainManager.
+     *
+     * This method checks if a drain has been requested and if the CPU
+     * has drained successfully (i.e., there are no instructions in
+     * the pipeline). If the CPU has drained, it deschedules the tick
+     * event and signals the drain manager.
+     *
+     * @return False if a drain hasn't been requested or the CPU
+     * hasn't drained, true otherwise.
+     */
+    bool tryDrain();
+
+    /**
+     * Perform sanity checks after a drain.
+     *
+     * This method is called from drain() when it has determined that
+     * the CPU is fully drained when gem5 is compiled with the NDEBUG
+     * macro undefined. The intention of this method is to do more
+     * extensive tests than the isDrained() method to weed out any
+     * draining bugs.
+     */
+    void drainSanityCheck() const;
+
+    /** Check if a system is in a drained state. */
+    bool isDrained() const;
+
   public:
     /** Constructs a CPU with the given parameters. */
     FullO3CPU(DerivO3CPUParams *params);
@@ -416,6 +443,9 @@ class FullO3CPU : public BaseO3CPU
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
 
+    /** Is the CPU draining? */
+    bool isDraining() const { return getDrainState() == Drainable::Draining; }
+
     /** Serialize state. */
     virtual void serialize(std::ostream &os);
 
@@ -435,8 +465,14 @@ class FullO3CPU : public BaseO3CPU
     /** Resumes execution after a drain. */
     void drainResume();
 
-    /** Signals to this CPU that a stage has completed switching out. */
-    void signalDrained();
+    /**
+     * Commit has reached a safe point to drain a thread.
+     *
+     * Commit calls this method to inform the pipeline that it has
+     * reached a point where it is not executed microcode and is about
+     * to squash uncommitted instructions to fully drain the pipeline.
+     */
+    void commitDrained(ThreadID tid);
 
     /** Switches out this CPU. */
     virtual void switchOut();
@@ -731,9 +767,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** DrainManager to notify when draining has completed. */
     DrainManager *drainManager;
-
-    /** Counter of how many stages have completed draining. */
-    int drainCount;
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;

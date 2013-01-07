@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -97,8 +109,8 @@ class ROB
      */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
-    /** Switches out the ROB. */
-    void switchOut();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
     /** Takes over another CPU's thread. */
     void takeOverFrom();
@@ -185,11 +197,11 @@ class ROB
     { return threadEntries[tid] == numEntries; }
 
     /** Returns if the ROB is empty. */
-    bool isEmpty()
+    bool isEmpty() const
     { return numInstsInROB == 0; }
 
     /** Returns if a specific thread's partition is empty. */
-    bool isEmpty(ThreadID tid)
+    bool isEmpty(ThreadID tid) const
     { return threadEntries[tid] == 0; }
 
     /** Executes the squash, marking squashed instructions. */
@@ -264,6 +276,9 @@ class ROB
     void regStats();
 
   private:
+    /** Reset the ROB state */
+    void resetState();
+
     /** Pointer to the CPU. */
     O3CPU *cpu;
 

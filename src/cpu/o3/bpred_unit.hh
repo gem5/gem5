@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -88,8 +88,10 @@ class BPredUnit
      */
     void regStats();
 
-    void switchOut();
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
 
+    /** Take over execution from another CPU's thread. */
     void takeOverFrom();
 
     /**

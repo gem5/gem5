@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -93,8 +105,11 @@ class DependencyGraph
     /** Removes and returns the newest dependent of a specific register. */
     DynInstPtr pop(PhysRegIndex idx);
 
+    /** Checks if the entire dependency graph is empty. */
+    bool empty() const;
+
     /** Checks if there are any dependents on a specific register. */
-    bool empty(PhysRegIndex idx) { return !dependGraph[idx].next; }
+    bool empty(PhysRegIndex idx) const { return !dependGraph[idx].next; }
 
     /** Debugging function to dump out the dependency graph.
      */
@@ -238,6 +253,17 @@ DependencyGraph<DynInstPtr>::pop(PhysRegIndex idx)
         delete node;
     }
     return inst;
+}
+
+template <class DynInstPtr>
+bool
+DependencyGraph<DynInstPtr>::empty() const
+{
+    for (int i = 0; i < numEntries; ++i) {
+        if (!empty(i))
+            return false;
+    }
+    return true;
 }
 
 template <class DynInstPtr>
