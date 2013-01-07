@@ -42,6 +42,8 @@
 #include <iostream>
 #include <vector>
 
+#include "mem/packet.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicRouter.hh"
 #include "params/Switch.hh"
 

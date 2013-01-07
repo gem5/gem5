@@ -42,6 +42,6 @@ class SimpleNetwork(RubyNetwork):
 
 class Switch(BasicRouter):
     type = 'Switch'
-    cxx_class = 'Switch'
+    cxx_header = 'mem/ruby/network/simple/Switch.hh'
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
