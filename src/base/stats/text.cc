@@ -223,7 +223,7 @@ ScalarPrint::operator()(ostream &stream) const
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
     ccprintf(stream, "%-40s %12s %10s %10s", name,
-             ValueToString(value, precision), pdfstr, cdfstr);
+             ValueToString(value, precision), pdfstr.str(), cdfstr.str());
 
     if (descriptions) {
         if (!desc.empty())

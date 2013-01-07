@@ -516,22 +516,25 @@ if main['GCC'] + main['CLANG'] > 1:
 
 # Set up default C++ compiler flags
 if main['GCC']:
+    # Check for a supported version of gcc, >= 4.4 is needed for c++0x
+    # support. See http://gcc.gnu.org/projects/cxx0x.html for details
+    gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
+    if compareVersions(gcc_version, "4.4") < 0:
+        print 'Error: gcc version 4.4 or newer required.'
+        print '       Installed version:', gcc_version
+        Exit(1)
+
+    main['GCC_VERSION'] = gcc_version
     main.Append(CCFLAGS=['-pipe'])
     main.Append(CCFLAGS=['-fno-strict-aliasing'])
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    # Read the GCC version to check for versions with bugs
-    # Note CCVERSION doesn't work here because it is run with the CC
-    # before we override it from the command line
-    gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    main['GCC_VERSION'] = gcc_version
+    main.Append(CXXFLAGS=['-std=c++0x'])
+
+    # Check for versions with bugs
     if not compareVersions(gcc_version, '4.4.1') or \
        not compareVersions(gcc_version, '4.4.2'):
         print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
         main.Append(CCFLAGS=['-fno-tree-vectorize'])
-    # c++0x support in gcc is useful already from 4.4, see
-    # http://gcc.gnu.org/projects/cxx0x.html for details
-    if compareVersions(gcc_version, '4.4') >= 0:
-        main.Append(CXXFLAGS=['-std=c++0x'])
 
     # LTO support is only really working properly from 4.6 and beyond
     if compareVersions(gcc_version, '4.6') >= 0:
@@ -551,6 +554,9 @@ if main['GCC']:
                                    '-fuse-linker-plugin']
 
 elif main['CLANG']:
+    # Check for a supported version of clang, >= 2.9 is needed to
+    # support similar features as gcc 4.4. See
+    # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.match(CXX_version)
     if (clang_version_match):
@@ -571,11 +577,18 @@ elif main['CLANG']:
     # Ruby makes frequent use of extraneous parantheses in the printing
     # of if-statements
     main.Append(CCFLAGS=['-Wno-parentheses'])
+    main.Append(CXXFLAGS=['-std=c++0x'])
+    # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
+    # opposed to libstdc++ to make the transition from TR1 to
+    # C++11. See http://libcxx.llvm.org. However, clang has chosen a
+    # strict implementation of the C++11 standard, and does not allow
+    # incomplete types in template arguments (besides unique_ptr and
+    # shared_ptr), and the libc++ STL containers create problems in
+    # combination with the current gem5 code. For now, we stick with
+    # libstdc++ and use the TR1 namespace.
+    # if sys.platform == "darwin":
+    #     main.Append(CXXFLAGS=['-stdlib=libc++'])
 
-    # clang 2.9 does not play well with c++0x as it ships with C++
-    # headers that produce errors, this was fixed in 3.0
-    if compareVersions(clang_version, "3") >= 0:
-        main.Append(CXXFLAGS=['-std=c++0x'])
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
     print "Don't know what compiler options to use for your compiler."
@@ -711,33 +724,16 @@ def CheckLeading(context):
     context.Result(ret)
     return ret
 
-# Test for the presence of C++11 static asserts. If the compiler lacks
-# support for static asserts, base/compiler.hh enables a macro that
-# removes any static asserts in the code.
-def CheckStaticAssert(context):
-    context.Message("Checking for C++11 static_assert support...")
-    ret = context.TryCompile('''
-        static_assert(1, "This assert is always true");
-        ''', extension=".cc")
-    context.env.Append(HAVE_STATIC_ASSERT=ret)
-    context.Result(ret)
-    return ret
-
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(main,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'),
-                 custom_tests = { 'CheckLeading' : CheckLeading,
-                                  'CheckStaticAssert' : CheckStaticAssert,
-                                })
+                 custom_tests = { 'CheckLeading' : CheckLeading })
 
 # Check for leading underscores.  Don't really need to worry either
 # way so don't need to check the return code.
 conf.CheckLeading()
-
-# Check for C++11 features we want to use if they exist
-conf.CheckStaticAssert()
 
 # Check if we should compile a 64 bit binary on Mac OS X/Darwin
 try:
@@ -980,9 +976,8 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP',
-                'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'PROTOCOL',
-                'HAVE_STATIC_ASSERT', 'HAVE_PROTOBUF']
+export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'CP_ANNOTATE',
+                'USE_POSIX_CLOCK', 'PROTOCOL', 'HAVE_PROTOBUF']
 
 ###################################################
 #

@@ -44,100 +44,42 @@
 #ifndef __HASHMAP_HH__
 #define __HASHMAP_HH__
 
-#if defined(__GNUC__)
-
-// for compilers that deprecate ext/hash_map, i.e. gcc >= 4.3 and
-// clang, use unordered_map
-
-// we need to determine what is available, as in the non-c++0x case,
-// i.e. gcc == 4.3, the containers are in the std::tr1 namespace, and
-// only gcc >= 4.4 (with -std=c++0x) adds the final container
-// implementation in the std namespace
-
 #if defined(__clang__)
-// align with -std=c++0x only for clang >= 3.0 in CCFLAGS and also
-// check if the header is present as this depends on what clang was
-// built against, using XCode clang 3.1, for example, the header is
-// not present without adding -stdlib=libc++
-#if (__clang_major__ >= 3 && __has_include(<unordered_map>))
+// check if the header is present, which requires -stdlib=libc++, and
+// that in turn causes problems with incomplete template parameters
+#if (__has_include(<unordered_map>))
 #define HAVE_STD_UNORDERED_MAP 1
-#else
-// we only support clang versions above 2.9 and these all have the tr1
-// unordered_map
-#define HAVE_STD_TR1_UNORDERED_MAP 1
 #endif
 #else
-// align with -std=c++0x only for gcc >= 4.4 in CCFLAGS, contrary to
-// clang we can rely entirely on the compiler version
-#if ((__GNUC__ == 4 && __GNUC_MINOR__ >= 4) || __GNUC__ > 4)
+// we only support gcc >= 4.4 as the other option
 #define HAVE_STD_UNORDERED_MAP 1
-#else
-#define HAVE_STD_TR1_UNORDERED_MAP 1
-#endif
 #endif
 
-// set a default value of 0
+// set a default value of 0 clang with the header in the tr1 namespace
 #ifndef HAVE_STD_UNORDERED_MAP
 #define HAVE_STD_UNORDERED_MAP 0
 #endif
-
-// set a default value of 0
-#ifndef HAVE_STD_TR1_UNORDERED_MAP
-#define HAVE_STD_TR1_UNORDERED_MAP 0
-#endif
-
-// now we are ready to deal with the actual includes based on what is
-// available
-#if (HAVE_STD_UNORDERED_MAP || HAVE_STD_TR1_UNORDERED_MAP)
 
 #define hash_map unordered_map
 #define hash_multimap unordered_multimap
 #define hash_set unordered_set
 #define hash_multiset unordered_multiset
 
-// these versions also have an existing hash function for strings and
-// 64-bit integer types
-#define HAVE_HASH_FUNCTIONS 1
-
 #if HAVE_STD_UNORDERED_MAP
-
-// clang or gcc >= 4.4
+// gcc or clang with libc++
 #include <unordered_map>
 #include <unordered_set>
-// note that this assumes that -std=c++0x is added to the command line
-// which is done in the SConstruct CXXFLAGS for gcc >= 4.4 and clang
-// >= 3.0
 #define __hash_namespace std
 #define __hash_namespace_begin namespace std {
 #define __hash_namespace_end }
 #else
-// clang <= 3.0, gcc == 4.3
+// clang with libstdc++
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #define __hash_namespace std::tr1
 #define __hash_namespace_begin namespace std { namespace tr1 {
 #define __hash_namespace_end } }
 #endif
-#else
-// gcc < 4.3
-#include <ext/hash_map>
-#include <ext/hash_set>
-#define __hash_namespace __gnu_cxx
-#define __hash_namespace_begin namespace __gnu_cxx {
-#define __hash_namespace_end }
-#endif
-#else
-// non GNU compiler
-#include <hash_map>
-#include <hash_set>
-#define __hash_namsepace std
-#define __hash_namespace_begin namespace std {
-#define __hash_namespace_end }
-#endif
-
-#include <string>
-
-#include "base/types.hh"
 
 namespace m5 {
     using ::__hash_namespace::hash_multimap;
@@ -146,48 +88,5 @@ namespace m5 {
     using ::__hash_namespace::hash_set;
     using ::__hash_namespace::hash;
 }
-
-
-///////////////////////////////////
-// Some default Hashing Functions
-//
-
-__hash_namespace_begin
-
-// if the hash functions for 64-bit integer types and strings are not
-// already available, then declare them here
-#if !defined(HAVE_HASH_FUNCTIONS)
-
-#if !defined(__LP64__) && !defined(__alpha__) && !defined(__SUNPRO_CC)
-    template<>
-    struct hash<uint64_t> {
-        size_t operator()(uint64_t r) const {
-            return r;
-        }
-    };
-
-    template<>
-    struct hash<int64_t> {
-        size_t operator()(int64_t r) const {
-            return r;
-        };
-    };
-#endif
-
-    template<>
-    struct hash<std::string> {
-        size_t operator()(const std::string &s) const {
-            return(__stl_hash_string(s.c_str()));
-        }
-    };
-
-    template <>
-    struct hash<std::pair<std::string, uint64_t> > {
-        size_t operator() (std::pair<std::string, uint64_t> r) const {
-            return (__stl_hash_string(r.first.c_str())) ^ r.second;
-        }
-    };
-#endif
-__hash_namespace_end
 
 #endif // __HASHMAP_HH__

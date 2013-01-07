@@ -93,8 +93,7 @@ ElfFile('libelf_msize.c')
 
 m4env = main.Clone()
 if m4env['GCC']:
-    if compareVersions(m4env['GCC_VERSION'], '4') >= 0:
-        m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
+    m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
     if compareVersions(m4env['GCC_VERSION'], '4.6') >= 0:
         m4env.Append(CCFLAGS=['-Wno-unused-but-set-variable',
                               '-Wno-implicit-function-declaration'])
