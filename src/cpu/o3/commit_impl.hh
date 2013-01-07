@@ -144,6 +144,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         tcSquash[tid] = false;
         pc[tid].set(0);
         lastCommitedSeqNum[tid] = 0;
+        squashAfterInst[tid] = NULL;
     }
     interrupt = NoFault;
 }
@@ -404,6 +405,7 @@ DefaultCommit<Impl>::takeOverFrom()
         changedROBNumEntries[tid] = false;
         trapSquash[tid] = false;
         tcSquash[tid] = false;
+        squashAfterInst[tid] = NULL;
     }
     squashCounter = 0;
     rob->takeOverFrom();
@@ -587,31 +589,32 @@ DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashAfter(ThreadID tid, DynInstPtr &head_inst,
-        uint64_t squash_after_seq_num)
+DefaultCommit<Impl>::squashFromSquashAfter(ThreadID tid)
 {
-    youngestSeqNum[tid] = squash_after_seq_num;
+    DPRINTF(Commit, "Squashing after squash after request, "
+            "restarting at PC %s\n", pc[tid]);
 
-    rob->squash(squash_after_seq_num, tid);
-    changedROBNumEntries[tid] = true;
+    squashAll(tid);
+    // Make sure to inform the fetch stage of which instruction caused
+    // the squash. It'll try to re-fetch an instruction executing in
+    // microcode unless this is set.
+    toIEW->commitInfo[tid].squashInst = squashAfterInst[tid];
+    squashAfterInst[tid] = NULL;
 
-    // Send back the sequence number of the squashed instruction.
-    toIEW->commitInfo[tid].doneSeqNum = squash_after_seq_num;
-
-    toIEW->commitInfo[tid].squashInst = head_inst;
-    // Send back the squash signal to tell stages that they should squash.
-    toIEW->commitInfo[tid].squash = true;
-
-    // Send back the rob squashing signal so other stages know that
-    // the ROB is in the process of squashing.
-    toIEW->commitInfo[tid].robSquashing = true;
-
-    toIEW->commitInfo[tid].mispredictInst = NULL;
-
-    toIEW->commitInfo[tid].pc = pc[tid];
-    DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%lli]\n",
-            tid, squash_after_seq_num);
     commitStatus[tid] = ROBSquashing;
+    cpu->activityThisCycle();
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::squashAfter(ThreadID tid, DynInstPtr &head_inst)
+{
+    DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%lli]\n",
+            tid, head_inst->seqNum);
+
+    assert(!squashAfterInst[tid] || squashAfterInst[tid] == head_inst);
+    commitStatus[tid] = SquashAfterPending;
+    squashAfterInst[tid] = head_inst;
 }
 
 template <class Impl>
@@ -797,6 +800,11 @@ DefaultCommit<Impl>::commit()
         } else if (tcSquash[tid] == true) {
             assert(commitStatus[tid] != TrapPending);
             squashFromTC(tid);
+        } else if (commitStatus[tid] == SquashAfterPending) {
+            // A squash from the previous cycle of the commit stage (i.e.,
+            // commitInsts() called squashAfter) is pending. Squash the
+            // thread now.
+            squashFromSquashAfter(tid);
         }
 
         // Squashed sequence number must be older than youngest valid
@@ -1008,7 +1016,7 @@ DefaultCommit<Impl>::commitInsts()
                 // If this is an instruction that doesn't play nicely with
                 // others squash everything and restart fetch
                 if (head_inst->isSquashAfter())
-                    squashAfter(tid, head_inst, head_inst->seqNum);
+                    squashAfter(tid, head_inst);
 
                 int count = 0;
                 Addr oldpc;
