@@ -365,16 +365,46 @@ class BaseCPU : public MemObject
 
     /**
      * Serialize this object to the given output stream.
+     *
+     * @note CPU models should normally overload the serializeThread()
+     * method instead of the serialize() method as this provides a
+     * uniform data format for all CPU models and promotes better code
+     * reuse.
+     *
      * @param os The stream to serialize to.
      */
     virtual void serialize(std::ostream &os);
 
     /**
      * Reconstruct the state of this object from a checkpoint.
+     *
+     * @note CPU models should normally overload the
+     * unserializeThread() method instead of the unserialize() method
+     * as this provides a uniform data format for all CPU models and
+     * promotes better code reuse.
+
      * @param cp The checkpoint use.
-     * @param section The section name of this object
+     * @param section The section name of this object.
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    /**
+     * Serialize a single thread.
+     *
+     * @param os The stream to serialize to.
+     * @param tid ID of the current thread.
+     */
+    virtual void serializeThread(std::ostream &os, ThreadID tid) {};
+
+    /**
+     * Unserialize one thread.
+     *
+     * @param cp The checkpoint use.
+     * @param section The section name of this thread.
+     * @param tid ID of the current thread.
+     */
+    virtual void unserializeThread(Checkpoint *cp, const std::string &section,
+                                   ThreadID tid) {};
 
     /**
      * Return pointer to CPU's branch predictor (NULL if none).

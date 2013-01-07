@@ -524,21 +524,36 @@ BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(instCnt);
 
-    /* Unlike _pid, _taskId is not serialized, as they are dynamically
-     * assigned unique ids that are only meaningful for the duration of
-     * a specific run. We will need to serialize the entire taskMap in
-     * system. */
-    SERIALIZE_SCALAR(_pid);
+    if (!_switchedOut) {
+        /* Unlike _pid, _taskId is not serialized, as they are dynamically
+         * assigned unique ids that are only meaningful for the duration of
+         * a specific run. We will need to serialize the entire taskMap in
+         * system. */
+        SERIALIZE_SCALAR(_pid);
 
-    interrupts->serialize(os);
+        interrupts->serialize(os);
+
+        // Serialize the threads, this is done by the CPU implementation.
+        for (ThreadID i = 0; i < numThreads; ++i) {
+            nameOut(os, csprintf("%s.xc.%i", name(), i));
+            serializeThread(os, i);
+        }
+    }
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(instCnt);
-    UNSERIALIZE_SCALAR(_pid);
-    interrupts->unserialize(cp, section);
+
+    if (!_switchedOut) {
+        UNSERIALIZE_SCALAR(_pid);
+        interrupts->unserialize(cp, section);
+
+        // Unserialize the threads, this is done by the CPU implementation.
+        for (ThreadID i = 0; i < numThreads; ++i)
+            unserializeThread(cp, csprintf("%s.xc.%i", section, i), i);
+    }
 }
 
 void

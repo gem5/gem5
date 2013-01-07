@@ -1094,35 +1094,17 @@ FullO3CPU<Impl>::syscall(int64_t callnum, ThreadID tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::serialize(std::ostream &os)
+FullO3CPU<Impl>::serializeThread(std::ostream &os, ThreadID tid)
 {
-    Drainable::State so_state(getDrainState());
-    SERIALIZE_ENUM(so_state);
-    BaseCPU::serialize(os);
-    nameOut(os, csprintf("%s.tickEvent", name()));
-    tickEvent.serialize(os);
-
-    for (ThreadID i = 0; i < thread.size(); i++) {
-        nameOut(os, csprintf("%s.xc.%i", name(), i));
-        thread[i]->serialize(os);
-    }
+    thread[tid]->serialize(os);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
+FullO3CPU<Impl>::unserializeThread(Checkpoint *cp, const std::string &section,
+                                   ThreadID tid)
 {
-    Drainable::State so_state;
-    UNSERIALIZE_ENUM(so_state);
-    BaseCPU::unserialize(cp, section);
-    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
-
-    for (ThreadID i = 0; i < thread.size(); i++) {
-        thread[i]->unserialize(cp,
-                               csprintf("%s.xc.%i", section, i));
-        if (thread[i]->status() == ThreadContext::Active)
-            activateThread(i);
-    }
+    thread[tid]->unserialize(cp, section);
 }
 
 template <class Impl>

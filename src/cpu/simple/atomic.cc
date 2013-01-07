@@ -132,7 +132,7 @@ unsigned int
 AtomicSimpleCPU::drain(DrainManager *dm)
 {
     assert(!drain_manager);
-    if (_status == SwitchedOut)
+    if (switchedOut())
         return 0;
 
     if (!isDrained()) {
@@ -151,8 +151,9 @@ AtomicSimpleCPU::drain(DrainManager *dm)
 void
 AtomicSimpleCPU::drainResume()
 {
+    assert(!tickEvent.scheduled());
     assert(!drain_manager);
-    if (_status == Idle || _status == SwitchedOut)
+    if (switchedOut())
         return;
 
     DPRINTF(SimpleCPU, "Resume\n");
@@ -161,9 +162,16 @@ AtomicSimpleCPU::drainResume()
               "'atomic' mode.\n");
     }
 
-    assert(!tickEvent.scheduled());
-    if (thread->status() == ThreadContext::Active)
+    assert(!threadContexts.empty());
+    if (threadContexts.size() > 1)
+        fatal("The atomic CPU only supports one thread.\n");
+
+    if (thread->status() == ThreadContext::Active) {
         schedule(tickEvent, nextCycle());
+        _status = BaseSimpleCPU::Running;
+    } else {
+        _status = BaseSimpleCPU::Idle;
+    }
 
     system->totalNumInsts = 0;
 }
@@ -194,8 +202,6 @@ AtomicSimpleCPU::switchOut()
     assert(!tickEvent.scheduled());
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
     assert(isDrained());
-
-    _status = SwitchedOut;
 }
 
 
@@ -206,16 +212,6 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
     // The tick event should have been descheduled by drain()
     assert(!tickEvent.scheduled());
-
-    assert(!threadContexts.empty());
-    if (threadContexts.size() > 1)
-        fatal("The atomic CPU only supports one thread.\n");
-
-    // If the ThreadContext is active, mark the CPU as running.
-    if (thread->status() == ThreadContext::Active)
-        _status = BaseSimpleCPU::Running;
-    else
-        _status = Idle;
 
     ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
     data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too

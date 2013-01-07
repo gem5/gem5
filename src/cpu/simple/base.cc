@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -283,22 +283,21 @@ BaseSimpleCPU::resetStats()
 }
 
 void
-BaseSimpleCPU::serialize(ostream &os)
+BaseSimpleCPU::serializeThread(ostream &os, ThreadID tid)
 {
-    SERIALIZE_ENUM(_status);
-    BaseCPU::serialize(os);
-//    SERIALIZE_SCALAR(inst);
-    nameOut(os, csprintf("%s.xc.0", name()));
+    assert(_status == Idle || _status == Running);
+    assert(tid == 0);
+
     thread->serialize(os);
 }
 
 void
-BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
+BaseSimpleCPU::unserializeThread(Checkpoint *cp, const string &section,
+                                 ThreadID tid)
 {
-    UNSERIALIZE_ENUM(_status);
-    BaseCPU::unserialize(cp, section);
-//    UNSERIALIZE_SCALAR(inst);
-    thread->unserialize(cp, csprintf("%s.xc.0", section));
+    if (tid != 0)
+        fatal("Trying to load more than one thread into a SimpleCPU\n");
+    thread->unserialize(cp, section);
 }
 
 void

@@ -446,11 +446,10 @@ class FullO3CPU : public BaseO3CPU
     /** Is the CPU draining? */
     bool isDraining() const { return getDrainState() == Drainable::Draining; }
 
-    /** Serialize state. */
-    virtual void serialize(std::ostream &os);
+    void serializeThread(std::ostream &os, ThreadID tid);
 
-    /** Unserialize from a checkpoint. */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void unserializeThread(Checkpoint *cp, const std::string &section,
+                           ThreadID tid);
 
   public:
     /** Executes a syscall.

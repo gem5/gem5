@@ -109,9 +109,12 @@ TimingSimpleCPU::~TimingSimpleCPU()
 unsigned int
 TimingSimpleCPU::drain(DrainManager *drain_manager)
 {
+    assert(!drainManager);
+    if (switchedOut())
+        return 0;
+
     if (_status == Idle ||
-        (_status == BaseSimpleCPU::Running && isDrained()) ||
-        _status == SwitchedOut) {
+        (_status == BaseSimpleCPU::Running && isDrained())) {
         assert(!fetchEvent.scheduled());
         DPRINTF(Drain, "No need to drain.\n");
         return 0;
@@ -122,10 +125,8 @@ TimingSimpleCPU::drain(DrainManager *drain_manager)
         // The fetch event can become descheduled if a drain didn't
         // succeed on the first attempt. We need to reschedule it if
         // the CPU is waiting for a microcode routine to complete.
-        if (_status == BaseSimpleCPU::Running && !isDrained() &&
-            !fetchEvent.scheduled()) {
+        if (_status == BaseSimpleCPU::Running && !fetchEvent.scheduled())
             schedule(fetchEvent, nextCycle());
-        }
 
         return 1;
     }
@@ -135,15 +136,25 @@ void
 TimingSimpleCPU::drainResume()
 {
     assert(!fetchEvent.scheduled());
+    assert(!drainManager);
+    if (switchedOut())
+        return;
 
     DPRINTF(SimpleCPU, "Resume\n");
-    if (_status != SwitchedOut && _status != Idle) {
-        if (system->getMemoryMode() != Enums::timing) {
-            fatal("The timing CPU requires the memory system to be in "
-                  "'timing' mode.\n");
-        }
+    if (system->getMemoryMode() != Enums::timing) {
+        fatal("The timing CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
 
+    assert(!threadContexts.empty());
+    if (threadContexts.size() > 1)
+        fatal("The timing CPU only supports one thread.\n");
+
+    if (thread->status() == ThreadContext::Active) {
         schedule(fetchEvent, nextCycle());
+        _status = BaseSimpleCPU::Running;
+    } else {
+        _status = BaseSimpleCPU::Idle;
     }
 }
 
@@ -174,7 +185,6 @@ TimingSimpleCPU::switchOut()
     assert(!stayAtPC);
     assert(microPC() == 0);
 
-    _status = SwitchedOut;
     numCycles += curCycle() - previousCycle;
 }
 
@@ -184,21 +194,6 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseSimpleCPU::takeOverFrom(oldCPU);
 
-    // if any of this CPU's ThreadContexts are active, mark the CPU as
-    // running and schedule its tick event.
-    for (int i = 0; i < threadContexts.size(); ++i) {
-        ThreadContext *tc = threadContexts[i];
-        if (tc->status() == ThreadContext::Active &&
-            _status != BaseSimpleCPU::Running) {
-            _status = BaseSimpleCPU::Running;
-            break;
-        }
-    }
-
-    if (_status != BaseSimpleCPU::Running) {
-        _status = Idle;
-    }
-    assert(threadContexts.size() == 1);
     previousCycle = curCycle();
 }
 

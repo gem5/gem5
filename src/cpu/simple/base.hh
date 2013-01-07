@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -137,7 +137,6 @@ class BaseSimpleCPU : public BaseCPU
         DcacheRetry,
         DcacheWaitResponse,
         DcacheWaitSwitch,
-        SwitchedOut
     };
 
     Status _status;
@@ -265,8 +264,9 @@ class BaseSimpleCPU : public BaseCPU
     Stats::Scalar dcacheRetryCycles;
     Counter lastDcacheRetry;
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serializeThread(std::ostream &os, ThreadID tid);
+    void unserializeThread(Checkpoint *cp, const std::string &section,
+                           ThreadID tid);
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
