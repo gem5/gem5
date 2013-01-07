@@ -323,7 +323,7 @@ TLB::demapAll(int partition_id)
 }
 
 void
-TLB::invalidateAll()
+TLB::flushAll()
 {
     cacheValid = false;
     lookupTable.clear();

@@ -129,7 +129,7 @@ TLB::lookup(Addr va, bool update_lru)
 }
 
 void
-TLB::invalidateAll()
+TLB::flushAll()
 {
     DPRINTF(TLB, "Invalidating all entries.\n");
     for (unsigned i = 0; i < size; i++) {
@@ -148,7 +148,7 @@ TLB::setConfigAddress(uint32_t addr)
 }
 
 void
-TLB::invalidateNonGlobal()
+TLB::flushNonGlobal()
 {
     DPRINTF(TLB, "Invalidating all non global entries.\n");
     for (unsigned i = 0; i < size; i++) {

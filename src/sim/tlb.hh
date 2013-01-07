@@ -65,6 +65,11 @@ class BaseTLB : public SimObject
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
     /**
+     * Remove all entries from the TLB
+     */
+    virtual void flushAll() = 0;
+
+    /**
      * Get the table walker master port if present. This is used for
      * migrating port connections during a CPU takeOverFrom()
      * call. For architectures that do not have a table walker, NULL
@@ -74,6 +79,8 @@ class BaseTLB : public SimObject
      * @return A pointer to the walker master port or NULL if not present
      */
     virtual BaseMasterPort* getMasterPort() { return NULL; }
+
+    void memInvalidate() { flushAll(); }
 
     class Translation
     {

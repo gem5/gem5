@@ -191,8 +191,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
                 }
             }
             if (toggled.pg) {
-                tc->getITBPtr()->invalidateAll();
-                tc->getDTBPtr()->invalidateAll();
+                tc->getITBPtr()->flushAll();
+                tc->getDTBPtr()->flushAll();
             }
             //This must always be 1.
             newCR0.et = 1;
@@ -208,15 +208,15 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
       case MISCREG_CR2:
         break;
       case MISCREG_CR3:
-        tc->getITBPtr()->invalidateNonGlobal();
-        tc->getDTBPtr()->invalidateNonGlobal();
+        tc->getITBPtr()->flushNonGlobal();
+        tc->getDTBPtr()->flushNonGlobal();
         break;
       case MISCREG_CR4:
         {
             CR4 toggled = regVal[miscReg] ^ val;
             if (toggled.pae || toggled.pse || toggled.pge) {
-                tc->getITBPtr()->invalidateAll();
-                tc->getDTBPtr()->invalidateAll();
+                tc->getITBPtr()->flushAll();
+                tc->getDTBPtr()->flushAll();
             }
         }
         break;

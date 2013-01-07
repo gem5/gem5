@@ -213,8 +213,8 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
 
-    dest->getITBPtr()->invalidateAll();
-    dest->getDTBPtr()->invalidateAll();
+    dest->getITBPtr()->flushAll();
+    dest->getDTBPtr()->flushAll();
 }
 
 void

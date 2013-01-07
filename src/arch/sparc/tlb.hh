@@ -123,7 +123,7 @@ class TLB : public BaseTLB
     uint64_t TagRead(int entry);
 
     /** Remove all entries from the TLB */
-    void invalidateAll();
+    void flushAll();
 
     /** Remove all non-locked entries from the tlb that match partition id. */
     void demapAll(int partition_id);
