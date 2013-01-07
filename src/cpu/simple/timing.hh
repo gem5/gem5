@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -43,9 +55,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual ~TimingSimpleCPU();
 
     virtual void init();
-
-  public:
-    DrainManager *drainManager;
 
   private:
 
@@ -246,9 +255,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   public:
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
     unsigned int drain(DrainManager *drain_manager);
     void drainResume();
 
@@ -302,7 +308,36 @@ class TimingSimpleCPU : public BaseSimpleCPU
         virtual const char *description() const;
     };
 
-    void completeDrain();
+    /**
+     * Check if a system is in a drained state.
+     *
+     * We need to drain if:
+     * <ul>
+     * <li>We are in the middle of a microcode sequence as some CPUs
+     *     (e.g., HW accelerated CPUs) can't be started in the middle
+     *     of a gem5 microcode sequence.
+     *
+     * <li>Stay at PC is true.
+     * </ul>
+     */
+    bool isDrained() {
+        return microPC() == 0 &&
+            !stayAtPC;
+    }
+
+    /**
+     * Try to complete a drain request.
+     *
+     * @returns true if the CPU is drained, false otherwise.
+     */
+    bool tryCompleteDrain();
+
+    /**
+     * Drain manager to use when signaling drain completion
+     *
+     * This pointer is non-NULL when draining and NULL otherwise.
+     */
+    DrainManager *drainManager;
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__
