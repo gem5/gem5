@@ -74,6 +74,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
     self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
+    self.mem_ranges = [self.physmem.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
     self.physmem.port = self.membus.master
@@ -111,6 +112,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
         
     physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
     self = LinuxAlphaSystem(physmem = physmem)
+    self.mem_ranges = [self.physmem.range]
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -182,6 +184,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
                                 zero = True)
     self.physmem2 = SimpleDRAM(range = AddrRange(Addr('2GB'), size ='256MB'),
                                  zero = True)
+    self.mem_ranges = [self.physmem.range, self.physmem2.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
     self.physmem.port = self.membus.master
@@ -273,6 +276,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.realview.uart.end_on_eot = True
         self.physmem = SimpleDRAM(range = AddrRange(Addr(mdesc.mem())),
                                     zero = True)
+        self.mem_ranges = [self.physmem.range]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
         self.machine_type = machine_type
@@ -289,6 +293,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
                                     AddrRange(self.realview.mem_start_addr,
                                               size = mdesc.mem()),
                                     conf_table_reported = True)
+        self.mem_ranges = [self.physmem.range]
         self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
@@ -324,6 +329,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.membus = MemBus()
     self.bridge = Bridge(delay='50ns')
     self.physmem = SimpleDRAM(range = AddrRange('1GB'))
+    self.mem_ranges = [self.physmem.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
     self.physmem.port = self.membus.master
@@ -429,6 +435,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
 
     # Physical memory
     self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
+    self.mem_ranges = [self.physmem.range]
 
     # Platform
     self.pc = Pc()

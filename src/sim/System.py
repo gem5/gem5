@@ -62,6 +62,12 @@ class System(MemObject):
     memories = VectorParam.AbstractMemory(Self.all,
                                           "All memories in the system")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
+
+    # The memory ranges are to be populated when creating the system
+    # such that these can be passed from the I/O subsystem through an
+    # I/O bridge or cache
+    mem_ranges = VectorParam.AddrRange([], "Ranges that constitute main memory")
+
     work_item_id = Param.Int(-1, "specific work item id")
     num_work_ids = Param.Int(16, "Number of distinct work item types")
     work_begin_cpu_id_exit = Param.Int(-1,

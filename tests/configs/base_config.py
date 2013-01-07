@@ -147,7 +147,7 @@ class BaseFSSystem(BaseSystem):
         BaseSystem.init_system(self, system)
 
         #create the iocache
-        system.iocache = IOCache(clock='1GHz', addr_ranges=[system.physmem.range])
+        system.iocache = IOCache(clock='1GHz', addr_ranges=system.mem_ranges)
         system.iocache.cpu_side = system.iobus.master
         system.iocache.mem_side = system.membus.slave
 

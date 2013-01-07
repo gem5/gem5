@@ -119,11 +119,11 @@ test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
 if options.caches or options.l2cache:
     test_sys.iocache = IOCache(clock = '1GHz',
-                               addr_ranges=[test_sys.physmem.range])
+                               addr_ranges = test_sys.mem_ranges)
     test_sys.iocache.cpu_side = test_sys.iobus.master
     test_sys.iocache.mem_side = test_sys.membus.slave
 else:
-    test_sys.iobridge = Bridge(delay='50ns', ranges = [test_sys.physmem.range])
+    test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
     test_sys.iobridge.slave = test_sys.iobus.master
     test_sys.iobridge.master = test_sys.membus.slave
 
@@ -163,8 +163,9 @@ if len(bm) == 2:
         drive_sys.cpu.fastmem = True
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
+
     drive_sys.iobridge = Bridge(delay='50ns',
-                                ranges = [drive_sys.physmem.range])
+                                ranges = drive_sys.mem_ranges)
     drive_sys.iobridge.slave = drive_sys.iobus.master
     drive_sys.iobridge.master = drive_sys.membus.slave
 
