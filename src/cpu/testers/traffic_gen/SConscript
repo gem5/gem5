@@ -39,8 +39,11 @@
 
 Import('*')
 
-SimObject('TrafficGen.py')
+# Only build the traffic generator if we have support for protobuf as the
+# tracing relies on it
+if env['HAVE_PROTOBUF']:
+    SimObject('TrafficGen.py')
 
-Source('traffic_gen.cc')
+    Source('traffic_gen.cc')
 
-DebugFlag('TrafficGen')
+    DebugFlag('TrafficGen')

@@ -41,12 +41,11 @@
 #ifndef __MEM_TRAFFIC_GEN_HH__
 #define __MEM_TRAFFIC_GEN_HH__
 
-#include <fstream>
-
 #include "base/hashmap.hh"
 #include "mem/mem_object.hh"
 #include "mem/qport.hh"
 #include "params/TrafficGen.hh"
+#include "proto/protoio.hh"
 
 /**
  * The traffic generator is a master module that generates stimuli for
@@ -449,15 +448,8 @@ class TrafficGen : public MemObject
 
               private:
 
-                /// Input file stream for the ASCII trace
-                std::ifstream trace;
-
-                /**
-                 * Create a 4MB read buffer for the input trace
-                 * file. This is to reduce the number of disk accesses
-                 * and thereby speed up the execution.
-                 */
-                char readBuffer[4 * 1024 * 1024];
+                /// Input file stream for the protobuf trace
+                ProtoInputStream trace;
 
               public:
 

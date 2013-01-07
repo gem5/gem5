@@ -45,6 +45,7 @@
 #include "cpu/testers/traffic_gen/traffic_gen.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/TrafficGen.hh"
+#include "proto/packet.pb.h"
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
@@ -497,65 +498,35 @@ TrafficGen::StateGraph::RandomGen::nextExecuteTick()
 
 TrafficGen::StateGraph::TraceGen::InputStream::InputStream(const string&
                                                            filename)
+    : trace(filename)
 {
-    trace.rdbuf()->pubsetbuf(readBuffer, 4 * 1024 * 1024);
-    trace.open(filename.c_str(), ifstream::in);
+    // Create a protobuf message for the header and read it from the stream
+    Message::PacketHeader header_msg;
+    if (!trace.read(header_msg)) {
+        panic("Failed to read packet header from %s\n", filename);
 
-    if (!trace.is_open()) {
-        fatal("Traffic generator trace file could not be"
-              " opened: %s\n", filename);
+        if (header_msg.tick_freq() != SimClock::Frequency) {
+            panic("Trace %s was recorded with a different tick frequency %d\n",
+                  header_msg.tick_freq());
+        }
     }
 }
 
 void
 TrafficGen::StateGraph::TraceGen::InputStream::reset()
 {
-    // seek to the start of the input trace file
-    trace.seekg(0, ifstream::beg);
-    trace.clear();
+    trace.reset();
 }
 
 bool
 TrafficGen::StateGraph::TraceGen::InputStream::read(TraceElement& element)
 {
-    string buffer;
-    bool format_error = false;
-    assert(trace.good());
-    getline(trace, buffer);
-
-    // Check that we have something to process. This assumes no EOF at
-    // the end of the line.
-    if (buffer.size() > 0 && !trace.eof()) {
-        std::istringstream iss(buffer);
-
-        char rOrW, ch;
-        iss >> rOrW;
-        if (rOrW == 'r') {
-            element.cmd = MemCmd::ReadReq;
-        } else if (rOrW == 'w') {
-            element.cmd = MemCmd::WriteReq;
-        } else {
-            format_error = true;
-        }
-
-        // eat a comma, then get the address
-        iss >> ch;
-        format_error |= ch != ',';
-        iss >> element.addr;
-
-        // eat a comma, then get the blocksize
-        iss >> ch;
-        format_error |= ch != ',';
-        iss >> element.blocksize;
-
-        // eat a comma, then get the tick
-        iss >> ch;
-        format_error |= ch != ',';
-        iss >> element.tick;
-
-        if (format_error)
-            fatal("Trace format error in %s\n", buffer);
-
+    Message::Packet pkt_msg;
+    if (trace.read(pkt_msg)) {
+        element.cmd = pkt_msg.cmd();
+        element.addr = pkt_msg.addr();
+        element.blocksize = pkt_msg.size();
+        element.tick = pkt_msg.tick();
         return true;
     }
 
