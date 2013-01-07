@@ -46,6 +46,7 @@
 #define __SIM_CLOCKED_OBJECT_HH__
 
 #include "base/intmath.hh"
+#include "base/misc.hh"
 #include "params/ClockedObject.hh"
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
@@ -113,7 +114,11 @@ class ClockedObject : public SimObject
      */
     ClockedObject(const ClockedObjectParams* p) :
         SimObject(p), tick(0), cycle(0), clock(p->clock)
-    { }
+    {
+        if (clock == 0) {
+            fatal("%s has a clock period of zero\n", name());
+        }
+    }
 
     /**
      * Virtual destructor due to inheritance.
