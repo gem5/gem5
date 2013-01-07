@@ -41,10 +41,17 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
+#include "mem/packet.hh"
 #include "mem/request.hh"
 
 namespace PowerISA
 {
+
+template <class XC>
+inline void
+handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
+{
+}
 
 template <class XC>
 inline void

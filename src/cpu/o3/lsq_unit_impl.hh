@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -433,6 +433,18 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
         assert(bs != 0);
 
         cacheBlockMask = ~(bs - 1);
+    }
+
+    // Unlock the cpu-local monitor when the CPU sees a snoop to a locked
+    // address. The CPU can speculatively execute a LL operation after a pending
+    // SC operation in the pipeline and that can make the cache monitor the CPU
+    // is connected to valid while it really shouldn't be.
+    for (int x = 0; x < cpu->numActiveThreads(); x++) {
+        ThreadContext *tc = cpu->getContext(x);
+        bool no_squash = cpu->thread[x]->noSquashFromTC;
+        cpu->thread[x]->noSquashFromTC = true;
+        TheISA::handleLockedSnoop(tc, pkt, cacheBlockMask);
+        cpu->thread[x]->noSquashFromTC = no_squash;
     }
 
     // If this is the only load in the LSQ we don't care
