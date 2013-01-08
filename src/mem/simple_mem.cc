@@ -154,7 +154,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         assert(pkt->isResponse());
         port.schedTimingResp(pkt, curTick() + latency);
     } else {
-        delete pkt;
+        pendingDelete.push_back(pkt);
     }
 
     return true;
