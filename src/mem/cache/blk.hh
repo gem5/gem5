@@ -127,15 +127,30 @@ class CacheBlk
     class Lock {
       public:
         int contextId;     // locking context
+        Addr lowAddr;      // low address of lock range
+        Addr highAddr;     // high address of lock range
 
         // check for matching execution context
         bool matchesContext(Request *req)
         {
-            return (contextId == req->contextId());
+            Addr req_low = req->getPaddr();
+            Addr req_high = req_low + req->getSize() -1;
+            return (contextId == req->contextId()) &&
+                   (req_low >= lowAddr) && (req_high <= highAddr);
+        }
+
+        bool overlapping(Request *req)
+        {
+            Addr req_low = req->getPaddr();
+            Addr req_high = req_low + req->getSize() - 1;
+
+            return (req_low <= highAddr) && (req_high >= lowAddr);
         }
 
         Lock(Request *req)
-            : contextId(req->contextId())
+            : contextId(req->contextId()),
+              lowAddr(req->getPaddr()),
+              highAddr(lowAddr + req->getSize() - 1)
         {
         }
     };
@@ -255,7 +270,23 @@ class CacheBlk
      * Clear the list of valid load locks.  Should be called whenever
      * block is written to or invalidated.
      */
-    void clearLoadLocks() { lockList.clear(); }
+    void clearLoadLocks(Request *req = NULL)
+    {
+        if (!req) {
+            // No request, invaldate all locks to this line
+            lockList.clear();
+        } else {
+            // Only invalidate locks that overlap with this request
+            std::list<Lock>::iterator lock_itr = lockList.begin();
+            while (lock_itr != lockList.end()) {
+                if (lock_itr->overlapping(req)) {
+                    lock_itr = lockList.erase(lock_itr);
+                } else {
+                    ++lock_itr;
+                }
+            }
+        }
+    }
 
     /**
      * Handle interaction of load-locked operations and stores.
@@ -283,12 +314,12 @@ class CacheBlk
             }
 
             req->setExtraData(success ? 1 : 0);
-            clearLoadLocks();
+            clearLoadLocks(req);
             return success;
         } else {
             // for *all* stores (conditional or otherwise) we have to
             // clear the list of load-locks as they're all invalid now.
-            clearLoadLocks();
+            clearLoadLocks(req);
             return true;
         }
     }
