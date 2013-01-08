@@ -851,3 +851,20 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 }
 
+SyscallReturn
+accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc)
+{
+    int index = 0;
+
+    string path;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+        return (TheISA::IntReg)-EFAULT;
+
+    // Adjust path for current working directory
+    path = p->fullPath(path);
+
+    mode_t mode = p->getSyscallArg(tc, index);
+
+    int result = access(path.c_str(), mode);
+    return (result == -1) ? -errno : result;
+}

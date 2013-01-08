@@ -108,7 +108,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 30 */ SyscallDesc("utime", unimplementedFunc),
     /* 31 */ SyscallDesc("unused#31", unimplementedFunc),
     /* 32 */ SyscallDesc("unused#32", unimplementedFunc),
-    /* 33 */ SyscallDesc("access", unimplementedFunc),
+    /* 33 */ SyscallDesc("access", accessFunc),
     /* 34 */ SyscallDesc("nice", unimplementedFunc),
     /* 35 */ SyscallDesc("unused#35", unimplementedFunc),
     /* 36 */ SyscallDesc("sync", unimplementedFunc),

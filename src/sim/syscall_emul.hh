@@ -335,6 +335,10 @@ SyscallReturn getegidFunc(SyscallDesc *desc, int num,
 SyscallReturn cloneFunc(SyscallDesc *desc, int num,
                                LiveProcess *p, ThreadContext *tc);
 
+/// Target access() handler
+SyscallReturn accessFunc(SyscallDesc *desc, int num,
+                               LiveProcess *p, ThreadContext *tc);
+
 /// Futex system call
 ///  Implemented by Daniel Sanchez
 ///  Used by printf's in multi-threaded apps
