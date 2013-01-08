@@ -219,6 +219,13 @@ m5exit(ThreadContext *tc, Tick delay)
 }
 
 void
+m5fail(ThreadContext *tc, Tick delay, uint64_t code)
+{
+    Tick when = curTick() + delay * SimClock::Int::ns;
+    exitSimLoop("m5_fail instruction encountered", code, when);
+}
+
+void
 loadsymbol(ThreadContext *tc)
 {
     if (!FullSystem)

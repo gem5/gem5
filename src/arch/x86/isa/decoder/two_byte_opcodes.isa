@@ -157,6 +157,9 @@
                         0x21: m5exit({{
                             PseudoInst::m5exit(xc->tcBase(), Rdi);
                         }}, IsNonSpeculative);
+                        0x22: m5fail({{
+                            PseudoInst::m5fail(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
                         0x30: m5initparam({{
                             Rax = PseudoInst::initParam(xc->tcBase());
                         }}, IsNonSpeculative);

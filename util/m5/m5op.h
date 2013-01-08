@@ -47,6 +47,7 @@ uint64_t rpns();
 void wakeCPU(uint64_t cpuid);
 
 void m5_exit(uint64_t ns_delay);
+void m5_fail(uint64_t ns_delay, uint64_t code);
 uint64_t m5_initparam(void);
 void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
 void m5_reset_stats(uint64_t ns_delay, uint64_t ns_period);

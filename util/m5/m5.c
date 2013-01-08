@@ -135,6 +135,15 @@ do_exit(int argc, char *argv[])
 }
 
 void
+do_fail(int argc, char *argv[])
+{
+    if (argc < 1 || argc > 2)
+        usage();
+
+    m5_fail((argc > 1) ? strtoul(argv[1], NULL, 0) : 0, strtoul(argv[0], NULL, 0));
+}
+
+void
 do_reset_stats(int argc, char *argv[])
 {
     uint64_t ints[2];
@@ -273,6 +282,7 @@ struct MainFunc
 
 struct MainFunc mainfuncs[] = {
     { "exit",           do_exit,             "[delay]" },
+    { "fail",           do_fail,             "<code> [delay]" },
     { "resetstats",     do_reset_stats,      "[delay [period]]" },
     { "dumpstats",      do_dump_stats,       "[delay [period]]" },
     { "dumpresetstats", do_dump_reset_stats, "[delay [period]]" },

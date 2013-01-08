@@ -27,6 +27,7 @@
 #
 # Authors: Lisa Hsu
 
+import sys
 from os import getcwd
 from os.path import join as joinpath
 
@@ -505,3 +506,5 @@ def run(options, root, testsys, cpu_class):
     print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
+
+    sys.exit(exit_event.getCode())
