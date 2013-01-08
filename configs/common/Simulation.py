@@ -231,7 +231,7 @@ def benchCheckpoints(options, maxtick, cptdir):
         exit_event = m5.simulate(maxtick - m5.curTick())
         exit_cause = exit_event.getCause()
 
-    return exit_cause
+    return exit_event
 
 def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
     print "starting switch loop"
@@ -240,7 +240,7 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
         exit_cause = exit_event.getCause()
 
         if exit_cause != "simulate() limit reached":
-            return exit_cause
+            return exit_event
 
         print "draining the system"
         m5.drain(testsys)
@@ -254,7 +254,7 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
 
         if (maxtick - m5.curTick()) <= switch_freq:
             exit_event = m5.simulate(maxtick - m5.curTick())
-            return exit_event.getCause()
+            return exit_event
 
 def run(options, root, testsys, cpu_class):
     if options.maxtick:
@@ -498,12 +498,12 @@ def run(options, root, testsys, cpu_class):
         # If checkpoints are being taken, then the checkpoint instruction
         # will occur in the benchmark code it self.
         if options.repeat_switch and maxtick > options.repeat_switch:
-            exit_cause = repeatSwitch(testsys, repeat_switch_cpu_list,
+            exit_event = repeatSwitch(testsys, repeat_switch_cpu_list,
                                       maxtick, options.repeat_switch)
         else:
-            exit_cause = benchCheckpoints(options, maxtick, cptdir)
+            exit_event = benchCheckpoints(options, maxtick, cptdir)
 
-    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
+    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_event.getCause())
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
 
