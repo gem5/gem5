@@ -521,38 +521,3 @@ BaseSimpleCPU::startup()
     BaseCPU::startup();
     thread->startup();
 }
-
-/*Fault
-BaseSimpleCPU::CacheOp(uint8_t Op, Addr EffAddr)
-{
-    // translate to physical address
-    Fault fault = NoFault;
-    int CacheID = Op & 0x3; // Lower 3 bits identify Cache
-    int CacheOP = Op >> 2; // Upper 3 bits identify Cache Operation
-    if(CacheID > 1)
-      {
-        warn("CacheOps not implemented for secondary/tertiary caches\n");
-      }
-    else
-      {
-        switch(CacheOP)
-          { // Fill Packet Type
-          case 0: warn("Invalidate Cache Op\n");
-            break;
-          case 1: warn("Index Load Tag Cache Op\n");
-            break;
-          case 2: warn("Index Store Tag Cache Op\n");
-            break;
-          case 4: warn("Hit Invalidate Cache Op\n");
-            break;
-          case 5: warn("Fill/Hit Writeback Invalidate Cache Op\n");
-            break;
-          case 6: warn("Hit Writeback\n");
-            break;
-          case 7: warn("Fetch & Lock Cache Op\n");
-            break;
-          default: warn("Unimplemented Cache Op\n");
-          }
-      }
-    return fault;
-}*/
