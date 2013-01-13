@@ -150,6 +150,7 @@ class SimpleThread : public ThreadState
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+    void startup();
 
     /***************************************************************
      *  SimpleThread functions to provide CPU with access to various

@@ -157,6 +157,8 @@ namespace MipsISA
         static std::string miscRegNames[NumMiscRegs];
 
       public:
+        void startup(ThreadContext *tc) {}
+
         const Params *params() const;
 
         ISA(Params *p);

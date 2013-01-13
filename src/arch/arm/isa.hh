@@ -193,6 +193,8 @@ namespace ArmISA
             updateRegMap(tmp_cpsr);
         }
 
+        void startup(ThreadContext *tc) {}
+
         typedef ArmISAParams Params;
 
         const Params *params() const;

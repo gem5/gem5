@@ -387,6 +387,12 @@ ISA::unserialize(Checkpoint * cp, const std::string & section)
                      NULL);
 }
 
+void
+ISA::startup(ThreadContext *tc)
+{
+    tc->getDecoderPtr()->setM5Reg(regVal[MISCREG_M5_REG]);
+}
+
 }
 
 X86ISA::ISA *

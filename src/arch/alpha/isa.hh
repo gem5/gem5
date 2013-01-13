@@ -106,6 +106,8 @@ namespace AlphaISA
         const Params *params() const;
 
         ISA(Params *p);
+
+        void startup(ThreadContext *tc) {}
     };
 }
 

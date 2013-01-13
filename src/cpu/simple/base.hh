@@ -172,6 +172,8 @@ class BaseSimpleCPU : public BaseCPU
     virtual void regStats();
     virtual void resetStats();
 
+    virtual void startup();
+
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;

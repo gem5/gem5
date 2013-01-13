@@ -143,6 +143,12 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
+SimpleThread::startup()
+{
+    isa->startup(tc);
+}
+
+void
 SimpleThread::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat",

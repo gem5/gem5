@@ -678,6 +678,9 @@ template <class Impl>
 void
 FullO3CPU<Impl>::startup()
 {
+    for (int tid = 0; tid < numThreads; ++tid)
+        isa[tid]->startup(threadContexts[tid]);
+
     fetch.startupStage();
     decode.startupStage();
     iew.startupStage();

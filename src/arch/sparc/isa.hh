@@ -171,6 +171,8 @@ class ISA : public SimObject
 
     void unserialize(Checkpoint *cp, const std::string & section);
 
+    void startup(ThreadContext *tc) {}
+
   protected:
 
     bool isHyperPriv() { return hpstate.hpriv; }

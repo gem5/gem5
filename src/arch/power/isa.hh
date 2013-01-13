@@ -98,6 +98,8 @@ class ISA : public SimObject
         return reg;
     }
 
+    void startup(ThreadContext *tc) {}
+
     const Params *params() const;
 
     ISA(Params *p);

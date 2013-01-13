@@ -515,6 +515,13 @@ BaseSimpleCPU::advancePC(Fault fault)
     }
 }
 
+void
+BaseSimpleCPU::startup()
+{
+    BaseCPU::startup();
+    thread->startup();
+}
+
 /*Fault
 BaseSimpleCPU::CacheOp(uint8_t Op, Addr EffAddr)
 {
