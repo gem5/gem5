@@ -91,7 +91,7 @@ ProtoOutputStream::write(const Message& msg)
 }
 
 ProtoInputStream::ProtoInputStream(const string& filename) :
-    fileStream(filename, ios::in | ios::binary), fileName(filename),
+    fileStream(filename.c_str(), ios::in | ios::binary), fileName(filename),
     useGzip(false),
     zeroCopyStream(NULL), gzipStream(NULL), codedStream(NULL)
 {
