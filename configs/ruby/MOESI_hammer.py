@@ -122,7 +122,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         if options.recycle_latency:
             l1_cntrl.recycle_latency = options.recycle_latency
 
-        exec("system.l1_cntrl%d = l1_cntrl" % i)
+        exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
         #
         # Add controllers and sequencers to the appropriate lists
         #
@@ -192,7 +192,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         if options.recycle_latency:
             dir_cntrl.recycle_latency = options.recycle_latency
 
-        exec("system.dir_cntrl%d = dir_cntrl" % i)
+        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
         cntrl_count += 1
@@ -209,8 +209,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                    dma_sequencer = dma_seq,
                                    ruby_system = ruby_system)
 
-        exec("system.dma_cntrl%d = dma_cntrl" % i)
-        exec("system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
+        exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
+        exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
         if options.recycle_latency:

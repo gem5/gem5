@@ -106,7 +106,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         if piobus != None:
             cpu_seq.pio_port = piobus.slave
 
-        exec("system.l1_cntrl%d = l1_cntrl" % i)
+        exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
         #
         # Add controllers and sequencers to the appropriate lists
         #
@@ -130,7 +130,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                       L2cacheMemory = l2_cache,
                                       ruby_system = ruby_system)
         
-        exec("system.l2_cntrl%d = l2_cntrl" % i)
+        exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
 
         cntrl_count += 1
@@ -158,7 +158,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                          memBuffer = mem_cntrl,
                                          ruby_system = ruby_system)
 
-        exec("system.dir_cntrl%d = dir_cntrl" % i)
+        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
         cntrl_count += 1
@@ -175,8 +175,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                    dma_sequencer = dma_seq,
                                    ruby_system = ruby_system)
 
-        exec("system.dma_cntrl%d = dma_cntrl" % i)
-        exec("system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
+        exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
+        exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
         cntrl_count += 1
 
