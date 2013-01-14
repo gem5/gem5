@@ -63,7 +63,7 @@ class PerfectSwitch : public Consumer
     { return csprintf("PerfectSwitch-%i", m_switch_id); }
 
     void init(SimpleNetwork *);
-    void addInPort(const std::vector<MessageBuffer*>& in);
+    void addInPort(const std::vector<MessageBuffer*>& in, Switch *);
     void addOutPort(const std::vector<MessageBuffer*>& out,
         const NetDest& routing_table_entry);
     void clearRoutingTables();

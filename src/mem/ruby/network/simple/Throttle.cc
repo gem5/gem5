@@ -50,7 +50,7 @@ static int network_message_to_size(NetworkMessage* net_msg_ptr);
 
 Throttle::Throttle(int sID, NodeID node, int link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
-                   EventManager *em)
+                   ClockedObject *em)
     : Consumer(em)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
@@ -59,7 +59,7 @@ Throttle::Throttle(int sID, NodeID node, int link_latency,
 
 Throttle::Throttle(NodeID node, int link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
-                   EventManager *em)
+                   ClockedObject *em)
     : Consumer(em)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
@@ -93,11 +93,11 @@ Throttle::clear()
 
 void
 Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
-    const std::vector<MessageBuffer*>& out_vec)
+    const std::vector<MessageBuffer*>& out_vec, ClockedObject *em)
 {
     assert(in_vec.size() == out_vec.size());
     for (int i=0; i<in_vec.size(); i++) {
-        addVirtualNetwork(in_vec[i], out_vec[i]);
+        addVirtualNetwork(in_vec[i], out_vec[i], em);
     }
 
     m_message_counters.resize(MessageSizeType_NUM);
@@ -110,7 +110,8 @@ Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
 }
 
 void
-Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
+Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr,
+                            ClockedObject *em)
 {
     m_units_remaining.push_back(0);
     m_in.push_back(in_ptr);
@@ -118,6 +119,8 @@ Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
 
     // Set consumer and description
     m_in[m_vnets]->setConsumer(this);
+    m_in[m_vnets]->setClockObj(em);
+
     string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
         to_string(m_node) + "]";
     m_in[m_vnets]->setDescription(desc);

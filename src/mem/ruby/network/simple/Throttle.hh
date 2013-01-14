@@ -54,16 +54,16 @@ class Throttle : public Consumer
   public:
     Throttle(int sID, NodeID node, int link_latency,
              int link_bandwidth_multiplier, int endpoint_bandwidth,
-             EventManager *em);
+             ClockedObject *em);
     Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier,
-             int endpoint_bandwidth, EventManager *em);
+             int endpoint_bandwidth, ClockedObject *em);
     ~Throttle() {}
 
     std::string name()
     { return csprintf("Throttle-%i", m_sID); }
 
     void addLinks(const std::vector<MessageBuffer*>& in_vec,
-        const std::vector<MessageBuffer*>& out_vec);
+        const std::vector<MessageBuffer*>& out_vec, ClockedObject *em);
     void wakeup();
 
     void printStats(std::ostream& out) const;
@@ -90,7 +90,8 @@ class Throttle : public Consumer
   private:
     void init(NodeID node, int link_latency, int link_bandwidth_multiplier,
               int endpoint_bandwidth);
-    void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
+    void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr,
+        ClockedObject *em);
     void linkUtilized(double ratio) { m_links_utilized += ratio; }
 
     // Private copy constructor and assignment operator

@@ -28,9 +28,9 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 
-class BasicRouter(SimObject):
+class BasicRouter(ClockedObject):
     type = 'BasicRouter'
     cxx_header = "mem/ruby/network/BasicRouter.hh"
     router_id = Param.Int("ID in relation to other routers")

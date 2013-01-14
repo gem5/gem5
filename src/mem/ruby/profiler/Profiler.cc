@@ -137,7 +137,7 @@ Profiler::wakeup()
     }
 
     //g_system_ptr->getNetwork()->printStats(out);
-    schedule(m_event, g_system_ptr->clockEdge(Cycles(m_stats_period )));
+    schedule(m_event, g_system_ptr->clockEdge(Cycles(m_stats_period)));
 }
 
 void
@@ -571,7 +571,7 @@ Profiler::profileSharing(const Address& addr, AccessType type,
 }
 
 void
-Profiler::profileMsgDelay(int virtualNetwork, int delayCycles)
+Profiler::profileMsgDelay(uint32_t virtualNetwork, Time delayCycles)
 {
     assert(virtualNetwork < m_delayedCyclesVCHistograms.size());
     m_delayedCyclesHistogram.add(delayCycles);

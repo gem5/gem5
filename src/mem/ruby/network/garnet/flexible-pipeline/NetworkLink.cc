@@ -32,7 +32,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 
 NetworkLink::NetworkLink(const Params *p)
-    : SimObject(p), FlexibleConsumer(this)
+    : ClockedObject(p), FlexibleConsumer(this)
 {
     linkBuffer = new flitBuffer();
     m_in_port = 0;

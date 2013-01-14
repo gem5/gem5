@@ -34,9 +34,9 @@
 #include <vector>
 
 #include "params/BasicRouter.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
-class BasicRouter : public SimObject
+class BasicRouter : public ClockedObject
 {
   public:
     typedef BasicRouterParams Params;

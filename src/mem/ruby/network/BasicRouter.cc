@@ -29,7 +29,7 @@
 #include "mem/ruby/network/BasicRouter.hh"
 
 BasicRouter::BasicRouter(const Params *p)
-    : SimObject(p)
+    : ClockedObject(p)
 {
     m_id = p->router_id;
 }

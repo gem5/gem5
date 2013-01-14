@@ -39,11 +39,11 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/orion/NetworkPower.hh"
 #include "params/NetworkLink_d.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class GarnetNetwork_d;
 
-class NetworkLink_d : public SimObject, public Consumer
+class NetworkLink_d : public ClockedObject, public Consumer
 {
   public:
     typedef NetworkLink_dParams Params;

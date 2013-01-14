@@ -106,6 +106,7 @@ NetworkInterface::addNode(vector<MessageBuffer*>& in,
     // protocol injects messages into the NI
     for (int j = 0; j < m_virtual_networks; j++) {
         inNode_ptr[j]->setConsumer(this);
+        inNode_ptr[j]->setClockObj(m_net_ptr);
     }
 }
 

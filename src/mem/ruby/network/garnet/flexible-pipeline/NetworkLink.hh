@@ -39,11 +39,11 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "params/NetworkLink.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class GarnetNetwork;
 
-class NetworkLink : public SimObject, public FlexibleConsumer
+class NetworkLink : public ClockedObject, public FlexibleConsumer
 {
   public:
     typedef NetworkLinkParams Params;

@@ -60,6 +60,8 @@ class MemoryControl : public ClockedObject, public Consumer
 
     virtual void setConsumer(Consumer* consumer_ptr) = 0;
     virtual Consumer* getConsumer() = 0;
+    virtual void setClockObj(ClockedObject* consumer_ptr) {}
+
     virtual void setDescription(const std::string& name) = 0;
     virtual std::string getDescription() = 0;
 

@@ -39,12 +39,12 @@
 #include <set>
 
 #include "mem/ruby/common/TypeDefines.hh"
-#include "sim/eventq.hh"
+#include "sim/clocked_object.hh"
 
 class Consumer
 {
   public:
-    Consumer(EventManager *_em)
+    Consumer(ClockedObject *_em)
         : m_last_scheduled_wakeup(0), m_last_wakeup(0), em(_em)
     {
     }
@@ -95,7 +95,7 @@ class Consumer
     Tick m_last_scheduled_wakeup;
     std::set<Tick> m_scheduled_wakeups;
     Tick m_last_wakeup;
-    EventManager *em;
+    ClockedObject *em;
 
     class ConsumerEvent : public Event
     {

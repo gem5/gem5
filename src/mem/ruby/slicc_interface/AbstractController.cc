@@ -30,7 +30,7 @@
 #include "mem/ruby/system/System.hh"
 
 AbstractController::AbstractController(const Params *p)
-    : SimObject(p), Consumer(this)
+    : ClockedObject(p), Consumer(this)
 {
     m_version = p->version;
     m_transitions_per_cycle = p->transitions_per_cycle;

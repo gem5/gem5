@@ -152,7 +152,7 @@ class Profiler : public SimObject
 
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
-    void profileMsgDelay(int virtualNetwork, int delayCycles);
+    void profileMsgDelay(uint32_t virtualNetwork, Time delayCycles);
 
     void print(std::ostream& out) const;
 

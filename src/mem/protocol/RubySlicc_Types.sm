@@ -36,13 +36,12 @@
 //
 
 external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
-
 external_type(OutPort, primitive="yes");
 
 structure(InPort, external = "yes", primitive="yes") {
   bool isReady();
   void dequeue();
-  int dequeue_getDelayCycles();
+  Time dequeue_getDelayCycles();
   void recycle();
   bool isEmpty();
 }

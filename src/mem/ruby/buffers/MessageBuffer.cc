@@ -42,6 +42,8 @@ MessageBuffer::MessageBuffer(const string &name)
 {
     m_msg_counter = 0;
     m_consumer_ptr = NULL;
+    m_clockobj_ptr = NULL;
+
     m_ordering_set = false;
     m_strict_fifo = true;
     m_size = 0;
@@ -66,10 +68,10 @@ MessageBuffer::MessageBuffer(const string &name)
 int
 MessageBuffer::getSize()
 {
-    if (m_time_last_time_size_checked == g_system_ptr->getTime()) {
+    if (m_time_last_time_size_checked == m_clockobj_ptr->curCycle()) {
         return m_size_last_time_size_checked;
     } else {
-        m_time_last_time_size_checked = g_system_ptr->getTime();
+        m_time_last_time_size_checked = m_clockobj_ptr->curCycle();
         m_size_last_time_size_checked = m_size;
         return m_size;
     }
@@ -89,11 +91,11 @@ MessageBuffer::areNSlotsAvailable(int n)
     // until next cycle, but enqueue operations effect the visible
     // size immediately
     int current_size = max(m_size_at_cycle_start, m_size);
-    if (m_time_last_time_pop < g_system_ptr->getTime()) {
+    if (m_time_last_time_pop < m_clockobj_ptr->curCycle()) {
         // no pops this cycle - m_size is correct
         current_size = m_size;
     } else {
-        if (m_time_last_time_enqueue < g_system_ptr->getTime()) {
+        if (m_time_last_time_enqueue < m_clockobj_ptr->curCycle()) {
             // no enqueues this cycle - m_size_at_cycle_start is correct
             current_size = m_size_at_cycle_start;
         } else {
@@ -155,9 +157,9 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     m_size++;
 
     // record current time incase we have a pop that also adjusts my size
-    if (m_time_last_time_enqueue < g_system_ptr->getTime()) {
+    if (m_time_last_time_enqueue < m_clockobj_ptr->curCycle()) {
         m_msgs_this_cycle = 0;  // first msg this cycle
-        m_time_last_time_enqueue = g_system_ptr->getTime();
+        m_time_last_time_enqueue = m_clockobj_ptr->curCycle();
     }
     m_msgs_this_cycle++;
 
@@ -168,7 +170,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
     assert(delta>0);
-    Time current_time = g_system_ptr->getTime();
+    Time current_time = m_clockobj_ptr->curCycle();
     Time arrival_time = 0;
     if (!RubySystem::getRandomization() || (m_randomization == false)) {
         // No randomization
@@ -191,11 +193,10 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, m_name,
-                  current_time * g_system_ptr->clockPeriod(),
-                  delta * g_system_ptr->clockPeriod(),
-                  arrival_time * g_system_ptr->clockPeriod(),
-                  m_last_arrival_time * g_system_ptr->clockPeriod());
+                  *this, m_name, current_time * m_clockobj_ptr->clockPeriod(),
+                  delta * m_clockobj_ptr->clockPeriod(),
+                  arrival_time * m_clockobj_ptr->clockPeriod(),
+                  m_last_arrival_time * m_clockobj_ptr->clockPeriod());
         }
     }
 
@@ -208,10 +209,10 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     Message* msg_ptr = message.get();
     assert(msg_ptr != NULL);
 
-    assert(g_system_ptr->getTime() >= msg_ptr->getLastEnqueueTime() &&
+    assert(m_clockobj_ptr->curCycle() >= msg_ptr->getLastEnqueueTime() &&
            "ensure we aren't dequeued early");
 
-    msg_ptr->setDelayedCycles(g_system_ptr->getTime() -
+    msg_ptr->setDelayedCycles(m_clockobj_ptr->curCycle() -
                               msg_ptr->getLastEnqueueTime() +
                               msg_ptr->getDelayedCycles());
     msg_ptr->setLastEnqueueTime(arrival_time);
@@ -222,9 +223,8 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    DPRINTF(RubyQueue, "Enqueue with arrival_time %lld.\n",
-            arrival_time * g_system_ptr->clockPeriod());
-    DPRINTF(RubyQueue, "Enqueue Message: %s.\n", (*(message.get())));
+    DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
+            arrival_time * m_clockobj_ptr->clockPeriod(), *(message.get()));
 
     // Schedule the wakeup
     if (m_consumer_ptr != NULL) {
@@ -235,18 +235,11 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     }
 }
 
-int
+Time
 MessageBuffer::dequeue_getDelayCycles(MsgPtr& message)
 {
-    int delay_cycles = -1;  // null value
-
     dequeue(message);
-
-    // get the delay cycles
-    delay_cycles = setAndReturnDelayCycles(message);
-
-    assert(delay_cycles >= 0);
-    return delay_cycles;
+    return setAndReturnDelayCycles(message);
 }
 
 void
@@ -259,21 +252,17 @@ MessageBuffer::dequeue(MsgPtr& message)
     DPRINTF(RubyQueue, "Enqueue message is %s\n", (*(message.get())));
 }
 
-int
+Time
 MessageBuffer::dequeue_getDelayCycles()
 {
-    int delay_cycles = -1;  // null value
-
     // get MsgPtr of the message about to be dequeued
     MsgPtr message = m_prio_heap.front().m_msgptr;
 
     // get the delay cycles
-    delay_cycles = setAndReturnDelayCycles(message);
-
+    Time delayCycles = setAndReturnDelayCycles(message);
     dequeue();
 
-    assert(delay_cycles >= 0);
-    return delay_cycles;
+    return delayCycles;
 }
 
 void
@@ -287,9 +276,9 @@ MessageBuffer::pop()
 
     // record previous size and time so the current buffer size isn't
     // adjusted until next cycle
-    if (m_time_last_time_pop < g_system_ptr->getTime()) {
+    if (m_time_last_time_pop < m_clockobj_ptr->curCycle()) {
         m_size_at_cycle_start = m_size;
-        m_time_last_time_pop = g_system_ptr->getTime();
+        m_time_last_time_pop = m_clockobj_ptr->curCycle();
     }
     m_size--;
 }
@@ -315,11 +304,11 @@ MessageBuffer::recycle()
     MessageBufferNode node = m_prio_heap.front();
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
-    node.m_time = g_system_ptr->getTime() + m_recycle_latency;
+    node.m_time = m_clockobj_ptr->curCycle() + m_recycle_latency;
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
-    m_consumer_ptr->scheduleEventAbsolute(g_system_ptr->getTime() +
+    m_consumer_ptr->scheduleEventAbsolute(m_clockobj_ptr->curCycle() +
                                           m_recycle_latency);
 }
 
@@ -335,7 +324,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
     //
     while(!m_stall_msg_map[addr].empty()) {
         m_msg_counter++;
-        MessageBufferNode msgNode(g_system_ptr->getTime() + 1,
+        MessageBufferNode msgNode(m_clockobj_ptr->curCycle() + 1,
                                   m_msg_counter, 
                                   m_stall_msg_map[addr].front());
 
@@ -364,7 +353,7 @@ MessageBuffer::reanalyzeAllMessages()
 
         while(!(map_iter->second).empty()) {
             m_msg_counter++;
-            MessageBufferNode msgNode(g_system_ptr->getTime() + 1,
+            MessageBufferNode msgNode(m_clockobj_ptr->curCycle() + 1,
                                       m_msg_counter, 
                                       (map_iter->second).front());
 
@@ -397,23 +386,19 @@ MessageBuffer::stallMessage(const Address& addr)
     (m_stall_msg_map[addr]).push_back(message);
 }
 
-int
+Time
 MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
 {
-    int delay_cycles = -1;  // null value
-
     // get the delay cycles of the message at the top of the queue
 
     // this function should only be called on dequeue
     // ensure the msg hasn't been enqueued
-    assert(msg_ptr->getLastEnqueueTime() <= g_system_ptr->getTime());
-    msg_ptr->setDelayedCycles(g_system_ptr->getTime() -
-                              msg_ptr->getLastEnqueueTime() +
-                              msg_ptr->getDelayedCycles());
-    delay_cycles = msg_ptr->getDelayedCycles();
+    assert(msg_ptr->getLastEnqueueTime() <= m_clockobj_ptr->curCycle());
+    msg_ptr->setDelayedCycles(m_clockobj_ptr->curCycle() -
+                             msg_ptr->getLastEnqueueTime() +
+                             msg_ptr->getDelayedCycles());
 
-    assert(delay_cycles >= 0);
-    return delay_cycles;
+    return msg_ptr->getDelayedCycles();
 }
 
 void
@@ -440,7 +425,7 @@ bool
 MessageBuffer::isReady() const
 {
     return ((m_prio_heap.size() > 0) &&
-            (m_prio_heap.front().m_time <= g_system_ptr->getTime()));
+            (m_prio_heap.front().m_time <= m_clockobj_ptr->curCycle()));
 }
 
 bool

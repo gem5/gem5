@@ -67,7 +67,7 @@ Switch::init()
 void
 Switch::addInPort(const vector<MessageBuffer*>& in)
 {
-    m_perfect_switch_ptr->addInPort(in);
+    m_perfect_switch_ptr->addInPort(in, this);
 }
 
 void
@@ -97,7 +97,7 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
     m_perfect_switch_ptr->addOutPort(intermediateBuffers, routing_table_entry);
 
     // Hook the queues to the Throttle
-    throttle_ptr->addLinks(intermediateBuffers, out);
+    throttle_ptr->addLinks(intermediateBuffers, out, this);
 }
 
 void

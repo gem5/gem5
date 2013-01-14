@@ -41,12 +41,12 @@
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/packet.hh"
 #include "params/RubyController.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class MessageBuffer;
 class Network;
 
-class AbstractController : public SimObject, public Consumer
+class AbstractController : public ClockedObject, public Consumer
 {
   public:
     typedef RubyControllerParams Params;

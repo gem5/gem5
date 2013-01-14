@@ -29,6 +29,7 @@
 
 from m5.params import *
 from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 from BasicLink import BasicLink
 
 class Topology(SimObject):
@@ -42,7 +43,7 @@ class Topology(SimObject):
     print_config = Param.Bool(False,
         "display topology config in the stats file")
 
-class RubyNetwork(SimObject):
+class RubyNetwork(ClockedObject):
     type = 'RubyNetwork'
     cxx_class = 'Network'
     cxx_header = "mem/ruby/network/Network.hh"

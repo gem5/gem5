@@ -49,6 +49,12 @@ class TimerTable
         m_consumer_ptr = consumer_ptr;
     }
 
+    void setClockObj(ClockedObject* obj)
+    {
+        assert(m_clockobj_ptr == NULL);
+        m_clockobj_ptr = obj;
+    }
+
     void
     setDescription(const std::string& name)
     {
@@ -78,7 +84,12 @@ class TimerTable
     mutable bool m_next_valid;
     mutable Time m_next_time; // Only valid if m_next_valid is true
     mutable Address m_next_address;  // Only valid if m_next_valid is true
-    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
+
+    //! Object used for querying time.
+    ClockedObject* m_clockobj_ptr;
+    //! Consumer to signal a wakeup()
+    Consumer* m_consumer_ptr;
+
     std::string m_name;
 };
 

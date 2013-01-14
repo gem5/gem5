@@ -37,7 +37,7 @@ uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
 
 Network::Network(const Params *p)
-    : SimObject(p)
+    : ClockedObject(p)
 {
     m_virtual_networks = p->number_of_virtual_networks;
     m_topology_ptr = p->topology;

@@ -28,9 +28,9 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 
-class RubyController(SimObject):
+class RubyController(ClockedObject):
     type = 'RubyController'
     cxx_class = 'AbstractController'
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"

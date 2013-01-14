@@ -27,23 +27,21 @@
  */
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
 
 void
 Consumer::scheduleEvent(Time timeDelta)
 {
-    scheduleEventAbsolute(timeDelta + g_system_ptr->getTime());
+    scheduleEventAbsolute(timeDelta + em->curCycle());
 }
 
 void
 Consumer::scheduleEventAbsolute(Time timeAbs)
 {
-    Tick evt_time = g_system_ptr->clockPeriod() * timeAbs;
+    Tick evt_time = em->clockPeriod() * timeAbs;
     if (!alreadyScheduled(evt_time)) {
         // This wakeup is not redundant
         ConsumerEvent *evt = new ConsumerEvent(this);
-        assert(timeAbs > g_system_ptr->getTime());
+        assert(timeAbs > em->curCycle());
 
         em->schedule(evt, evt_time);
         insertScheduledWakeupTime(evt_time);

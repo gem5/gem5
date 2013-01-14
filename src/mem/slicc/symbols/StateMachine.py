@@ -527,6 +527,8 @@ $c_ident::init()
 {
     MachineType machine_type;
     int base;
+    machine_type = string_to_MachineType("${{var.machine.ident}}");
+    base = MachineType_base_number(machine_type);
 
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
@@ -592,8 +594,6 @@ $c_ident::init()
 
                 assert var.machine is not None
                 code('''
-machine_type = string_to_MachineType("${{var.machine.ident}}");
-base = MachineType_base_number(machine_type);
 $vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet, "$vnet_type");
 ''')
 
@@ -638,15 +638,14 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
         for prefetcher in self.prefetchers:
             code('${{prefetcher.code}}.setController(this);')
 
-        # Set the queue consumers
         code()
         for port in self.in_ports:
+            # Set the queue consumers
             code('${{port.code}}.setConsumer(this);')
-
-        # Set the queue descriptions
-        code()
-        for port in self.in_ports:
+            # Set the queue descriptions
             code('${{port.code}}.setDescription("[Version " + to_string(m_version) + ", $ident, $port]");')
+            # Set the clock object
+            code('${{port.code}}.setClockObj(this);')
 
         # Initialize the transition profiling
         code()
@@ -1139,7 +1138,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
     ${ident}_State next_state = state;
 
     DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
-            *this, g_system_ptr->getTime(), ${ident}_State_to_string(state),
+            *this, curCycle(), ${ident}_State_to_string(state),
             ${ident}_Event_to_string(event), addr);
 
     TransitionResult result =
@@ -1312,7 +1311,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
       default:
         fatal("Invalid transition\\n"
               "%s time: %d addr: %s event: %s state: %s\\n",
-              name(), g_system_ptr->getTime(), addr, event, state);
+              name(), curCycle(), addr, event, state);
     }
     return TransitionResult_Valid;
 }

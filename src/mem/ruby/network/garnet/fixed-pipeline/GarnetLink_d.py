@@ -30,10 +30,10 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.SimObject import SimObject
+from ClockedObject import ClockedObject
 from BasicLink import BasicIntLink, BasicExtLink
 
-class NetworkLink_d(SimObject):
+class NetworkLink_d(ClockedObject):
     type = 'NetworkLink_d'
     cxx_header = "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
     link_id = Param.Int(Parent.link_id, "link id")

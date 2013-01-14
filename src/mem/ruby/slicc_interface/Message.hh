@@ -73,12 +73,11 @@ class Message : public RefCounted
     virtual bool functionalWrite(Packet *pkt) = 0;
     //{ fatal("Write functional access not implemented!"); }
 
-    void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
-    const int& getDelayedCycles() const {return m_DelayedCycles;}
-    int& getDelayedCycles() {return m_DelayedCycles;}
+    void setDelayedCycles(const Time cycles) { m_DelayedCycles = cycles; }
+    const Time getDelayedCycles() const {return m_DelayedCycles;}
+
     void setLastEnqueueTime(const Time& time) { m_LastEnqueueTime = time; }
-    const Time& getLastEnqueueTime() const {return m_LastEnqueueTime;}
-    Time& getLastEnqueueTime() {return m_LastEnqueueTime;}
+    const Time getLastEnqueueTime() const {return m_LastEnqueueTime;}
 
     const Time& getTime() const { return m_time; }
     void setTime(const Time& new_time) { m_time = new_time; }

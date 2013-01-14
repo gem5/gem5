@@ -49,14 +49,14 @@
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "params/RubyNetwork.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
 class Topology;
 
-class Network : public SimObject
+class Network : public ClockedObject
 {
   public:
     typedef RubyNetworkParams Params;

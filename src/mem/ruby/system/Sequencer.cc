@@ -88,7 +88,7 @@ Sequencer::wakeup()
     assert(getDrainState() != Drainable::Draining);
 
     // Check for deadlock of any of the requests
-    Time current_time = g_system_ptr->getTime();
+    Time current_time = curCycle();
 
     // Check across all outstanding requests
     int total_outstanding = 0;
@@ -130,8 +130,7 @@ Sequencer::wakeup()
 
     if (m_outstanding_count > 0) {
         // If there are still outstanding requests, keep checking
-        schedule(deadlockCheckEvent,
-            g_system_ptr->clockPeriod() * m_deadlock_threshold + curTick());
+        schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
 }
 
@@ -211,8 +210,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     // See if we should schedule a deadlock check
     if (!deadlockCheckEvent.scheduled() &&
         getDrainState() != Drainable::Draining) {
-        schedule(deadlockCheckEvent,
-            g_system_ptr->clockPeriod() * m_deadlock_threshold + curTick());
+        schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
 
     Address line_addr(pkt->getAddr());
@@ -242,8 +240,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
             m_writeRequestTable.insert(default_entry);
         if (r.second) {
             RequestTable::iterator i = r.first;
-            i->second = new SequencerRequest(pkt, request_type,
-                                             g_system_ptr->getTime());
+            i->second = new SequencerRequest(pkt, request_type, curCycle());
             m_outstanding_count++;
         } else {
           // There is an outstanding write request for the cache line
@@ -263,8 +260,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 
         if (r.second) {
             RequestTable::iterator i = r.first;
-            i->second = new SequencerRequest(pkt, request_type,
-                                             g_system_ptr->getTime());
+            i->second = new SequencerRequest(pkt, request_type, curCycle());
             m_outstanding_count++;
         } else {
             // There is an outstanding read request for the cache line
@@ -480,8 +476,8 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         m_dataCache_ptr->setMRU(request_line_address);
     }
 
-    assert(g_system_ptr->getTime() >= issued_time);
-    Time miss_latency = g_system_ptr->getTime() - issued_time;
+    assert(curCycle() >= issued_time);
+    Time miss_latency = curCycle() - issued_time;
 
     // Profile the miss latency for all non-zero demand misses
     if (miss_latency != 0) {
@@ -489,18 +485,14 @@ Sequencer::hitCallback(SequencerRequest* srequest,
 
         if (mach == GenericMachineType_L1Cache_wCC) {
             g_system_ptr->getProfiler()->missLatencyWcc(issued_time,
-                                                   initialRequestTime,
-                                                   forwardRequestTime,
-                                                   firstResponseTime,
-                                                   g_system_ptr->getTime());
+                initialRequestTime, forwardRequestTime,
+                firstResponseTime, curCycle());
         }
 
         if (mach == GenericMachineType_Directory) {
             g_system_ptr->getProfiler()->missLatencyDir(issued_time,
-                                                   initialRequestTime,
-                                                   forwardRequestTime,
-                                                   firstResponseTime,
-                                                   g_system_ptr->getTime());
+                initialRequestTime, forwardRequestTime,
+                firstResponseTime, curCycle());
         }
 
         DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",

@@ -66,7 +66,7 @@ profile_sharing(const Address& addr, AccessType type, NodeID requestor,
 }
 
 void
-profileMsgDelay(int virtualNetwork, int delayCycles)
+profileMsgDelay(uint32_t virtualNetwork, Time delayCycles)
 {
     g_system_ptr->getProfiler()->profileMsgDelay(virtualNetwork, delayCycles);
 }
@@ -86,6 +86,3 @@ profileGetS(const Address& datablock, const Address& PC, const Set& owner,
     g_system_ptr->getProfiler()->getAddressProfiler()->
         profileGetS(datablock, PC, owner, sharers, requestor);
 }
-
-
-

@@ -86,6 +86,12 @@ class MessageBuffer
         m_consumer_ptr = consumer_ptr;
     }
 
+    void setClockObj(ClockedObject* obj)
+    {
+        assert(m_clockobj_ptr == NULL);
+        m_clockobj_ptr = obj;
+    }
+
     void setDescription(const std::string& name) { m_name = name; }
     std::string getDescription() { return m_name;}
 
@@ -110,12 +116,13 @@ class MessageBuffer
 
     void enqueue(MsgPtr message) { enqueue(message, 1); }
     void enqueue(MsgPtr message, Time delta);
-    //  void enqueueAbsolute(const MsgPtr& message, Time absolute_time);
-    int dequeue_getDelayCycles(MsgPtr& message);  // returns delay
-                                                  // cycles of the
-                                                  // message
+
+    //!  returns delay ticks of the message.
+    Time dequeue_getDelayCycles(MsgPtr& message);
     void dequeue(MsgPtr& message);
-    int dequeue_getDelayCycles();  // returns delay cycles of the message
+
+    //! returns delay cycles of the message
+    Time dequeue_getDelayCycles();
     void dequeue() { pop(); }
     void pop();
     void recycle();
@@ -156,16 +163,19 @@ class MessageBuffer
     int m_recycle_latency;
 
     // Private Methods
-    int setAndReturnDelayCycles(MsgPtr message);
+    Time setAndReturnDelayCycles(MsgPtr message);
 
     // Private copy constructor and assignment operator
     MessageBuffer(const MessageBuffer& obj);
     MessageBuffer& operator=(const MessageBuffer& obj);
 
     // Data Members (m_ prefix)
-    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
+    //! Object used for querying time.
+    ClockedObject* m_clockobj_ptr;
+    //! Consumer to signal a wakeup(), can be NULL
+    Consumer* m_consumer_ptr;
     std::vector<MessageBufferNode> m_prio_heap;
-    
+
     // use a std::map for the stalled messages as this container is
     // sorted and ensures a well-defined iteration order
     typedef std::map< Address, std::list<MsgPtr> > StallMsgMapType;

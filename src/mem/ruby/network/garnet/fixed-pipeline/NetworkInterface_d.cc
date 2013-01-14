@@ -116,6 +116,7 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
 
         // the protocol injects messages into the NI
         inNode_ptr[j]->setConsumer(this);
+        inNode_ptr[j]->setClockObj(m_net_ptr);
     }
 }
 
