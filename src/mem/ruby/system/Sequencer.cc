@@ -104,8 +104,8 @@ Sequencer::wakeup()
              "version: %d request.paddr: 0x%x m_readRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
              Address(request->pkt->getAddr()), m_readRequestTable.size(),
-             current_time, request->issue_time,
-             current_time - request->issue_time);
+              current_time * clockPeriod(), request->issue_time * clockPeriod(),
+              (current_time * clockPeriod()) - (request->issue_time * clockPeriod()));
     }
 
     RequestTable::iterator write = m_writeRequestTable.begin();
@@ -119,8 +119,8 @@ Sequencer::wakeup()
              "version: %d request.paddr: 0x%x m_writeRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
              Address(request->pkt->getAddr()), m_writeRequestTable.size(),
-             current_time, request->issue_time,
-             current_time - request->issue_time);
+              current_time * clockPeriod(), request->issue_time * clockPeriod(),
+              (current_time * clockPeriod()) - (request->issue_time * clockPeriod()));
     }
 
     total_outstanding += m_writeRequestTable.size();
