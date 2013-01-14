@@ -1,24 +1,24 @@
-Real time: Nov/10/2012 16:14:51
+Real time: Jan/14/2013 08:26:27
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 184
-Elapsed_time_in_minutes: 3.06667
-Elapsed_time_in_hours: 0.0511111
-Elapsed_time_in_days: 0.00212963
+Elapsed_time_in_seconds: 179
+Elapsed_time_in_minutes: 2.98333
+Elapsed_time_in_hours: 0.0497222
+Elapsed_time_in_days: 0.00207176
 
-Virtual_time_in_seconds: 183.88
-Virtual_time_in_minutes: 3.06467
-Virtual_time_in_hours:   0.0510778
-Virtual_time_in_days:    0.00212824
+Virtual_time_in_seconds: 178.39
+Virtual_time_in_minutes: 2.97317
+Virtual_time_in_hours:   0.0495528
+Virtual_time_in_days:    0.0020647
 
 Ruby_current_time: 7473494
 Ruby_start_time: 0
 Ruby_cycles: 7473494
 
-mbytes_resident: 71.2734
-mbytes_total: 409.457
-resident_ratio: 0.174078
+mbytes_resident: 71.9219
+mbytes_total: 417.055
+resident_ratio: 0.17248
 
 ruby_cycles_executed: [ 7473495 7473495 7473495 7473495 7473495 7473495 7473495 7473495 ]
 
@@ -80,13 +80,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 183
+user_time: 178
 system_time: 0
-page_reclaims: 10545
-page_faults: 152
+page_reclaims: 10461
+page_faults: 0
 swaps: 0
-block_inputs: 27544
-block_outputs: 272
+block_inputs: 0
+block_outputs: 288
 
 Network Stats
 -------------
@@ -374,20 +374,20 @@ links_utilized_percent_switch_10: 15.884
   outgoing_messages_switch_10_link_9_Writeback_Control: 992796 7942368 [ 0 604048 388748 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_10_link_9_Unblock_Control: 604436 4835488 [ 0 0 604436 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.l1_cntrl0.L1IcacheMemory
-  system.l1_cntrl0.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl0.L1IcacheMemory
+  system.ruby.l1_cntrl0.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl0.L1DcacheMemory
-  system.l1_cntrl0.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
+  system.ruby.l1_cntrl0.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
 
  --- L1Cache ---
@@ -552,124 +552,124 @@ II  Writeback_Ack [0 0 0 0 0 0 0 0 ] 0
 II  Writeback_Ack_Data [312 330 347 359 329 342 345 312 ] 2676
 II  Writeback_Nack [1 2 1 1 4 1 2 4 ] 16
 
-Cache Stats: system.l1_cntrl1.L1IcacheMemory
-  system.l1_cntrl1.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl1.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl1.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl1.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl1.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl1.L1IcacheMemory
+  system.ruby.l1_cntrl1.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl1.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl1.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl1.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl1.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl1.L1DcacheMemory
-  system.l1_cntrl1.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl1.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl1.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl1.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl1.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl1.L1DcacheMemory
+  system.ruby.l1_cntrl1.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl1.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl1.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl1.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl1.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl2.L1IcacheMemory
-  system.l1_cntrl2.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl2.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl2.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl2.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl2.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl2.L1IcacheMemory
+  system.ruby.l1_cntrl2.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl2.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl2.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl2.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl2.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl2.L1DcacheMemory
-  system.l1_cntrl2.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl2.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl2.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl2.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl2.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl2.L1DcacheMemory
+  system.ruby.l1_cntrl2.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl2.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl2.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl2.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl2.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl3.L1IcacheMemory
-  system.l1_cntrl3.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl3.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl3.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl3.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl3.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl3.L1IcacheMemory
+  system.ruby.l1_cntrl3.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl3.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl3.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl3.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl3.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl3.L1DcacheMemory
-  system.l1_cntrl3.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl3.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl3.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl3.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl3.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl3.L1DcacheMemory
+  system.ruby.l1_cntrl3.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl3.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl3.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl3.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl3.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl4.L1IcacheMemory
-  system.l1_cntrl4.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl4.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl4.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl4.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl4.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl4.L1IcacheMemory
+  system.ruby.l1_cntrl4.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl4.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl4.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl4.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl4.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl4.L1DcacheMemory
-  system.l1_cntrl4.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl4.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl4.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl4.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl4.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl4.L1DcacheMemory
+  system.ruby.l1_cntrl4.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl4.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl4.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl4.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl4.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl5.L1IcacheMemory
-  system.l1_cntrl5.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl5.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl5.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl5.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl5.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl5.L1IcacheMemory
+  system.ruby.l1_cntrl5.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl5.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl5.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl5.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl5.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl5.L1DcacheMemory
-  system.l1_cntrl5.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl5.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl5.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl5.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl5.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl5.L1DcacheMemory
+  system.ruby.l1_cntrl5.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl5.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl5.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl5.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl5.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl6.L1IcacheMemory
-  system.l1_cntrl6.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl6.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl6.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl6.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl6.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl6.L1IcacheMemory
+  system.ruby.l1_cntrl6.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl6.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl6.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl6.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl6.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl6.L1DcacheMemory
-  system.l1_cntrl6.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl6.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl6.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl6.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl6.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl6.L1DcacheMemory
+  system.ruby.l1_cntrl6.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl6.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl6.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl6.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl6.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl7.L1IcacheMemory
-  system.l1_cntrl7.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl7.L1IcacheMemory_total_demand_misses: 0
-  system.l1_cntrl7.L1IcacheMemory_total_prefetches: 0
-  system.l1_cntrl7.L1IcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl7.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl7.L1IcacheMemory
+  system.ruby.l1_cntrl7.L1IcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl7.L1IcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl7.L1IcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl7.L1IcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl7.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl7.L1DcacheMemory
-  system.l1_cntrl7.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl7.L1DcacheMemory_total_demand_misses: 0
-  system.l1_cntrl7.L1DcacheMemory_total_prefetches: 0
-  system.l1_cntrl7.L1DcacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl7.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl7.L1DcacheMemory
+  system.ruby.l1_cntrl7.L1DcacheMemory_total_misses: 0
+  system.ruby.l1_cntrl7.L1DcacheMemory_total_demand_misses: 0
+  system.ruby.l1_cntrl7.L1DcacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl7.L1DcacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl7.L1DcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l2_cntrl0.L2cacheMemory
-  system.l2_cntrl0.L2cacheMemory_total_misses: 0
-  system.l2_cntrl0.L2cacheMemory_total_demand_misses: 0
-  system.l2_cntrl0.L2cacheMemory_total_prefetches: 0
-  system.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
-  system.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l2_cntrl0.L2cacheMemory
+  system.ruby.l2_cntrl0.L2cacheMemory_total_misses: 0
+  system.ruby.l2_cntrl0.L2cacheMemory_total_demand_misses: 0
+  system.ruby.l2_cntrl0.L2cacheMemory_total_prefetches: 0
+  system.ruby.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
+  system.ruby.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
 
 
  --- L2Cache ---
@@ -1516,7 +1516,7 @@ ILOXD  Inv [0 ] 0
 ILOXD  DmaAck [0 ] 0
 ILOXD  L2_Replacement [0 ] 0
 
-Memory controller: system.dir_cntrl0.memBuffer:
+Memory controller: system.ruby.dir_cntrl0.memBuffer:
   memory_total_requests: 819736
   memory_reads: 604464
   memory_writes: 215272

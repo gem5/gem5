@@ -1,4 +1,4 @@
-Real time: Dec/30/2012 01:12:43
+Real time: Jan/14/2013 08:41:48
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.51
-Virtual_time_in_minutes: 0.0085
-Virtual_time_in_hours:   0.000141667
-Virtual_time_in_days:    5.90278e-06
+Virtual_time_in_seconds: 0.61
+Virtual_time_in_minutes: 0.0101667
+Virtual_time_in_hours:   0.000169444
+Virtual_time_in_days:    7.06019e-06
 
 Ruby_current_time: 121759
 Ruby_start_time: 0
 Ruby_cycles: 121759
 
-mbytes_resident: 60.1836
-mbytes_total: 277.391
-resident_ratio: 0.217006
+mbytes_resident: 66.375
+mbytes_total: 290.48
+resident_ratio: 0.228541
 
 ruby_cycles_executed: [ 121760 ]
 
@@ -89,11 +89,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 12527
-page_faults: 3
+page_reclaims: 13678
+page_faults: 0
 swaps: 0
-block_inputs: 1360
-block_outputs: 88
+block_inputs: 240
+block_outputs: 152
 
 Network Stats
 -------------
@@ -137,18 +137,18 @@ links_utilized_percent_switch_2: 5.6464
   outgoing_messages_switch_2_link_1_Control: 1377 11016 [ 0 0 1377 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Data: 1373 98856 [ 0 0 1373 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.l1_cntrl0.cacheMemory
-  system.l1_cntrl0.cacheMemory_total_misses: 1377
-  system.l1_cntrl0.cacheMemory_total_demand_misses: 1377
-  system.l1_cntrl0.cacheMemory_total_prefetches: 0
-  system.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
-  system.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
+Cache Stats: system.ruby.l1_cntrl0.cacheMemory
+  system.ruby.l1_cntrl0.cacheMemory_total_misses: 1377
+  system.ruby.l1_cntrl0.cacheMemory_total_demand_misses: 1377
+  system.ruby.l1_cntrl0.cacheMemory_total_prefetches: 0
+  system.ruby.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
+  system.ruby.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl0.cacheMemory_request_type_LD:   36.2382%
-  system.l1_cntrl0.cacheMemory_request_type_ST:   18.5185%
-  system.l1_cntrl0.cacheMemory_request_type_IFETCH:   45.2433%
+  system.ruby.l1_cntrl0.cacheMemory_request_type_LD:   36.2382%
+  system.ruby.l1_cntrl0.cacheMemory_request_type_ST:   18.5185%
+  system.ruby.l1_cntrl0.cacheMemory_request_type_IFETCH:   45.2433%
 
-  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   1377    100%
+  system.ruby.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   1377    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -189,7 +189,7 @@ IS  Data [1122 ] 1122
 
 IM  Data [255 ] 255
 
-Memory controller: system.dir_cntrl0.memBuffer:
+Memory controller: system.ruby.dir_cntrl0.memBuffer:
   memory_total_requests: 2750
   memory_reads: 1377
   memory_writes: 1373

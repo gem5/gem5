@@ -4,35 +4,35 @@ sim_seconds                                  0.000318                       # Nu
 sim_ticks                                      318321                       # Number of ticks simulated
 final_tick                                     318321                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                1374742                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 271156                       # Number of bytes of host memory used
-host_seconds                                     0.23                       # Real time elapsed on the host
-system.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
-system.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
-system.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
-system.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
-system.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
-system.l1_cntrl0.prefetcher.hits                    0                       # number of prefetched blocks accessed
-system.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
-system.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
-system.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+host_tick_rate                                1534160                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 277364                       # Number of bytes of host memory used
+host_seconds                                     0.21                       # Real time elapsed on the host
+system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
+system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
+system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
+system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.ruby.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.ruby.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.ruby.l1_cntrl0.prefetcher.hits               0                       # number of prefetched blocks accessed
+system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
 
 ---------- End Simulation Statistics   ----------

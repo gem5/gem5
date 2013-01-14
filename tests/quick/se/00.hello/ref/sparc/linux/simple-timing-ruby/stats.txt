@@ -4,11 +4,11 @@ sim_seconds                                  0.000108                       # Nu
 sim_ticks                                      107952                       # Number of ticks simulated
 final_tick                                     107952                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  33106                       # Simulator instruction rate (inst/s)
-host_op_rate                                    33103                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 670773                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 232832                       # Number of bytes of host memory used
-host_seconds                                     0.16                       # Real time elapsed on the host
+host_inst_rate                                  20687                       # Simulator instruction rate (inst/s)
+host_op_rate                                    20685                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 419155                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 289516                       # Number of bytes of host memory used
+host_seconds                                     0.26                       # Real time elapsed on the host
 sim_insts                                        5327                       # Number of instructions simulated
 sim_ops                                          5327                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             21480                       # Number of bytes read from this memory
@@ -33,12 +33,12 @@ system.physmem.bw_write::total               46919001                       # Wr
 system.physmem.bw_total::cpu.inst           198977323                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data            89549059                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total              288526382                       # Total bandwidth to/from this memory (bytes/s)
-system.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.l1_cntrl0.cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.l1_cntrl0.cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.l1_cntrl0.cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
+system.ruby.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
+system.ruby.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
+system.ruby.l1_cntrl0.cacheMemory.num_tag_array_writes            0                       # number of tag array writes
+system.ruby.l1_cntrl0.cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
+system.ruby.l1_cntrl0.cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
 system.cpu.numCycles                           107952                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
