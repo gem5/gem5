@@ -226,7 +226,7 @@ class Type(Symbol):
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 ''')
 
         for dm in self.data_members.values():
@@ -242,9 +242,13 @@ class Type(Symbol):
 $klass ${{self.c_ident}}$parent
 {
   public:
-    ${{self.c_ident}}()
-    {
+    ${{self.c_ident}}
 ''', klass="class")
+
+        if self.isMessage:
+            code('(Time curTime) : %s(curTime) {' % self["interface"])
+        else:
+            code('()\n\t\t{')
 
         code.indent()
         if not self.isGlobal:
@@ -284,13 +288,19 @@ $klass ${{self.c_ident}}$parent
         if not self.isGlobal:
             params = [ 'const %s& local_%s' % (dm.type.c_ident, dm.ident) \
                        for dm in self.data_members.itervalues() ]
-
             params = ', '.join(params)
+
+            if self.isMessage:
+                params = "const Time curTime, " + params
+
             code('${{self.c_ident}}($params)')
 
             # Call superclass constructor
             if "interface" in self:
-                code('    : ${{self["interface"]}}()')
+                if self.isMessage:
+                    code('    : ${{self["interface"]}}(curTime)')
+                else:
+                    code('    : ${{self["interface"]}}()')
 
             code('{')
             code.indent()
@@ -302,14 +312,8 @@ $klass ${{self.c_ident}}$parent
             code.dedent()
             code('}')
 
-        # create a static factory method and a clone member
+        # create a clone member
         code('''
-static ${{self.c_ident}}*
-create()
-{
-    return new ${{self.c_ident}}();
-}
-
 ${{self.c_ident}}*
 clone() const
 {
@@ -419,7 +423,6 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 
 #include "mem/protocol/${{self.c_ident}}.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
 using namespace std;
 ''')

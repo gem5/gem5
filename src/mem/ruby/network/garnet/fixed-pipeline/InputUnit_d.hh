@@ -56,9 +56,9 @@ class InputUnit_d : public Consumer
     inline int get_inlink_id() { return m_in_link->get_id(); }
 
     inline void
-    set_vc_state(VC_state_type state, int vc)
+    set_vc_state(VC_state_type state, int vc, Time curTime)
     {
-        m_vcs[vc]->set_state(state);
+        m_vcs[vc]->set_state(state, curTime);
     }
 
     inline void
@@ -86,9 +86,9 @@ class InputUnit_d : public Consumer
     }
 
     inline void
-    increment_credit(int in_vc, bool free_signal)
+    increment_credit(int in_vc, bool free_signal, Time curTime)
     {
-        flit_d *t_flit = new flit_d(in_vc, free_signal);
+        flit_d *t_flit = new flit_d(in_vc, free_signal, curTime);
         creditQueue->insert(t_flit);
         m_credit_link->scheduleEvent(1);
     }
@@ -100,16 +100,16 @@ class InputUnit_d : public Consumer
     }
 
     inline void
-    updateRoute(int vc, int outport)
+    updateRoute(int vc, int outport, Time curTime)
     {
         m_vcs[vc]->set_outport(outport);
-        m_vcs[vc]->set_state(VC_AB_);
+        m_vcs[vc]->set_state(VC_AB_, curTime);
     }
 
     inline void
-    grant_vc(int in_vc, int out_vc)
+    grant_vc(int in_vc, int out_vc, Time curTime)
     {
-        m_vcs[in_vc]->grant_vc(out_vc);
+        m_vcs[in_vc]->grant_vc(out_vc, curTime);
     }
 
     inline flit_d*
@@ -125,21 +125,22 @@ class InputUnit_d : public Consumer
     }
 
     inline bool
-    need_stage(int vc, VC_state_type state, flit_stage stage)
+    need_stage(int vc, VC_state_type state, flit_stage stage, Time curTime)
     {
-        return m_vcs[vc]->need_stage(state, stage);
+        return m_vcs[vc]->need_stage(state, stage, curTime);
     }
 
     inline bool
-    need_stage_nextcycle(int vc, VC_state_type state, flit_stage stage)
+    need_stage_nextcycle(int vc, VC_state_type state, flit_stage stage,
+                         Time curTime)
     {
-        return m_vcs[vc]->need_stage_nextcycle(state, stage);
+        return m_vcs[vc]->need_stage_nextcycle(state, stage, curTime);
     }
 
     inline bool
-    isReady(int invc)
+    isReady(int invc, Time curTime)
     {
-        return m_vcs[invc]->isReady();
+        return m_vcs[invc]->isReady(curTime);
     }
 
     inline int

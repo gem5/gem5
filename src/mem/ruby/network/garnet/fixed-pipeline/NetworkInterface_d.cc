@@ -71,7 +71,7 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks,
 
     for (int i = 0; i < m_num_vcs; i++) {
         m_out_vc_state.push_back(new OutVcState_d(i, m_net_ptr));
-        m_out_vc_state[i]->setState(IDLE_, g_system_ptr->getTime());
+        m_out_vc_state[i]->setState(IDLE_, m_net_ptr->curCycle());
     }
 }
 
@@ -170,12 +170,15 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 
         for (int i = 0; i < num_flits; i++) {
             m_net_ptr->increment_injected_flits(vnet);
-            flit_d *fl = new flit_d(i, vc, vnet, num_flits, new_msg_ptr);
-            fl->set_delay(g_system_ptr->getTime() - msg_ptr->getTime());
+            flit_d *fl = new flit_d(i, vc, vnet, num_flits, new_msg_ptr,
+                m_net_ptr->curCycle());
+
+            fl->set_delay(m_net_ptr->curCycle() - msg_ptr->getTime());
             m_ni_buffers[vc]->insert(fl);
         }
-        m_ni_enqueue_time[vc] = g_system_ptr->getTime();
-        m_out_vc_state[vc]->setState(ACTIVE_, g_system_ptr->getTime());
+
+        m_ni_enqueue_time[vc] = m_net_ptr->curCycle();
+        m_out_vc_state[vc]->setState(ACTIVE_, m_net_ptr->curCycle());
     }
     return true ;
 }
@@ -191,7 +194,7 @@ NetworkInterface_d::calculateVC(int vnet)
                         m_vc_allocator[vnet] = 0;
 
                 if (m_out_vc_state[(vnet*m_vc_per_vnet) + delta]->isInState(
-                    IDLE_, g_system_ptr->getTime())) {
+                    IDLE_, m_net_ptr->curCycle())) {
                         return ((vnet*m_vc_per_vnet) + delta);
                 }
         }
@@ -212,7 +215,7 @@ void
 NetworkInterface_d::wakeup()
 {
     DPRINTF(RubyNetwork, "m_id: %d woke up at time: %lld",
-            m_id, g_system_ptr->getTime());
+            m_id, m_net_ptr->curCycle());
 
     MsgPtr msg_ptr;
 
@@ -234,7 +237,7 @@ NetworkInterface_d::wakeup()
 
     /*********** Picking messages destined for this NI **********/
 
-    if (inNetLink->isReady()) {
+    if (inNetLink->isReady(m_net_ptr->curCycle())) {
         flit_d *t_flit = inNetLink->consumeLink();
         bool free_signal = false;
         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
@@ -245,13 +248,14 @@ NetworkInterface_d::wakeup()
         }
         // Simply send a credit back since we are not buffering
         // this flit in the NI
-        flit_d *credit_flit = new flit_d(t_flit->get_vc(), free_signal);
+        flit_d *credit_flit = new flit_d(t_flit->get_vc(), free_signal,
+                                         m_net_ptr->curCycle());
         creditQueue->insert(credit_flit);
         m_ni_credit_link->scheduleEvent(1);
 
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
-        int network_delay = g_system_ptr->getTime() -
+        int network_delay = m_net_ptr->curCycle() -
                             t_flit->get_enqueue_time();
         int queueing_delay = t_flit->get_delay();
         m_net_ptr->increment_network_latency(network_delay, vnet);
@@ -261,12 +265,12 @@ NetworkInterface_d::wakeup()
 
     /****************** Checking for credit link *******/
 
-    if (m_credit_link->isReady()) {
+    if (m_credit_link->isReady(m_net_ptr->curCycle())) {
         flit_d *t_flit = m_credit_link->consumeLink();
         m_out_vc_state[t_flit->get_vc()]->increment_credit();
         if (t_flit->is_free_signal()) {
             m_out_vc_state[t_flit->get_vc()]->setState(IDLE_,
-                g_system_ptr->getTime());
+                m_net_ptr->curCycle());
         }
         delete t_flit;
     }
@@ -292,7 +296,9 @@ NetworkInterface_d::scheduleOutputLink()
             vc = 0;
 
         // model buffer backpressure
-        if (m_ni_buffers[vc]->isReady() && m_out_vc_state[vc]->has_credits()) {
+        if (m_ni_buffers[vc]->isReady(m_net_ptr->curCycle()) &&
+            m_out_vc_state[vc]->has_credits()) {
+
             bool is_candidate_vc = true;
             int t_vnet = get_vnet(vc);
             int vc_base = t_vnet * m_vc_per_vnet;
@@ -301,7 +307,7 @@ NetworkInterface_d::scheduleOutputLink()
                 for (int vc_offset = 0; vc_offset < m_vc_per_vnet;
                      vc_offset++) {
                     int t_vc = vc_base + vc_offset;
-                    if (m_ni_buffers[t_vc]->isReady()) {
+                    if (m_ni_buffers[t_vc]->isReady(m_net_ptr->curCycle())) {
                         if (m_ni_enqueue_time[t_vc] < m_ni_enqueue_time[vc]) {
                             is_candidate_vc = false;
                             break;
@@ -315,7 +321,7 @@ NetworkInterface_d::scheduleOutputLink()
             m_out_vc_state[vc]->decrement_credit();
             // Just removing the flit
             flit_d *t_flit = m_ni_buffers[vc]->getTopFlit();
-            t_flit->set_time(g_system_ptr->getTime() + 1);
+            t_flit->set_time(m_net_ptr->curCycle() + 1);
             outSrcQueue->insert(t_flit);
             // schedule the out link
             outNetLink->scheduleEvent(1);
@@ -350,7 +356,7 @@ NetworkInterface_d::checkReschedule()
         }
     }
     for (int vc = 0; vc < m_num_vcs; vc++) {
-        if (m_ni_buffers[vc]->isReadyForNext()) {
+        if (m_ni_buffers[vc]->isReadyForNext(m_net_ptr->curCycle())) {
             scheduleEvent(1);
             return;
         }

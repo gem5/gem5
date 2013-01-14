@@ -34,12 +34,5 @@
 class RubySystem;
 extern RubySystem* g_system_ptr;
 
-// FIXME: this is required by the contructor of Directory_Entry.hh.
-// It can't go into slicc_util.hh because it opens a can of ugly worms
-extern inline int max_tokens()
-{
-  return 1024;
-}
-
 #endif // __MEM_RUBY_COMMON_GLOBAL_HH__
 

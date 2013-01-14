@@ -39,9 +39,7 @@ Router_d::calculate_power()
 {
     //Network Activities from garnet
     calculate_performance_numbers();
-    double sim_cycles;
-    sim_cycles =
-        g_system_ptr->getTime() - m_network_ptr->getRubyStartTime();
+    double sim_cycles = curCycle() - m_network_ptr->getRubyStartTime();
 
     // Number of virtual networks/message classes declared in Ruby
     // maybe greater than active virtual networks.
@@ -248,7 +246,7 @@ NetworkLink_d::calculate_power()
         orion_cfg_ptr);
 
     double sim_cycles =
-        (double)(g_system_ptr->getTime() - m_net_ptr->getRubyStartTime());
+        (double)(m_net_ptr->curCycle() - m_net_ptr->getRubyStartTime());
 
     // Dynamic Power
     // Assume half the bits flipped on every link activity

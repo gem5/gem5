@@ -39,13 +39,14 @@
 class VirtualChannel_d
 {
   public:
-    VirtualChannel_d(int id);
+    VirtualChannel_d(int id, Time curTime);
     ~VirtualChannel_d();
 
-    bool need_stage(VC_state_type state, flit_stage stage);
-    bool need_stage_nextcycle(VC_state_type state, flit_stage stage);
+    bool need_stage(VC_state_type state, flit_stage stage, Time curTime);
+    bool need_stage_nextcycle(VC_state_type state, flit_stage stage,
+                              Time curTime);
     void set_outport(int outport);
-    void grant_vc(int out_vc);
+    void grant_vc(int out_vc, Time curTime);
 
     inline Time get_enqueue_time()          { return m_enqueue_time; }
     inline void set_enqueue_time(Time time) { m_enqueue_time = time; }
@@ -56,7 +57,10 @@ class VirtualChannel_d
     inline void update_credit(int credit)   { m_credit_count = credit; }
     inline void increment_credit()          { m_credit_count++; }
 
-    inline bool isReady() { return m_input_buffer->isReady(); }
+    inline bool isReady(Time curTime)
+    {
+        return m_input_buffer->isReady(curTime);
+    }
 
     inline void
     insertFlit(flit_d *t_flit)
@@ -65,10 +69,10 @@ class VirtualChannel_d
     }
 
     inline void
-    set_state(VC_state_type m_state)
+    set_state(VC_state_type m_state, Time curTime)
     {
         m_vc_state.first = m_state;
-        m_vc_state.second = g_system_ptr->getTime() + 1;
+        m_vc_state.second = curTime + 1;
     }
 
     inline flit_d*

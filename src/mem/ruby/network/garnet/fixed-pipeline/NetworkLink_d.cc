@@ -66,9 +66,9 @@ NetworkLink_d::setSourceQueue(flitBuffer_d *srcQueue)
 void
 NetworkLink_d::wakeup()
 {
-    if (link_srcQueue->isReady()) {
+    if (link_srcQueue->isReady(curCycle())) {
         flit_d *t_flit = link_srcQueue->getTopFlit();
-        t_flit->set_time(g_system_ptr->getTime() + m_latency);
+        t_flit->set_time(curCycle() + m_latency);
         linkBuffer->insert(t_flit);
         link_consumer->scheduleEvent(m_latency);
         m_link_utilized++;

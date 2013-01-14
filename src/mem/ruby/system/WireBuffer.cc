@@ -34,6 +34,8 @@
 
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/WireBuffer.hh"
 
 using namespace std;

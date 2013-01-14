@@ -116,7 +116,7 @@ NetworkLink::getLinkUtilization()
 bool
 NetworkLink::isReady()
 {
-    return linkBuffer->isReady();
+    return linkBuffer->isReady(curCycle());
 }
 
 void
@@ -134,11 +134,11 @@ NetworkLink::setOutPort(int port)
 void
 NetworkLink::wakeup()
 {
-    if (!link_srcQueue->isReady())
+    if (!link_srcQueue->isReady(curCycle()))
         return;
 
     flit *t_flit = link_srcQueue->getTopFlit();
-    t_flit->set_time(g_system_ptr->getTime() + m_latency);
+    t_flit->set_time(curCycle() + m_latency);
     linkBuffer->insert(t_flit);
     link_consumer->scheduleEvent(m_latency);
     m_link_utilized++;

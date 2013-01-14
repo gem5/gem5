@@ -53,7 +53,7 @@ InputUnit_d::InputUnit_d(int id, Router_d *router) : Consumer(router)
     // Instantiating the virtual channels
     m_vcs.resize(m_num_vcs);
     for (int i=0; i < m_num_vcs; i++) {
-        m_vcs[i] = new VirtualChannel_d(i);
+        m_vcs[i] = new VirtualChannel_d(i, m_router->curCycle());
     }
 }
 
@@ -67,7 +67,7 @@ void
 InputUnit_d::wakeup()
 {
     flit_d *t_flit;
-    if (m_in_link->isReady()) {
+    if (m_in_link->isReady(m_router->curCycle())) {
 
         t_flit = m_in_link->consumeLink();
         int vc = t_flit->get_vc();
@@ -79,9 +79,9 @@ InputUnit_d::wakeup()
             // Do the route computation for this vc
             m_router->route_req(t_flit, this, vc);
 
-            m_vcs[vc]->set_enqueue_time(g_system_ptr->getTime());
+            m_vcs[vc]->set_enqueue_time(m_router->curCycle());
         } else {
-            t_flit->advance_stage(SA_);
+            t_flit->advance_stage(SA_, m_router->curCycle());
             m_router->swarb_req();
         }
         // write flit into input buffer

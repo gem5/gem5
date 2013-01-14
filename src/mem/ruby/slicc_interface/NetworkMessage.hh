@@ -36,16 +36,14 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
-class Address;
-
 class NetworkMessage;
 typedef RefCountingPtr<NetworkMessage> NetMsgPtr;
 
 class NetworkMessage : public Message
 {
   public:
-    NetworkMessage()
-        : m_internal_dest_valid(false)
+    NetworkMessage(Time curTime)
+        : Message(curTime), m_internal_dest_valid(false)
     { }
 
     NetworkMessage(const NetworkMessage &other)

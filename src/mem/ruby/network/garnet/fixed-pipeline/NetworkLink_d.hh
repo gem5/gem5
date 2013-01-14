@@ -62,7 +62,7 @@ class NetworkLink_d : public ClockedObject, public Consumer
 
     double calculate_power();
 
-    inline bool isReady()           { return linkBuffer->isReady(); }
+    inline bool isReady(Time curTime) { return linkBuffer->isReady(curTime); }
     inline flit_d* peekLink()       { return linkBuffer->peekTopFlit(); }
     inline flit_d* consumeLink()    { return linkBuffer->getTopFlit(); }
     void init_net_ptr(GarnetNetwork_d* net_ptr)

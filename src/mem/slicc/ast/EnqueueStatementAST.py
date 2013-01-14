@@ -53,7 +53,8 @@ class EnqueueStatementAST(StatementAST):
         self.symtab.newSymbol(v)
 
         # Declare message
-        code("${{msg_type.ident}} *out_msg = new ${{msg_type.ident}};")
+        code("${{msg_type.ident}} *out_msg = \
+                new ${{msg_type.ident}}(curCycle());")
 
         # The other statements
         t = self.statements.generate(code, None)

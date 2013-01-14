@@ -30,12 +30,12 @@
 
 #include "mem/ruby/network/garnet/fixed-pipeline/VirtualChannel_d.hh"
 
-VirtualChannel_d::VirtualChannel_d(int id)
+VirtualChannel_d::VirtualChannel_d(int id, Time curTime)
 {
     m_id = id;
     m_input_buffer = new flitBuffer_d();
     m_vc_state.first = IDLE_;
-    m_vc_state.second = g_system_ptr->getTime();
+    m_vc_state.second = curTime;
     m_enqueue_time = INFINITE_;
 }
 
@@ -51,37 +51,36 @@ VirtualChannel_d::set_outport(int outport)
 }
 
 void
-VirtualChannel_d::grant_vc(int out_vc)
+VirtualChannel_d::grant_vc(int out_vc, Time curTime)
 {
     m_output_vc = out_vc;
     m_vc_state.first = ACTIVE_;
-    m_vc_state.second = g_system_ptr->getTime() + 1;
+    m_vc_state.second = curTime + 1;
     flit_d *t_flit = m_input_buffer->peekTopFlit();
-    t_flit->advance_stage(SA_);
+    t_flit->advance_stage(SA_, curTime);
 }
 
 bool
-VirtualChannel_d::need_stage(VC_state_type state, flit_stage stage)
+VirtualChannel_d::need_stage(VC_state_type state, flit_stage stage,
+                             Time curTime)
 {
-    if ((m_vc_state.first == state) &&
-       (g_system_ptr->getTime() >= m_vc_state.second)) {
-        if (m_input_buffer->isReady()) {
+    if ((m_vc_state.first == state) && (curTime >= m_vc_state.second)) {
+        if (m_input_buffer->isReady(curTime)) {
             flit_d *t_flit = m_input_buffer->peekTopFlit();
-            return(t_flit->is_stage(stage)) ;
+            return(t_flit->is_stage(stage, curTime)) ;
         }
     }
     return false;
-
 }
 
 bool
-VirtualChannel_d::need_stage_nextcycle(VC_state_type state, flit_stage stage)
+VirtualChannel_d::need_stage_nextcycle(VC_state_type state, flit_stage stage,
+                                       Time curTime)
 {
-    if ((m_vc_state.first == state) &&
-       ((g_system_ptr->getTime()+1) >= m_vc_state.second)) {
-        if (m_input_buffer->isReadyForNext()) {
+    if ((m_vc_state.first == state) && ((curTime + 1) >= m_vc_state.second)) {
+        if (m_input_buffer->isReadyForNext(curTime)) {
             flit_d *t_flit = m_input_buffer->peekTopFlit();
-            return(t_flit->is_next_stage(stage)) ;
+            return(t_flit->is_next_stage(stage, curTime)) ;
         }
     }
     return false;

@@ -47,22 +47,22 @@ flitBuffer_d::isEmpty()
 }
 
 bool
-flitBuffer_d::isReady()
+flitBuffer_d::isReady(Time curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit_d *t_flit = peekTopFlit();
-        if (t_flit->get_time() <= g_system_ptr->getTime())
+        if (t_flit->get_time() <= curTime)
             return true;
     }
     return false;
 }
 
 bool
-flitBuffer_d::isReadyForNext()
+flitBuffer_d::isReadyForNext(Time curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit_d *t_flit = peekTopFlit();
-        if (t_flit->get_time() <= (g_system_ptr->getTime() + 1))
+        if (t_flit->get_time() <= (curTime + 1))
             return true;
     }
     return false;

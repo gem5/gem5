@@ -40,7 +40,7 @@
 class flit
 {
   public:
-    flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr);
+    flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr, Time curTime);
 
     int get_size();
     int get_id();

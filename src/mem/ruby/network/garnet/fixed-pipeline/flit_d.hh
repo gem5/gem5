@@ -40,8 +40,8 @@
 class flit_d
 {
   public:
-    flit_d(int id, int vc, int vnet, int size, MsgPtr msg_ptr);
-    flit_d(int vc, bool is_free_signal);
+    flit_d(int id, int vc, int vnet, int size, MsgPtr msg_ptr, Time curTime);
+    flit_d(int vc, bool is_free_signal, Time curTime);
     void set_outport(int port) { m_outport = port; }
     int get_outport() {return m_outport; }
     void print(std::ostream& out) const;
@@ -58,25 +58,26 @@ class flit_d
     flit_type get_type() { return m_type; }
 
     bool
-    is_stage(flit_stage t_stage)
+    is_stage(flit_stage t_stage, Time curTime)
     {
         return (m_stage.first == t_stage &&
-                g_system_ptr->getTime() >= m_stage.second);
+                curTime >= m_stage.second);
     }
 
     bool
-    is_next_stage(flit_stage t_stage)
+    is_next_stage(flit_stage t_stage, Time curTime)
     {
         return (m_stage.first == t_stage &&
-                (g_system_ptr->getTime() + 1) >= m_stage.second);
+                (curTime + 1) >= m_stage.second);
     }
 
     void
-    advance_stage(flit_stage t_stage)
+    advance_stage(flit_stage t_stage, Time curTime)
     {
         m_stage.first = t_stage;
-        m_stage.second = g_system_ptr->getTime() + 1;
+        m_stage.second = curTime + 1;
     }
+
     std::pair<flit_stage, Time>
     get_stage()
     {

@@ -132,7 +132,8 @@ VCallocator_d::is_invc_candidate(int inport_iter, int invc_iter)
     if ((m_router->get_net_ptr())->isVNetOrdered(vnet)) {
         for (int vc_offset = 0; vc_offset < m_vc_per_vnet; vc_offset++) {
             int temp_vc = invc_base + vc_offset;
-            if (m_input_unit[inport_iter]->need_stage(temp_vc, VC_AB_, VA_) &&
+            if (m_input_unit[inport_iter]->need_stage(temp_vc, VC_AB_, VA_,
+                                                      m_router->curCycle()) &&
                (m_input_unit[inport_iter]->get_route(temp_vc) == outport) &&
                (m_input_unit[inport_iter]->get_enqueue_time(temp_vc) <
                     t_enqueue_time)) {
@@ -163,7 +164,7 @@ VCallocator_d::select_outvc(int inport_iter, int invc_iter)
         if (outvc_offset >= num_vcs_per_vnet)
             outvc_offset = 0;
         int outvc = outvc_base + outvc_offset;
-        if (m_output_unit[outport]->is_vc_idle(outvc)) {
+        if (m_output_unit[outport]->is_vc_idle(outvc, m_router->curCycle())) {
             m_local_arbiter_activity[vnet]++;
             m_outvc_req[outport][outvc][inport_iter][invc_iter] = true;
             if (!m_outvc_is_req[outport][outvc])
@@ -182,8 +183,8 @@ VCallocator_d::arbitrate_invcs()
                 get_vnet(invc_iter))))
                 continue;
 
-            if (m_input_unit[inport_iter]->need_stage(
-                invc_iter, VC_AB_, VA_)) {
+            if (m_input_unit[inport_iter]->need_stage(invc_iter, VC_AB_,
+                    VA_, m_router->curCycle())) {
                 if (!is_invc_candidate(inport_iter, invc_iter))
                     continue;
 
@@ -231,7 +232,8 @@ VCallocator_d::arbitrate_outvcs()
                 int invc = invc_base + invc_offset;
                 if (m_outvc_req[outport_iter][outvc_iter][inport][invc]) {
                     m_global_arbiter_activity[vnet]++;
-                    m_input_unit[inport]->grant_vc(invc, outvc_iter);
+                    m_input_unit[inport]->grant_vc(invc, outvc_iter,
+                        m_router->curCycle());
                     m_output_unit[outport_iter]->update_vc(
                         outvc_iter, inport, invc);
                     m_router->swarb_req();
@@ -256,7 +258,8 @@ VCallocator_d::check_for_wakeup()
 {
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {
-            if (m_input_unit[i]->need_stage_nextcycle(j, VC_AB_, VA_)) {
+            if (m_input_unit[i]->need_stage_nextcycle(j, VC_AB_, VA_,
+                   m_router->curCycle())) {
                 scheduleEvent(1);
                 return;
             }

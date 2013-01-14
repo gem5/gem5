@@ -65,16 +65,16 @@ void
 Switch_d::wakeup()
 {
     DPRINTF(RubyNetwork, "Switch woke up at time: %lld\n",
-            g_system_ptr->getTime());
+            m_router->curCycle());
 
     for (int inport = 0; inport < m_num_inports; inport++) {
-        if (!m_switch_buffer[inport]->isReady())
+        if (!m_switch_buffer[inport]->isReady(m_router->curCycle()))
             continue;
         flit_d *t_flit = m_switch_buffer[inport]->peekTopFlit();
-        if (t_flit->is_stage(ST_)) {
+        if (t_flit->is_stage(ST_, m_router->curCycle())) {
             int outport = t_flit->get_outport();
-            t_flit->advance_stage(LT_);
-            t_flit->set_time(g_system_ptr->getTime() + 1);
+            t_flit->advance_stage(LT_, m_router->curCycle());
+            t_flit->set_time(m_router->curCycle() + 1);
 
             // This will take care of waking up the Network Link
             m_output_unit[outport]->insert_flit(t_flit);
@@ -89,7 +89,7 @@ void
 Switch_d::check_for_wakeup()
 {
     for (int inport = 0; inport < m_num_inports; inport++) {
-        if (m_switch_buffer[inport]->isReadyForNext()) {
+        if (m_switch_buffer[inport]->isReadyForNext(m_router->curCycle())) {
             scheduleEvent(1);
             break;
         }

@@ -130,6 +130,11 @@ mod(int val, int mod)
     return val % mod;
 }
 
+inline int max_tokens()
+{
+  return 1024;
+}
+
 /**
  * This function accepts an address, a data block and a packet. If the address
  * range for the data block contains the address which the packet needs to

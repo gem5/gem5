@@ -51,22 +51,22 @@ flitBuffer::isEmpty()
 }
 
 bool
-flitBuffer::isReady()
+flitBuffer::isReady(Time curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();
-        if (t_flit->get_time() <= g_system_ptr->getTime())
+        if (t_flit->get_time() <= curTime)
             return true;
     }
     return false;
 }
 
 bool
-flitBuffer::isReadyForNext()
+flitBuffer::isReadyForNext(Time curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();
-        if (t_flit->get_time() <= (g_system_ptr->getTime() + 1))
+        if (t_flit->get_time() <= (curTime + 1))
             return true;
     }
     return false;

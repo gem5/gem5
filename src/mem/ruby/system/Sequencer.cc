@@ -657,7 +657,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
         pc = pkt->req->getPC();
     }
 
-    RubyRequest *msg = new RubyRequest(pkt->getAddr(),
+    RubyRequest *msg = new RubyRequest(curCycle(), pkt->getAddr(),
                                        pkt->getPtr<uint8_t>(true),
                                        pkt->getSize(), pc, secondary_type,
                                        RubyAccessMode_Supervisor, pkt,

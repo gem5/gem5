@@ -57,8 +57,8 @@ void
 RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
 {
     int outport = routeCompute(t_flit);
-    in_unit->updateRoute(invc, outport);
-    t_flit->advance_stage(VA_);
+    in_unit->updateRoute(invc, outport, m_router->curCycle());
+    t_flit->advance_stage(VA_, m_router->curCycle());
     m_router->vcarb_req();
 }
 

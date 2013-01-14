@@ -68,7 +68,7 @@ NetworkInterface::NetworkInterface(int id, int virtual_networks,
 
     for (int i = 0; i < m_num_vcs; i++) {
         m_out_vc_state.push_back(new OutVcState(i));
-        m_out_vc_state[i]->setState(IDLE_, g_system_ptr->getTime());
+        m_out_vc_state[i]->setState(IDLE_, m_net_ptr->curCycle());
     }
 }
 
@@ -167,19 +167,20 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         }
         for (int i = 0; i < num_flits; i++) {
             m_net_ptr->increment_injected_flits(vnet);
-            flit *fl = new flit(i, vc, vnet, num_flits, new_msg_ptr);
-            fl->set_delay(g_system_ptr->getTime() - msg_ptr->getTime());
+            flit *fl = new flit(i, vc, vnet, num_flits, new_msg_ptr,
+                                m_net_ptr->curCycle());
+            fl->set_delay(m_net_ptr->curCycle() - msg_ptr->getTime());
             m_ni_buffers[vc]->insert(fl);
         }
 
-        m_out_vc_state[vc]->setState(VC_AB_, g_system_ptr->getTime());
+        m_out_vc_state[vc]->setState(VC_AB_, m_net_ptr->curCycle());
 
         // setting an output vc request for the next hop.
         // This flit will be ready to traverse the link and into the next hop
         // only when an output vc is acquired at the next hop
         outNetLink->request_vc_link(vc,
                                     new_net_msg_ptr->getInternalDestination(),
-                                    g_system_ptr->getTime());
+                                    m_net_ptr->curCycle());
     }
 
     return true ;
@@ -222,7 +223,7 @@ NetworkInterface::calculateVC(int vnet)
             m_vc_allocator[vnet] = 0;
 
         if (m_out_vc_state[(vnet*m_vc_per_vnet) + delta]->isInState(IDLE_,
-            g_system_ptr->getTime())) {
+            m_net_ptr->curCycle())) {
             return ((vnet*m_vc_per_vnet) + delta);
         }
     }
@@ -266,18 +267,18 @@ NetworkInterface::wakeup()
         flit *t_flit = inNetLink->consumeLink();
         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
             DPRINTF(RubyNetwork, "m_id: %d, Message delivered at time: %lld\n",
-                    m_id, g_system_ptr->getTime());
+                    m_id, m_net_ptr->curCycle());
 
             outNode_ptr[t_flit->get_vnet()]->enqueue(
                 t_flit->get_msg_ptr(), 1);
 
             // signal the upstream router that this vc can be freed now
             inNetLink->release_vc_link(t_flit->get_vc(),
-                g_system_ptr->getTime() + 1);
+                m_net_ptr->curCycle() + 1);
         }
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
-        int network_delay = g_system_ptr->getTime() -
+        int network_delay = m_net_ptr->curCycle() -
                             t_flit->get_enqueue_time();
         int queueing_delay = t_flit->get_delay();
         m_net_ptr->increment_network_latency(network_delay, vnet);
@@ -304,14 +305,14 @@ NetworkInterface::scheduleOutputLink()
         vc++;
         if (vc == m_num_vcs)
             vc = 0;
-        if (m_ni_buffers[vc]->isReady()) {
+        if (m_ni_buffers[vc]->isReady(m_net_ptr->curCycle())) {
             if (m_out_vc_state[vc]->isInState(ACTIVE_,
-               g_system_ptr->getTime()) &&
+               m_net_ptr->curCycle()) &&
                outNetLink->isBufferNotFull_link(vc)) {  // buffer backpressure
 
                 // Just removing the flit
                 flit *t_flit = m_ni_buffers[vc]->getTopFlit();
-                t_flit->set_time(g_system_ptr->getTime() + 1);
+                t_flit->set_time(m_net_ptr->curCycle() + 1);
                 outSrcQueue->insert(t_flit);
 
                 // schedule the out link
@@ -332,7 +333,7 @@ NetworkInterface::checkReschedule()
         }
     }
     for (int vc = 0; vc < m_num_vcs; vc++) {
-        if (m_ni_buffers[vc]->isReadyForNext()) {
+        if (m_ni_buffers[vc]->isReadyForNext(m_net_ptr->curCycle())) {
             scheduleEvent(1);
             return;
         }

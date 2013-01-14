@@ -36,7 +36,6 @@
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/packet.hh"
 
 class RubyRequest : public Message
 {
@@ -52,12 +51,12 @@ class RubyRequest : public Message
     PacketPtr pkt;
     unsigned m_contextId;
 
-    RubyRequest() {}
-    RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc,
-                RubyRequestType _type, RubyAccessMode _access_mode,
-                PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-                 unsigned _proc_id = 100)
-        : m_PhysicalAddress(_paddr),
+    RubyRequest(Time curTime, uint64_t _paddr, uint8_t* _data, int _len,
+        uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
+        PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
+        unsigned _proc_id = 100)
+        : Message(curTime),
+          m_PhysicalAddress(_paddr),
           m_Type(_type),
           m_ProgramCounter(_pc),
           m_AccessMode(_access_mode),
@@ -71,10 +70,8 @@ class RubyRequest : public Message
       m_LineAddress.makeLineAddress();
     }
 
-    static RubyRequest*
-    create()
+    RubyRequest(Time curTime) : Message(curTime)
     {
-        return new RubyRequest();
     }
 
     RubyRequest*
