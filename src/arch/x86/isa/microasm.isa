@@ -212,6 +212,7 @@ let {{
 
     assembler.symbols["fsw"] = readFpReg("FSW")
     assembler.symbols["fcw"] = readFpReg("FCW")
+    assembler.symbols["ftw"] = readFpReg("FTW")
 
     macroopDict = assembler.assemble(microcode)
 

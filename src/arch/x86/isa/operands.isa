@@ -162,6 +162,7 @@ def operands {{
         # Registers related to the state of x87 floating point unit.
         'TOP':           controlReg('MISCREG_X87_TOP', 66, ctype='ub'),
         'FSW':           controlReg('MISCREG_FSW', 67, ctype='uw'),
+        'FTW':           controlReg('MISCREG_FTW', 68, ctype='uw'),
 
         # The segment base as used by memory instructions.
         'SegBase':       controlReg('MISCREG_SEG_EFF_BASE(segment)', 70),

@@ -36,6 +36,9 @@
 # Authors: Gabe Black
 
 microcode = '''
-# EMMS
+def macroop EMMS {
+    emms
+};
+
 # FEMMS
 '''

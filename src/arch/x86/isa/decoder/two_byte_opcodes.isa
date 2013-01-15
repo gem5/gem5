@@ -604,7 +604,7 @@
                         0x4: Inst::PCMPEQB(Pq,Qq);
                         0x5: Inst::PCMPEQW(Pq,Qq);
                         0x6: Inst::PCMPEQD(Pq,Qq);
-                        0x7: WarnUnimpl::emms();
+                        0x7: Inst::EMMS();
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
