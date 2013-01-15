@@ -150,8 +150,8 @@ namespace X86ISA {
                         stringToRegister(vendorString + 8));
                 break;
               case FamilyModelStepping:
-                result = CpuidResult(0x00020f51, 0000000405,
-                                     0xe7d3fbff, 0x00000001);
+                result = CpuidResult(0x00020f51, 0x00000805,
+                                     0xe7dbfbff, 0x00000001);
                 break;
               default:
                 warn("x86 cpuid: unimplemented function %u", funcNum);
