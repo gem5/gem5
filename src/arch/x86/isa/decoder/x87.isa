@@ -109,8 +109,8 @@ format WarnUnimpl {
                     0x3: Inst::FSINCOS();
                     0x4: frndint();
                     0x5: fscale();
-                    0x6: fsin();
-                    0x7: fcos();
+                    0x6: Inst::FSIN();
+                    0x7: Inst::FCOS();
                 }
                 default: Inst::FNSTCW(Mw);
             }

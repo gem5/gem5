@@ -36,8 +36,13 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FSIN
-# FCOS
+def macroop FSIN {
+    sinfp st(0), st(0)
+};
+
+def macroop FCOS {
+    cosfp st(0), st(0)
+};
 
 def macroop FSINCOS {
     sinfp ufp1, st(0)
