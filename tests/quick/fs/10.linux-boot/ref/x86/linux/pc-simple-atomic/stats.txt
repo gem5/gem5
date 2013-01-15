@@ -1,16 +1,16 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  5.112041                       # Number of seconds simulated
-sim_ticks                                5112040968500                       # Number of ticks simulated
-final_tick                               5112040968500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                5112040970500                       # Number of ticks simulated
+final_tick                               5112040970500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 468346                       # Simulator instruction rate (inst/s)
-host_op_rate                                   958973                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            11982395829                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 354180                       # Number of bytes of host memory used
-host_seconds                                   426.63                       # Real time elapsed on the host
-sim_insts                                   199810236                       # Number of instructions simulated
-sim_ops                                     409125920                       # Number of ops (including micro ops) simulated
+host_inst_rate                                1661898                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3402855                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            42518772648                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 621064                       # Number of bytes of host memory used
+host_seconds                                   120.23                       # Real time elapsed on the host
+sim_insts                                   199810242                       # Number of instructions simulated
+sim_ops                                     409125923                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2464640                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.dtb.walker          128                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.itb.walker          320                       # Number of bytes read from this memory
@@ -209,7 +209,7 @@ system.iocache.tagsinuse                     0.042402                       # Cy
 system.iocache.total_refs                           0                       # Total number of references to valid blocks.
 system.iocache.sampled_refs                     47585                       # Sample count of references to valid blocks.
 system.iocache.avg_refs                             0                       # Average number of references to valid blocks.
-system.iocache.warmup_cycle              4994776680059                       # Cycle when the warmup percentage was hit.
+system.iocache.warmup_cycle              4994776682059                       # Cycle when the warmup percentage was hit.
 system.iocache.occ_blocks::pc.south_bridge.ide     0.042402                       # Average occupied blocks per requestor
 system.iocache.occ_percent::pc.south_bridge.ide     0.002650                       # Average percentage of cache occupancy
 system.iocache.occ_percent::total            0.002650                       # Average percentage of cache occupancy
@@ -260,57 +260,57 @@ system.pc.south_bridge.ide.disks1.dma_read_txs            0                     
 system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
-system.cpu.numCycles                      10224081960                       # number of cpu cycles simulated
+system.cpu.numCycles                      10224081964                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.committedInsts                   199810236                       # Number of instructions committed
-system.cpu.committedOps                     409125920                       # Number of ops (including micro ops) committed
-system.cpu.num_int_alu_accesses             374289911                       # Number of integer alu accesses
+system.cpu.committedInsts                   199810242                       # Number of instructions committed
+system.cpu.committedOps                     409125923                       # Number of ops (including micro ops) committed
+system.cpu.num_int_alu_accesses             374289914                       # Number of integer alu accesses
 system.cpu.num_fp_alu_accesses                      0                       # Number of float alu accesses
 system.cpu.num_func_calls                           0                       # number of times a function call or return occured
-system.cpu.num_conditional_control_insts     39954536                       # number of instructions that are conditional controls
-system.cpu.num_int_insts                    374289911                       # number of integer instructions
+system.cpu.num_conditional_control_insts     39954535                       # number of instructions that are conditional controls
+system.cpu.num_int_insts                    374289914                       # number of integer instructions
 system.cpu.num_fp_insts                             0                       # number of float instructions
-system.cpu.num_int_register_reads           915450709                       # number of times the integer registers were read
-system.cpu.num_int_register_writes          480322748                       # number of times the integer registers were written
+system.cpu.num_int_register_reads           915450706                       # number of times the integer registers were read
+system.cpu.num_int_register_writes          480322745                       # number of times the integer registers were written
 system.cpu.num_fp_register_reads                    0                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                   0                       # number of times the floating registers were written
-system.cpu.num_mem_refs                      35624588                       # number of memory refs
+system.cpu.num_mem_refs                      35624590                       # number of memory refs
 system.cpu.num_load_insts                    27216588                       # Number of load instructions
-system.cpu.num_store_insts                    8408000                       # Number of store instructions
-system.cpu.num_idle_cycles               9770609595.971962                       # Number of idle cycles
-system.cpu.num_busy_cycles               453472364.028039                       # Number of busy cycles
+system.cpu.num_store_insts                    8408002                       # Number of store instructions
+system.cpu.num_idle_cycles               9770609597.971960                       # Number of idle cycles
+system.cpu.num_busy_cycles               453472366.028039                       # Number of busy cycles
 system.cpu.not_idle_fraction                 0.044353                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                     0.955647                       # Percentage of idle cycles
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.quiesce                        0                       # number of quiesce instructions executed
 system.cpu.icache.replacements                 790732                       # number of replacements
-system.cpu.icache.tagsinuse                510.627676                       # Cycle average of tags in use
-system.cpu.icache.total_refs                243360722                       # Total number of references to valid blocks.
+system.cpu.icache.tagsinuse                510.627675                       # Cycle average of tags in use
+system.cpu.icache.total_refs                243360727                       # Total number of references to valid blocks.
 system.cpu.icache.sampled_refs                 791244                       # Sample count of references to valid blocks.
-system.cpu.icache.avg_refs                 307.567226                       # Average number of references to valid blocks.
-system.cpu.icache.warmup_cycle           148763110500                       # Cycle when the warmup percentage was hit.
-system.cpu.icache.occ_blocks::cpu.inst     510.627676                       # Average occupied blocks per requestor
+system.cpu.icache.avg_refs                 307.567232                       # Average number of references to valid blocks.
+system.cpu.icache.warmup_cycle           148763114500                       # Cycle when the warmup percentage was hit.
+system.cpu.icache.occ_blocks::cpu.inst     510.627675                       # Average occupied blocks per requestor
 system.cpu.icache.occ_percent::cpu.inst      0.997320                       # Average percentage of cache occupancy
 system.cpu.icache.occ_percent::total         0.997320                       # Average percentage of cache occupancy
-system.cpu.icache.ReadReq_hits::cpu.inst    243360722                       # number of ReadReq hits
-system.cpu.icache.ReadReq_hits::total       243360722                       # number of ReadReq hits
-system.cpu.icache.demand_hits::cpu.inst     243360722                       # number of demand (read+write) hits
-system.cpu.icache.demand_hits::total        243360722                       # number of demand (read+write) hits
-system.cpu.icache.overall_hits::cpu.inst    243360722                       # number of overall hits
-system.cpu.icache.overall_hits::total       243360722                       # number of overall hits
+system.cpu.icache.ReadReq_hits::cpu.inst    243360727                       # number of ReadReq hits
+system.cpu.icache.ReadReq_hits::total       243360727                       # number of ReadReq hits
+system.cpu.icache.demand_hits::cpu.inst     243360727                       # number of demand (read+write) hits
+system.cpu.icache.demand_hits::total        243360727                       # number of demand (read+write) hits
+system.cpu.icache.overall_hits::cpu.inst    243360727                       # number of overall hits
+system.cpu.icache.overall_hits::total       243360727                       # number of overall hits
 system.cpu.icache.ReadReq_misses::cpu.inst       791251                       # number of ReadReq misses
 system.cpu.icache.ReadReq_misses::total        791251                       # number of ReadReq misses
 system.cpu.icache.demand_misses::cpu.inst       791251                       # number of demand (read+write) misses
 system.cpu.icache.demand_misses::total         791251                       # number of demand (read+write) misses
 system.cpu.icache.overall_misses::cpu.inst       791251                       # number of overall misses
 system.cpu.icache.overall_misses::total        791251                       # number of overall misses
-system.cpu.icache.ReadReq_accesses::cpu.inst    244151973                       # number of ReadReq accesses(hits+misses)
-system.cpu.icache.ReadReq_accesses::total    244151973                       # number of ReadReq accesses(hits+misses)
-system.cpu.icache.demand_accesses::cpu.inst    244151973                       # number of demand (read+write) accesses
-system.cpu.icache.demand_accesses::total    244151973                       # number of demand (read+write) accesses
-system.cpu.icache.overall_accesses::cpu.inst    244151973                       # number of overall (read+write) accesses
-system.cpu.icache.overall_accesses::total    244151973                       # number of overall (read+write) accesses
+system.cpu.icache.ReadReq_accesses::cpu.inst    244151978                       # number of ReadReq accesses(hits+misses)
+system.cpu.icache.ReadReq_accesses::total    244151978                       # number of ReadReq accesses(hits+misses)
+system.cpu.icache.demand_accesses::cpu.inst    244151978                       # number of demand (read+write) accesses
+system.cpu.icache.demand_accesses::total    244151978                       # number of demand (read+write) accesses
+system.cpu.icache.overall_accesses::cpu.inst    244151978                       # number of overall (read+write) accesses
+system.cpu.icache.overall_accesses::total    244151978                       # number of overall (read+write) accesses
 system.cpu.icache.ReadReq_miss_rate::cpu.inst     0.003241                       # miss rate for ReadReq accesses
 system.cpu.icache.ReadReq_miss_rate::total     0.003241                       # miss rate for ReadReq accesses
 system.cpu.icache.demand_miss_rate::cpu.inst     0.003241                       # miss rate for demand accesses
@@ -331,7 +331,7 @@ system.cpu.itb_walker_cache.tagsinuse        3.026483                       # Cy
 system.cpu.itb_walker_cache.total_refs           8029                       # Total number of references to valid blocks.
 system.cpu.itb_walker_cache.sampled_refs         3346                       # Sample count of references to valid blocks.
 system.cpu.itb_walker_cache.avg_refs         2.399582                       # Average number of references to valid blocks.
-system.cpu.itb_walker_cache.warmup_cycle 5102019608500                       # Cycle when the warmup percentage was hit.
+system.cpu.itb_walker_cache.warmup_cycle 5102019610500                       # Cycle when the warmup percentage was hit.
 system.cpu.itb_walker_cache.occ_blocks::cpu.itb.walker     3.026483                       # Average occupied blocks per requestor
 system.cpu.itb_walker_cache.occ_percent::cpu.itb.walker     0.189155                       # Average percentage of cache occupancy
 system.cpu.itb_walker_cache.occ_percent::total     0.189155                       # Average percentage of cache occupancy
@@ -379,7 +379,7 @@ system.cpu.dtb_walker_cache.tagsinuse        5.013746                       # Cy
 system.cpu.dtb_walker_cache.total_refs          13015                       # Total number of references to valid blocks.
 system.cpu.dtb_walker_cache.sampled_refs         7611                       # Sample count of references to valid blocks.
 system.cpu.dtb_walker_cache.avg_refs         1.710025                       # Average number of references to valid blocks.
-system.cpu.dtb_walker_cache.warmup_cycle 5101206384000                       # Cycle when the warmup percentage was hit.
+system.cpu.dtb_walker_cache.warmup_cycle 5101206386000                       # Cycle when the warmup percentage was hit.
 system.cpu.dtb_walker_cache.occ_blocks::cpu.dtb.walker     5.013746                       # Average occupied blocks per requestor
 system.cpu.dtb_walker_cache.occ_percent::cpu.dtb.walker     0.313359                       # Average percentage of cache occupancy
 system.cpu.dtb_walker_cache.occ_percent::total     0.313359                       # Average percentage of cache occupancy
@@ -420,21 +420,21 @@ system.cpu.dtb_walker_cache.writebacks::total         2556                      
 system.cpu.dtb_walker_cache.no_allocate_misses            0                       # Number of misses that were no-allocate
 system.cpu.dcache.replacements                1621135                       # number of replacements
 system.cpu.dcache.tagsinuse                511.999456                       # Cycle average of tags in use
-system.cpu.dcache.total_refs                 20140429                       # Total number of references to valid blocks.
+system.cpu.dcache.total_refs                 20140431                       # Total number of references to valid blocks.
 system.cpu.dcache.sampled_refs                1621647                       # Sample count of references to valid blocks.
-system.cpu.dcache.avg_refs                  12.419737                       # Average number of references to valid blocks.
+system.cpu.dcache.avg_refs                  12.419738                       # Average number of references to valid blocks.
 system.cpu.dcache.warmup_cycle                7549500                       # Cycle when the warmup percentage was hit.
 system.cpu.dcache.occ_blocks::cpu.data     511.999456                       # Average occupied blocks per requestor
 system.cpu.dcache.occ_percent::cpu.data      0.999999                       # Average percentage of cache occupancy
 system.cpu.dcache.occ_percent::total         0.999999                       # Average percentage of cache occupancy
 system.cpu.dcache.ReadReq_hits::cpu.data     12055941                       # number of ReadReq hits
 system.cpu.dcache.ReadReq_hits::total        12055941                       # number of ReadReq hits
-system.cpu.dcache.WriteReq_hits::cpu.data      8082226                       # number of WriteReq hits
-system.cpu.dcache.WriteReq_hits::total        8082226                       # number of WriteReq hits
-system.cpu.dcache.demand_hits::cpu.data      20138167                       # number of demand (read+write) hits
-system.cpu.dcache.demand_hits::total         20138167                       # number of demand (read+write) hits
-system.cpu.dcache.overall_hits::cpu.data     20138167                       # number of overall hits
-system.cpu.dcache.overall_hits::total        20138167                       # number of overall hits
+system.cpu.dcache.WriteReq_hits::cpu.data      8082228                       # number of WriteReq hits
+system.cpu.dcache.WriteReq_hits::total        8082228                       # number of WriteReq hits
+system.cpu.dcache.demand_hits::cpu.data      20138169                       # number of demand (read+write) hits
+system.cpu.dcache.demand_hits::total         20138169                       # number of demand (read+write) hits
+system.cpu.dcache.overall_hits::cpu.data     20138169                       # number of overall hits
+system.cpu.dcache.overall_hits::total        20138169                       # number of overall hits
 system.cpu.dcache.ReadReq_misses::cpu.data      1308091                       # number of ReadReq misses
 system.cpu.dcache.ReadReq_misses::total       1308091                       # number of ReadReq misses
 system.cpu.dcache.WriteReq_misses::cpu.data       315828                       # number of WriteReq misses
@@ -445,12 +445,12 @@ system.cpu.dcache.overall_misses::cpu.data      1623919                       # 
 system.cpu.dcache.overall_misses::total       1623919                       # number of overall misses
 system.cpu.dcache.ReadReq_accesses::cpu.data     13364032                       # number of ReadReq accesses(hits+misses)
 system.cpu.dcache.ReadReq_accesses::total     13364032                       # number of ReadReq accesses(hits+misses)
-system.cpu.dcache.WriteReq_accesses::cpu.data      8398054                       # number of WriteReq accesses(hits+misses)
-system.cpu.dcache.WriteReq_accesses::total      8398054                       # number of WriteReq accesses(hits+misses)
-system.cpu.dcache.demand_accesses::cpu.data     21762086                       # number of demand (read+write) accesses
-system.cpu.dcache.demand_accesses::total     21762086                       # number of demand (read+write) accesses
-system.cpu.dcache.overall_accesses::cpu.data     21762086                       # number of overall (read+write) accesses
-system.cpu.dcache.overall_accesses::total     21762086                       # number of overall (read+write) accesses
+system.cpu.dcache.WriteReq_accesses::cpu.data      8398056                       # number of WriteReq accesses(hits+misses)
+system.cpu.dcache.WriteReq_accesses::total      8398056                       # number of WriteReq accesses(hits+misses)
+system.cpu.dcache.demand_accesses::cpu.data     21762088                       # number of demand (read+write) accesses
+system.cpu.dcache.demand_accesses::total     21762088                       # number of demand (read+write) accesses
+system.cpu.dcache.overall_accesses::cpu.data     21762088                       # number of overall (read+write) accesses
+system.cpu.dcache.overall_accesses::total     21762088                       # number of overall (read+write) accesses
 system.cpu.dcache.ReadReq_miss_rate::cpu.data     0.097881                       # miss rate for ReadReq accesses
 system.cpu.dcache.ReadReq_miss_rate::total     0.097881                       # miss rate for ReadReq accesses
 system.cpu.dcache.WriteReq_miss_rate::cpu.data     0.037607                       # miss rate for WriteReq accesses
@@ -471,16 +471,16 @@ system.cpu.dcache.writebacks::writebacks      1534848                       # nu
 system.cpu.dcache.writebacks::total           1534848                       # number of writebacks
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.l2cache.replacements                106558                       # number of replacements
-system.cpu.l2cache.tagsinuse             64822.149247                       # Cycle average of tags in use
+system.cpu.l2cache.tagsinuse             64822.149219                       # Cycle average of tags in use
 system.cpu.l2cache.total_refs                 3456224                       # Total number of references to valid blocks.
 system.cpu.l2cache.sampled_refs                170677                       # Sample count of references to valid blocks.
 system.cpu.l2cache.avg_refs                 20.250086                       # Average number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu.l2cache.occ_blocks::writebacks 51981.453140                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::writebacks 51981.453118                       # Average occupied blocks per requestor
 system.cpu.l2cache.occ_blocks::cpu.dtb.walker     0.004954                       # Average occupied blocks per requestor
 system.cpu.l2cache.occ_blocks::cpu.itb.walker     0.132114                       # Average occupied blocks per requestor
-system.cpu.l2cache.occ_blocks::cpu.inst   2434.994083                       # Average occupied blocks per requestor
-system.cpu.l2cache.occ_blocks::cpu.data  10405.564957                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.inst   2434.994082                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.data  10405.564951                       # Average occupied blocks per requestor
 system.cpu.l2cache.occ_percent::writebacks     0.793174                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_percent::cpu.dtb.walker     0.000000                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_percent::cpu.itb.walker     0.000002                       # Average percentage of cache occupancy
