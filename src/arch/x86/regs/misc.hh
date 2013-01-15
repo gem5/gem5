@@ -79,6 +79,25 @@ namespace X86ISA
         IDBit = 1 << 21
     };
 
+    enum X87StatusBit {
+        // Exception Flags
+        IEBit = 1 << 0,
+        DEBit = 1 << 1,
+        ZEBit = 1 << 2,
+        OEBit = 1 << 3,
+        UEBit = 1 << 4,
+        PEBit = 1 << 5,
+
+        // !Exception Flags
+        StackFaultBit = 1 << 6,
+        ErrSummaryBit = 1 << 7,
+        CC0Bit = 1 << 8,
+        CC1Bit = 1 << 9,
+        CC2Bit = 1 << 10,
+        CC3Bit = 1 << 14,
+        BusyBit = 1 << 15,
+    };
+
     enum MiscRegIndex
     {
         // Control registers

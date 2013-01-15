@@ -36,6 +36,12 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FABS
-# FCHS
+
+def macroop FABS {
+    absfp st(0), st(0)
+};
+
+def macroop FCHS {
+    chsfp st(0), st(0)
+};
 '''

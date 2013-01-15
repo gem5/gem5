@@ -331,4 +331,12 @@ let {{
             else if(FpSrcReg1 == FpSrcReg2)
                 ccFlagBits = ccFlagBits | ZFBit;
         '''
+
+    class absfp(FpUnaryOp):
+        code = 'FpDestReg = fabs(FpSrcReg1);'
+        flag_code = 'FSW &= (~CC1Bit);'
+
+    class chsfp(FpUnaryOp):
+        code = 'FpDestReg = (-1) * (FpSrcReg1);'
+        flag_code = 'FSW &= (~CC1Bit);'
 }};

@@ -68,8 +68,8 @@ format WarnUnimpl {
             }
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
-                    0x0: fchs();
-                    0x1: fabs();
+                    0x0: Inst::FCHS();
+                    0x1: Inst::FABS();
                     0x4: ftst();
                     0x5: fxam();
                     default: Inst::UD2();
