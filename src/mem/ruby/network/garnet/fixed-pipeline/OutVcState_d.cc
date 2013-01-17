@@ -37,7 +37,7 @@ OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
     m_network_ptr = network_ptr;
     m_id = id;
     m_vc_state = IDLE_;
-    m_time = g_system_ptr->getTime();
+    m_time = m_network_ptr->curCycle();
 
     if (m_network_ptr->get_vnet_type(id) == DATA_VNET_)
         m_credit_count = m_network_ptr->getBuffersPerDataVC();

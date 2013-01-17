@@ -191,7 +191,7 @@ void
 RubyTester::hitCallback(NodeID proc, SubBlock* data)
 {
     // Mark that we made progress
-    m_last_progress_vector[proc] = g_system_ptr->getTime();
+    m_last_progress_vector[proc] = curCycle();
 
     DPRINTF(RubyTest, "completed request for proc: %d\n", proc);
     DPRINTF(RubyTest, "addr: 0x%x, size: %d, data: ",
@@ -205,7 +205,7 @@ RubyTester::hitCallback(NodeID proc, SubBlock* data)
     // back the data to make the check
     Check* check_ptr = m_checkTable_ptr->getCheck(data->getAddress());
     assert(check_ptr != NULL);
-    check_ptr->performCallback(proc, data);
+    check_ptr->performCallback(proc, data, curCycle());
 }
 
 void
@@ -229,7 +229,7 @@ void
 RubyTester::checkForDeadlock()
 {
     int size = m_last_progress_vector.size();
-    Time current_time = g_system_ptr->getTime();
+    Time current_time = curCycle();
     for (int processor = 0; processor < size; processor++) {
         if ((current_time - m_last_progress_vector[processor]) >
                 m_deadlock_threshold) {

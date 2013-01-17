@@ -50,7 +50,7 @@ class Check
           int _num_readers, RubyTester* _tester);
 
     void initiate(); // Does Action or Check or nether
-    void performCallback(NodeID proc, SubBlock* data);
+    void performCallback(NodeID proc, SubBlock* data, Time curTime);
     const Address& getAddress() { return m_address; }
     void changeAddress(const Address& address);
 

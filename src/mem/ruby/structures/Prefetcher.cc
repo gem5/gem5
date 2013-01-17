@@ -248,7 +248,7 @@ Prefetcher::issueNextPrefetch(const Address &address, PrefetchEntry *stream)
 
     // launch next prefetch
     stream->m_address = line_addr;
-    stream->m_use_time = g_system_ptr->getTime();
+    stream->m_use_time = m_controller->curCycle();
     DPRINTF(RubyPrefetcher, "Requesting prefetch for %s\n", line_addr);
     m_controller->enqueuePrefetch(line_addr, stream->m_type);
 }
@@ -290,7 +290,7 @@ Prefetcher::initializeStream(const Address& address, int stride,
     PrefetchEntry *mystream = &(m_array[index]);
     mystream->m_address = line_address(address);
     mystream->m_stride = stride;
-    mystream->m_use_time = g_system_ptr->getTime();
+    mystream->m_use_time = m_controller->curCycle();
     mystream->m_is_valid = true;
     mystream->m_type = type;
 

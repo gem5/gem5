@@ -276,7 +276,7 @@ Check::initiateCheck()
 }
 
 void
-Check::performCallback(NodeID proc, SubBlock* data)
+Check::performCallback(NodeID proc, SubBlock* data, Time curTime)
 {
     Address address = data->getAddress();
 
@@ -312,8 +312,7 @@ Check::performCallback(NodeID proc, SubBlock* data)
                       "Time: %d\n",
                       proc, address, data, byte_number,
                       (int)m_value + byte_number,
-                      (int)data->getByte(byte_number), *this,
-                      g_system_ptr->getTime());
+                      (int)data->getByte(byte_number), *this, curTime);
             }
         }
         DPRINTF(RubyTest, "Action/check success\n");
@@ -327,8 +326,7 @@ Check::performCallback(NodeID proc, SubBlock* data)
 
     } else {
         panic("Unexpected TesterStatus: %s proc: %d data: %s m_status: %s "
-              "time: %d\n",
-              *this, proc, data, m_status, g_system_ptr->getTime());
+              "time: %d\n", *this, proc, data, m_status, curTime);
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,
