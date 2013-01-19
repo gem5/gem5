@@ -213,7 +213,8 @@ class DefaultIEW
 
     void incrWb(InstSeqNum &sn)
     {
-        if (++wbOutstanding == wbMax)
+        ++wbOutstanding;
+        if (wbOutstanding == wbMax)
             ableToIssue = false;
         DPRINTF(IEW, "wbOutstanding: %i [sn:%lli]\n", wbOutstanding, sn);
         assert(wbOutstanding <= wbMax);
@@ -224,8 +225,9 @@ class DefaultIEW
 
     void decrWb(InstSeqNum &sn)
     {
-        if (wbOutstanding-- == wbMax)
+        if (wbOutstanding == wbMax)
             ableToIssue = true;
+        wbOutstanding--;
         DPRINTF(IEW, "wbOutstanding: %i [sn:%lli]\n", wbOutstanding, sn);
         assert(wbOutstanding >= 0);
 #ifdef DEBUG
