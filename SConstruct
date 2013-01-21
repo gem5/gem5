@@ -637,21 +637,32 @@ if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
         termcap.Normal
     main['PROTOC'] = False
 else:
-    # Determine the appropriate include path and library path using
-    # pkg-config, that means we also need to check for pkg-config
-    if not readCommand(['pkg-config', '--version'], exception=''):
-        print 'Error: pkg-config not found. Please install and retry.'
-        Exit(1)
-
-    main.ParseConfig('pkg-config --cflags --libs-only-L protobuf')
-
     # Based on the availability of the compress stream wrappers,
     # require 2.1.0
     min_protoc_version = '2.1.0'
     if compareVersions(protoc_version[1], min_protoc_version) < 0:
-        print 'Error: protoc version', min_protoc_version, 'or newer required.'
-        print '       Installed version:', protoc_version[1]
-        Exit(1)
+        print termcap.Yellow + termcap.Bold + \
+            'Warning: protoc version', min_protoc_version, \
+            'or newer required.\n' + \
+            '         Installed version:', protoc_version[1], \
+            termcap.Normal
+        main['PROTOC'] = False
+    else:
+        # Attempt to determine the appropriate include path and
+        # library path using pkg-config, that means we also need to
+        # check for pkg-config. Note that it is possible to use
+        # protobuf without the involvement of pkg-config. Later on we
+        # check go a library config check and at that point the test
+        # will fail if libprotobuf cannot be found.
+        if readCommand(['pkg-config', '--version'], exception=''):
+            try:
+                # Attempt to establish what linking flags to add for protobuf
+                # using pkg-config
+                main.ParseConfig('pkg-config --cflags --libs-only-L protobuf')
+            except:
+                print termcap.Yellow + termcap.Bold + \
+                    'Warning: pkg-config could not get protobuf flags.' + \
+                    termcap.Normal
 
 # Check for SWIG
 if not main.has_key('SWIG'):
@@ -846,11 +857,12 @@ main['HAVE_PROTOBUF'] = main['PROTOC'] and \
     conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
                             'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
 
-# If we have the compiler but not the library, treat it as an error.
+# If we have the compiler but not the library, print another warning.
 if main['PROTOC'] and not main['HAVE_PROTOBUF']:
-    print 'Error: did not find protocol buffer library and/or headers.'
-    print '       Please install libprotobuf-dev and try again.'
-    Exit(1)
+    print termcap.Yellow + termcap.Bold + \
+        'Warning: did not find protocol buffer library and/or headers.\n' + \
+    '       Please install libprotobuf-dev for tracing support.' + \
+    termcap.Normal
 
 # Check for librt.
 have_posix_clock = \
