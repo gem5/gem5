@@ -250,6 +250,19 @@ class Decoder
         }
     }
 
+    void takeOverFrom(Decoder *old)
+    {
+        mode = old->mode;
+        submode = old->submode;
+        emi.mode.mode = mode;
+        emi.mode.submode = submode;
+        altOp = old->altOp;
+        defOp = old->defOp;
+        altAddr = old->altAddr;
+        defAddr = old->defAddr;
+        stack = old->stack;
+    }
+
     void reset()
     {
         state = ResetState;

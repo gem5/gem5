@@ -97,6 +97,8 @@ class Decoder
         asi = _asi;
     }
 
+    void takeOverFrom(Decoder *old) {}
+
   protected:
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;

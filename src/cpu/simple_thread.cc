@@ -108,6 +108,7 @@ void
 SimpleThread::takeOverFrom(ThreadContext *oldContext)
 {
     ::takeOverFrom(*tc, *oldContext);
+    decoder.takeOverFrom(oldContext->getDecoderPtr());
 
     kernelStats = oldContext->getKernelStats();
     funcExeInst = oldContext->readFuncExeInst();

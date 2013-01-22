@@ -83,6 +83,8 @@ class Decoder
         return instDone;
     }
 
+    void takeOverFrom(Decoder * old) {}
+
   protected:
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;

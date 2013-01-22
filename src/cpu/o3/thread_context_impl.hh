@@ -67,6 +67,9 @@ void
 O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 {
     ::takeOverFrom(*this, *old_context);
+    TheISA::Decoder *newDecoder = getDecoderPtr();
+    TheISA::Decoder *oldDecoder = old_context->getDecoderPtr();
+    newDecoder->takeOverFrom(oldDecoder);
 
     thread->kernelStats = old_context->getKernelStats();
     thread->funcExeInst = old_context->readFuncExeInst();

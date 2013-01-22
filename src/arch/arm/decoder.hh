@@ -116,6 +116,8 @@ class Decoder
         fpscrStride = fpscr.stride;
     }
 
+    void takeOverFrom(Decoder *old) {}
+
   protected:
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;
