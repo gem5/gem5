@@ -158,6 +158,7 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         } else {
             // Otherwise return the zero register so nothing bad happens.
             renamed_reg = intZeroReg;
+            prev_reg = intZeroReg;
         }
     } else if (arch_reg < numLogicalRegs) {
         // Record the current physical register that is renamed to the
