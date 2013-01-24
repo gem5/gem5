@@ -73,7 +73,6 @@ using namespace std;
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
-      branchPred(params),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -129,6 +128,8 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         cacheData[i] = NULL;
         decoder[i] = new TheISA::Decoder;
     }
+
+    branchPred = params->branchPred;
 }
 
 template <class Impl>
@@ -259,8 +260,6 @@ DefaultFetch<Impl>::regStats()
         .desc("Number of inst fetches per cycle")
         .flags(Stats::total);
     fetchRate = fetchedInsts / cpu->numCycles;
-
-    branchPred.regStats();
 }
 
 template<class Impl>
@@ -437,7 +436,7 @@ DefaultFetch<Impl>::drainSanityCheck() const
         assert(fetchStatus[i] == Idle || stalls[i].drain);
     }
 
-    branchPred.drainSanityCheck();
+    branchPred->drainSanityCheck();
 }
 
 template <class Impl>
@@ -470,7 +469,6 @@ DefaultFetch<Impl>::takeOverFrom()
     assert(cpu->getInstPort().isConnected());
     resetStage();
 
-    branchPred.takeOverFrom();
 }
 
 template <class Impl>
@@ -537,7 +535,8 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
     }
 
     ThreadID tid = inst->threadNumber;
-    predict_taken = branchPred.predict(inst, nextPC, tid);
+    predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
+                                        nextPC, tid);
 
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i]: [sn:%i]:  Branch predicted to be taken to %s.\n",
@@ -990,12 +989,12 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
         // invalid state we generated in after sequence number
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
-            branchPred.squash(fromCommit->commitInfo[tid].doneSeqNum,
+            branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
                               tid);
         } else {
-            branchPred.squash(fromCommit->commitInfo[tid].doneSeqNum,
+            branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
         }
 
@@ -1003,7 +1002,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
     } else if (fromCommit->commitInfo[tid].doneSeqNum) {
         // Update the branch predictor if it wasn't a squashed instruction
         // that was broadcasted.
-        branchPred.update(fromCommit->commitInfo[tid].doneSeqNum, tid);
+        branchPred->update(fromCommit->commitInfo[tid].doneSeqNum, tid);
     }
 
     // Check ROB squash signals from commit.
@@ -1023,12 +1022,12 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
 
         // Update the branch predictor.
         if (fromDecode->decodeInfo[tid].branchMispredict) {
-            branchPred.squash(fromDecode->decodeInfo[tid].doneSeqNum,
+            branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               fromDecode->decodeInfo[tid].nextPC,
                               fromDecode->decodeInfo[tid].branchTaken,
                               tid);
         } else {
-            branchPred.squash(fromDecode->decodeInfo[tid].doneSeqNum,
+            branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);
         }
 

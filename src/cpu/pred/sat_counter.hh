@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_SAT_COUNTER_HH__
-#define __CPU_O3_SAT_COUNTER_HH__
+#ifndef __CPU_PRED_SAT_COUNTER_HH__
+#define __CPU_PRED_SAT_COUNTER_HH__
 
 #include "base/misc.hh"
 #include "base/types.hh"
@@ -114,4 +114,4 @@ class SatCounter
     uint8_t counter;
 };
 
-#endif // __CPU_O3_SAT_COUNTER_HH__
+#endif // __CPU_PRED_SAT_COUNTER_HH__

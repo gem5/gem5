@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_BTB_HH__
-#define __CPU_O3_BTB_HH__
+#ifndef __CPU_PRED_BTB_HH__
+#define __CPU_PRED_BTB_HH__
 
 #include "arch/types.hh"
 #include "base/misc.hh"
@@ -127,4 +127,4 @@ class DefaultBTB
     unsigned tagShiftAmt;
 };
 
-#endif // __CPU_O3_BTB_HH__
+#endif // __CPU_PRED_BTB_HH__

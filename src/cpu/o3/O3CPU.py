@@ -32,6 +32,7 @@ from m5.proxy import *
 from BaseCPU import BaseCPU
 from FUPool import *
 from O3Checker import O3Checker
+from BranchPredictor import BranchPredictor
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
@@ -84,22 +85,6 @@ class DerivO3CPU(BaseCPU):
     backComSize = Param.Unsigned(5, "Time buffer size for backwards communication")
     forwardComSize = Param.Unsigned(5, "Time buffer size for forward communication")
 
-    predType = Param.String("tournament", "Branch predictor type ('local', 'tournament')")
-    localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
-    localCtrBits = Param.Unsigned(2, "Bits per counter")
-    localHistoryTableSize = Param.Unsigned(2048, "Size of local history table")
-    localHistoryBits = Param.Unsigned(11, "Bits for the local history")
-    globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
-    globalCtrBits = Param.Unsigned(2, "Bits per counter")
-    globalHistoryBits = Param.Unsigned(13, "Bits of history")
-    choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
-    choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
-
-    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
-    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
-
-    RASSize = Param.Unsigned(16, "RAS size")
-
     LQEntries = Param.Unsigned(32, "Number of load queue entries")
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
     LSQDepCheckShift = Param.Unsigned(4, "Number of places to shift addr before check")
@@ -118,8 +103,6 @@ class DerivO3CPU(BaseCPU):
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
-
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
     smtFetchPolicy = Param.String('SingleThread', "SMT Fetch policy")
     smtLSQPolicy    = Param.String('Partitioned', "SMT LSQ Sharing Policy")
@@ -130,6 +113,7 @@ class DerivO3CPU(BaseCPU):
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
 
+    branchPred = BranchPredictor(numThreads = Parent.numThreads)
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
                           "Enable TSO Memory model")
 

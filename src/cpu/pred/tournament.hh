@@ -38,15 +38,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Timothy M. Jones
+ *          Nilay Vaish
  */
 
-#ifndef __CPU_O3_TOURNAMENT_PRED_HH__
-#define __CPU_O3_TOURNAMENT_PRED_HH__
+#ifndef __CPU_PRED_TOURNAMENT_PRED_HH__
+#define __CPU_PRED_TOURNAMENT_PRED_HH__
 
 #include <vector>
 
 #include "base/types.hh"
-#include "cpu/o3/sat_counter.hh"
+#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/sat_counter.hh"
 
 /**
  * Implements a tournament branch predictor, hopefully identical to the one
@@ -57,21 +60,13 @@
  * is speculatively updated, the rest are updated upon branches committing
  * or misspeculating.
  */
-class TournamentBP
+class TournamentBP : public BPredUnit
 {
   public:
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(unsigned localCtrBits,
-                 unsigned localHistoryTableSize,
-                 unsigned localHistoryBits,
-                 unsigned globalPredictorSize,
-                 unsigned globalHistoryBits,
-                 unsigned globalCtrBits,
-                 unsigned choicePredictorSize,
-                 unsigned choiceCtrBits,
-                 unsigned instShiftAmt);
+    TournamentBP(const Params *params);
 
     /**
      * Looks up the given address in the branch predictor and returns
@@ -81,7 +76,7 @@ class TournamentBP
      * @param bp_history Pointer that will be set to the BPHistory object.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(Addr &branch_addr, void * &bp_history);
+    bool lookup(Addr branch_addr, void * &bp_history);
 
     /**
      * Records that there was an unconditional branch, and modifies
@@ -89,7 +84,7 @@ class TournamentBP
      * global history stored in it.
      * @param bp_history Pointer that will be set to the BPHistory object.
      */
-    void uncondBr(void * &bp_history);
+    void uncondBranch(void * &bp_history);
     /**
      * Updates the branch predictor to Not Taken if a BTB entry is
      * invalid or not found.
@@ -97,7 +92,7 @@ class TournamentBP
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    void BTBUpdate(Addr &branch_addr, void * &bp_history);
+    void btbUpdate(Addr branch_addr, void * &bp_history);
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
@@ -107,7 +102,7 @@ class TournamentBP
      * @param squashed is set when this function is called during a squash
      * operation.
      */
-    void update(Addr &branch_addr, bool taken, void *bp_history, bool squashed);
+    void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
 
     /**
      * Restores the global branch history on a squash.
@@ -250,4 +245,4 @@ class TournamentBP
     unsigned choiceThreshold;
 };
 
-#endif // __CPU_O3_TOURNAMENT_PRED_HH__
+#endif // __CPU_PRED_TOURNAMENT_PRED_HH__

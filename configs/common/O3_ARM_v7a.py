@@ -87,8 +87,8 @@ class O3_ARM_v7a_FUP(FUPool):
     FUList = [O3_ARM_v7a_Simple_Int(), O3_ARM_v7a_Complex_Int(),
               O3_ARM_v7a_Load(), O3_ARM_v7a_Store(), O3_ARM_v7a_FP()]
 
-
-class O3_ARM_v7a_3(DerivO3CPU):
+# Tournament Branch Predictor
+class O3_ARM_v7a_BP(BranchPredictor):
     predType = "tournament"
     localCtrBits = 2
     localHistoryTableSize = 64
@@ -102,6 +102,8 @@ class O3_ARM_v7a_3(DerivO3CPU):
     BTBTagSize = 18
     RASSize = 16
     instShiftAmt = 2
+
+class O3_ARM_v7a_3(DerivO3CPU):
     LQEntries = 16
     SQEntries = 16
     LSQDepCheckShift = 0
@@ -142,6 +144,7 @@ class O3_ARM_v7a_3(DerivO3CPU):
     numROBEntries = 40
 
     switched_out = False
+    branchPred = O3_ARM_v7a_BP()
 
 # Instruction Cache
 class O3_ARM_v7a_ICache(BaseCache):

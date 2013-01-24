@@ -57,11 +57,5 @@ InOrderCPUParams::create()
     }
 
     numThreads = actual_num_threads;
-
-    instShiftAmt = 2;
-
     return new InOrderCPU(this);
 }
-
-
-

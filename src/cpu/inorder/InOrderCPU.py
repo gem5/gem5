@@ -29,6 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from BaseCPU import BaseCPU
+from BranchPredictor import BranchPredictor
 
 class ThreadModel(Enum):
     vals = ['Single', 'SMT', 'SwitchOnCacheMiss']
@@ -46,24 +47,6 @@ class InOrderCPU(BaseCPU):
     fetchBuffSize = Param.Unsigned(4, "Fetch Buffer Size (Number of Cache Blocks Stored)")
     memBlockSize = Param.Unsigned(64, "Memory Block Size")
 
-    predType = Param.String("tournament", "Branch predictor type ('local', 'tournament')")
-    localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
-    localCtrBits = Param.Unsigned(2, "Bits per counter")
-    localHistoryTableSize = Param.Unsigned(2048, "Size of local history table")
-    localHistoryBits = Param.Unsigned(11, "Bits for the local history")
-    globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
-    globalCtrBits = Param.Unsigned(2, "Bits per counter")
-    globalHistoryBits = Param.Unsigned(13, "Bits of history")
-    choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
-    choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
-
-    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
-    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
-
-    RASSize = Param.Unsigned(16, "RAS size")
-
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
-
     stageTracing = Param.Bool(False, "Enable tracing of each stage in CPU")
 
     multLatency = Param.Cycles(1, "Latency for Multiply Operations")
@@ -76,3 +59,5 @@ class InOrderCPU(BaseCPU):
     div24RepeatRate = Param.Cycles(1, "Repeat Rate for 24-bit Divide Operations")
     div32Latency = Param.Cycles(1, "Latency for 32-bit Divide Operations")
     div32RepeatRate = Param.Cycles(1, "Repeat Rate for 32-bit Divide Operations")
+
+    branchPred = BranchPredictor(numThreads = Parent.numThreads)

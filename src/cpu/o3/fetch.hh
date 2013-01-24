@@ -49,6 +49,7 @@
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
 #include "mem/packet.hh"
@@ -76,7 +77,6 @@ class DefaultFetch
     typedef typename Impl::O3CPU O3CPU;
 
     /** Typedefs from the CPU policy. */
-    typedef typename CPUPol::BPredUnit BPredUnit;
     typedef typename CPUPol::FetchStruct FetchStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
 
@@ -405,7 +405,7 @@ class DefaultFetch
     typename TimeBuffer<FetchStruct>::wire toDecode;
 
     /** BPredUnit. */
-    BPredUnit branchPred;
+    BPredUnit *branchPred;
 
     TheISA::PCState pc[Impl::MaxThreads];
 

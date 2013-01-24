@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2010 The University of Edinburgh
+ * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +28,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Timothy M. Jones
  */
 
-#include "cpu/o3/bpred_unit_impl.hh"
-#include "cpu/o3/isa_specific.hh"
+#include "cpu/pred/2bit_local.hh"
+#include "cpu/pred/bpred_unit_impl.hh"
+#include "cpu/pred/tournament.hh"
 
-template class BPredUnit<O3CPUImpl>;
+BPredUnit *
+BranchPredictorParams::create()
+{
+    // Setup the selected predictor.
+    if (predType == "local") {
+        return new LocalBP(this);
+    } else if (predType == "tournament") {
+        return new TournamentBP(this);
+    } else {
+        fatal("Invalid BP selected!");
+    }
+}

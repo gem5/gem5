@@ -31,8 +31,12 @@
 Import('*')
 
 if 'InOrderCPU' in env['CPU_MODELS'] or 'O3CPU' in env['CPU_MODELS']:
+    SimObject('BranchPredictor.py')
+
+    Source('bpred_unit.cc')
     Source('2bit_local.cc')
     Source('btb.cc')
     Source('ras.cc')
     Source('tournament.cc')
     DebugFlag('FreeList')
+    DebugFlag('Branch')

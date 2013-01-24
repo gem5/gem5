@@ -31,7 +31,6 @@
 #ifndef __CPU_O3_CPU_POLICY_HH__
 #define __CPU_O3_CPU_POLICY_HH__
 
-#include "cpu/o3/bpred_unit.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/decode.hh"
@@ -60,10 +59,6 @@
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    /** Typedef for the branch prediction unit (which includes the BP,
-     * RAS, and BTB).
-     */
-    typedef ::BPredUnit<Impl> BPredUnit;
     /** Typedef for the register file.  Most classes assume a unified
      * physical register file.
      */

@@ -36,7 +36,7 @@
 #include <string>
 #include <vector>
 
-#include "cpu/inorder/resources/bpred_unit.hh"
+#include "cpu/pred/bpred_unit.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
@@ -70,7 +70,7 @@ class BranchPredictor : public Resource {
     /** List of instructions this resource is currently
      *  processing.
      */
-    BPredUnit branchPred;
+    BPredUnit *branchPred;
 
     int instSize;
 

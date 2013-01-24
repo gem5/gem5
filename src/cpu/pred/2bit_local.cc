@@ -34,12 +34,11 @@
 #include "cpu/pred/2bit_local.hh"
 #include "debug/Fetch.hh"
 
-LocalBP::LocalBP(unsigned _localPredictorSize,
-                 unsigned _localCtrBits,
-                 unsigned _instShiftAmt)
-    : localPredictorSize(_localPredictorSize),
-      localCtrBits(_localCtrBits),
-      instShiftAmt(_instShiftAmt)
+LocalBP::LocalBP(const Params *params)
+    : BPredUnit(params),
+      localPredictorSize(params->localPredictorSize),
+      localCtrBits(params->localCtrBits),
+      instShiftAmt(params->instShiftAmt)
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -54,20 +53,20 @@ LocalBP::LocalBP(unsigned _localPredictorSize,
     // Setup the index mask.
     indexMask = localPredictorSets - 1;
 
-    DPRINTF(Fetch, "Branch predictor: index mask: %#x\n", indexMask);
+    DPRINTF(Fetch, "index mask: %#x\n", indexMask);
 
     // Setup the array of counters for the local predictor.
     localCtrs.resize(localPredictorSets);
 
     for (unsigned i = 0; i < localPredictorSets; ++i)
-        localCtrs[i].setBits(_localCtrBits);
+        localCtrs[i].setBits(localCtrBits);
 
-    DPRINTF(Fetch, "Branch predictor: local predictor size: %i\n",
+    DPRINTF(Fetch, "local predictor size: %i\n",
             localPredictorSize);
 
-    DPRINTF(Fetch, "Branch predictor: local counter bits: %i\n", localCtrBits);
+    DPRINTF(Fetch, "local counter bits: %i\n", localCtrBits);
 
-    DPRINTF(Fetch, "Branch predictor: instruction shift amount: %i\n",
+    DPRINTF(Fetch, "instruction shift amount: %i\n",
             instShiftAmt);
 }
 
@@ -80,7 +79,7 @@ LocalBP::reset()
 }
 
 void
-LocalBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
+LocalBP::btbUpdate(Addr branch_addr, void * &bp_history)
 {
 // Place holder for a function that is called to update predictor history when
 // a BTB entry is invalid or not found.
@@ -88,18 +87,18 @@ LocalBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
 
 
 bool
-LocalBP::lookup(Addr &branch_addr, void * &bp_history)
+LocalBP::lookup(Addr branch_addr, void * &bp_history)
 {
     bool taken;
     uint8_t counter_val;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
 
-    DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
+    DPRINTF(Fetch, "Looking up index %#x\n",
             local_predictor_idx);
 
     counter_val = localCtrs[local_predictor_idx].read();
 
-    DPRINTF(Fetch, "Branch predictor: prediction is %i.\n",
+    DPRINTF(Fetch, "prediction is %i.\n",
             (int)counter_val);
 
     taken = getPrediction(counter_val);
@@ -107,10 +106,10 @@ LocalBP::lookup(Addr &branch_addr, void * &bp_history)
 #if 0
     // Speculative update.
     if (taken) {
-        DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
+        DPRINTF(Fetch, "Branch updated as taken.\n");
         localCtrs[local_predictor_idx].increment();
     } else {
-        DPRINTF(Fetch, "Branch predictor: Branch updated as not taken.\n");
+        DPRINTF(Fetch, "Branch updated as not taken.\n");
         localCtrs[local_predictor_idx].decrement();
     }
 #endif
@@ -119,7 +118,7 @@ LocalBP::lookup(Addr &branch_addr, void * &bp_history)
 }
 
 void
-LocalBP::update(Addr &branch_addr, bool taken, void *bp_history)
+LocalBP::update(Addr branch_addr, bool taken, void *bp_history, bool squashed)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;
@@ -127,14 +126,13 @@ LocalBP::update(Addr &branch_addr, bool taken, void *bp_history)
     // Update the local predictor.
     local_predictor_idx = getLocalIndex(branch_addr);
 
-    DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
-            local_predictor_idx);
+    DPRINTF(Fetch, "Looking up index %#x\n", local_predictor_idx);
 
     if (taken) {
-        DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
+        DPRINTF(Fetch, "Branch updated as taken.\n");
         localCtrs[local_predictor_idx].increment();
     } else {
-        DPRINTF(Fetch, "Branch predictor: Branch updated as not taken.\n");
+        DPRINTF(Fetch, "Branch updated as not taken.\n");
         localCtrs[local_predictor_idx].decrement();
     }
 }
@@ -152,4 +150,9 @@ unsigned
 LocalBP::getLocalIndex(Addr &branch_addr)
 {
     return (branch_addr >> instShiftAmt) & indexMask;
+}
+
+void
+LocalBP::uncondBranch(void *&bp_history)
+{
 }

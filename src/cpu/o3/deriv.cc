@@ -65,7 +65,5 @@ DerivO3CPUParams::create()
     else
         smtFetchPolicy = smtFetchPolicy;
 
-    instShiftAmt = 2;
-
     return new DerivO3CPU(this);
 }

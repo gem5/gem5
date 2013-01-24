@@ -44,24 +44,17 @@
 #include "base/intmath.hh"
 #include "cpu/pred/tournament.hh"
 
-TournamentBP::TournamentBP(unsigned _localCtrBits,
-                           unsigned _localHistoryTableSize,
-                           unsigned _localHistoryBits,
-                           unsigned _globalPredictorSize,
-                           unsigned _globalHistoryBits,
-                           unsigned _globalCtrBits,
-                           unsigned _choicePredictorSize,
-                           unsigned _choiceCtrBits,
-                           unsigned _instShiftAmt)
-    : localCtrBits(_localCtrBits),
-      localHistoryTableSize(_localHistoryTableSize),
-      localHistoryBits(_localHistoryBits),
-      globalPredictorSize(_globalPredictorSize),
-      globalCtrBits(_globalCtrBits),
-      globalHistoryBits(_globalHistoryBits),
-      choicePredictorSize(_choicePredictorSize),
-      choiceCtrBits(_choiceCtrBits),
-      instShiftAmt(_instShiftAmt)
+TournamentBP::TournamentBP(const Params *params)
+    : BPredUnit(params),
+      localCtrBits(params->localCtrBits),
+      localHistoryTableSize(params->localHistoryTableSize),
+      localHistoryBits(params->localHistoryBits),
+      globalPredictorSize(params->globalPredictorSize),
+      globalCtrBits(params->globalCtrBits),
+      globalHistoryBits(params->globalHistoryBits),
+      choicePredictorSize(params->choicePredictorSize),
+      choiceCtrBits(params->choiceCtrBits),
+      instShiftAmt(params->instShiftAmt)
 {
     localPredictorSize = ULL(1) << localHistoryBits;
 
@@ -178,7 +171,7 @@ TournamentBP::updateLocalHistNotTaken(unsigned local_history_idx)
 
 
 void
-TournamentBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
+TournamentBP::btbUpdate(Addr branch_addr, void * &bp_history)
 {
     unsigned local_history_idx = calcLocHistIdx(branch_addr);
     //Update Global History to Not Taken (clear LSB)
@@ -189,7 +182,7 @@ TournamentBP::BTBUpdate(Addr &branch_addr, void * &bp_history)
 }
 
 bool
-TournamentBP::lookup(Addr &branch_addr, void * &bp_history)
+TournamentBP::lookup(Addr branch_addr, void * &bp_history)
 {
     bool local_prediction;
     unsigned local_history_idx;
@@ -249,7 +242,7 @@ TournamentBP::lookup(Addr &branch_addr, void * &bp_history)
 }
 
 void
-TournamentBP::uncondBr(void * &bp_history)
+TournamentBP::uncondBranch(void * &bp_history)
 {
     // Create BPHistory and pass it back to be recorded.
     BPHistory *history = new BPHistory;
@@ -264,7 +257,7 @@ TournamentBP::uncondBr(void * &bp_history)
 }
 
 void
-TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history,
+TournamentBP::update(Addr branch_addr, bool taken, void *bp_history,
                      bool squashed)
 {
     unsigned local_history_idx;

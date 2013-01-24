@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2010 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,50 +39,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
+ *          Timothy M. Jones
+ *          Nilay Vaish
  */
 
-#ifndef __CPU_O3_BPRED_UNIT_HH__
-#define __CPU_O3_BPRED_UNIT_HH__
+#ifndef __CPU_PRED_BPRED_UNIT_HH__
+#define __CPU_PRED_BPRED_UNIT_HH__
 
 #include <list>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "cpu/pred/2bit_local.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/ras.hh"
-#include "cpu/pred/tournament.hh"
 #include "cpu/inst_seq.hh"
-
-struct DerivO3CPUParams;
+#include "cpu/static_inst.hh"
+#include "params/BranchPredictor.hh"
+#include "sim/sim_object.hh"
 
 /**
  * Basically a wrapper class to hold both the branch predictor
  * and the BTB.
  */
-template<class Impl>
-class BPredUnit
+class BPredUnit : public SimObject
 {
-  private:
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
-    enum PredType {
-        Local,
-        Tournament
-    };
-
-    PredType predictor;
-
-    const std::string _name;
-
   public:
-
+      typedef BranchPredictorParams Params;
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    BPredUnit(DerivO3CPUParams *params);
-
-    const std::string &name() const { return _name; }
+    BPredUnit(const Params *p);
 
     /**
      * Registers statistics.
@@ -91,9 +79,6 @@ class BPredUnit
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 
-    /** Take over execution from another CPU's thread. */
-    void takeOverFrom();
-
     /**
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.
@@ -102,10 +87,14 @@ class BPredUnit
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(DynInstPtr &inst, TheISA::PCState &pc, ThreadID tid);
+    bool predict(StaticInstPtr &inst, const InstSeqNum &seqNum,
+                 TheISA::PCState &pc, ThreadID tid);
+    bool predictInOrder(StaticInstPtr &inst, const InstSeqNum &seqNum,
+                        int asid, TheISA::PCState &instPC, TheISA::PCState &predPC,
+                        ThreadID tid);
 
     // @todo: Rename this function.
-    void BPUncond(void * &bp_history);
+    virtual void uncondBranch(void * &bp_history) = 0;
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -140,7 +129,7 @@ class BPredUnit
      * @param bp_history Pointer to the history object.  The predictor
      * will need to update any state and delete the object.
      */
-    void BPSquash(void *bp_history);
+    virtual void squash(void *bp_history) = 0;
 
     /**
      * Looks up a given PC in the BP to see if it is taken or not taken.
@@ -149,7 +138,7 @@ class BPredUnit
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    bool BPLookup(Addr instPC, void * &bp_history);
+    virtual bool lookup(Addr instPC, void * &bp_history) = 0;
 
      /**
      * If a branch is not taken, because the BTB address is invalid or missing,
@@ -159,7 +148,7 @@ class BPredUnit
      * @param bp_history Pointer that will be set to an object that
      * has the branch predictor state associated with the lookup.
      */
-    void BPBTBUpdate(Addr instPC, void * &bp_history);
+    virtual void btbUpdate(Addr instPC, void * &bp_history) = 0;
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -187,7 +176,8 @@ class BPredUnit
      * squash operation.
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    void BPUpdate(Addr instPC, bool taken, void *bp_history, bool squashed);
+    virtual void update(Addr instPC, bool taken, void *bp_history,
+                        bool squashed) = 0;
 
     /**
      * Updates the BTB with the target of a branch.
@@ -210,7 +200,7 @@ class BPredUnit
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), validBTB(0)
+              wasCall(0), wasReturn(0)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -252,31 +242,26 @@ class BPredUnit
 
         /** Whether or not the instruction was a return. */
         bool wasReturn;
-        /** Whether or not the instruction had a valid BTB entry. */
-        bool validBTB;
     };
 
     typedef std::list<PredictorHistory> History;
-    typedef typename History::iterator HistoryIt;
+    typedef History::iterator HistoryIt;
+
+    /** Number of the threads for which the branch history is maintained. */
+    uint32_t numThreads;
 
     /**
      * The per-thread predictor history. This is used to update the predictor
      * as instructions are committed, or restore it to the proper state after
      * a squash.
      */
-    History predHist[Impl::MaxThreads];
-
-    /** The local branch predictor. */
-    LocalBP *localBP;
-
-    /** The tournament branch predictor. */
-    TournamentBP *tournamentBP;
+    History *predHist;
 
     /** The BTB. */
     DefaultBTB BTB;
 
     /** The per-thread return address stack. */
-    ReturnAddrStack RAS[Impl::MaxThreads];
+    ReturnAddrStack *RAS;
 
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
@@ -290,10 +275,12 @@ class BPredUnit
     Stats::Scalar BTBHits;
     /** Stat for number of times the BTB is correct. */
     Stats::Scalar BTBCorrect;
+    /** Stat for percent times an entry in BTB found. */
+    Stats::Formula BTBHitPct;
     /** Stat for number of times the RAS is used to get a target. */
     Stats::Scalar usedRAS;
     /** Stat for number of times the RAS is incorrect. */
     Stats::Scalar RASIncorrect;
 };
 
-#endif // __CPU_O3_BPRED_UNIT_HH__
+#endif // __CPU_PRED_BPRED_UNIT_HH__

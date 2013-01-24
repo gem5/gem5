@@ -71,7 +71,6 @@ if 'InOrderCPU' in env['CPU_MODELS']:
         Source('resource.cc')
         Source('resources/agen_unit.cc')
         Source('resources/execution_unit.cc')
-        Source('resources/bpred_unit.cc')
         Source('resources/branch_predictor.cc')
         Source('resources/cache_unit.cc')
         Source('resources/fetch_unit.cc')	

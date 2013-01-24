@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2012 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,56 +24,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Nilay Vaish
 
-import sys
+from m5.SimObject import SimObject
+from m5.params import *
 
-Import('*')
+class BranchPredictor(SimObject):
+    type = 'BranchPredictor'
+    cxx_class = 'BPredUnit'
+    cxx_header = "cpu/pred/bpred_unit.hh"
 
-if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:
-    DebugFlag('CommitRate')
-    DebugFlag('IEW')
-    DebugFlag('IQ')
+    numThreads = Param.Unsigned(1, "Number of threads")
+    predType = Param.String("tournament",
+        "Branch predictor type ('local', 'tournament')")
+    localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
+    localCtrBits = Param.Unsigned(2, "Bits per counter")
+    localHistoryTableSize = Param.Unsigned(2048, "Size of local history table")
+    localHistoryBits = Param.Unsigned(11, "Bits for the local history")
+    globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
+    globalCtrBits = Param.Unsigned(2, "Bits per counter")
+    globalHistoryBits = Param.Unsigned(13, "Bits of history")
+    choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
+    choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('FUPool.py')
-    SimObject('FuncUnitConfig.py')
-    SimObject('O3CPU.py')
+    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
+    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
 
-    Source('base_dyn_inst.cc')
-    Source('commit.cc')
-    Source('cpu.cc')
-    Source('deriv.cc')
-    Source('decode.cc')
-    Source('dyn_inst.cc')
-    Source('fetch.cc')
-    Source('free_list.cc')
-    Source('fu_pool.cc')
-    Source('iew.cc')
-    Source('inst_queue.cc')
-    Source('lsq.cc')
-    Source('lsq_unit.cc')
-    Source('mem_dep_unit.cc')
-    Source('rename.cc')
-    Source('rename_map.cc')
-    Source('rob.cc')
-    Source('scoreboard.cc')
-    Source('store_set.cc')
-    Source('thread_context.cc')
-
-    DebugFlag('LSQ')
-    DebugFlag('LSQUnit')
-    DebugFlag('MemDepUnit')
-    DebugFlag('O3CPU')
-    DebugFlag('ROB')
-    DebugFlag('Rename')
-    DebugFlag('Scoreboard')
-    DebugFlag('StoreSet')
-    DebugFlag('Writeback')
-
-    CompoundFlag('O3CPUAll', [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit',
-        'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
-        'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
-
-    SimObject('O3Checker.py')
-    Source('checker.cc')
+    RASSize = Param.Unsigned(16, "RAS size")
+    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")

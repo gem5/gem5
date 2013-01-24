@@ -38,15 +38,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Timothy M. Jones
  */
 
-#ifndef __CPU_O3_2BIT_LOCAL_PRED_HH__
-#define __CPU_O3_2BIT_LOCAL_PRED_HH__
+#ifndef __CPU_PRED_2BIT_LOCAL_PRED_HH__
+#define __CPU_PRED_2BIT_LOCAL_PRED_HH__
 
 #include <vector>
 
 #include "base/types.hh"
-#include "cpu/o3/sat_counter.hh"
+#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/sat_counter.hh"
 
 /**
  * Implements a local predictor that uses the PC to index into a table of
@@ -55,17 +57,15 @@
  * predictor state that needs to be recorded or updated; the update can be
  * determined solely by the branch being taken or not taken.
  */
-class LocalBP
+class LocalBP : public BPredUnit
 {
   public:
     /**
      * Default branch predictor constructor.
-     * @param localPredictorSize Size of the local predictor.
-     * @param localCtrBits Number of bits per counter.
-     * @param instShiftAmt Offset amount for instructions to ignore alignment.
      */
-    LocalBP(unsigned localPredictorSize, unsigned localCtrBits,
-            unsigned instShiftAmt);
+    LocalBP(const Params *params);
+
+    virtual void uncondBranch(void * &bp_history);
 
     /**
      * Looks up the given address in the branch predictor and returns
@@ -74,7 +74,7 @@ class LocalBP
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(Addr &branch_addr, void * &bp_history);
+    bool lookup(Addr branch_addr, void * &bp_history);
 
     /**
      * Updates the branch predictor to Not Taken if a BTB entry is
@@ -83,14 +83,14 @@ class LocalBP
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    void BTBUpdate(Addr &branch_addr, void * &bp_history);
+    void btbUpdate(Addr branch_addr, void * &bp_history);
 
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
      * @param taken Whether or not the branch was taken.
      */
-    void update(Addr &branch_addr, bool taken, void *bp_history);
+    void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
 
     void squash(void *bp_history)
     { assert(bp_history == NULL); }
@@ -128,4 +128,4 @@ class LocalBP
     unsigned indexMask;
 };
 
-#endif // __CPU_O3_2BIT_LOCAL_PRED_HH__
+#endif // __CPU_PRED_2BIT_LOCAL_PRED_HH__
