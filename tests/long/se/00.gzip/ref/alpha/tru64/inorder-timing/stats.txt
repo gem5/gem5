@@ -4,11 +4,11 @@ sim_seconds                                  0.269661                       # Nu
 sim_ticks                                269661304500                       # Number of ticks simulated
 final_tick                               269661304500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 125304                       # Simulator instruction rate (inst/s)
-host_op_rate                                   125304                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               56142087                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 214336                       # Number of bytes of host memory used
-host_seconds                                  4803.19                       # Real time elapsed on the host
+host_inst_rate                                  98682                       # Simulator instruction rate (inst/s)
+host_op_rate                                    98682                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               44214559                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 273520                       # Number of bytes of host memory used
+host_seconds                                  6098.93                       # Real time elapsed on the host
 sim_insts                                   601856964                       # Number of instructions simulated
 sim_ops                                     601856964                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             53824                       # Number of bytes read from this memory
@@ -192,6 +192,15 @@ system.physmem.writeRowHits                        51                       # Nu
 system.physmem.readRowHitRate                   66.23                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                   5.03                       # Row buffer hit rate for writes
 system.physmem.avgGap                      9874807.84                       # Average gap between requests
+system.cpu.branchPred.lookups                86405274                       # Number of BP lookups
+system.cpu.branchPred.condPredicted          81476244                       # Number of conditional branches predicted
+system.cpu.branchPred.condIncorrect          36343014                       # Number of conditional branches incorrect
+system.cpu.branchPred.BTBLookups             44773910                       # Number of BTB lookups
+system.cpu.branchPred.BTBHits                34660000                       # Number of BTB hits
+system.cpu.branchPred.BTBCorrect                    0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu.branchPred.BTBHitPct             77.411153                       # BTB Hit Percentage
+system.cpu.branchPred.usedRAS                 1197609                       # Number of times the RAS was used to get a target.
+system.cpu.branchPred.RASInCorrect                  6                       # Number of incorrect RAS predictions.
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
@@ -228,14 +237,6 @@ system.cpu.workload.num_syscalls                   17                       # Nu
 system.cpu.numCycles                        539322610                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.branch_predictor.lookups          86405274                       # Number of BP lookups
-system.cpu.branch_predictor.condPredicted     81476244                       # Number of conditional branches predicted
-system.cpu.branch_predictor.condIncorrect     36343014                       # Number of conditional branches incorrect
-system.cpu.branch_predictor.BTBLookups       44773910                       # Number of BTB lookups
-system.cpu.branch_predictor.BTBHits          34660000                       # Number of BTB hits
-system.cpu.branch_predictor.usedRAS           1197609                       # Number of times the RAS was used to get a target.
-system.cpu.branch_predictor.RASInCorrect            6                       # Number of incorrect RAS predictions.
-system.cpu.branch_predictor.BTBHitPct       77.411153                       # BTB Hit Percentage
 system.cpu.branch_predictor.predictedTaken     37224652                       # Number of Branches Predicted As Taken (True).
 system.cpu.branch_predictor.predictedNotTaken     49180622                       # Number of Branches Predicted As Not Taken (False).
 system.cpu.regfile_manager.intRegFileReads    541063714                       # Number of Reads from Int. Register File

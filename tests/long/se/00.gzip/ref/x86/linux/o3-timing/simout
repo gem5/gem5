@@ -1,9 +1,11 @@
+Redirecting stdout to build/X86/tests/opt/long/se/00.gzip/x86/linux/o3-timing/simout
+Redirecting stderr to build/X86/tests/opt/long/se/00.gzip/x86/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan  4 2013 21:20:54
-gem5 started Jan  4 2013 22:11:32
-gem5 executing on u200540
+gem5 compiled Jan 23 2013 16:30:44
+gem5 started Jan 23 2013 18:48:34
+gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/00.gzip/x86/linux/o3-timing -re tests/run.py build/X86/tests/opt/long/se/00.gzip/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

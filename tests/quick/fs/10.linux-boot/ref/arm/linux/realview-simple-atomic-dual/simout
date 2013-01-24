@@ -1,12 +1,14 @@
+Redirecting stdout to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic-dual/simout
+Redirecting stderr to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic-dual/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan  4 2013 21:17:24
-gem5 started Jan  4 2013 23:29:32
-gem5 executing on u200540
+gem5 compiled Jan 23 2013 19:43:25
+gem5 started Jan 23 2013 19:45:38
+gem5 executing on ribera.cs.wisc.edu
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic-dual -re tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /gem5/dist/binaries/vmlinux.arm.smp.fb.2.6.38.8
+info: kernel located at: /scratch/nilay/GEM5/system/binaries/vmlinux.arm.smp.fb.2.6.38.8
 info: Using bootloader at address 0x80000000
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 912096763500 because m5_exit instruction encountered

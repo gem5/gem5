@@ -4,11 +4,11 @@ sim_seconds                                  1.841687                       # Nu
 sim_ticks                                1841687115500                       # Number of ticks simulated
 final_tick                               1841687115500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 299654                       # Simulator instruction rate (inst/s)
-host_op_rate                                   299654                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8001020229                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 317816                       # Number of bytes of host memory used
-host_seconds                                   230.18                       # Real time elapsed on the host
+host_inst_rate                                 216690                       # Simulator instruction rate (inst/s)
+host_op_rate                                   216690                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5785819991                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 360768                       # Number of bytes of host memory used
+host_seconds                                   318.31                       # Real time elapsed on the host
 sim_insts                                    68974794                       # Number of instructions simulated
 sim_ops                                      68974794                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu0.inst           474496                       # Number of bytes read from this memory
@@ -1229,6 +1229,15 @@ system.cpu1.kern.mode_ticks::kernel                 0                       # nu
 system.cpu1.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
 system.cpu1.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
 system.cpu1.kern.swap_context                       0                       # number of times the context was actually changed
+system.cpu2.branchPred.lookups                8367198                       # Number of BP lookups
+system.cpu2.branchPred.condPredicted          7675066                       # Number of conditional branches predicted
+system.cpu2.branchPred.condIncorrect           129021                       # Number of conditional branches incorrect
+system.cpu2.branchPred.BTBLookups             6898028                       # Number of BTB lookups
+system.cpu2.branchPred.BTBHits                5713360                       # Number of BTB hits
+system.cpu2.branchPred.BTBCorrect                   0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu2.branchPred.BTBHitPct            82.825990                       # BTB Hit Percentage
+system.cpu2.branchPred.usedRAS                 286292                       # Number of times the RAS was used to get a target.
+system.cpu2.branchPred.RASInCorrect             15213                       # Number of incorrect RAS predictions.
 system.cpu2.dtb.fetch_hits                          0                       # ITB hits
 system.cpu2.dtb.fetch_misses                        0                       # ITB misses
 system.cpu2.dtb.fetch_acv                           0                       # ITB acv
@@ -1264,14 +1273,6 @@ system.cpu2.itb.data_accesses                       0                       # DT
 system.cpu2.numCycles                        30553382                       # number of cpu cycles simulated
 system.cpu2.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu2.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu2.BPredUnit.lookups                 8367198                       # Number of BP lookups
-system.cpu2.BPredUnit.condPredicted           7675066                       # Number of conditional branches predicted
-system.cpu2.BPredUnit.condIncorrect            129021                       # Number of conditional branches incorrect
-system.cpu2.BPredUnit.BTBLookups              6898028                       # Number of BTB lookups
-system.cpu2.BPredUnit.BTBHits                 5713360                       # Number of BTB hits
-system.cpu2.BPredUnit.BTBCorrect                    0                       # Number of correct BTB predictions (this stat may not work properly.
-system.cpu2.BPredUnit.usedRAS                  286292                       # Number of times the RAS was used to get a target.
-system.cpu2.BPredUnit.RASInCorrect              15213                       # Number of incorrect RAS predictions.
 system.cpu2.fetch.icacheStallCycles           8548806                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu2.fetch.Insts                      34839646                       # Number of instructions fetch has processed
 system.cpu2.fetch.Branches                    8367198                       # Number of branches that fetch encountered

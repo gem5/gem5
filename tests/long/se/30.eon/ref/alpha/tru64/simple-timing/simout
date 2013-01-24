@@ -1,14 +1,16 @@
+Redirecting stdout to build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/simple-timing/simout
+Redirecting stderr to build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  2 2012 08:30:56
-gem5 started Jul  2 2012 09:39:35
-gem5 executing on zizzer
-command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/simple-timing -re tests/run.py build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/simple-timing
+gem5 compiled Jan 23 2013 13:29:14
+gem5 started Jan 23 2013 13:49:24
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/simple-timing -re tests/run.py build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Eon, Version 1.1
 info: Increasing stack size by one page.
 OO-style eon Time= 0.566667
-Exiting @ tick 567365869000 because target called exit()
+Exiting @ tick 567335093000 because target called exit()

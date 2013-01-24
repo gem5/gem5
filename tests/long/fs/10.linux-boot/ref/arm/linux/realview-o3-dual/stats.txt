@@ -4,11 +4,11 @@ sim_seconds                                  1.092969                       # Nu
 sim_ticks                                1092968826500                       # Number of ticks simulated
 final_tick                               1092968826500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  64747                       # Simulator instruction rate (inst/s)
-host_op_rate                                    83356                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1148881552                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 415112                       # Number of bytes of host memory used
-host_seconds                                   951.33                       # Real time elapsed on the host
+host_inst_rate                                  49884                       # Simulator instruction rate (inst/s)
+host_op_rate                                    64220                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              885142778                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 458008                       # Number of bytes of host memory used
+host_seconds                                  1234.79                       # Real time elapsed on the host
 sim_insts                                    61595972                       # Number of instructions simulated
 sim_ops                                      79298956                       # Number of ops (including micro ops) simulated
 system.realview.nvmem.bytes_read::cpu0.inst           64                       # Number of bytes read from this memory
@@ -663,6 +663,15 @@ system.cf0.dma_read_txs                             0                       # Nu
 system.cf0.dma_write_full_pages                     0                       # Number of full page size DMA writes.
 system.cf0.dma_write_bytes                          0                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                            0                       # Number of DMA write transactions.
+system.cpu0.branchPred.lookups                6012491                       # Number of BP lookups
+system.cpu0.branchPred.condPredicted          4585363                       # Number of conditional branches predicted
+system.cpu0.branchPred.condIncorrect           296577                       # Number of conditional branches incorrect
+system.cpu0.branchPred.BTBLookups             3765620                       # Number of BTB lookups
+system.cpu0.branchPred.BTBHits                2919015                       # Number of BTB hits
+system.cpu0.branchPred.BTBCorrect                   0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu0.branchPred.BTBHitPct            77.517514                       # BTB Hit Percentage
+system.cpu0.branchPred.usedRAS                 674578                       # Number of times the RAS was used to get a target.
+system.cpu0.branchPred.RASInCorrect             28863                       # Number of incorrect RAS predictions.
 system.cpu0.dtb.inst_hits                           0                       # ITB inst hits
 system.cpu0.dtb.inst_misses                         0                       # ITB inst misses
 system.cpu0.dtb.read_hits                     8918270                       # DTB read hits
@@ -708,14 +717,6 @@ system.cpu0.itb.accesses                      4231537                       # DT
 system.cpu0.numCycles                        67785734                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu0.BPredUnit.lookups                 6012491                       # Number of BP lookups
-system.cpu0.BPredUnit.condPredicted           4585363                       # Number of conditional branches predicted
-system.cpu0.BPredUnit.condIncorrect            296577                       # Number of conditional branches incorrect
-system.cpu0.BPredUnit.BTBLookups              3765620                       # Number of BTB lookups
-system.cpu0.BPredUnit.BTBHits                 2919015                       # Number of BTB hits
-system.cpu0.BPredUnit.BTBCorrect                    0                       # Number of correct BTB predictions (this stat may not work properly.
-system.cpu0.BPredUnit.usedRAS                  674578                       # Number of times the RAS was used to get a target.
-system.cpu0.BPredUnit.RASInCorrect              28863                       # Number of incorrect RAS predictions.
 system.cpu0.fetch.icacheStallCycles          11763968                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu0.fetch.Insts                      32049970                       # Number of instructions fetch has processed
 system.cpu0.fetch.Branches                    6012491                       # Number of branches that fetch encountered
@@ -1233,6 +1234,15 @@ system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::total          inf    
 system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu0.data          inf                       # average overall mshr uncacheable latency
 system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::total          inf                       # average overall mshr uncacheable latency
 system.cpu0.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
+system.cpu1.branchPred.lookups                8781590                       # Number of BP lookups
+system.cpu1.branchPred.condPredicted          7165099                       # Number of conditional branches predicted
+system.cpu1.branchPred.condIncorrect           410272                       # Number of conditional branches incorrect
+system.cpu1.branchPred.BTBLookups             5784510                       # Number of BTB lookups
+system.cpu1.branchPred.BTBHits                4949628                       # Number of BTB hits
+system.cpu1.branchPred.BTBCorrect                   0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu1.branchPred.BTBHitPct            85.566937                       # BTB Hit Percentage
+system.cpu1.branchPred.usedRAS                 773605                       # Number of times the RAS was used to get a target.
+system.cpu1.branchPred.RASInCorrect             42847                       # Number of incorrect RAS predictions.
 system.cpu1.dtb.inst_hits                           0                       # ITB inst hits
 system.cpu1.dtb.inst_misses                         0                       # ITB inst misses
 system.cpu1.dtb.read_hits                    42721233                       # DTB read hits
@@ -1278,14 +1288,6 @@ system.cpu1.itb.accesses                      7589581                       # DT
 system.cpu1.numCycles                       406854445                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu1.BPredUnit.lookups                 8781590                       # Number of BP lookups
-system.cpu1.BPredUnit.condPredicted           7165099                       # Number of conditional branches predicted
-system.cpu1.BPredUnit.condIncorrect            410272                       # Number of conditional branches incorrect
-system.cpu1.BPredUnit.BTBLookups              5784510                       # Number of BTB lookups
-system.cpu1.BPredUnit.BTBHits                 4949628                       # Number of BTB hits
-system.cpu1.BPredUnit.BTBCorrect                    0                       # Number of correct BTB predictions (this stat may not work properly.
-system.cpu1.BPredUnit.usedRAS                  773605                       # Number of times the RAS was used to get a target.
-system.cpu1.BPredUnit.RASInCorrect              42847                       # Number of incorrect RAS predictions.
 system.cpu1.fetch.icacheStallCycles          18987687                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu1.fetch.Insts                      60514486                       # Number of instructions fetch has processed
 system.cpu1.fetch.Branches                    8781590                       # Number of branches that fetch encountered
