@@ -54,7 +54,6 @@ class AST(PairContainer):
             message = message % args
         code = self.slicc.codeFormatter()
         code('''
-panic("Runtime Error at ${{self.location}}, Ruby Time: %d, %s.\\n",
-    curCycle(), $message);
+panic("Runtime Error at ${{self.location}}: %s.\\n", $message);
 ''')
         return code
