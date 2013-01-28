@@ -179,6 +179,7 @@ machine(Directory, "AMD Hammer-like protocol")
   void set_tbe(TBE a);
   void unset_tbe();
   void wakeUpBuffers(Address a);
+  Time curCycle();
 
   // ** OBJECTS **
 
@@ -877,7 +878,7 @@ machine(Directory, "AMD Hammer-like protocol")
               out_msg.Destination.setNetDest(MachineType:L1Cache, fwd_set);
               out_msg.MessageSize := MessageSizeType:Multicast_Control;
               out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-              out_msg.ForwardRequestTime := get_time();
+              out_msg.ForwardRequestTime := curCycle();
               assert(tbe.SilentAcks > 0);
               out_msg.SilentAcks := tbe.SilentAcks;
             }
@@ -893,7 +894,7 @@ machine(Directory, "AMD Hammer-like protocol")
             out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
             out_msg.MessageSize := MessageSizeType:Broadcast_Control;
             out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-            out_msg.ForwardRequestTime := get_time();
+            out_msg.ForwardRequestTime := curCycle();
           }
         }
       }
@@ -953,7 +954,7 @@ machine(Directory, "AMD Hammer-like protocol")
                   out_msg.Destination.setNetDest(MachineType:L1Cache, fwd_set);
                   out_msg.MessageSize := MessageSizeType:Multicast_Control;
                   out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-                  out_msg.ForwardRequestTime := get_time();
+                  out_msg.ForwardRequestTime := curCycle();
                   out_msg.SilentAcks := machineCount(MachineType:L1Cache) - fwd_set.count();
                   out_msg.SilentAcks := out_msg.SilentAcks - 1;
               }
@@ -967,7 +968,7 @@ machine(Directory, "AMD Hammer-like protocol")
                 out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
                 out_msg.MessageSize := MessageSizeType:Broadcast_Control;
                 out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-                out_msg.ForwardRequestTime := get_time();
+                out_msg.ForwardRequestTime := curCycle();
             }
         }
       }
@@ -1007,7 +1008,7 @@ machine(Directory, "AMD Hammer-like protocol")
         }
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.InitialRequestTime := zero_time();
-        out_msg.ForwardRequestTime := get_time();
+        out_msg.ForwardRequestTime := curCycle();
       }      
     }
   }
@@ -1025,7 +1026,7 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.MessageSize := MessageSizeType:Request_Control;
           out_msg.DirectedProbe := true;
           out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-          out_msg.ForwardRequestTime := get_time();
+          out_msg.ForwardRequestTime := curCycle();
         }
       }      
     } else {
@@ -1038,7 +1039,7 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-          out_msg.ForwardRequestTime := get_time();
+          out_msg.ForwardRequestTime := curCycle();
         }
       }
     }
@@ -1059,7 +1060,7 @@ machine(Directory, "AMD Hammer-like protocol")
             out_msg.MessageSize := MessageSizeType:Request_Control;
             out_msg.DirectedProbe := true;
             out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-            out_msg.ForwardRequestTime := get_time();
+            out_msg.ForwardRequestTime := curCycle();
           }
         }
        }
@@ -1073,7 +1074,7 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-          out_msg.ForwardRequestTime := get_time();
+          out_msg.ForwardRequestTime := curCycle();
         }
       }
      }

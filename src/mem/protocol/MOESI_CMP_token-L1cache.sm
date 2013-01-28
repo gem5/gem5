@@ -179,6 +179,7 @@ machine(L1Cache, "Token protocol")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Address a);
+  Time curCycle();
 
   TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
@@ -1344,7 +1345,7 @@ machine(L1Cache, "Token protocol")
       tbe.Prefetch := in_msg.Prefetch;
       tbe.AccessMode := in_msg.AccessMode;
     }
-    tbe.IssueTime := get_time();
+    tbe.IssueTime := curCycle();
   }
 
   action(ta_traceStalledAddress, "ta", desc="Trace Stalled Address") {
@@ -1447,7 +1448,7 @@ machine(L1Cache, "Token protocol")
     // Update average latency
     if (tbe.IssueCount <= 1) {
       if (tbe.ExternalResponse == true) {
-        updateAverageLatencyEstimate(time_to_int(get_time()) - time_to_int(tbe.IssueTime));
+        updateAverageLatencyEstimate(time_to_int(curCycle()) - time_to_int(tbe.IssueTime));
       }
     }
 

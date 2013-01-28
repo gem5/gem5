@@ -32,7 +32,6 @@
 void error(std::string msg);
 void assert(bool condition);
 int random(int number);
-Time get_time();
 Time zero_time();
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);

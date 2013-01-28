@@ -181,6 +181,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Address a);
+  Time curCycle();
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     Entry L2cache_entry := static_cast(Entry, "pointer", L2cacheMemory.lookup(address));
@@ -545,7 +546,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      out_msg.InitialRequestTime := get_time();
+      out_msg.InitialRequestTime := curCycle();
       tbe.NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
@@ -558,7 +559,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      out_msg.InitialRequestTime := get_time();
+      out_msg.InitialRequestTime := curCycle();
       tbe.NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
@@ -572,7 +573,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Request_Control;
-        out_msg.InitialRequestTime := get_time();
+        out_msg.InitialRequestTime := curCycle();
       }
     }
     tbe.NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
@@ -586,7 +587,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      out_msg.InitialRequestTime := get_time();
+      out_msg.InitialRequestTime := curCycle();
       tbe.NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
@@ -982,7 +983,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         tbe.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
       if (tbe.FirstResponseTime == zero_time()) {
-        tbe.FirstResponseTime := get_time();
+        tbe.FirstResponseTime := curCycle();
       }
     }
   }

@@ -48,12 +48,6 @@ random(int n)
 }
 
 inline Time
-get_time()
-{
-    return g_system_ptr->getTime();
-}
-
-inline Time
 zero_time()
 {
     return 0;
