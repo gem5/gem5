@@ -77,7 +77,6 @@ BaseCache::BaseCache(const Params *p)
       blocked(0),
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
-      drainManager(NULL),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
@@ -752,8 +751,6 @@ BaseCache::drain(DrainManager *dm)
 
     // Set status
     if (count != 0) {
-        drainManager = dm;
-
         setDrainState(Drainable::Draining);
         DPRINTF(Drain, "Cache not drained\n");
         return count;

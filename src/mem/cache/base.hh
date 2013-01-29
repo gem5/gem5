@@ -287,9 +287,6 @@ class BaseCache : public MemObject
     /** The number of misses to trigger an exit event. */
     Counter missCount;
 
-    /** The drain event. */
-    DrainManager *drainManager;
-
     /**
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
