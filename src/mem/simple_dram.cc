@@ -299,13 +299,16 @@ SimpleDRAM::processWriteEvent()
 
         if (pageMgmt == Enums::open) {
             bank.openRow = dram_pkt->row;
-            bank.freeAt = schedTime + tBURST + accessLat;
+            bank.freeAt = schedTime + tBURST + std::max(accessLat, tCL);
+            busBusyUntil = bank.freeAt - tCL;
 
-            if (!rowHitFlag)
+            if (!rowHitFlag) {
                 bank.tRASDoneAt = bank.freeAt + tRP;
-
+                busBusyUntil = bank.freeAt - tCL - tRCD;
+            }
         } else if (pageMgmt == Enums::close) {
             bank.freeAt = schedTime + tBURST + accessLat + tRP + tRP;
+            busBusyUntil = bank.freeAt - tRP - tRP - tCL - tRCD;
             DPRINTF(DRAMWR, "processWriteEvent::bank.freeAt for "
                     "banks_id %d is %lld\n",
                     dram_pkt->rank * banksPerRank + dram_pkt->bank,
@@ -313,12 +316,7 @@ SimpleDRAM::processWriteEvent()
         } else
             panic("Unknown page management policy chosen\n");
 
-        // @todo: As of now, write goes on the databus asap, maybe
-        // be held up at bank. May want to change it to delay the
-        // schedTime itself.
-        busBusyUntil = schedTime + tBURST;
         DPRINTF(DRAMWR,"Done writing to address %lld\n",dram_pkt->addr);
-
 
         DPRINTF(DRAMWR,"schedtime is %lld, tBURST is %lld, "
                 "busbusyuntil is %lld\n",
@@ -781,7 +779,8 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     } else
         panic("No page management policy chosen\n");
 
-    DPRINTF(DRAM, "Returning %lld from estimateLatency()\n",accLat);
+    DPRINTF(DRAM, "Returning < %lld, %lld > from estimateLatency()\n",
+            bankLat, accLat);
 
     return make_pair(bankLat, accLat);
 }
