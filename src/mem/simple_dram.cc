@@ -166,6 +166,11 @@ SimpleDRAM::writeQueueFull() const
 SimpleDRAM::DRAMPacket*
 SimpleDRAM::decodeAddr(PacketPtr pkt)
 {
+    // decode the address based on the address mapping scheme
+    //
+    // with R, C, B and K denoting rank, column, bank and rank,
+    // respectively, and going from MSB to LSB, the two schemes are
+    // RKBC (openmap) and RCKB (closedmap)
     uint8_t rank;
     uint16_t bank;
     uint16_t row;
@@ -176,26 +181,46 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     // truncate the address to the access granularity
     addr = addr / bytesPerCacheLine;
 
+    // we have removed the lowest order address bits that denote the
+    // position within the cache line, proceed and select the
+    // appropriate bits for bank, rank and row (no column address is
+    // needed)
     if (addrMapping == Enums::openmap) {
+        // the lowest order bits denote the column to ensure that
+        // sequential cache lines occupy the same row
         addr = addr / linesPerRowBuffer;
 
+        // after the column bits, we get the bank bits to interleave
+        // over the banks
         bank = addr % banksPerRank;
         addr = addr / banksPerRank;
 
+        // after the bank, we get the rank bits which thus interleaves
+        // over the ranks
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
+        // lastly, get the row bits
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::closemap) {
+        // optimise for closed page mode and utilise maximum
+        // parallelism of the DRAM (at the cost of power)
+
+        // start with the bank bits, as this provides the maximum
+        // opportunity for parallelism between requests
         bank = addr % banksPerRank;
         addr = addr / banksPerRank;
 
+        // next get the rank bits
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
+        // next the column bits which we do not need to keep track of
+        // and simply skip past
         addr = addr / linesPerRowBuffer;
 
+        // lastly, get the row bits
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
     } else
