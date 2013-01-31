@@ -197,7 +197,7 @@ system.physmem.avgRdBW                           0.00                       # Av
 system.physmem.avgWrBW                           0.00                       # Average achieved write bandwidth in MB/s
 system.physmem.avgConsumedRdBW                   0.00                       # Average consumed read bandwidth in MB/s
 system.physmem.avgConsumedWrBW                   0.00                       # Average consumed write bandwidth in MB/s
-system.physmem.peakBW                        16000.00                       # Theoretical peak bandwidth in MB/s
+system.physmem.peakBW                        12800.00                       # Theoretical peak bandwidth in MB/s
 system.physmem.busUtil                           0.00                       # Data bus utilization in percentage
 system.physmem.avgRdQLen                         0.00                       # Average read queue length over time
 system.physmem.avgWrQLen                         0.00                       # Average write queue length over time
@@ -440,8 +440,8 @@ system.cpu0.num_fp_register_writes             150767                       # nu
 system.cpu0.num_mem_refs                     15124548                       # number of memory refs
 system.cpu0.num_load_insts                    9178366                       # Number of load instructions
 system.cpu0.num_store_insts                   5946182                       # Number of store instructions
-system.cpu0.num_idle_cycles              3683454681.836560                       # Number of idle cycles
-system.cpu0.num_busy_cycles              57196201.163440                       # Number of busy cycles
+system.cpu0.num_idle_cycles              3683454681.064560                       # Number of idle cycles
+system.cpu0.num_busy_cycles              57196201.935440                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.015290                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.984710                       # Percentage of idle cycles
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed

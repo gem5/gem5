@@ -1,45 +1,45 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.200409                       # Number of seconds simulated
-sim_ticks                                200409284500                       # Number of ticks simulated
-final_tick                               4321205328500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                200409293000                       # Number of ticks simulated
+final_tick                               4321201686500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               13697441                       # Simulator instruction rate (inst/s)
-host_op_rate                                 13697433                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             5245128514                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 514692                       # Number of bytes of host memory used
-host_seconds                                    38.21                       # Real time elapsed on the host
-sim_insts                                   523360203                       # Number of instructions simulated
-sim_ops                                     523360203                       # Number of ops (including micro ops) simulated
-testsys.physmem.bytes_read::cpu.inst         80888044                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::cpu.data         27771396                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::tsunami.ethernet     50103096                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::total           158762536                       # Number of bytes read from this memory
-testsys.physmem.bytes_inst_read::cpu.inst     80888044                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_inst_read::total       80888044                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_written::cpu.data      16575224                       # Number of bytes written to this memory
+host_inst_rate                               19440889                       # Simulator instruction rate (inst/s)
+host_op_rate                                 19440880                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7408936081                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 472492                       # Number of bytes of host memory used
+host_seconds                                    27.05                       # Real time elapsed on the host
+sim_insts                                   525869186                       # Number of instructions simulated
+sim_ops                                     525869186                       # Number of ops (including micro ops) simulated
+testsys.physmem.bytes_read::cpu.inst         81048564                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::cpu.data         27826180                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::tsunami.ethernet     51169128                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::total           160043872                       # Number of bytes read from this memory
+testsys.physmem.bytes_inst_read::cpu.inst     81048564                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_inst_read::total       81048564                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_written::cpu.data      16606324                       # Number of bytes written to this memory
 testsys.physmem.bytes_written::tsunami.ethernet          902                       # Number of bytes written to this memory
-testsys.physmem.bytes_written::total         16576126                       # Number of bytes written to this memory
-testsys.physmem.num_reads::cpu.inst          20222011                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::cpu.data           3834989                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::tsunami.ethernet      2087611                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::total             26144611                       # Number of read requests responded to by this memory
-testsys.physmem.num_writes::cpu.data          2254078                       # Number of write requests responded to by this memory
+testsys.physmem.bytes_written::total         16607226                       # Number of bytes written to this memory
+testsys.physmem.num_reads::cpu.inst          20262141                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::cpu.data           3842564                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::tsunami.ethernet      2132029                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::total             26236734                       # Number of read requests responded to by this memory
+testsys.physmem.num_writes::cpu.data          2258349                       # Number of write requests responded to by this memory
 testsys.physmem.num_writes::tsunami.ethernet           31                       # Number of write requests responded to by this memory
-testsys.physmem.num_writes::total             2254109                       # Number of write requests responded to by this memory
-testsys.physmem.bw_read::cpu.inst           403614255                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::cpu.data           138573400                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::tsunami.ethernet    250003866                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::total              792191521                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::cpu.inst      403614255                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::total         403614255                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::cpu.data           82706867                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.num_writes::total             2258380                       # Number of write requests responded to by this memory
+testsys.physmem.bw_read::cpu.inst           404415198                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::cpu.data           138846755                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::tsunami.ethernet    255323130                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::total              798585084                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::cpu.inst      404415198                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::total         404415198                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_write::cpu.data           82862046                       # Write bandwidth from this memory (bytes/s)
 testsys.physmem.bw_write::tsunami.ethernet         4501                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::total              82711368                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.inst          403614255                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.data          221280267                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::tsunami.ethernet    250008367                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::total             874902889                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_write::total              82866547                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.inst          404415198                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.data          221708801                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::tsunami.ethernet    255327631                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::total             881451630                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.readReqs                            0                       # Total number of read requests seen
 testsys.physmem.writeReqs                           0                       # Total number of write requests seen
 testsys.physmem.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
@@ -189,7 +189,7 @@ testsys.physmem.avgRdBW                          0.00                       # Av
 testsys.physmem.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
 testsys.physmem.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
 testsys.physmem.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
-testsys.physmem.peakBW                       16000.00                       # Theoretical peak bandwidth in MB/s
+testsys.physmem.peakBW                       12800.00                       # Theoretical peak bandwidth in MB/s
 testsys.physmem.busUtil                          0.00                       # Data bus utilization in percentage
 testsys.physmem.avgRdQLen                        0.00                       # Average read queue length over time
 testsys.physmem.avgWrQLen                        0.00                       # Average write queue length over time
@@ -214,22 +214,22 @@ testsys.cpu.dtb.fetch_hits                          0                       # IT
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
 testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
-testsys.cpu.dtb.read_hits                     3909164                       # DTB read hits
+testsys.cpu.dtb.read_hits                     3916928                       # DTB read hits
 testsys.cpu.dtb.read_misses                      3287                       # DTB read misses
 testsys.cpu.dtb.read_acv                           80                       # DTB read access violations
 testsys.cpu.dtb.read_accesses                  225414                       # DTB read accesses
-testsys.cpu.dtb.write_hits                    2312434                       # DTB write hits
+testsys.cpu.dtb.write_hits                    2316846                       # DTB write hits
 testsys.cpu.dtb.write_misses                      528                       # DTB write misses
 testsys.cpu.dtb.write_acv                          81                       # DTB write access violations
 testsys.cpu.dtb.write_accesses                 109988                       # DTB write accesses
-testsys.cpu.dtb.data_hits                     6221598                       # DTB hits
+testsys.cpu.dtb.data_hits                     6233774                       # DTB hits
 testsys.cpu.dtb.data_misses                      3815                       # DTB misses
 testsys.cpu.dtb.data_acv                          161                       # DTB access violations
 testsys.cpu.dtb.data_accesses                  335402                       # DTB accesses
-testsys.cpu.itb.fetch_hits                    4045775                       # ITB hits
+testsys.cpu.itb.fetch_hits                    4052272                       # ITB hits
 testsys.cpu.itb.fetch_misses                     1497                       # ITB misses
 testsys.cpu.itb.fetch_acv                          69                       # ITB acv
-testsys.cpu.itb.fetch_accesses                4047272                       # ITB accesses
+testsys.cpu.itb.fetch_accesses                4053769                       # ITB accesses
 testsys.cpu.itb.read_hits                           0                       # DTB read hits
 testsys.cpu.itb.read_misses                         0                       # DTB read misses
 testsys.cpu.itb.read_acv                            0                       # DTB read access violations
@@ -242,51 +242,51 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
-testsys.cpu.numCycles                       400807419                       # number of cpu cycles simulated
+testsys.cpu.numCycles                       400815936                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.committedInsts                   20218035                       # Number of instructions committed
-testsys.cpu.committedOps                     20218035                       # Number of ops (including micro ops) committed
-testsys.cpu.num_int_alu_accesses             18800192                       # Number of integer alu accesses
-testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
-testsys.cpu.num_func_calls                    1218514                       # number of times a function call or return occured
-testsys.cpu.num_conditional_control_insts      1439639                       # number of instructions that are conditional controls
-testsys.cpu.num_int_insts                    18800192                       # number of integer instructions
-testsys.cpu.num_fp_insts                        17380                       # number of float instructions
-testsys.cpu.num_int_register_reads           24739164                       # number of times the integer registers were read
-testsys.cpu.num_int_register_writes          14664877                       # number of times the integer registers were written
-testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
-testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
-testsys.cpu.num_mem_refs                      6250795                       # number of memory refs
-testsys.cpu.num_load_insts                    3936233                       # Number of load instructions
-testsys.cpu.num_store_insts                   2314562                       # Number of store instructions
-testsys.cpu.num_idle_cycles              380584404.581032                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              20223014.418968                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.050456                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.949544                       # Percentage of idle cycles
+testsys.cpu.committedInsts                   20258165                       # Number of instructions committed
+testsys.cpu.committedOps                     20258165                       # Number of ops (including micro ops) committed
+testsys.cpu.num_int_alu_accesses             18837392                       # Number of integer alu accesses
+testsys.cpu.num_fp_alu_accesses                 17313                       # Number of float alu accesses
+testsys.cpu.num_func_calls                    1221260                       # number of times a function call or return occured
+testsys.cpu.num_conditional_control_insts      1442190                       # number of instructions that are conditional controls
+testsys.cpu.num_int_insts                    18837392                       # number of integer instructions
+testsys.cpu.num_fp_insts                        17313                       # number of float instructions
+testsys.cpu.num_int_register_reads           24787608                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes          14694255                       # number of times the integer registers were written
+testsys.cpu.num_fp_register_reads               11133                       # number of times the floating registers were read
+testsys.cpu.num_fp_register_writes              10789                       # number of times the floating registers were written
+testsys.cpu.num_mem_refs                      6263009                       # number of memory refs
+testsys.cpu.num_load_insts                    3944038                       # Number of load instructions
+testsys.cpu.num_store_insts                   2318971                       # Number of store instructions
+testsys.cpu.num_idle_cycles              380552362.972989                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              20263573.027011                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.050556                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.949444                       # Percentage of idle cycles
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
-testsys.cpu.kern.inst.quiesce                   19525                       # number of quiesce instructions executed
-testsys.cpu.kern.inst.hwrei                    153371                       # number of hwrei instructions executed
-testsys.cpu.kern.ipl_count::0                   62656     42.67%     42.67% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::21                  19578     13.33%     56.01% # number of times we switched to this ipl
+testsys.cpu.kern.inst.quiesce                   19598                       # number of quiesce instructions executed
+testsys.cpu.kern.inst.hwrei                    153677                       # number of hwrei instructions executed
+testsys.cpu.kern.ipl_count::0                   62790     42.68%     42.68% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::21                  19620     13.34%     56.01% # number of times we switched to this ipl
 testsys.cpu.kern.ipl_count::22                    205      0.14%     56.15% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::31                  64383     43.85%    100.00% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::total              146822                       # number of times we switched to this ipl
-testsys.cpu.kern.ipl_good::0                    62650     43.18%     43.18% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::21                   19578     13.49%     56.67% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_count::31                  64514     43.85%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::total              147129                       # number of times we switched to this ipl
+testsys.cpu.kern.ipl_good::0                    62784     43.18%     43.18% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::21                   19620     13.49%     56.67% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::22                     205      0.14%     56.81% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::31                   62661     43.19%    100.00% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::total               145094                       # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks::0            194361437500     96.98%     96.98% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::21             1585244500      0.79%     97.78% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_good::31                   62791     43.19%    100.00% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::total               145400                       # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_ticks::0            194352160500     96.98%     96.98% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::21             1588908500      0.79%     97.77% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks::22                8815000      0.00%     97.78% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::31             4448431000      2.22%    100.00% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::total        200403928000                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::31             4458302500      2.22%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::total        200408186500                       # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_used::0                 0.999904                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::31                0.973254                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::total             0.988231                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::31                0.973293                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::total             0.988248                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.syscall::2                         3      3.61%      3.61% # number of syscalls executed
 testsys.cpu.kern.syscall::3                         7      8.43%     12.05% # number of syscalls executed
 testsys.cpu.kern.syscall::4                         1      1.20%     13.25% # number of syscalls executed
@@ -309,30 +309,30 @@ testsys.cpu.kern.syscall::104                       1      1.20%     93.98% # nu
 testsys.cpu.kern.syscall::105                       3      3.61%     97.59% # number of syscalls executed
 testsys.cpu.kern.syscall::118                       2      2.41%    100.00% # number of syscalls executed
 testsys.cpu.kern.syscall::total                    83                       # number of syscalls executed
-testsys.cpu.kern.callpal::swpctx                  438      0.34%      0.34% # number of callpals executed
+testsys.cpu.kern.callpal::swpctx                  437      0.34%      0.34% # number of callpals executed
 testsys.cpu.kern.callpal::tbi                      20      0.02%      0.36% # number of callpals executed
-testsys.cpu.kern.callpal::swpipl               106626     83.26%     83.62% # number of callpals executed
+testsys.cpu.kern.callpal::swpipl               106841     83.26%     83.62% # number of callpals executed
 testsys.cpu.kern.callpal::rdps                    359      0.28%     83.90% # number of callpals executed
 testsys.cpu.kern.callpal::wrusp                     3      0.00%     83.90% # number of callpals executed
-testsys.cpu.kern.callpal::rdusp                     3      0.00%     83.91% # number of callpals executed
-testsys.cpu.kern.callpal::rti                   20424     15.95%     99.86% # number of callpals executed
+testsys.cpu.kern.callpal::rdusp                     3      0.00%     83.90% # number of callpals executed
+testsys.cpu.kern.callpal::rti                   20470     15.95%     99.86% # number of callpals executed
 testsys.cpu.kern.callpal::callsys                 140      0.11%     99.97% # number of callpals executed
 testsys.cpu.kern.callpal::imb                      44      0.03%    100.00% # number of callpals executed
-testsys.cpu.kern.callpal::total                128057                       # number of callpals executed
-testsys.cpu.kern.mode_switch::kernel             1279                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::user                702                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::idle              19584                       # number of protection mode switches
+testsys.cpu.kern.callpal::total                128317                       # number of callpals executed
+testsys.cpu.kern.mode_switch::kernel             1281                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::user                703                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::idle              19627                       # number of protection mode switches
 testsys.cpu.kern.mode_good::kernel                707                      
-testsys.cpu.kern.mode_good::user                  702                      
-testsys.cpu.kern.mode_good::idle                    5                      
-testsys.cpu.kern.mode_switch_good::kernel     0.552776                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_good::user                  703                      
+testsys.cpu.kern.mode_good::idle                    4                      
+testsys.cpu.kern.mode_switch_good::kernel     0.551913                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::idle      0.000255                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::total     0.065569                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_ticks::kernel         993857000     59.77%     59.77% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::user           533068000     32.06%     91.82% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::idle           135946500      8.18%    100.00% # number of ticks spent at the given mode
-testsys.cpu.kern.swap_context                     438                       # number of times the context was actually changed
+testsys.cpu.kern.mode_switch_good::idle      0.000204                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::total     0.065430                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_ticks::kernel        1002766500     60.53%     60.53% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::user           533073000     32.18%     92.70% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::idle           120928500      7.30%    100.00% # number of ticks spent at the given mode
+testsys.cpu.kern.swap_context                     437                       # number of times the context was actually changed
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
 testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
 testsys.tsunami.ethernet.txPackets                  8                       # Number of Packets Transmitted
@@ -343,9 +343,9 @@ testsys.tsunami.ethernet.txTcpChecksums             2                       # Nu
 testsys.tsunami.ethernet.rxTcpChecksums             5                       # Number of rx TCP Checksums done by device
 testsys.tsunami.ethernet.txUdpChecksums             0                       # Number of tx UDP Checksums done by device
 testsys.tsunami.ethernet.rxUdpChecksums             0                       # Number of rx UDP Checksums done by device
-testsys.tsunami.ethernet.descDMAReads         2087576                       # Number of descriptors the device read w/ DMA
+testsys.tsunami.ethernet.descDMAReads         2131994                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites             13                       # Number of descriptors the device wrote w/ DMA
-testsys.tsunami.ethernet.descDmaReadBytes     50101824                       # number of descriptor bytes read w/ DMA
+testsys.tsunami.ethernet.descDmaReadBytes     51167856                       # number of descriptor bytes read w/ DMA
 testsys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
 testsys.tsunami.ethernet.totBandwidth           70176                       # Total Bandwidth (bits/s)
 testsys.tsunami.ethernet.totPackets                13                       # Total Packets
@@ -370,9 +370,9 @@ testsys.tsunami.ethernet.totalRxDesc                5                       # to
 testsys.tsunami.ethernet.postedTxOk                 0                       # number of TxOk interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxOk              0                       # average number of TxOk's coalesced into each post
 testsys.tsunami.ethernet.totalTxOk                  0                       # total number of TxOk written to ISR
-testsys.tsunami.ethernet.postedTxIdle           19525                       # number of TxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxIdle           19571                       # number of TxIdle interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
-testsys.tsunami.ethernet.totalTxIdle          2087576                       # total number of TxIdle written to ISR
+testsys.tsunami.ethernet.totalTxIdle          2131994                       # total number of TxIdle written to ISR
 testsys.tsunami.ethernet.postedTxDesc               0                       # number of TxDesc interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
 testsys.tsunami.ethernet.totalTxDesc                0                       # total number of TxDesc written to ISR
@@ -380,37 +380,37 @@ testsys.tsunami.ethernet.postedRxOrn                0                       # nu
 testsys.tsunami.ethernet.coalescedRxOrn             0                       # average number of RxOrn's coalesced into each post
 testsys.tsunami.ethernet.totalRxOrn                 0                       # total number of RxOrn written to ISR
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
-testsys.tsunami.ethernet.postedInterrupts      2087594                       # number of posts to CPU
+testsys.tsunami.ethernet.postedInterrupts      2132012                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
-drivesys.physmem.bytes_read::cpu.inst        76121948                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::cpu.data        26255588                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::tsunami.ethernet     50103126                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::total          152480662                       # Number of bytes read from this memory
-drivesys.physmem.bytes_inst_read::cpu.inst     76121948                       # Number of instructions bytes read from this memory
-drivesys.physmem.bytes_inst_read::total      76121948                       # Number of instructions bytes read from this memory
-drivesys.physmem.bytes_written::cpu.data     14603776                       # Number of bytes written to this memory
+drivesys.physmem.bytes_read::cpu.inst        76288612                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::cpu.data        26312880                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::tsunami.ethernet     51169134                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::total          153770626                       # Number of bytes read from this memory
+drivesys.physmem.bytes_inst_read::cpu.inst     76288612                       # Number of instructions bytes read from this memory
+drivesys.physmem.bytes_inst_read::total      76288612                       # Number of instructions bytes read from this memory
+drivesys.physmem.bytes_written::cpu.data     14635456                       # Number of bytes written to this memory
 drivesys.physmem.bytes_written::tsunami.ethernet         1064                       # Number of bytes written to this memory
-drivesys.physmem.bytes_written::total        14604840                       # Number of bytes written to this memory
-drivesys.physmem.num_reads::cpu.inst         19030487                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::cpu.data          3643074                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::tsunami.ethernet      2087613                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::total            24761174                       # Number of read requests responded to by this memory
-drivesys.physmem.num_writes::cpu.data         2022588                       # Number of write requests responded to by this memory
+drivesys.physmem.bytes_written::total        14636520                       # Number of bytes written to this memory
+drivesys.physmem.num_reads::cpu.inst         19072153                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::cpu.data          3651006                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::tsunami.ethernet      2132030                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::total            24855189                       # Number of read requests responded to by this memory
+drivesys.physmem.num_writes::cpu.data         2026958                       # Number of write requests responded to by this memory
 drivesys.physmem.num_writes::tsunami.ethernet           37                       # Number of write requests responded to by this memory
-drivesys.physmem.num_writes::total            2022625                       # Number of write requests responded to by this memory
-drivesys.physmem.bw_read::cpu.inst          379832442                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::cpu.data          131009839                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::tsunami.ethernet    250004016                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::total             760846297                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::cpu.inst     379832442                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::total        379832442                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::cpu.data          72869758                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.num_writes::total            2026995                       # Number of write requests responded to by this memory
+drivesys.physmem.bw_read::cpu.inst          380664044                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::cpu.data          131295708                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::tsunami.ethernet    255323160                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::total             767282912                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::cpu.inst     380664044                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::total        380664044                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_write::cpu.data          73027831                       # Write bandwidth from this memory (bytes/s)
 drivesys.physmem.bw_write::tsunami.ethernet         5309                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::total             72875067                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.inst         379832442                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.data         203879596                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::tsunami.ethernet    250009325                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::total            833721364                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_write::total             73033140                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.inst         380664044                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.data         204323539                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::tsunami.ethernet    255328469                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::total            840316053                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.readReqs                           0                       # Total number of read requests seen
 drivesys.physmem.writeReqs                          0                       # Total number of write requests seen
 drivesys.physmem.cpureqs                            0                       # Reqs generatd by CPU via cache - shady
@@ -560,7 +560,7 @@ drivesys.physmem.avgRdBW                         0.00                       # Av
 drivesys.physmem.avgWrBW                         0.00                       # Average achieved write bandwidth in MB/s
 drivesys.physmem.avgConsumedRdBW                 0.00                       # Average consumed read bandwidth in MB/s
 drivesys.physmem.avgConsumedWrBW                 0.00                       # Average consumed write bandwidth in MB/s
-drivesys.physmem.peakBW                      16000.00                       # Theoretical peak bandwidth in MB/s
+drivesys.physmem.peakBW                      12800.00                       # Theoretical peak bandwidth in MB/s
 drivesys.physmem.busUtil                         0.00                       # Data bus utilization in percentage
 drivesys.physmem.avgRdQLen                       0.00                       # Average read queue length over time
 drivesys.physmem.avgWrQLen                       0.00                       # Average write queue length over time
@@ -585,22 +585,22 @@ drivesys.cpu.dtb.fetch_hits                         0                       # IT
 drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
 drivesys.cpu.dtb.fetch_acv                          0                       # ITB acv
 drivesys.cpu.dtb.fetch_accesses                     0                       # ITB accesses
-drivesys.cpu.dtb.read_hits                    3721202                       # DTB read hits
+drivesys.cpu.dtb.read_hits                    3729326                       # DTB read hits
 drivesys.cpu.dtb.read_misses                      487                       # DTB read misses
 drivesys.cpu.dtb.read_acv                          30                       # DTB read access violations
 drivesys.cpu.dtb.read_accesses                 267991                       # DTB read accesses
-drivesys.cpu.dtb.write_hits                   2081819                       # DTB write hits
+drivesys.cpu.dtb.write_hits                   2086333                       # DTB write hits
 drivesys.cpu.dtb.write_misses                      82                       # DTB write misses
 drivesys.cpu.dtb.write_acv                         10                       # DTB write access violations
 drivesys.cpu.dtb.write_accesses                133239                       # DTB write accesses
-drivesys.cpu.dtb.data_hits                    5803021                       # DTB hits
+drivesys.cpu.dtb.data_hits                    5815659                       # DTB hits
 drivesys.cpu.dtb.data_misses                      569                       # DTB misses
 drivesys.cpu.dtb.data_acv                          40                       # DTB access violations
 drivesys.cpu.dtb.data_accesses                 401230                       # DTB accesses
-drivesys.cpu.itb.fetch_hits                   4194101                       # ITB hits
+drivesys.cpu.itb.fetch_hits                   4201097                       # ITB hits
 drivesys.cpu.itb.fetch_misses                     194                       # ITB misses
 drivesys.cpu.itb.fetch_acv                         22                       # ITB acv
-drivesys.cpu.itb.fetch_accesses               4194295                       # ITB accesses
+drivesys.cpu.itb.fetch_accesses               4201291                       # ITB accesses
 drivesys.cpu.itb.read_hits                          0                       # DTB read hits
 drivesys.cpu.itb.read_misses                        0                       # DTB read misses
 drivesys.cpu.itb.read_acv                           0                       # DTB read access violations
@@ -613,51 +613,51 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
-drivesys.cpu.numCycles                      801639056                       # number of cpu cycles simulated
+drivesys.cpu.numCycles                      801619128                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
-drivesys.cpu.committedInsts                  19029878                       # Number of instructions committed
-drivesys.cpu.committedOps                    19029878                       # Number of ops (including micro ops) committed
-drivesys.cpu.num_int_alu_accesses            17721251                       # Number of integer alu accesses
+drivesys.cpu.committedInsts                  19071544                       # Number of instructions committed
+drivesys.cpu.committedOps                    19071544                       # Number of ops (including micro ops) committed
+drivesys.cpu.num_int_alu_accesses            17759891                       # Number of integer alu accesses
 drivesys.cpu.num_fp_alu_accesses                 1412                       # Number of float alu accesses
-drivesys.cpu.num_func_calls                   1263632                       # number of times a function call or return occured
-drivesys.cpu.num_conditional_control_insts      1263629                       # number of instructions that are conditional controls
-drivesys.cpu.num_int_insts                   17721251                       # number of integer instructions
+drivesys.cpu.num_func_calls                   1266408                       # number of times a function call or return occured
+drivesys.cpu.num_conditional_control_insts      1266328                       # number of instructions that are conditional controls
+drivesys.cpu.num_int_insts                   17759891                       # number of integer instructions
 drivesys.cpu.num_fp_insts                        1412                       # number of float instructions
-drivesys.cpu.num_int_register_reads          23047059                       # number of times the integer registers were read
-drivesys.cpu.num_int_register_writes         13965767                       # number of times the integer registers were written
+drivesys.cpu.num_int_register_reads          23097438                       # number of times the integer registers were read
+drivesys.cpu.num_int_register_writes         13996340                       # number of times the integer registers were written
 drivesys.cpu.num_fp_register_reads                760                       # number of times the floating registers were read
 drivesys.cpu.num_fp_register_writes               766                       # number of times the floating registers were written
-drivesys.cpu.num_mem_refs                     5824433                       # number of memory refs
-drivesys.cpu.num_load_insts                   3742101                       # Number of load instructions
-drivesys.cpu.num_store_insts                  2082332                       # Number of store instructions
-drivesys.cpu.num_idle_cycles             782608307.467164                       # Number of idle cycles
-drivesys.cpu.num_busy_cycles             19030748.532836                       # Number of busy cycles
-drivesys.cpu.not_idle_fraction               0.023740                       # Percentage of non-idle cycles
-drivesys.cpu.idle_fraction                   0.976260                       # Percentage of idle cycles
+drivesys.cpu.num_mem_refs                     5837119                       # number of memory refs
+drivesys.cpu.num_load_insts                   3750273                       # Number of load instructions
+drivesys.cpu.num_store_insts                  2086846                       # Number of store instructions
+drivesys.cpu.num_idle_cycles             782547188.298833                       # Number of idle cycles
+drivesys.cpu.num_busy_cycles             19071939.701167                       # Number of busy cycles
+drivesys.cpu.not_idle_fraction               0.023792                       # Percentage of non-idle cycles
+drivesys.cpu.idle_fraction                   0.976208                       # Percentage of idle cycles
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
-drivesys.cpu.kern.inst.quiesce                  19854                       # number of quiesce instructions executed
-drivesys.cpu.kern.inst.hwrei                   143418                       # number of hwrei instructions executed
-drivesys.cpu.kern.ipl_count::0                  60285     42.42%     42.42% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::21                 19703     13.86%     56.28% # number of times we switched to this ipl
+drivesys.cpu.kern.inst.quiesce                  19898                       # number of quiesce instructions executed
+drivesys.cpu.kern.inst.hwrei                   143758                       # number of hwrei instructions executed
+drivesys.cpu.kern.ipl_count::0                  60430     42.42%     42.42% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::21                 19752     13.86%     56.28% # number of times we switched to this ipl
 drivesys.cpu.kern.ipl_count::22                   205      0.14%     56.42% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::31                 61936     43.58%    100.00% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::total             142129                       # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_good::0                   60285     42.91%     42.91% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::21                  19703     14.03%     56.94% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_count::31                 62082     43.58%    100.00% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::total             142469                       # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_good::0                   60430     42.91%     42.91% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::21                  19752     14.03%     56.94% # number of times we switched to this ipl from a different ipl
 drivesys.cpu.kern.ipl_good::22                    205      0.15%     57.09% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::31                  60286     42.91%    100.00% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::total              140479                       # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_ticks::0           197404825250     98.50%     98.50% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::21             797938750      0.40%     98.90% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_good::31                  60432     42.91%    100.00% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::total              140819                       # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_ticks::0           197392680000     98.50%     98.50% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::21             799890500      0.40%     98.90% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks::22               4407500      0.00%     98.90% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::31            2202592500      1.10%    100.00% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::total       200409764000                       # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::31            2207804000      1.10%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::total       200404782000                       # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_used::0                       1                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::21                      1                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::22                      1                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::31               0.973360                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::total            0.988391                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::31               0.973422                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::total            0.988419                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.syscall::2                        1      4.55%      4.55% # number of syscalls executed
 drivesys.cpu.kern.syscall::6                        3     13.64%     18.18% # number of syscalls executed
 drivesys.cpu.kern.syscall::17                       2      9.09%     27.27% # number of syscalls executed
@@ -673,26 +673,26 @@ drivesys.cpu.kern.syscall::150                      1      4.55%    100.00% # nu
 drivesys.cpu.kern.syscall::total                   22                       # number of syscalls executed
 drivesys.cpu.kern.callpal::swpctx                  72      0.06%      0.06% # number of callpals executed
 drivesys.cpu.kern.callpal::tbi                      5      0.00%      0.06% # number of callpals executed
-drivesys.cpu.kern.callpal::swpipl              102208     83.31%     83.37% # number of callpals executed
+drivesys.cpu.kern.callpal::swpipl              102452     83.31%     83.37% # number of callpals executed
 drivesys.cpu.kern.callpal::rdps                   354      0.29%     83.66% # number of callpals executed
 drivesys.cpu.kern.callpal::rdusp                    1      0.00%     83.66% # number of callpals executed
-drivesys.cpu.kern.callpal::rti                  20014     16.31%     99.97% # number of callpals executed
+drivesys.cpu.kern.callpal::rti                  20062     16.31%     99.97% # number of callpals executed
 drivesys.cpu.kern.callpal::callsys                 25      0.02%     99.99% # number of callpals executed
 drivesys.cpu.kern.callpal::imb                      7      0.01%    100.00% # number of callpals executed
-drivesys.cpu.kern.callpal::total               122686                       # number of callpals executed
+drivesys.cpu.kern.callpal::total               122978                       # number of callpals executed
 drivesys.cpu.kern.mode_switch::kernel             214                       # number of protection mode switches
 drivesys.cpu.kern.mode_switch::user               139                       # number of protection mode switches
-drivesys.cpu.kern.mode_switch::idle             19872                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch::idle             19920                       # number of protection mode switches
 drivesys.cpu.kern.mode_good::kernel               143                      
 drivesys.cpu.kern.mode_good::user                 139                      
 drivesys.cpu.kern.mode_good::idle                   4                      
 drivesys.cpu.kern.mode_switch_good::kernel     0.668224                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_switch_good::user            1                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_switch_good::idle     0.000201                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::total     0.014141                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::total     0.014107                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_ticks::kernel         78132750      2.64%      2.64% # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks::user          319665750     10.81%     13.45% # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks::idle         2560362000     86.55%    100.00% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks::user          319665750     10.79%     13.43% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks::idle         2564974000     86.57%    100.00% # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                     72                       # number of times the context was actually changed
 drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
 drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
@@ -704,9 +704,9 @@ drivesys.tsunami.ethernet.txTcpChecksums            2                       # Nu
 drivesys.tsunami.ethernet.rxTcpChecksums            8                       # Number of rx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
 drivesys.tsunami.ethernet.rxUdpChecksums            0                       # Number of rx UDP Checksums done by device
-drivesys.tsunami.ethernet.descDMAReads        2087584                       # Number of descriptors the device read w/ DMA
+drivesys.tsunami.ethernet.descDMAReads        2132001                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites            13                       # Number of descriptors the device wrote w/ DMA
-drivesys.tsunami.ethernet.descDmaReadBytes     50102016                       # number of descriptor bytes read w/ DMA
+drivesys.tsunami.ethernet.descDmaReadBytes     51168024                       # number of descriptor bytes read w/ DMA
 drivesys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
 drivesys.tsunami.ethernet.totBandwidth          70176                       # Total Bandwidth (bits/s)
 drivesys.tsunami.ethernet.totPackets               13                       # Total Packets
@@ -731,9 +731,9 @@ drivesys.tsunami.ethernet.totalRxDesc               8                       # to
 drivesys.tsunami.ethernet.postedTxOk                0                       # number of TxOk interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxOk             0                       # average number of TxOk's coalesced into each post
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-drivesys.tsunami.ethernet.postedTxIdle          19702                       # number of TxIdle interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxIdle          19750                       # number of TxIdle interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
-drivesys.tsunami.ethernet.totalTxIdle         2087584                       # total number of TxIdle written to ISR
+drivesys.tsunami.ethernet.totalTxIdle         2132001                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
@@ -741,49 +741,49 @@ drivesys.tsunami.ethernet.postedRxOrn               0                       # nu
 drivesys.tsunami.ethernet.coalescedRxOrn            0                       # average number of RxOrn's coalesced into each post
 drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
-drivesys.tsunami.ethernet.postedInterrupts      2087605                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedInterrupts      2132022                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
 
 ---------- End Simulation Statistics   ----------
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000407                       # Number of seconds simulated
-sim_ticks                                   406952000                       # Number of ticks simulated
-final_tick                               4321612280500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                   407365500                       # Number of ticks simulated
+final_tick                               4321609052000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             7058170696                       # Simulator instruction rate (inst/s)
-host_op_rate                               7056390513                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             5484794115                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 514692                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
-sim_insts                                   523432506                       # Number of instructions simulated
-sim_ops                                     523432506                       # Number of ops (including micro ops) simulated
-testsys.physmem.bytes_read::cpu.inst           144604                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::cpu.data            49952                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::tsunami.ethernet       101736                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::total              296292                       # Number of bytes read from this memory
-testsys.physmem.bytes_inst_read::cpu.inst       144604                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_inst_read::total         144604                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_written::cpu.data         27688                       # Number of bytes written to this memory
-testsys.physmem.bytes_written::total            27688                       # Number of bytes written to this memory
-testsys.physmem.num_reads::cpu.inst             36151                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::cpu.data              6909                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::tsunami.ethernet         4239                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::total                47299                       # Number of read requests responded to by this memory
-testsys.physmem.num_writes::cpu.data             3812                       # Number of write requests responded to by this memory
-testsys.physmem.num_writes::total                3812                       # Number of write requests responded to by this memory
-testsys.physmem.bw_read::cpu.inst           355334290                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::cpu.data           122746663                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::tsunami.ethernet    249995085                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::total              728076038                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::cpu.inst      355334290                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::total         355334290                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::cpu.data           68037508                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::total              68037508                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.inst          355334290                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.data          190784171                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::tsunami.ethernet    249995085                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::total             796113547                       # Total bandwidth to/from this memory (bytes/s)
+host_inst_rate                            12024534237                       # Simulator instruction rate (inst/s)
+host_op_rate                              12021051237                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             9308365303                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 472492                       # Number of bytes of host memory used
+host_seconds                                     0.04                       # Real time elapsed on the host
+sim_insts                                   525940622                       # Number of instructions simulated
+sim_ops                                     525940622                       # Number of ops (including micro ops) simulated
+testsys.physmem.bytes_read::cpu.inst           141136                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::cpu.data            48760                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::tsunami.ethernet       103992                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::total              293888                       # Number of bytes read from this memory
+testsys.physmem.bytes_inst_read::cpu.inst       141136                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_inst_read::total         141136                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_written::cpu.data         27028                       # Number of bytes written to this memory
+testsys.physmem.bytes_written::total            27028                       # Number of bytes written to this memory
+testsys.physmem.num_reads::cpu.inst             35284                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::cpu.data              6744                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::tsunami.ethernet         4333                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::total                46361                       # Number of read requests responded to by this memory
+testsys.physmem.num_writes::cpu.data             3721                       # Number of write requests responded to by this memory
+testsys.physmem.num_writes::total                3721                       # Number of write requests responded to by this memory
+testsys.physmem.bw_read::cpu.inst           346460365                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::cpu.data           119695949                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::tsunami.ethernet    255279350                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::total              721435664                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::cpu.inst      346460365                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::total         346460365                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_write::cpu.data           66348279                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_write::total              66348279                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.inst          346460365                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.data          186044228                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::tsunami.ethernet    255279350                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::total             787783943                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.readReqs                            0                       # Total number of read requests seen
 testsys.physmem.writeReqs                           0                       # Total number of write requests seen
 testsys.physmem.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
@@ -933,7 +933,7 @@ testsys.physmem.avgRdBW                          0.00                       # Av
 testsys.physmem.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
 testsys.physmem.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
 testsys.physmem.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
-testsys.physmem.peakBW                       16000.00                       # Theoretical peak bandwidth in MB/s
+testsys.physmem.peakBW                       12800.00                       # Theoretical peak bandwidth in MB/s
 testsys.physmem.busUtil                          0.00                       # Data bus utilization in percentage
 testsys.physmem.avgRdQLen                        0.00                       # Average read queue length over time
 testsys.physmem.avgWrQLen                        0.00                       # Average write queue length over time
@@ -958,22 +958,22 @@ testsys.cpu.dtb.fetch_hits                          0                       # IT
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
 testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
-testsys.cpu.dtb.read_hits                        7069                       # DTB read hits
+testsys.cpu.dtb.read_hits                        6900                       # DTB read hits
 testsys.cpu.dtb.read_misses                         0                       # DTB read misses
 testsys.cpu.dtb.read_acv                            0                       # DTB read access violations
 testsys.cpu.dtb.read_accesses                       0                       # DTB read accesses
-testsys.cpu.dtb.write_hits                       3933                       # DTB write hits
+testsys.cpu.dtb.write_hits                       3839                       # DTB write hits
 testsys.cpu.dtb.write_misses                        0                       # DTB write misses
 testsys.cpu.dtb.write_acv                           0                       # DTB write access violations
 testsys.cpu.dtb.write_accesses                      0                       # DTB write accesses
-testsys.cpu.dtb.data_hits                       11002                       # DTB hits
+testsys.cpu.dtb.data_hits                       10739                       # DTB hits
 testsys.cpu.dtb.data_misses                         0                       # DTB misses
 testsys.cpu.dtb.data_acv                            0                       # DTB access violations
 testsys.cpu.dtb.data_accesses                       0                       # DTB accesses
-testsys.cpu.itb.fetch_hits                       5992                       # ITB hits
+testsys.cpu.itb.fetch_hits                       5847                       # ITB hits
 testsys.cpu.itb.fetch_misses                        0                       # ITB misses
 testsys.cpu.itb.fetch_acv                           0                       # ITB acv
-testsys.cpu.itb.fetch_accesses                   5992                       # ITB accesses
+testsys.cpu.itb.fetch_accesses                   5847                       # ITB accesses
 testsys.cpu.itb.read_hits                           0                       # DTB read hits
 testsys.cpu.itb.read_misses                         0                       # DTB read misses
 testsys.cpu.itb.read_acv                            0                       # DTB read access violations
@@ -986,58 +986,58 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
-testsys.cpu.numCycles                          821760                       # number of cpu cycles simulated
+testsys.cpu.numCycles                          799188                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.committedInsts                      36151                       # Number of instructions committed
-testsys.cpu.committedOps                        36151                       # Number of ops (including micro ops) committed
-testsys.cpu.num_int_alu_accesses                33514                       # Number of integer alu accesses
+testsys.cpu.committedInsts                      35284                       # Number of instructions committed
+testsys.cpu.committedOps                        35284                       # Number of ops (including micro ops) committed
+testsys.cpu.num_int_alu_accesses                32710                       # Number of integer alu accesses
 testsys.cpu.num_fp_alu_accesses                     0                       # Number of float alu accesses
-testsys.cpu.num_func_calls                       2388                       # number of times a function call or return occured
-testsys.cpu.num_conditional_control_insts         2348                       # number of instructions that are conditional controls
-testsys.cpu.num_int_insts                       33514                       # number of integer instructions
+testsys.cpu.num_func_calls                       2330                       # number of times a function call or return occured
+testsys.cpu.num_conditional_control_insts         2292                       # number of instructions that are conditional controls
+testsys.cpu.num_int_insts                       32710                       # number of integer instructions
 testsys.cpu.num_fp_insts                            0                       # number of float instructions
-testsys.cpu.num_int_register_reads              43768                       # number of times the integer registers were read
-testsys.cpu.num_int_register_writes             26496                       # number of times the integer registers were written
+testsys.cpu.num_int_register_reads              42720                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes             25860                       # number of times the integer registers were written
 testsys.cpu.num_fp_register_reads                   0                       # number of times the floating registers were read
 testsys.cpu.num_fp_register_writes                  0                       # number of times the floating registers were written
-testsys.cpu.num_mem_refs                        11043                       # number of memory refs
-testsys.cpu.num_load_insts                       7109                       # Number of load instructions
-testsys.cpu.num_store_insts                      3934                       # Number of store instructions
-testsys.cpu.num_idle_cycles              785260.061817                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              36499.938183                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.044417                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.955583                       # Percentage of idle cycles
+testsys.cpu.num_mem_refs                        10779                       # number of memory refs
+testsys.cpu.num_load_insts                       6939                       # Number of load instructions
+testsys.cpu.num_store_insts                      3840                       # Number of store instructions
+testsys.cpu.num_idle_cycles              764577.129267                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              34610.870733                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.043308                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.956692                       # Percentage of idle cycles
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
-testsys.cpu.kern.inst.quiesce                      41                       # number of quiesce instructions executed
-testsys.cpu.kern.inst.hwrei                       295                       # number of hwrei instructions executed
-testsys.cpu.kern.ipl_count::0                     123     41.84%     41.84% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::21                     40     13.61%     55.44% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::22                      1      0.34%     55.78% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::31                    130     44.22%    100.00% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::total                 294                       # number of times we switched to this ipl
-testsys.cpu.kern.ipl_good::0                      123     42.86%     42.86% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::21                      40     13.94%     56.79% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::22                       1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::31                     123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::total                  287                       # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks::0               398338500     96.95%     96.95% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::21                3240000      0.79%     97.74% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::22                  43000      0.01%     97.75% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::31                9258500      2.25%    100.00% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::total           410880000                       # number of cycles we spent at this ipl
+testsys.cpu.kern.inst.quiesce                      40                       # number of quiesce instructions executed
+testsys.cpu.kern.inst.hwrei                       288                       # number of hwrei instructions executed
+testsys.cpu.kern.ipl_count::0                     120     41.81%     41.81% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::21                     39     13.59%     55.40% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::22                      1      0.35%     55.75% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::31                    127     44.25%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::total                 287                       # number of times we switched to this ipl
+testsys.cpu.kern.ipl_good::0                      120     42.86%     42.86% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::21                      39     13.93%     56.79% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::22                       1      0.36%     57.14% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::31                     120     42.86%    100.00% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::total                  280                       # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_ticks::0               387349500     96.94%     96.94% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::21                3159000      0.79%     97.73% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::22                  43000      0.01%     97.74% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::31                9042500      2.26%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::total           399594000                       # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_used::0                        1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::31                0.946154                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::total             0.976190                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.callpal::swpipl                  212     83.46%     83.46% # number of callpals executed
-testsys.cpu.kern.callpal::rdps                      1      0.39%     83.86% # number of callpals executed
-testsys.cpu.kern.callpal::rti                      41     16.14%    100.00% # number of callpals executed
-testsys.cpu.kern.callpal::total                   254                       # number of callpals executed
+testsys.cpu.kern.ipl_used::31                0.944882                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::total             0.975610                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.callpal::swpipl                  207     83.47%     83.47% # number of callpals executed
+testsys.cpu.kern.callpal::rdps                      1      0.40%     83.87% # number of callpals executed
+testsys.cpu.kern.callpal::rti                      40     16.13%    100.00% # number of callpals executed
+testsys.cpu.kern.callpal::total                   248                       # number of callpals executed
 testsys.cpu.kern.mode_switch::kernel                0                       # number of protection mode switches
 testsys.cpu.kern.mode_switch::user                  0                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::idle                 41                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::idle                 40                       # number of protection mode switches
 testsys.cpu.kern.mode_good::kernel                  0                      
 testsys.cpu.kern.mode_good::user                    0                      
 testsys.cpu.kern.mode_good::idle                    0                      
@@ -1049,9 +1049,9 @@ testsys.cpu.kern.mode_ticks::kernel                 0                       # nu
 testsys.cpu.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
-testsys.tsunami.ethernet.descDMAReads            4239                       # Number of descriptors the device read w/ DMA
+testsys.tsunami.ethernet.descDMAReads            4333                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
-testsys.tsunami.ethernet.descDmaReadBytes       101736                       # number of descriptor bytes read w/ DMA
+testsys.tsunami.ethernet.descDmaReadBytes       103992                       # number of descriptor bytes read w/ DMA
 testsys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
 testsys.tsunami.ethernet.postedSwi                  0                       # number of software interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedSwi               0                       # average number of Swi's coalesced into each post
@@ -1068,9 +1068,9 @@ testsys.tsunami.ethernet.totalRxDesc                0                       # to
 testsys.tsunami.ethernet.postedTxOk                 0                       # number of TxOk interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxOk              0                       # average number of TxOk's coalesced into each post
 testsys.tsunami.ethernet.totalTxOk                  0                       # total number of TxOk written to ISR
-testsys.tsunami.ethernet.postedTxIdle              40                       # number of TxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxIdle              39                       # number of TxIdle interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
-testsys.tsunami.ethernet.totalTxIdle             4239                       # total number of TxIdle written to ISR
+testsys.tsunami.ethernet.totalTxIdle             4333                       # total number of TxIdle written to ISR
 testsys.tsunami.ethernet.postedTxDesc               0                       # number of TxDesc interrupts posted to CPU
 testsys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
 testsys.tsunami.ethernet.totalTxDesc                0                       # total number of TxDesc written to ISR
@@ -1078,34 +1078,34 @@ testsys.tsunami.ethernet.postedRxOrn                0                       # nu
 testsys.tsunami.ethernet.coalescedRxOrn             0                       # average number of RxOrn's coalesced into each post
 testsys.tsunami.ethernet.totalRxOrn                 0                       # total number of RxOrn written to ISR
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
-testsys.tsunami.ethernet.postedInterrupts         4239                       # number of posts to CPU
+testsys.tsunami.ethernet.postedInterrupts         4333                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
 drivesys.physmem.bytes_read::cpu.inst          144608                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data           49952                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::tsunami.ethernet       101736                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::total             296296                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::tsunami.ethernet       104016                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::total             298576                       # Number of bytes read from this memory
 drivesys.physmem.bytes_inst_read::cpu.inst       144608                       # Number of instructions bytes read from this memory
 drivesys.physmem.bytes_inst_read::total        144608                       # Number of instructions bytes read from this memory
 drivesys.physmem.bytes_written::cpu.data        27688                       # Number of bytes written to this memory
 drivesys.physmem.bytes_written::total           27688                       # Number of bytes written to this memory
 drivesys.physmem.num_reads::cpu.inst            36152                       # Number of read requests responded to by this memory
 drivesys.physmem.num_reads::cpu.data             6909                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::tsunami.ethernet         4239                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::total               47300                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::tsunami.ethernet         4334                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::total               47395                       # Number of read requests responded to by this memory
 drivesys.physmem.num_writes::cpu.data            3812                       # Number of write requests responded to by this memory
 drivesys.physmem.num_writes::total               3812                       # Number of write requests responded to by this memory
-drivesys.physmem.bw_read::cpu.inst          355344119                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::cpu.data          122746663                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::tsunami.ethernet    249995085                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::total             728085868                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::cpu.inst     355344119                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::total        355344119                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::cpu.data          68037508                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::total             68037508                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.inst         355344119                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.data         190784171                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::tsunami.ethernet    249995085                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::total            796123376                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_read::cpu.inst          354983424                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::cpu.data          122622068                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::tsunami.ethernet    255338265                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::total             732943757                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::cpu.inst     354983424                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::total        354983424                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_write::cpu.data          67968446                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_write::total             67968446                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.inst         354983424                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.data         190590514                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::tsunami.ethernet    255338265                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::total            800912203                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.readReqs                           0                       # Total number of read requests seen
 drivesys.physmem.writeReqs                          0                       # Total number of write requests seen
 drivesys.physmem.cpureqs                            0                       # Reqs generatd by CPU via cache - shady
@@ -1255,7 +1255,7 @@ drivesys.physmem.avgRdBW                         0.00                       # Av
 drivesys.physmem.avgWrBW                         0.00                       # Average achieved write bandwidth in MB/s
 drivesys.physmem.avgConsumedRdBW                 0.00                       # Average consumed read bandwidth in MB/s
 drivesys.physmem.avgConsumedWrBW                 0.00                       # Average consumed write bandwidth in MB/s
-drivesys.physmem.peakBW                      16000.00                       # Theoretical peak bandwidth in MB/s
+drivesys.physmem.peakBW                      12800.00                       # Theoretical peak bandwidth in MB/s
 drivesys.physmem.busUtil                         0.00                       # Data bus utilization in percentage
 drivesys.physmem.avgRdQLen                       0.00                       # Average read queue length over time
 drivesys.physmem.avgWrQLen                       0.00                       # Average write queue length over time
@@ -1308,7 +1308,7 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
-drivesys.cpu.numCycles                        1628160                       # number of cpu cycles simulated
+drivesys.cpu.numCycles                        1624320                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
 drivesys.cpu.committedInsts                     36152                       # Number of instructions committed
@@ -1326,10 +1326,10 @@ drivesys.cpu.num_fp_register_writes                 0                       # nu
 drivesys.cpu.num_mem_refs                       11043                       # number of memory refs
 drivesys.cpu.num_load_insts                      7109                       # Number of load instructions
 drivesys.cpu.num_store_insts                     3934                       # Number of store instructions
-drivesys.cpu.num_idle_cycles             1592000.182518                       # Number of idle cycles
-drivesys.cpu.num_busy_cycles             36159.817482                       # Number of busy cycles
-drivesys.cpu.not_idle_fraction               0.022209                       # Percentage of non-idle cycles
-drivesys.cpu.idle_fraction                   0.977791                       # Percentage of idle cycles
+drivesys.cpu.num_idle_cycles             1588282.082886                       # Number of idle cycles
+drivesys.cpu.num_busy_cycles             36037.917114                       # Number of busy cycles
+drivesys.cpu.not_idle_fraction               0.022186                       # Percentage of non-idle cycles
+drivesys.cpu.idle_fraction                   0.977814                       # Percentage of idle cycles
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                     41                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                      295                       # number of hwrei instructions executed
@@ -1343,11 +1343,11 @@ drivesys.cpu.kern.ipl_good::21                     40     13.94%     56.79% # nu
 drivesys.cpu.kern.ipl_good::22                      1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
 drivesys.cpu.kern.ipl_good::31                    123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
 drivesys.cpu.kern.ipl_good::total                 287                       # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_ticks::0              400769000     98.46%     98.46% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::21               1620000      0.40%     98.86% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::0              399809000     98.46%     98.46% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::21               1620000      0.40%     98.85% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks::22                 21500      0.01%     98.86% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks::31               4629500      1.14%    100.00% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::total          407040000                       # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::total          406080000                       # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_used::0                       1                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::21                      1                       # fraction of swpipl calls that actually changed the ipl
 drivesys.cpu.kern.ipl_used::22                      1                       # fraction of swpipl calls that actually changed the ipl
@@ -1371,9 +1371,9 @@ drivesys.cpu.kern.mode_ticks::kernel                0                       # nu
 drivesys.cpu.kern.mode_ticks::user                  0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::idle                  0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
-drivesys.tsunami.ethernet.descDMAReads           4239                       # Number of descriptors the device read w/ DMA
+drivesys.tsunami.ethernet.descDMAReads           4334                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites             0                       # Number of descriptors the device wrote w/ DMA
-drivesys.tsunami.ethernet.descDmaReadBytes       101736                       # number of descriptor bytes read w/ DMA
+drivesys.tsunami.ethernet.descDmaReadBytes       104016                       # number of descriptor bytes read w/ DMA
 drivesys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
 drivesys.tsunami.ethernet.postedSwi                 0                       # number of software interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedSwi              0                       # average number of Swi's coalesced into each post
@@ -1392,7 +1392,7 @@ drivesys.tsunami.ethernet.coalescedTxOk             0                       # av
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
 drivesys.tsunami.ethernet.postedTxIdle             40                       # number of TxIdle interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
-drivesys.tsunami.ethernet.totalTxIdle            4239                       # total number of TxIdle written to ISR
+drivesys.tsunami.ethernet.totalTxIdle            4334                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
@@ -1400,7 +1400,7 @@ drivesys.tsunami.ethernet.postedRxOrn               0                       # nu
 drivesys.tsunami.ethernet.coalescedRxOrn            0                       # average number of RxOrn's coalesced into each post
 drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
-drivesys.tsunami.ethernet.postedInterrupts         4239                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedInterrupts         4334                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
 
 ---------- End Simulation Statistics   ----------
