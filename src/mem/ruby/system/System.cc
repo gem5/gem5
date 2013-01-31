@@ -69,7 +69,7 @@ RubySystem::RubySystem(const Params *p)
     if (m_memory_size_bytes == 0) {
         m_memory_size_bits = 0;
     } else {
-        m_memory_size_bits = floorLog2(m_memory_size_bytes);
+        m_memory_size_bits = ceilLog2(m_memory_size_bytes);
     }
 
     g_system_ptr = this;
