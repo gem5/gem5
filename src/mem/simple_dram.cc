@@ -51,7 +51,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
-    rowHitFlag(false), stopReads(false),
+    rowHitFlag(false), stopReads(false), actTicks(p->activation_limit, 0),
     writeEvent(this), respondEvent(this),
     refreshEvent(this), nextReqEvent(this), drainManager(NULL),
     bytesPerCacheLine(0),
@@ -64,6 +64,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     tWTR(p->tWTR), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP),
     tRFC(p->tRFC), tREFI(p->tREFI),
+    tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
     busBusyUntil(0), prevdramaccess(0), writeStartTime(0),
@@ -304,10 +305,13 @@ SimpleDRAM::processWriteEvent()
 
             if (!rowHitFlag) {
                 bank.tRASDoneAt = bank.freeAt + tRP;
+                recordActivate(bank.freeAt - tCL - tRCD);
                 busBusyUntil = bank.freeAt - tCL - tRCD;
             }
         } else if (pageMgmt == Enums::close) {
             bank.freeAt = schedTime + tBURST + accessLat + tRP + tRP;
+            // Work backwards from bank.freeAt to determine activate time
+            recordActivate(bank.freeAt - tRP - tRP - tCL - tRCD);
             busBusyUntil = bank.freeAt - tRP - tRP - tCL - tRCD;
             DPRINTF(DRAMWR, "processWriteEvent::bank.freeAt for "
                     "banks_id %d is %lld\n",
@@ -792,6 +796,41 @@ SimpleDRAM::processNextReqEvent()
 }
 
 void
+SimpleDRAM::recordActivate(Tick act_tick)
+{
+    assert(actTicks.size() == activationLimit);
+
+    DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
+
+    // sanity check
+    if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
+        panic("Got %d activates in window %d (%d - %d) which is smaller "
+              "than %d\n", activationLimit, act_tick - actTicks.back(),
+              act_tick, actTicks.back(), tXAW);
+    }
+
+    // shift the times used for the book keeping, the last element
+    // (highest index) is the oldest one and hence the lowest value
+    actTicks.pop_back();
+
+    // record an new activation (in the future)
+    actTicks.push_front(act_tick);
+
+    // cannot activate more than X times in time window tXAW, push the
+    // next one (the X + 1'st activate) to be tXAW away from the
+    // oldest in our window of X
+    if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
+        DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate no earlier "
+                "than %d\n", activationLimit, actTicks.back() + tXAW);
+        for(int i = 0; i < ranksPerChannel; i++)
+            for(int j = 0; j < banksPerRank; j++)
+                // next activate must not happen before end of window
+                banks[i][j].freeAt = std::max(banks[i][j].freeAt,
+                                              actTicks.back() + tXAW);
+    }
+}
+
+void
 SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 {
 
@@ -821,14 +860,18 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
         bank.openRow = dram_pkt->row;
         bank.freeAt = curTick() + addDelay + accessLat;
         // If you activated a new row do to this access, the next access
-        // will have to respect tRAS for this bank. Assume tRAS ~= 3 * tRP
-        if (!rowHitFlag)
+        // will have to respect tRAS for this bank. Assume tRAS ~= 3 * tRP.
+        // Also need to account for t_XAW
+        if (!rowHitFlag) {
             bank.tRASDoneAt = bank.freeAt + tRP;
-
+            recordActivate(bank.freeAt - tCL - tRCD); //since this is open page,
+                                                      //no tRP by default
+        }
     } else if (pageMgmt == Enums::close) { // accounting for tRAS also
-        // assuming that tRAS ~= 3 * tRP, and tRAS ~= 4 * tRP, as is common
+        // assuming that tRAS ~= 3 * tRP, and tRC ~= 4 * tRP, as is common
         // (refer Jacob/Ng/Wang and Micron datasheets)
         bank.freeAt = curTick() + addDelay + accessLat + tRP + tRP;
+        recordActivate(bank.freeAt - tRP - tRP - tCL - tRCD); //essentially (freeAt - tRC)
         DPRINTF(DRAM,"doDRAMAccess::bank.freeAt is %lld\n",bank.freeAt);
     } else
         panic("No page management policy chosen\n");

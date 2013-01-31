@@ -112,7 +112,12 @@ class SimpleDRAM(AbstractMemory):
     # write-to-read turn around penalty, assumed same as read-to-write
     tWTR = Param.Latency("1ns", "Write to read switching time")
 
-    # Currently unimplemented, unused, deduced or rolled into other params
+    # time window in which a maximum number of activates are allowed
+    # to take place, set to 0 to disable
+    tXAW = Param.Latency("0ns", "X activation window")
+    activation_limit = Param.Unsigned(4, "Max number of activates in window")
+
+    # Currently rolled into other params
     ######################################################################
 
     # the minimum amount of time between a row being activated, and
@@ -122,10 +127,3 @@ class SimpleDRAM(AbstractMemory):
     # tRC  - assumed to be 4 * tRP
 
     # burst length for an access derived from peerBlockSize
-
-    # @todo: Implement tFAW in the model
-    # minimum time window in which a maximum of four activates are
-    # allowed to take place
-    # tFAW = Param.Latency("30ns", "Four activation window")
-
-

@@ -46,6 +46,8 @@
 #ifndef __MEM_SIMPLE_DRAM_HH__
 #define __MEM_SIMPLE_DRAM_HH__
 
+#include <deque>
+
 #include "base/statistics.hh"
 #include "enums/AddrMap.hh"
 #include "enums/MemSched.hh"
@@ -126,6 +128,9 @@ class SimpleDRAM : public AbstractMemory
      * and do a few writes, or refresh, or whatever
      */
     bool stopReads;
+
+    /** List to keep track of activate ticks */
+    std::deque<Tick> actTicks;
 
     /**
      * A basic class to track the bank state indirectly via
@@ -323,6 +328,15 @@ class SimpleDRAM : public AbstractMemory
      */
     Tick maxBankFreeAt() const;
 
+
+    /**
+     * Keep track of when row activations happen, in order to enforce
+     * the maximum number of activations in the activation window. The
+     * method updates the time that the banks become available based
+     * on the current limits.
+     */
+    void recordActivate(Tick act_tick);
+
     void printParams() const;
     void printQs() const;
 
@@ -381,6 +395,8 @@ class SimpleDRAM : public AbstractMemory
     const Tick tRP;
     const Tick tRFC;
     const Tick tREFI;
+    const Tick tXAW;
+    const uint32_t activationLimit;
 
     /**
      * Memory controller configuration initialized based on parameter
