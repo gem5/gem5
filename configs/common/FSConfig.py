@@ -73,7 +73,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     # base address (including the PCI config space)
     self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
-    self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
+    self.physmem = SimpleDDR3(range = AddrRange(mdesc.mem()))
     self.mem_ranges = [self.physmem.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -110,7 +110,7 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                             pci_func=0, pci_dev=0, pci_bus=0)
         
-    physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
+    physmem = SimpleDDR3(range = AddrRange(mdesc.mem()))
     self = LinuxAlphaSystem(physmem = physmem)
     self.mem_ranges = [self.physmem.range]
     if not mdesc:
@@ -180,10 +180,10 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)
-    self.physmem = SimpleDRAM(range = AddrRange(Addr('1MB'), size = '64MB'),
-                                zero = True)
-    self.physmem2 = SimpleDRAM(range = AddrRange(Addr('2GB'), size ='256MB'),
-                                 zero = True)
+    self.physmem = SimpleDDR3(range = AddrRange(Addr('1MB'), size = '64MB'),
+                              zero = True)
+    self.physmem2 = SimpleDDR3(range = AddrRange(Addr('2GB'), size ='256MB'),
+                               zero = True)
     self.mem_ranges = [self.physmem.range, self.physmem2.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -274,8 +274,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.physmem = SimpleDRAM(range = AddrRange(Addr(mdesc.mem())),
-                                    zero = True)
+        self.physmem = SimpleDDR3(range = AddrRange(Addr(mdesc.mem())),
+                                  zero = True)
         self.mem_ranges = [self.physmem.range]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
@@ -289,10 +289,10 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
                      'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
 
-        self.physmem = SimpleDRAM(range =
-                                    AddrRange(self.realview.mem_start_addr,
-                                              size = mdesc.mem()),
-                                    conf_table_reported = True)
+        self.physmem = SimpleDDR3(range =
+                                  AddrRange(self.realview.mem_start_addr,
+                                            size = mdesc.mem()),
+                                  conf_table_reported = True)
         self.mem_ranges = [self.physmem.range]
         self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
@@ -328,7 +328,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.iobus = NoncoherentBus()
     self.membus = MemBus()
     self.bridge = Bridge(delay='50ns')
-    self.physmem = SimpleDRAM(range = AddrRange('1GB'))
+    self.physmem = SimpleDDR3(range = AddrRange('1GB'))
     self.mem_ranges = [self.physmem.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -434,7 +434,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     self.mem_mode = mem_mode
 
     # Physical memory
-    self.physmem = SimpleDRAM(range = AddrRange(mdesc.mem()))
+    self.physmem = SimpleDDR3(range = AddrRange(mdesc.mem()))
     self.mem_ranges = [self.physmem.range]
 
     # Platform

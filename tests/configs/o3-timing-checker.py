@@ -52,7 +52,7 @@ cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
 cpu.clock = '2GHz'
 
 system = System(cpu = cpu,
-                physmem = SimpleDRAM(),
+                physmem = SimpleDDR3(),
                 membus = CoherentBus(),
                 mem_mode = "timing")
 system.system_port = system.membus.slave
