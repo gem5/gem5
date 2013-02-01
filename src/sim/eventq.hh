@@ -296,16 +296,6 @@ class Event : public Serializable
     Priority priority() const { return _priority; }
 
 #ifndef SWIG
-    struct priority_compare
-        : public std::binary_function<Event *, Event *, bool>
-    {
-        bool
-        operator()(const Event *l, const Event *r) const
-        {
-            return l->when() >= r->when() || l->priority() >= r->priority();
-        }
-    };
-
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 #endif
