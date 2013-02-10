@@ -129,11 +129,40 @@ def parse_options():
 
 def interact(scope):
     banner = "gem5 Interactive Console"
+
+    ipshell = None
+    prompt_in1 = "gem5 \\#> "
+    prompt_out = "gem5 \\#: "
+
+    # Is IPython version 0.10 or earlier available?
     try:
         from IPython.Shell import IPShellEmbed
-        ipshell = IPShellEmbed(argv=[], banner=banner, user_ns=scope)
-        ipshell()
+        ipshell = IPShellEmbed(argv=["-prompt_in1", prompt_in1,
+                                     "-prompt_out", prompt_out],
+                               banner=banner, user_ns=scope)
     except ImportError:
+        pass
+
+    # Is IPython version 0.11 or later available?
+    if not ipshell:
+        try:
+            import IPython
+            from IPython.config.loader import Config
+            from IPython.frontend.terminal.embed import InteractiveShellEmbed
+
+            cfg = Config()
+            cfg.PromptManager.in_template = prompt_in1
+            cfg.PromptManager.out_template = prompt_out
+            ipshell = InteractiveShellEmbed(config=cfg, user_ns=scope,
+                                            banner1=banner)
+        except ImportError:
+            pass
+
+    if ipshell:
+        ipshell()
+    else:
+        # Use the Python shell in the standard library if IPython
+        # isn't available.
         code.InteractiveConsole(scope).interact(banner)
 
 def main(*args):
