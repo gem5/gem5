@@ -129,10 +129,9 @@ def parse_options():
 
 def interact(scope):
     banner = "gem5 Interactive Console"
-    sys.argv = []
     try:
         from IPython.Shell import IPShellEmbed
-        ipshell = IPShellEmbed(banner=banner,user_ns=scope)
+        ipshell = IPShellEmbed(argv=[], banner=banner, user_ns=scope)
         ipshell()
     except ImportError:
         code.InteractiveConsole(scope).interact(banner)
