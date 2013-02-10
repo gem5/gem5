@@ -507,4 +507,5 @@ def run(options, root, testsys, cpu_class):
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
 
-    sys.exit(exit_event.getCode())
+    if not m5.options.interactive:
+        sys.exit(exit_event.getCode())
