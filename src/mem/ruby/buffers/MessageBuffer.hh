@@ -115,11 +115,11 @@ class MessageBuffer
     void enqueue(MsgPtr message, Cycles delta);
 
     //!  returns delay ticks of the message.
-    Time dequeue_getDelayCycles(MsgPtr& message);
+    Cycles dequeue_getDelayCycles(MsgPtr& message);
     void dequeue(MsgPtr& message);
 
     //! returns delay cycles of the message
-    Time dequeue_getDelayCycles();
+    Cycles dequeue_getDelayCycles();
     void dequeue() { pop(); }
     void pop();
     void recycle();
@@ -160,7 +160,7 @@ class MessageBuffer
     Cycles m_recycle_latency;
 
     // Private Methods
-    Time setAndReturnDelayCycles(MsgPtr message);
+    Cycles setAndReturnDelayCycles(MsgPtr message);
 
     // Private copy constructor and assignment operator
     MessageBuffer(const MessageBuffer& obj);
@@ -184,13 +184,13 @@ class MessageBuffer
     int m_max_size;
     int m_size;
 
-    Time m_time_last_time_size_checked;
+    Cycles m_time_last_time_size_checked;
     int m_size_last_time_size_checked;
 
     // variables used so enqueues appear to happen imediately, while
     // pop happen the next cycle
-    Time m_time_last_time_enqueue;
-    Time m_time_last_time_pop;
+    Cycles m_time_last_time_enqueue;
+    Cycles m_time_last_time_pop;
     int m_size_at_cycle_start;
     int m_msgs_this_cycle;
 

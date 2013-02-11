@@ -39,7 +39,8 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const string &name)
-    : m_last_arrival_time(0)
+    : m_time_last_time_size_checked(0), m_time_last_time_enqueue(0),
+    m_time_last_time_pop(0), m_last_arrival_time(0)
 {
     m_msg_counter = 0;
     m_consumer_ptr = NULL;
@@ -51,9 +52,6 @@ MessageBuffer::MessageBuffer(const string &name)
     m_max_size = -1;
     m_randomization = true;
     m_size_last_time_size_checked = 0;
-    m_time_last_time_size_checked = 0;
-    m_time_last_time_enqueue = 0;
-    m_time_last_time_pop = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
     m_not_avail_count = 0;
@@ -236,7 +234,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     }
 }
 
-Time
+Cycles
 MessageBuffer::dequeue_getDelayCycles(MsgPtr& message)
 {
     dequeue(message);
@@ -253,14 +251,14 @@ MessageBuffer::dequeue(MsgPtr& message)
     DPRINTF(RubyQueue, "Enqueue message is %s\n", (*(message.get())));
 }
 
-Time
+Cycles
 MessageBuffer::dequeue_getDelayCycles()
 {
     // get MsgPtr of the message about to be dequeued
     MsgPtr message = m_prio_heap.front().m_msgptr;
 
     // get the delay cycles
-    Time delayCycles = setAndReturnDelayCycles(message);
+    Cycles delayCycles = setAndReturnDelayCycles(message);
     dequeue();
 
     return delayCycles;
@@ -291,8 +289,8 @@ MessageBuffer::clear()
 
     m_msg_counter = 0;
     m_size = 0;
-    m_time_last_time_enqueue = 0;
-    m_time_last_time_pop = 0;
+    m_time_last_time_enqueue = Cycles(0);
+    m_time_last_time_pop = Cycles(0);
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
 }
@@ -319,7 +317,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages\n");
     assert(m_stall_msg_map.count(addr) > 0);
-    Cycles nextCycle(m_clockobj_ptr->curCycle() + Cycles(1));
+    Cycles nextCycle = m_clockobj_ptr->curCycle() + Cycles(1);
 
     //
     // Put all stalled messages associated with this address back on the
@@ -344,7 +342,7 @@ void
 MessageBuffer::reanalyzeAllMessages()
 {
     DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n");
-    Cycles nextCycle(m_clockobj_ptr->curCycle() + Cycles(1));
+    Cycles nextCycle = m_clockobj_ptr->curCycle() + Cycles(1);
 
     //
     // Put all stalled messages associated with this address back on the
@@ -388,7 +386,7 @@ MessageBuffer::stallMessage(const Address& addr)
     (m_stall_msg_map[addr]).push_back(message);
 }
 
-Time
+Cycles
 MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
 {
     // get the delay cycles of the message at the top of the queue
