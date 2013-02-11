@@ -51,7 +51,7 @@ class RubyRequest : public Message
     PacketPtr pkt;
     unsigned m_contextId;
 
-    RubyRequest(Time curTime, uint64_t _paddr, uint8_t* _data, int _len,
+    RubyRequest(Cycles curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
         unsigned _proc_id = 100)
@@ -70,7 +70,7 @@ class RubyRequest : public Message
       m_LineAddress.makeLineAddress();
     }
 
-    RubyRequest(Time curTime) : Message(curTime)
+    RubyRequest(Cycles curTime) : Message(curTime)
     {
     }
 

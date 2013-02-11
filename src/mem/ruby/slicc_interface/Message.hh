@@ -32,7 +32,6 @@
 #include <iostream>
 
 #include "base/refcnt.hh"
-#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/packet.hh"
 
 class Message;
@@ -41,7 +40,7 @@ typedef RefCountingPtr<Message> MsgPtr;
 class Message : public RefCounted
 {
   public:
-    Message(Time curTime)
+    Message(Cycles curTime)
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
           m_DelayedCycles(0)
@@ -72,19 +71,19 @@ class Message : public RefCounted
     virtual bool functionalWrite(Packet *pkt) = 0;
     //{ fatal("Write functional access not implemented!"); }
 
-    void setDelayedCycles(const Time cycles) { m_DelayedCycles = cycles; }
-    const Time getDelayedCycles() const {return m_DelayedCycles;}
+    void setDelayedCycles(const Cycles cycles) { m_DelayedCycles = cycles; }
+    const Cycles getDelayedCycles() const {return m_DelayedCycles;}
 
-    void setLastEnqueueTime(const Time& time) { m_LastEnqueueTime = time; }
-    const Time getLastEnqueueTime() const {return m_LastEnqueueTime;}
+    void setLastEnqueueTime(const Cycles& time) { m_LastEnqueueTime = time; }
+    const Cycles getLastEnqueueTime() const {return m_LastEnqueueTime;}
 
-    const Time& getTime() const { return m_time; }
-    void setTime(const Time& new_time) { m_time = new_time; }
+    const Cycles& getTime() const { return m_time; }
+    void setTime(const Cycles& new_time) { m_time = new_time; }
 
   private:
-    Time m_time;
-    Time m_LastEnqueueTime; // my last enqueue time
-    int m_DelayedCycles; // my delayed cycles
+    Cycles m_time;
+    Cycles m_LastEnqueueTime; // my last enqueue time
+    Cycles m_DelayedCycles; // my delayed cycles
 };
 
 inline std::ostream&

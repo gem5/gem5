@@ -31,6 +31,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 

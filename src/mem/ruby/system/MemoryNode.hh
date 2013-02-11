@@ -42,6 +42,7 @@
 
 #include "mem/protocol/MemoryRequestType.hh"
 #include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
 class MemoryNode

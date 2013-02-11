@@ -42,7 +42,7 @@ typedef RefCountingPtr<NetworkMessage> NetMsgPtr;
 class NetworkMessage : public Message
 {
   public:
-    NetworkMessage(Time curTime)
+    NetworkMessage(Cycles curTime)
         : Message(curTime), m_internal_dest_valid(false)
     { }
 

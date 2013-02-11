@@ -40,6 +40,7 @@
 #include <inttypes.h>
 
 #include <cassert>
+#include <ostream>
 
 /** uint64_t constant */
 #define ULL(N)          ((uint64_t)N##ULL)
@@ -124,6 +125,8 @@ class Cycles
 
     const Cycles operator >>(const int32_t shift)
     { return Cycles(c >> shift); }
+
+    friend std::ostream& operator<<(std::ostream &out, const Cycles & cycles);
 
 #endif // SWIG not touching operators
 

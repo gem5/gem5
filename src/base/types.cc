@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,52 +24,20 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nilay Vaish
  */
 
-#ifndef __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__
-#define __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__
+#include "base/types.hh"
 
-#include <iostream>
+#ifndef SWIG // keep the operators away from SWIG
 
-#include "mem/ruby/slicc_interface/Message.hh"
-
-class MessageBufferNode
+std::ostream&
+operator<<(std::ostream &out, const Cycles & cycles)
 {
-  public:
-    MessageBufferNode()
-        : m_time(0), m_msg_counter(0)
-    {}
-
-    MessageBufferNode(const Cycles& time, uint64_t counter,
-                      const MsgPtr& msgptr)
-        : m_time(time), m_msg_counter(counter), m_msgptr(msgptr)
-    {}
-
-    void print(std::ostream& out) const;
-
-  public:
-    Cycles m_time;
-    uint64_t m_msg_counter; // FIXME, should this be a 64-bit value?
-    MsgPtr m_msgptr;
-};
-
-inline bool
-operator>(const MessageBufferNode& n1, const MessageBufferNode& n2)
-{
-    if (n1.m_time == n2.m_time) {
-        assert(n1.m_msg_counter != n2.m_msg_counter);
-        return n1.m_msg_counter > n2.m_msg_counter;
-    } else {
-        return n1.m_time > n2.m_time;
-    }
-}
-
-inline std::ostream&
-operator<<(std::ostream& out, const MessageBufferNode& obj)
-{
-    obj.print(out);
-    out << std::flush;
+    out << cycles.c;
     return out;
 }
 
-#endif // __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__
+#endif // SWIG not touching operators
+
