@@ -39,7 +39,7 @@ class LRUPolicy : public AbstractReplacementPolicy
     LRUPolicy(Index num_sets, Index assoc);
     ~LRUPolicy();
 
-    void touch(Index set, Index way, Time time);
+    void touch(Index set, Index way, Tick time);
     Index getVictim(Index set) const;
 };
 
@@ -55,7 +55,7 @@ LRUPolicy::~LRUPolicy()
 }
 
 inline void
-LRUPolicy::touch(Index set, Index index, Time time)
+LRUPolicy::touch(Index set, Index index, Tick time)
 {
     assert(index >= 0 && index < m_assoc);
     assert(set >= 0 && set < m_num_sets);
@@ -67,7 +67,7 @@ inline Index
 LRUPolicy::getVictim(Index set) const
 {
     //  assert(m_assoc != 0);
-    Time time, smallest_time;
+    Tick time, smallest_time;
     Index smallest_index;
 
     smallest_index = 0;

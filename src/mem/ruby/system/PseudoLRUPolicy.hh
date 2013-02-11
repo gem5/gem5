@@ -50,7 +50,7 @@ class PseudoLRUPolicy : public AbstractReplacementPolicy
     PseudoLRUPolicy(Index num_sets, Index assoc);
     ~PseudoLRUPolicy();
 
-    void touch(Index set, Index way, Time time);
+    void touch(Index set, Index way, Tick time);
     Index getVictim(Index set) const;
 
   private:
@@ -96,7 +96,7 @@ PseudoLRUPolicy::~PseudoLRUPolicy()
 }
 
 inline void
-PseudoLRUPolicy::touch(Index set, Index index, Time time)
+PseudoLRUPolicy::touch(Index set, Index index, Tick time)
 {
     assert(index >= 0 && index < m_assoc);
     assert(set >= 0 && set < m_num_sets);
