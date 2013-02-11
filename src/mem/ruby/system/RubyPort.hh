@@ -46,13 +46,13 @@
 #include <string>
 
 #include "mem/protocol/RequestStatus.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
 
-class MessageBuffer;
 class AbstractController;
 
 class RubyPort : public MemObject

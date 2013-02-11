@@ -93,11 +93,11 @@ Throttle::clear()
 
 void
 Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
-    const std::vector<MessageBuffer*>& out_vec, ClockedObject *em)
+    const std::vector<MessageBuffer*>& out_vec)
 {
     assert(in_vec.size() == out_vec.size());
     for (int i=0; i<in_vec.size(); i++) {
-        addVirtualNetwork(in_vec[i], out_vec[i], em);
+        addVirtualNetwork(in_vec[i], out_vec[i]);
     }
 
     m_message_counters.resize(MessageSizeType_NUM);
@@ -110,8 +110,7 @@ Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
 }
 
 void
-Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr,
-                            ClockedObject *em)
+Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
 {
     m_units_remaining.push_back(0);
     m_in.push_back(in_ptr);
@@ -119,7 +118,6 @@ Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr,
 
     // Set consumer and description
     m_in[m_vnets]->setConsumer(this);
-    m_in[m_vnets]->setClockObj(em);
 
     string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
         to_string(m_node) + "]";
@@ -174,7 +172,7 @@ Throttle::wakeup()
                 DPRINTF(RubyNetwork, "throttle: %d my bw %d bw spent "
                         "enqueueing net msg %d time: %lld.\n",
                         m_node, getLinkBandwidth(), m_units_remaining[vnet],
-                        g_system_ptr->getTime());
+                        g_system_ptr->curCycle());
 
                 // Move the message
                 m_out[vnet]->enqueue(m_in[vnet]->peekMsgPtr(), m_link_latency);
@@ -235,7 +233,7 @@ Throttle::printStats(ostream& out) const
 void
 Throttle::clearStats()
 {
-    m_ruby_start = g_system_ptr->getTime();
+    m_ruby_start = g_system_ptr->curCycle();
     m_links_utilized = 0.0;
 
     for (int i = 0; i < m_message_counters.size(); i++) {
@@ -249,7 +247,7 @@ double
 Throttle::getUtilization() const
 {
     return 100.0 * double(m_links_utilized) /
-        double(g_system_ptr->getTime()-m_ruby_start);
+        double(g_system_ptr->curCycle()-m_ruby_start);
 }
 
 void

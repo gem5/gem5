@@ -40,16 +40,16 @@ typedef RefCountingPtr<Message> MsgPtr;
 class Message : public RefCounted
 {
   public:
-    Message(Cycles curTime)
+    Message(Tick curTime)
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedCycles(0)
+          m_DelayedTicks(0)
     { }
 
     Message(const Message &other)
         : m_time(other.m_time),
           m_LastEnqueueTime(other.m_LastEnqueueTime),
-          m_DelayedCycles(other.m_DelayedCycles)
+          m_DelayedTicks(other.m_DelayedTicks)
     { }
 
     virtual ~Message() { }
@@ -71,19 +71,19 @@ class Message : public RefCounted
     virtual bool functionalWrite(Packet *pkt) = 0;
     //{ fatal("Write functional access not implemented!"); }
 
-    void setDelayedCycles(const Cycles cycles) { m_DelayedCycles = cycles; }
-    const Cycles getDelayedCycles() const {return m_DelayedCycles;}
+    void setDelayedTicks(const Tick ticks) { m_DelayedTicks = ticks; }
+    const Tick getDelayedTicks() const {return m_DelayedTicks;}
 
-    void setLastEnqueueTime(const Cycles& time) { m_LastEnqueueTime = time; }
-    const Cycles getLastEnqueueTime() const {return m_LastEnqueueTime;}
+    void setLastEnqueueTime(const Tick& time) { m_LastEnqueueTime = time; }
+    const Tick getLastEnqueueTime() const {return m_LastEnqueueTime;}
 
-    const Cycles& getTime() const { return m_time; }
-    void setTime(const Cycles& new_time) { m_time = new_time; }
+    const Tick& getTime() const { return m_time; }
+    void setTime(const Tick& new_time) { m_time = new_time; }
 
   private:
-    Cycles m_time;
-    Cycles m_LastEnqueueTime; // my last enqueue time
-    Cycles m_DelayedCycles; // my delayed cycles
+    Tick m_time;
+    Tick m_LastEnqueueTime; // my last enqueue time
+    Tick m_DelayedTicks; // my delayed cycles
 };
 
 inline std::ostream&

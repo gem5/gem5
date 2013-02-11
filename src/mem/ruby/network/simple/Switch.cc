@@ -67,7 +67,11 @@ Switch::init()
 void
 Switch::addInPort(const vector<MessageBuffer*>& in)
 {
-    m_perfect_switch_ptr->addInPort(in, this);
+    m_perfect_switch_ptr->addInPort(in);
+
+    for (int i = 0; i < in.size(); i++) {
+        in[i]->setReceiver(this);
+    }
 }
 
 void
@@ -83,21 +87,27 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
     // Create one buffer per vnet (these are intermediaryQueues)
     vector<MessageBuffer*> intermediateBuffers;
     for (int i = 0; i < out.size(); i++) {
+        out[i]->setSender(this);
+
         MessageBuffer* buffer_ptr = new MessageBuffer;
         // Make these queues ordered
         buffer_ptr->setOrdering(true);
         if (m_network_ptr->getBufferSize() > 0) {
             buffer_ptr->resize(m_network_ptr->getBufferSize());
         }
+
         intermediateBuffers.push_back(buffer_ptr);
         m_buffers_to_free.push_back(buffer_ptr);
+
+        buffer_ptr->setSender(this);
+        buffer_ptr->setReceiver(this);
     }
 
     // Hook the queues to the PerfectSwitch
     m_perfect_switch_ptr->addOutPort(intermediateBuffers, routing_table_entry);
 
     // Hook the queues to the Throttle
-    throttle_ptr->addLinks(intermediateBuffers, out, this);
+    throttle_ptr->addLinks(intermediateBuffers, out);
 }
 
 void

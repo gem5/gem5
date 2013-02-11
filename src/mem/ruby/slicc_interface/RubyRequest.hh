@@ -51,7 +51,7 @@ class RubyRequest : public Message
     PacketPtr pkt;
     unsigned m_contextId;
 
-    RubyRequest(Cycles curTime, uint64_t _paddr, uint8_t* _data, int _len,
+    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
         unsigned _proc_id = 100)
@@ -70,60 +70,18 @@ class RubyRequest : public Message
       m_LineAddress.makeLineAddress();
     }
 
-    RubyRequest(Cycles curTime) : Message(curTime)
-    {
-    }
+    RubyRequest(Tick curTime) : Message(curTime) {}
+    RubyRequest* clone() const { return new RubyRequest(*this); }
 
-    RubyRequest*
-    clone() const
-    {
-        return new RubyRequest(*this);
-    }
-
-    const Address&
-    getLineAddress() const
-    {
-        return m_LineAddress;
-    }
-
-    const Address&
-    getPhysicalAddress() const
-    {
-        return m_PhysicalAddress;
-    }
-
-    const RubyRequestType&
-    getType() const
-    {
-        return m_Type;
-    }
-
-    const Address&
-    getProgramCounter() const
-    {
-        return m_ProgramCounter;
-    }
-
-    const RubyAccessMode&
-    getAccessMode() const
-    {
-      return m_AccessMode;
-    }
-
-    const int&
-    getSize() const
-    {
-      return m_Size;
-    }
-
-    const PrefetchBit&
-    getPrefetch() const
-    {
-      return m_Prefetch;
-    }
+    const Address& getLineAddress() const { return m_LineAddress; }
+    const Address& getPhysicalAddress() const { return m_PhysicalAddress; }
+    const RubyRequestType& getType() const { return m_Type; }
+    const Address& getProgramCounter() const { return m_ProgramCounter; }
+    const RubyAccessMode& getAccessMode() const { return m_AccessMode; }
+    const int& getSize() const { return m_Size; }
+    const PrefetchBit& getPrefetch() const { return m_Prefetch; }
 
     void print(std::ostream& out) const;
-
     bool functionalRead(Packet *pkt);
     bool functionalWrite(Packet *pkt);
 };

@@ -76,6 +76,7 @@ RubyPort::init()
 {
     assert(m_controller != NULL);
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
+    m_mandatory_q_ptr->setSender(this);
 }
 
 BaseMasterPort &

@@ -83,10 +83,16 @@ class MessageBuffer
         m_consumer_ptr = consumer_ptr;
     }
 
-    void setClockObj(ClockedObject* obj)
+    void setSender(ClockedObject* obj)
     {
-        assert(m_clockobj_ptr == NULL);
-        m_clockobj_ptr = obj;
+        assert(m_sender_ptr == NULL || m_sender_ptr == obj);
+        m_sender_ptr = obj;
+    }
+
+    void setReceiver(ClockedObject* obj)
+    {
+        assert(m_receiver_ptr == NULL || m_receiver_ptr == obj);
+        m_receiver_ptr = obj;
     }
 
     void setDescription(const std::string& name) { m_name = name; }
@@ -167,8 +173,10 @@ class MessageBuffer
     MessageBuffer& operator=(const MessageBuffer& obj);
 
     // Data Members (m_ prefix)
-    //! Object used for querying time.
-    ClockedObject* m_clockobj_ptr;
+    //! The two ends of the buffer.
+    ClockedObject* m_sender_ptr;
+    ClockedObject* m_receiver_ptr;
+
     //! Consumer to signal a wakeup(), can be NULL
     Consumer* m_consumer_ptr;
     std::vector<MessageBufferNode> m_prio_heap;

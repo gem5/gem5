@@ -278,7 +278,7 @@ RubyMemoryControl::~RubyMemoryControl()
 void
 RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
 {
-    Cycles arrival_time = g_system_ptr->getTime() + latency;
+    Cycles arrival_time = curCycle() + latency;
     const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
     physical_address_t addr = memMess->getAddress().getAddress();
     MemoryRequestType type = memMess->getType();
@@ -345,7 +345,7 @@ bool
 RubyMemoryControl::isReady()
 {
     return ((!m_response_queue.empty()) &&
-            (m_response_queue.front().m_time <= g_system_ptr->getTime()));
+            (m_response_queue.front().m_time <= g_system_ptr->curCycle()));
 }
 
 void

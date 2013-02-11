@@ -68,7 +68,7 @@ PerfectSwitch::init(SimpleNetwork *network_ptr)
 }
 
 void
-PerfectSwitch::addInPort(const vector<MessageBuffer*>& in, Switch *sw)
+PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
 {
     assert(in.size() == m_virtual_networks);
     NodeID port = m_in.size();
@@ -76,7 +76,6 @@ PerfectSwitch::addInPort(const vector<MessageBuffer*>& in, Switch *sw)
 
     for (int j = 0; j < m_virtual_networks; j++) {
         m_in[port][j]->setConsumer(this);
-        m_in[port][j]->setClockObj(sw);
 
         string desc = csprintf("[Queue from port %s %s %s to PerfectSwitch]",
             to_string(m_switch_id), to_string(port), to_string(j));

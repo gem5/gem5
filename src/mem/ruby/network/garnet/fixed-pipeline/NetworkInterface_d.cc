@@ -116,7 +116,9 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
 
         // the protocol injects messages into the NI
         inNode_ptr[j]->setConsumer(this);
-        inNode_ptr[j]->setClockObj(m_net_ptr);
+        inNode_ptr[j]->setReceiver(m_net_ptr);
+
+        outNode_ptr[j]->setSender(m_net_ptr);
     }
 }
 
@@ -173,7 +175,8 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
             flit_d *fl = new flit_d(i, vc, vnet, num_flits, new_msg_ptr,
                 m_net_ptr->curCycle());
 
-            fl->set_delay(m_net_ptr->curCycle() - msg_ptr->getTime());
+            fl->set_delay(m_net_ptr->curCycle() -
+                          m_net_ptr->ticksToCycles(msg_ptr->getTime()));
             m_ni_buffers[vc]->insert(fl);
         }
 

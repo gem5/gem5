@@ -79,7 +79,6 @@ class RubySystem : public ClockedObject
     static uint32_t getBlockSizeBits() { return m_block_size_bits; }
     static uint64_t getMemorySizeBytes() { return m_memory_size_bytes; }
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
-    Cycles getTime() const { return curCycle(); }
 
     // Public Methods
     Network*

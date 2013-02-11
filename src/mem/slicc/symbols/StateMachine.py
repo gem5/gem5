@@ -518,7 +518,10 @@ m_dma_sequencer_ptr->setController(this);
         code('m_num_controllers++;')
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:
-                code('m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();')
+                code('''
+m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();
+m_${{var.c_ident}}_ptr->setReceiver(this);
+''')
 
         code.dedent()
         code('''
@@ -573,7 +576,7 @@ $c_ident::init()
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
                     # Set ordering
-                    if "ordered" in var and "trigger_queue" not in var:
+                    if "ordered" in var:
                         # A buffer
                         code('$vid->setOrdering(${{var["ordered"]}});')
 
@@ -583,9 +586,15 @@ $c_ident::init()
                         code('$vid->setRandomization(${{var["random"]}});')
 
                     # Set Priority
-                    if vtype.isBuffer and \
-                           "rank" in var and "trigger_queue" not in var:
+                    if vtype.isBuffer and "rank" in var:
                         code('$vid->setPriority(${{var["rank"]}});')
+
+                    # Set sender and receiver for trigger queue
+                    if var.ident.find("triggerQueue") >= 0:
+                        code('$vid->setSender(this);')
+                        code('$vid->setReceiver(this);')
+                    elif vtype.c_ident == "TimerTable":
+                        code('$vid->setClockObj(this);')
 
             else:
                 # Network port object
@@ -600,6 +609,12 @@ $vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet, "$vne
 ''')
 
                 code('assert($vid != NULL);')
+
+                # Set the end
+                if network == "To":
+                    code('$vid->setSender(this);')
+                else:
+                    code('$vid->setReceiver(this);')
 
                 # Set ordering
                 if "ordered" in var:
@@ -647,8 +662,6 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
             code('${{port.code}}.setConsumer(this);')
             # Set the queue descriptions
             code('${{port.code}}.setDescription("[Version " + to_string(m_version) + ", $ident, $port]");')
-            # Set the clock object
-            code('${{port.code}}.setClockObj(this);')
 
         # Initialize the transition profiling
         code()

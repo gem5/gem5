@@ -246,7 +246,7 @@ $klass ${{self.c_ident}}$parent
 ''', klass="class")
 
         if self.isMessage:
-            code('(Cycles curTime) : %s(curTime) {' % self["interface"])
+            code('(Tick curTime) : %s(curTime) {' % self["interface"])
         else:
             code('()\n\t\t{')
 
@@ -291,7 +291,7 @@ $klass ${{self.c_ident}}$parent
             params = ', '.join(params)
 
             if self.isMessage:
-                params = "const Cycles curTime, " + params
+                params = "const Tick curTime, " + params
 
             code('${{self.c_ident}}($params)')
 

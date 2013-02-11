@@ -54,7 +54,7 @@ class EnqueueStatementAST(StatementAST):
 
         # Declare message
         code("${{msg_type.ident}} *out_msg = "\
-             "new ${{msg_type.ident}}(curCycle());")
+             "new ${{msg_type.ident}}(clockEdge());")
 
         # The other statements
         t = self.statements.generate(code, None)
