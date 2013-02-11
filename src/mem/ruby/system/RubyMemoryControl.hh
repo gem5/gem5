@@ -100,7 +100,7 @@ class RubyMemoryControl : public MemoryControl
     uint32_t functionalWriteBuffers(Packet *pkt);
 
   private:
-    void enqueueToDirectory(MemoryNode req, int latency);
+    void enqueueToDirectory(MemoryNode req, Cycles latency);
     const int getRank(int bank) const;
     bool queueReady(int bank);
     void issueRequest(int bank);
@@ -128,11 +128,11 @@ class RubyMemoryControl : public MemoryControl
     int m_rank_rank_delay;
     int m_read_write_delay;
     int m_basic_bus_busy_time;
-    int m_mem_ctl_latency;
+    Cycles m_mem_ctl_latency;
     int m_refresh_period;
     int m_mem_random_arbitrate;
     int m_tFaw;
-    int m_mem_fixed_delay;
+    Cycles m_mem_fixed_delay;
 
     int m_total_banks;
     int m_total_ranks;

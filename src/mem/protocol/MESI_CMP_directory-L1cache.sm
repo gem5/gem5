@@ -33,9 +33,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
    CacheMemory * L1DcacheMemory,
    Prefetcher * prefetcher = 'NULL',
    int l2_select_num_bits,
-   int l1_request_latency = 2,
-   int l1_response_latency = 2,
-   int to_l2_latency = 1,
+   Cycles l1_request_latency = 2,
+   Cycles l1_response_latency = 2,
+   Cycles to_l2_latency = 1,
    bool send_evictions,
    bool enable_prefetch = "False"
 {

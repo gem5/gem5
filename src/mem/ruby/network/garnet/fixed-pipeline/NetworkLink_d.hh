@@ -72,7 +72,7 @@ class NetworkLink_d : public ClockedObject, public Consumer
 
   protected:
     int m_id;
-    int m_latency;
+    Cycles m_latency;
     int channel_width;
 
     GarnetNetwork_d *m_net_ptr;

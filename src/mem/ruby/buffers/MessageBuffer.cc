@@ -39,6 +39,7 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const string &name)
+    : m_last_arrival_time(0)
 {
     m_msg_counter = 0;
     m_consumer_ptr = NULL;
@@ -48,7 +49,6 @@ MessageBuffer::MessageBuffer(const string &name)
     m_strict_fifo = true;
     m_size = 0;
     m_max_size = -1;
-    m_last_arrival_time = 0;
     m_randomization = true;
     m_size_last_time_size_checked = 0;
     m_time_last_time_size_checked = 0;
@@ -139,19 +139,19 @@ MessageBuffer::peekAtHeadOfQueue() const
 }
 
 // FIXME - move me somewhere else
-int
+Cycles
 random_time()
 {
-    int time = 1;
-    time += random() & 0x3;  // [0...3]
+    Cycles time(1);
+    time += Cycles(random() & 0x3);  // [0...3]
     if ((random() & 0x7) == 0) {  // 1 in 8 chance
-        time += 100 + (random() % 0xf); // 100 + [1...15]
+        time += Cycles(100 + (random() % 0xf)); // 100 + [1...15]
     }
     return time;
 }
 
 void
-MessageBuffer::enqueue(MsgPtr message, Time delta)
+MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 {
     m_msg_counter++;
     m_size++;
@@ -170,8 +170,9 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
     assert(delta>0);
-    Time current_time = m_clockobj_ptr->curCycle();
-    Time arrival_time = 0;
+    Cycles current_time(m_clockobj_ptr->curCycle());
+    Cycles arrival_time(0);
+
     if (!RubySystem::getRandomization() || (m_randomization == false)) {
         // No randomization
         arrival_time = current_time + delta;
@@ -304,6 +305,7 @@ MessageBuffer::recycle()
     MessageBufferNode node = m_prio_heap.front();
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
+
     node.m_time = m_clockobj_ptr->curCycle() + m_recycle_latency;
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
@@ -317,6 +319,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages\n");
     assert(m_stall_msg_map.count(addr) > 0);
+    Cycles nextCycle(m_clockobj_ptr->curCycle() + Cycles(1));
 
     //
     // Put all stalled messages associated with this address back on the
@@ -324,8 +327,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
     //
     while(!m_stall_msg_map[addr].empty()) {
         m_msg_counter++;
-        MessageBufferNode msgNode(m_clockobj_ptr->curCycle() + 1,
-                                  m_msg_counter, 
+        MessageBufferNode msgNode(nextCycle, m_msg_counter,
                                   m_stall_msg_map[addr].front());
 
         m_prio_heap.push_back(msgNode);
@@ -342,6 +344,7 @@ void
 MessageBuffer::reanalyzeAllMessages()
 {
     DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n");
+    Cycles nextCycle(m_clockobj_ptr->curCycle() + Cycles(1));
 
     //
     // Put all stalled messages associated with this address back on the
@@ -353,14 +356,13 @@ MessageBuffer::reanalyzeAllMessages()
 
         while(!(map_iter->second).empty()) {
             m_msg_counter++;
-            MessageBufferNode msgNode(m_clockobj_ptr->curCycle() + 1,
-                                      m_msg_counter, 
+            MessageBufferNode msgNode(nextCycle, m_msg_counter,
                                       (map_iter->second).front());
 
             m_prio_heap.push_back(msgNode);
             push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                       greater<MessageBufferNode>());
-            
+
             m_consumer_ptr->scheduleEventAbsolute(msgNode.m_time);
             (map_iter->second).pop_front();
         }

@@ -72,12 +72,12 @@ Switch::addInPort(const vector<MessageBuffer*>& in)
 
 void
 Switch::addOutPort(const vector<MessageBuffer*>& out,
-    const NetDest& routing_table_entry, int link_latency, int bw_multiplier)
+    const NetDest& routing_table_entry, Cycles link_latency, int bw_multiplier)
 {
     // Create a throttle
     Throttle* throttle_ptr = new Throttle(m_id, m_throttles.size(),
-        link_latency, bw_multiplier, m_network_ptr->getEndpointBandwidth(),
-        this);
+            link_latency, bw_multiplier, m_network_ptr->getEndpointBandwidth(),
+            this);
     m_throttles.push_back(throttle_ptr);
 
     // Create one buffer per vnet (these are intermediaryQueues)

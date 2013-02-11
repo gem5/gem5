@@ -32,7 +32,8 @@ from slicc.symbols.Var import Var
 import slicc.generate.html as html
 import re
 
-python_class_map = {"int": "Int",
+python_class_map = {
+                    "int": "Int",
                     "uint32_t" : "UInt32",
                     "std::string": "String",
                     "bool": "Bool",
@@ -42,8 +43,9 @@ python_class_map = {"int": "Int",
                     "DirectoryMemory": "RubyDirectoryMemory",
                     "MemoryControl": "MemoryControl",
                     "DMASequencer": "DMASequencer",
-                    "Prefetcher":"Prefetcher"
-                    }
+                    "Prefetcher":"Prefetcher",
+                    "Cycles":"Cycles",
+                   }
 
 class StateMachine(Symbol):
     def __init__(self, symtab, ident, location, pairs, config_parameters):
@@ -629,7 +631,8 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 
             if vtype.isBuffer:
                 if "recycle_latency" in var:
-                    code('$vid->setRecycleLatency(${{var["recycle_latency"]}});')
+                    code('$vid->setRecycleLatency( ' \
+                         'Cycles(${{var["recycle_latency"]}}));')
                 else:
                     code('$vid->setRecycleLatency(m_recycle_latency);')
 
@@ -1055,7 +1058,7 @@ ${ident}_Controller::wakeup()
             m_fully_busy_cycles++;
 
             // Wakeup in another cycle and try again
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             break;
         }
 ''')

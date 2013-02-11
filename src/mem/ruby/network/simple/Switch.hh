@@ -63,7 +63,7 @@ class Switch : public BasicRouter
     void init();
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
-        const NetDest& routing_table_entry, int link_latency,
+        const NetDest& routing_table_entry, Cycles link_latency,
         int bw_multiplier);
     const Throttle* getThrottle(LinkID link_number) const;
     const std::vector<Throttle*>* getThrottles() const;

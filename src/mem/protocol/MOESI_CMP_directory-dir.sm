@@ -33,7 +33,7 @@
 machine(Directory, "Directory protocol") 
 :  DirectoryMemory * directory,
    MemoryControl * memBuffer,
-   int directory_latency = 6
+   Cycles directory_latency = 6
 {
 
   // ** IN QUEUES **

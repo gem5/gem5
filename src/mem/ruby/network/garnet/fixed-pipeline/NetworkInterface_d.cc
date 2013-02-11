@@ -244,14 +244,14 @@ NetworkInterface_d::wakeup()
             free_signal = true;
 
             outNode_ptr[t_flit->get_vnet()]->enqueue(
-                t_flit->get_msg_ptr(), 1);
+                t_flit->get_msg_ptr(), Cycles(1));
         }
         // Simply send a credit back since we are not buffering
         // this flit in the NI
         flit_d *credit_flit = new flit_d(t_flit->get_vc(), free_signal,
                                          m_net_ptr->curCycle());
         creditQueue->insert(credit_flit);
-        m_ni_credit_link->scheduleEvent(1);
+        m_ni_credit_link->scheduleEvent(Cycles(1));
 
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
@@ -324,7 +324,7 @@ NetworkInterface_d::scheduleOutputLink()
             t_flit->set_time(m_net_ptr->curCycle() + 1);
             outSrcQueue->insert(t_flit);
             // schedule the out link
-            outNetLink->scheduleEvent(1);
+            outNetLink->scheduleEvent(Cycles(1));
 
             if (t_flit->get_type() == TAIL_ ||
                t_flit->get_type() == HEAD_TAIL_) {
@@ -351,13 +351,13 @@ NetworkInterface_d::checkReschedule()
 {
     for (int vnet = 0; vnet < m_virtual_networks; vnet++) {
         if (inNode_ptr[vnet]->isReady()) { // Is there a message waiting
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             return;
         }
     }
     for (int vc = 0; vc < m_num_vcs; vc++) {
         if (m_ni_buffers[vc]->isReadyForNext(m_net_ptr->curCycle())) {
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             return;
         }
     }

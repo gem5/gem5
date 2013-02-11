@@ -130,7 +130,7 @@ Router::isBufferNotFull(int vc, int inport)
 // This has to be updated and arbitration performed
 void
 Router::request_vc(int in_vc, int in_port, NetDest destination,
-                   Time request_time)
+                   Cycles request_time)
 {
     assert(m_in_vc_state[in_port][in_vc]->isInState(IDLE_, request_time));
 
@@ -231,7 +231,7 @@ Router::grant_vc(int out_port, int vc, Time grant_time)
 {
     assert(m_out_vc_state[out_port][vc]->isInState(VC_AB_, grant_time));
     m_out_vc_state[out_port][vc]->grant_vc(grant_time);
-    scheduleEvent(1);
+    scheduleEvent(Cycles(1));
 }
 
 void
@@ -239,7 +239,7 @@ Router::release_vc(int out_port, int vc, Time release_time)
 {
     assert(m_out_vc_state[out_port][vc]->isInState(ACTIVE_, release_time));
     m_out_vc_state[out_port][vc]->setState(IDLE_, release_time);
-    scheduleEvent(1);
+    scheduleEvent(Cycles(1));
 }
 
 // This function calculated the output port for a particular destination.
@@ -274,7 +274,8 @@ Router::routeCompute(flit *m_flit, int inport)
     m_router_buffers[outport][outvc]->insert(m_flit);
 
     if (m_net_ptr->getNumPipeStages() > 1)
-        scheduleEvent(m_net_ptr->getNumPipeStages() - 1 );
+        scheduleEvent(Cycles(m_net_ptr->getNumPipeStages() - 1));
+
     if ((m_flit->get_type() == HEAD_) || (m_flit->get_type() == HEAD_TAIL_)) {
         NetworkMessage *nm =
             safe_cast<NetworkMessage*>(m_flit->get_msg_ptr().get());
@@ -290,6 +291,7 @@ Router::routeCompute(flit *m_flit, int inport)
                 curCycle());
         }
     }
+
     if ((m_flit->get_type() == TAIL_) || (m_flit->get_type() == HEAD_TAIL_)) {
         m_in_vc_state[inport][invc]->setState(IDLE_, curCycle() + 1);
         m_in_link[inport]->release_vc_link(invc, curCycle() + 1);
@@ -361,7 +363,7 @@ Router::scheduleOutputLinks()
                         m_router_buffers[port][vc_tolookat]->getTopFlit();
                     t_flit->set_time(curCycle() + 1 );
                     m_out_src_queue[port]->insert(t_flit);
-                    m_out_link[port]->scheduleEvent(1);
+                    m_out_link[port]->scheduleEvent(Cycles(1));
                     break; // done for this port
                 }
             }
@@ -383,7 +385,7 @@ Router::checkReschedule()
     for (int port = 0; port < m_out_link.size(); port++) {
         for (int vc = 0; vc < m_num_vcs; vc++) {
             if (m_router_buffers[port][vc]->isReadyForNext(curCycle())) {
-                scheduleEvent(1);
+                scheduleEvent(Cycles(1));
                 return;
             }
         }
@@ -396,7 +398,7 @@ Router::check_arbiter_reschedule()
     for (int port = 0; port < m_in_link.size(); port++) {
         for (int vc = 0; vc < m_num_vcs; vc++) {
             if (m_in_vc_state[port][vc]->isInState(VC_AB_, curCycle() + 1)) {
-                m_vc_arbiter->scheduleEvent(1);
+                m_vc_arbiter->scheduleEvent(Cycles(1));
                 return;
             }
         }

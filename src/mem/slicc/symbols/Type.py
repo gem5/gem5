@@ -423,6 +423,8 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 
 #include "mem/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
 
 using namespace std;
 ''')

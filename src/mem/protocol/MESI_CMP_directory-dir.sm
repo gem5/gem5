@@ -38,8 +38,8 @@
 machine(Directory, "MESI_CMP_filter_directory protocol") 
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
-   int to_mem_ctrl_latency = 1,
-   int directory_latency = 6
+   Cycles to_mem_ctrl_latency = 1,
+   Cycles directory_latency = 6
 {
 
   MessageBuffer requestToDir, network="From", virtual_network="0", ordered="false", vnet_type="request";

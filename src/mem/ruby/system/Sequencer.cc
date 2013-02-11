@@ -668,7 +668,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
             msg->getPhysicalAddress(),
             RubyRequestType_to_string(secondary_type));
 
-    Time latency = 0;  // initialzed to an null value
+    Cycles latency(0);  // initialzed to an null value
 
     if (secondary_type == RubyRequestType_IFETCH)
         latency = m_instCache_ptr->getLatency();

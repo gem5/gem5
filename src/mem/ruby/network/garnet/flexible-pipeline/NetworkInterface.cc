@@ -193,7 +193,7 @@ NetworkInterface::grant_vc(int out_port, int vc, Time grant_time)
 {
     assert(m_out_vc_state[vc]->isInState(VC_AB_, grant_time));
     m_out_vc_state[vc]->grant_vc(grant_time);
-    scheduleEvent(1);
+    scheduleEvent(Cycles(1));
 }
 
 // The tail flit corresponding to this vc has been buffered at the next hop
@@ -203,7 +203,7 @@ NetworkInterface::release_vc(int out_port, int vc, Time release_time)
 {
     assert(m_out_vc_state[vc]->isInState(ACTIVE_, release_time));
     m_out_vc_state[vc]->setState(IDLE_, release_time);
-    scheduleEvent(1);
+    scheduleEvent(Cycles(1));
 }
 
 // Looking for a free output vc
@@ -270,7 +270,7 @@ NetworkInterface::wakeup()
                     m_id, m_net_ptr->curCycle());
 
             outNode_ptr[t_flit->get_vnet()]->enqueue(
-                t_flit->get_msg_ptr(), 1);
+                t_flit->get_msg_ptr(), Cycles(1));
 
             // signal the upstream router that this vc can be freed now
             inNetLink->release_vc_link(t_flit->get_vc(),
@@ -316,7 +316,7 @@ NetworkInterface::scheduleOutputLink()
                 outSrcQueue->insert(t_flit);
 
                 // schedule the out link
-                outNetLink->scheduleEvent(1);
+                outNetLink->scheduleEvent(Cycles(1));
                 return;
             }
         }
@@ -328,13 +328,13 @@ NetworkInterface::checkReschedule()
 {
     for (int vnet = 0; vnet < m_virtual_networks; vnet++) {
         if (inNode_ptr[vnet]->isReady()) { // Is there a message waiting
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             return;
         }
     }
     for (int vc = 0; vc < m_num_vcs; vc++) {
         if (m_ni_buffers[vc]->isReadyForNext(m_net_ptr->curCycle())) {
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             return;
         }
     }

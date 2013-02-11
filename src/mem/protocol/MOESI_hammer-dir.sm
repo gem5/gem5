@@ -37,7 +37,7 @@ machine(Directory, "AMD Hammer-like protocol")
 : DirectoryMemory * directory,
   CacheMemory * probeFilter,
   MemoryControl * memBuffer,
-  int memory_controller_latency = 2,
+  Cycles memory_controller_latency = 2,
   bool probe_filter_enabled = false,
   bool full_bit_dir_enabled = false
 {

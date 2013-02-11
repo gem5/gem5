@@ -47,7 +47,7 @@ class InfixOperatorExprAST(ExprAST):
         rtype = self.right.generate(rcode)
 
         # Figure out what the input and output types should be
-        if self.op in ("==", "!="):
+        if self.op in ("==", "!=", ">=", "<=", ">", "<"):
             output = "bool"
             if (ltype != rtype):
                 self.error("Type mismatch: left and right operands of " +
@@ -55,30 +55,35 @@ class InfixOperatorExprAST(ExprAST):
                            "left: '%s', right: '%s'",
                            self.op, ltype, rtype)
         else:
+            expected_types = []
+            output = None
+
             if self.op in ("&&", "||"):
                 # boolean inputs and output
-                inputs = "bool"
-                output = "bool"
-            elif self.op in ("==", "!=", ">=", "<=", ">", "<"):
-                # Integer inputs, boolean output
-                inputs = "int"
-                output = "bool"
+                expected_types = [("bool", "bool", "bool")]
+            elif self.op in ("<<", ">>"):
+                expected_types = [("int", "int", "int"),
+                                  ("Cycles", "int", "Cycles")]
+            elif self.op in ("+", "-", "*", "/"):
+                expected_types = [("int", "int", "int"),
+                                  ("Time", "Time", "Time"),
+                                  ("Cycles", "Cycles", "Cycles"),
+                                  ("Cycles", "int", "Cycles"),
+                                  ("int", "Cycles", "Cycles")]
             else:
-                # integer inputs and output
-                inputs = "int"
-                output = "int"
+                self.error("No operator matched with {0}!" .format(self.op))
 
-            inputs_type = self.symtab.find(inputs, Type)
+            for expected_type in expected_types:
+                left_input_type = self.symtab.find(expected_type[0], Type)
+                right_input_type = self.symtab.find(expected_type[1], Type)
 
-            if inputs_type != ltype:
-                self.left.error("Type mismatch: left operand of operator " +
-                                "'%s' expects type '%s', actual was '%s'",
-                                self.op, inputs, ltype)
+                if (left_input_type == ltype) and (right_input_type == rtype):
+                    output = expected_type[2]
 
-            if inputs_type != rtype:
-                self.right.error("Type mismatch: right operand of operator " +
-                                 "'%s' expects type '%s', actual was '%s'",
-                                 self.op, inputs, rtype)
+            if output == None:
+                self.error("Type mismatch: operands ({0}, {1}) for operator " \
+                           "'{2}' failed to match with the expected types" .
+                           format(ltype, rtype, self.op))
 
         # All is well
         fix = code.nofix()

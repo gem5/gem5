@@ -37,9 +37,8 @@
 
 #include "debug/RubySlicc.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/packet.hh"
 
 inline int
 random(int n)
@@ -52,6 +51,8 @@ zero_time()
 {
     return 0;
 }
+
+inline Cycles TimeToCycles(Time t) { return Cycles(t); }
 
 inline NodeID
 intToID(int nodenum)

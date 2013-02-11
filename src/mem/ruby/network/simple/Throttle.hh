@@ -52,10 +52,10 @@ class MessageBuffer;
 class Throttle : public Consumer
 {
   public:
-    Throttle(int sID, NodeID node, int link_latency,
+    Throttle(int sID, NodeID node, Cycles link_latency,
              int link_bandwidth_multiplier, int endpoint_bandwidth,
              ClockedObject *em);
-    Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier,
+    Throttle(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
              int endpoint_bandwidth, ClockedObject *em);
     ~Throttle() {}
 
@@ -70,13 +70,10 @@ class Throttle : public Consumer
     void clearStats();
     // The average utilization (a percent) since last clearStats()
     double getUtilization() const;
-    int
-    getLinkBandwidth() const
-    {
-        return m_endpoint_bandwidth * m_link_bandwidth_multiplier;
-    }
-    int getLatency() const { return m_link_latency; }
+    int getLinkBandwidth() const
+    { return m_endpoint_bandwidth * m_link_bandwidth_multiplier; }
 
+    Cycles getLatency() const { return m_link_latency; }
     const std::vector<std::vector<int> >&
     getCounters() const
     {
@@ -88,7 +85,7 @@ class Throttle : public Consumer
     void print(std::ostream& out) const;
 
   private:
-    void init(NodeID node, int link_latency, int link_bandwidth_multiplier,
+    void init(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
               int endpoint_bandwidth);
     void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr,
         ClockedObject *em);
@@ -106,7 +103,7 @@ class Throttle : public Consumer
     int m_sID;
     NodeID m_node;
     int m_link_bandwidth_multiplier;
-    int m_link_latency;
+    Cycles m_link_latency;
     int m_wakeups_wo_switch;
     int m_endpoint_bandwidth;
 

@@ -37,7 +37,8 @@ machine(L1Cache, "Directory protocol")
    CacheMemory * L1IcacheMemory,
    CacheMemory * L1DcacheMemory,
    int l2_select_num_bits,
-   int request_latency = 2,
+   Cycles request_latency = 2,
+   Cycles use_timeout_latency = 50,
    bool send_evictions
 {
 
@@ -696,7 +697,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(o_scheduleUseTimeout, "oo", desc="Schedule a use timeout.") {
-    useTimerTable.set(address, 50);
+    useTimerTable.set(address, use_timeout_latency);
   }
 
   action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {

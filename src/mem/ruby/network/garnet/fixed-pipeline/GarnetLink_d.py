@@ -37,7 +37,7 @@ class NetworkLink_d(ClockedObject):
     type = 'NetworkLink_d'
     cxx_header = "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
     link_id = Param.Int(Parent.link_id, "link id")
-    link_latency = Param.Int(Parent.latency, "link latency")
+    link_latency = Param.Cycles(Parent.latency, "link latency")
     vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
                               "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,

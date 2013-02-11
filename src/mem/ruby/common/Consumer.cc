@@ -29,13 +29,14 @@
 #include "mem/ruby/common/Consumer.hh"
 
 void
-Consumer::scheduleEvent(Time timeDelta)
+Consumer::scheduleEvent(Cycles timeDelta)
 {
-    scheduleEventAbsolute(timeDelta + em->curCycle());
+    timeDelta += em->curCycle();
+    scheduleEventAbsolute(timeDelta);
 }
 
 void
-Consumer::scheduleEventAbsolute(Time timeAbs)
+Consumer::scheduleEventAbsolute(Cycles timeAbs)
 {
     Tick evt_time = em->clockPeriod() * timeAbs;
     if (!alreadyScheduled(evt_time)) {

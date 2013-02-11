@@ -48,7 +48,7 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 
 static int network_message_to_size(NetworkMessage* net_msg_ptr);
 
-Throttle::Throttle(int sID, NodeID node, int link_latency,
+Throttle::Throttle(int sID, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
                    ClockedObject *em)
     : Consumer(em)
@@ -57,7 +57,7 @@ Throttle::Throttle(int sID, NodeID node, int link_latency,
     m_sID = sID;
 }
 
-Throttle::Throttle(NodeID node, int link_latency,
+Throttle::Throttle(NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
                    ClockedObject *em)
     : Consumer(em)
@@ -67,8 +67,8 @@ Throttle::Throttle(NodeID node, int link_latency,
 }
 
 void
-Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier, 
-               int endpoint_bandwidth)
+Throttle::init(NodeID node, Cycles link_latency,
+               int link_bandwidth_multiplier, int endpoint_bandwidth)
 {
     m_node = node;
     m_vnets = 0;
@@ -222,7 +222,7 @@ Throttle::wakeup()
 
         // We are out of bandwidth for this cycle, so wakeup next
         // cycle and continue
-        scheduleEvent(1);
+        scheduleEvent(Cycles(1));
     }
 }
 

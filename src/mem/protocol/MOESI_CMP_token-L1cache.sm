@@ -38,10 +38,14 @@ machine(L1Cache, "Token protocol")
    CacheMemory * L1DcacheMemory,
    int l2_select_num_bits,
    int N_tokens,
-   int l1_request_latency = 2,
-   int l1_response_latency = 2,
+
+   Cycles l1_request_latency = 2,
+   Cycles l1_response_latency = 2,
    int retry_threshold = 1,
-   int fixed_timeout_latency = 100,
+   Cycles fixed_timeout_latency = 100,
+   Cycles reissue_wakeup_latency = 10,
+   Cycles use_timeout_latency = 50,
+
    bool dynamic_timeout_enabled = true,
    bool no_mig_atomic = true,
    bool send_evictions
@@ -195,19 +199,20 @@ machine(L1Cache, "Token protocol")
   int outstandingRequests, default="0";
   int outstandingPersistentRequests, default="0";
 
-  int averageLatencyHysteresis, default="(8)"; // Constant that provides hysteresis for calculated the estimated average
-  int averageLatencyCounter, default="(500 << (*m_L1Cache_averageLatencyHysteresis_ptr))";
+  // Constant that provides hysteresis for calculated the estimated average
+  int averageLatencyHysteresis, default="(8)";
+  Cycles averageLatencyCounter,
+        default="(Cycles(500) << (*m_L1Cache_averageLatencyHysteresis_ptr))";
 
-  int averageLatencyEstimate() {
+  Cycles averageLatencyEstimate() {
     DPRINTF(RubySlicc, "%d\n",
             (averageLatencyCounter >> averageLatencyHysteresis));
     //profile_average_latency_estimate( (averageLatencyCounter >> averageLatencyHysteresis) );
     return averageLatencyCounter >> averageLatencyHysteresis;
   }
 
-  void updateAverageLatencyEstimate(int latency) {
+  void updateAverageLatencyEstimate(Cycles latency) {
     DPRINTF(RubySlicc, "%d\n", latency);
-    assert(latency >= 0);
 
     // By subtracting the current average and then adding the most
     // recent sample, we calculate an estimate of the recent average.
@@ -781,7 +786,7 @@ machine(L1Cache, "Token protocol")
           // IssueCount.
 
           // Set a wakeup timer
-          reissueTimerTable.set(address, 10);
+          reissueTimerTable.set(address, reissue_wakeup_latency);
 
         }
       } else {
@@ -834,7 +839,7 @@ machine(L1Cache, "Token protocol")
         // Set a wakeup timer
 
         if (dynamic_timeout_enabled) {
-          reissueTimerTable.set(address, 1.25 * averageLatencyEstimate());
+          reissueTimerTable.set(address, (5 * averageLatencyEstimate()) / 4);
         } else {
           reissueTimerTable.set(address, fixed_timeout_latency);
         }
@@ -902,9 +907,8 @@ machine(L1Cache, "Token protocol")
           // IssueCount.
 
           // Set a wakeup timer
-          reissueTimerTable.set(address, 10);
+          reissueTimerTable.set(address, reissue_wakeup_latency);
         }
-
 
       } else  {
         // Make a normal request
@@ -961,7 +965,7 @@ machine(L1Cache, "Token protocol")
 
         // Set a wakeup timer
         if (dynamic_timeout_enabled) {
-          reissueTimerTable.set(address, 1.25 * averageLatencyEstimate());
+          reissueTimerTable.set(address, (5 * averageLatencyEstimate()) / 4);
         } else {
           reissueTimerTable.set(address, fixed_timeout_latency);
         }
@@ -1381,7 +1385,7 @@ machine(L1Cache, "Token protocol")
   }
 
   action(o_scheduleUseTimeout, "o", desc="Schedule a use timeout.") {
-    useTimerTable.set(address, 50);
+    useTimerTable.set(address, use_timeout_latency);
   }
 
   action(p_informL2AboutTokenLoss, "p", desc="Inform L2 about loss of all tokens") {
@@ -1448,7 +1452,7 @@ machine(L1Cache, "Token protocol")
     // Update average latency
     if (tbe.IssueCount <= 1) {
       if (tbe.ExternalResponse == true) {
-        updateAverageLatencyEstimate(time_to_int(curCycle()) - time_to_int(tbe.IssueTime));
+        updateAverageLatencyEstimate(TimeToCycles(curCycle() - tbe.IssueTime));
       }
     }
 

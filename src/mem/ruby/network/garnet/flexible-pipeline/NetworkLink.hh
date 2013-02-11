@@ -81,7 +81,8 @@ class NetworkLink : public ClockedObject, public FlexibleConsumer
     uint32_t functionalWrite(Packet *);
 
   protected:
-    int m_id, m_latency;
+    int m_id;
+    Cycles m_latency;
     int m_in_port, m_out_port;
     int m_link_utilized;
     std::vector<int> m_vc_load;

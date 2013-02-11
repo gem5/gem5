@@ -52,8 +52,6 @@ class AbstractCacheEntry : public AbstractEntry
     void changePermission(AccessPermission new_perm);
 
     Address m_Address; // Address of this block, required by CacheMemory
-    Time m_LastRef; // Last time this block was referenced, required
-                    // by CacheMemory
     int m_locked; // Holds info whether the address is locked,
                   // required for implementing LL/SC
 };

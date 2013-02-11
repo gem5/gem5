@@ -90,7 +90,7 @@ Switch_d::check_for_wakeup()
 {
     for (int inport = 0; inport < m_num_inports; inport++) {
         if (m_switch_buffer[inport]->isReadyForNext(m_router->curCycle())) {
-            scheduleEvent(1);
+            scheduleEvent(Cycles(1));
             break;
         }
     }

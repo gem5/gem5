@@ -72,7 +72,7 @@ class WireBuffer : public SimObject
     void setDescription(const std::string& name) { m_description = name; };
     std::string getDescription() { return m_description; };
 
-    void enqueue(MsgPtr message, int latency );
+    void enqueue(MsgPtr message, Cycles latency);
     void dequeue();
     const Message* peek();
     MessageBufferNode peekNode();

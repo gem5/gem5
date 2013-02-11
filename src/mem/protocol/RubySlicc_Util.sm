@@ -33,6 +33,7 @@ void error(std::string msg);
 void assert(bool condition);
 int random(int number);
 Time zero_time();
+Cycles TimeToCycles(Time t);
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
 int time_to_int(Time time);

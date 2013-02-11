@@ -92,7 +92,7 @@ class CacheMemory : public SimObject
     AbstractCacheEntry* lookup(const Address& address);
     const AbstractCacheEntry* lookup(const Address& address) const;
 
-    int getLatency() const { return m_latency; }
+    Cycles getLatency() const { return m_latency; }
 
     // Hook for checkpointing the contents of the cache
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
@@ -144,7 +144,7 @@ class CacheMemory : public SimObject
 
   private:
     const std::string m_cache_name;
-    int m_latency;
+    Cycles m_latency;
 
     // Data Members (m_prefix)
     bool m_is_instruction_only_cache;

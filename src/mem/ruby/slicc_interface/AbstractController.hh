@@ -106,7 +106,7 @@ class AbstractController : public ClockedObject, public Consumer
   protected:
     int m_transitions_per_cycle;
     int m_buffer_size;
-    int m_recycle_latency;
+    Cycles m_recycle_latency;
     std::string m_name;
     NodeID m_version;
     Network* m_net_ptr;

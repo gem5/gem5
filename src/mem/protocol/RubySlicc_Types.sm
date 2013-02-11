@@ -171,7 +171,7 @@ structure (DMASequencer, external = "yes") {
 structure (TimerTable, inport="yes", external = "yes") {
   bool isReady();
   Address readyAddress();
-  void set(Address, int);
+  void set(Address, Cycles);
   void unset(Address);
   bool isSet(Address);
 }

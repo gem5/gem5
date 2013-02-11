@@ -34,8 +34,8 @@
 
 machine(L2Cache, "Token protocol") 
 : CacheMemory * L2cacheMemory,
-  int response_latency = 2, 
-  int request_latency = 2
+  Cycles response_latency = 2, 
+  Cycles request_latency = 2
 {
 
   // L2 BANK QUEUES

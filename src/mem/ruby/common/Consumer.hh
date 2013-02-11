@@ -38,7 +38,6 @@
 #include <iostream>
 #include <set>
 
-#include "mem/ruby/common/TypeDefines.hh"
 #include "sim/clocked_object.hh"
 
 class Consumer
@@ -88,8 +87,8 @@ class Consumer
         m_scheduled_wakeups.erase(time);
     }
 
-    void scheduleEvent(Time timeDelta);
-    void scheduleEventAbsolute(Time timeAbs);
+    void scheduleEvent(Cycles timeDelta);
+    void scheduleEventAbsolute(Cycles timeAbs);
 
   private:
     Tick m_last_scheduled_wakeup;

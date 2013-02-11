@@ -374,10 +374,10 @@ RubyMemoryControl::printStats(ostream& out) const
 
 // Queue up a completed request to send back to directory
 void
-RubyMemoryControl::enqueueToDirectory(MemoryNode req, int latency)
+RubyMemoryControl::enqueueToDirectory(MemoryNode req, Cycles latency)
 {
     Time arrival_time = curTick() + (latency * clock);
-    Time ruby_arrival_time = arrival_time / g_system_ptr->clockPeriod();
+    Cycles ruby_arrival_time = g_system_ptr->ticksToCycles(arrival_time);
     req.m_time = ruby_arrival_time;
     m_response_queue.push_back(req);
 

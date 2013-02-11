@@ -66,12 +66,13 @@ TimerTable::readyAddress() const
 }
 
 void
-TimerTable::set(const Address& address, Time relative_latency)
+TimerTable::set(const Address& address, Cycles relative_latency)
 {
     assert(address == line_address(address));
     assert(relative_latency > 0);
     assert(!m_map.count(address));
-    Time ready_time = m_clockobj_ptr->curCycle() + relative_latency;
+
+    Cycles ready_time = m_clockobj_ptr->curCycle() + relative_latency;
     m_map[address] = ready_time;
     assert(m_consumer_ptr != NULL);
     m_consumer_ptr->scheduleEventAbsolute(ready_time);

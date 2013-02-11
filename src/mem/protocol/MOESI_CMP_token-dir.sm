@@ -36,9 +36,10 @@ machine(Directory, "Token protocol")
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
    int l2_select_num_bits,
-   int directory_latency = 5,
+   Cycles directory_latency = 5,
    bool distributed_persistent = true,
-   int fixed_timeout_latency = 100
+   Cycles fixed_timeout_latency = 100,
+   Cycles reissue_wakeup_latency = 10
 {
 
   MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true", vnet_type="response";
@@ -470,7 +471,7 @@ machine(Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, 10);
+      reissueTimerTable.set(address, reissue_wakeup_latency);
     }
   }
 
@@ -540,7 +541,7 @@ machine(Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, 10);
+      reissueTimerTable.set(address, reissue_wakeup_latency);
     }
   }
 

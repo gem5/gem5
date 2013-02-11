@@ -220,7 +220,7 @@ SWallocator_d::check_for_wakeup()
         for (int j = 0; j < m_num_vcs; j++) {
             if (m_input_unit[i]->need_stage_nextcycle(j, ACTIVE_, SA_,
                                                       m_router->curCycle())) {
-                scheduleEvent(1);
+                scheduleEvent(Cycles(1));
                 return;
             }
         }

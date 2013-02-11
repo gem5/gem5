@@ -30,7 +30,7 @@
 machine(Directory, "Directory protocol") 
 : DirectoryMemory * directory,
   MemoryControl * memBuffer,
-  int directory_latency = 12
+  Cycles directory_latency = 12
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false", vnet_type="forward";

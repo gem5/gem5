@@ -54,11 +54,8 @@ class MessageBuffer
 
     std::string name() const { return m_name; }
 
-    void
-    setRecycleLatency(int recycle_latency)
-    {
-        m_recycle_latency = recycle_latency;
-    }
+    void setRecycleLatency(Cycles recycle_latency)
+    { m_recycle_latency = recycle_latency; }
 
     void reanalyzeMessages(const Address& addr);
     void reanalyzeAllMessages();
@@ -74,7 +71,7 @@ class MessageBuffer
         std::pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
                       std::greater<MessageBufferNode>());
         m_prio_heap.pop_back();
-        enqueue(node.m_msgptr, 1);
+        enqueue(node.m_msgptr, Cycles(1));
     }
 
     bool areNSlotsAvailable(int n);
@@ -114,8 +111,8 @@ class MessageBuffer
         return m_prio_heap.front().m_msgptr;
     }
 
-    void enqueue(MsgPtr message) { enqueue(message, 1); }
-    void enqueue(MsgPtr message, Time delta);
+    void enqueue(MsgPtr message) { enqueue(message, Cycles(1)); }
+    void enqueue(MsgPtr message, Cycles delta);
 
     //!  returns delay ticks of the message.
     Time dequeue_getDelayCycles(MsgPtr& message);
@@ -160,7 +157,7 @@ class MessageBuffer
 
   private:
     //added by SS
-    int m_recycle_latency;
+    Cycles m_recycle_latency;
 
     // Private Methods
     Time setAndReturnDelayCycles(MsgPtr message);
@@ -204,7 +201,8 @@ class MessageBuffer
     bool m_strict_fifo;
     bool m_ordering_set;
     bool m_randomization;
-    Time m_last_arrival_time;
+
+    Cycles m_last_arrival_time;
 
     int m_input_link_id;
     int m_vnet_id;

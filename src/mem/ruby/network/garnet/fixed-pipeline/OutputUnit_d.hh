@@ -84,7 +84,7 @@ class OutputUnit_d : public Consumer
     insert_flit(flit_d *t_flit)
     {
         m_out_buffer->insert(t_flit);
-        m_out_link->scheduleEvent(1);
+        m_out_link->scheduleEvent(Cycles(1));
     }
 
   private:

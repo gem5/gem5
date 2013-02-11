@@ -38,9 +38,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
   CacheMemory * L1IcacheMemory,
   CacheMemory * L1DcacheMemory,
   CacheMemory * L2cacheMemory,
-  int cache_response_latency = 10,
-  int issue_latency = 2,
-  int l2_cache_hit_latency = 10,
+  Cycles cache_response_latency = 10,
+  Cycles issue_latency = 2,
+  Cycles l2_cache_hit_latency = 10,
   bool no_mig_atomic = true,
   bool send_evictions
 {

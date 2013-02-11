@@ -60,7 +60,7 @@ class Router : public BasicRouter, public FlexibleConsumer
                     int link_weight);
     void wakeup();
     void request_vc(int in_vc, int in_port, NetDest destination,
-                    Time request_time);
+                    Cycles request_time);
     bool isBufferNotFull(int vc, int inport);
     void grant_vc(int out_port, int vc, Time grant_time);
     void release_vc(int out_port, int vc, Time release_time);
