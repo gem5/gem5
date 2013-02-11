@@ -1,4 +1,4 @@
-Real time: Jan/23/2013 14:07:36
+Real time: Feb/02/2013 08:06:19
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.44
-Virtual_time_in_minutes: 0.00733333
-Virtual_time_in_hours:   0.000122222
-Virtual_time_in_days:    5.09259e-06
+Virtual_time_in_seconds: 0.39
+Virtual_time_in_minutes: 0.0065
+Virtual_time_in_hours:   0.000108333
+Virtual_time_in_days:    4.51389e-06
 
 Ruby_current_time: 221941
 Ruby_start_time: 0
 Ruby_cycles: 221941
 
-mbytes_resident: 49.4375
-mbytes_total: 270.48
-resident_ratio: 0.18282
+mbytes_resident: 49.5742
+mbytes_total: 265.59
+resident_ratio: 0.186701
 
 ruby_cycles_executed: [ 221942 ]
 
@@ -68,7 +68,6 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 Message Delayed Cycles
 ----------------------
 Total_delay_cycles: [binsize: 1 max: 12 count: 1828 average: 0.280088 | standard deviation: 1.03285 | 1658 32 43 46 23 10 9 2 2 2 0 0 1 ]
-Total_nonPF_delay_cycles: [binsize: 1 max: 12 count: 1828 average: 0.280088 | standard deviation: 1.03285 | 1658 32 43 46 23 10 9 2 2 2 0 0 1 ]
   virtual_network_0_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_1_delay_cycles: [binsize: 1 max: 7 count: 916 average: 0.265284 | standard deviation: 0.915561 | 824 19 30 28 3 6 4 2 ]
   virtual_network_2_delay_cycles: [binsize: 1 max: 12 count: 912 average: 0.294956 | standard deviation: 1.13907 | 834 13 13 18 20 4 5 0 2 2 0 0 1 ]
@@ -85,10 +84,10 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10370
+page_reclaims: 9328
 page_faults: 0
 swaps: 0
-block_inputs: 24
+block_inputs: 0
 block_outputs: 80
 
 Network Stats

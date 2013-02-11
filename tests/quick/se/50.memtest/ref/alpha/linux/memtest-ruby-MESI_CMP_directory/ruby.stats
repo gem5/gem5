@@ -1,24 +1,24 @@
-Real time: Jan/14/2013 08:21:52
+Real time: Feb/02/2013 08:15:30
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 101
-Elapsed_time_in_minutes: 1.68333
-Elapsed_time_in_hours: 0.0280556
-Elapsed_time_in_days: 0.00116898
+Elapsed_time_in_seconds: 82
+Elapsed_time_in_minutes: 1.36667
+Elapsed_time_in_hours: 0.0227778
+Elapsed_time_in_days: 0.000949074
 
-Virtual_time_in_seconds: 101.26
-Virtual_time_in_minutes: 1.68767
-Virtual_time_in_hours:   0.0281278
-Virtual_time_in_days:    0.00117199
+Virtual_time_in_seconds: 80.54
+Virtual_time_in_minutes: 1.34233
+Virtual_time_in_hours:   0.0223722
+Virtual_time_in_days:    0.000932176
 
 Ruby_current_time: 7257449
 Ruby_start_time: 0
 Ruby_cycles: 7257449
 
-mbytes_resident: 71.9961
-mbytes_total: 416.859
-resident_ratio: 0.172739
+mbytes_resident: 71.4336
+mbytes_total: 411.711
+resident_ratio: 0.173542
 
 ruby_cycles_executed: [ 7257450 7257450 7257450 7257450 7257450 7257450 7257450 7257450 ]
 
@@ -64,9 +64,8 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 
 Message Delayed Cycles
 ----------------------
-Total_delay_cycles: [binsize: 32 max: 952 count: 4856797 average: 43.4082 | standard deviation: 104.144 | 4025692 47689 64638 48612 56875 68710 62101 82292 81634 76798 75935 59926 43791 30096 16740 8442 4032 1777 627 240 88 19 15 14 2 5 2 1 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-Total_nonPF_delay_cycles: [binsize: 1 max: 36 count: 3321263 average: 1.55988 | standard deviation: 2.57192 | 1930762 349994 185654 210176 241672 152349 65086 47928 47954 34218 19014 9882 6194 6282 5704 2510 1391 1016 946 803 506 250 194 322 184 92 54 43 40 21 9 2 6 3 0 0 2 ]
-  virtual_network_0_delay_cycles: [binsize: 32 max: 952 count: 1535534 average: 133.924 | standard deviation: 149.364 | 704440 47678 64638 48612 56875 68710 62101 82292 81634 76798 75935 59926 43791 30096 16740 8442 4032 1777 627 240 88 19 15 14 2 5 2 1 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+Total_delay_cycles: [binsize: 32 max: 952 count: 4856797 average: 43.4082 | standard deviation: 104.144 | 4025692 47689 64638 48612 56875 68710 62101 82292 81634 76798 75935 59926 43791 30096 16740 8442 4032 1777 627 240 88 19 15 14 2 5 2 1 2 2 ]
+  virtual_network_0_delay_cycles: [binsize: 32 max: 952 count: 1535534 average: 133.924 | standard deviation: 149.364 | 704440 47678 64638 48612 56875 68710 62101 82292 81634 76798 75935 59926 43791 30096 16740 8442 4032 1777 627 240 88 19 15 14 2 5 2 1 2 2 ]
   virtual_network_1_delay_cycles: [binsize: 1 max: 25 count: 2729880 average: 1.39963 | standard deviation: 2.33339 | 1665086 261419 142358 182063 191213 107497 51010 39587 36260 24170 11876 5896 4335 3537 1939 669 358 307 184 52 28 21 11 2 1 1 ]
   virtual_network_2_delay_cycles: [binsize: 1 max: 36 count: 591383 average: 2.29961 | standard deviation: 3.36899 | 265676 88575 43296 28113 50459 44852 14076 8341 11694 10048 7138 3986 1859 2745 3765 1841 1033 709 762 751 478 229 183 320 183 91 54 43 40 21 9 2 6 3 0 0 2 ]
   virtual_network_3_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
@@ -80,9 +79,9 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 36 count: 3321263 average: 1.55988 | 
 Resource Usage
 --------------
 page_size: 4096
-user_time: 101
+user_time: 80
 system_time: 0
-page_reclaims: 9902
+page_reclaims: 10252
 page_faults: 0
 swaps: 0
 block_inputs: 0

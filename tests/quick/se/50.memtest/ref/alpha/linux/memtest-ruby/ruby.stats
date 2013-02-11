@@ -1,24 +1,24 @@
-Real time: Jan/23/2013 14:04:13
+Real time: Feb/02/2013 08:07:46
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 79
-Elapsed_time_in_minutes: 1.31667
-Elapsed_time_in_hours: 0.0219444
-Elapsed_time_in_days: 0.000914352
+Elapsed_time_in_seconds: 77
+Elapsed_time_in_minutes: 1.28333
+Elapsed_time_in_hours: 0.0213889
+Elapsed_time_in_days: 0.000891204
 
-Virtual_time_in_seconds: 47.52
-Virtual_time_in_minutes: 0.792
-Virtual_time_in_hours:   0.0132
-Virtual_time_in_days:    0.00055
+Virtual_time_in_seconds: 37.08
+Virtual_time_in_minutes: 0.618
+Virtual_time_in_hours:   0.0103
+Virtual_time_in_days:    0.000429167
 
 Ruby_current_time: 8664886
 Ruby_start_time: 0
 Ruby_cycles: 8664886
 
-mbytes_resident: 71.0234
-mbytes_total: 415.48
-resident_ratio: 0.170971
+mbytes_resident: 70.5195
+mbytes_total: 410.59
+resident_ratio: 0.17178
 
 ruby_cycles_executed: [ 8664887 8664887 8664887 8664887 8664887 8664887 8664887 8664887 ]
 
@@ -67,7 +67,6 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 Message Delayed Cycles
 ----------------------
 Total_delay_cycles: [binsize: 1 max: 22 count: 1237687 average: 0.00723931 | standard deviation: 0.160084 | 1234218 929 781 837 896 2 1 1 0 0 1 0 1 1 3 0 5 8 2 0 0 0 1 ]
-Total_nonPF_delay_cycles: [binsize: 1 max: 22 count: 1237687 average: 0.00723931 | standard deviation: 0.160084 | 1234218 929 781 837 896 2 1 1 0 0 1 0 1 1 3 0 5 8 2 0 0 0 1 ]
   virtual_network_0_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_1_delay_cycles: [binsize: 1 max: 4 count: 617552 average: 0.00101044 | standard deviation: 0.0517838 | 617290 38 102 106 16 ]
   virtual_network_2_delay_cycles: [binsize: 1 max: 22 count: 620135 average: 0.0134422 | standard deviation: 0.219998 | 616928 891 679 731 880 2 1 1 0 0 1 0 1 1 3 0 5 8 2 0 0 0 1 ]
@@ -82,13 +81,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 22 count: 1237687 average: 0.00723931
 Resource Usage
 --------------
 page_size: 4096
-user_time: 47
+user_time: 36
 system_time: 0
-page_reclaims: 10782
+page_reclaims: 10596
 page_faults: 0
 swaps: 0
-block_inputs: 16
-block_outputs: 720
+block_inputs: 0
+block_outputs: 240
 
 Network Stats
 -------------
