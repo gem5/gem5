@@ -72,7 +72,6 @@ RubySystem::RubySystem(const Params *p)
         m_memory_size_bits = ceilLog2(m_memory_size_bytes);
     }
 
-    g_system_ptr = this;
     if (p->no_mem_vec) {
         m_mem_vec_ptr = NULL;
     } else {
@@ -86,6 +85,12 @@ RubySystem::RubySystem(const Params *p)
 
     m_warmup_enabled = false;
     m_cooldown_enabled = false;
+
+    // Setup the global variables used in Ruby
+    g_system_ptr = this;
+
+    // Resize to the size of different machine types
+    g_abs_controls.resize(MachineType_NUM);
 }
 
 void
@@ -111,6 +116,9 @@ void
 RubySystem::registerAbstractController(AbstractController* cntrl)
 {
   m_abs_cntrl_vec.push_back(cntrl);
+
+  MachineID id = cntrl->getMachineID();
+  g_abs_controls[id.getType()][id.getNum()] = cntrl;
 }
 
 void
@@ -144,6 +152,15 @@ RubySystem::printStats(ostream& out)
 
     m_profiler_ptr->printStats(out);
     m_network_ptr->printStats(out);
+
+    for (uint32_t i = 0;i < g_abs_controls.size(); ++i) {
+        for (map<uint32_t, AbstractController *>::iterator it =
+                g_abs_controls[i].begin();
+             it != g_abs_controls[i].end(); ++it) {
+
+            ((*it).second)->printStats(out);
+        }
+    }
 }
 
 void
@@ -397,6 +414,9 @@ RubySystem::resetStats()
 {
     m_profiler_ptr->clearStats();
     m_network_ptr->clearStats();
+    for (uint32_t cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        m_abs_cntrl_vec[cntrl]->clearStats();
+    }
 }
 
 bool

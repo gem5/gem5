@@ -171,6 +171,9 @@ class Profiler : public SimObject
     bool getAllInstructions() { return m_all_instructions; }
 
   private:
+    void printRequestProfile(std::ostream &out);
+
+  private:
     // Private copy constructor and assignment operator
     Profiler(const Profiler& obj);
     Profiler& operator=(const Profiler& obj);
@@ -187,7 +190,6 @@ class Profiler : public SimObject
     Time m_ruby_start;
     time_t m_real_time_start_time;
 
-    std::vector<std::vector<int64_t> > m_busyControllerCount;
     int64_t m_busyBankCount;
     Histogram m_multicast_retry_histogram;
 
@@ -234,9 +236,6 @@ class Profiler : public SimObject
     Histogram m_average_latency_estimate;
 
     m5::hash_set<Address> m_watch_address_set;
-    // counts all initiated cache request including PUTs
-    int m_requests;
-    std::map<std::string, int> m_requestProfileMap;
 
     //added by SS
     bool m_hot_lines;

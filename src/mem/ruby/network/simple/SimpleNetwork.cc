@@ -304,7 +304,6 @@ SimpleNetwork::printStats(ostream& out) const
     for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
         m_switch_ptr_vector[i]->printStats(out);
     }
-    m_topology_ptr->printStats(out);
 }
 
 void
@@ -313,7 +312,6 @@ SimpleNetwork::clearStats()
     for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
         m_switch_ptr_vector[i]->clearStats();
     }
-    m_topology_ptr->clearStats();
 }
 
 void

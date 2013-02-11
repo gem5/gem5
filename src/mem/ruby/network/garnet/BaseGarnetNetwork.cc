@@ -146,7 +146,6 @@ BaseGarnetNetwork::printStats(ostream& out) const
     printPerformanceStats(out);
     printLinkStats(out);
     printPowerStats(out);
-    m_topology_ptr->printStats(out);
 }
 
 void

@@ -36,16 +36,6 @@
 using namespace std;
 
 void
-profile_request(const string& L1CacheState, const string& L2CacheState,
-                const string& directoryState, const string& requestType)
-{
-    string requestStr = L1CacheState + ":" + L2CacheState + ":" +
-        directoryState + ":" + requestType;
-
-    g_system_ptr->getProfiler()->profileRequest(requestStr);
-}
-
-void
 profile_outstanding_request(int outstanding)
 {
     g_system_ptr->getProfiler()->profileOutstandingRequest(outstanding);

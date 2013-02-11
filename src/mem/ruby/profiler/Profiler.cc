@@ -171,6 +171,59 @@ Profiler::print(ostream& out) const
 }
 
 void
+Profiler::printRequestProfile(ostream &out)
+{
+    out << "Request vs. RubySystem State Profile" << endl;
+    out << "--------------------------------" << endl;
+    out << endl;
+
+    map<string, uint64_t> m_requestProfileMap;
+    uint64_t m_requests = 0;
+
+    for (uint32_t i = 0; i < MachineType_NUM; i++) {
+        for (map<uint32_t, AbstractController*>::iterator it =
+                  g_abs_controls[i].begin();
+             it != g_abs_controls[i].end(); ++it) {
+
+            AbstractController *ctr = (*it).second;
+            map<string, uint64_t> mp = ctr->getRequestProfileMap();
+
+            for (map<string, uint64_t>::iterator jt = mp.begin();
+                 jt != mp.end(); ++jt) {
+
+                map<string, uint64_t>::iterator kt =
+                    m_requestProfileMap.find((*jt).first);
+                if (kt != m_requestProfileMap.end()) {
+                    (*kt).second += (*jt).second;
+                } else {
+                    m_requestProfileMap[(*jt).first] = (*jt).second;
+                }
+            }
+
+            m_requests += ctr->getRequestCount();
+        }
+    }
+
+    map<string, uint64_t>::const_iterator i = m_requestProfileMap.begin();
+    map<string, uint64_t>::const_iterator end = m_requestProfileMap.end();
+    for (; i != end; ++i) {
+        const string &key = i->first;
+        uint64_t count = i->second;
+
+        double percent = (100.0 * double(count)) / double(m_requests);
+        vector<string> items;
+        tokenize(items, key, ':');
+        vector<string>::iterator j = items.begin();
+        vector<string>::iterator end = items.end();
+        for (; j != end; ++i)
+            out << setw(10) << *j;
+        out << setw(11) << count;
+        out << setw(14) << percent << endl;
+    }
+    out << endl;
+}
+
+void
 Profiler::printStats(ostream& out, bool short_stats)
 {
     out << endl;
@@ -237,13 +290,17 @@ Profiler::printStats(ostream& out, bool short_stats)
 
     if (!short_stats) {
         out << "Busy Controller Counts:" << endl;
-        for (int i = 0; i < MachineType_NUM; i++) {
-            int size = MachineType_base_count((MachineType)i);
-            for (int j = 0; j < size; j++) {
+        for (uint32_t i = 0; i < MachineType_NUM; i++) {
+            uint32_t size = MachineType_base_count((MachineType)i);
+
+            for (uint32_t j = 0; j < size; j++) {
                 MachineID machID;
                 machID.type = (MachineType)i;
                 machID.num = j;
-                out << machID << ":" << m_busyControllerCount[i][j] << "  ";
+
+                AbstractController *ctr =
+                    (*(g_abs_controls[i].find(j))).second;
+                out << machID << ":" << ctr->getFullyBusyCycles() << "  ";
                 if ((j + 1) % 8 == 0) {
                     out << endl;
                 }
@@ -365,27 +422,7 @@ Profiler::printStats(ostream& out, bool short_stats)
     }
 
     if (!short_stats) {
-        out << "Request vs. RubySystem State Profile" << endl;
-        out << "--------------------------------" << endl;
-        out << endl;
-
-        map<string, int>::const_iterator i = m_requestProfileMap.begin();
-        map<string, int>::const_iterator end = m_requestProfileMap.end();
-        for (; i != end; ++i) {
-            const string &key = i->first;
-            int count = i->second;
-
-            double percent = (100.0 * double(count)) / double(m_requests);
-            vector<string> items;
-            tokenize(items, key, ':');
-            vector<string>::iterator j = items.begin();
-            vector<string>::iterator end = items.end();
-            for (; j != end; ++i)
-                out << setw(10) << *j;
-            out << setw(11) << count;
-            out << setw(14) << percent << endl;
-        }
-        out << endl;
+        printRequestProfile(out);
 
         out << "filter_action: " << m_filter_action_histogram << endl;
 
@@ -449,14 +486,6 @@ Profiler::clearStats()
         }
     }
 
-    m_busyControllerCount.resize(MachineType_NUM); // all machines
-    for (int i = 0; i < MachineType_NUM; i++) {
-        int size = MachineType_base_count((MachineType)i);
-        m_busyControllerCount[i].resize(size);
-        for (int j = 0; j < size; j++) {
-            m_busyControllerCount[i][j] = 0;
-        }
-    }
     m_busyBankCount = 0;
 
     m_delayedCyclesHistogram.clear();
@@ -510,12 +539,6 @@ Profiler::clearStats()
     m_all_sharing_histogram.clear();
     m_cache_to_cache = 0;
     m_memory_to_cache = 0;
-
-    // clear HashMaps
-    m_requestProfileMap.clear();
-
-    // count requests profiled
-    m_requests = 0;
 
     m_outstanding_requests.clear();
     m_outstanding_persistent_requests.clear();
@@ -579,23 +602,6 @@ Profiler::profileMsgDelay(uint32_t virtualNetwork, Time delayCycles)
     if (virtualNetwork != 0) {
         m_delayedCyclesNonPFHistogram.add(delayCycles);
     }
-}
-
-// profiles original cache requests including PUTs
-void
-Profiler::profileRequest(const string& requestStr)
-{
-    m_requests++;
-
-    // if it doesn't exist, conveniently, it will be created with the
-    // default value which is 0
-    m_requestProfileMap[requestStr]++;
-}
-
-void
-Profiler::controllerBusy(MachineID machID)
-{
-    m_busyControllerCount[(int)machID.type][(int)machID.num]++;
 }
 
 void

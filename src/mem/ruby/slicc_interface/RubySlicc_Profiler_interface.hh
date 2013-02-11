@@ -46,10 +46,6 @@ void profile_outstanding_persistent_request(int outstanding);
 void profile_outstanding_request(int outstanding);
 void profile_sharing(const Address& addr, AccessType type, NodeID requestor,
                      const Set& sharers, const Set& owner);
-void profile_request(const std::string& L1CacheStateStr,
-                     const std::string& L2CacheStateStr,
-                     const std::string& directoryStateStr,
-                     const std::string& requestTypeStr);
 void profile_miss(const RubyRequest& msg, NodeID id);
 void profile_token_retry(const Address& addr, AccessType type, int count);
 void profile_filter_action(int action);

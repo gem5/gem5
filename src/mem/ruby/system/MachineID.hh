@@ -38,7 +38,11 @@
 struct MachineID
 {
     MachineType type;
-    int num;  // range: 0 ... number of this machine's components in system - 1
+    //! range: 0 ... number of this machine's components in system - 1
+    uint32_t num;
+
+    MachineType getType() const { return type; }
+    uint32_t getNum() const { return num; }
 };
 
 inline std::string

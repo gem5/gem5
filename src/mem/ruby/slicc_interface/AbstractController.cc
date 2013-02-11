@@ -30,7 +30,8 @@
 #include "mem/ruby/system/System.hh"
 
 AbstractController::AbstractController(const Params *p)
-    : ClockedObject(p), Consumer(this)
+    : ClockedObject(p), Consumer(this), m_fully_busy_cycles(0),
+    m_request_count(0)
 {
     m_version = p->version;
     m_transitions_per_cycle = p->transitions_per_cycle;
@@ -38,5 +39,27 @@ AbstractController::AbstractController(const Params *p)
     m_recycle_latency = p->recycle_latency;
     m_number_of_TBEs = p->number_of_TBEs;
     m_is_blocking = false;
-    p->ruby_system->registerAbstractController(this);
+}
+
+void
+AbstractController::init()
+{
+    params()->ruby_system->registerAbstractController(this);
+}
+
+void
+AbstractController::clearStats()
+{
+    m_requestProfileMap.clear();
+    m_request_count = 0;
+}
+
+void
+AbstractController::profileRequest(const std::string &request)
+{
+    m_request_count++;
+
+    // if it doesn't exist, conveniently, it will be created with the
+    // default value which is 0
+    m_requestProfileMap[request]++;
 }

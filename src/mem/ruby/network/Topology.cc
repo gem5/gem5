@@ -89,8 +89,7 @@ Topology::Topology(const Params *p)
         AbstractController *abs_cntrl = ext_link->params()->ext_node;
         BasicRouter *router = ext_link->params()->int_node;
 
-        // Store the controller and ExtLink pointers for later
-        m_controller_vector.push_back(abs_cntrl);
+        // Store the ExtLink pointers for later
         m_ext_link_vector.push_back(ext_link);
 
         int ext_idx1 = abs_cntrl->params()->cntrl_id;
@@ -262,22 +261,6 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         net->makeInternalLink(src - (2 * m_nodes), dest - (2 * m_nodes),
                               link_entry.link, link_entry.direction,
                               routing_table_entry, isReconfiguration);
-    }
-}
-
-void
-Topology::printStats(std::ostream& out) const
-{
-    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
-        m_controller_vector[cntrl]->printStats(out);
-    }
-}
-
-void
-Topology::clearStats()
-{
-    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
-        m_controller_vector[cntrl]->clearStats();
     }
 }
 

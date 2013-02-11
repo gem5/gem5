@@ -78,8 +78,6 @@ class Topology : public SimObject
     void initNetworkPtr(Network* net_ptr);
 
     const std::string getName() { return m_name; }
-    void printStats(std::ostream& out) const;
-    void clearStats();
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   protected:
@@ -99,7 +97,6 @@ class Topology : public SimObject
     NodeID m_nodes;
     int m_number_of_switches;
 
-    std::vector<AbstractController*> m_controller_vector;
     std::vector<BasicExtLink*> m_ext_link_vector;
     std::vector<BasicIntLink*> m_int_link_vector;
 

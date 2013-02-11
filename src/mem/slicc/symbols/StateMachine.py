@@ -663,7 +663,11 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
                 code('m_profiler.possibleTransition($state, $event);')
 
         code.dedent()
-        code('}')
+        code('''
+    AbstractController::init();
+    clearStats();
+}
+''')
 
         has_mandatory_q = False
         for port in self.in_ports:
@@ -839,6 +843,7 @@ void $c_ident::clearStats() {
 
         code('''
     m_profiler.clearStats();
+    AbstractController::clearStats();
 }
 ''')
 
@@ -1047,7 +1052,7 @@ ${ident}_Controller::wakeup()
         assert(counter <= m_transitions_per_cycle);
         if (counter == m_transitions_per_cycle) {
             // Count how often we are fully utilized
-            g_system_ptr->getProfiler()->controllerBusy(m_machineID);
+            m_fully_busy_cycles++;
 
             // Wakeup in another cycle and try again
             scheduleEvent(1);

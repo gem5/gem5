@@ -51,6 +51,7 @@ class AbstractController : public ClockedObject, public Consumer
   public:
     typedef RubyControllerParams Params;
     AbstractController(const Params *p);
+    void init();
     const Params *params() const { return (const Params *)_params; }
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual const int & getVersion() const = 0;
@@ -84,12 +85,22 @@ class AbstractController : public ClockedObject, public Consumer
     virtual void enqueuePrefetch(const Address&, const RubyRequestType&)
     { fatal("Prefetches not implemented!");}
 
+  public:
+    MachineID getMachineID() const { return m_machineID; }
+    uint64_t getFullyBusyCycles() const { return m_fully_busy_cycles; }
+    uint64_t getRequestCount() const { return m_request_count; }
+    const std::map<std::string, uint64_t>& getRequestProfileMap() const
+    { return m_requestProfileMap; }
+
+  protected:
+    //! Profiles original cache requests including PUTs
+    void profileRequest(const std::string &request);
+
   protected:
     int m_transitions_per_cycle;
     int m_buffer_size;
     int m_recycle_latency;
     std::string m_name;
-    std::map<std::string, std::string> m_cfg;
     NodeID m_version;
     Network* m_net_ptr;
     MachineID m_machineID;
@@ -101,6 +112,15 @@ class AbstractController : public ClockedObject, public Consumer
     int m_max_in_port_rank;
     int m_cur_in_port_rank;
     int m_number_of_TBEs;
+
+    //! Counter for the number of cycles when the transitions carried out
+    //! were equal to the maximum allowed
+    uint64_t m_fully_busy_cycles;
+
+    //! Map for couting requests of different types. The controller should
+    //! call requisite function for updating the count.
+    std::map<std::string, uint64_t> m_requestProfileMap;
+    uint64_t m_request_count;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
