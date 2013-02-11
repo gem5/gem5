@@ -40,8 +40,6 @@
 
 #include <iostream>
 
-#include "mem/protocol/MemoryRequestType.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -49,10 +47,10 @@ class MemoryNode
 {
   public:
     // old constructor
-    MemoryNode(const Time& time, int counter, const MsgPtr& msgptr,
+    MemoryNode(const Cycles& time, int counter, const MsgPtr& msgptr,
                const physical_address_t addr, const bool is_mem_read)
+        : m_time(time)
     {
-        m_time = time;
         m_msg_counter = counter;
         m_msgptr = msgptr;
         m_addr = addr;
@@ -61,11 +59,11 @@ class MemoryNode
     }
 
     // new constructor
-    MemoryNode(const Time& time, const MsgPtr& msgptr,
+    MemoryNode(const Cycles& time, const MsgPtr& msgptr,
                const physical_address_t addr, const bool is_mem_read,
                const bool is_dirty_wb)
+        : m_time(time)
     {
-        m_time = time;
         m_msg_counter = 0;
         m_msgptr = msgptr;
         m_addr = addr;
@@ -75,7 +73,7 @@ class MemoryNode
 
     void print(std::ostream& out) const;
 
-    Time m_time;
+    Cycles m_time;
     int m_msg_counter;
     MsgPtr m_msgptr;
     physical_address_t m_addr;

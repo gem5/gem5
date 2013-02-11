@@ -276,10 +276,9 @@ RubyMemoryControl::~RubyMemoryControl()
 
 // enqueue new request from directory
 void
-RubyMemoryControl::enqueue(const MsgPtr& message, int latency)
+RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
 {
-    Time current_time = g_system_ptr->getTime();
-    Time arrival_time = current_time + latency;
+    Cycles arrival_time = g_system_ptr->getTime() + latency;
     const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
     physical_address_t addr = memMess->getAddress().getAddress();
     MemoryRequestType type = memMess->getType();
@@ -376,14 +375,13 @@ RubyMemoryControl::printStats(ostream& out) const
 void
 RubyMemoryControl::enqueueToDirectory(MemoryNode req, Cycles latency)
 {
-    Time arrival_time = curTick() + (latency * clock);
+    Tick arrival_time = clockEdge(latency);
     Cycles ruby_arrival_time = g_system_ptr->ticksToCycles(arrival_time);
     req.m_time = ruby_arrival_time;
     m_response_queue.push_back(req);
 
     DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
-            req.m_addr, req.m_is_mem_read ? 'R':'W',
-            arrival_time);
+            req.m_addr, req.m_is_mem_read ? 'R':'W', arrival_time);
 
     // schedule the wake up
     m_consumer_ptr->scheduleEventAbsolute(ruby_arrival_time);

@@ -66,7 +66,7 @@ class MemoryControl : public ClockedObject, public Consumer
     virtual std::string getDescription() = 0;
 
     // Called from the directory:
-    virtual void enqueue(const MsgPtr& message, int latency ) = 0;
+    virtual void enqueue(const MsgPtr& message, Cycles latency) = 0;
     virtual void enqueueMemRef(MemoryNode& memRef) = 0;
     virtual void dequeue() = 0;
     virtual const Message* peek() = 0;

@@ -72,7 +72,7 @@ class RubyMemoryControl : public MemoryControl
     std::string getDescription() { return m_description; };
 
     // Called from the directory:
-    void enqueue(const MsgPtr& message, int latency );
+    void enqueue(const MsgPtr& message, Cycles latency);
     void enqueueMemRef(MemoryNode& memRef);
     void dequeue();
     const Message* peek();
