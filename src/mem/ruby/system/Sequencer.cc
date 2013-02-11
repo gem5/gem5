@@ -88,7 +88,7 @@ Sequencer::wakeup()
     assert(getDrainState() != Drainable::Draining);
 
     // Check for deadlock of any of the requests
-    Time current_time = curCycle();
+    Cycles current_time = curCycle();
 
     // Check across all outstanding requests
     int total_outstanding = 0;

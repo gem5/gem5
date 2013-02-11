@@ -46,9 +46,10 @@ struct SequencerRequest
 {
     PacketPtr pkt;
     RubyRequestType m_type;
-    Time issue_time;
+    Cycles issue_time;
 
-    SequencerRequest(PacketPtr _pkt, RubyRequestType _m_type, Time _issue_time)
+    SequencerRequest(PacketPtr _pkt, RubyRequestType _m_type,
+                     Cycles _issue_time)
         : pkt(_pkt), m_type(_m_type), issue_time(_issue_time)
     {}
 };
