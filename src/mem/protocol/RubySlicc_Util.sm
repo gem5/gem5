@@ -32,14 +32,9 @@
 void error(std::string msg);
 void assert(bool condition);
 int random(int number);
-Time zero_time();
-Cycles TimeToCycles(Time t);
+Cycles zero_time();
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
-int time_to_int(Time time);
-Time getTimeModInt(Time time, int modulus);
-Time getTimePlusInt(Time addend1, int addend2);
-Time getTimeMinusTime(Time t1, Time t2);
 void procProfileCoherenceRequest(NodeID node, bool needCLB);
 void dirProfileCoherenceRequest(NodeID node, bool needCLB);
 int max_tokens();

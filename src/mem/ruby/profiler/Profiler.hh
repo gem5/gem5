@@ -125,29 +125,23 @@ class Profiler : public SimObject
 
     void startTransaction(int cpu);
     void endTransaction(int cpu);
-    void profilePFWait(Time waitTime);
+    void profilePFWait(Cycles waitTime);
 
     void controllerBusy(MachineID machID);
     void bankBusy();
 
-    void missLatency(Time t, 
-                     RubyRequestType type,
+    void missLatency(Cycles t, RubyRequestType type,
                      const GenericMachineType respondingMach);
 
-    void missLatencyWcc(Time issuedTime,
-                        Time initialRequestTime,
-                        Time forwardRequestTime,
-                        Time firstResponseTime,
-                        Time completionTime);
+    void missLatencyWcc(Cycles issuedTime, Cycles initialRequestTime,
+                        Cycles forwardRequestTime, Cycles firstResponseTime,
+                        Cycles completionTime);
     
-    void missLatencyDir(Time issuedTime,
-                        Time initialRequestTime,
-                        Time forwardRequestTime,
-                        Time firstResponseTime,
-                        Time completionTime);
+    void missLatencyDir(Cycles issuedTime, Cycles initialRequestTime,
+                        Cycles forwardRequestTime, Cycles firstResponseTime,
+                        Cycles completionTime);
     
-    void swPrefetchLatency(Time t, 
-                           RubyRequestType type,
+    void swPrefetchLatency(Cycles t, RubyRequestType type,
                            const GenericMachineType respondingMach);
 
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
@@ -158,11 +152,7 @@ class Profiler : public SimObject
     bool watchAddress(Address addr);
 
     // return Ruby's start time
-    Time
-    getRubyStartTime()
-    {
-        return m_ruby_start;
-    }
+    Cycles getRubyStartTime() { return m_ruby_start; }
 
     // added by SS
     bool getHotLines() { return m_hot_lines; }
@@ -186,7 +176,7 @@ class Profiler : public SimObject
     std::ostream* m_periodic_output_file_ptr;
     int64_t m_stats_period;
 
-    Time m_ruby_start;
+    Cycles m_ruby_start;
     time_t m_real_time_start_time;
 
     int64_t m_busyBankCount;

@@ -33,9 +33,6 @@
 
 #include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/system/System.hh"
 
 template<class ENTRY>
 class TBETable

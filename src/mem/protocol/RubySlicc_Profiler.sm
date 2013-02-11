@@ -47,4 +47,4 @@ void profile_outstanding_persistent_request(int outstanding);
 void profile_average_latency_estimate(int latency);
 
 // profile the total message delay of a message across a virtual network
-void profileMsgDelay(int virtualNetwork, Time delayCycles);
+void profileMsgDelay(int virtualNetwork, Cycles delayCycles);

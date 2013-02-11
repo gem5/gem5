@@ -153,7 +153,7 @@ machine(L1Cache, "Token protocol")
     bool IsAtomic, default="false",       desc="Request was an atomic request";
 
     AccessType AccessType,                desc="Type of request (used for profiling)";
-    Time IssueTime,                       desc="Time the request was issued";
+    Cycles IssueTime,                       desc="Time the request was issued";
     RubyAccessMode AccessMode,    desc="user/supervisor access type";
     PrefetchBit Prefetch,         desc="Is this a prefetch request";
   }
@@ -183,7 +183,7 @@ machine(L1Cache, "Token protocol")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Address a);
-  Time curCycle();
+  Cycles curCycle();
 
   TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
@@ -1452,7 +1452,7 @@ machine(L1Cache, "Token protocol")
     // Update average latency
     if (tbe.IssueCount <= 1) {
       if (tbe.ExternalResponse == true) {
-        updateAverageLatencyEstimate(TimeToCycles(curCycle() - tbe.IssueTime));
+        updateAverageLatencyEstimate(curCycle() - tbe.IssueTime);
       }
     }
 

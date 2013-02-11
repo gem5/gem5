@@ -85,7 +85,7 @@ class TimerTable
     typedef std::map<Address, Cycles> AddressMap;
     AddressMap m_map;
     mutable bool m_next_valid;
-    mutable Time m_next_time; // Only valid if m_next_valid is true
+    mutable Cycles m_next_time; // Only valid if m_next_valid is true
     mutable Address m_next_address;  // Only valid if m_next_valid is true
 
     //! Object used for querying time.

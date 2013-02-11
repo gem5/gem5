@@ -161,9 +161,13 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool AppliedSilentAcks, default="false", desc="for full-bit dir, does the pending msg count reflect the silent acks";
     MachineID LastResponder, desc="last machine to send a response for this request";
     MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
-    Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
-    Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
-    Time FirstResponseTime, default="0", desc="the time the first response was received";
+
+    Cycles InitialRequestTime, default="Cycles(0)",
+            desc="time the initial requests was sent from the L1Cache";
+    Cycles ForwardRequestTime, default="Cycles(0)",
+            desc="time the dir forwarded the request";
+    Cycles FirstResponseTime, default="Cycles(0)",
+            desc="the time the first response was received";
   }
 
   structure(TBETable, external="yes") {
@@ -181,7 +185,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Address a);
-  Time curCycle();
+  Cycles curCycle();
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     Entry L2cache_entry := static_cast(Entry, "pointer", L2cacheMemory.lookup(address));

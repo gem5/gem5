@@ -257,7 +257,7 @@ uint32_t
 Prefetcher::getLRUindex(void)
 {
     uint32_t lru_index = 0;
-    Time lru_access = m_array[lru_index].m_use_time;
+    Cycles lru_access = m_array[lru_index].m_use_time;
 
     for (uint32_t i = 0; i < m_num_streams; i++) {
         if (!m_array[i].m_is_valid) {

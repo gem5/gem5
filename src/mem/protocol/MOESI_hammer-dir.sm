@@ -179,7 +179,7 @@ machine(Directory, "AMD Hammer-like protocol")
   void set_tbe(TBE a);
   void unset_tbe();
   void wakeUpBuffers(Address a);
-  Time curCycle();
+  Cycles curCycle();
 
   // ** OBJECTS **
 

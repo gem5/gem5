@@ -46,12 +46,7 @@ random(int n)
   return random() % n;
 }
 
-inline Time
-zero_time()
-{
-    return 0;
-}
-
+inline Cycles zero_time() { return Cycles(0); }
 inline Cycles TimeToCycles(Time t) { return Cycles(t); }
 
 inline NodeID
@@ -66,33 +61,6 @@ IDToInt(NodeID id)
 {
     int nodenum = id;
     return nodenum;
-}
-
-inline Time
-getTimeModInt(Time time, int modulus)
-{
-    return time % modulus;
-}
-
-inline Time
-getTimePlusInt(Time addend1, int addend2)
-{
-    return (Time) addend1 + addend2;
-}
-
-inline Time
-getTimeMinusTime(Time t1, Time t2)
-{
-    assert(t1 >= t2);
-    return t1 - t2;
-}
-
-// Return type for time_to_int is "Time" and not "int" so we get a
-// 64-bit integer
-inline Time
-time_to_int(Time time)
-{
-    return time;
 }
 
 // Appends an offset to an address

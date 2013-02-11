@@ -70,29 +70,29 @@ class Sequencer : public RubyPort
 
     void writeCallback(const Address& address, DataBlock& data);
 
-    void writeCallback(const Address& address, 
-                       GenericMachineType mach, 
+    void writeCallback(const Address& address,
+                       GenericMachineType mach,
                        DataBlock& data);
 
-    void writeCallback(const Address& address, 
-                       GenericMachineType mach, 
+    void writeCallback(const Address& address,
+                       GenericMachineType mach,
                        DataBlock& data,
-                       Time initialRequestTime,
-                       Time forwardRequestTime,
-                       Time firstResponseTime);
+                       Cycles initialRequestTime,
+                       Cycles forwardRequestTime,
+                       Cycles firstResponseTime);
 
     void readCallback(const Address& address, DataBlock& data);
 
-    void readCallback(const Address& address, 
-                      GenericMachineType mach, 
+    void readCallback(const Address& address,
+                      GenericMachineType mach,
                       DataBlock& data);
 
-    void readCallback(const Address& address, 
-                      GenericMachineType mach, 
+    void readCallback(const Address& address,
+                      GenericMachineType mach,
                       DataBlock& data,
-                      Time initialRequestTime,
-                      Time forwardRequestTime,
-                      Time firstResponseTime);
+                      Cycles initialRequestTime,
+                      Cycles forwardRequestTime,
+                      Cycles firstResponseTime);
 
     RequestStatus makeRequest(PacketPtr pkt);
     bool empty() const;
@@ -122,13 +122,13 @@ class Sequencer : public RubyPort
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
 
-    void hitCallback(SequencerRequest* request, 
+    void hitCallback(SequencerRequest* request,
                      GenericMachineType mach,
                      DataBlock& data,
                      bool success,
-                     Time initialRequestTime,
-                     Time forwardRequestTime,
-                     Time firstResponseTime);
+                     Cycles initialRequestTime,
+                     Cycles forwardRequestTime,
+                     Cycles firstResponseTime);
 
     RequestStatus insertRequest(PacketPtr pkt, RubyRequestType request_type);
 
@@ -152,10 +152,10 @@ class Sequencer : public RubyPort
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;
 
-    int m_store_waiting_on_load_cycles;
-    int m_store_waiting_on_store_cycles;
-    int m_load_waiting_on_store_cycles;
-    int m_load_waiting_on_load_cycles;
+    uint32_t m_store_waiting_on_load_cycles;
+    uint32_t m_store_waiting_on_store_cycles;
+    uint32_t m_load_waiting_on_store_cycles;
+    uint32_t m_load_waiting_on_load_cycles;
 
     bool m_usingNetworkTester;
 

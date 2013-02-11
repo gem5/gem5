@@ -66,7 +66,6 @@ class InfixOperatorExprAST(ExprAST):
                                   ("Cycles", "int", "Cycles")]
             elif self.op in ("+", "-", "*", "/"):
                 expected_types = [("int", "int", "int"),
-                                  ("Time", "Time", "Time"),
                                   ("Cycles", "Cycles", "Cycles"),
                                   ("Cycles", "int", "Cycles"),
                                   ("int", "Cycles", "Cycles")]

@@ -41,7 +41,7 @@ external_type(OutPort, primitive="yes");
 structure(InPort, external = "yes", primitive="yes") {
   bool isReady();
   void dequeue();
-  Time dequeue_getDelayCycles();
+  Cycles dequeue_getDelayCycles();
   void recycle();
   bool isEmpty();
 }
@@ -97,10 +97,14 @@ structure (NetDest, external = "yes", non_obj="yes") {
 structure (Sequencer, external = "yes") {
   void readCallback(Address, DataBlock);
   void readCallback(Address, GenericMachineType, DataBlock);
-  void readCallback(Address, GenericMachineType, DataBlock, Time, Time, Time);
+  void readCallback(Address, GenericMachineType, DataBlock,
+                    Cycles, Cycles, Cycles);
+
   void writeCallback(Address, DataBlock);
   void writeCallback(Address, GenericMachineType, DataBlock);
-  void writeCallback(Address, GenericMachineType, DataBlock, Time, Time, Time);
+  void writeCallback(Address, GenericMachineType, DataBlock,
+                     Cycles, Cycles, Cycles);
+
   void checkCoherence(Address);
   void profileNack(Address, int, int, uint64);
   void evictionCallback(Address);

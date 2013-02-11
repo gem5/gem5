@@ -31,7 +31,6 @@
 #define TYPEDEFINES_H
 
 typedef unsigned long long uint64;
-
 typedef long long int64;
 
 typedef int64 Time;

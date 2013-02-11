@@ -31,13 +31,13 @@
 #include "mem/ruby/system/TimerTable.hh"
 
 TimerTable::TimerTable()
+    : m_next_time(0)
 {
     m_consumer_ptr  = NULL;
     m_clockobj_ptr = NULL;
 
     m_next_valid = false;
     m_next_address = Address(0);
-    m_next_time = 0;
 }
 
 bool

@@ -270,7 +270,7 @@ Profiler::printStats(ostream& out, bool short_stats)
     double minutes = seconds / 60.0;
     double hours = minutes / 60.0;
     double days = hours / 24.0;
-    Time ruby_cycles = g_system_ptr->getTime()-m_ruby_start;
+    Cycles ruby_cycles = g_system_ptr->getTime()-m_ruby_start;
 
     if (!short_stats) {
         out << "Elapsed_time_in_seconds: " << seconds << endl;
@@ -609,7 +609,7 @@ Profiler::profileSharing(const Address& addr, AccessType type,
 }
 
 void
-Profiler::profilePFWait(Time waitTime)
+Profiler::profilePFWait(Cycles waitTime)
 {
     m_prefetchWaitHistogram.add(waitTime);
 }
@@ -622,7 +622,7 @@ Profiler::bankBusy()
 
 // non-zero cycle demand request
 void
-Profiler::missLatency(Time cycles, 
+Profiler::missLatency(Cycles cycles,
                       RubyRequestType type,
                       const GenericMachineType respondingMach)
 {
@@ -633,11 +633,11 @@ Profiler::missLatency(Time cycles,
 }
 
 void
-Profiler::missLatencyWcc(Time issuedTime,
-                         Time initialRequestTime,
-                         Time forwardRequestTime,
-                         Time firstResponseTime,
-                         Time completionTime)
+Profiler::missLatencyWcc(Cycles issuedTime,
+                         Cycles initialRequestTime,
+                         Cycles forwardRequestTime,
+                         Cycles firstResponseTime,
+                         Cycles completionTime)
 {
     if ((issuedTime <= initialRequestTime) &&
         (initialRequestTime <= forwardRequestTime) &&
@@ -659,11 +659,11 @@ Profiler::missLatencyWcc(Time issuedTime,
 }
 
 void
-Profiler::missLatencyDir(Time issuedTime,
-                         Time initialRequestTime,
-                         Time forwardRequestTime,
-                         Time firstResponseTime,
-                         Time completionTime)
+Profiler::missLatencyDir(Cycles issuedTime,
+                         Cycles initialRequestTime,
+                         Cycles forwardRequestTime,
+                         Cycles firstResponseTime,
+                         Cycles completionTime)
 {
     if ((issuedTime <= initialRequestTime) &&
         (initialRequestTime <= forwardRequestTime) &&
@@ -686,13 +686,13 @@ Profiler::missLatencyDir(Time issuedTime,
 
 // non-zero cycle prefetch request
 void
-Profiler::swPrefetchLatency(Time cycles, 
-                            RubyRequestType type,
+Profiler::swPrefetchLatency(Cycles cycles, RubyRequestType type,
                             const GenericMachineType respondingMach)
 {
     m_allSWPrefetchLatencyHistogram.add(cycles);
     m_SWPrefetchLatencyHistograms[type].add(cycles);
     m_SWPrefetchMachLatencyHistograms[respondingMach].add(cycles);
+
     if (respondingMach == GenericMachineType_Directory ||
         respondingMach == GenericMachineType_NUM) {
         m_SWPrefetchL2MissLatencyHistogram.add(cycles);

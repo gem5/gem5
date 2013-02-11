@@ -94,8 +94,11 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,             desc="Multicast destination mask";
   MessageSizeType MessageSize, desc="size category of the message";
   bool DirectedProbe, default="false", desc="probe filter directed probe";
-  Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
-  Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
+
+  Cycles InitialRequestTime, default="Cycles(0)",
+        desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, default="Cycles(0)",
+        desc="time the dir forwarded the request";
   int SilentAcks, default="0", desc="silent acks from the full-bit directory";
 
   bool functionalRead(Packet *pkt) {
@@ -120,8 +123,11 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   bool Dirty,                  desc="Is the data dirty (different than memory)?";
   int Acks, default="0",    desc="How many messages this counts as";
   MessageSizeType MessageSize, desc="size category of the message";
-  Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
-  Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
+
+  Cycles InitialRequestTime, default="Cycles(0)",
+        desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, default="Cycles(0)",
+        desc="time the dir forwarded the request";
   int SilentAcks, default="0", desc="silent acks from the full-bit directory";
 
   bool functionalRead(Packet *pkt) {

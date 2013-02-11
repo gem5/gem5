@@ -73,7 +73,7 @@ AbstractController::profileRequest(const std::string &request)
 }
 
 void
-AbstractController::profileMsgDelay(uint32_t virtualNetwork, Time delay)
+AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 {
     assert(virtualNetwork < m_delayVCHistogram.size());
     m_delayHistogram.add(delay);

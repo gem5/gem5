@@ -101,7 +101,7 @@ class AbstractController : public ClockedObject, public Consumer
     //! Profiles original cache requests including PUTs
     void profileRequest(const std::string &request);
     //! Profiles the delay associated with messages.
-    void profileMsgDelay(uint32_t virtualNetwork, Time delay);
+    void profileMsgDelay(uint32_t virtualNetwork, Cycles delay);
 
   protected:
     int m_transitions_per_cycle;

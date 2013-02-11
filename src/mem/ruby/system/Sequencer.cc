@@ -359,19 +359,19 @@ Sequencer::writeCallback(const Address& address, DataBlock& data)
 
 void
 Sequencer::writeCallback(const Address& address,
-                         GenericMachineType mach, 
+                         GenericMachineType mach,
                          DataBlock& data)
 {
-    writeCallback(address, mach, data, 0, 0, 0);
+    writeCallback(address, mach, data, Cycles(0), Cycles(0), Cycles(0));
 }
 
 void
 Sequencer::writeCallback(const Address& address,
-                         GenericMachineType mach, 
+                         GenericMachineType mach,
                          DataBlock& data,
-                         Time initialRequestTime,
-                         Time forwardRequestTime,
-                         Time firstResponseTime)
+                         Cycles initialRequestTime,
+                         Cycles forwardRequestTime,
+                         Cycles firstResponseTime)
 {
     assert(address == line_address(address));
     assert(m_writeRequestTable.count(line_address(address)));
@@ -410,7 +410,7 @@ Sequencer::writeCallback(const Address& address,
         m_controller->unblock(address);
     }
 
-    hitCallback(request, mach, data, success, 
+    hitCallback(request, mach, data, success,
                 initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
@@ -425,16 +425,16 @@ Sequencer::readCallback(const Address& address,
                         GenericMachineType mach,
                         DataBlock& data)
 {
-    readCallback(address, mach, data, 0, 0, 0);
+    readCallback(address, mach, data, Cycles(0), Cycles(0), Cycles(0));
 }
 
 void
 Sequencer::readCallback(const Address& address,
                         GenericMachineType mach,
                         DataBlock& data,
-                        Time initialRequestTime,
-                        Time forwardRequestTime,
-                        Time firstResponseTime)
+                        Cycles initialRequestTime,
+                        Cycles forwardRequestTime,
+                        Cycles firstResponseTime)
 {
     assert(address == line_address(address));
     assert(m_readRequestTable.count(line_address(address)));
@@ -449,7 +449,7 @@ Sequencer::readCallback(const Address& address,
     assert((request->m_type == RubyRequestType_LD) ||
            (request->m_type == RubyRequestType_IFETCH));
 
-    hitCallback(request, mach, data, true, 
+    hitCallback(request, mach, data, true,
                 initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
@@ -458,16 +458,16 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                        GenericMachineType mach,
                        DataBlock& data,
                        bool success,
-                       Time initialRequestTime,
-                       Time forwardRequestTime,
-                       Time firstResponseTime)
+                       Cycles initialRequestTime,
+                       Cycles forwardRequestTime,
+                       Cycles firstResponseTime)
 {
     PacketPtr pkt = srequest->pkt;
     Address request_address(pkt->getAddr());
     Address request_line_address(pkt->getAddr());
     request_line_address.makeLineAddress();
     RubyRequestType type = srequest->m_type;
-    Time issued_time = srequest->issue_time;
+    Cycles issued_time = srequest->issue_time;
 
     // Set this cache entry to the most recently used
     if (type == RubyRequestType_IFETCH) {
@@ -477,7 +477,7 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     }
 
     assert(curCycle() >= issued_time);
-    Time miss_latency = curCycle() - issued_time;
+    Cycles miss_latency = curCycle() - issued_time;
 
     // Profile the miss latency for all non-zero demand misses
     if (miss_latency != 0) {
