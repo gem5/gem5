@@ -59,8 +59,8 @@ class NetworkInterface : public FlexibleConsumer
     void wakeup();
     void addNode(std::vector<MessageBuffer *> &inNode,
                  std::vector<MessageBuffer *> &outNode);
-    void grant_vc(int out_port, int vc, Time grant_time);
-    void release_vc(int out_port, int vc, Time release_time);
+    void grant_vc(int out_port, int vc, Cycles grant_time);
+    void release_vc(int out_port, int vc, Cycles release_time);
 
     bool
     isBufferNotFull(int vc, int inport)
@@ -68,7 +68,7 @@ class NetworkInterface : public FlexibleConsumer
         return true;
     }
     void request_vc(int in_vc, int in_port, NetDest destination,
-                    Time request_time);
+                    Cycles request_time);
 
     void print(std::ostream& out) const;
 

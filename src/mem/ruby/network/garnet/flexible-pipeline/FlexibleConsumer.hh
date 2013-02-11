@@ -40,10 +40,10 @@ class FlexibleConsumer : public Consumer
   public:
     FlexibleConsumer(ClockedObject *em) : Consumer(em) {}
     virtual bool isBufferNotFull(int vc, int inport) { return true; }
-    virtual void grant_vc(int out_port, int vc, Time grant_time) {}
-    virtual void release_vc(int out_port, int vc, Time release_time) {}
+    virtual void grant_vc(int out_port, int vc, Cycles grant_time) {}
+    virtual void release_vc(int out_port, int vc, Cycles release_time) {}
     virtual void request_vc(int vc, int in_port, NetDest destination,
-                            Time request_time) {}
+                            Cycles request_time) {}
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLEXIBLE_CONSUMER_HH__

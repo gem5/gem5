@@ -37,7 +37,7 @@ InVcState::InVcState(int id)
 }
 
 bool
-InVcState::isInState(VC_state_type state, Time request_time)
+InVcState::isInState(VC_state_type state, Cycles request_time)
 {
     return ((m_vc_state == state) && (request_time >= m_time) );
 }
@@ -49,14 +49,14 @@ InVcState::setRoute(int route)
 }
 
 void
-InVcState::setState(VC_state_type state, Time time)
+InVcState::setState(VC_state_type state, Cycles time)
 {
     m_vc_state = state;
     m_time = time;
 }
 
 void
-InVcState::grant_vc(int out_vc, Time grant_time)
+InVcState::grant_vc(int out_vc, Cycles grant_time)
 {
     m_vc_state = ACTIVE_;
     m_time = grant_time;

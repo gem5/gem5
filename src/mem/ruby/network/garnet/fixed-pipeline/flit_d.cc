@@ -31,7 +31,7 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 
 flit_d::flit_d(int id, int  vc, int vnet, int size, MsgPtr msg_ptr,
-    Time curTime)
+    Cycles curTime)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
@@ -55,7 +55,7 @@ flit_d::flit_d(int id, int  vc, int vnet, int size, MsgPtr msg_ptr,
         m_type = BODY_;
 }
 
-flit_d::flit_d(int vc, bool is_free_signal, Time curTime)
+flit_d::flit_d(int vc, bool is_free_signal, Cycles curTime)
 {
     m_id = 0;
     m_vc = vc;

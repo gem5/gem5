@@ -255,9 +255,10 @@ NetworkInterface_d::wakeup()
 
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
-        int network_delay = m_net_ptr->curCycle() -
-                            t_flit->get_enqueue_time();
-        int queueing_delay = t_flit->get_delay();
+        Cycles network_delay = m_net_ptr->curCycle() -
+                               t_flit->get_enqueue_time();
+        Cycles queueing_delay = t_flit->get_delay();
+
         m_net_ptr->increment_network_latency(network_delay, vnet);
         m_net_ptr->increment_queueing_latency(queueing_delay, vnet);
         delete t_flit;
@@ -321,7 +322,7 @@ NetworkInterface_d::scheduleOutputLink()
             m_out_vc_state[vc]->decrement_credit();
             // Just removing the flit
             flit_d *t_flit = m_ni_buffers[vc]->getTopFlit();
-            t_flit->set_time(m_net_ptr->curCycle() + 1);
+            t_flit->set_time(m_net_ptr->curCycle() + Cycles(1));
             outSrcQueue->insert(t_flit);
             // schedule the out link
             outNetLink->scheduleEvent(Cycles(1));

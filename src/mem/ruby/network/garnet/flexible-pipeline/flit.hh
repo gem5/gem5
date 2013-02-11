@@ -31,7 +31,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "mem/ruby/common/TypeDefines.hh"
+#include "base/types.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -41,20 +41,20 @@
 class flit
 {
   public:
-    flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr, Time curTime);
+    flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr, Cycles curTime);
 
     int get_size();
     int get_id();
-    Time get_time();
-    Time get_enqueue_time();
-    void set_time(Time time);
+    Cycles get_time();
+    Cycles get_enqueue_time();
+    void set_time(Cycles time);
     int get_vnet();
     int get_vc();
     void set_vc(int vc);
     MsgPtr& get_msg_ptr();
     flit_type get_type();
-    void set_delay(int delay);
-    int get_delay();
+    void set_delay(Cycles delay);
+    Cycles get_delay();
     void print(std::ostream& out) const;
 
     static bool
@@ -75,10 +75,10 @@ class flit
     int m_vnet;
     int m_vc;
     int m_size;
-    Time m_enqueue_time, m_time;
+    Cycles m_enqueue_time, m_time;
     flit_type m_type;
     MsgPtr m_msg_ptr;
-    int src_delay;
+    Cycles src_delay;
 };
 
 inline std::ostream&

@@ -112,7 +112,7 @@ NetworkInterface::addNode(vector<MessageBuffer*>& in,
 
 void
 NetworkInterface::request_vc(int in_vc, int in_port, NetDest destination,
-                             Time request_time)
+                             Cycles request_time)
 {
     inNetLink->grant_vc_link(in_vc, request_time);
 }
@@ -189,7 +189,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 // An output vc has been granted at the next hop to one of the vc's.
 // We have to update the state of the vc to reflect this
 void
-NetworkInterface::grant_vc(int out_port, int vc, Time grant_time)
+NetworkInterface::grant_vc(int out_port, int vc, Cycles grant_time)
 {
     assert(m_out_vc_state[vc]->isInState(VC_AB_, grant_time));
     m_out_vc_state[vc]->grant_vc(grant_time);
@@ -199,7 +199,7 @@ NetworkInterface::grant_vc(int out_port, int vc, Time grant_time)
 // The tail flit corresponding to this vc has been buffered at the next hop
 // and thus this vc is now free
 void
-NetworkInterface::release_vc(int out_port, int vc, Time release_time)
+NetworkInterface::release_vc(int out_port, int vc, Cycles release_time)
 {
     assert(m_out_vc_state[vc]->isInState(ACTIVE_, release_time));
     m_out_vc_state[vc]->setState(IDLE_, release_time);
@@ -274,13 +274,15 @@ NetworkInterface::wakeup()
 
             // signal the upstream router that this vc can be freed now
             inNetLink->release_vc_link(t_flit->get_vc(),
-                m_net_ptr->curCycle() + 1);
+                m_net_ptr->curCycle() + Cycles(1));
         }
+
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
-        int network_delay = m_net_ptr->curCycle() -
-                            t_flit->get_enqueue_time();
-        int queueing_delay = t_flit->get_delay();
+        Cycles network_delay = m_net_ptr->curCycle() -
+                               t_flit->get_enqueue_time();
+        Cycles queueing_delay = t_flit->get_delay();
+
         m_net_ptr->increment_network_latency(network_delay, vnet);
         m_net_ptr->increment_queueing_latency(queueing_delay, vnet);
         delete t_flit;
@@ -312,7 +314,7 @@ NetworkInterface::scheduleOutputLink()
 
                 // Just removing the flit
                 flit *t_flit = m_ni_buffers[vc]->getTopFlit();
-                t_flit->set_time(m_net_ptr->curCycle() + 1);
+                t_flit->set_time(m_net_ptr->curCycle() + Cycles(1));
                 outSrcQueue->insert(t_flit);
 
                 // schedule the out link

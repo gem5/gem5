@@ -47,7 +47,7 @@ flitBuffer_d::isEmpty()
 }
 
 bool
-flitBuffer_d::isReady(Time curTime)
+flitBuffer_d::isReady(Cycles curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit_d *t_flit = peekTopFlit();
@@ -58,7 +58,7 @@ flitBuffer_d::isReady(Time curTime)
 }
 
 bool
-flitBuffer_d::isReadyForNext(Time curTime)
+flitBuffer_d::isReadyForNext(Cycles curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit_d *t_flit = peekTopFlit();

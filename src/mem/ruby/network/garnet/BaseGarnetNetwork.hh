@@ -40,7 +40,6 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/fault_model/FaultModel.hh"
 #include "params/BaseGarnetNetwork.hh"
-#include "math.h"
 
 class BaseGarnetNetwork : public Network 
 {
@@ -58,13 +57,13 @@ class BaseGarnetNetwork : public Network
     void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
 
     void
-    increment_network_latency(Time latency, int vnet)
+    increment_network_latency(Cycles latency, int vnet)
     {
         m_network_latency[vnet] += latency;
     }
 
     void
-    increment_queueing_latency(Time latency, int vnet)
+    increment_queueing_latency(Cycles latency, int vnet)
     {
         m_queueing_latency[vnet] += latency;
     }
@@ -81,7 +80,7 @@ class BaseGarnetNetwork : public Network
     virtual void checkNetworkAllocation(NodeID id, bool ordered,
         int network_num, std::string vnet_type) = 0;
 
-    Time getRubyStartTime();
+    Cycles getRubyStartTime();
     void clearStats();
     void printStats(std::ostream& out) const;
     void printPerformanceStats(std::ostream& out) const;
@@ -104,7 +103,7 @@ class BaseGarnetNetwork : public Network
     std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
     std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
-    Time m_ruby_start;
+    Cycles m_ruby_start;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__

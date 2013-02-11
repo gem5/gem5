@@ -181,7 +181,8 @@ SWallocator_d::arbitrate_outports()
                 t_flit->advance_stage(ST_, m_router->curCycle());
                 t_flit->set_vc(outvc);
                 t_flit->set_outport(outport);
-                t_flit->set_time(m_router->curCycle() + 1);
+                t_flit->set_time(m_router->curCycle() + Cycles(1));
+
                 m_output_unit[outport]->decrement_credit(outvc);
                 m_router->update_sw_winner(inport, t_flit);
                 m_global_arbiter_activity++;
@@ -200,7 +201,8 @@ SWallocator_d::arbitrate_outports()
 
                     m_input_unit[inport]->set_vc_state(IDLE_, invc,
                         m_router->curCycle());
-                    m_input_unit[inport]->set_enqueue_time(invc, INFINITE_);
+                    m_input_unit[inport]->set_enqueue_time(invc,
+                        Cycles(INFINITE_));
                 } else {
                     // Send a credit back
                     // but do not indicate that the VC is idle

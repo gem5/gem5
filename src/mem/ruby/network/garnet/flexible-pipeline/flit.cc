@@ -30,7 +30,7 @@
 
 #include "mem/ruby/network/garnet/flexible-pipeline/flit.hh"
 
-flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr, Time curTime)
+flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr, Cycles curTime)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
@@ -64,20 +64,20 @@ flit::get_id()
     return m_id;
 }
 
-Time
+Cycles
 flit::get_time()
 {
     return m_time;
 }
 
-Time
+Cycles
 flit::get_enqueue_time()
 {
     return m_enqueue_time;
 }
 
 void
-flit::set_time(Time time)
+flit::set_time(Cycles time)
 {
     m_time = time;
 }
@@ -113,12 +113,12 @@ flit::get_type()
 }
 
 void
-flit::set_delay(int delay)
+flit::set_delay(Cycles delay)
 {
     src_delay = delay;
 }
 
-int
+Cycles
 flit::get_delay()
 {
     return src_delay;

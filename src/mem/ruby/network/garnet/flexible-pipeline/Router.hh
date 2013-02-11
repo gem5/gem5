@@ -62,8 +62,8 @@ class Router : public BasicRouter, public FlexibleConsumer
     void request_vc(int in_vc, int in_port, NetDest destination,
                     Cycles request_time);
     bool isBufferNotFull(int vc, int inport);
-    void grant_vc(int out_port, int vc, Time grant_time);
-    void release_vc(int out_port, int vc, Time release_time);
+    void grant_vc(int out_port, int vc, Cycles grant_time);
+    void release_vc(int out_port, int vc, Cycles release_time);
     void vc_arbitrate();
     int get_vnet(int vc);
 

@@ -31,7 +31,7 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
 #define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
 
-#include "mem/ruby/common/TypeDefines.hh"
+#include "base/types.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class InVcState
@@ -40,18 +40,18 @@ class InVcState
     InVcState(int id);
 
     void setRoute(int route);
-    void setState(VC_state_type state, Time time);
+    void setState(VC_state_type state, Cycles time);
     int get_outport();
     int get_outvc();
-    void grant_vc(int out_vc, Time grant_time);
-    bool isInState(VC_state_type state, Time time);
+    void grant_vc(int out_vc, Cycles grant_time);
+    bool isInState(VC_state_type state, Cycles time);
 
   private:
     int m_id;
     int m_route;
     int m_output_vc;
     VC_state_type m_vc_state;
-    Time m_time;
+    Cycles m_time;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__

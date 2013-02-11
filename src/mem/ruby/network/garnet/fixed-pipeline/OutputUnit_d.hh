@@ -69,13 +69,13 @@ class OutputUnit_d : public Consumer
     }
 
     inline void
-    set_vc_state(VC_state_type state, int vc, Time curTime)
+    set_vc_state(VC_state_type state, int vc, Cycles curTime)
     {
-        m_outvc_state[vc]->setState(state, curTime + 1);
+        m_outvc_state[vc]->setState(state, curTime + Cycles(1));
     }
 
     inline bool
-    is_vc_idle(int vc, Time curTime)
+    is_vc_idle(int vc, Cycles curTime)
     {
         return (m_outvc_state[vc]->isInState(IDLE_, curTime));
     }

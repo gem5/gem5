@@ -64,9 +64,9 @@ class NetworkLink : public ClockedObject, public FlexibleConsumer
     void setOutPort(int port);
     void wakeup();
     bool isReady();
-    void grant_vc_link(int vc, Time grant_time);
-    void release_vc_link(int vc, Time release_time);
-    void request_vc_link(int vc, NetDest destination, Time request_time);
+    void grant_vc_link(int vc, Cycles grant_time);
+    void release_vc_link(int vc, Cycles release_time);
+    void request_vc_link(int vc, NetDest destination, Cycles request_time);
     bool isBufferNotFull_link(int vc);
     void setSource(FlexibleConsumer *source);
     double getLinkUtilization();

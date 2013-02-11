@@ -51,7 +51,7 @@ flitBuffer::isEmpty()
 }
 
 bool
-flitBuffer::isReady(Time curTime)
+flitBuffer::isReady(Cycles curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();
@@ -62,7 +62,7 @@ flitBuffer::isReady(Time curTime)
 }
 
 bool
-flitBuffer::isReadyForNext(Time curTime)
+flitBuffer::isReadyForNext(Cycles curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = m_buffer.front();

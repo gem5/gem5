@@ -46,12 +46,12 @@ class OutVcState_d
     void set_inport(int port)       { m_in_port = port; }
     void set_invc(int vc)           { m_in_vc = vc; }
     inline bool
-    isInState(VC_state_type state, Time request_time)
+    isInState(VC_state_type state, Cycles request_time)
     {
         return ((m_vc_state == state) && (request_time >= m_time) );
     }
     inline void
-    setState(VC_state_type state, Time time)
+    setState(VC_state_type state, Cycles time)
     {
         m_vc_state = state;
         m_time = time;
@@ -63,7 +63,7 @@ class OutVcState_d
   private:
     GarnetNetwork_d *m_network_ptr;
     int m_id ;
-    Time m_time;
+    Cycles m_time;
     VC_state_type m_vc_state;
     int m_in_port;
     int m_in_vc;

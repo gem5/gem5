@@ -227,7 +227,7 @@ Router::get_valid_vcs(int invc)
 }
 
 void
-Router::grant_vc(int out_port, int vc, Time grant_time)
+Router::grant_vc(int out_port, int vc, Cycles grant_time)
 {
     assert(m_out_vc_state[out_port][vc]->isInState(VC_AB_, grant_time));
     m_out_vc_state[out_port][vc]->grant_vc(grant_time);
@@ -235,7 +235,7 @@ Router::grant_vc(int out_port, int vc, Time grant_time)
 }
 
 void
-Router::release_vc(int out_port, int vc, Time release_time)
+Router::release_vc(int out_port, int vc, Cycles release_time)
 {
     assert(m_out_vc_state[out_port][vc]->isInState(ACTIVE_, release_time));
     m_out_vc_state[out_port][vc]->setState(IDLE_, release_time);
@@ -269,7 +269,7 @@ Router::routeCompute(flit *m_flit, int inport)
     assert(m_net_ptr->getNumPipeStages() >= 1);
 
     // Subtract 1 as 1 cycle will be consumed in scheduling the output link
-    m_flit->set_time(curCycle() + (m_net_ptr->getNumPipeStages() - 1));
+    m_flit->set_time(curCycle() + Cycles((m_net_ptr->getNumPipeStages() - 1)));
     m_flit->set_vc(outvc);
     m_router_buffers[outport][outvc]->insert(m_flit);
 
@@ -282,9 +282,10 @@ Router::routeCompute(flit *m_flit, int inport)
         NetDest destination = nm->getInternalDestination();
 
         if (m_net_ptr->getNumPipeStages() > 1) {
-            m_out_vc_state[outport][outvc]->setState(VC_AB_, curCycle() + 1);
+            m_out_vc_state[outport][outvc]->setState(VC_AB_, curCycle() +
+                                                     Cycles(1));
             m_out_link[outport]->request_vc_link(outvc, destination,
-                curCycle() + 1);
+                                                 curCycle() + Cycles(1));
         } else {
             m_out_vc_state[outport][outvc]->setState(VC_AB_, curCycle());
             m_out_link[outport]->request_vc_link(outvc, destination,
@@ -293,8 +294,8 @@ Router::routeCompute(flit *m_flit, int inport)
     }
 
     if ((m_flit->get_type() == TAIL_) || (m_flit->get_type() == HEAD_TAIL_)) {
-        m_in_vc_state[inport][invc]->setState(IDLE_, curCycle() + 1);
-        m_in_link[inport]->release_vc_link(invc, curCycle() + 1);
+        m_in_vc_state[inport][invc]->setState(IDLE_, curCycle() + Cycles(1));
+        m_in_link[inport]->release_vc_link(invc, curCycle() + Cycles(1));
     }
 }
 
@@ -361,7 +362,7 @@ Router::scheduleOutputLinks()
 
                     flit *t_flit =
                         m_router_buffers[port][vc_tolookat]->getTopFlit();
-                    t_flit->set_time(curCycle() + 1 );
+                    t_flit->set_time(curCycle() + Cycles(1));
                     m_out_src_queue[port]->insert(t_flit);
                     m_out_link[port]->scheduleEvent(Cycles(1));
                     break; // done for this port
@@ -397,7 +398,8 @@ Router::check_arbiter_reschedule()
 {
     for (int port = 0; port < m_in_link.size(); port++) {
         for (int vc = 0; vc < m_num_vcs; vc++) {
-            if (m_in_vc_state[port][vc]->isInState(VC_AB_, curCycle() + 1)) {
+            if (m_in_vc_state[port][vc]->isInState(VC_AB_, curCycle() +
+                                                   Cycles(1))) {
                 m_vc_arbiter->scheduleEvent(Cycles(1));
                 return;
             }

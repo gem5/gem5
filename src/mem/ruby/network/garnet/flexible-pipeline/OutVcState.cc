@@ -37,20 +37,20 @@ OutVcState::OutVcState(int id)
 }
 
 bool
-OutVcState::isInState(VC_state_type state, Time request_time)
+OutVcState::isInState(VC_state_type state, Cycles request_time)
 {
     return ((m_vc_state == state) && (request_time >= m_time));
 }
 
 void
-OutVcState::grant_vc(Time grant_time)
+OutVcState::grant_vc(Cycles grant_time)
 {
     m_time = grant_time;
     m_vc_state = ACTIVE_;
 }
 
 void
-OutVcState::setState(VC_state_type state, Time time)
+OutVcState::setState(VC_state_type state, Cycles time)
 {
     m_vc_state = state;
     m_time = time;

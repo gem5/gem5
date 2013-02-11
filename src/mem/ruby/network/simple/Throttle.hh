@@ -108,7 +108,7 @@ class Throttle : public Consumer
     int m_endpoint_bandwidth;
 
     // For tracking utilization
-    Time m_ruby_start;
+    Cycles m_ruby_start;
     double m_links_utilized;
 };
 

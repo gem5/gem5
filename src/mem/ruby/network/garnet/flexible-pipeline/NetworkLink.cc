@@ -78,7 +78,7 @@ NetworkLink::setSource(FlexibleConsumer *source)
 }
 
 void
-NetworkLink::request_vc_link(int vc, NetDest destination, Time request_time)
+NetworkLink::request_vc_link(int vc, NetDest destination, Cycles request_time)
 {
     link_consumer->request_vc(vc, m_in_port, destination, request_time);
 }
@@ -90,13 +90,13 @@ NetworkLink::isBufferNotFull_link(int vc)
 }
 
 void
-NetworkLink::grant_vc_link(int vc, Time grant_time)
+NetworkLink::grant_vc_link(int vc, Cycles grant_time)
 {
     link_source->grant_vc(m_out_port, vc, grant_time);
 }
 
 void
-NetworkLink::release_vc_link(int vc, Time release_time)
+NetworkLink::release_vc_link(int vc, Cycles release_time)
 {
     link_source->release_vc(m_out_port, vc, release_time);
 }

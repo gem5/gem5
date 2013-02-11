@@ -36,15 +36,13 @@
 using namespace std;
 
 BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
-    : Network(p)
+    : Network(p), m_ruby_start(0)
 {
     m_ni_flit_size = p->ni_flit_size;
     m_vcs_per_vnet = p->vcs_per_vnet;
     m_enable_fault_model = p->enable_fault_model;
     if (m_enable_fault_model)
         fault_model = p->fault_model;
-
-    m_ruby_start = 0;
 
     // Currently Garnet only supports uniform bandwidth for all
     // links and network interfaces.
@@ -130,7 +128,7 @@ BaseGarnetNetwork::clearStats()
     m_ruby_start = curCycle();
 }
 
-Time
+Cycles
 BaseGarnetNetwork::getRubyStartTime()
 {
     return m_ruby_start;
