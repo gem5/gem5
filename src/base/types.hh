@@ -113,6 +113,18 @@ class Cycles
     bool operator>(const Cycles& cc) const
     { return c > cc.c; }
 
+    const Cycles operator +(const Cycles& b) const
+    { return Cycles(c + b.c); }
+
+    const Cycles operator -(const Cycles& b) const
+    { assert(c >= b.c); return Cycles(c - b.c); }
+
+    const Cycles operator <<(const int32_t shift)
+    { return Cycles(c << shift); }
+
+    const Cycles operator >>(const int32_t shift)
+    { return Cycles(c >> shift); }
+
 #endif // SWIG not touching operators
 
 };
