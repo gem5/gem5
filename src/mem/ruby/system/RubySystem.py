@@ -37,7 +37,7 @@ class RubySystem(ClockedObject):
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times");
     clock = '1GHz'
-    block_size_bytes = Param.Int(64,
+    block_size_bytes = Param.UInt32(64,
         "default cache block size; must be a power of two");
     mem_size = Param.MemorySize("total memory size of the system");
     stats_filename = Param.String("ruby.stats",

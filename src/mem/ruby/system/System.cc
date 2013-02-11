@@ -46,10 +46,10 @@ using namespace std;
 
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
-int RubySystem::m_block_size_bytes;
-int RubySystem::m_block_size_bits;
-uint64 RubySystem::m_memory_size_bytes;
-int RubySystem::m_memory_size_bits;
+uint32_t RubySystem::m_block_size_bytes;
+uint32_t RubySystem::m_block_size_bits;
+uint64_t RubySystem::m_memory_size_bytes;
+uint32_t RubySystem::m_memory_size_bits;
 
 RubySystem::RubySystem(const Params *p)
     : ClockedObject(p)

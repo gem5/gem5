@@ -75,10 +75,10 @@ class RubySystem : public ClockedObject
     // config accessors
     static int getRandomSeed() { return m_random_seed; }
     static int getRandomization() { return m_randomization; }
-    static int getBlockSizeBytes() { return m_block_size_bytes; }
-    static int getBlockSizeBits() { return m_block_size_bits; }
-    static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
-    static int getMemorySizeBits() { return m_memory_size_bits; }
+    static uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
+    static uint32_t getBlockSizeBits() { return m_block_size_bits; }
+    static uint64_t getMemorySizeBytes() { return m_memory_size_bytes; }
+    static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
     Cycles getTime() const { return curCycle(); }
 
     // Public Methods
@@ -147,10 +147,10 @@ class RubySystem : public ClockedObject
     // configuration parameters
     static int m_random_seed;
     static bool m_randomization;
-    static int m_block_size_bytes;
-    static int m_block_size_bits;
-    static uint64 m_memory_size_bytes;
-    static int m_memory_size_bits;
+    static uint32_t m_block_size_bytes;
+    static uint32_t m_block_size_bits;
+    static uint64_t m_memory_size_bytes;
+    static uint32_t m_memory_size_bits;
 
     Network* m_network_ptr;
     std::vector<MemoryControl *> m_memory_controller_vec;
