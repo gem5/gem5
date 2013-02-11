@@ -65,7 +65,7 @@ class Network : public ClockedObject
 
     virtual void init();
 
-    static int getNumberOfVirtualNetworks() { return m_virtual_networks; }
+    static uint32_t getNumberOfVirtualNetworks() { return m_virtual_networks; }
     static uint32_t MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component

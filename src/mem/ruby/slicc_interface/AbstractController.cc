@@ -52,6 +52,14 @@ AbstractController::clearStats()
 {
     m_requestProfileMap.clear();
     m_request_count = 0;
+
+    m_delayHistogram.clear();
+
+    uint32_t size = Network::getNumberOfVirtualNetworks();
+    m_delayVCHistogram.resize(size);
+    for (uint32_t i = 0; i < size; i++) {
+        m_delayVCHistogram[i].clear();
+    }
 }
 
 void
@@ -62,4 +70,12 @@ AbstractController::profileRequest(const std::string &request)
     // if it doesn't exist, conveniently, it will be created with the
     // default value which is 0
     m_requestProfileMap[request]++;
+}
+
+void
+AbstractController::profileMsgDelay(uint32_t virtualNetwork, Time delay)
+{
+    assert(virtualNetwork < m_delayVCHistogram.size());
+    m_delayHistogram.add(delay);
+    m_delayVCHistogram[virtualNetwork].add(delay);
 }

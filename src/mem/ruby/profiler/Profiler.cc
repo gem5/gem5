@@ -224,6 +224,38 @@ Profiler::printRequestProfile(ostream &out)
 }
 
 void
+Profiler::printDelayProfile(ostream &out)
+{
+    out << "Message Delayed Cycles" << endl;
+    out << "----------------------" << endl;
+
+    uint32_t numVNets = Network::getNumberOfVirtualNetworks();
+    Histogram delayHistogram;
+    std::vector<Histogram> delayVCHistogram(numVNets);
+
+    for (uint32_t i = 0; i < MachineType_NUM; i++) {
+        for (map<uint32_t, AbstractController*>::iterator it =
+                  g_abs_controls[i].begin();
+             it != g_abs_controls[i].end(); ++it) {
+
+            AbstractController *ctr = (*it).second;
+            delayHistogram.add(ctr->getDelayHist());
+
+            for (uint32_t i = 0; i < numVNets; i++) {
+                delayVCHistogram[i].add(ctr->getDelayVCHist(i));
+            }
+        }
+    }
+
+    out << "Total_delay_cycles: " <<   delayHistogram << endl;
+
+    for (int i = 0; i < numVNets; i++) {
+        out << "  virtual_network_" << i << "_delay_cycles: "
+            << delayVCHistogram[i] << endl;
+    }
+}
+
+void
 Profiler::printStats(ostream& out, bool short_stats)
 {
     out << endl;
@@ -435,16 +467,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         }
 
         out << endl;
-        out << "Message Delayed Cycles" << endl;
-        out << "----------------------" << endl;
-        out << "Total_delay_cycles: " <<   m_delayedCyclesHistogram << endl;
-        out << "Total_nonPF_delay_cycles: "
-            << m_delayedCyclesNonPFHistogram << endl;
-        for (int i = 0; i < m_delayedCyclesVCHistograms.size(); i++) {
-            out << "  virtual_network_" << i << "_delay_cycles: "
-                << m_delayedCyclesVCHistograms[i] << endl;
-        }
-
+        printDelayProfile(out);
         printResourceUsage(out);
     }
 }
@@ -487,14 +510,6 @@ Profiler::clearStats()
     }
 
     m_busyBankCount = 0;
-
-    m_delayedCyclesHistogram.clear();
-    m_delayedCyclesNonPFHistogram.clear();
-    int size = Network::getNumberOfVirtualNetworks();
-    m_delayedCyclesVCHistograms.resize(size);
-    for (int i = 0; i < size; i++) {
-        m_delayedCyclesVCHistograms[i].clear();
-    }
 
     m_missLatencyHistograms.resize(RubyRequestType_NUM);
     for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
@@ -590,17 +605,6 @@ Profiler::profileSharing(const Address& addr, AccessType type,
         m_memory_to_cache++;
     } else {
         m_cache_to_cache++;
-    }
-}
-
-void
-Profiler::profileMsgDelay(uint32_t virtualNetwork, Time delayCycles)
-{
-    assert(virtualNetwork < m_delayedCyclesVCHistograms.size());
-    m_delayedCyclesHistogram.add(delayCycles);
-    m_delayedCyclesVCHistograms[virtualNetwork].add(delayCycles);
-    if (virtualNetwork != 0) {
-        m_delayedCyclesNonPFHistogram.add(delayCycles);
     }
 }
 

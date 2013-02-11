@@ -36,6 +36,7 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/system/MachineID.hh"
@@ -92,9 +93,15 @@ class AbstractController : public ClockedObject, public Consumer
     const std::map<std::string, uint64_t>& getRequestProfileMap() const
     { return m_requestProfileMap; }
 
+    Histogram& getDelayHist() { return m_delayHistogram; }
+    Histogram& getDelayVCHist(uint32_t index)
+    { return m_delayVCHistogram[index]; }
+
   protected:
     //! Profiles original cache requests including PUTs
     void profileRequest(const std::string &request);
+    //! Profiles the delay associated with messages.
+    void profileMsgDelay(uint32_t virtualNetwork, Time delay);
 
   protected:
     int m_transitions_per_cycle;
@@ -121,6 +128,11 @@ class AbstractController : public ClockedObject, public Consumer
     //! call requisite function for updating the count.
     std::map<std::string, uint64_t> m_requestProfileMap;
     uint64_t m_request_count;
+
+    //! Histogram for profiling delay for the messages this controller
+    //! cares for
+    Histogram m_delayHistogram;
+    std::vector<Histogram> m_delayVCHistogram;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

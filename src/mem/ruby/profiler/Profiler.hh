@@ -152,8 +152,6 @@ class Profiler : public SimObject
 
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
-    void profileMsgDelay(uint32_t virtualNetwork, Time delayCycles);
-
     void print(std::ostream& out) const;
 
     void rubyWatch(int proc);
@@ -172,6 +170,7 @@ class Profiler : public SimObject
 
   private:
     void printRequestProfile(std::ostream &out);
+    void printDelayProfile(std::ostream &out);
 
   private:
     // Private copy constructor and assignment operator
@@ -225,10 +224,6 @@ class Profiler : public SimObject
     Histogram m_SWPrefetchL2MissLatencyHistogram;
     std::vector<Histogram> m_SWPrefetchLatencyHistograms;
     std::vector<Histogram> m_SWPrefetchMachLatencyHistograms;
-
-    Histogram m_delayedCyclesHistogram;
-    Histogram m_delayedCyclesNonPFHistogram;
-    std::vector<Histogram> m_delayedCyclesVCHistograms;
 
     Histogram m_outstanding_requests;
     Histogram m_outstanding_persistent_requests;

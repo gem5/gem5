@@ -34,11 +34,10 @@
 
 using namespace std;
 
-Histogram::Histogram(int binsize, int bins)
+Histogram::Histogram(int binsize, uint32_t bins)
 {
     m_binsize = binsize;
-    m_bins = bins;
-    clear();
+    clear(bins);
 }
 
 Histogram::~Histogram()
@@ -46,29 +45,43 @@ Histogram::~Histogram()
 }
 
 void
-Histogram::clear(int binsize, int bins)
+Histogram::clear(int binsize, uint32_t bins)
 {
     m_binsize = binsize;
     clear(bins);
 }
 
 void
-Histogram::clear(int bins)
+Histogram::clear(uint32_t bins)
 {
-    m_bins = bins;
     m_largest_bin = 0;
     m_max = 0;
-    m_data.resize(m_bins);
-    for (int i = 0; i < m_bins; i++) {
+    m_data.resize(bins);
+    for (uint32_t i = 0; i < bins; i++) {
         m_data[i] = 0;
     }
+
     m_count = 0;
     m_max = 0;
-
     m_sumSamples = 0;
     m_sumSquaredSamples = 0;
 }
 
+void
+Histogram::doubleBinSize()
+{
+    assert(m_binsize != -1);
+    uint32_t t_bins = m_data.size();
+
+    for (uint32_t i = 0; i < t_bins/2; i++) {
+        m_data[i] = m_data[i*2] + m_data[i*2 + 1];
+    }
+    for (uint32_t i = t_bins/2; i < t_bins; i++) {
+        m_data[i] = 0;
+    }
+
+    m_binsize *= 2;
+}
 
 void
 Histogram::add(int64 value)
@@ -80,7 +93,8 @@ Histogram::add(int64 value)
     m_sumSamples += value;
     m_sumSquaredSamples += (value*value);
 
-    int index;
+    uint32_t index;
+
     if (m_binsize == -1) {
         // This is a log base 2 histogram
         if (value == 0) {
@@ -93,37 +107,59 @@ Histogram::add(int64 value)
         }
     } else {
         // This is a linear histogram
-        while (m_max >= (m_bins * m_binsize)) {
-            for (int i = 0; i < m_bins/2; i++) {
-                m_data[i] = m_data[i*2] + m_data[i*2 + 1];
-            }
-            for (int i = m_bins/2; i < m_bins; i++) {
-                m_data[i] = 0;
-            }
-            m_binsize *= 2;
-        }
+        uint32_t t_bins = m_data.size();
+
+        while (m_max >= (t_bins * m_binsize)) doubleBinSize();
         index = value/m_binsize;
     }
-    assert(index >= 0);
+
+    assert(index < m_data.size());
     m_data[index]++;
     m_largest_bin = max(m_largest_bin, index);
 }
 
 void
-Histogram::add(const Histogram& hist)
+Histogram::add(Histogram& hist)
 {
-    assert(hist.getBins() == m_bins);
-    assert(hist.getBinSize() == -1);  // assume log histogram
-    assert(m_binsize == -1);
+    uint32_t t_bins = m_data.size();
 
-    for (int j = 0; j < hist.getData(0); j++) {
-        add(0);
+    if (hist.getBins() != t_bins) {
+        fatal("Histograms with different number of bins cannot be combined!");
     }
 
-    for (int i = 1; i < m_bins; i++) {
-        for (int j = 0; j < hist.getData(i); j++) {
-            add(1<<(i-1));  // account for the + 1 index
+    m_max = max(m_max, hist.getMax());
+    m_count += hist.size();
+    m_sumSamples += hist.getTotal();
+    m_sumSquaredSamples += hist.getSquaredTotal();
+
+    // Both histograms are log base 2.
+    if (hist.getBinSize() == -1 && m_binsize == -1) {
+        for (int j = 0; j < hist.getData(0); j++) {
+            add(0);
         }
+
+        for (uint32_t i = 1; i < t_bins; i++) {
+            for (int j = 0; j < hist.getData(i); j++) {
+                add(1<<(i-1));  // account for the + 1 index
+            }
+        }
+    } else if (hist.getBinSize() >= 1 && m_binsize >= 1) {
+        // Both the histogram are linear.
+        // We are assuming that the two histograms have the same
+        // minimum value that they can store.
+
+        while (m_binsize > hist.getBinSize()) hist.doubleBinSize();
+        while (hist.getBinSize() > m_binsize) doubleBinSize();
+
+        assert(m_binsize == hist.getBinSize());
+
+        for (uint32_t i = 0; i < t_bins; i++) {
+            m_data[i] += hist.getData(i);
+
+            if (m_data[i] > 0) m_largest_bin = i;
+        }
+    } else {
+        fatal("Don't know how to combine log and linear histograms!");
     }
 }
 
@@ -177,7 +213,8 @@ Histogram::printWithMultiplier(ostream& out, double multiplier) const
             << " | ";
         out << "standard deviation: " << getStandardDeviation() << " |";
     }
-    for (int i = 0; i < m_bins && i <= m_largest_bin; i++) {
+
+    for (uint32_t i = 0; i <= m_largest_bin; i++) {
         if (multiplier == 1.0) {
             out << " " << m_data[i];
         } else {
