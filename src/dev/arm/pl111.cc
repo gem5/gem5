@@ -65,8 +65,8 @@ Pl111::Pl111(const Params *p)
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
-      pixelClock(p->pixel_clock),
-      vnc(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
+      pixelClock(p->pixel_clock), vnc(p->vnc), bmp(NULL), pic(NULL),
+      width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
       dmaDoneEventAll(maxOutstandingDma, this),
@@ -74,8 +74,6 @@ Pl111::Pl111(const Params *p)
       intEvent(this)
 {
     pioSize = 0xFFFF;
-
-    pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
     dmaBuffer = new uint8_t[buffer_size];
 
@@ -503,7 +501,11 @@ Pl111::dmaDone()
 
         DPRINTF(PL111, "-- write out frame buffer into bmp\n");
 
+        if (!pic)
+            pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
+
         assert(bmp);
+        assert(pic);
         pic->seekp(0);
         bmp->write(pic);
 
