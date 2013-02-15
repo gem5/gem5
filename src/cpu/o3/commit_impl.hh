@@ -42,6 +42,7 @@
  */
 
 #include <algorithm>
+#include <set>
 #include <string>
 
 #include "arch/utility.hh"
