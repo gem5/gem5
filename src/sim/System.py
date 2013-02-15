@@ -35,7 +35,8 @@ from m5.proxy import *
 
 from SimpleMemory import *
 
-class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
+class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
+                                'atomic_noncaching']
 
 class System(MemObject):
     type = 'System'
@@ -55,7 +56,7 @@ class System(MemObject):
     @classmethod
     def export_methods(cls, code):
         code('''
-      Enums::MemoryMode getMemoryMode();
+      Enums::MemoryMode getMemoryMode() const;
       void setMemoryMode(Enums::MemoryMode mode);
 ''')
 

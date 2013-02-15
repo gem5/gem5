@@ -212,7 +212,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 void
 AtomicSimpleCPU::verifyMemoryMode() const
 {
-    if (system->getMemoryMode() != Enums::atomic) {
+    if (!system->isAtomicMode()) {
         fatal("The atomic CPU requires the memory system to be in "
               "'atomic' mode.\n");
     }

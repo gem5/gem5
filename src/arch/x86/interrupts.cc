@@ -510,7 +510,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             message.destMode = low.destMode;
             message.level = low.level;
             message.trigger = low.trigger;
-            bool timing = sys->getMemoryMode() == Enums::timing;
+            bool timing(sys->isTimingMode());
             // Be careful no updates of the delivery status bit get lost.
             regs[APIC_INTERRUPT_COMMAND_LOW] = low;
             ApicList apics;

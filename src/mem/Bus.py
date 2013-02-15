@@ -40,7 +40,9 @@
 #          Andreas Hansson
 
 from MemObject import MemObject
+from System import System
 from m5.params import *
+from m5.proxy import *
 
 class BaseBus(MemObject):
     type = 'BaseBus'
@@ -72,3 +74,5 @@ class NoncoherentBus(BaseBus):
 class CoherentBus(BaseBus):
     type = 'CoherentBus'
     cxx_header = "mem/coherent_bus.hh"
+
+    system = Param.System(Parent.any, "System that the bus belongs to.")

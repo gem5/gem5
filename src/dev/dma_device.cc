@@ -232,8 +232,7 @@ DmaPort::sendDma()
     // switching actually work
     assert(transmitList.size());
 
-    Enums::MemoryMode state = sys->getMemoryMode();
-    if (state == Enums::timing) {
+    if (sys->isTimingMode()) {
         // if we are either waiting for a retry or are still waiting
         // after sending the last packet, then do not proceed
         if (inRetry || sendEvent.scheduled()) {
@@ -242,7 +241,7 @@ DmaPort::sendDma()
         }
 
         trySendTimingReq();
-    } else if (state == Enums::atomic) {
+    } else if (sys->isAtomicMode()) {
         // send everything there is to send in zero time
         while (!transmitList.empty()) {
             PacketPtr pkt = transmitList.front();

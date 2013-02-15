@@ -224,6 +224,12 @@ class CoherentBus : public BaseBus
      */
     std::set<RequestPtr> outstandingReq;
 
+    /**
+     * Keep a pointer to the system to be allow to querying memory system
+     * properties.
+     */
+    System *system;
+
     /** Function called by the port when the bus is recieving a Timing
       request packet.*/
     virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);

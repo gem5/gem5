@@ -812,7 +812,7 @@ InOrderCPU::init()
 void
 InOrderCPU::verifyMemoryMode() const
 {
-    if (system->getMemoryMode() != Enums::timing) {
+    if (!system->isTimingMode()) {
         fatal("The in-order CPU requires the memory system to be in "
               "'timing' mode.\n");
     }

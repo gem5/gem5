@@ -1316,7 +1316,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::verifyMemoryMode() const
 {
-    if (system->getMemoryMode() != Enums::timing) {
+    if (!system->isTimingMode()) {
         fatal("The O3 CPU requires the memory system to be in "
               "'timing' mode.\n");
     }

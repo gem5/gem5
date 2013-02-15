@@ -83,10 +83,8 @@ TrafficGen::init()
     if (!port.isConnected())
         fatal("The port of %s is not connected!\n", name());
 
-    Enums::MemoryMode mode = system->getMemoryMode();
-
     // if the system is in timing mode active the request generator
-    if (mode == Enums::timing) {
+    if (system->isTimingMode()) {
         DPRINTF(TrafficGen, "Timing mode, activating request generator\n");
 
         // enter initial state
@@ -101,7 +99,7 @@ void
 TrafficGen::initState()
 {
     // when not restoring from a checkpoint, make sure we kick things off
-    if (system->getMemoryMode() == Enums::timing) {
+    if (system->isTimingMode()) {
         Tick nextStateGraphEvent = stateGraph.nextEventTick();
         schedule(updateStateGraphEvent, nextStateGraphEvent);
     } else {

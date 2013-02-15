@@ -222,8 +222,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
                 apics.push_back(selected);
             }
         }
-        intMasterPort.sendMessage(apics, message,
-                                  sys->getMemoryMode() == Enums::timing);
+        intMasterPort.sendMessage(apics, message, sys->isTimingMode());
     }
 }
 

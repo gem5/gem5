@@ -52,11 +52,13 @@
 #include "debug/BusAddrRanges.hh"
 #include "debug/CoherentBus.hh"
 #include "mem/coherent_bus.hh"
+#include "sim/system.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
     : BaseBus(p), reqLayer(*this, ".reqLayer", p->clock),
       respLayer(*this, ".respLayer", p->clock),
-      snoopRespLayer(*this, ".snoopRespLayer", p->clock)
+      snoopRespLayer(*this, ".snoopRespLayer", p->clock),
+      system(p->system)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -137,7 +139,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     Tick packetFinishTime = is_express_snoop ? 0 : pkt->finishTime;
 
     // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable()) {
+    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
         forwardTiming(pkt, slave_port_id);
@@ -323,6 +325,9 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 void
 CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
 {
+    // snoops should only happen if the system isn't bypassing caches
+    assert(!system->bypassCaches());
+
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
@@ -357,7 +362,7 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     Tick snoop_response_latency = 0;
 
     // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable()) {
+    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
         // forward to all snoopers but the source
         std::pair<MemCmd, Tick> snoop_result =
             forwardAtomic(pkt, slave_port_id);
@@ -414,6 +419,9 @@ CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
 
+    // snoops should only happen if the system isn't bypassing caches
+    assert(!system->bypassCaches());
+
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
@@ -458,7 +466,7 @@ CoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
     }
 
     // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable()) {
+    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
         // forward to all snoopers but the source
         forwardFunctional(pkt, slave_port_id);
     }
@@ -490,6 +498,9 @@ CoherentBus::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
 void
 CoherentBus::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
 {
+    // snoops should only happen if the system isn't bypassing caches
+    assert(!system->bypassCaches());
+
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master

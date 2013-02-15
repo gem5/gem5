@@ -63,6 +63,7 @@ MaxTick = 2**63 - 1
 _memory_modes = {
     "atomic" : objects.params.atomic,
     "timing" : objects.params.timing,
+    "atomic_noncaching" : objects.params.atomic_noncaching,
     }
 
 # The final hook to generate .ini files.  Called from the user script
@@ -288,6 +289,13 @@ def switchCpus(system, cpuList, do_drain=True):
     # Change the memory mode if required. We check if this is needed
     # to avoid printing a warning if no switch was performed.
     if system.getMemoryMode() != memory_mode:
+        # Flush the memory system if we are switching to a memory mode
+        # that disables caches. This typically happens when switching to a
+        # hardware virtualized CPU.
+        if memory_mode == objects.params.atomic_noncaching:
+            memWriteback(system)
+            memInvalidate(system)
+
         _changeMemoryMode(system, memory_mode)
 
     for old_cpu, new_cpu in cpuList:

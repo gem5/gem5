@@ -120,20 +120,63 @@ class System : public MemObject
     BaseMasterPort& getMasterPort(const std::string &if_name,
                                   PortID idx = InvalidPortID);
 
-    static const char *MemoryModeStrings[3];
+    static const char *MemoryModeStrings[4];
 
-    Enums::MemoryMode
-    getMemoryMode()
-    {
-        assert(memoryMode);
-        return memoryMode;
+    /** @{ */
+    /**
+     * Is the system in atomic mode?
+     *
+     * There are currently two different atomic memory modes:
+     * 'atomic', which supports caches; and 'atomic_noncaching', which
+     * bypasses caches. The latter is used by hardware virtualized
+     * CPUs. SimObjects are expected to use Port::sendAtomic() and
+     * Port::recvAtomic() when accessing memory in this mode.
+     */
+    bool isAtomicMode() const {
+        return memoryMode == Enums::atomic ||
+            memoryMode == Enums::atomic_noncaching;
     }
 
-    /** Change the memory mode of the system. This should only be called by the
-     * python!!
-     * @param mode Mode to change to (atomic/timing)
+    /**
+     * Is the system in timing mode?
+     *
+     * SimObjects are expected to use Port::sendTiming() and
+     * Port::recvTiming() when accessing memory in this mode.
+     */
+    bool isTimingMode() const {
+        return memoryMode == Enums::timing;
+    }
+
+    /**
+     * Should caches be bypassed?
+     *
+     * Some CPUs need to bypass caches to allow direct memory
+     * accesses, which is required for hardware virtualization.
+     */
+    bool bypassCaches() const {
+        return memoryMode == Enums::atomic_noncaching;
+    }
+    /** @} */
+
+    /** @{ */
+    /**
+     * Get the memory mode of the system.
+     *
+     * \warn This should only be used by the Python world. The C++
+     * world should use one of the query functions above
+     * (isAtomicMode(), isTimingMode(), bypassCaches()).
+     */
+    Enums::MemoryMode getMemoryMode() const { return memoryMode; }
+
+    /**
+     * Change the memory mode of the system.
+     *
+     * \warn This should only be called by the Python!
+     *
+     * @param mode Mode to change to (atomic/timing/...)
      */
     void setMemoryMode(Enums::MemoryMode mode);
+    /** @} */
 
     PCEventQueue pcEventQueue;
 

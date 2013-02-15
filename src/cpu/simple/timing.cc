@@ -191,7 +191,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 void
 TimingSimpleCPU::verifyMemoryMode() const
 {
-    if (system->getMemoryMode() != Enums::timing) {
+    if (!system->isTimingMode()) {
         fatal("The timing CPU requires the memory system to be in "
               "'timing' mode.\n");
     }

@@ -104,7 +104,7 @@ void
 TableWalker::drainResume()
 {
     Drainable::drainResume();
-    if ((params()->sys->getMemoryMode() == Enums::timing) && currState) {
+    if (params()->sys->isTimingMode() && currState) {
         delete currState;
         currState = NULL;
     }

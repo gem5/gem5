@@ -390,6 +390,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         // must be cache-to-cache response from upper to lower level
         ForwardResponseRecord *rec =
             dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
+        assert(!system->bypassCaches());
 
         if (rec == NULL) {
             assert(pkt->cmd == MemCmd::HardPFResp);
@@ -408,6 +409,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     assert(pkt->isRequest());
+
+    // Just forward the packet if caches are disabled.
+    if (system->bypassCaches()) {
+        memSidePort->sendTimingReq(pkt);
+        return true;
+    }
 
     if (pkt->memInhibitAsserted()) {
         DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
@@ -629,6 +636,10 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
     // @TODO: make this a parameter
     bool last_level_cache = false;
 
+    // Forward the request if the system is in cache bypass mode.
+    if (system->bypassCaches())
+        return memSidePort->sendAtomic(pkt);
+
     if (pkt->memInhibitAsserted()) {
         assert(!pkt->req->isUncacheable());
         // have to invalidate ourselves and any lower caches even if
@@ -744,6 +755,17 @@ template<class TagStore>
 void
 Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 {
+    if (system->bypassCaches()) {
+        // Packets from the memory side are snoop request and
+        // shouldn't happen in bypass mode.
+        assert(fromCpuSide);
+
+        // The cache should be flushed if we are in cache bypass mode,
+        // so we don't need to check if we need to update anything.
+        memSidePort->sendFunctional(pkt);
+        return;
+    }
+
     Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
@@ -1354,6 +1376,9 @@ template<class TagStore>
 void
 Cache<TagStore>::snoopTiming(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!system->bypassCaches());
+
     // Note that some deferred snoops don't have requests, since the
     // original access may have already completed
     if ((pkt->req && pkt->req->isUncacheable()) ||
@@ -1438,6 +1463,9 @@ template<class TagStore>
 Cycles
 Cache<TagStore>::snoopAtomic(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!system->bypassCaches());
+
     if (pkt->req->isUncacheable() || pkt->cmd == MemCmd::Writeback) {
         // Can't get a hit on an uncacheable address
         // Revisit this for multi level coherence
@@ -1683,6 +1711,7 @@ Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     // always let inhibited requests through even if blocked
     if (!pkt->memInhibitAsserted() && blocked) {
+        assert(!cache->system->bypassCaches());
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
