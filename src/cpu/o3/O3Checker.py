@@ -27,14 +27,8 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
-from BaseCPU import BaseCPU
+from CheckerCPU import CheckerCPU
 
-class O3Checker(BaseCPU):
+class O3Checker(CheckerCPU):
     type = 'O3Checker'
     cxx_header = 'cpu/o3/checker.hh'
-
-    exitOnError = Param.Bool(False, "Exit on an error")
-    updateOnError = Param.Bool(False,
-        "Update the checker with the main CPU's state on an error")
-    warnOnlyOnLoadError = Param.Bool(True,
-        "If a load result is incorrect, only print a warning and do not exit")
