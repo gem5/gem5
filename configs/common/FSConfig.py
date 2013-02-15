@@ -227,7 +227,8 @@ def makeSparcSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
+def makeArmSystem(mem_mode, machine_type, mdesc = None, dtb_filename = None,
+                  bare_metal=False):
     assert machine_type
 
     if bare_metal:
@@ -279,6 +280,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.mem_ranges = [self.physmem.range]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
+        if dtb_filename is not None:
+            self.dtb_filename = dtb_filename
         self.machine_type = machine_type
         if convert.toMemorySize(mdesc.mem()) > int(self.realview.max_mem_size):
             print "The currently selected ARM platforms doesn't support"

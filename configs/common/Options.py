@@ -173,6 +173,9 @@ def addFSOptions(parser):
                    help="Provide the raw system without the linux specific bits")
         parser.add_option("--machine-type", action="store", type="choice",
                 choices=ArmMachineType.map.keys(), default="RealView_PBX")
+        parser.add_option("--dtb-filename", action="store", type="string",
+              help="Specifies device tree blob file to use with device-tree-"\
+              "enabled kernels")
     # Benchmark options
     parser.add_option("--dual", action="store_true",
                       help="Simulate two systems attached with an ethernet link")

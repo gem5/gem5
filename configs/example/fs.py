@@ -101,9 +101,8 @@ elif buildEnv['TARGET_ISA'] == "sparc":
 elif buildEnv['TARGET_ISA'] == "x86":
     test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0])
 elif buildEnv['TARGET_ISA'] == "arm":
-    test_sys = makeArmSystem(test_mem_mode,
-            options.machine_type, bm[0],
-            bare_metal=options.bare_metal)
+    test_sys = makeArmSystem(test_mem_mode, options.machine_type, bm[0],
+            options.dtb_filename, bare_metal=options.bare_metal)
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
