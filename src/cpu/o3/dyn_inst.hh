@@ -149,8 +149,18 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
         /** Writes to misc. registers are recorded and deferred until the
-         * commit stage, when updateMiscRegs() is called.
+         * commit stage, when updateMiscRegs() is called. First, check if
+         * the misc reg has been written before and update its value to be
+         * committed instead of making a new entry. If not, make a new
+         * entry and record the write.
          */
+        for (int idx = 0; idx < _numDestMiscRegs; idx++) {
+            if (_destMiscRegIdx[idx] == misc_reg) {
+               _destMiscRegVal[idx] = val;
+               return;
+            }
+        }
+
         assert(_numDestMiscRegs < TheISA::MaxMiscDestRegs);
         _destMiscRegIdx[_numDestMiscRegs] = misc_reg;
         _destMiscRegVal[_numDestMiscRegs] = val;
