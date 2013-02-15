@@ -586,7 +586,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 template<class TagStore>
 PacketPtr
 Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
-                              bool needsExclusive)
+                              bool needsExclusive) const
 {
     bool blkValid = blk && blk->isValid();
 
@@ -1645,7 +1645,7 @@ Cache<TagStore>::getTimingPacket()
 
 template<class TagStore>
 Tick
-Cache<TagStore>::nextMSHRReadyTime()
+Cache<TagStore>::nextMSHRReadyTime() const
 {
     Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
                               writeBuffer.nextMSHRReadyTime());

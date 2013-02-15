@@ -262,12 +262,12 @@ class BaseCache : public MemObject
     const int numTarget;
 
     /** Do we forward snoops from mem side port through to cpu side port? */
-    bool forwardSnoops;
+    const bool forwardSnoops;
 
     /** Is this cache a toplevel cache (e.g. L1, I/O cache). If so we should
      * never try to forward ownership and similar optimizations to the cpu
      * side */
-    bool isTopLevel;
+    const bool isTopLevel;
 
     /**
      * Bit vector of the blocking reasons for the access path.
@@ -290,7 +290,7 @@ class BaseCache : public MemObject
     /**
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
-    AddrRangeList addrRanges;
+    const AddrRangeList addrRanges;
 
   public:
     /** System we are currently operating in. */
@@ -495,7 +495,7 @@ class BaseCache : public MemObject
     /**
      * Returns true if the cache is blocked for accesses.
      */
-    bool isBlocked()
+    bool isBlocked() const
     {
         return blocked != 0;
     }
@@ -560,9 +560,9 @@ class BaseCache : public MemObject
 
     virtual unsigned int drain(DrainManager *dm);
 
-    virtual bool inCache(Addr addr) = 0;
+    virtual bool inCache(Addr addr) const = 0;
 
-    virtual bool inMissQueue(Addr addr) = 0;
+    virtual bool inMissQueue(Addr addr) const = 0;
 
     void incMissCount(PacketPtr pkt)
     {

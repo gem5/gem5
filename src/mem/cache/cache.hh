@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -290,12 +290,6 @@ class Cache : public BaseCache
      */
     void uncacheableFlush(PacketPtr pkt);
 
-  public:
-    /** Instantiates a basic cache object. */
-    Cache(const Params *p, TagStore *tags);
-
-    void regStats();
-
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
@@ -356,7 +350,7 @@ class Cache : public BaseCache
      * current request in cpu_pkt should just be forwarded on.
      */
     PacketPtr getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
-                           bool needsExclusive);
+                           bool needsExclusive) const;
 
     /**
      * Return the next MSHR to service, either a pending miss from the
@@ -389,22 +383,28 @@ class Cache : public BaseCache
         return mshrQueue.allocated != 0;
     }
 
-    CacheBlk *findBlock(Addr addr) {
+    CacheBlk *findBlock(Addr addr) const {
         return tags->findBlock(addr);
     }
 
-    bool inCache(Addr addr) {
+    bool inCache(Addr addr) const {
         return (tags->findBlock(addr) != 0);
     }
 
-    bool inMissQueue(Addr addr) {
+    bool inMissQueue(Addr addr) const {
         return (mshrQueue.findMatch(addr) != 0);
     }
 
     /**
      * Find next request ready time from among possible sources.
      */
-    Tick nextMSHRReadyTime();
+    Tick nextMSHRReadyTime() const;
+
+  public:
+    /** Instantiates a basic cache object. */
+    Cache(const Params *p, TagStore *tags);
+
+    void regStats();
 
     /** serialize the state of the caches
      * We currently don't support checkpointing cache state, so this panics.
