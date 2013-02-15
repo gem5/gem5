@@ -47,6 +47,7 @@
 #include "cpu/inst_seq.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
+#include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/full_system.hh"
 
@@ -714,7 +715,9 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         --insts_available;
 
 #if TRACING_ON
-        inst->decodeTick = curTick() - inst->fetchTick;
+        if (DTRACE(O3PipeView)) {
+            inst->decodeTick = curTick() - inst->fetchTick;
+        }
 #endif
 
         // Ensure that if it was predicted as a branch, it really is a

@@ -49,6 +49,7 @@
 #include "cpu/o3/rename.hh"
 #include "debug/Activity.hh"
 #include "debug/Rename.hh"
+#include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;
@@ -658,9 +659,6 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         ++renamed_insts;
 
-#if TRACING_ON
-        inst->renameTick = curTick() - inst->fetchTick;
-#endif
 
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;
@@ -736,6 +734,11 @@ DefaultRename<Impl>::sortInsts()
     for (int i = 0; i < insts_from_decode; ++i) {
         DynInstPtr inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
+#if TRACING_ON
+        if (DTRACE(O3PipeView)) {
+            inst->renameTick = curTick() - inst->fetchTick;
+        }
+#endif
     }
 }
 

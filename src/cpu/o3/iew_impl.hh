@@ -56,6 +56,7 @@
 #include "debug/Decode.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
+#include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;
@@ -1611,7 +1612,9 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     iewExecutedInsts++;
 
 #if TRACING_ON
-    inst->completeTick = curTick() - inst->fetchTick;
+    if (DTRACE(O3PipeView)) {
+        inst->completeTick = curTick() - inst->fetchTick;
+    }
 #endif
 
     //

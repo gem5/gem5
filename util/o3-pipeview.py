@@ -64,11 +64,11 @@ insts = {
                           # out of order for more then 2000 CPU ticks,
                           # otherwise the print may not start/stop
                           # at the time specified by tick_start/stop.
-    'only_committed':0    # Set if only committed instructions are printed.
+    'only_committed':0,   # Set if only committed instructions are printed.
 }
 
 def process_trace(trace, outfile, cycle_time, width, color, timestamps,
-                  committed_only, start_tick, stop_tick, start_sn, stop_sn):
+                  committed_only, store_completions, start_tick, stop_tick, start_sn, stop_sn):
     global insts
 
     insts['sn_start'] = start_sn
@@ -80,31 +80,25 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
     line = None
     fields = None
 
-    # Read the first line
-    line = trace.readline()
-    if not line: return
-    fields = line.split(':')
-
     # Skip lines up to the starting tick
     if start_tick != 0:
         while True:
-            if fields[0] != 'O3PipeView': continue
-            if (int(fields[2]) > 0 and
-                int(fields[2]) >= start_tick-insts['tick_drift']): break
             line = trace.readline()
             if not line: return
             fields = line.split(':')
-
-    # Skip lines up to the starting sequence number
-    if start_sn != 0:
+            if fields[0] != 'O3PipeView': continue
+            if int(fields[2]) >= start_tick: break
+    elif start_sn != 0:
         while True:
-            if fields[0] != 'O3PipeView': continue
-            if (fields[1] == 'fetch' and
-                int(fields[5]) >= (start_sn-insts['max_threshold'])):
-                break
             line = trace.readline()
             if not line: return
             fields = line.split(':')
+            if fields[0] != 'O3PipeView': continue
+            if fields[1] == 'fetch' and int(fields[5]) >= start_sn: break
+    else:
+        line = trace.readline()
+        if not line: return
+        fields = line.split(':')
 
     # Skip lines up to next instruction fetch
     while fields[0] != 'O3PipeView' or fields[1] != 'fetch':
@@ -114,12 +108,17 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
 
     # Print header
     outfile.write('// f = fetch, d = decode, n = rename, p = dispatch, '
-                  'i = issue, c = complete, r = retire\n\n')
+                  'i = issue, c = complete, r = retire')
+
+    if store_completions:
+        outfile.write(', s = store-complete')
+    outfile.write('\n\n')
+
     outfile.write(' ' + 'timeline'.center(width) +
                   '   ' + 'tick'.center(15) +
                   '  ' + 'pc.upc'.center(12) +
                   '  ' + 'disasm'.ljust(25) +
-                  '  ' + 'seq_num'.center(15))
+                  '  ' + 'seq_num'.center(10))
     if timestamps:
         outfile.write('timestamps'.center(25))
     outfile.write('\n')
@@ -138,9 +137,16 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
                 curr_inst['sn'] = int(fields[5])
                 curr_inst['disasm'] = ' '.join(fields[6][:-1].split())
             elif fields[1] == 'retire':
-                queue_inst(outfile, curr_inst, cycle_time, width, color, timestamps)
+                if curr_inst['retire'] == 0:
+                    curr_inst['disasm'] = '-----' + curr_inst['disasm']
+                if store_completions:
+                    curr_inst[fields[3]] = int(fields[4])
+                queue_inst(outfile, curr_inst, cycle_time, width, color, timestamps, store_completions)
+
         line = trace.readline()
-        if not line: return
+        if not line:
+            print_insts(outfile, cycle_time, width, color, timestamps, store_completions, 0)
+            return
         fields = line.split(':')
 
 
@@ -150,15 +156,15 @@ def compare_by_sn(a, b):
 
 # Puts new instruction into the print queue.
 # Sorts out and prints instructions when their number reaches threshold value
-def queue_inst(outfile, inst, cycle_time, width, color, timestamps):
+def queue_inst(outfile, inst, cycle_time, width, color, timestamps, store_completions):
     global insts
     l_copy = copy.deepcopy(inst)
     insts['queue'].append(l_copy)
     if len(insts['queue']) > insts['max_threshold']:
-        print_insts(outfile, cycle_time, width, color, timestamps, insts['min_threshold'])
+        print_insts(outfile, cycle_time, width, color, timestamps, store_completions, insts['min_threshold'])
 
 # Sorts out and prints instructions in print queue
-def print_insts(outfile, cycle_time, width, color, timestamps, lower_threshold):
+def print_insts(outfile, cycle_time, width, color, timestamps, store_completions, lower_threshold):
     global insts
     insts['queue'].sort(compare_by_sn)
     while len(insts['queue']) > lower_threshold:
@@ -179,10 +185,10 @@ def print_insts(outfile, cycle_time, width, color, timestamps, lower_threshold):
 
         if (insts['only_committed'] != 0 and print_item['retire'] == 0):
             continue; # retire is set to zero if it hasn't been completed
-        print_inst(outfile,  print_item, cycle_time, width, color, timestamps)
+        print_inst(outfile,  print_item, cycle_time, width, color, timestamps, store_completions)
 
 # Prints a single instruction
-def print_inst(outfile, inst, cycle_time, width, color, timestamps):
+def print_inst(outfile, inst, cycle_time, width, color, timestamps, store_completions):
     if color:
         from m5.util.terminal import termcap
     else:
@@ -208,7 +214,13 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
                'shorthand': 'c'},
               {'name': 'retire',
                'color': termcap.Blue + termcap.Reverse,
-               'shorthand': 'r'}]
+               'shorthand': 'r'}
+              ]
+    if store_completions:
+        stages.append(
+            {'name': 'store',
+             'color': termcap.Yellow + termcap.Reverse,
+             'shorthand': 's'})
 
     # Print
 
@@ -218,7 +230,9 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
     # Find out the time of the last event - it may not
     # be 'retire' if the instruction is not comlpeted.
     last_event_time = max(inst['fetch'], inst['decode'],inst['rename'],
-        inst['dispatch'],inst['issue'], inst['complete'], inst['retire'])
+                      inst['dispatch'],inst['issue'], inst['complete'], inst['retire'])
+    if store_completions:
+        last_event_time = max(last_event_time, inst['store'])
 
     # Timeline shorter then time_width is printed in compact form where
     # the print continues at the start of the same line.
@@ -268,11 +282,11 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps):
         outfile.write(curr_color + dot * (width - pos) + termcap.Normal +
                       ']-(' + str(base_tick + i * time_width).rjust(15) + ') ')
         if i == 0:
-            outfile.write('%s.%s  %s [%s]' % (
+            outfile.write('%s.%s %s [%s]' % (
                     inst['pc'].rjust(10),
                     inst['upc'],
                     inst['disasm'].ljust(25),
-                    str(inst['sn']).rjust(15)))
+                    str(inst['sn']).rjust(10)))
             if timestamps:
                 outfile.write('  f=%s, r=%s' % (inst['fetch'], inst['retire']))
             outfile.write('\n')
@@ -329,6 +343,10 @@ def main():
         '--only_committed',
         action='store_true', default=False,
         help="display only committed (completed) instructions (default: '%default')")
+    parser.add_option(
+        '--store_completions',
+        action='store_true', default=False,
+        help="additionally display store completion ticks (default: '%default')")
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error('incorrect number of arguments')
@@ -347,7 +365,8 @@ def main():
         with open(options.outfile, 'w') as out:
             process_trace(trace, out, options.cycle_time, options.width,
                           options.color, options.timestamps,
-                          options.only_committed, *(tick_range + inst_range))
+                          options.only_committed, options.store_completions,
+                          *(tick_range + inst_range))
     print 'done!'
 
 

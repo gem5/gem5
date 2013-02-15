@@ -51,6 +51,7 @@
 #include "debug/Activity.hh"
 #include "debug/IEW.hh"
 #include "debug/LSQUnit.hh"
+#include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
@@ -1136,6 +1137,13 @@ LSQUnit<Impl>::completeStore(int store_idx)
     DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
             "idx:%i\n",
             storeQueue[store_idx].inst->seqNum, store_idx, storeHead);
+
+#if TRACING_ON
+    if (DTRACE(O3PipeView)) {
+        storeQueue[store_idx].inst->storeTick =
+            curTick() - storeQueue[store_idx].inst->fetchTick;
+    }
+#endif
 
     if (isStalled() &&
         storeQueue[store_idx].inst->seqNum == stallingStoreIsn) {

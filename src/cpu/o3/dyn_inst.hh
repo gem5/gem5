@@ -132,6 +132,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     int32_t issueTick;
     int32_t completeTick;
     int32_t commitTick;
+    int32_t storeTick;
 #endif
 
     /** Reads a misc. register, including any side-effects the read

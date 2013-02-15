@@ -60,6 +60,7 @@
 #include "debug/CommitRate.hh"
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
+#include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
@@ -1267,7 +1268,9 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     rob->retireHead(tid);
 
 #if TRACING_ON
-    head_inst->commitTick = curTick() - head_inst->fetchTick;
+    if (DTRACE(O3PipeView)) {
+        head_inst->commitTick = curTick() - head_inst->fetchTick;
+    }
 #endif
 
     // If this was a store, record it for this cycle.

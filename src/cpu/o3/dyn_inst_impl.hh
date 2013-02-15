@@ -66,26 +66,35 @@ BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr _staticInst,
 template <class Impl>BaseO3DynInst<Impl>::~BaseO3DynInst()
 {
 #if TRACING_ON
-    Tick val, fetch = this->fetchTick;
-    // Print info needed by the pipeline activity viewer.
-    DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
-             fetch,
-             this->instAddr(),
-             this->microPC(),
-             this->seqNum,
-             this->staticInst->disassemble(this->instAddr()));
-    val = (this->decodeTick == -1) ? 0 : fetch + this->decodeTick;
-    DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
-    val = (this->renameTick == -1) ? 0 : fetch + this->renameTick;
-    DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", val);
-    val = (this->dispatchTick == -1) ? 0 : fetch + this->dispatchTick;
-    DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", val);
-    val = (this->issueTick == -1) ? 0 : fetch + this->issueTick;
-    DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", val);
-    val = (this->completeTick == -1) ? 0 : fetch + this->completeTick;
-    DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", val);
-    val = (this->commitTick == -1) ? 0 : fetch + this->commitTick;
-    DPRINTFR(O3PipeView, "O3PipeView:retire:%llu\n", val);
+    if (DTRACE(O3PipeView)) {
+        Tick fetch = this->fetchTick;
+        // fetchTick can be -1 if the instruction fetched outside the trace window.
+        if (fetch != -1) {
+            Tick val;
+            // Print info needed by the pipeline activity viewer.
+            DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
+                     fetch,
+                     this->instAddr(),
+                     this->microPC(),
+                     this->seqNum,
+                     this->staticInst->disassemble(this->instAddr()));
+
+            val = (this->decodeTick == -1) ? 0 : fetch + this->decodeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
+            val = (this->renameTick == -1) ? 0 : fetch + this->renameTick;
+            DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", val);
+            val = (this->dispatchTick == -1) ? 0 : fetch + this->dispatchTick;
+            DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", val);
+            val = (this->issueTick == -1) ? 0 : fetch + this->issueTick;
+            DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", val);
+            val = (this->completeTick == -1) ? 0 : fetch + this->completeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", val);
+            val = (this->commitTick == -1) ? 0 : fetch + this->commitTick;
+
+            Tick valS = (this->storeTick == -1) ? 0 : fetch + this->storeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:retire:%llu:store:%llu\n", val, valS);
+        }
+    }
 #endif
 };
 
@@ -119,6 +128,7 @@ BaseO3DynInst<Impl>::initVars()
     issueTick = -1;
     completeTick = -1;
     commitTick = -1;
+    storeTick = -1;
 #endif
 }
 

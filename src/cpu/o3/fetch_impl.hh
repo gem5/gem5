@@ -60,6 +60,7 @@
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
+#include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/byteswap.hh"
@@ -1313,7 +1314,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             numInst++;
 
 #if TRACING_ON
-            instruction->fetchTick = curTick();
+            if (DTRACE(O3PipeView)) {
+                instruction->fetchTick = curTick();
+            }
 #endif
 
             nextPC = thisPC;
