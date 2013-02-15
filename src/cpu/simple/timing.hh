@@ -261,6 +261,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
+    void verifyMemoryMode() const;
+
     virtual void activateContext(ThreadID thread_num, Cycles delay);
     virtual void suspendContext(ThreadID thread_num);
 

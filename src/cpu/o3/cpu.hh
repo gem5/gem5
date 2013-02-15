@@ -479,6 +479,8 @@ class FullO3CPU : public BaseO3CPU
     /** Takes over from another CPU. */
     virtual void takeOverFrom(BaseCPU *oldCPU);
 
+    void verifyMemoryMode() const;
+
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq()
     { return globalSeqNum++; }

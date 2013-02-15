@@ -254,8 +254,11 @@ BaseCPU::~BaseCPU()
 void
 BaseCPU::init()
 {
-    if (!params()->switched_out)
+    if (!params()->switched_out) {
         registerThreadContexts();
+
+        verifyMemoryMode();
+    }
 }
 
 void

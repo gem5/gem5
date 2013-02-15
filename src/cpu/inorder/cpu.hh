@@ -109,6 +109,8 @@ class InOrderCPU : public BaseCPU
     /* Destructor */
     ~InOrderCPU();
     
+    void verifyMemoryMode() const;
+
     /** Return a reference to the data port. */
     virtual CpuPort &getDataPort() { return dataPort; }
 

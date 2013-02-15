@@ -84,12 +84,6 @@ AtomicSimpleCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->switched_out &&
-        system->getMemoryMode() != Enums::atomic) {
-        fatal("The atomic CPU requires the memory system to be in "
-              "'atomic' mode.\n");
-    }
-
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
@@ -157,10 +151,7 @@ AtomicSimpleCPU::drainResume()
         return;
 
     DPRINTF(SimpleCPU, "Resume\n");
-    if (system->getMemoryMode() != Enums::atomic) {
-        fatal("The atomic CPU requires the memory system to be in "
-              "'atomic' mode.\n");
-    }
+    verifyMemoryMode();
 
     assert(!threadContexts.empty());
     if (threadContexts.size() > 1)
@@ -218,6 +209,14 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
 }
 
+void
+AtomicSimpleCPU::verifyMemoryMode() const
+{
+    if (system->getMemoryMode() != Enums::atomic) {
+        fatal("The atomic CPU requires the memory system to be in "
+              "'atomic' mode.\n");
+    }
+}
 
 void
 AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)

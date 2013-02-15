@@ -66,12 +66,6 @@ TimingSimpleCPU::init()
 {
     BaseCPU::init();
 
-    if (!params()->switched_out &&
-        system->getMemoryMode() != Enums::timing) {
-        fatal("The timing CPU requires the memory system to be in "
-              "'timing' mode.\n");
-    }
-
     // Initialise the ThreadContext's memory proxies
     tcBase()->initMemProxies(tcBase());
 
@@ -141,10 +135,7 @@ TimingSimpleCPU::drainResume()
         return;
 
     DPRINTF(SimpleCPU, "Resume\n");
-    if (system->getMemoryMode() != Enums::timing) {
-        fatal("The timing CPU requires the memory system to be in "
-              "'timing' mode.\n");
-    }
+    verifyMemoryMode();
 
     assert(!threadContexts.empty());
     if (threadContexts.size() > 1)
@@ -197,6 +188,14 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     previousCycle = curCycle();
 }
 
+void
+TimingSimpleCPU::verifyMemoryMode() const
+{
+    if (system->getMemoryMode() != Enums::timing) {
+        fatal("The timing CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
+}
 
 void
 TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)

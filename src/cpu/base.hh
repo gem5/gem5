@@ -342,6 +342,17 @@ class BaseCPU : public MemObject
     bool switchedOut() const { return _switchedOut; }
 
     /**
+     * Verify that the system is in a memory mode supported by the
+     * CPU.
+     *
+     * Implementations are expected to query the system for the
+     * current memory mode and ensure that it is what the CPU model
+     * expects. If the check fails, the implementation should
+     * terminate the simulation using fatal().
+     */
+    virtual void verifyMemoryMode() const { };
+
+    /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).
      * This is a constant for the duration of the simulation.
      */

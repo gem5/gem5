@@ -646,12 +646,6 @@ FullO3CPU<Impl>::init()
 {
     BaseCPU::init();
 
-    if (!params()->switched_out &&
-        system->getMemoryMode() != Enums::timing) {
-        fatal("The O3 CPU requires the memory system to be in "
-              "'timing' mode.\n");
-    }
-
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.
@@ -1262,11 +1256,7 @@ FullO3CPU<Impl>::drainResume()
         return;
 
     DPRINTF(Drain, "Resuming...\n");
-
-    if (system->getMemoryMode() != Enums::timing) {
-        fatal("The O3 CPU requires the memory system to be in "
-              "'timing' mode.\n");
-    }
+    verifyMemoryMode();
 
     fetch.drainResume();
     commit.drainResume();
@@ -1320,6 +1310,16 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     lastRunningCycle = curCycle();
     _status = Idle;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::verifyMemoryMode() const
+{
+    if (system->getMemoryMode() != Enums::timing) {
+        fatal("The O3 CPU requires the memory system to be in "
+              "'timing' mode.\n");
+    }
 }
 
 template <class Impl>
