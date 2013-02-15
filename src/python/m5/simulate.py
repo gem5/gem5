@@ -60,6 +60,11 @@ from util import attrdict
 # define a MaxTick parameter
 MaxTick = 2**63 - 1
 
+_memory_modes = {
+    "atomic" : objects.params.atomic,
+    "timing" : objects.params.timing,
+    }
+
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(ckpt_dir=None):
@@ -202,7 +207,7 @@ def checkpoint(dir):
     internal.core.serializeAll(dir)
     resume(root)
 
-def changeMemoryMode(system, mode):
+def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
@@ -212,15 +217,26 @@ def changeMemoryMode(system, mode):
     else:
         print "System already in target mode. Memory mode unchanged."
 
-def changeToAtomic(system, **kwargs):
-    print "Changing memory mode to atomic"
-    changeMemoryMode(system, objects.params.atomic, **kwargs)
+def switchCpus(system, cpuList, do_drain=True):
+    """Switch CPUs in a system.
 
-def changeToTiming(system, **kwargs):
-    print "Changing memory mode to timing"
-    changeMemoryMode(system, objects.params.timing, **kwargs)
+    By default, this method drains and resumes the system. This
+    behavior can be disabled by setting the keyword argument
+    'do_drain' to false, which might be desirable if multiple
+    operations requiring a drained system are going to be performed in
+    sequence.
 
-def switchCpus(cpuList):
+    Note: This method may switch the memory mode of the system if that
+    is required by the CPUs. It may also flush all caches in the
+    system.
+
+    Arguments:
+      system -- Simulated system.
+      cpuList -- (old_cpu, new_cpu) tuples
+
+    Keyword Arguments:
+      do_drain -- Perform a drain/resume of the system when switching.
+    """
     print "switching cpus"
     if not isinstance(cpuList, list):
         raise RuntimeError, "Must pass a list to this function"
@@ -228,7 +244,10 @@ def switchCpus(cpuList):
         if not isinstance(item, tuple) or len(item) != 2:
             raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
 
-    old_cpu_set = set([old_cpu for old_cpu, new_cpu in cpuList])
+    old_cpus = [old_cpu for old_cpu, new_cpu in cpuList]
+    new_cpus = [new_cpu for old_cpu, new_cpu in cpuList]
+    old_cpu_set = set(old_cpus)
+    memory_mode_name = new_cpus[0].memory_mode()
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, objects.BaseCPU):
             raise TypeError, "%s is not of type BaseCPU" % old_cpu
@@ -240,15 +259,41 @@ def switchCpus(cpuList):
         if not new_cpu.switchedOut():
             raise RuntimeError, \
                 "New CPU (%s) is already active." % (new_cpu,)
+        if not new_cpu.support_take_over():
+            raise RuntimeError, \
+                "New CPU (%s) does not support CPU handover." % (old_cpu,)
+        if new_cpu.memory_mode() != memory_mode_name:
+            raise RuntimeError, \
+                "%s and %s require different memory modes." % (new_cpu,
+                                                               new_cpus[0])
         if old_cpu.switchedOut():
             raise RuntimeError, \
                 "Old CPU (%s) is inactive." % (new_cpu,)
+        if not old_cpu.support_take_over():
+            raise RuntimeError, \
+                "Old CPU (%s) does not support CPU handover." % (old_cpu,)
+
+    try:
+        memory_mode = _memory_modes[memory_mode_name]
+    except KeyError:
+        raise RuntimeError, "Invalid memory mode (%s)" % memory_mode_name
+
+    if do_drain:
+        drain(system)
 
     # Now all of the CPUs are ready to be switched out
     for old_cpu, new_cpu in cpuList:
         old_cpu.switchOut()
 
+    # Change the memory mode if required. We check if this is needed
+    # to avoid printing a warning if no switch was performed.
+    if system.getMemoryMode() != memory_mode:
+        _changeMemoryMode(system, memory_mode)
+
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
+
+    if do_drain:
+        resume(system)
 
 from internal.core import disableAllListeners

@@ -40,12 +40,6 @@ from m5.objects import *
 m5.util.addToPath('../configs/common')
 from Caches import *
 
-def _memMode(cclass):
-    if cclass == AtomicSimpleCPU:
-        return "atomic", m5.objects.params.atomic
-    else:
-        return "timing", m5.objects.params.timing
-
 class Sequential:
     """Sequential CPU switcher.
 
@@ -104,7 +98,7 @@ def run_test(root, switcher=None, freq=1000):
 
     current_cpu = switcher.first()
     system = root.system
-    system.mem_mode = _memMode(type(current_cpu))[0]
+    system.mem_mode = type(current_cpu).memory_mode()
 
     # instantiate configuration
     m5.instantiate()
@@ -122,9 +116,9 @@ def run_test(root, switcher=None, freq=1000):
             print "Switching CPUs..."
             print "Next CPU: %s" % type(next_cpu)
             m5.drain(system)
-            system.setMemoryMode(_memMode(type(next_cpu))[1])
             if current_cpu != next_cpu:
-                m5.switchCpus([ (current_cpu, next_cpu) ])
+                m5.switchCpus(system, [ (current_cpu, next_cpu) ],
+                              do_drain=False)
             else:
                 print "Source CPU and destination CPU are the same, skipping..."
             m5.resume(system)

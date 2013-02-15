@@ -242,10 +242,7 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
         if exit_cause != "simulate() limit reached":
             return exit_event
 
-        print "draining the system"
-        m5.drain(testsys)
-        m5.switchCpus(repeat_switch_cpu_list)
-        m5.resume(testsys)
+        m5.switchCpus(testsys, repeat_switch_cpu_list)
 
         tmp_cpu_list = []
         for old_cpu, new_cpu in repeat_switch_cpu_list:
@@ -436,15 +433,7 @@ def run(options, root, testsys, cpu_class):
             exit_event = m5.simulate(10000)
         print "Switched CPUS @ tick %s" % (m5.curTick())
 
-        # when you change to Timing (or Atomic), you halt the system
-        # given as argument.  When you are finished with the system
-        # changes (including switchCpus), you must resume the system
-        # manually.  You DON'T need to resume after just switching
-        # CPUs if you haven't changed anything on the system level.
-
-        m5.changeToTiming(testsys)
-        m5.switchCpus(switch_cpu_list)
-        m5.resume(testsys)
+        m5.switchCpus(testsys, switch_cpu_list)
 
         if options.standard_switch:
             print "Switch at instruction count:%d" % \
@@ -458,9 +447,7 @@ def run(options, root, testsys, cpu_class):
             print "Switching CPUS @ tick %s" % (m5.curTick())
             print "Simulation ends instruction count:%d" % \
                     (testsys.switch_cpus_1[0].max_insts_any_thread)
-            m5.drain(testsys)
-            m5.switchCpus(switch_cpu_list1)
-            m5.resume(testsys)
+            m5.switchCpus(testsys, switch_cpu_list1)
 
     # If we're taking and restoring checkpoints, use checkpoint_dir
     # option only for finding the checkpoints to restore from.  This
