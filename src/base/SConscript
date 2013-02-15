@@ -63,6 +63,7 @@ Source('types.cc')
 Source('userinfo.cc')
 
 Source('loader/aout_object.cc')
+Source('loader/dtb_object.cc')
 Source('loader/ecoff_object.cc')
 Source('loader/elf_object.cc')
 Source('loader/hex_file.cc')

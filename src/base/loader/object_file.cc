@@ -39,6 +39,7 @@
 #include <string>
 
 #include "base/loader/aout_object.hh"
+#include "base/loader/dtb_object.hh"
 #include "base/loader/ecoff_object.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
@@ -137,6 +138,10 @@ createObjectFile(const string &fname, bool raw)
     }
 
     if ((fileObj = ElfObject::tryFile(fname, fd, len, fileData)) != NULL) {
+        return fileObj;
+    }
+
+    if ((fileObj = DtbObject::tryFile(fname, fd, len, fileData)) != NULL) {
         return fileObj;
     }
 

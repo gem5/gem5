@@ -45,6 +45,7 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/linux/threadinfo.hh"
+#include "base/loader/dtb_object.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
@@ -143,6 +144,20 @@ LinuxArmSystem::initState()
         if (!dtb_file) {
             fatal("couldn't load DTB file: %s\n", params()->dtb_filename);
         }
+
+        DtbObject *_dtb_file = dynamic_cast<DtbObject*>(dtb_file);
+
+        if (_dtb_file) {
+            if (!_dtb_file->addBootCmdLine(params()->boot_osflags.c_str(),
+                                           params()->boot_osflags.size())) {
+                warn("couldn't append bootargs to DTB file: %s\n",
+                     params()->dtb_filename);
+            }
+        } else {
+            warn("dtb_file cast failed; couldn't append bootargs "
+                 "to DTB file: %s\n", params()->dtb_filename);
+        }
+
         dtb_file->setTextBase(params()->atags_addr);
         dtb_file->loadSections(physProxy);
         delete dtb_file;
