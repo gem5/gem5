@@ -241,7 +241,9 @@ DefaultDecode<Impl>::block(ThreadID tid)
         // Set the status to Blocked.
         decodeStatus[tid] = Blocked;
 
-        if (decodeStatus[tid] != Unblocking) {
+        if (toFetch->decodeUnblock[tid]) {
+            toFetch->decodeUnblock[tid] = false;
+        } else {
             toFetch->decodeBlock[tid] = true;
             wroteToTimeBuffer = true;
         }
