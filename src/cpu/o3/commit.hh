@@ -479,6 +479,12 @@ class DefaultCommit
     /** True if last committed microop can be followed by an interrupt */
     bool canHandleInterrupts;
 
+    /** Have we had an interrupt pending and then seen it de-asserted because
+        of a masking change? In this case the variable is set and the next time
+        interrupts are enabled and pending the pipeline will squash to avoid
+        a possible livelock senario.  */
+    bool avoidQuiesceLiveLock;
+
     /** Updates commit stats based on this instruction. */
     void updateComInstStats(DynInstPtr &inst);
 

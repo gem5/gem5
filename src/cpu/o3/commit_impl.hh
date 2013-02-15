@@ -101,7 +101,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       numThreads(params->numThreads),
       drainPending(false),
       trapLatency(params->trapLatency),
-      canHandleInterrupts(true)
+      canHandleInterrupts(true),
+      avoidQuiesceLiveLock(false)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -728,6 +729,7 @@ DefaultCommit<Impl>::handleInterrupt()
                 "it got handled. Restart fetching from the orig path.\n");
         toIEW->commitInfo[0].clearInterrupt = true;
         interrupt = NoFault;
+        avoidQuiesceLiveLock = true;
         return;
     }
 
@@ -759,6 +761,7 @@ DefaultCommit<Impl>::handleInterrupt()
         generateTrapEvent(0);
 
         interrupt = NoFault;
+        avoidQuiesceLiveLock = false;
     } else {
         DPRINTF(Commit, "Interrupt pending: instruction is %sin "
                 "flight, ROB is %sempty\n",
@@ -1058,6 +1061,18 @@ DefaultCommit<Impl>::commitInsts()
                             "PC skip function event, stopping commit\n");
                     break;
                 }
+
+                // Check if an instruction just enabled interrupts and we've
+                // previously had an interrupt pending that was not handled
+                // because interrupts were subsequently disabled before the
+                // pipeline reached a place to handle the interrupt. In that
+                // case squash now to make sure the interrupt is handled.
+                //
+                // If we don't do this, we might end up in a live lock situation
+                if (!interrupt  && avoidQuiesceLiveLock &&
+                   (!head_inst->isMicroop() || head_inst->isLastMicroop()) &&
+                   cpu->checkInterrupts(cpu->tcBase(0)))
+                    squashAfter(tid, head_inst);
             } else {
                 DPRINTF(Commit, "Unable to commit head instruction PC:%s "
                         "[tid:%i] [sn:%i].\n",
