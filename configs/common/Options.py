@@ -31,11 +31,19 @@ from m5.defines import buildEnv
 from m5.objects import *
 from Benchmarks import *
 
+import CpuConfig
+
+def _listCpuTypes(option, opt, value, parser):
+    CpuConfig.print_cpu_list()
+    sys.exit(0)
+
 def addCommonOptions(parser):
     # system options
+    parser.add_option("--list-cpu-types",
+                      action="callback", callback=_listCpuTypes,
+                      help="List available CPU types")
     parser.add_option("--cpu-type", type="choice", default="atomic",
-                      choices = ["atomic", "timing", "detailed", "inorder",
-                                 "arm_detailed"],
+                      choices=CpuConfig.cpu_names(),
                       help = "type of cpu to run with")
     parser.add_option("--checker", action="store_true");
     parser.add_option("-n", "--num-cpus", type="int", default=1)

@@ -43,28 +43,19 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
+import CpuConfig
+
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
-from O3_ARM_v7a import *
 
 addToPath('../common')
 
 def getCPUClass(cpu_type):
-    """Returns the required cpu class and the mode of operation.
-    """
-
-    if cpu_type == "timing":
-        return TimingSimpleCPU, 'timing'
-    elif cpu_type == "detailed":
-        return DerivO3CPU, 'timing'
-    elif cpu_type == "arm_detailed":
-        return O3_ARM_v7a_3, 'timing'
-    elif cpu_type == "inorder":
-        return InOrderCPU, 'timing'
-    else:
-        return AtomicSimpleCPU, 'atomic'
+    """Returns the required cpu class and the mode of operation."""
+    cls = CpuConfig.get(cpu_type)
+    return cls, cls.memory_mode()
 
 def setCPUClass(options):
     """Returns two cpu classes and the initial mode of operation.
