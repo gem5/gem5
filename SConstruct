@@ -1040,6 +1040,10 @@ main.SConscript('ext/libelf/SConscript',
 main.SConscript('ext/gzstream/SConscript',
                 variant_dir = joinpath(build_root, 'gzstream'))
 
+# libfdt build is shared across all configs in the build root.
+main.SConscript('ext/libfdt/SConscript',
+                variant_dir = joinpath(build_root, 'libfdt'))
+
 ###################################################
 #
 # This function is used to set up a directory with switching headers
