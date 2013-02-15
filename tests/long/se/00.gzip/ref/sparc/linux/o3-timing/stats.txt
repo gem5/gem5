@@ -4,11 +4,11 @@ sim_seconds                                  0.387316                       # Nu
 sim_ticks                                387315507500                       # Number of ticks simulated
 final_tick                               387315507500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 205717                       # Simulator instruction rate (inst/s)
-host_op_rate                                   206366                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               56864239                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 235456                       # Number of bytes of host memory used
-host_seconds                                  6811.23                       # Real time elapsed on the host
+host_inst_rate                                 183094                       # Simulator instruction rate (inst/s)
+host_op_rate                                   183671                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               50610731                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 233664                       # Number of bytes of host memory used
+host_seconds                                  7652.83                       # Real time elapsed on the host
 sim_insts                                  1401188945                       # Number of instructions simulated
 sim_ops                                    1405604139                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             76544                       # Number of bytes read from this memory
@@ -259,7 +259,7 @@ system.cpu.rename.int_rename_lookups       2712307786                       # Nu
 system.cpu.rename.fp_rename_lookups          34121307                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps            1244770439                       # Number of HB maps that are committed
 system.cpu.rename.UndoneMaps                111594753                       # Number of HB maps that are undone due to squashing
-system.cpu.rename.serializingInsts            2643942                       # count of serializing insts renamed
+system.cpu.rename.serializingInsts            2643851                       # count of serializing insts renamed
 system.cpu.rename.tempSerializingInsts        2663506                       # count of temporary serializing insts renamed
 system.cpu.rename.skidInsts                 271777312                       # count of insts added to the skid buffer
 system.cpu.memDep0.insertedLoads            436941235                       # Number of loads inserted to the mem dependence unit.

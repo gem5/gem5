@@ -10,23 +10,25 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-warn: 5659150500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
-warn: 5667223500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
-warn: 5701468500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
-warn: 5716197500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
-warn: 6234360500: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
+warn: 5720641500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
+warn: 5728757500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
+warn: 5763076500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
+warn: 5777835500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
+warn: 6298513500: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
 warn: LCD dual screen mode not supported
-warn: 51492621000: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
+warn: 52553050000: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
+warn: 2291164927000: Instruction results do not match! (Values may not actually be integers) Inst: 0x2, checker: 0
 warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr bpiallis' unimplemented
-warn: 2473679746000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
-warn: 2487454314500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2488664454000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2a4, checker: 0
-warn: 2509713816500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2510230497500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2515951942000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
-warn: 2516461974500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d954, checker: 0
-warn: 2517022987000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
-warn: 2517024145000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
-warn: 2517574344000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2fc, checker: 0
+warn: 2483733168000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
+warn: 2497502762000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2498707540000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2a4, checker: 0
+warn: 2519748168000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2520262198000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2525920507000: Instruction results do not match! (Values may not actually be integers) Inst: 0xee6b2, checker: 0x200da
+warn: 2525942893500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
+warn: 2526450197000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d954, checker: 0
+warn: 2527009496000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
+warn: 2527010611500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
+warn: 2527557612000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2fc, checker: 0
 hack: be nice to actually delete the event here
