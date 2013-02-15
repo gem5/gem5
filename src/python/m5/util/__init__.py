@@ -56,6 +56,17 @@ def fatal(fmt, *args):
     print >>sys.stderr, 'fatal:', fmt % args
     sys.exit(1)
 
+# warn() should be called when the user should be warned about some condition
+# that may or may not be the user's fault, but that they should be made aware
+# of as it may affect the simulation or results.
+def warn(fmt, *args):
+    print >>sys.stderr, 'warn:', fmt % args
+
+# inform() should be called when the user should be informed about some
+# condition that they may be interested in.
+def inform(fmt, *args):
+    print >>sys.stdout, 'info:', fmt % args
+
 class Singleton(type):
     def __call__(cls, *args, **kwargs):
         if hasattr(cls, '_instance'):

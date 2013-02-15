@@ -213,8 +213,7 @@ class MetaSimObject(type):
             if 'cxx_header' not in cls._value_dict:
                 global noCxxHeader
                 noCxxHeader = True
-                print >> sys.stderr, \
-                    "warning: No header file specified for SimObject: %s" % name
+                warn("No header file specified for SimObject: %s", name)
 
         # Export methods are automatically inherited via C++, so we
         # don't want the method declarations to get inherited on the
@@ -804,8 +803,8 @@ class SimObject(object):
     def add_child(self, name, child):
         child = coerceSimObjectOrVector(child)
         if child.has_parent():
-            print "warning: add_child('%s'): child '%s' already has parent" % \
-                  (name, child.get_name())
+            warn("add_child('%s'): child '%s' already has parent", name,
+                child.get_name())
         if self._children.has_key(name):
             # This code path had an undiscovered bug that would make it fail
             # at runtime. It had been here for a long time and was only
@@ -828,8 +827,7 @@ class SimObject(object):
                 val = SimObjectVector(val)
                 self._values[key] = val
             if isSimObjectOrVector(val) and not val.has_parent():
-                print "warning: %s adopting orphan SimObject param '%s'" \
-                      % (self, key)
+                warn("%s adopting orphan SimObject param '%s'", self, key)
                 self.add_child(key, val)
 
     def path(self):

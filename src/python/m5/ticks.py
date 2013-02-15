@@ -27,6 +27,7 @@
 # Authors: Nathan Binkert
 
 import sys
+from m5.util import warn
 
 tps = 1.0e12         # default to 1 THz (1 Tick == 1 ps)
 tps_fixed = False    # once set to true, can't be changed
@@ -81,8 +82,8 @@ def fromSeconds(value):
     int_value = int(round(value))
     err = (value - int_value) / value
     if err > frequency_tolerance:
-        print >>sys.stderr, "Warning: rounding error > tolerance"
-        print >>sys.stderr, "    %f rounded to %d" % (value, int_value)
+        warn("rounding error > tolerance\n    %f rounded to %d", value,
+            int_value)
     return int_value
 
 __all__ = [ 'setGlobalFrequency', 'fixGlobalFrequency', 'fromSeconds',

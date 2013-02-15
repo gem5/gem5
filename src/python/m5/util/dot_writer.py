@@ -57,6 +57,7 @@
 
 import m5, os, re
 from m5.SimObject import isRoot, isSimObjectVector
+from m5.util import warn
 try:
     import pydot
 except:
@@ -176,4 +177,4 @@ def do_dot(root, outdir, dotFilename):
         # So avoid terminating simulation unnecessarily
         callgraph.write_pdf(dot_filename + ".pdf")
     except:
-        print "warning: failed to generate pdf output from %s" % dot_filename
+        warn("failed to generate pdf output from %s", dot_filename)
