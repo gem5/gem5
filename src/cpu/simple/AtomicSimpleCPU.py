@@ -42,8 +42,21 @@ from m5.params import *
 from BaseSimpleCPU import BaseSimpleCPU
 
 class AtomicSimpleCPU(BaseSimpleCPU):
+    """Simple CPU model executing a configurable number of
+    instructions per cycle. This model uses the simplified 'atomic'
+    memory mode."""
+
     type = 'AtomicSimpleCPU'
     cxx_header = "cpu/simple/atomic.hh"
+
+    @classmethod
+    def memory_mode(cls):
+        return 'atomic'
+
+    @classmethod
+    def support_take_over(cls):
+        return True
+
     width = Param.Int(1, "CPU width")
     simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
     simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")

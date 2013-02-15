@@ -39,6 +39,14 @@ class InOrderCPU(BaseCPU):
     cxx_header = "cpu/inorder/cpu.hh"
     activity = Param.Unsigned(0, "Initial count")
 
+    @classmethod
+    def memory_mode(cls):
+        return 'timing'
+
+    @classmethod
+    def require_caches(cls):
+        return True
+
     threadModel = Param.ThreadModel('SMT', "Multithreading model (SE-MODE only)")
     
     cachePorts = Param.Unsigned(2, "Cache Ports")

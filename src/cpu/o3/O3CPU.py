@@ -38,6 +38,18 @@ class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     cxx_header = 'cpu/o3/deriv.hh'
 
+    @classmethod
+    def memory_mode(cls):
+        return 'timing'
+
+    @classmethod
+    def require_caches(cls):
+        return True
+
+    @classmethod
+    def support_take_over(cls):
+        return True
+
     activity = Param.Unsigned(0, "Initial count")
 
     cachePorts = Param.Unsigned(200, "Cache Ports")

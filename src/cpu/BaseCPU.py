@@ -100,6 +100,25 @@ class BaseCPU(MemObject):
     void flushTLBs();
 ''')
 
+    @classmethod
+    def memory_mode(cls):
+        """Which memory mode does this CPU require?"""
+        return 'invalid'
+
+    @classmethod
+    def require_caches(cls):
+        """Does the CPU model require caches?
+
+        Some CPU models might make assumptions that require them to
+        have caches.
+        """
+        return False
+
+    @classmethod
+    def support_take_over(cls):
+        """Does the CPU model support CPU takeOverFrom?"""
+        return False
+
     def takeOverFrom(self, old_cpu):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
 

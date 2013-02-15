@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved
+# 
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2008 The Regents of The University of Michigan
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -64,14 +76,11 @@ def setCPUClass(options):
        depending on the options provided.
     """
 
-    if options.cpu_type == "detailed" or \
-       options.cpu_type == "arm_detailed" or \
-       options.cpu_type == "inorder" :
-        if not options.caches and not options.ruby:
-            fatal("O3/Inorder CPU must be used with caches")
-
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
     CPUClass = None
+    if TmpClass.require_caches() and \
+            not options.caches and not options.ruby:
+        fatal("%s must be used with caches" % options.cpu_type)
 
     if options.checkpoint_restore != None:
         if options.restore_with_cpu != options.cpu_type:
@@ -317,29 +326,17 @@ def run(options, root, testsys, cpu_class):
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.repeat_switch:
-        if options.cpu_type == "arm_detailed":
-            if not options.caches:
-                print "O3 CPU must be used with caches"
-                sys.exit(1)
-
-            repeat_switch_cpus = [O3_ARM_v7a_3(switched_out=True, \
-                                  cpu_id=(i)) for i in xrange(np)]
-        elif options.cpu_type == "detailed":
-            if not options.caches:
-                print "O3 CPU must be used with caches"
-                sys.exit(1)
-
-            repeat_switch_cpus = [DerivO3CPU(switched_out=True, \
-                                  cpu_id=(i)) for i in xrange(np)]
-        elif options.cpu_type == "inorder":
-            print "inorder CPU switching not supported"
+        switch_class = getCPUClass(options.cpu_type)[0]
+        if switch_class.require_caches() and \
+                not options.caches:
+            print "%s: Must be used with caches" % str(switch_class)
             sys.exit(1)
-        elif options.cpu_type == "timing":
-            repeat_switch_cpus = [TimingSimpleCPU(switched_out=True, \
-                                  cpu_id=(i)) for i in xrange(np)]
-        else:
-            repeat_switch_cpus = [AtomicSimpleCPU(switched_out=True, \
-                                  cpu_id=(i)) for i in xrange(np)]
+        if not switch_class.support_take_over():
+            print "%s: CPU switching not supported" % str(switch_class)
+            sys.exit(1)
+
+        repeat_switch_cpus = [switch_class(switched_out=True, \
+                                               cpu_id=(i)) for i in xrange(np)]
 
         for i in xrange(np):
             repeat_switch_cpus[i].system = testsys
