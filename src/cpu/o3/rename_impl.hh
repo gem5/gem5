@@ -600,6 +600,18 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         DPRINTF(Rename, "[tid:%u]: Processing instruction [sn:%lli] with "
                 "PC %s.\n", tid, inst->seqNum, inst->pcState());
 
+        // Check here to make sure there are enough destination registers
+        // to rename to.  Otherwise block.
+        if (renameMap[tid]->numFreeEntries() < inst->numDestRegs()) {
+            DPRINTF(Rename, "Blocking due to lack of free "
+                    "physical registers to rename to.\n");
+            blockThisCycle = true;
+            insts_to_rename.push_front(inst);
+            ++renameFullRegistersEvents;
+
+            break;
+        }
+
         // Handle serializeAfter/serializeBefore instructions.
         // serializeAfter marks the next instruction as serializeBefore.
         // serializeBefore makes the instruction wait in rename until the ROB
@@ -639,18 +651,6 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
             inst->setSerializeHandled();
 
             serializeAfter(insts_to_rename, tid);
-        }
-
-        // Check here to make sure there are enough destination registers
-        // to rename to.  Otherwise block.
-        if (renameMap[tid]->numFreeEntries() < inst->numDestRegs()) {
-            DPRINTF(Rename, "Blocking due to lack of free "
-                    "physical registers to rename to.\n");
-            blockThisCycle = true;
-            insts_to_rename.push_front(inst);
-            ++renameFullRegistersEvents;
-
-            break;
         }
 
         renameSrcRegs(inst, inst->threadNumber);
