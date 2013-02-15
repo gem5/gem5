@@ -58,10 +58,12 @@ class DiskImage : public SimObject
     DiskImage(const Params *p) : SimObject(p), initialized(false) {}
     virtual ~DiskImage() {}
 
-    virtual off_t size() const = 0;
+    virtual std::streampos size() const = 0;
 
-    virtual off_t read(uint8_t *data, off_t offset) const = 0;
-    virtual off_t write(const uint8_t *data, off_t offset) = 0;
+    virtual std::streampos read(uint8_t *data,
+                                std::streampos offset) const = 0;
+    virtual std::streampos write(const uint8_t *data,
+                                 std::streampos offset) = 0;
 };
 
 /**
@@ -73,7 +75,7 @@ class RawDiskImage : public DiskImage
     mutable std::fstream stream;
     std::string file;
     bool readonly;
-    mutable off_t disk_size;
+    mutable std::streampos disk_size;
 
   public:
     typedef RawDiskImageParams Params;
@@ -83,10 +85,10 @@ class RawDiskImage : public DiskImage
     void close();
     void open(const std::string &filename, bool rd_only = false);
 
-    virtual off_t size() const;
+    virtual std::streampos size() const;
 
-    virtual off_t read(uint8_t *data, off_t offset) const;
-    virtual off_t write(const uint8_t *data, off_t offset);
+    virtual std::streampos read(uint8_t *data, std::streampos offset) const;
+    virtual std::streampos write(const uint8_t *data, std::streampos offset);
 };
 
 /**
@@ -129,10 +131,10 @@ class CowDiskImage : public DiskImage
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    virtual off_t size() const;
+    virtual std::streampos size() const;
 
-    virtual off_t read(uint8_t *data, off_t offset) const;
-    virtual off_t write(const uint8_t *data, off_t offset);
+    virtual std::streampos read(uint8_t *data, std::streampos offset) const;
+    virtual std::streampos write(const uint8_t *data, std::streampos offset);
 };
 
 #endif // __DISK_IMAGE_HH__

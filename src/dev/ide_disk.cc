@@ -590,7 +590,7 @@ IdeDisk::startCommand()
     switch (cmdReg.command) {
         // Supported non-data commands
       case WDSF_READ_NATIVE_MAX:
-        size = image->size() - 1;
+        size = (uint32_t)image->size() - 1;
         cmdReg.sec_num = (size & 0xff);
         cmdReg.cyl_low = ((size & 0xff00) >> 8);
         cmdReg.cyl_high = ((size & 0xff0000) >> 16);

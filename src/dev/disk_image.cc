@@ -86,7 +86,7 @@ RawDiskImage::close()
     stream.close();
 }
 
-off_t
+std::streampos
 RawDiskImage::size() const
 {
     if (disk_size == 0) {
@@ -99,8 +99,8 @@ RawDiskImage::size() const
     return disk_size / SectorSize;
 }
 
-off_t
-RawDiskImage::read(uint8_t *data, off_t offset) const
+std::streampos
+RawDiskImage::read(uint8_t *data, std::streampos offset) const
 {
     if (!initialized)
         panic("RawDiskImage not initialized");
@@ -120,8 +120,8 @@ RawDiskImage::read(uint8_t *data, off_t offset) const
     return stream.tellg() - pos;
 }
 
-off_t
-RawDiskImage::write(const uint8_t *data, off_t offset)
+std::streampos
+RawDiskImage::write(const uint8_t *data, std::streampos offset)
 {
     if (!initialized)
         panic("RawDiskImage not initialized");
@@ -357,12 +357,12 @@ CowDiskImage::writeback()
     }
 }
 
-off_t
+std::streampos
 CowDiskImage::size() const
 { return child->size(); }
 
-off_t
-CowDiskImage::read(uint8_t *data, off_t offset) const
+std::streampos
+CowDiskImage::read(uint8_t *data, std::streampos offset) const
 {
     if (!initialized)
         panic("CowDiskImage not initialized");
@@ -381,8 +381,8 @@ CowDiskImage::read(uint8_t *data, off_t offset) const
     }
 }
 
-off_t
-CowDiskImage::write(const uint8_t *data, off_t offset)
+std::streampos
+CowDiskImage::write(const uint8_t *data, std::streampos offset)
 {
     if (!initialized)
         panic("RawDiskImage not initialized");
