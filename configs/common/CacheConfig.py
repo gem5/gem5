@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved
+# 
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+# 
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -32,24 +44,30 @@
 import m5
 from m5.objects import *
 from Caches import *
-from O3_ARM_v7a import *
 
 def config_cache(options, system):
+    if options.cpu_type == "arm_detailed":
+        try:
+            from O3_ARM_v7a import *
+        except:
+            print "arm_detailed is unavailable. Did you compile the O3 model?"
+            sys.exit(1)
+
+        dcache_class, icache_class, l2_cache_class = \
+            O3_ARM_v7a_DCache, O3_ARM_v7a_ICache, O3_ARM_v7aL2
+    else:
+        dcache_class, icache_class, l2_cache_class = \
+            L1Cache, L1Cache, L2Cache
+
     if options.l2cache:
         # Provide a clock for the L2 and the L1-to-L2 bus here as they
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs, and set the L1-to-L2 bus width to 32
         # bytes (256 bits).
-        if options.cpu_type == "arm_detailed":
-            system.l2 = O3_ARM_v7aL2(clock = options.clock,
-                                     size = options.l2_size,
-                                     assoc = options.l2_assoc,
-                                     block_size=options.cacheline_size)
-        else:
-            system.l2 = L2Cache(clock = options.clock,
-                                size = options.l2_size,
-                                assoc = options.l2_assoc,
-                                block_size = options.cacheline_size)
+        system.l2 = l2_cache_class(clock=options.clock,
+                                   size=options.l2_size,
+                                   assoc=options.l2_assoc,
+                                   block_size=options.cacheline_size)
 
         system.tol2bus = CoherentBus(clock = options.clock, width = 32)
         system.l2.cpu_side = system.tol2bus.master
@@ -57,20 +75,12 @@ def config_cache(options, system):
 
     for i in xrange(options.num_cpus):
         if options.caches:
-            if options.cpu_type == "arm_detailed":
-                icache = O3_ARM_v7a_ICache(size = options.l1i_size,
-                                           assoc = options.l1i_assoc,
-                                           block_size=options.cacheline_size)
-                dcache = O3_ARM_v7a_DCache(size = options.l1d_size,
-                                           assoc = options.l1d_assoc,
-                                           block_size=options.cacheline_size)
-            else:
-                icache = L1Cache(size = options.l1i_size,
-                                 assoc = options.l1i_assoc,
-                                 block_size=options.cacheline_size)
-                dcache = L1Cache(size = options.l1d_size,
-                                 assoc = options.l1d_assoc,
-                                 block_size=options.cacheline_size)
+            icache = icache_class(size=options.l1i_size,
+                                  assoc=options.l1i_assoc,
+                                  block_size=options.cacheline_size)
+            dcache = dcache_class(size=options.l1d_size,
+                                  assoc=options.l1d_assoc,
+                                  block_size=options.cacheline_size)
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
