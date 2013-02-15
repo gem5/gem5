@@ -186,8 +186,15 @@ TableWalker::processWalkWrapper()
     assert(pendingQueue.size());
     currState = pendingQueue.front();
 
+    // Check if a previous walk filled this request already
+    TlbEntry* te = tlb->lookup(currState->vaddr, currState->contextId, true);
 
-    if (!currState->transState->squashed()) {
+    // Check if we still need to have a walk for this request. If the requesting
+    // instruction has been squashed, or a previous walk has filled the TLB with
+    // a match, we just want to get rid of the walk. The latter could happen
+    // when there are multiple outstanding misses to a single page and a
+    // previous request has been successfully translated.
+    if (!currState->transState->squashed() && !te) {
         // We've got a valid request, lets process it
         pending = true;
         pendingQueue.pop_front();
@@ -200,26 +207,34 @@ TableWalker::processWalkWrapper()
     // squashed we shouldn't bother.
     unsigned num_squashed = 0;
     ThreadContext *tc = currState->tc;
-    assert(currState->transState->squashed());
     while ((num_squashed < numSquashable) && currState &&
-            currState->transState->squashed()) {
+           (currState->transState->squashed() || te)) {
         pendingQueue.pop_front();
         num_squashed++;
 
         DPRINTF(TLB, "Squashing table walk for address %#x\n", currState->vaddr);
 
-        // finish the translation which will delete the translation object
-        currState->transState->finish(new UnimpFault("Squashed Inst"),
-                currState->req, currState->tc, currState->mode);
+        if (currState->transState->squashed()) {
+            // finish the translation which will delete the translation object
+            currState->transState->finish(new UnimpFault("Squashed Inst"),
+                    currState->req, currState->tc, currState->mode);
+        } else {
+            // translate the request now that we know it will work
+            currState->fault = tlb->translateTiming(currState->req, currState->tc,
+                                      currState->transState, currState->mode);
+        }
 
         // delete the current request
         delete currState;
 
         // peak at the next one
-        if (pendingQueue.size())
+        if (pendingQueue.size()) {
             currState = pendingQueue.front();
-        else
+            te = tlb->lookup(currState->vaddr, currState->contextId, true);
+        } else {
+            // Terminate the loop, nothing more to do
             currState = NULL;
+        }
     }
 
     // if we've still got pending translations schedule more work

@@ -91,14 +91,6 @@ class TLB : public BaseTLB
 
     TableWalker *tableWalker;
 
-    /** Lookup an entry in the TLB
-     * @param vpn virtual address
-     * @param asn context id/address space id to use
-     * @param functional if the lookup should modify state
-     * @return pointer to TLB entrry if it exists
-     */
-    TlbEntry *lookup(Addr vpn, uint8_t asn, bool functional = false);
-
     // Access Stats
     mutable Stats::Scalar instHits;
     mutable Stats::Scalar instMisses;
@@ -131,6 +123,14 @@ class TLB : public BaseTLB
   public:
     typedef ArmTLBParams Params;
     TLB(const Params *p);
+
+    /** Lookup an entry in the TLB
+     * @param vpn virtual address
+     * @param asn context id/address space id to use
+     * @param functional if the lookup should modify state
+     * @return pointer to TLB entrry if it exists
+     */
+    TlbEntry *lookup(Addr vpn, uint8_t asn, bool functional = false);
 
     virtual ~TLB();
     int getsize() const { return size; }

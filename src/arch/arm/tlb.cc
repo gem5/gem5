@@ -107,7 +107,7 @@ TLB::lookup(Addr va, uint8_t cid, bool functional)
         if (table[x].match(va, cid)) {
 
             // We only move the hit entry ahead when the position is higher than rangeMRU
-            if (x > rangeMRU) {
+            if (x > rangeMRU && !functional) {
                 TlbEntry tmp_entry = table[x];
                 for(int i = x; i > 0; i--)
                     table[i] = table[i-1];
