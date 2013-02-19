@@ -515,6 +515,38 @@ if main['GCC'] + main['CLANG'] > 1:
     Exit(1)
 
 # Set up default C++ compiler flags
+if main['GCC'] or main['CLANG']:
+    # As gcc and clang share many flags, do the common parts here
+    main.Append(CCFLAGS=['-pipe'])
+    main.Append(CCFLAGS=['-fno-strict-aliasing'])
+    # Enable -Wall and then disable the few warnings that we
+    # consistently violate
+    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
+    # We always compile using C++11, but only gcc >= 4.7 and clang 3.1
+    # actually use that name, so we stick with c++0x
+    main.Append(CXXFLAGS=['-std=c++0x'])
+    # Add selected sanity checks from -Wextra
+    main.Append(CXXFLAGS=['-Wmissing-field-initializers',
+                          '-Woverloaded-virtual'])
+else:
+    print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
+    print "Don't know what compiler options to use for your compiler."
+    print termcap.Yellow + '       compiler:' + termcap.Normal, main['CXX']
+    print termcap.Yellow + '       version:' + termcap.Normal,
+    if not CXX_version:
+        print termcap.Yellow + termcap.Bold + "COMMAND NOT FOUND!" +\
+               termcap.Normal
+    else:
+        print CXX_version.replace('\n', '<nl>')
+    print "       If you're trying to use a compiler other than GCC"
+    print "       or clang, there appears to be something wrong with your"
+    print "       environment."
+    print "       "
+    print "       If you are trying to use a compiler other than those listed"
+    print "       above you will need to ease fix SConstruct and "
+    print "       src/SConscript to support that compiler."
+    Exit(1)
+
 if main['GCC']:
     # Check for a supported version of gcc, >= 4.4 is needed for c++0x
     # support. See http://gcc.gnu.org/projects/cxx0x.html for details
@@ -525,12 +557,6 @@ if main['GCC']:
         Exit(1)
 
     main['GCC_VERSION'] = gcc_version
-    main.Append(CCFLAGS=['-pipe'])
-    main.Append(CCFLAGS=['-fno-strict-aliasing'])
-    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    main.Append(CXXFLAGS=['-Wmissing-field-initializers',
-                          '-Woverloaded-virtual'])
-    main.Append(CXXFLAGS=['-std=c++0x'])
 
     # Check for versions with bugs
     if not compareVersions(gcc_version, '4.4.1') or \
@@ -571,17 +597,16 @@ elif main['CLANG']:
         print 'Error: Unable to determine clang version.'
         Exit(1)
 
-    main.Append(CCFLAGS=['-pipe'])
-    main.Append(CCFLAGS=['-fno-strict-aliasing'])
-    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    main.Append(CCFLAGS=['-Wno-tautological-compare'])
-    main.Append(CCFLAGS=['-Wno-self-assign'])
-    # Ruby makes frequent use of extraneous parantheses in the printing
-    # of if-statements
-    main.Append(CCFLAGS=['-Wno-parentheses'])
-    main.Append(CXXFLAGS=['-Wmissing-field-initializers',
-                          '-Woverloaded-virtual'])
-    main.Append(CXXFLAGS=['-std=c++0x'])
+    # clang has a few additional warnings that we disable,
+    # tautological comparisons are allowed due to unsigned integers
+    # being compared to constants that happen to be 0, and extraneous
+    # parantheses are allowed due to Ruby's printing of the AST,
+    # finally self assignments are allowed as the generated CPU code
+    # is relying on this
+    main.Append(CCFLAGS=['-Wno-tautological-compare',
+                         '-Wno-parentheses',
+                         '-Wno-self-assign'])
+
     # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
     # opposed to libstdc++ to make the transition from TR1 to
     # C++11. See http://libcxx.llvm.org. However, clang has chosen a
