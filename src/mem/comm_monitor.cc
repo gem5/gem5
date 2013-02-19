@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -162,6 +162,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     // or even deleted when sendTiming() is called.
     bool isRead = pkt->isRead();
     bool isWrite = pkt->isWrite();
+    int cmd = pkt->cmdToIndex();
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
@@ -193,9 +194,9 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         // trace.
         Message::Packet pkt_msg;
         pkt_msg.set_tick(curTick());
-        pkt_msg.set_cmd(pkt->cmdToIndex());
-        pkt_msg.set_addr(pkt->getAddr());
-        pkt_msg.set_size(pkt->getSize());
+        pkt_msg.set_cmd(cmd);
+        pkt_msg.set_addr(addr);
+        pkt_msg.set_size(size);
 
         traceStream->write(pkt_msg);
     }
