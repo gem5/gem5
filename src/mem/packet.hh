@@ -329,8 +329,6 @@ class Packet : public Printable
     uint16_t bytesValidEnd;
 
   public:
-    /// Used to calculate latencies for each packet.
-    Tick time;
 
     /// The time at which the packet will be fully transmitted
     Tick finishTime;
@@ -585,7 +583,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL)
+           senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -606,7 +604,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL)
+           senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -628,7 +626,7 @@ class Packet : public Printable
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart), bytesValidEnd(pkt->bytesValidEnd),
-           time(curTick()), senderState(pkt->senderState)
+           senderState(pkt->senderState)
     {
         if (!clearFlags)
             flags.set(pkt->flags & COPY_FLAGS);
@@ -665,7 +663,6 @@ class Packet : public Printable
         flags = 0;
         addr = req->getPaddr();
         size = req->getSize();
-        time = req->time();
 
         flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -139,9 +151,9 @@ BasePrefetcher::getPacket()
         return NULL;
     }
 
-    PacketPtr pkt = *pf.begin();
+    PacketPtr pkt = pf.begin()->pkt;
     while (!pf.empty()) {
-        pkt = *pf.begin();
+        pkt = pf.begin()->pkt;
         pf.pop_front();
 
         Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
@@ -168,20 +180,20 @@ BasePrefetcher::getPacket()
 
 
 Tick
-BasePrefetcher::notify(PacketPtr &pkt, Tick time)
+BasePrefetcher::notify(PacketPtr &pkt, Tick tick)
 {
     if (!pkt->req->isUncacheable() && !(pkt->req->isInstFetch() && onlyData)) {
         // Calculate the blk address
         Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
         // Check if miss is in pfq, if so remove it
-        std::list<PacketPtr>::iterator iter = inPrefetch(blk_addr);
+        std::list<DeferredPacket>::iterator iter = inPrefetch(blk_addr);
         if (iter != pf.end()) {
             DPRINTF(HWPrefetch, "Saw a miss to a queued prefetch addr: "
                     "0x%x, removing it\n", blk_addr);
             pfRemovedMSHR++;
-            delete (*iter)->req;
-            delete (*iter);
+            delete iter->pkt->req;
+            delete iter->pkt;
             iter = pf.erase(iter);
             if (pf.empty())
                 cache->deassertMemSideBusRequest(BaseCache::Request_PF);
@@ -196,12 +208,12 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             iter = pf.end();
             if (iter != pf.begin())
                 iter--;
-            while (!pf.empty() && ((*iter)->time >= time)) {
+            while (!pf.empty() && iter->tick >= tick) {
                 pfSquashed++;
                 DPRINTF(HWPrefetch, "Squashing old prefetch addr: 0x%x\n",
-                        (*iter)->getAddr());
-                delete (*iter)->req;
-                delete (*iter);
+                        iter->pkt->getAddr());
+                delete iter->pkt->req;
+                delete iter->pkt;
                 iter = pf.erase(iter);
                 if (iter != pf.begin())
                     iter--;
@@ -241,12 +253,10 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             prefetch->req->setThreadContext(pkt->req->contextId(),
                                             pkt->req->threadId());
 
-            prefetch->time = time + clockPeriod() * *delayIter;
-
             // We just remove the head if we are full
             if (pf.size() == size) {
                 pfRemovedFull++;
-                PacketPtr old_pkt = *pf.begin();
+                PacketPtr old_pkt = pf.begin()->pkt;
                 DPRINTF(HWPrefetch, "Prefetch queue full, "
                         "removing oldest 0x%x\n", old_pkt->getAddr());
                 delete old_pkt->req;
@@ -254,20 +264,21 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
                 pf.pop_front();
             }
 
-            pf.push_back(prefetch);
+            pf.push_back(DeferredPacket(tick + clockPeriod() * *delayIter,
+                                        prefetch));
         }
     }
 
-    return pf.empty() ? 0 : pf.front()->time;
+    return pf.empty() ? 0 : pf.front().tick;
 }
 
-std::list<PacketPtr>::iterator
+std::list<BasePrefetcher::DeferredPacket>::iterator
 BasePrefetcher::inPrefetch(Addr address)
 {
     // Guaranteed to only be one match, we always check before inserting
-    std::list<PacketPtr>::iterator iter;
+    std::list<DeferredPacket>::iterator iter;
     for (iter = pf.begin(); iter != pf.end(); iter++) {
-        if (((*iter)->getAddr() & ~(Addr)(blkSize-1)) == address) {
+        if ((iter->pkt->getAddr() & ~(Addr)(blkSize-1)) == address) {
             return iter;
         }
     }

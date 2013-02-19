@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -49,8 +61,18 @@ class BasePrefetcher : public ClockedObject
 {
   protected:
 
+    /** A deferred packet, buffered to transmit later. */
+    class DeferredPacket {
+      public:
+        Tick tick;      ///< The tick when the packet is ready to transmit
+        PacketPtr pkt;  ///< Pointer to the packet to transmit
+        DeferredPacket(Tick t, PacketPtr p)
+            : tick(t), pkt(p)
+        {}
+    };
+
     /** The Prefetch Queue. */
-    std::list<PacketPtr> pf;
+    std::list<DeferredPacket> pf;
 
     // PARAMETERS
 
@@ -113,7 +135,7 @@ class BasePrefetcher : public ClockedObject
      * misses, depending on cache parameters.)
      * @retval Time of next prefetch availability, or 0 if none.
      */
-    Tick notify(PacketPtr &pkt, Tick time);
+    Tick notify(PacketPtr &pkt, Tick tick);
 
     bool inCache(Addr addr);
 
@@ -128,14 +150,14 @@ class BasePrefetcher : public ClockedObject
 
     Tick nextPrefetchReadyTime()
     {
-        return pf.empty() ? MaxTick : pf.front()->time;
+        return pf.empty() ? MaxTick : pf.front().tick;
     }
 
     virtual void calculatePrefetch(PacketPtr &pkt,
                                    std::list<Addr> &addresses,
                                    std::list<Cycles> &delays) = 0;
 
-    std::list<PacketPtr>::iterator inPrefetch(Addr address);
+    std::list<DeferredPacket>::iterator inPrefetch(Addr address);
 
     /**
      * Utility function: are addresses a and b on the same VM page?
