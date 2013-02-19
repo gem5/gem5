@@ -356,10 +356,37 @@ class ForwardResponseRecord : public Packet::SenderState
     {}
 };
 
+template<class TagStore>
+void
+Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
+{
+    Tick time = clockEdge(hitLatency);
+
+    assert(pkt->isResponse());
+
+    // must be cache-to-cache response from upper to lower level
+    ForwardResponseRecord *rec =
+        dynamic_cast<ForwardResponseRecord *>(pkt->popSenderState());
+    assert(!system->bypassCaches());
+
+    if (rec == NULL) {
+        assert(pkt->cmd == MemCmd::HardPFResp);
+        // Check if it's a prefetch response and handle it. We shouldn't
+        // get any other kinds of responses without FRRs.
+        DPRINTF(Cache, "Got prefetch response from above for addr %#x\n",
+                pkt->getAddr());
+        recvTimingResp(pkt);
+        return;
+    }
+
+    pkt->setDest(rec->prevSrc);
+    delete rec;
+    memSidePort->schedTimingSnoopResp(pkt, time);
+}
 
 template<class TagStore>
 bool
-Cache<TagStore>::timingAccess(PacketPtr pkt)
+Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 {
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
@@ -373,28 +400,6 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
     // we charge hitLatency for doing just about anything here
     Tick time = clockEdge(hitLatency);
-
-    if (pkt->isResponse()) {
-        // must be cache-to-cache response from upper to lower level
-        ForwardResponseRecord *rec =
-            dynamic_cast<ForwardResponseRecord *>(pkt->popSenderState());
-        assert(!system->bypassCaches());
-
-        if (rec == NULL) {
-            assert(pkt->cmd == MemCmd::HardPFResp);
-            // Check if it's a prefetch response and handle it. We shouldn't
-            // get any other kinds of responses without FRRs.
-            DPRINTF(Cache, "Got prefetch response from above for addr %#x\n",
-                    pkt->getAddr());
-            handleResponse(pkt);
-            return true;
-        }
-
-        pkt->setDest(rec->prevSrc);
-        delete rec;
-        memSidePort->schedTimingSnoopResp(pkt, time);
-        return true;
-    }
 
     assert(pkt->isRequest());
 
@@ -616,8 +621,8 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
 
 
 template<class TagStore>
-Tick
-Cache<TagStore>::atomicAccess(PacketPtr pkt)
+Cycles
+Cache<TagStore>::recvAtomic(PacketPtr pkt)
 {
     Cycles lat = hitLatency;
 
@@ -626,7 +631,7 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 
     // Forward the request if the system is in cache bypass mode.
     if (system->bypassCaches())
-        return memSidePort->sendAtomic(pkt);
+        return ticksToCycles(memSidePort->sendAtomic(pkt));
 
     if (pkt->memInhibitAsserted()) {
         assert(!pkt->req->isUncacheable());
@@ -816,8 +821,10 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 
 template<class TagStore>
 void
-Cache<TagStore>::handleResponse(PacketPtr pkt)
+Cache<TagStore>::recvTimingResp(PacketPtr pkt)
 {
+    assert(pkt->isResponse());
+
     Tick time = clockEdge(hitLatency);
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     bool is_error = pkt->isError();
@@ -1366,7 +1373,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
 
 template<class TagStore>
 void
-Cache<TagStore>::snoopTiming(PacketPtr pkt)
+Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 {
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
@@ -1447,13 +1454,13 @@ bool
 Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     // Express snoop responses from master to slave, e.g., from L1 to L2
-    cache->timingAccess(pkt);
+    cache->recvTimingSnoopResp(pkt);
     return true;
 }
 
 template<class TagStore>
 Cycles
-Cache<TagStore>::snoopAtomic(PacketPtr pkt)
+Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
 {
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
@@ -1578,7 +1585,7 @@ Cache<TagStore>::getTimingPacket()
         pkt->cmd = MemCmd::UpgradeFailResp;
         pkt->senderState = mshr;
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
-        handleResponse(pkt);
+        recvTimingResp(pkt);
         return NULL;
     } else if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
@@ -1709,7 +1716,7 @@ Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
         return false;
     }
 
-    cache->timingAccess(pkt);
+    cache->recvTimingReq(pkt);
     return true;
 }
 
@@ -1717,8 +1724,9 @@ template<class TagStore>
 Tick
 Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
-    // atomic request
-    return cache->atomicAccess(pkt);
+    // @todo: Note that this is currently using cycles instead of
+    // ticks and will be fixed in a future patch
+    return cache->recvAtomic(pkt);
 }
 
 template<class TagStore>
@@ -1747,7 +1755,7 @@ template<class TagStore>
 bool
 Cache<TagStore>::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
-    cache->handleResponse(pkt);
+    cache->recvTimingResp(pkt);
     return true;
 }
 
@@ -1757,15 +1765,16 @@ void
 Cache<TagStore>::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     // handle snooping requests
-    cache->snoopTiming(pkt);
+    cache->recvTimingSnoopReq(pkt);
 }
 
 template<class TagStore>
 Tick
 Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
-    // atomic snoop
-    return cache->snoopAtomic(pkt);
+    // @todo: Note that this is using cycles and not ticks and will be
+    // fixed in a future patch
+    return cache->recvAtomicSnoop(pkt);
 }
 
 template<class TagStore>

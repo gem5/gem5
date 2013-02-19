@@ -234,6 +234,54 @@ class Cache : public BaseCache
     BlkType *handleFill(PacketPtr pkt, BlkType *blk,
                         PacketList &writebacks);
 
+
+    /**
+     * Performs the access specified by the request.
+     * @param pkt The request to perform.
+     * @return The result of the access.
+     */
+    bool recvTimingReq(PacketPtr pkt);
+
+    /**
+     * Handles a response (cache line fill/write ack) from the bus.
+     * @param pkt The response packet
+     */
+    void recvTimingResp(PacketPtr pkt);
+
+    /**
+     * Snoops bus transactions to maintain coherence.
+     * @param pkt The current bus transaction.
+     */
+    void recvTimingSnoopReq(PacketPtr pkt);
+
+    /**
+     * Handle a snoop response.
+     * @param pkt Snoop response packet
+     */
+    void recvTimingSnoopResp(PacketPtr pkt);
+
+    /**
+     * Performs the access specified by the request.
+     * @param pkt The request to perform.
+     * @return The number of cycles required for the access.
+     */
+    Cycles recvAtomic(PacketPtr pkt);
+
+    /**
+     * Snoop for the provided request in the cache and return the estimated
+     * time of completion.
+     * @param pkt The memory request to snoop
+     * @return The number of cycles required for the snoop.
+     */
+    Cycles recvAtomicSnoop(PacketPtr pkt);
+
+    /**
+     * Performs the access specified by the request.
+     * @param pkt The request to perform.
+     * @param fromCpuSide from the CPU side port or the memory side port
+     */
+    void functionalAccess(PacketPtr pkt, bool fromCpuSide);
+
     void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                                bool deferred_response = false,
                                bool pending_downgrade = false);
@@ -289,47 +337,6 @@ class Cache : public BaseCache
      * a cache maintenance operation.
      */
     void uncacheableFlush(PacketPtr pkt);
-
-    /**
-     * Performs the access specified by the request.
-     * @param pkt The request to perform.
-     * @return The result of the access.
-     */
-    bool timingAccess(PacketPtr pkt);
-
-    /**
-     * Performs the access specified by the request.
-     * @param pkt The request to perform.
-     * @return The number of ticks required for the access.
-     */
-    Tick atomicAccess(PacketPtr pkt);
-
-    /**
-     * Performs the access specified by the request.
-     * @param pkt The request to perform.
-     * @param fromCpuSide from the CPU side port or the memory side port
-     */
-    void functionalAccess(PacketPtr pkt, bool fromCpuSide);
-
-    /**
-     * Handles a response (cache line fill/write ack) from the bus.
-     * @param pkt The request being responded to.
-     */
-    void handleResponse(PacketPtr pkt);
-
-    /**
-     * Snoops bus transactions to maintain coherence.
-     * @param pkt The current bus transaction.
-     */
-    void snoopTiming(PacketPtr pkt);
-
-    /**
-     * Snoop for the provided request in the cache and return the estimated
-     * time of completion.
-     * @param pkt The memory request to snoop
-     * @return The number of cycles required for the snoop.
-     */
-    Cycles snoopAtomic(PacketPtr pkt);
 
     /**
      * Squash all requests associated with specified thread.
