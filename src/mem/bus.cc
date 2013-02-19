@@ -140,6 +140,13 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
     // determine how many cycles are needed to send the data
     unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;
 
+    // before setting the bus delay fields of the packet, ensure that
+    // the delay from any previous bus has been accounted for
+    if (pkt->busFirstWordDelay != 0 || pkt->busLastWordDelay != 0)
+        panic("Packet %s already has bus delay (%d, %d) that should be "
+              "accounted for.\n", pkt->cmdString(), pkt->busFirstWordDelay,
+              pkt->busLastWordDelay);
+
     // The first word will be delivered on the cycle after the header.
     pkt->busFirstWordDelay = (headerCycles + 1) * clockPeriod() + offset;
 

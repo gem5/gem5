@@ -121,6 +121,9 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         return false;
     }
 
+    // @todo someone should pay for this
+    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request
     // rather than long term as it is the short term data rate that is

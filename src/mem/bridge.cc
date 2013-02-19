@@ -141,6 +141,9 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 
     DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
+    // @todo: We need to pay for this and not just zero it out
+    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
     slavePort.schedTimingResp(pkt, bridge.clockEdge(delay));
 
     return true;
@@ -171,6 +174,10 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
             assert(outstandingResponses != respQueueLimit);
             ++outstandingResponses;
             retryReq = false;
+
+            // @todo: We need to pay for this and not just zero it out
+            pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
             masterPort.schedTimingReq(pkt, bridge.clockEdge(delay));
         }
     }

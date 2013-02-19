@@ -81,6 +81,8 @@ class IntDev
 
         Tick recvMessage(PacketPtr pkt)
         {
+            // @todo someone should pay for this
+            pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
             return device->recvMessage(pkt);
         }
     };

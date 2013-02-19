@@ -381,6 +381,8 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
 
     pkt->setDest(rec->prevSrc);
     delete rec;
+    // @todo someone should pay for this
+    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
     memSidePort->schedTimingSnoopResp(pkt, time);
 }
 
@@ -419,6 +421,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // supplier had exclusive copy to begin with.
         if (pkt->needsExclusive() && !pkt->isSupplyExclusive()) {
             Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+            // also reset the bus time that the original packet has
+            // not yet paid for
+            snoopPkt->busFirstWordDelay = snoopPkt->busLastWordDelay = 0;
             snoopPkt->setExpressSnoop();
             snoopPkt->assertMemInhibit();
             memSidePort->sendTimingReq(snoopPkt);
@@ -436,6 +441,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
     if (pkt->req->isUncacheable()) {
         uncacheableFlush(pkt);
+
+        // @todo: someone should pay for this
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         // writes go in write buffer, reads use MSHR
         if (pkt->isWrite() && !pkt->isRead()) {
@@ -489,6 +497,8 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
         if (needsResponse) {
             pkt->makeTimingResponse();
+            // @todo: Make someone pay for this
+            pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
             cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
         } else {
             /// @todo nominally we should just delete the packet here,
@@ -498,6 +508,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         }
     } else {
         // miss
+
+        // @todo: Make someone pay for this
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
@@ -946,6 +959,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // isInvalidate() set otherwise.
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
+            // reset the bus additional time as it is now accounted for
+            target->pkt->busFirstWordDelay = target->pkt->busLastWordDelay = 0;
             cpuSidePort->schedTimingResp(target->pkt, completion_time);
             break;
 
@@ -1250,6 +1265,8 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
     assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
     pkt->allocate();
     pkt->makeTimingResponse();
+    // @todo Make someone pay for this
+    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
     if (pkt->isRead()) {
         pkt->setDataFromBlock(blk_data, blkSize);
     }
@@ -1293,6 +1310,9 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             Packet snoopPkt(pkt, true);  // clear flags
             snoopPkt.setExpressSnoop();
             snoopPkt.pushSenderState(new ForwardResponseRecord(pkt->getSrc()));
+            // the snoop packet does not need to wait any additional
+            // time
+            snoopPkt.busFirstWordDelay = snoopPkt.busLastWordDelay = 0;
             cpuSidePort->sendTimingSnoopReq(&snoopPkt);
             if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache

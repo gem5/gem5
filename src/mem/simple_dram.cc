@@ -741,6 +741,9 @@ SimpleDRAM::accessAndRespond(PacketPtr pkt)
         // access already turned the packet into a response
         assert(pkt->isResponse());
 
+        // @todo someone should pay for this
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
         // queue the packet in the response queue to be sent out the
         // next tick
         port.schedTimingResp(pkt, curTick() + 1);

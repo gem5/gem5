@@ -179,6 +179,9 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
             if (add_outstanding)
                 outstandingReq.erase(pkt->req);
 
+            // undo the calculation so we can check for 0 again
+            pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
             DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 

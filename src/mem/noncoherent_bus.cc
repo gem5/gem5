@@ -124,6 +124,9 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
+        // undo the calculation so we can check for 0 again
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
         // occupy until the header is sent
         reqLayer.failedTiming(src_port, clockEdge(Cycles(headerCycles)));
 
