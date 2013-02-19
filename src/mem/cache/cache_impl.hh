@@ -366,7 +366,7 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
 
     // must be cache-to-cache response from upper to lower level
     ForwardResponseRecord *rec =
-        dynamic_cast<ForwardResponseRecord *>(pkt->popSenderState());
+        dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
     assert(!system->bypassCaches());
 
     if (rec == NULL) {
@@ -379,6 +379,7 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
         return;
     }
 
+    pkt->popSenderState();
     pkt->setDest(rec->prevSrc);
     delete rec;
     // @todo someone should pay for this
