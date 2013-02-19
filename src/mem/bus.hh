@@ -302,12 +302,13 @@ class BaseBus : public MemObject
      */
     AddrRangeList getAddrRanges() const;
 
-    /** Calculate the timing parameters for the packet.  Updates the
-     * firstWordTime and finishTime fields of the packet object.
-     * Returns the tick at which the packet header is completed (which
-     * will be all that is sent if the target rejects the packet).
+    /**
+     * Calculate the timing parameters for the packet. Updates the
+     * busFirstWordDelay and busLastWordDelay fields of the packet
+     * object with the relative number of ticks required to transmit
+     * the header and the first word, and the last word, respectively.
      */
-    Tick calcPacketTiming(PacketPtr pkt);
+    void calcPacketTiming(PacketPtr pkt);
 
     /**
      * Ask everyone on the bus what their size is and determine the

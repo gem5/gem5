@@ -898,8 +898,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency * clockPeriod() +
-                    (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
+                completion_time = curTick() + responseLatency * clockPeriod() +
+                    (transfer_offset ? pkt->busLastWordDelay :
+                     pkt->busFirstWordDelay);
 
                 assert(!target->pkt->req->isUncacheable());
 
@@ -914,15 +915,15 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency * clockPeriod() +
-                    pkt->finishTime;
+                completion_time = curTick() + responseLatency * clockPeriod() +
+                    pkt->busLastWordDelay;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
-                completion_time = responseLatency * clockPeriod() +
-                    pkt->finishTime;
+                completion_time = curTick() + responseLatency * clockPeriod() +
+                    pkt->busLastWordDelay;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
                 }
@@ -984,7 +985,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         }
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
-        requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+        requestMemSideBus((RequestCause)mq->index, curTick() +
+                          pkt->busLastWordDelay);
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
@@ -1217,7 +1219,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
     }
 
-    blk->whenReady = pkt->finishTime;
+    blk->whenReady = curTick() + pkt->busLastWordDelay;
 
     return blk;
 }
@@ -1575,7 +1577,7 @@ Cache<TagStore>::getTimingPacket()
         pkt = new Packet(tgt_pkt);
         pkt->cmd = MemCmd::UpgradeFailResp;
         pkt->senderState = mshr;
-        pkt->firstWordTime = pkt->finishTime = curTick();
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
         handleResponse(pkt);
         return NULL;
     } else if (mshr->isForwardNoResponse()) {

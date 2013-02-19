@@ -135,8 +135,8 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
 
-    Tick headerFinishTime = is_express_snoop ? 0 : calcPacketTiming(pkt);
-    Tick packetFinishTime = is_express_snoop ? 0 : pkt->finishTime;
+    calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // uncacheable requests need never be snooped
     if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
@@ -183,7 +183,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             // update the bus state and schedule an idle event
-            reqLayer.failedTiming(src_port, headerFinishTime);
+            reqLayer.failedTiming(src_port, clockEdge(Cycles(headerCycles)));
         } else {
             // update the bus state and schedule an idle event
             reqLayer.succeededTiming(packetFinishTime);
@@ -211,7 +211,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->finishTime;
+    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // the packet is a normal response to a request that we should
     // have seen passing through the bus
@@ -281,7 +281,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     assert(!pkt->isExpressSnoop());
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->finishTime;
+    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // determine if the response is from a snoop request we
     // created as the result of a normal request (in which case it
@@ -385,7 +385,8 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         response_latency = snoop_response_latency;
     }
 
-    pkt->finishTime = curTick() + response_latency;
+    // @todo: Not setting first-word time
+    pkt->busLastWordDelay = response_latency;
     return response_latency;
 }
 
@@ -405,7 +406,8 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
     if (snoop_response_cmd != MemCmd::InvalidCmd)
         pkt->cmd = snoop_response_cmd;
 
-    pkt->finishTime = curTick() + snoop_response_latency;
+    // @todo: Not setting first-word time
+    pkt->busLastWordDelay = snoop_response_latency;
     return snoop_response_latency;
 }
 

@@ -110,8 +110,8 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
 
-    Tick headerFinishTime = calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->finishTime;
+    calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // since it is a normal request, determine the destination
     // based on the address and attempt to send the packet
@@ -124,7 +124,8 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        reqLayer.failedTiming(src_port, headerFinishTime);
+        // occupy until the header is sent
+        reqLayer.failedTiming(src_port, clockEdge(Cycles(headerCycles)));
 
         return false;
     }
@@ -152,7 +153,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->finishTime;
+    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // send the packet to the destination through one of our slave
     // ports, as determined by the destination field
@@ -189,7 +190,8 @@ NoncoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
 
-    pkt->finishTime = curTick() + response_latency;
+    // @todo: Not setting first-word time
+    pkt->busLastWordDelay = response_latency;
     return response_latency;
 }
 

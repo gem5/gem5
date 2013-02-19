@@ -129,30 +129,24 @@ BaseBus::getSlavePort(const std::string &if_name, PortID idx)
     }
 }
 
-Tick
+void
 BaseBus::calcPacketTiming(PacketPtr pkt)
 {
-    // determine the header time rounded to the closest following
-    // clock edge
-    Tick headerTime = clockEdge(headerCycles);
+    // the bus will be called at a time that is not necessarily
+    // coinciding with its own clock, so start by determining how long
+    // until the next clock edge (could be zero)
+    Tick offset = nextCycle() - curTick();
 
-    // The packet will be sent. Figure out how long it occupies the bus, and
-    // how much of that time is for the first "word", aka bus width.
-    Cycles numCycles(0);
-    if (pkt->hasData()) {
-        // If a packet has data, it needs ceil(size/width) cycles to send it
-        unsigned dataSize = pkt->getSize();
-        numCycles = Cycles(divCeil(dataSize, width));
-    }
+    // determine how many cycles are needed to send the data
+    unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;
 
     // The first word will be delivered on the cycle after the header.
-    pkt->firstWordTime = headerTime + clockPeriod();
+    pkt->busFirstWordDelay = (headerCycles + 1) * clockPeriod() + offset;
 
-    // Note that currently finishTime can be smaller than
-    // firstWordTime if the packet has no data
-    pkt->finishTime = headerTime + numCycles * clockPeriod();
-
-    return headerTime;
+    // Note that currently busLastWordDelay can be smaller than
+    // busFirstWordDelay if the packet has no data
+    pkt->busLastWordDelay = (headerCycles + dataCycles) * clockPeriod() +
+        offset;
 }
 
 template <typename PortClass>

@@ -330,11 +330,23 @@ class Packet : public Printable
 
   public:
 
-    /// The time at which the packet will be fully transmitted
-    Tick finishTime;
+    /**
+     * The extra delay from seeing the packet until the first word is
+     * transmitted by the bus that provided it (if any). This delay is
+     * used to communicate the bus waiting time to the neighbouring
+     * object (e.g. a cache) that actually makes the packet wait. As
+     * the delay is relative, a 32-bit unsigned should be sufficient.
+     */
+    uint32_t busFirstWordDelay;
 
-    /// The time at which the first chunk of the packet will be transmitted
-    Tick firstWordTime;
+    /**
+     * The extra delay from seeing the packet until the last word is
+     * transmitted by the bus that provided it (if any). Similar to
+     * the first word time, this is used to make up for the fact that
+     * the bus does not make the packet wait. As the delay is relative,
+     * a 32-bit unsigned should be sufficient.
+     */
+    uint32_t busLastWordDelay;
 
     /**
      * A virtual base opaque structure used to hold state associated
@@ -583,6 +595,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
+           busFirstWordDelay(0), busLastWordDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -604,6 +617,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
+           busFirstWordDelay(0), busLastWordDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -625,7 +639,10 @@ class Packet : public Printable
         :  cmd(pkt->cmd), req(pkt->req),
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
-           bytesValidStart(pkt->bytesValidStart), bytesValidEnd(pkt->bytesValidEnd),
+           bytesValidStart(pkt->bytesValidStart),
+           bytesValidEnd(pkt->bytesValidEnd),
+           busFirstWordDelay(pkt->busFirstWordDelay),
+           busLastWordDelay(pkt->busLastWordDelay),
            senderState(pkt->senderState)
     {
         if (!clearFlags)
@@ -663,6 +680,13 @@ class Packet : public Printable
         flags = 0;
         addr = req->getPaddr();
         size = req->getSize();
+
+        src = InvalidPortID;
+        dest = InvalidPortID;
+        bytesValidStart = 0;
+        bytesValidEnd = 0;
+        busFirstWordDelay = 0;
+        busLastWordDelay = 0;
 
         flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();
