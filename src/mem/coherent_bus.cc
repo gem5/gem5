@@ -55,9 +55,9 @@
 #include "sim/system.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
-    : BaseBus(p), reqLayer(*this, ".reqLayer", p->clock),
-      respLayer(*this, ".respLayer", p->clock),
-      snoopRespLayer(*this, ".snoopRespLayer", p->clock),
+    : BaseBus(p), reqLayer(*this, ".reqLayer"),
+      respLayer(*this, ".respLayer"),
+      snoopRespLayer(*this, ".snoopRespLayer"),
       system(p->system)
 {
     // create the ports based on the size of the master and slave

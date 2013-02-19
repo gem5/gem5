@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -105,9 +105,8 @@ class BaseBus : public MemObject
          *
          * @param _bus the bus this layer belongs to
          * @param _name the layer's name
-         * @param _clock clock period in ticks
          */
-        Layer(BaseBus& _bus, const std::string& _name, Tick _clock);
+        Layer(BaseBus& _bus, const std::string& _name);
 
         /**
          * Drain according to the normal semantics, so that the bus
@@ -202,9 +201,6 @@ class BaseBus : public MemObject
 
         /** track the state of the bus layer */
         State state;
-
-        /** the clock speed for the bus layer */
-        Tick clock;
 
         /** manager to signal when drained */
         DrainManager *drainManager;

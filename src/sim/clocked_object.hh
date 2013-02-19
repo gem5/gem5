@@ -103,10 +103,10 @@ class ClockedObject : public SimObject
         tick += elapsedCycles * clock;
     }
 
-  protected:
-
     // Clock period in ticks
     Tick clock;
+
+  protected:
 
     /**
      * Create a clocked object and set the clock based on the

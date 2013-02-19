@@ -241,7 +241,7 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             prefetch->req->setThreadContext(pkt->req->contextId(),
                                             pkt->req->threadId());
 
-            prefetch->time = time + clock * *delayIter;
+            prefetch->time = time + clockPeriod() * *delayIter;
 
             // We just remove the head if we are full
             if (pf.size() == size) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,8 +55,8 @@
 #include "mem/noncoherent_bus.hh"
 
 NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p), reqLayer(*this, ".reqLayer", p->clock),
-      respLayer(*this, ".respLayer", p->clock)
+    : BaseBus(p), reqLayer(*this, ".reqLayer"),
+      respLayer(*this, ".respLayer")
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports

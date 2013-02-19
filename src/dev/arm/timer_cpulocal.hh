@@ -103,9 +103,6 @@ class CpuLocalTimer : public BasicPioDevice
         /** Cpu this timer is attached to */
         uint32_t cpuNum;
 
-        /** Number of ticks in a clock input */
-        Tick clock;
-
         /** Control register as specified above */
         TimerCtrl timerControl;
         WatchdogCtrl watchdogControl;

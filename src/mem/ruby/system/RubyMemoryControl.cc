@@ -557,7 +557,7 @@ RubyMemoryControl::issueRequest(int bank)
             bank, m_event.scheduled() ? 'Y':'N');
 
     if (req.m_msgptr) {  // don't enqueue L3 writebacks
-        enqueueToDirectory(req, m_mem_ctl_latency + m_mem_fixed_delay);
+        enqueueToDirectory(req, Cycles(m_mem_ctl_latency + m_mem_fixed_delay));
     }
     m_oldRequest[bank] = 0;
     markTfaw(rank);
@@ -702,7 +702,7 @@ RubyMemoryControl::wakeup()
     m_idleCount--;
     if (m_idleCount > 0) {
         assert(!m_event.scheduled());
-        schedule(m_event, curTick() + clock);
+        schedule(m_event, clockEdge(Cycles(1)));
     }
 }
 

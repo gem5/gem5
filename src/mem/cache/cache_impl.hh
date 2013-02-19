@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -898,7 +898,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency * clock +
+                completion_time = responseLatency * clockPeriod() +
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
@@ -914,13 +914,15 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = responseLatency * clock + pkt->finishTime;
+                completion_time = responseLatency * clockPeriod() +
+                    pkt->finishTime;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
-                completion_time = responseLatency * clock + pkt->finishTime;
+                completion_time = responseLatency * clockPeriod() +
+                    pkt->finishTime;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
                 }

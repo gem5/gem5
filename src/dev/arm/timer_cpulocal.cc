@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,7 +58,6 @@ CpuLocalTimer::CpuLocalTimer(Params *p)
         localTimer[i].parent = this;
         localTimer[i].intNumTimer = p->int_num_timer;
         localTimer[i].intNumWatchdog = p->int_num_watchdog;
-        localTimer[i].clock = clock;
         localTimer[i].cpuNum = i;
     }
     pioSize = 0x38;
@@ -104,9 +103,11 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         break;
       case TimerCounterReg:
         DPRINTF(Timer, "Event schedule for timer %d, clock=%d, prescale=%d\n",
-                timerZeroEvent.when(), clock, timerControl.prescalar);
+                timerZeroEvent.when(), parent->clockPeriod(),
+                timerControl.prescalar);
         time = timerZeroEvent.when() - curTick();
-        time = time / clock / power(16, timerControl.prescalar);
+        time = time / parent->clockPeriod() /
+            power(16, timerControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->set<uint32_t>(time);
         break;
@@ -120,10 +121,13 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         pkt->set<uint32_t>(watchdogLoadValue);
         break;
       case WatchdogCounterReg:
-        DPRINTF(Timer, "Event schedule for watchdog %d, clock=%d, prescale=%d\n",
-                watchdogZeroEvent.when(), clock, watchdogControl.prescalar);
+        DPRINTF(Timer,
+                "Event schedule for watchdog %d, clock=%d, prescale=%d\n",
+                watchdogZeroEvent.when(), parent->clockPeriod(),
+                watchdogControl.prescalar);
         time = watchdogZeroEvent.when() - curTick();
-        time = time / clock / power(16, watchdogControl.prescalar);
+        time = time / parent->clockPeriod() /
+            power(16, watchdogControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->set<uint32_t>(time);
         break;
@@ -249,7 +253,7 @@ CpuLocalTimer::Timer::restartTimerCounter(uint32_t val)
     if (!timerControl.enable)
         return;
 
-    Tick time = clock * power(16, timerControl.prescalar);
+    Tick time = parent->clockPeriod() * power(16, timerControl.prescalar);
     time *= val;
 
     if (timerZeroEvent.scheduled()) {
@@ -267,7 +271,7 @@ CpuLocalTimer::Timer::restartWatchdogCounter(uint32_t val)
     if (!watchdogControl.enable)
         return;
 
-    Tick time = clock * power(16, watchdogControl.prescalar);
+    Tick time = parent->clockPeriod() * power(16, watchdogControl.prescalar);
     time *= val;
 
     if (watchdogZeroEvent.scheduled()) {

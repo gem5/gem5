@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -132,37 +132,33 @@ BaseBus::getSlavePort(const std::string &if_name, PortID idx)
 Tick
 BaseBus::calcPacketTiming(PacketPtr pkt)
 {
-    // determine the current time rounded to the closest following
+    // determine the header time rounded to the closest following
     // clock edge
-    Tick now = nextCycle();
-
-    Tick headerTime = now + headerCycles * clock;
+    Tick headerTime = clockEdge(headerCycles);
 
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
-    int numCycles = 0;
+    Cycles numCycles(0);
     if (pkt->hasData()) {
         // If a packet has data, it needs ceil(size/width) cycles to send it
-        int dataSize = pkt->getSize();
-        numCycles += dataSize/width;
-        if (dataSize % width)
-            numCycles++;
+        unsigned dataSize = pkt->getSize();
+        numCycles = Cycles(divCeil(dataSize, width));
     }
 
-    // The first word will be delivered after the current tick, the delivery
-    // of the address if any, and one bus cycle to deliver the data
-    pkt->firstWordTime = headerTime + clock;
+    // The first word will be delivered on the cycle after the header.
+    pkt->firstWordTime = headerTime + clockPeriod();
 
-    pkt->finishTime = headerTime + numCycles * clock;
+    // Note that currently finishTime can be smaller than
+    // firstWordTime if the packet has no data
+    pkt->finishTime = headerTime + numCycles * clockPeriod();
 
     return headerTime;
 }
 
 template <typename PortClass>
-BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name,
-                                 Tick _clock) :
+BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name) :
     Drainable(),
-    bus(_bus), _name(_name), state(IDLE), clock(_clock), drainManager(NULL),
+    bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
     releaseEvent(this)
 {
 }
@@ -306,11 +302,8 @@ BaseBus::Layer<PortClass>::retryWaiting()
         // snoop responses
         state = BUSY;
 
-        // determine the current time rounded to the closest following
-        // clock edge
-        Tick now = bus.nextCycle();
-
-        occupyLayer(now + clock);
+        // occupy the bus layer until the next cycle ends
+        occupyLayer(bus.clockEdge(Cycles(1)));
     }
 }
 
