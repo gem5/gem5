@@ -195,6 +195,9 @@ namespace ArmISA
 
         void startup(ThreadContext *tc) {}
 
+        /// Explicitly import the otherwise hidden startup
+        using SimObject::startup;
+
         typedef ArmISAParams Params;
 
         const Params *params() const;

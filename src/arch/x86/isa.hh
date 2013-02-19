@@ -88,6 +88,10 @@ namespace X86ISA
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
         void startup(ThreadContext *tc);
+
+        /// Explicitly import the otherwise hidden startup
+        using SimObject::startup;
+
     };
 }
 

@@ -100,6 +100,9 @@ class ISA : public SimObject
 
     void startup(ThreadContext *tc) {}
 
+    /// Explicitly import the otherwise hidden startup
+    using SimObject::startup;
+
     const Params *params() const;
 
     ISA(Params *p);

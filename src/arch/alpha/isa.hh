@@ -108,6 +108,9 @@ namespace AlphaISA
         ISA(Params *p);
 
         void startup(ThreadContext *tc) {}
+
+        /// Explicitly import the otherwise hidden startup
+        using SimObject::startup;
     };
 }
 
