@@ -170,4 +170,6 @@ class CacheMemory : public SimObject
     bool m_resource_stalls;
 };
 
+std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);
+
 #endif // __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__

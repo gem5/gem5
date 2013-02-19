@@ -168,4 +168,6 @@ class RubyMemoryControl : public MemoryControl
     MemCntrlProfiler* m_profiler_ptr;
 };
 
+std::ostream& operator<<(std::ostream& out, const RubyMemoryControl& obj);
+
 #endif // __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__

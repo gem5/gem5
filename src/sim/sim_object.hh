@@ -176,4 +176,8 @@ class SimObject : public EventManager, public Serializable, public Drainable
     static SimObject *find(const char *name);
 };
 
+#ifdef DEBUG
+void debugObjectBreak(const char *objs);
+#endif
+
 #endif // __SIM_OBJECT_HH__

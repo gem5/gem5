@@ -31,11 +31,14 @@
 #include <Python.h>
 
 #include "base/types.hh"
+#include "dev/etherint.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 SimObject *resolveSimObject(const std::string &name);
+
+EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.

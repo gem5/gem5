@@ -236,4 +236,7 @@ class Drainable
 
 };
 
+DrainManager *createDrainManager();
+void cleanupDrainManager(DrainManager *drain_manager);
+
 #endif

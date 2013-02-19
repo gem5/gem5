@@ -418,6 +418,8 @@ class EventQueue : public Serializable
 #endif
 };
 
+void dumpMainQueue();
+
 #ifndef SWIG
 class EventManager
 {

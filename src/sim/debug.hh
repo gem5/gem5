@@ -53,6 +53,8 @@ void takeCheckpoint(Tick when);
  */
 void eventqDump();
 
+void py_interact();
+
 int getRemoteGDBPort();
 // Remote gdb base port.  0 disables remote gdb.
 void setRemoteGDBPort(int port);

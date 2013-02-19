@@ -36,6 +36,7 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "kern/tru64/printf.hh"
 #include "sim/arguments.hh"
 
 using namespace std;

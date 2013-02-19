@@ -35,6 +35,7 @@
 #include <string>
 
 #include "base/stats/output.hh"
+#include "base/stats/types.hh"
 #include "base/output.hh"
 
 namespace Stats {
@@ -74,6 +75,8 @@ class Text : public Output
     virtual void begin();
     virtual void end();
 };
+
+std::string ValueToString(Result value, int precision);
 
 Output *initText(const std::string &filename, bool desc);
 

@@ -84,6 +84,17 @@ output decoder {{
     }
 }};
 
+output header {{
+   void getThrRegExValues(%(CPU_exec_context)s *xc,
+                          MipsISA::VPEConf0Reg &vpe_conf0,
+                          MipsISA::TCBindReg &tc_bind_mt,
+                          MipsISA::TCBindReg &tc_bind,
+                          MipsISA::VPEControlReg &vpe_control,
+                          MipsISA::MVPConf0Reg &mvp_conf0);
+
+   void getMTExValues(%(CPU_exec_context)s *xc, MipsISA::Config3Reg &config3);
+}};
+
 output exec {{
     void getThrRegExValues(%(CPU_exec_context)s *xc,
             VPEConf0Reg &vpe_conf0, TCBindReg &tc_bind_mt,

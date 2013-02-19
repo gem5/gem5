@@ -81,7 +81,7 @@ def format ArmMsrMrs() {{
 let {{
     header_output = '''
     StaticInstPtr
-    decodeMcrMrc15(ExtMachInst machInst);
+    decodeMcrMrc14(ExtMachInst machInst);
     '''
     decoder_output = '''
     StaticInstPtr

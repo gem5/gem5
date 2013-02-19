@@ -216,6 +216,8 @@ class MessageBuffer
     int m_vnet_id;
 };
 
+Cycles random_time();
+
 inline std::ostream&
 operator<<(std::ostream& out, const MessageBuffer& obj)
 {

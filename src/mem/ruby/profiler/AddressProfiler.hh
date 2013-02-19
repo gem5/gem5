@@ -92,6 +92,14 @@ class AddressProfiler
     int m_num_of_sequencers;
 };
 
+AccessTraceForAddress& lookupTraceForAddress(const Address& addr,
+                                             AddressProfiler::AddressMap&
+                                             record_map);
+
+void printSorted(std::ostream& out, int num_of_sequencers,
+                 const AddressProfiler::AddressMap &record_map,
+                 std::string description);
+
 inline std::ostream&
 operator<<(std::ostream& out, const AddressProfiler& obj)
 {

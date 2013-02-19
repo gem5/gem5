@@ -463,6 +463,7 @@ class UdpPtr
     int pstart() const { return off() + get()->size(); }
 };
 
+uint16_t __tu_cksum(const IpPtr &ip);
 uint16_t cksum(const UdpPtr &ptr);
 
 int hsplit(const EthPacketPtr &ptr);

@@ -38,7 +38,9 @@
 
 
 let {{
-    header_output = ""
+    header_output = '''
+    uint64_t join32to64(uint32_t r1, uint32_t r0);
+    '''
     decoder_output = '''
     uint64_t join32to64(uint32_t r1, uint32_t r0)
     {

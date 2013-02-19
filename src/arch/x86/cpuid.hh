@@ -55,6 +55,8 @@ namespace X86ISA
         {}
     };
 
+    uint64_t stringToRegister(const char *str);
+
     bool doCpuid(ThreadContext * tc, uint32_t function,
             uint32_t index, CpuidResult &result);
 } // namespace X86ISA

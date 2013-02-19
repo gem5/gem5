@@ -86,6 +86,11 @@ output decoder {{
         }
 }};
 
+output header {{
+        void fpResetCauseBits(%(CPU_exec_context)s *cpu);
+
+}};
+
 output exec {{
         inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
         {

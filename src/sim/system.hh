@@ -472,4 +472,6 @@ class System : public MemObject
 
 };
 
+void printSystems();
+
 #endif // __SYSTEM_HH__

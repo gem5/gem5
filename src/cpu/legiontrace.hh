@@ -42,6 +42,8 @@ class ThreadContext;
 
 namespace Trace {
 
+void setupSharedData();
+
 class LegionTraceRecord : public InstRecord
 {
   public:

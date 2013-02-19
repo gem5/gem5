@@ -39,6 +39,7 @@
 
 class ThreadContext;
 class PCEventQueue;
+class System;
 
 class PCEvent
 {
@@ -140,5 +141,9 @@ class BreakPCEvent : public PCEvent
                  bool del = false);
     virtual void process(ThreadContext *tc);
 };
+
+void sched_break_pc_sys(System *sys, Addr addr);
+
+void sched_break_pc(Addr addr);
 
 #endif // __PC_EVENT_HH__

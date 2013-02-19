@@ -178,6 +178,8 @@ class Serializable
     static void unserializeGlobals(Checkpoint *cp);
 };
 
+void debug_serialize(const std::string &cpt_dir);
+
 //
 // A SerializableBuilder serves as an evaluation context for a set of
 // parameters that describe a specific instance of a Serializable.  This

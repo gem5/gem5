@@ -32,6 +32,7 @@
 #ifndef __BASE_DEBUG_HH__
 #define __BASE_DEBUG_HH__
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -110,6 +111,19 @@ class CompoundFlag : public SimpleFlag
     void disable();
 };
 
+typedef std::map<std::string, Flag *> FlagsMap;
+FlagsMap &allFlags();
+
+Flag *findFlag(const std::string &name);
+
+bool changeFlag(const char *s, bool value);
+
 } // namespace Debug
+
+void setDebugFlag(const char *string);
+
+void clearDebugFlag(const char *string);
+
+void dumpDebugFlags();
 
 #endif // __BASE_DEBUG_HH__

@@ -40,6 +40,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
+#include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/arguments.hh"
 #include "sim/system.hh"

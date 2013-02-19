@@ -135,6 +135,12 @@ def template DspHiLoExecute {{
         }
 }};
 
+output header {{
+    bool isDspEnabled(%(CPU_exec_context)s *xc);
+
+    bool isDspPresent(%(CPU_exec_context)s *xc);
+}};
+
 //Outputs to decoder.cc
 output decoder {{
 }};

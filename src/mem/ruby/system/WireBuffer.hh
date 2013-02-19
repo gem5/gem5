@@ -100,4 +100,6 @@ class WireBuffer : public SimObject
 
 };
 
+std::ostream& operator<<(std::ostream& out, const WireBuffer& obj);
+
 #endif // __MEM_RUBY_SYSTEM_WireBuffer_HH__

@@ -53,6 +53,8 @@ struct LinkOrder
     int m_value;
 };
 
+bool operator<(const LinkOrder& l1, const LinkOrder& l2);
+
 class PerfectSwitch : public Consumer
 {
   public:

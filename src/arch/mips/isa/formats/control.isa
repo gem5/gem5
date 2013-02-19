@@ -172,6 +172,13 @@ output decoder {{
 
 }};
 
+output header {{
+        bool isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num);
+
+        bool isMMUTLB(%(CPU_exec_context)s *xc);
+
+}};
+
 output exec {{
         bool
         isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)

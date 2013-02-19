@@ -33,8 +33,6 @@
 
 #include <algorithm>
 #include <csignal>
-#include <map>
-#include <vector>
 
 #include "base/cprintf.hh"
 #include "base/debug.hh"
@@ -62,7 +60,6 @@ breakpoint()
 //
 // Flags for debugging purposes.  Primarily for trace.hh
 //
-typedef std::map<string, Flag *> FlagsMap;
 int allFlagsVersion = 0;
 FlagsMap &
 allFlags()

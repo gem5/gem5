@@ -276,6 +276,19 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
+void enterREDState(ThreadContext *tc);
+
+void doREDFault(ThreadContext *tc, TrapType tt);
+
+void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv);
+
+void getREDVector(MiscReg TT, Addr &PC, Addr &NPC);
+
+void getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, MiscReg TT);
+
+void getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT,
+                   MiscReg TL);
+
 } // namespace SparcISA
 
 #endif // __SPARC_FAULTS_HH__

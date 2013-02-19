@@ -34,6 +34,8 @@
 
 #include <string>
 
+#include "base/userinfo.hh"
+
 std::string
 username()
 {

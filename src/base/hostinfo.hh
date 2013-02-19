@@ -35,6 +35,8 @@
 
 #include "base/types.hh"
 
+std::string __get_hostname();
+
 std::string &hostname();
 
 uint64_t procInfo(const char *filename, const char *target);

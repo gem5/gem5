@@ -49,7 +49,6 @@ using namespace std;
 namespace Stats {
 
 std::string Info::separatorString = "::";
-typedef map<const void *, Info *> MapType;
 
 // We wrap these in a function to make sure they're built in time.
 list<Info *> &
@@ -114,7 +113,6 @@ StorageParams::~StorageParams()
 {
 }
 
-typedef map<std::string, Info *> NameMapType;
 NameMapType &
 nameMap()
 {

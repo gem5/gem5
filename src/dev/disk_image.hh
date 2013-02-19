@@ -137,4 +137,20 @@ class CowDiskImage : public DiskImage
     virtual std::streampos write(const uint8_t *data, std::streampos offset);
 };
 
+void SafeRead(std::ifstream &stream, void *data, int count);
+
+template<class T>
+void SafeRead(std::ifstream &stream, T &data);
+
+template<class T>
+void SafeReadSwap(std::ifstream &stream, T &data);
+
+void SafeWrite(std::ofstream &stream, const void *data, int count);
+
+template<class T>
+void SafeWrite(std::ofstream &stream, const T &data);
+
+template<class T>
+void SafeWriteSwap(std::ofstream &stream, const T &data);
+
 #endif // __DISK_IMAGE_HH__

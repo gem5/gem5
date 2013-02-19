@@ -96,6 +96,11 @@ output decoder {{
 
 }};
 
+output header {{
+    uint64_t getMemData(%(CPU_exec_context)s *xc, Packet *packet);
+
+}};
+
 output exec {{
     /** return data in cases where there the size of data is only
         known in the packet

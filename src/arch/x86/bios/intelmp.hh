@@ -73,6 +73,12 @@ struct X86IntelMPAddrSpaceMappingParams;
 struct X86IntelMPBusHierarchyParams;
 struct X86IntelMPCompatAddrSpaceModParams;
 
+template<class T>
+uint8_t writeOutField(PortProxy& proxy, Addr addr, T val);
+
+uint8_t writeOutString(PortProxy& proxy, Addr addr, std::string str,
+                       int length);
+
 namespace X86ISA
 {
 

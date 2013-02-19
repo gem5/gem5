@@ -66,7 +66,11 @@
 class ThreadContext;
 class BaseCPU;
 
+int divideFromConf(uint32_t conf);
+
 namespace X86ISA {
+
+ApicRegIndex decodeAddr(Addr paddr);
 
 class Interrupts : public BasicPioDevice, IntDev
 {
