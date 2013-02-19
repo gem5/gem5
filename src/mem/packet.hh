@@ -454,6 +454,25 @@ class Packet : public Printable
      */
     SenderState *popSenderState();
 
+    /**
+     * Go through the sender state stack and return the first instance
+     * that is of type T (as determined by a dynamic_cast). If there
+     * is no sender state of type T, NULL is returned.
+     *
+     * @return The topmost state of type T
+     */
+    template <typename T>
+    T * findNextSenderState() const
+    {
+        T *t = NULL;
+        SenderState* sender_state = senderState;
+        while (t == NULL && sender_state != NULL) {
+            t = dynamic_cast<T*>(sender_state);
+            sender_state = sender_state->predecessor;
+        }
+        return t;
+    }
+
     /// Return the string name of the cmd field (for debugging and
     /// tracing).
     const std::string &cmdString() const { return cmd.toString(); }

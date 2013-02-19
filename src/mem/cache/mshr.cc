@@ -82,7 +82,10 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
     }
 
     if (markPending) {
-        MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+        // Iterate over the SenderState stack and see if we find
+        // an MSHR entry. If we do, set the downstreamPending
+        // flag. Otherwise, do nothing.
+        MSHR *mshr = pkt->findNextSenderState<MSHR>();
         if (mshr != NULL) {
             assert(!mshr->downstreamPending);
             mshr->downstreamPending = true;
@@ -130,7 +133,13 @@ MSHR::TargetList::clearDownstreamPending()
     Iterator end_i = end();
     for (Iterator i = begin(); i != end_i; ++i) {
         if (i->markedPending) {
-            MSHR *mshr = dynamic_cast<MSHR*>(i->pkt->senderState);
+            // Iterate over the SenderState stack and see if we find
+            // an MSHR entry. If we find one, clear the
+            // downstreamPending flag by calling
+            // clearDownstreamPending(). This recursively clears the
+            // downstreamPending flag in all caches this packet has
+            // passed through.
+            MSHR *mshr = i->pkt->findNextSenderState<MSHR>();
             if (mshr != NULL) {
                 mshr->clearDownstreamPending();
             }
