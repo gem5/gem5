@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1207,9 +1207,10 @@ class Frequency(TickParamValue):
     def ini_str(self):
         return '%d' % self.getValue()
 
-# A generic frequency and/or Latency value.  Value is stored as a latency,
-# but to avoid ambiguity this object does not support numeric ops (* or /).
-# An explicit conversion to a Latency or Frequency must be made first.
+# A generic frequency and/or Latency value. Value is stored as a
+# latency, and any manipulation using a multiplier thus scales the
+# clock period, i.e. a 2x multiplier doubles the clock period and thus
+# halves the clock frequency.
 class Clock(ParamValue):
     cxx_type = 'Tick'
 
@@ -1242,6 +1243,14 @@ class Clock(ParamValue):
         if attr in ('latency', 'period'):
             return Latency(self)
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
+
+    def __mul__(self, other):
+        # Always treat the clock as a period when scaling
+        newobj = self.__class__(self)
+        newobj.value *= other
+        return newobj
+
+    __rmul__ = __mul__
 
     def getValue(self):
         return self.period.getValue()

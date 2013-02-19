@@ -201,12 +201,6 @@ class Interrupts : public BasicPioDevice, IntDev
 
     void setCPU(BaseCPU * newCPU);
 
-    void
-    setClock(Tick newClock)
-    {
-        clock = newClock;
-    }
-
     const Params *
     params() const
     {

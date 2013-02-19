@@ -221,8 +221,9 @@ class BaseCPU(MemObject):
         elif buildEnv['TARGET_ISA'] == 'alpha':
             self.interrupts = AlphaInterrupts()
         elif buildEnv['TARGET_ISA'] == 'x86':
-            _localApic = X86LocalApic(pio_addr=0x2000000000000000)
-            self.interrupts = _localApic
+            self.interrupts = X86LocalApic(clock = Parent.clock * 16,
+                                           pio_addr=0x2000000000000000)
+            _localApic = self.interrupts
         elif buildEnv['TARGET_ISA'] == 'mips':
             self.interrupts = MipsInterrupts()
         elif buildEnv['TARGET_ISA'] == 'arm':

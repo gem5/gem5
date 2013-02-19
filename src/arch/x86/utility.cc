@@ -174,10 +174,6 @@ void initCPU(ThreadContext *tc, int cpuId)
 
     interrupts->setRegNoEffect(APIC_VERSION, (5 << 16) | 0x14);
 
-    // @todo: Control the relative frequency, in this case 16:1, of
-    // the clocks in the Python code
-    interrupts->setClock(tc->getCpuPtr()->clockPeriod() * 16);
-
     // TODO Set the SMRAM base address (SMBASE) to 0x00030000
 
     tc->setMiscReg(MISCREG_VM_CR, 0);
