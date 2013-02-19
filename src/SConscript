@@ -903,12 +903,15 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         # Add additional warnings here that should not be applied to
         # the SWIG generated code
         new_env.Append(CXXFLAGS='-Wmissing-declarations')
+        if compareVersions(env['GCC_VERSION'], '4.7') >= 0:
+            new_env.Append(CXXFLAGS='-Wdelete-non-virtual-dtor')
     if env['CLANG']:
         swig_env.Append(CCFLAGS=['-Wno-unused-label', '-Wno-unused-value'])
 
         # Add additional warnings here that should not be applied to
         # the SWIG generated code
-        new_env.Append(CXXFLAGS='-Wmissing-declarations')
+        new_env.Append(CXXFLAGS=['-Wmissing-declarations',
+                                 '-Wdelete-non-virtual-dtor'])
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
