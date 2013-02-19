@@ -259,7 +259,7 @@ class AddrRange
         // no interleaving, or with interleaving also if the selected
         // bits from the address match the interleaving value
         return a >= _start && a <= _end &&
-            (interleaved() ||
+            (!interleaved() ||
              (bits(a, intlvHighBit, intlvHighBit - intlvBits + 1) ==
               intlvMatch));
     }
