@@ -119,8 +119,7 @@ RubyPort::getSlavePort(const std::string &if_name, PortID idx)
 
 RubyPort::PioPort::PioPort(const std::string &_name,
                            RubyPort *_port)
-    : QueuedMasterPort(_name, _port, queue), queue(*_port, *this),
-      ruby_port(_port)
+    : QueuedMasterPort(_name, _port, queue), queue(*_port, *this)
 {
     DPRINTF(RubyPort, "creating master port on ruby sequencer %s\n", _name);
 }

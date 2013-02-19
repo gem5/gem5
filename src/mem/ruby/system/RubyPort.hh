@@ -99,8 +99,6 @@ class RubyPort : public MemObject
 
         MasterPacketQueue queue;
 
-        RubyPort *ruby_port;
-
       public:
         PioPort(const std::string &_name, RubyPort *_port);
 

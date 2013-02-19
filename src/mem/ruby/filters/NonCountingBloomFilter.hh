@@ -73,9 +73,6 @@ class NonCountingBloomFilter : public AbstractBloomFilter
     int m_filter_size;
     int m_offset;
     int m_filter_size_bits;
-
-    int m_count_bits;
-    int m_count;
 };
 
 #endif // __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__

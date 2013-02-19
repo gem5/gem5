@@ -82,9 +82,6 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
     int m_par_filter_size;
     int m_par_filter_size_bits;
 
-    int m_count_bits;
-    int m_count;
-
     bool isParallel;
 };
 

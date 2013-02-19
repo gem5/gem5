@@ -2820,6 +2820,7 @@ let {{
             4, vcvts2fpCode, fromInt = True)
 
     vcvts2hCode = '''
+        destElem = 0;
         FPSCR fpscr = (FPSCR) FpscrExc;
         float srcFp1 = bitsToFp(srcElem1, (float)0.0);
         if (flushToZero(srcFp1))
@@ -2836,6 +2837,7 @@ let {{
     twoRegNarrowMiscInst("vcvt", "NVcvts2h", "SimdCvtOp", ("uint16_t",), vcvts2hCode)
 
     vcvth2sCode = '''
+        destElem = 0;
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcElem1), "=m" (destElem)

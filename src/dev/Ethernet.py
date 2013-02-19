@@ -78,8 +78,6 @@ class IGbE(EtherDevice):
     cxx_header = "dev/i8254xGBe.hh"
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
-    use_flow_control = Param.Bool(False,
-        "Should we use xon/xoff flow contorl (UNIMPLEMENTD)")
     rx_fifo_size = Param.MemorySize('384kB', "Size of the rx FIFO")
     tx_fifo_size = Param.MemorySize('384kB', "Size of the tx FIFO")
     rx_desc_cache_size = Param.Int(64,

@@ -58,7 +58,6 @@ using namespace Net;
 
 IGbE::IGbE(const Params *p)
     : EtherDevice(p), etherInt(NULL),  drainManager(NULL),
-      useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
       txTick(false), txFifoTick(false), rxDmaPacket(false), pktOffset(0),
       fetchDelay(p->fetch_delay), wbDelay(p->wb_delay), 

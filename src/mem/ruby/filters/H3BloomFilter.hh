@@ -80,9 +80,6 @@ class H3BloomFilter : public AbstractBloomFilter
     int m_par_filter_size;
     int m_par_filter_size_bits;
 
-    int m_count_bits;
-    int m_count;
-
     int primes_list[6];// = {9323,11279,10247,30637,25717,43711};
     int mults_list[6]; //= {255,29,51,3,77,43};
     int adds_list[6]; //= {841,627,1555,241,7777,65391};

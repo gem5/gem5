@@ -70,9 +70,6 @@ class IGbE : public EtherDevice
     // The drain event if we have one
     DrainManager *drainManager;
 
-    // cached parameters from params struct
-    bool useFlowControl;
-
     // packet fifos
     PacketFifo rxFifo;
     PacketFifo txFifo;

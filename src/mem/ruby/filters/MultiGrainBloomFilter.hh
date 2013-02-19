@@ -71,9 +71,6 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
     std::vector<int> m_page_filter;
     int m_page_filter_size;
     int m_page_filter_size_bits;
-
-    int m_count_bits;
-    int m_count;
 };
 
 #endif // __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__

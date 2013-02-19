@@ -51,8 +51,6 @@
  */
 class TsunamiIO : public BasicPioDevice
 {
-  private:
-    struct tm tm;
 
   protected:
 

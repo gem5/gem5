@@ -627,7 +627,7 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingStartup(false), startupVector(0),
     startedUp(false), pendingUnmaskableInt(false),
     pendingIPIs(0), cpu(NULL),
-    intSlavePort(name() + ".int_slave", this, this, latency)
+    intSlavePort(name() + ".int_slave", this, this)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));

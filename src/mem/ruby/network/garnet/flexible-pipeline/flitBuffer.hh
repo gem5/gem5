@@ -58,7 +58,7 @@ class flitBuffer
 
   private:
     std::vector<flit *> m_buffer;
-    int size, max_size;
+    int max_size;
 };
 
 inline std::ostream&

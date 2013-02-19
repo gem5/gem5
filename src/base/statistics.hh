@@ -1327,8 +1327,6 @@ class DistStor
     Counter max_track;
     /** The number of entries in each bucket. */
     Counter bucket_size;
-    /** The number of buckets. Equal to (max-min)/bucket_size. */
-    size_type buckets;
 
     /** The smallest value sampled. */
     Counter min_val;

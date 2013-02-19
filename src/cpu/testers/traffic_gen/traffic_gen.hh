@@ -548,13 +548,6 @@ class TrafficGen : public MemObject
              * state is complete.
              */
             bool traceComplete;
-
-            /**
-             * Used to store the Tick when the next generate should
-             * occur. It is to remove a transaction as soon as we
-             * enter the state.
-             */
-            Tick oldEmitTime;
         };
 
         /** Pointer to owner of request handler */
@@ -582,8 +575,7 @@ class TrafficGen : public MemObject
       public:
 
         TrafficGenPort(const std::string& name, TrafficGen& _owner)
-            : QueuedMasterPort(name, &_owner, queue), queue(_owner, *this),
-              owner(_owner)
+            : QueuedMasterPort(name, &_owner, queue), queue(_owner, *this)
         { }
 
       protected:
@@ -593,9 +585,6 @@ class TrafficGen : public MemObject
       private:
 
         MasterPacketQueue queue;
-
-        // Owner of the port
-        TrafficGen& owner;
 
     };
 

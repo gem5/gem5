@@ -44,7 +44,7 @@ class Consumer
 {
   public:
     Consumer(ClockedObject *_em)
-        : m_last_scheduled_wakeup(0), m_last_wakeup(0), em(_em)
+        : m_last_scheduled_wakeup(0), em(_em)
     {
     }
 
@@ -93,7 +93,6 @@ class Consumer
   private:
     Tick m_last_scheduled_wakeup;
     std::set<Tick> m_scheduled_wakeups;
-    Tick m_last_wakeup;
     ClockedObject *em;
 
     class ConsumerEvent : public Event

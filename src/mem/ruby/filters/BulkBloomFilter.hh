@@ -71,8 +71,6 @@ class BulkBloomFilter : public AbstractBloomFilter
 
     int m_sector_bits;
 
-    int m_count_bits;
-    int m_count;
 };
 
 #endif // __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__

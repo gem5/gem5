@@ -66,11 +66,11 @@ class IntDev
     class IntSlavePort : public MessageSlavePort
     {
         IntDev * device;
-        Tick latency;
+
       public:
         IntSlavePort(const std::string& _name, MemObject* _parent,
-                     IntDev* dev, Tick _latency) :
-            MessageSlavePort(_name, _parent), device(dev), latency(_latency)
+                     IntDev* dev) :
+            MessageSlavePort(_name, _parent), device(dev)
         {
         }
 
