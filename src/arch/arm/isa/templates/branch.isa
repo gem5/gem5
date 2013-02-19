@@ -74,6 +74,9 @@ class %(class_name)s : public %(base_class)s
                        ConditionCode _condCode);
         %(BasicExecDeclare)s
         ArmISA::PCState branchTarget(const ArmISA::PCState &branchPC) const;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
 };
 }};
 

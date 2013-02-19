@@ -46,6 +46,8 @@ class PowerLinuxProcess : public PowerLiveProcess
     void initState();
 
     PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    /// Explicitly import the otherwise hidden getSyscallArg
+    using LiveProcess::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);
 
     /// Array of syscall descriptors, indexed by call number.

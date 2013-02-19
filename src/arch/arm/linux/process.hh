@@ -45,6 +45,8 @@ class ArmLinuxProcess : public ArmLiveProcess
     void initState();
 
     ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    /// Explicitly import the otherwise hidden getSyscallArg
+    using ArmLiveProcess::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
 
     /// The target system's hostname.

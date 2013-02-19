@@ -91,6 +91,9 @@ output header {{
 
         MipsISA::PCState branchTarget(const MipsISA::PCState &branchPC) const;
 
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
+
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
@@ -117,6 +120,9 @@ output header {{
         }
 
         MipsISA::PCState branchTarget(ThreadContext *tc) const;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;

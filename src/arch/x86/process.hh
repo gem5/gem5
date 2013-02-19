@@ -103,6 +103,8 @@ namespace X86ISA
         void initState();
 
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+        /// Explicitly import the otherwise hidden getSyscallArg
+        using LiveProcess::getSyscallArg;
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 

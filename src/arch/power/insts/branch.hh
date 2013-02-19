@@ -88,6 +88,9 @@ class BranchPCRel : public PCDependentDisassembly
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
+    /// Explicitly import the otherwise hidden branchTarget
+    using StaticInst::branchTarget;
+
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
@@ -113,6 +116,9 @@ class BranchNonPCRel : public PCDependentDisassembly
     }
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
+
+    /// Explicitly import the otherwise hidden branchTarget
+    using StaticInst::branchTarget;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -189,6 +195,9 @@ class BranchPCRelCond : public BranchCond
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
+    /// Explicitly import the otherwise hidden branchTarget
+    using StaticInst::branchTarget;
+
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
@@ -215,6 +224,9 @@ class BranchNonPCRelCond : public BranchCond
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
+    /// Explicitly import the otherwise hidden branchTarget
+    using StaticInst::branchTarget;
+
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
@@ -232,6 +244,9 @@ class BranchRegCond : public BranchCond
     }
 
     PowerISA::PCState branchTarget(ThreadContext *tc) const;
+
+    /// Explicitly import the otherwise hidden branchTarget
+    using StaticInst::branchTarget;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };

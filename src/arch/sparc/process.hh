@@ -94,6 +94,9 @@ class Sparc32LiveProcess : public SparcLiveProcess
     void flushWindows(ThreadContext *tc);
 
     SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    /// Explicitly import the otherwise hidden getSyscallArg
+    using LiveProcess::getSyscallArg;
+
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
@@ -122,6 +125,9 @@ class Sparc64LiveProcess : public SparcLiveProcess
     void flushWindows(ThreadContext *tc);
 
     SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    /// Explicitly import the otherwise hidden getSyscallArg
+    using LiveProcess::getSyscallArg;
+
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 

@@ -83,6 +83,9 @@ output header {{
 
         AlphaISA::PCState branchTarget(const AlphaISA::PCState &branchPC) const;
 
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
+
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
@@ -107,6 +110,9 @@ output header {{
         }
 
         AlphaISA::PCState branchTarget(ThreadContext *tc) const;
+
+        /// Explicitly import the otherwise hidden branchTarget
+        using StaticInst::branchTarget;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
