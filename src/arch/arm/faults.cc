@@ -53,31 +53,32 @@ namespace ArmISA
 {
 
 template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals =
-    {"reset", 0x00, MODE_SVC, 0, 0, true, true};
+{"reset", 0x00, MODE_SVC, 0, 0, true, true, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals =
-    {"Undefined Instruction", 0x04, MODE_UNDEFINED, 4 ,2, false, false} ;
+{"Undefined Instruction", 0x04, MODE_UNDEFINED, 4 ,2, false, false,
+ FaultStat()} ;
 
 template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals =
-    {"Supervisor Call", 0x08, MODE_SVC, 4, 2, false, false};
+{"Supervisor Call", 0x08, MODE_SVC, 4, 2, false, false, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals =
-    {"Prefetch Abort", 0x0C, MODE_ABORT, 4, 4, true, false};
+{"Prefetch Abort", 0x0C, MODE_ABORT, 4, 4, true, false, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals =
-    {"Data Abort", 0x10, MODE_ABORT, 8, 8, true, false};
+{"Data Abort", 0x10, MODE_ABORT, 8, 8, true, false, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals =
-    {"IRQ", 0x18, MODE_IRQ, 4, 4, true, false};
+{"IRQ", 0x18, MODE_IRQ, 4, 4, true, false, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals =
-    {"FIQ", 0x1C, MODE_FIQ, 4, 4, true, true};
+{"FIQ", 0x1C, MODE_FIQ, 4, 4, true, true, FaultStat()};
 
 template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals =
-    {"Pipe Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
+{"Pipe Flush", 0x00, MODE_SVC, 0, 0, true, true, FaultStat()}; // dummy values
 
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals =
-    {"ArmSev Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
+{"ArmSev Flush", 0x00, MODE_SVC, 0, 0, true, true, FaultStat()}; // dummy values
 Addr 
 ArmFault::getVector(ThreadContext *tc)
 {

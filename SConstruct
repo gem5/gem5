@@ -528,6 +528,7 @@ if main['GCC']:
     main.Append(CCFLAGS=['-pipe'])
     main.Append(CCFLAGS=['-fno-strict-aliasing'])
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
+    main.Append(CXXFLAGS=['-Wmissing-field-initializers'])
     main.Append(CXXFLAGS=['-std=c++0x'])
 
     # Check for versions with bugs
@@ -577,6 +578,7 @@ elif main['CLANG']:
     # Ruby makes frequent use of extraneous parantheses in the printing
     # of if-statements
     main.Append(CCFLAGS=['-Wno-parentheses'])
+    main.Append(CXXFLAGS=['-Wmissing-field-initializers'])
     main.Append(CXXFLAGS=['-std=c++0x'])
     # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
     # opposed to libstdc++ to make the transition from TR1 to
