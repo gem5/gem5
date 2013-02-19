@@ -157,10 +157,8 @@ namespace X86ISA
         struct WalkerSenderState : public Packet::SenderState
         {
             WalkerState * senderWalk;
-            Packet::SenderState * saved;
-            WalkerSenderState(WalkerState * _senderWalk,
-                    Packet::SenderState * _saved) :
-                senderWalk(_senderWalk), saved(_saved) {}
+            WalkerSenderState(WalkerState * _senderWalk) :
+                senderWalk(_senderWalk) {}
         };
 
       public:

@@ -167,15 +167,13 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     Addr addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
     bool memInhibitAsserted = pkt->memInhibitAsserted();
-    Packet::SenderState* senderState = pkt->senderState;
 
     // If a cache miss is served by a cache, a monitor near the memory
     // would see a request which needs a response, but this response
     // would be inhibited and not come back from the memory. Therefore
     // we additionally have to check the inhibit flag.
     if (needsResponse && !memInhibitAsserted && !stats.disableLatencyHists) {
-        pkt->senderState = new CommMonitorSenderState(senderState,
-                                                      curTick());
+        pkt->pushSenderState(new CommMonitorSenderState(curTick()));
     }
 
     // Attempt to send the packet (always succeeds for inhibited
@@ -184,8 +182,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
 
     // If not successful, restore the sender state
     if (!successful && needsResponse && !stats.disableLatencyHists) {
-        delete pkt->senderState;
-        pkt->senderState = senderState;
+        delete pkt->popSenderState();
     }
 
     if (successful && traceStream != NULL) {
@@ -306,7 +303,7 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
             panic("Monitor got a response without monitor sender state\n");
 
         // Restore the sate
-        pkt->senderState = commReceivedState->origSenderState;
+        pkt->senderState = commReceivedState->predecessor;
     }
 
     // Attempt to send the packet

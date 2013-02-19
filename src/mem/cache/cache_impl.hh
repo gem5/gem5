@@ -348,24 +348,12 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
 class ForwardResponseRecord : public Packet::SenderState
 {
-    Packet::SenderState *prevSenderState;
-    PortID prevSrc;
-#ifndef NDEBUG
-    BaseCache *cache;
-#endif
   public:
-    ForwardResponseRecord(Packet *pkt, BaseCache *_cache)
-        : prevSenderState(pkt->senderState), prevSrc(pkt->getSrc())
-#ifndef NDEBUG
-          , cache(_cache)
-#endif
+
+    PortID prevSrc;
+
+    ForwardResponseRecord(PortID prev_src) : prevSrc(prev_src)
     {}
-    void restore(Packet *pkt, BaseCache *_cache)
-    {
-        assert(_cache == cache);
-        pkt->senderState = prevSenderState;
-        pkt->setDest(prevSrc);
-    }
 };
 
 
@@ -389,7 +377,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     if (pkt->isResponse()) {
         // must be cache-to-cache response from upper to lower level
         ForwardResponseRecord *rec =
-            dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
+            dynamic_cast<ForwardResponseRecord *>(pkt->popSenderState());
         assert(!system->bypassCaches());
 
         if (rec == NULL) {
@@ -402,7 +390,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             return true;
         }
 
-        rec->restore(pkt, this);
+        pkt->setDest(rec->prevSrc);
         delete rec;
         memSidePort->schedTimingSnoopResp(pkt, time);
         return true;
@@ -1293,14 +1281,14 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         if (is_timing) {
             Packet snoopPkt(pkt, true);  // clear flags
             snoopPkt.setExpressSnoop();
-            snoopPkt.senderState = new ForwardResponseRecord(pkt, this);
+            snoopPkt.pushSenderState(new ForwardResponseRecord(pkt->getSrc()));
             cpuSidePort->sendTimingSnoopReq(&snoopPkt);
             if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache
                 assert(!alreadyResponded);
                 pkt->assertMemInhibit();
             } else {
-                delete snoopPkt.senderState;
+                delete snoopPkt.popSenderState();
             }
             if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -149,17 +149,13 @@ RubyTester::CpuPort::recvTimingResp(PacketPtr pkt)
     // retrieve the subblock and call hitCallback
     RubyTester::SenderState* senderState =
         safe_cast<RubyTester::SenderState*>(pkt->senderState);
-    SubBlock* subblock = senderState->subBlock;
-    assert(subblock != NULL);
+    SubBlock& subblock = senderState->subBlock;
 
-    // pop the sender state from the packet
-    pkt->senderState = senderState->saved;
-
-    tester->hitCallback(id, subblock);
+    tester->hitCallback(id, &subblock);
 
     // Now that the tester has completed, delete the senderState
     // (includes sublock) and the packet, then return
-    delete senderState;
+    delete pkt->senderState;
     delete pkt->req;
     delete pkt;
     return true;

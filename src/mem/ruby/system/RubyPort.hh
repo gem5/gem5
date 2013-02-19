@@ -113,10 +113,8 @@ class RubyPort : public MemObject
     struct SenderState : public Packet::SenderState
     {
         M5Port* port;
-        Packet::SenderState *saved;
 
-        SenderState(M5Port* _port, Packet::SenderState *sender_state = NULL)
-            : port(_port), saved(sender_state)
+        SenderState(M5Port* _port) : port(_port)
         {}
     };
 

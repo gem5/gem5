@@ -123,10 +123,9 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
     Addr orig_addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
     bool memInhibitAsserted = pkt->memInhibitAsserted();
-    Packet::SenderState* senderState = pkt->senderState;
 
     if (needsResponse && !memInhibitAsserted) {
-        pkt->senderState = new AddrMapperSenderState(senderState, orig_addr);
+        pkt->pushSenderState(new AddrMapperSenderState(orig_addr));
     }
 
     pkt->setAddr(remapAddr(orig_addr));
@@ -137,8 +136,7 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
 
     // If not successful, restore the sender state
     if (!successful && needsResponse) {
-        delete pkt->senderState;
-        pkt->senderState = senderState;
+        delete pkt->popSenderState();
     }
 
     return successful;
@@ -158,7 +156,7 @@ AddrMapper::recvTimingResp(PacketPtr pkt)
     Addr remapped_addr = pkt->getAddr();
 
     // Restore the state and address
-    pkt->senderState = receivedState->origSenderState;
+    pkt->senderState = receivedState->predecessor;
     pkt->setAddr(receivedState->origAddr);
 
     // Attempt to send the packet

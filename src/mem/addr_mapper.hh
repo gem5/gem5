@@ -87,22 +87,15 @@ class AddrMapper : public MemObject
       public:
 
         /**
-         * Construct a new sender state and remember the original one
-         * so that we can implement a stack.
+         * Construct a new sender state to remember the original address.
          *
-         * @param _origSenderState Sender state to remember
          * @param _origAddr Address before remapping
          */
-        AddrMapperSenderState(SenderState* _origSenderState,
-                              Addr _origAddr)
-            : origSenderState(_origSenderState), origAddr(_origAddr)
+        AddrMapperSenderState(Addr _origAddr) : origAddr(_origAddr)
         { }
 
         /** Destructor */
         ~AddrMapperSenderState() { }
-
-        /** Pointer to old sender state of packet */
-        SenderState* origSenderState;
 
         /** The original address the packet was destined for */
         Addr origAddr;

@@ -151,12 +151,9 @@ RubyPort::PioPort::recvTimingResp(PacketPtr pkt)
 
     // First we must retrieve the request port from the sender State
     RubyPort::SenderState *senderState =
-      safe_cast<RubyPort::SenderState *>(pkt->senderState);
+        safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
     M5Port *port = senderState->port;
     assert(port != NULL);
-
-    // pop the sender state from the packet
-    pkt->senderState = senderState->saved;
     delete senderState;
 
     port->sendTimingResp(pkt);
@@ -187,7 +184,7 @@ RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
 
     // Save the port in the sender state object to be used later to
     // route the response
-    pkt->senderState = new SenderState(this, pkt->senderState);
+    pkt->pushSenderState(new SenderState(this));
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.
@@ -230,7 +227,7 @@ RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
             pkt->getAddr(), RequestStatus_to_string(requestStatus));
 
     SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
-    pkt->senderState = senderState->saved;
+    pkt->senderState = senderState->predecessor;
     delete senderState;
     return false;
 }
@@ -305,7 +302,7 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     assert(port != NULL);
 
     // pop the sender state from the packet
-    pkt->senderState = senderState->saved;
+    pkt->senderState = senderState->predecessor;
     delete senderState;
 
     port->hitCallback(pkt);

@@ -107,22 +107,17 @@ class CommMonitor : public MemObject
       public:
 
         /**
-         * Construct a new sender state and remember the original one
-         * so that we can implement a stack.
+         * Construct a new sender state and store the time so we can
+         * calculate round-trip latency.
          *
-         * @param _origSenderState Sender state to remember
          * @param _transmitTime Time of packet transmission
          */
-        CommMonitorSenderState(SenderState* _origSenderState,
-                               Tick _transmitTime)
-            : origSenderState(_origSenderState), transmitTime(_transmitTime)
+        CommMonitorSenderState(Tick _transmitTime)
+            : transmitTime(_transmitTime)
         { }
 
         /** Destructor */
         ~CommMonitorSenderState() { }
-
-        /** Pointer to old sender state of packet */
-        SenderState* origSenderState;
 
         /** Tick when request is transmitted */
         Tick transmitTime;

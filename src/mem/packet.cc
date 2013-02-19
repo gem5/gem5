@@ -316,6 +316,24 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
 }
 
 void
+Packet::pushSenderState(Packet::SenderState *sender_state)
+{
+    assert(sender_state != NULL);
+    sender_state->predecessor = senderState;
+    senderState = sender_state;
+}
+
+Packet::SenderState *
+Packet::popSenderState()
+{
+    assert(senderState != NULL);
+    SenderState *sender_state = senderState;
+    senderState = sender_state->predecessor;
+    sender_state->predecessor = NULL;
+    return sender_state;
+}
+
+void
 Packet::print(ostream &o, const int verbosity, const string &prefix) const
 {
     ccprintf(o, "%s[%x:%x] %s\n", prefix,

@@ -84,20 +84,11 @@ class Bridge : public MemObject
 
       public:
 
-        Packet::SenderState *origSenderState;
         PortID origSrc;
 
-        RequestState(PacketPtr _pkt)
-            : origSenderState(_pkt->senderState),
-              origSrc(_pkt->getSrc())
+        RequestState(PortID orig_src) : origSrc(orig_src)
         { }
 
-        void fixResponse(PacketPtr pkt)
-        {
-            assert(pkt->senderState == this);
-            pkt->setDest(origSrc);
-            pkt->senderState = origSenderState;
-        }
     };
 
     /**

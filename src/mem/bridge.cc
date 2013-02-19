@@ -201,8 +201,7 @@ Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
     if (!pkt->memInhibitAsserted() && pkt->needsResponse()) {
         // Update the sender state so we can deal with the response
         // appropriately
-        RequestState *req_state = new RequestState(pkt);
-        pkt->senderState = req_state;
+        pkt->pushSenderState(new RequestState(pkt->getSrc()));
     }
 
     // If we're about to put this packet at the head of the queue, we
@@ -225,11 +224,10 @@ Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
     // This is a response for a request we forwarded earlier.  The
     // corresponding request state should be stored in the packet's
     // senderState field.
-    RequestState *req_state = dynamic_cast<RequestState*>(pkt->senderState);
+    RequestState *req_state =
+        dynamic_cast<RequestState*>(pkt->popSenderState());
     assert(req_state != NULL);
-    // set up new packet dest & senderState based on values saved
-    // from original request
-    req_state->fixResponse(pkt);
+    pkt->setDest(req_state->origSrc);
     delete req_state;
 
     // the bridge assumes that at least one bus has set the

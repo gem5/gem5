@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -340,15 +340,25 @@ class Packet : public Printable
 
     /**
      * A virtual base opaque structure used to hold state associated
-     * with the packet but specific to the sending device (e.g., an
-     * MSHR).  A pointer to this state is returned in the packet's
-     * response so that the sender can quickly look up the state
-     * needed to process it.  A specific subclass would be derived
-     * from this to carry state specific to a particular sending
-     * device.
+     * with the packet (e.g., an MSHR), specific to a MemObject that
+     * sees the packet. A pointer to this state is returned in the
+     * packet's response so that the MemObject in question can quickly
+     * look up the state needed to process it. A specific subclass
+     * would be derived from this to carry state specific to a
+     * particular sending device.
+     *
+     * As multiple MemObjects may add their SenderState throughout the
+     * memory system, the SenderStates create a stack, where a
+     * MemObject can add a new Senderstate, as long as the
+     * predecessing SenderState is restored when the response comes
+     * back. For this reason, the predecessor should always be
+     * populated with the current SenderState of a packet before
+     * modifying the senderState field in the request packet.
      */
     struct SenderState
     {
+        SenderState* predecessor;
+        SenderState() : predecessor(NULL) {}
         virtual ~SenderState() {}
     };
 
@@ -418,11 +428,31 @@ class Packet : public Printable
      * This packet's sender state.  Devices should use dynamic_cast<>
      * to cast to the state appropriate to the sender.  The intent of
      * this variable is to allow a device to attach extra information
-     * to a request.  A response packet must return the sender state
+     * to a request. A response packet must return the sender state
      * that was attached to the original request (even if a new packet
      * is created).
      */
     SenderState *senderState;
+
+    /**
+     * Push a new sender state to the packet and make the current
+     * sender state the predecessor of the new one. This should be
+     * prefered over direct manipulation of the senderState member
+     * variable.
+     *
+     * @param sender_state SenderState to push at the top of the stack
+     */
+    void pushSenderState(SenderState *sender_state);
+
+    /**
+     * Pop the top of the state stack and return a pointer to it. This
+     * assumes the current sender state is not NULL. This should be
+     * preferred over direct manipulation of the senderState member
+     * variable.
+     *
+     * @return The current top of the stack
+     */
+    SenderState *popSenderState();
 
     /// Return the string name of the cmd field (for debugging and
     /// tracing).

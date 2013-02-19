@@ -111,16 +111,13 @@ Check::initiatePrefetch()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState =
-        new SenderState(m_address, req->getSize(), pkt->senderState);
+    pkt->senderState = new SenderState(m_address, req->getSize());
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "successfully initiated prefetch.\n");
     } else {
         // If the packet did not issue, must delete
-        SenderState* senderState =  safe_cast<SenderState*>(pkt->senderState);
-        pkt->senderState = senderState->saved;
-        delete senderState;
+        delete pkt->senderState;
         delete pkt->req;
         delete pkt;
 
@@ -151,8 +148,7 @@ Check::initiateFlush()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState =
-        new SenderState(m_address, req->getSize(), pkt->senderState);
+    pkt->senderState = new SenderState(m_address, req->getSize());
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating Flush - successful\n");
@@ -198,8 +194,7 @@ Check::initiateAction()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState =
-        new SenderState(writeAddr, req->getSize(), pkt->senderState);
+    pkt->senderState = new SenderState(writeAddr, req->getSize());
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating action - successful\n");
@@ -210,9 +205,7 @@ Check::initiateAction()
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
         // will delete it
-        SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
-        pkt->senderState = senderState->saved;
-        delete senderState;
+        delete pkt->senderState;
         delete pkt->req;
         delete pkt;
 
@@ -250,8 +243,7 @@ Check::initiateCheck()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState =
-        new SenderState(m_address, req->getSize(), pkt->senderState);
+    pkt->senderState = new SenderState(m_address, req->getSize());
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating check - successful\n");
@@ -262,9 +254,7 @@ Check::initiateCheck()
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
         // will delete it
-        SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
-        pkt->senderState = senderState->saved;
-        delete senderState;
+        delete pkt->senderState;
         delete pkt->req;
         delete pkt;
 

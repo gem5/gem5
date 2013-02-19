@@ -123,8 +123,7 @@ bool
 Walker::recvTimingResp(PacketPtr pkt)
 {
     WalkerSenderState * senderState =
-        dynamic_cast<WalkerSenderState *>(pkt->senderState);
-    pkt->senderState = senderState->saved;
+        dynamic_cast<WalkerSenderState *>(pkt->popSenderState());
     WalkerState * senderWalk = senderState->senderWalk;
     bool walkComplete = senderWalk->recvPacket(pkt);
     delete senderState;
@@ -169,7 +168,7 @@ Walker::recvRetry()
 
 bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
 {
-    pkt->senderState = new WalkerSenderState(sendingState, pkt->senderState);
+    pkt->pushSenderState(new WalkerSenderState(sendingState));
     return port.sendTimingReq(pkt);
 }
 
