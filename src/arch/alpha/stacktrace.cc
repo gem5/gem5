@@ -197,7 +197,7 @@ StackTrace::trace(ThreadContext *_tc, bool is_call)
             return;
         }
 
-        bool kernel = sys->kernelStart <= pc && pc <= sys->kernelEnd;
+        kernel = sys->kernelStart <= pc && pc <= sys->kernelEnd;
         if (!kernel)
             return;
 

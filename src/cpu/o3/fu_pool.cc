@@ -135,10 +135,7 @@ FUPool::FUPool(const Params *p)
             numFU++;
 
             //  Add the appropriate number of copies of this FU to the list
-            ostringstream s;
-
-            s << (*i)->name() << "(0)";
-            fu->name = s.str();
+            fu->name = (*i)->name() + "(0)";
             funcUnits.push_back(fu);
 
             for (int c = 1; c < (*i)->number; ++c) {

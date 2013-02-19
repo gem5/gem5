@@ -130,8 +130,8 @@ class Arguments
     template <class T>
     operator T() {
         assert(sizeof(T) <= sizeof(uint64_t));
-        T data = static_cast<T>(getArg(sizeof(T)));
-        return data;
+        T d = static_cast<T>(getArg(sizeof(T)));
+        return d;
     }
 
     template <class T>

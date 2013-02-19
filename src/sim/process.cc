@@ -167,7 +167,7 @@ Process::Process(ProcessParams * params)
 
     // mark remaining fds as free
     for (int i = 3; i <= MAX_FD; ++i) {
-        Process::FdMap *fdo = &fd_map[i];
+        fdo = &fd_map[i];
         fdo->fd = -1;
     }
 

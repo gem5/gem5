@@ -1570,13 +1570,6 @@ let {{
                 }
               case 0x6:
                 if (b == 0xc) {
-                    const IntRegIndex vd =
-                        (IntRegIndex)(2 * (bits(machInst, 15, 12) |
-                                           (bits(machInst, 22) << 4)));
-                    const IntRegIndex vm =
-                        (IntRegIndex)(2 * (bits(machInst, 3, 0) |
-                                           (bits(machInst, 5) << 4)));
-                    unsigned size = bits(machInst, 19, 18);
                     return decodeNeonSTwoShiftUSReg<NVshll>(
                             size, machInst, vd, vm, 8 << size);
                 } else {
@@ -1866,7 +1859,6 @@ let {{
           case 0x3:
             const bool up = (bits(machInst, 23) == 1);
             const uint32_t imm = bits(machInst, 7, 0) << 2;
-            RegIndex vd;
             if (single) {
                 vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
                                           (bits(machInst, 22)));

@@ -231,7 +231,6 @@ Pl390::readDistributor(PacketPtr pkt)
                                    cpuTarget[int_num+3] << 24) ;
             }
         } else {
-            int ctx_id = pkt->req->contextId();
             assert(ctx_id < sys->numRunningContexts());
             pkt->set<uint32_t>(ctx_id);
         }

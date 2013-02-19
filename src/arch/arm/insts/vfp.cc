@@ -995,7 +995,6 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
 
     // Get NAN behavior right. This varies between x86 and ARM.
     if (std::isnan(dest)) {
-        const bool single = (sizeof(fpType) == sizeof(float));
         const uint64_t qnan =
             single ? 0x7fc00000 : ULL(0x7ff8000000000000);
         const bool nan1 = std::isnan(op1);
@@ -1066,7 +1065,6 @@ FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
 
     // Get NAN behavior right. This varies between x86 and ARM.
     if (std::isnan(dest)) {
-        const bool single = (sizeof(fpType) == sizeof(float));
         const uint64_t qnan =
             single ? 0x7fc00000 : ULL(0x7ff8000000000000);
         const bool nan = std::isnan(op1);

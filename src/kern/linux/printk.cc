@@ -186,17 +186,17 @@ Printk(stringstream &out, Arguments args)
                 case 'c': {
                     uint64_t mask = (*p == 'C') ? 0xffL : 0x7fL;
                     uint64_t num;
-                    int width;
+                    int cwidth;
 
                     if (islong) {
                         num = (uint64_t)args;
-                        width = sizeof(uint64_t);
+                        cwidth = sizeof(uint64_t);
                     } else {
                         num = (uint32_t)args;
-                        width = sizeof(uint32_t);
+                        cwidth = sizeof(uint32_t);
                     }
 
-                    while (width-- > 0) {
+                    while (cwidth-- > 0) {
                         char c = (char)(num & mask);
                         if (c)
                             out << c;

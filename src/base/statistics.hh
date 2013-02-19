@@ -1416,9 +1416,8 @@ class DistStor
         data.underflow = underflow;
         data.overflow = overflow;
 
-        size_type buckets = params->buckets;
-        data.cvec.resize(buckets);
-        for (off_type i = 0; i < buckets; ++i)
+        data.cvec.resize(params->buckets);
+        for (off_type i = 0; i < params->buckets; ++i)
             data.cvec[i] = cvec[i];
 
         data.sum = sum;
@@ -2372,13 +2371,13 @@ class SumNode : public Node
         size_type size = lvec.size();
         assert(size > 0);
 
-        Result vresult = 0.0;
+        Result result = 0.0;
 
         Op op;
         for (off_type i = 0; i < size; ++i)
-            vresult = op(vresult, lvec[i]);
+            result = op(result, lvec[i]);
 
-        return vresult;
+        return result;
     }
 
     size_type size() const { return 1; }

@@ -254,7 +254,7 @@ IniFile::Section::printUnreferenced(const string &sectionName)
     for (EntryTable::iterator ei = table.begin();
          ei != table.end(); ++ei) {
         const string &entryName = ei->first;
-        Entry *entry = ei->second;
+        entry = ei->second;
 
         if (entryName == "unref_section_ok" ||
             entryName == "unref_entries_ok")

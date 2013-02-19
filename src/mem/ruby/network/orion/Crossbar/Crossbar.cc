@@ -306,7 +306,7 @@ double Crossbar::calc_ctr_cap(double cap_wire_, bool prev_ctr_, bool next_ctr_)
         //FIXME Wmemcellr and resize
         double Wmemcellr = m_tech_param_ptr->get_Wmemcellr();
         double nsize = Wmemcellr;
-        double trans_cap = m_tech_param_ptr->calc_gatecap(nsize, 0);
+        trans_cap = m_tech_param_ptr->calc_gatecap(nsize, 0);
         if (m_trans_type == NP_GATE)
         {
             double Wdecinvn = m_tech_param_ptr->get_Wdecinvn();

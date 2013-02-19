@@ -100,9 +100,9 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     std::vector<int64> m_touched_weighted_vec;
     m_touched_vec.resize(num_of_sequencers+1);
     m_touched_weighted_vec.resize(num_of_sequencers+1);
-    for (int i = 0; i < m_touched_vec.size(); i++) {
-        m_touched_vec[i] = 0;
-        m_touched_weighted_vec[i] = 0;
+    for (int j = 0; j < m_touched_vec.size(); j++) {
+        m_touched_vec[j] = 0;
+        m_touched_weighted_vec[j] = 0;
     }
 
     int counter = 0;

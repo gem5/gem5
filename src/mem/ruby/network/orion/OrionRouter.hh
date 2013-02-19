@@ -98,7 +98,7 @@ class OrionRouter
     uint32_t m_num_out_port;
     uint32_t m_flit_width;
     uint32_t m_num_vclass;
-    uint32_t num_vc_per_vclass_;
+    uint32_t num_vc_per_vclass;
     uint32_t m_total_num_vc;
     uint32_t* m_num_vc_per_vclass_ary;
     uint32_t* m_in_buf_num_set_ary;

@@ -482,8 +482,8 @@ RubySystem::functionalRead(PacketPtr pkt)
 
                 DPRINTF(RubySystem, "reading from %s block %s\n",
                         m_abs_cntrl_vec[i]->name(), block);
-                for (unsigned i = 0; i < size_in_bytes; ++i) {
-                    data[i] = block.getByte(i + startByte);
+                for (unsigned j = 0; j < size_in_bytes; ++j) {
+                    data[j] = block.getByte(j + startByte);
                 }
                 return true;
             }
@@ -507,8 +507,8 @@ RubySystem::functionalRead(PacketPtr pkt)
 
                 DPRINTF(RubySystem, "reading from %s block %s\n",
                         m_abs_cntrl_vec[i]->name(), block);
-                for (unsigned i = 0; i < size_in_bytes; ++i) {
-                    data[i] = block.getByte(i + startByte);
+                for (unsigned j = 0; j < size_in_bytes; ++j) {
+                    data[j] = block.getByte(j + startByte);
                 }
                 return true;
             }
@@ -545,8 +545,8 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
             DataBlock& block = m_abs_cntrl_vec[i]->getDataBlock(line_addr);
             DPRINTF(RubySystem, "%s\n",block);
-            for (unsigned i = 0; i < size_in_bytes; ++i) {
-              block.setByte(i + startByte, data[i]);
+            for (unsigned j = 0; j < size_in_bytes; ++j) {
+              block.setByte(j + startByte, data[j]);
             }
             DPRINTF(RubySystem, "%s\n",block);
         }

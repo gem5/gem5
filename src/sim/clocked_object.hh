@@ -184,8 +184,8 @@ class ClockedObject : public SimObject
 
     inline Tick clockPeriod() const { return clock; }
 
-    inline Cycles ticksToCycles(Tick tick) const
-    { return Cycles(tick / clock); }
+    inline Cycles ticksToCycles(Tick t) const
+    { return Cycles(t / clock); }
 
 };
 

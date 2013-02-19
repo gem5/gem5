@@ -404,7 +404,6 @@ template <class Impl>
 void
 ROB<Impl>::updateHead()
 {
-    DynInstPtr head_inst;
     InstSeqNum lowest_num = 0;
     bool first_valid = true;
 

@@ -319,8 +319,8 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 incMissCount(pkt);
                 return false;
             }
-            int id = pkt->req->masterId();
-            tags->insertBlock(pkt->getAddr(), blk, id);
+            int master_id = pkt->req->masterId();
+            tags->insertBlock(pkt->getAddr(), blk, master_id);
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
@@ -1005,7 +1005,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         if (blk) {
             blk->status &= ~BlkReadable;
         }
-        MSHRQueue *mq = mshr->queue;
+        mq = mshr->queue;
         mq->markPending(mshr);
         requestMemSideBus((RequestCause)mq->index, curTick() +
                           pkt->busLastWordDelay);

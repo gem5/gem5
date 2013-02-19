@@ -270,16 +270,16 @@ bool
 FALRU::check()
 {
     FALRUBlk* blk = head;
-    int size = 0;
+    int tot_size = 0;
     int boundary = 1<<17;
     int j = 0;
     int flags = cacheMask;
     while (blk) {
-        size += blkSize;
+        tot_size += blkSize;
         if (blk->inCache != flags) {
             return false;
         }
-        if (size == boundary && blk != tail) {
+        if (tot_size == boundary && blk != tail) {
             if (cacheBoundaries[j] != blk) {
                 return false;
             }

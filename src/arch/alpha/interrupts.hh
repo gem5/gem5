@@ -158,11 +158,10 @@ class Interrupts : public SimObject
             }
         }
 
-        uint64_t interrupts = intstatus;
-        if (interrupts) {
+        if (intstatus) {
             for (uint64_t i = INTLEVEL_EXTERNAL_MIN;
                  i < INTLEVEL_EXTERNAL_MAX; i++) {
-                if (interrupts & (ULL(1) << i)) {
+                if (intstatus & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference
                     ipl = i;
                     summary |= (ULL(1) << i);

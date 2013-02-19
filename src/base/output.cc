@@ -233,27 +233,27 @@ OutputDirectory::remove(const string &name, bool recursive)
     } else {
         // assume 'name' is a directory
         if (recursive) {
-            DIR *dir = opendir(fname.c_str());
+            DIR *subdir = opendir(fname.c_str());
 
             // silently ignore removal request for non-existent directory
-            if ((!dir) && (errno == ENOENT))
+            if ((!subdir) && (errno == ENOENT))
                 return;
 
             // fail on other errors
-            if (!dir) {
+            if (!subdir) {
                 perror("opendir");
                 fatal("Error opening directory for recursive removal '%s'\n",
                     fname);
             }
 
-            struct dirent *de = readdir(dir);
+            struct dirent *de = readdir(subdir);
             while (de != NULL) {
                 // ignore files starting with a '.'; user must delete those
                 //   manually if they really want to
                 if (de->d_name[0] != '.')
                     remove(name + PATH_SEPARATOR + de->d_name, recursive);
 
-                de = readdir(dir);
+                de = readdir(subdir);
             }
         }
 
