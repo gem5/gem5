@@ -61,7 +61,6 @@ NetDest shortest_path_to_node(SwitchID src, SwitchID next,
 Topology::Topology(const Params *p)
     : SimObject(p)
 {
-    m_print_config = p->print_config;
     m_number_of_switches = p->routers.size();
 
     // initialize component latencies record

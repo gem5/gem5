@@ -93,7 +93,6 @@ class Topology : public SimObject
     Topology& operator=(const Topology& obj);
 
     std::string m_name;
-    bool m_print_config;
     NodeID m_nodes;
     int m_number_of_switches;
 
