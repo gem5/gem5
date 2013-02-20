@@ -75,8 +75,6 @@ class StateMachine(Symbol):
         self.objects = []
         self.TBEType   = None
         self.EntryType = None
-        self.message_buffer_names = []
-
 
     def __repr__(self):
         return "[StateMachine: %s]" % self.ident
@@ -215,8 +213,6 @@ class $py_ident(RubyController):
         code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
-
-        self.message_buffer_names = []
 
         code('''
 /** \\file $c_ident.hh
@@ -380,9 +376,6 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         for var in self.objects:
             th = var.get("template", "")
             code('${{var.type.c_ident}}$th* m_${{var.c_ident}}_ptr;')
-
-            if var.type.ident == "MessageBuffer":
-                self.message_buffer_names.append("m_%s_ptr" % var.c_ident)
 
         code.dedent()
         code('};')
