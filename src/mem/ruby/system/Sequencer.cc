@@ -306,6 +306,20 @@ Sequencer::removeRequest(SequencerRequest* srequest)
     markRemoved();
 }
 
+void
+Sequencer::invalidateSC(const Address& address)
+{
+    RequestTable::iterator i = m_writeRequestTable.find(address);
+    if (i != m_writeRequestTable.end()) {
+        SequencerRequest* request = i->second;
+        // The controller has lost the coherence permissions, hence the lock
+        // on the cache line maintained by the cache should be cleared.
+        if (request->m_type == RubyRequestType_Store_Conditional) {
+            m_dataCache_ptr->clearLocked(address);
+        }
+    }
+}
+
 bool
 Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
 {
@@ -391,7 +405,6 @@ Sequencer::writeCallback(const Address& address,
            (request->m_type == RubyRequestType_Locked_RMW_Read) ||
            (request->m_type == RubyRequestType_Locked_RMW_Write) ||
            (request->m_type == RubyRequestType_FLUSH));
-
 
     //
     // For Alpha, properly handle LL, SC, and write requests with respect to

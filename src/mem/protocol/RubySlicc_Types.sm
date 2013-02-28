@@ -110,6 +110,7 @@ structure (Sequencer, external = "yes") {
   void evictionCallback(Address);
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Address);
+  void invalidateSC(Address);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {

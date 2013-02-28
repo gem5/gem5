@@ -782,6 +782,11 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
+  action(dg_invalidate_sc, "dg",
+         desc="Invalidate store conditional as the cache lost permissions") {
+    sequencer.invalidateSC(address);
+  }
+
   action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
@@ -1251,7 +1256,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from IM
-  transition({IM, SM}, Inv, IM) {
+  transition(IM, Inv, IM) {
     fi_sendInvAck;
     l_popRequestQueue;
   }
@@ -1292,6 +1297,12 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // transitions from SM
+  transition(SM, Inv, IM) {
+    fi_sendInvAck;
+    dg_invalidate_sc;
+    l_popRequestQueue;
+  }
+
   transition({SM, IM, PF_SM, PF_IM}, Ack) {
     q_updateAckCount;
     o_popIncomingResponseQueue;

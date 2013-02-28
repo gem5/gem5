@@ -116,6 +116,7 @@ class Sequencer : public RubyPort
     void markRemoved();
     void removeRequest(SequencerRequest* request);
     void evictionCallback(const Address& address);
+    void invalidateSC(const Address& address);
 
     void recordRequestType(SequencerRequestType requestType);
 
