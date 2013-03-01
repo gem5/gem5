@@ -80,6 +80,10 @@ class SimpleDRAM(AbstractMemory):
     lines_per_rowbuffer = Param.Unsigned("Row buffer size in cache lines")
     ranks_per_channel = Param.Unsigned("Number of ranks per channel")
     banks_per_rank = Param.Unsigned("Number of banks per rank")
+    # only used for the address mapping as the controller by
+    # construction is a single channel and multiple controllers have
+    # to be instantiated for a multi-channel configuration
+    channels = Param.Unsigned(1, "Number of channels")
 
     # timing behaviour and constraints - all in nanoseconds
 

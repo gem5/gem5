@@ -378,6 +378,7 @@ class SimpleDRAM : public AbstractMemory
     const uint32_t linesPerRowBuffer;
     const uint32_t ranksPerChannel;
     const uint32_t banksPerRank;
+    const uint32_t channels;
     uint32_t rowsPerBank;
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;

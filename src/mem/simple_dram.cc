@@ -57,7 +57,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     bytesPerCacheLine(0),
     linesPerRowBuffer(p->lines_per_rowbuffer),
     ranksPerChannel(p->ranks_per_channel),
-    banksPerRank(p->banks_per_rank), rowsPerBank(0),
+    banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size),
     writeThresholdPerc(p->write_thresh_perc),
@@ -115,6 +115,23 @@ SimpleDRAM::init()
     rowsPerBank = capacity / (bytesPerCacheLine * linesPerRowBuffer *
                               banksPerRank * ranksPerChannel);
 
+    if (range.interleaved()) {
+        if (channels != range.stripes())
+            panic("%s has %d interleaved address stripes but %d channel(s)\n",
+                  name(), range.stripes(), channels);
+
+        if (addrMapping == Enums::openmap) {
+            if (bytesPerCacheLine * linesPerRowBuffer !=
+                range.granularity()) {
+                panic("Interleaving of %s doesn't match open address map\n",
+                      name());
+            }
+        } else if (addrMapping == Enums::closemap) {
+            if (bytesPerCacheLine != range.granularity())
+                panic("Interleaving of %s doesn't match closed address map\n",
+                      name());
+        }
+    }
 }
 
 void
@@ -190,6 +207,11 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
         // sequential cache lines occupy the same row
         addr = addr / linesPerRowBuffer;
 
+        // take out the channel part of the address, note that this has
+        // to match with how accesses are interleaved between the
+        // controllers in the address mapping
+        addr = addr / channels;
+
         // after the column bits, we get the bank bits to interleave
         // over the banks
         bank = addr % banksPerRank;
@@ -206,6 +228,11 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     } else if (addrMapping == Enums::closemap) {
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
+
+        // take out the channel part of the address, not that this has
+        // to match with how accesses are interleaved between the
+        // controllers in the address mapping
+        addr = addr / channels;
 
         // start with the bank bits, as this provides the maximum
         // opportunity for parallelism between requests
