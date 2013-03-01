@@ -396,8 +396,11 @@ SimpleDRAM::processWriteEvent()
     }
 
     // Once you're done emptying the write queue, check if there's
-    // anything in the read queue, and call schedule if required
-    schedule(nextReqEvent, busBusyUntil);
+    // anything in the read queue, and call schedule if required. The
+    // retry above could already have caused it to be scheduled, so
+    // first check
+    if (!nextReqEvent.scheduled())
+        schedule(nextReqEvent, busBusyUntil);
 }
 
 void
