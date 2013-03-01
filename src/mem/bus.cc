@@ -442,31 +442,83 @@ BaseBus::recvRangeChange(PortID master_port_id)
     // modules, go ahead and tell our connected master modules in
     // turn, this effectively assumes a tree structure of the system
     if (gotAllAddrRanges) {
+        DPRINTF(BusAddrRanges, "Aggregating bus ranges\n");
+        busRanges.clear();
+
+        // start out with the default range
+        if (useDefaultRange) {
+            if (!gotAddrRanges[defaultPortID])
+                fatal("Bus %s uses default range, but none provided",
+                      name());
+
+            busRanges.push_back(defaultRange);
+            DPRINTF(BusAddrRanges, "-- Adding default %s\n",
+                    defaultRange.to_string());
+        }
+
+        // merge all interleaved ranges and add any range that is not
+        // a subset of the default range
+        std::vector<AddrRange> intlv_ranges;
+        for (AddrRangeMap<PortID>::const_iterator r = portMap.begin();
+             r != portMap.end(); ++r) {
+            // if the range is interleaved then save it for now
+            if (r->first.interleaved()) {
+                // if we already got interleaved ranges that are not
+                // part of the same range, then first do a merge
+                // before we add the new one
+                if (!intlv_ranges.empty() &&
+                    !intlv_ranges.back().mergesWith(r->first)) {
+                    DPRINTF(BusAddrRanges, "-- Merging range from %d ranges\n",
+                            intlv_ranges.size());
+                    AddrRange merged_range(intlv_ranges);
+                    // next decide if we keep the merged range or not
+                    if (!(useDefaultRange &&
+                          merged_range.isSubset(defaultRange))) {
+                        busRanges.push_back(merged_range);
+                        DPRINTF(BusAddrRanges, "-- Adding merged range %s\n",
+                                merged_range.to_string());
+                    }
+                    intlv_ranges.clear();
+                }
+                intlv_ranges.push_back(r->first);
+            } else {
+                // keep the current range if not a subset of the default
+                if (!(useDefaultRange &&
+                      r->first.isSubset(defaultRange))) {
+                    busRanges.push_back(r->first);
+                    DPRINTF(BusAddrRanges, "-- Adding range %s\n",
+                            r->first.to_string());
+                }
+            }
+        }
+
+        // if there is still interleaved ranges waiting to be merged,
+        // go ahead and do it
+        if (!intlv_ranges.empty()) {
+            DPRINTF(BusAddrRanges, "-- Merging range from %d ranges\n",
+                    intlv_ranges.size());
+            AddrRange merged_range(intlv_ranges);
+            if (!(useDefaultRange && merged_range.isSubset(defaultRange))) {
+                busRanges.push_back(merged_range);
+                DPRINTF(BusAddrRanges, "-- Adding merged range %s\n",
+                        merged_range.to_string());
+            }
+        }
+
         // also check that no range partially overlaps with the
         // default range, this has to be done after all ranges are set
         // as there are no guarantees for when the default range is
         // update with respect to the other ones
         if (useDefaultRange) {
-            for (PortID port_id = 0; port_id < masterPorts.size(); ++port_id) {
-                if (port_id == defaultPortID) {
-                    if (!gotAddrRanges[port_id])
-                        fatal("Bus %s uses default range, but none provided",
-                              name());
-                } else {
-                    AddrRangeList ranges =
-                        masterPorts[port_id]->getAddrRanges();
-
-                    for (AddrRangeConstIter r = ranges.begin();
-                         r != ranges.end(); ++r) {
-                        // see if the new range is partially
-                        // overlapping the default range
-                        if (r->intersects(defaultRange) &&
-                            !r->isSubset(defaultRange))
-                            fatal("Range %s intersects the " \
-                                  "default range of %s but is not a " \
-                                  "subset\n", r->to_string(), name());
-                    }
-                }
+            for (AddrRangeConstIter r = busRanges.begin();
+                 r != busRanges.end(); ++r) {
+                // see if the new range is partially
+                // overlapping the default range
+                if (r->intersects(defaultRange) &&
+                    !r->isSubset(defaultRange))
+                    fatal("Range %s intersects the "                    \
+                          "default range of %s but is not a "           \
+                          "subset\n", r->to_string(), name());
             }
         }
 
@@ -493,27 +545,9 @@ BaseBus::getAddrRanges() const
     // (CPU, cache, bridge etc) actually care about the ranges of the
     // ports they are connected to
 
-    DPRINTF(BusAddrRanges, "Received address range request, returning:\n");
+    DPRINTF(BusAddrRanges, "Received address range request\n");
 
-    // start out with the default range
-    AddrRangeList ranges;
-    if (useDefaultRange) {
-        ranges.push_back(defaultRange);
-        DPRINTF(BusAddrRanges, "  -- Default %s\n", defaultRange.to_string());
-    }
-
-    // add any range that is not a subset of the default range
-    for (PortMapConstIter p = portMap.begin(); p != portMap.end(); ++p) {
-        if (useDefaultRange && p->first.isSubset(defaultRange)) {
-            DPRINTF(BusAddrRanges, "  -- %s is a subset of default\n",
-                    p->first.to_string());
-        } else {
-            ranges.push_back(p->first);
-            DPRINTF(BusAddrRanges, "  -- %s\n", p->first.to_string());
-        }
-    }
-
-    return ranges;
+    return busRanges;
 }
 
 unsigned

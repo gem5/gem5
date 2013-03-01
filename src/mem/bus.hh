@@ -232,6 +232,9 @@ class BaseBus : public MemObject
     typedef AddrRangeMap<PortID>::const_iterator PortMapConstIter;
     AddrRangeMap<PortID> portMap;
 
+    /** all contigous ranges seen by this bus */
+    AddrRangeList busRanges;
+
     AddrRange defaultRange;
 
     /**
