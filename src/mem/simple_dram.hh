@@ -278,13 +278,13 @@ class SimpleDRAM : public AbstractMemory
     DRAMPacket* decodeAddr(PacketPtr pkt);
 
     /**
-     * The memory schduler/arbiter - picks which request needs to
-     * go next, based on the specified policy such as fcfs or frfcfs
-     * and moves it to the head of the read queue
+     * The memory schduler/arbiter - picks which read request needs to
+     * go next, based on the specified policy such as FCFS or FR-FCFS
+     * and moves it to the head of the read queue.
      *
-     * @return True if a request was chosen, False if Q is empty
+     * @return True if a request was chosen and false if queue is empty
      */
-    bool chooseNextReq();
+    bool chooseNextRead();
 
     /**
      * Calls chooseNextReq() to pick the right request, then calls
@@ -316,7 +316,7 @@ class SimpleDRAM : public AbstractMemory
     void moveToRespQ();
 
     /**
-     * Scheduling policy within the write Q
+     * Scheduling policy within the write queue
      */
     void chooseNextWrite();
 
@@ -343,20 +343,22 @@ class SimpleDRAM : public AbstractMemory
     /**
      * The controller's main read and write queues
      */
-    std::list<DRAMPacket*> dramReadQueue;
-    std::list<DRAMPacket*> dramWriteQueue;
+    std::list<DRAMPacket*> readQueue;
+    std::list<DRAMPacket*> writeQueue;
 
     /**
      * Response queue where read packets wait after we're done working
-     * with them, but it's not time to send the response yet.\ It is
-     * seperate mostly to keep the code clean and help with gem5 events,
-     * but for all logical purposes such as sizing the read queue, this
-     * and the main read queue need to be added together.
+     * with them, but it's not time to send the response yet. The
+     * responses are stored seperately mostly to keep the code clean
+     * and help with events scheduling. For all logical purposes such
+     * as sizing the read queue, this and the main read queue need to
+     * be added together.
      */
-    std::list<DRAMPacket*> dramRespQueue;
+    std::list<DRAMPacket*> respQueue;
 
-    /** If we need to drain, keep the drain manager around until we're done
-     * here.
+    /**
+     * If we need to drain, keep the drain manager around until we're
+     * done here.
      */
     DrainManager *drainManager;
 
@@ -369,10 +371,10 @@ class SimpleDRAM : public AbstractMemory
     /**
      * The following are basic design parameters of the memory
      * controller, and are initialized based on parameter values. The
-     * bytesPerCacheLine is based on the neighbouring port and thus
-     * determined outside the constructor. Similarly, the rowsPerBank
-     * is determined based on the capacity, number of ranks and banks,
-     * the cache line size, and the row buffer size.
+     * bytesPerCacheLine is based on the neighbouring ports cache line
+     * size and thus determined outside the constructor. Similarly,
+     * the rowsPerBank is determined based on the capacity, number of
+     * ranks and banks, the cache line size, and the row buffer size.
      */
     uint32_t bytesPerCacheLine;
     const uint32_t linesPerRowBuffer;
@@ -412,7 +414,6 @@ class SimpleDRAM : public AbstractMemory
      */
     Tick busBusyUntil;
 
-    Tick prevdramaccess;
     Tick writeStartTime;
     Tick prevArrival;
     int numReqs;
@@ -434,7 +435,6 @@ class SimpleDRAM : public AbstractMemory
     Stats::Scalar totGap;
     Stats::Vector readPktSize;
     Stats::Vector writePktSize;
-    Stats::Vector neitherPktSize;
     Stats::Vector rdQLenPdf;
     Stats::Vector wrQLenPdf;
 

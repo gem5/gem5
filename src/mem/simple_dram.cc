@@ -43,7 +43,6 @@
 #include "debug/DRAM.hh"
 #include "debug/DRAMWR.hh"
 #include "mem/simple_dram.hh"
-#include "sim/stat_control.hh"
 
 using namespace std;
 
@@ -67,7 +66,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
-    busBusyUntil(0), prevdramaccess(0), writeStartTime(0),
+    busBusyUntil(0), writeStartTime(0),
     prevArrival(0), numReqs(0)
 {
     // create the bank states based on the dimensions of the ranks and
@@ -91,24 +90,17 @@ SimpleDRAM::init()
         port.sendRangeChange();
     }
 
-    // get the cache line size from the connected port
+    // get the burst size from the connected port as it is currently
+    // assumed to be equal to the cache line size
     bytesPerCacheLine = port.peerBlockSize();
 
     // we could deal with plenty options here, but for now do a quick
     // sanity check
     if (bytesPerCacheLine != 64 && bytesPerCacheLine != 32)
-        panic("Unexpected cache line size %d", bytesPerCacheLine);
+        panic("Unexpected burst size %d", bytesPerCacheLine);
 
     // determine the rows per bank by looking at the total capacity
-    uint64_t capacity = AbstractMemory::size();
-    uint64_t i = 1;
-    while (i < 64 && capacity > ((1 << i))) {
-        ++i;
-    }
-
-    // rounded up to nearest power of two
-    DPRINTF(DRAM, "i is %lld\n", i);
-    capacity = 1 << i;
+    uint64_t capacity = ULL(1) << ceilLog2(AbstractMemory::size());
 
     DPRINTF(DRAM, "Memory capacity %lld (%lld) bytes\n", capacity,
             AbstractMemory::size());
@@ -141,9 +133,8 @@ SimpleDRAM::startup()
     printParams();
 
     // kick off the refresh
-    schedule(&refreshEvent, curTick() + tREFI);
+    schedule(refreshEvent, curTick() + tREFI);
 }
-
 
 Tick
 SimpleDRAM::recvAtomic(PacketPtr pkt)
@@ -166,19 +157,18 @@ bool
 SimpleDRAM::readQueueFull() const
 {
     DPRINTF(DRAM, "Read queue limit %d current size %d\n",
-            readBufferSize, dramReadQueue.size() + dramRespQueue.size());
+            readBufferSize, readQueue.size() + respQueue.size());
 
-    return (dramReadQueue.size() + dramRespQueue.size()) == readBufferSize;
+    return (readQueue.size() + respQueue.size()) == readBufferSize;
 }
 
 bool
 SimpleDRAM::writeQueueFull() const
 {
     DPRINTF(DRAM, "Write queue limit %d current size %d\n",
-            writeBufferSize, dramWriteQueue.size());
-    return dramWriteQueue.size() == writeBufferSize;
+            writeBufferSize, writeQueue.size());
+    return writeQueue.size() == writeBufferSize;
 }
-
 
 SimpleDRAM::DRAMPacket*
 SimpleDRAM::decodeAddr(PacketPtr pkt)
@@ -193,7 +183,6 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     uint16_t row;
 
     Addr addr = pkt->getAddr();
-    Addr temp = addr;
 
     // truncate the address to the access granularity
     addr = addr / bytesPerCacheLine;
@@ -258,14 +247,13 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     assert(row < rowsPerBank);
 
     DPRINTF(DRAM, "Address: %lld Rank %d Bank %d Row %d\n",
-            temp, rank, bank, row);
+            pkt->getAddr(), rank, bank, row);
 
     // create the corresponding DRAM packet with the entry time and
-    // ready time set to the current tick, they will be updated later
-    DRAMPacket* dram_pkt = new DRAMPacket(pkt, rank, bank, row, temp,
-                                          banks[rank][bank]);
-
-    return dram_pkt;
+    // ready time set to the current tick, the latter will be updated
+    // later
+    return new DRAMPacket(pkt, rank, bank, row, pkt->getAddr(),
+                          banks[rank][bank]);
 }
 
 void
@@ -277,14 +265,14 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt)
 
     // First check write buffer to see if the data is already at
     // the controller
-    std::list<DRAMPacket*>::const_iterator i;
+    list<DRAMPacket*>::const_iterator i;
     Addr addr = pkt->getAddr();
 
     // @todo: add size check
-    for (i = dramWriteQueue.begin();  i != dramWriteQueue.end(); ++i) {
+    for (i = writeQueue.begin(); i != writeQueue.end(); ++i) {
         if ((*i)->addr == addr){
             servicedByWrQ++;
-            DPRINTF(DRAM,"Serviced by write Q\n");
+            DPRINTF(DRAM, "Read to %lld serviced by write queue\n", addr);
             bytesRead += bytesPerCacheLine;
             bytesConsumedRd += pkt->getSize();
             accessAndRespond(pkt);
@@ -294,31 +282,32 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt)
 
     DRAMPacket* dram_pkt = decodeAddr(pkt);
 
-    assert(dramReadQueue.size() + dramRespQueue.size() < readBufferSize);
-    rdQLenPdf[dramReadQueue.size() + dramRespQueue.size()]++;
+    assert(readQueue.size() + respQueue.size() < readBufferSize);
+    rdQLenPdf[readQueue.size() + respQueue.size()]++;
 
     DPRINTF(DRAM, "Adding to read queue\n");
 
-    dramReadQueue.push_back(dram_pkt);
+    readQueue.push_back(dram_pkt);
 
     // Update stats
     uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
     assert(bank_id < ranksPerChannel * banksPerRank);
     perBankRdReqs[bank_id]++;
 
-    avgRdQLen = dramReadQueue.size() + dramRespQueue.size();
+    avgRdQLen = readQueue.size() + respQueue.size();
 
-    // Special case where no arbitration is required between requests
+    // If we are not already scheduled to get the read request out of
+    // the queue, do so now
     if (!nextReqEvent.scheduled() && !stopReads) {
-        DPRINTF(DRAM, "Request %lld - need to schedule immediately");
-        schedule(&nextReqEvent, curTick() + 1);
+        DPRINTF(DRAM, "Request scheduled immediately\n");
+        schedule(nextReqEvent, curTick());
     }
 }
 
 void
 SimpleDRAM::processWriteEvent()
 {
-    assert(!dramWriteQueue.empty());
+    assert(!writeQueue.empty());
     uint32_t numWritesThisTime = 0;
 
     DPRINTF(DRAMWR, "Beginning DRAM Writes\n");
@@ -326,13 +315,15 @@ SimpleDRAM::processWriteEvent()
     Tick temp2 M5_VAR_USED = std::max(curTick(), maxBankFreeAt());
 
     // @todo: are there any dangers with the untimed while loop?
-    while (!dramWriteQueue.empty()) {
-        if (numWritesThisTime > writeThreshold)
+    while (!writeQueue.empty()) {
+        if (numWritesThisTime > writeThreshold) {
+            DPRINTF(DRAMWR, "Hit write threshold %d\n", writeThreshold);
             break;
+        }
 
         chooseNextWrite();
-        DRAMPacket* dram_pkt = dramWriteQueue.front();
-        // What's the earlier the request can be put on the bus
+        DRAMPacket* dram_pkt = writeQueue.front();
+        // What's the earliest the request can be put on the bus
         Tick schedTime = std::max(curTick(), busBusyUntil);
 
         DPRINTF(DRAMWR, "Asking for latency estimate at %lld\n",
@@ -342,9 +333,6 @@ SimpleDRAM::processWriteEvent()
         Tick accessLat = lat.second;
 
         // look at the rowHitFlag set by estimateLatency
-
-        // @todo: Race condition here where another packet gives rise
-        // to another call to estimateLatency in the meanwhile?
         if (rowHitFlag)
             writeRowHits++;
 
@@ -372,13 +360,13 @@ SimpleDRAM::processWriteEvent()
         } else
             panic("Unknown page management policy chosen\n");
 
-        DPRINTF(DRAMWR,"Done writing to address %lld\n",dram_pkt->addr);
+        DPRINTF(DRAMWR, "Done writing to address %lld\n", dram_pkt->addr);
 
-        DPRINTF(DRAMWR,"schedtime is %lld, tBURST is %lld, "
+        DPRINTF(DRAMWR, "schedtime is %lld, tBURST is %lld, "
                 "busbusyuntil is %lld\n",
                 schedTime, tBURST, busBusyUntil);
 
-        dramWriteQueue.pop_front();
+        writeQueue.pop_front();
         delete dram_pkt;
 
         numWritesThisTime++;
@@ -389,7 +377,7 @@ SimpleDRAM::processWriteEvent()
             busBusyUntil - temp1, maxBankFreeAt() - temp2);
 
     // Update stats
-    avgWrQLen = dramWriteQueue.size();
+    avgWrQLen = writeQueue.size();
 
     // turn the bus back around for reads again
     busBusyUntil += tWTR;
@@ -401,15 +389,15 @@ SimpleDRAM::processWriteEvent()
     }
 
     // if there is nothing left in any queue, signal a drain
-    if (dramWriteQueue.empty() && dramReadQueue.empty() &&
-        dramRespQueue.empty () && drainManager) {
+    if (writeQueue.empty() && readQueue.empty() &&
+        respQueue.empty () && drainManager) {
         drainManager->signalDrainDone();
         drainManager = NULL;
     }
 
     // Once you're done emptying the write queue, check if there's
     // anything in the read queue, and call schedule if required
-    schedule(&nextReqEvent, busBusyUntil);
+    schedule(nextReqEvent, busBusyUntil);
 }
 
 void
@@ -425,7 +413,7 @@ SimpleDRAM::triggerWrites()
 
     assert(writeStartTime >= curTick());
     assert(!writeEvent.scheduled());
-    schedule(&writeEvent, writeStartTime);
+    schedule(writeEvent, writeStartTime);
 }
 
 void
@@ -437,19 +425,19 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt)
 
     DRAMPacket* dram_pkt = decodeAddr(pkt);
 
-    assert(dramWriteQueue.size() < writeBufferSize);
-    wrQLenPdf[dramWriteQueue.size()]++;
+    assert(writeQueue.size() < writeBufferSize);
+    wrQLenPdf[writeQueue.size()]++;
 
     DPRINTF(DRAM, "Adding to write queue\n");
 
-    dramWriteQueue.push_back(dram_pkt);
+    writeQueue.push_back(dram_pkt);
 
     // Update stats
     uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
     assert(bank_id < ranksPerChannel * banksPerRank);
     perBankWrReqs[bank_id]++;
 
-    avgWrQLen = dramWriteQueue.size();
+    avgWrQLen = writeQueue.size();
 
     // we do not wait for the writes to be send to the actual memory,
     // but instead take responsibility for the consistency here and
@@ -460,7 +448,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt)
     accessAndRespond(pkt);
 
     // If your write buffer is starting to fill up, drain it!
-    if (dramWriteQueue.size() > writeThreshold  && !stopReads){
+    if (writeQueue.size() > writeThreshold && !stopReads){
         triggerWrites();
     }
 }
@@ -477,7 +465,7 @@ SimpleDRAM::printParams() const
             "Banks per rank       %d\n"                         \
             "Ranks per channel    %d\n"                         \
             "Total mem capacity   %u\n",
-            name(), bytesPerCacheLine ,linesPerRowBuffer, rowsPerBank,
+            name(), bytesPerCacheLine, linesPerRowBuffer, rowsPerBank,
             banksPerRank, ranksPerChannel, bytesPerCacheLine *
             linesPerRowBuffer * rowsPerBank * banksPerRank * ranksPerChannel);
 
@@ -498,14 +486,16 @@ SimpleDRAM::printParams() const
             scheduler, address_mapping, page_policy);
 
     DPRINTF(DRAM, "Memory controller %s timing specs\n" \
-            "tRCD    %d ticks\n"                        \
-            "tCL     %d ticks\n"                        \
-            "tRP     %d ticks\n"                        \
-            "tBURST  %d ticks\n"                        \
-            "tRFC    %d ticks\n"                        \
-            "tREFI   %d ticks\n"                        \
-            "tWTR    %d ticks\n",
-            name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR);
+            "tRCD      %d ticks\n"                        \
+            "tCL       %d ticks\n"                        \
+            "tRP       %d ticks\n"                        \
+            "tBURST    %d ticks\n"                        \
+            "tRFC      %d ticks\n"                        \
+            "tREFI     %d ticks\n"                        \
+            "tWTR      %d ticks\n"                        \
+            "tXAW (%d) %d ticks\n",
+            name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR,
+            activationLimit, tXAW);
 }
 
 void
@@ -514,15 +504,15 @@ SimpleDRAM::printQs() const {
     list<DRAMPacket*>::const_iterator i;
 
     DPRINTF(DRAM, "===READ QUEUE===\n\n");
-    for (i = dramReadQueue.begin() ;  i != dramReadQueue.end() ; ++i) {
+    for (i = readQueue.begin() ;  i != readQueue.end() ; ++i) {
         DPRINTF(DRAM, "Read %lu\n", (*i)->addr);
     }
     DPRINTF(DRAM, "\n===RESP QUEUE===\n\n");
-    for (i = dramRespQueue.begin() ;  i != dramRespQueue.end() ; ++i) {
+    for (i = respQueue.begin() ;  i != respQueue.end() ; ++i) {
         DPRINTF(DRAM, "Response %lu\n", (*i)->addr);
     }
     DPRINTF(DRAM, "\n===WRITE QUEUE===\n\n");
-    for (i = dramWriteQueue.begin() ;  i != dramWriteQueue.end() ; ++i) {
+    for (i = writeQueue.begin() ;  i != writeQueue.end() ; ++i) {
         DPRINTF(DRAM, "Write %lu\n", (*i)->addr);
     }
 }
@@ -536,16 +526,21 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
         delete pendingDelete[x];
     pendingDelete.clear();
 
-
     // This is where we enter from the outside world
-    DPRINTF(DRAM, "Inside recvTimingReq: request %s addr %lld size %d\n",
+    DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(),pkt->getAddr(), pkt->getSize());
 
-   int index;
+    // simply drop inhibited packets for now
+    if (pkt->memInhibitAsserted()) {
+        DPRINTF(DRAM,"Inhibited packet -- Dropping it now\n");
+        pendingDelete.push_back(pkt);
+        return true;
+    }
 
    if (pkt->getSize() == bytesPerCacheLine)
        cpuReqs++;
 
+   // Every million accesses, print the state of the queues
    if (numReqs % 1000000 == 0)
        printQs();
 
@@ -555,66 +550,36 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
     }
     prevArrival = curTick();
 
-    // simply drop inhibited packets for now
-    if (pkt->memInhibitAsserted()) {
-        DPRINTF(DRAM,"Inhibited packet -- Dropping it now\n");
-        pendingDelete.push_back(pkt);
-        return true;
-    }
-
     unsigned size = pkt->getSize();
     if (size > bytesPerCacheLine)
-        panic("Request size %d is greater than cache line size %d",
+        panic("Request size %d is greater than burst size %d",
               size, bytesPerCacheLine);
-
-    if (size == 0)
-        index = log2(bytesPerCacheLine) + 1;
-    else
-        index = log2(size);
-
-    if (size != 0 && (1 << index) != size)
-        index = log2(bytesPerCacheLine) + 2;
-
-    // @todo: Do we really want to do all this before the packet is
-    // actually accepted?
-
-    /* Index 0 - Size 1 byte
-       Index 1 - Size 2 bytes
-       Index 2 - Size 4 bytes
-         .
-         .
-       Index 6 - Size 64 bytes
-       Index 7 - Size 0 bytes
-       Index 8 - Non-power-of-2 size */
-
-    if (pkt->isRead())
-        readPktSize[index]++;
-    else if (pkt->isWrite())
-        writePktSize[index]++;
-    else
-        neitherPktSize[index]++;
 
     // check local buffers and do not accept if full
     if (pkt->isRead()) {
+        assert(size != 0);
         if (readQueueFull()) {
-            DPRINTF(DRAM,"Read queue full, not accepting\n");
+            DPRINTF(DRAM, "Read queue full, not accepting\n");
             // remember that we have to retry this port
             retryRdReq = true;
             numRdRetry++;
             return false;
         } else {
+            readPktSize[ceilLog2(size)]++;
             addToReadQueue(pkt);
             readReqs++;
             numReqs++;
         }
     } else if (pkt->isWrite()) {
+        assert(size != 0);
         if (writeQueueFull()) {
-            DPRINTF(DRAM,"Write queue full, not accepting\n");
+            DPRINTF(DRAM, "Write queue full, not accepting\n");
             // remember that we have to retry this port
             retryWrReq = true;
             numWrRetry++;
             return false;
         } else {
+            writePktSize[ceilLog2(size)]++;
             addToWriteQueue(pkt);
             writeReqs++;
             numReqs++;
@@ -624,7 +589,6 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
         neitherReadNorWrite++;
         accessAndRespond(pkt);
     }
-
 
     retryRdReq = false;
     retryWrReq = false;
@@ -637,119 +601,116 @@ SimpleDRAM::processRespondEvent()
     DPRINTF(DRAM,
             "processRespondEvent(): Some req has reached its readyTime\n");
 
-     PacketPtr pkt = dramRespQueue.front()->pkt;
+     PacketPtr pkt = respQueue.front()->pkt;
 
      // Actually responds to the requestor
      bytesConsumedRd += pkt->getSize();
      bytesRead += bytesPerCacheLine;
      accessAndRespond(pkt);
 
-     DRAMPacket* dram_pkt = dramRespQueue.front();
-     dramRespQueue.pop_front();
-     delete dram_pkt;
+     delete respQueue.front();
+     respQueue.pop_front();
 
      // Update stats
-     avgRdQLen = dramReadQueue.size() + dramRespQueue.size();
+     avgRdQLen = readQueue.size() + respQueue.size();
 
-     if (!dramRespQueue.empty()){
-         assert(dramRespQueue.front()->readyTime >= curTick());
+     if (!respQueue.empty()) {
+         assert(respQueue.front()->readyTime >= curTick());
          assert(!respondEvent.scheduled());
-         schedule(&respondEvent, dramRespQueue.front()->readyTime);
+         schedule(respondEvent, respQueue.front()->readyTime);
      } else {
          // if there is nothing left in any queue, signal a drain
-         if (dramWriteQueue.empty() && dramReadQueue.empty() &&
+         if (writeQueue.empty() && readQueue.empty() &&
              drainManager) {
              drainManager->signalDrainDone();
              drainManager = NULL;
          }
+     }
+
+     // We have made a location in the queue available at this point,
+     // so if there is a read that was forced to wait, retry now
+     if (retryRdReq) {
+         retryRdReq = false;
+         port.sendRetry();
      }
 }
 
 void
 SimpleDRAM::chooseNextWrite()
 {
-    // This method does the arbitration between requests. The chosen
-    // packet is simply moved to the head of the queue. The other
-    // methods know that this is the place to look. For example, with
-    // FCFS, this method does nothing
-    assert(!dramWriteQueue.empty());
+    // This method does the arbitration between write requests. The
+    // chosen packet is simply moved to the head of the write
+    // queue. The other methods know that this is the place to
+    // look. For example, with FCFS, this method does nothing
+    assert(!writeQueue.empty());
 
-    if (dramWriteQueue.size() == 1) {
-        DPRINTF(DRAMWR, "chooseNextWrite(): Single element, nothing to do\n");
+    if (writeQueue.size() == 1) {
+        DPRINTF(DRAMWR, "Single write request, nothing to do\n");
         return;
     }
 
     if (memSchedPolicy == Enums::fcfs) {
-
         // Do nothing, since the correct request is already head
-
     } else if (memSchedPolicy == Enums::frfcfs) {
-
-        list<DRAMPacket*>::iterator i = dramWriteQueue.begin();
+        list<DRAMPacket*>::iterator i = writeQueue.begin();
         bool foundRowHit = false;
-        while (!foundRowHit && i != dramWriteQueue.end()) {
+        while (!foundRowHit && i != writeQueue.end()) {
             DRAMPacket* dram_pkt = *i;
             const Bank& bank = dram_pkt->bank_ref;
             if (bank.openRow == dram_pkt->row) { //FR part
-                DPRINTF(DRAMWR,"Row buffer hit\n");
-                dramWriteQueue.erase(i);
-                dramWriteQueue.push_front(dram_pkt);
+                DPRINTF(DRAMWR, "Write row buffer hit\n");
+                writeQueue.erase(i);
+                writeQueue.push_front(dram_pkt);
                 foundRowHit = true;
             } else { //FCFS part
                 ;
             }
             ++i;
         }
-
     } else
         panic("No scheduling policy chosen\n");
 
-    DPRINTF(DRAMWR, "chooseNextWrite(): Something chosen\n");
+    DPRINTF(DRAMWR, "Selected next write request\n");
 }
 
 bool
-SimpleDRAM::chooseNextReq()
+SimpleDRAM::chooseNextRead()
 {
-    // This method does the arbitration between requests.
-    // The chosen packet is simply moved to the head of the
-    // queue. The other methods know that this is the place
-    // to look. For example, with FCFS, this method does nothing
-    list<DRAMPacket*>::iterator i;
-    DRAMPacket* dram_pkt;
-
-    if (dramReadQueue.empty()){
-        DPRINTF(DRAM, "chooseNextReq(): Returning False\n");
+    // This method does the arbitration between read requests. The
+    // chosen packet is simply moved to the head of the queue. The
+    // other methods know that this is the place to look. For example,
+    // with FCFS, this method does nothing
+    if (readQueue.empty()) {
+        DPRINTF(DRAM, "No read request to select\n");
         return false;
     }
 
-    if (dramReadQueue.size() == 1)
+    // If there is only one request then there is nothing left to do
+    if (readQueue.size() == 1)
         return true;
 
     if (memSchedPolicy == Enums::fcfs) {
-
-        // Do nothing, since the correct request is already head
-
+        // Do nothing, since the request to serve is already the first
+        // one in the read queue
     } else if (memSchedPolicy == Enums::frfcfs) {
-
-        for (i = dramReadQueue.begin() ; i != dramReadQueue.end() ; ++i) {
-            dram_pkt = *i;
+        for (list<DRAMPacket*>::iterator i = readQueue.begin();
+             i != readQueue.end() ; ++i) {
+            DRAMPacket* dram_pkt = *i;
             const Bank& bank = dram_pkt->bank_ref;
+            // Check if it is a row hit
             if (bank.openRow == dram_pkt->row) { //FR part
                 DPRINTF(DRAM, "Row buffer hit\n");
-                dramReadQueue.erase(i);
-                dramReadQueue.push_front(dram_pkt);
+                readQueue.erase(i);
+                readQueue.push_front(dram_pkt);
                 break;
             } else { //FCFS part
                 ;
             }
-
         }
-
     } else
         panic("No scheduling policy chosen!\n");
 
-
-    DPRINTF(DRAM,"chooseNextReq(): Chosen something, returning True\n");
+    DPRINTF(DRAM, "Selected next read request\n");
     return true;
 }
 
@@ -825,7 +786,6 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             bankLat += tRP + tRCD + tCL;
         }
     } else if (pageMgmt == Enums::close) {
-
         // With a close page policy, no notion of
         // bank.tRASDoneAt
         if (bank.freeAt > inTime)
@@ -891,9 +851,6 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 
     DPRINTF(DRAM, "Timing access to addr %lld, rank/bank/row %d %d %d\n",
             dram_pkt->addr, dram_pkt->rank, dram_pkt->bank, dram_pkt->row);
-
-    assert(curTick() >= prevdramaccess);
-    prevdramaccess = curTick();
 
     // estimate the bank and access latency
     pair<Tick, Tick> lat = estimateLatency(dram_pkt, curTick());
@@ -975,10 +932,10 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
                    curTick();
 
     if (!nextReqEvent.scheduled() && !stopReads){
-        schedule(&nextReqEvent, newTime);
+        schedule(nextReqEvent, newTime);
     } else {
         if (newTime < nextReqEvent.when())
-            reschedule(&nextReqEvent, newTime);
+            reschedule(nextReqEvent, newTime);
     }
 
 
@@ -988,43 +945,38 @@ void
 SimpleDRAM::moveToRespQ()
 {
     // Remove from read queue
-    DRAMPacket* dram_pkt = dramReadQueue.front();
-    dramReadQueue.pop_front();
+    DRAMPacket* dram_pkt = readQueue.front();
+    readQueue.pop_front();
 
     // Insert into response queue sorted by readyTime
     // It will be sent back to the requestor at its
     // readyTime
-    if (dramRespQueue.empty()) {
-        dramRespQueue.push_front(dram_pkt);
+    if (respQueue.empty()) {
+        respQueue.push_front(dram_pkt);
         assert(!respondEvent.scheduled());
         assert(dram_pkt->readyTime >= curTick());
-        schedule(&respondEvent, dram_pkt->readyTime);
+        schedule(respondEvent, dram_pkt->readyTime);
     } else {
         bool done = false;
-        std::list<DRAMPacket*>::iterator i = dramRespQueue.begin();
-        while (!done && i != dramRespQueue.end()) {
+        list<DRAMPacket*>::iterator i = respQueue.begin();
+        while (!done && i != respQueue.end()) {
             if ((*i)->readyTime > dram_pkt->readyTime) {
-                dramRespQueue.insert(i, dram_pkt);
+                respQueue.insert(i, dram_pkt);
                 done = true;
             }
             ++i;
         }
 
         if (!done)
-            dramRespQueue.push_back(dram_pkt);
+            respQueue.push_back(dram_pkt);
 
         assert(respondEvent.scheduled());
 
-        if (dramRespQueue.front()->readyTime < respondEvent.when()) {
-            assert(dramRespQueue.front()->readyTime >= curTick());
-            reschedule(&respondEvent, dramRespQueue.front()->readyTime);
+        if (respQueue.front()->readyTime < respondEvent.when()) {
+            assert(respQueue.front()->readyTime >= curTick());
+            reschedule(respondEvent, respQueue.front()->readyTime);
         }
     }
-
-    if (retryRdReq) {
-         retryRdReq = false;
-         port.sendRetry();
-     }
 }
 
 void
@@ -1032,16 +984,17 @@ SimpleDRAM::scheduleNextReq()
 {
     DPRINTF(DRAM, "Reached scheduleNextReq()\n");
 
-    // Figure out which request goes next, and move it to front()
-    if (!chooseNextReq()) {
+    // Figure out which read request goes next, and move it to the
+    // front of the read queue
+    if (!chooseNextRead()) {
         // In the case there is no read request to go next, see if we
         // are asked to drain, and if so trigger writes, this also
         // ensures that if we hit the write limit we will do this
         // multiple times until we are completely drained
-        if (drainManager && !dramWriteQueue.empty() && !writeEvent.scheduled())
+        if (drainManager && !writeQueue.empty() && !writeEvent.scheduled())
             triggerWrites();
     } else {
-        doDRAMAccess(dramReadQueue.front());
+        doDRAMAccess(readQueue.front());
     }
 }
 
@@ -1068,7 +1021,7 @@ SimpleDRAM::processRefreshEvent()
         for(int j = 0; j < banksPerRank; j++)
             banks[i][j].freeAt = banksFree;
 
-    schedule(&refreshEvent, curTick() + tREFI);
+    schedule(refreshEvent, curTick() + tREFI);
 }
 
 void
@@ -1193,27 +1146,22 @@ SimpleDRAM::regStats()
     writeRowHitRate = (writeRowHits / writeReqs) * 100;
 
     readPktSize
-        .init(log2(bytesPerCacheLine)+3)
+        .init(ceilLog2(bytesPerCacheLine) + 1)
         .name(name() + ".readPktSize")
         .desc("Categorize read packet sizes");
 
      writePktSize
-        .init(log2(bytesPerCacheLine)+3)
+        .init(ceilLog2(bytesPerCacheLine) + 1)
         .name(name() + ".writePktSize")
-        .desc("categorize write packet sizes");
-
-     neitherPktSize
-        .init(log2(bytesPerCacheLine)+3)
-        .name(name() + ".neitherpktsize")
-        .desc("categorize neither packet sizes");
+        .desc("Categorize write packet sizes");
 
      rdQLenPdf
-        .init(readBufferSize + 1)
+        .init(readBufferSize)
         .name(name() + ".rdQLenPdf")
         .desc("What read queue length does an incoming req see");
 
      wrQLenPdf
-        .init(writeBufferSize + 1)
+        .init(writeBufferSize)
         .name(name() + ".wrQLenPdf")
         .desc("What write queue length does an incoming req see");
 
@@ -1312,18 +1260,18 @@ SimpleDRAM::drain(DrainManager *dm)
 
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (!(dramWriteQueue.empty() && dramReadQueue.empty() &&
-          dramRespQueue.empty())) {
+    if (!(writeQueue.empty() && readQueue.empty() &&
+          respQueue.empty())) {
         DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
-                " resp: %d\n", dramWriteQueue.size(), dramReadQueue.size(),
-                dramRespQueue.size());
+                " resp: %d\n", writeQueue.size(), readQueue.size(),
+                respQueue.size());
         ++count;
         drainManager = dm;
         // the only part that is not drained automatically over time
         // is the write queue, thus trigger writes if there are any
         // waiting and no reads waiting, otherwise wait until the
         // reads are done
-        if (dramReadQueue.empty() && !dramWriteQueue.empty() &&
+        if (readQueue.empty() && !writeQueue.empty() &&
             !writeEvent.scheduled())
             triggerWrites();
     }
