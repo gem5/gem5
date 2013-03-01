@@ -99,19 +99,40 @@ PhysicalMemory::PhysicalMemory(const string& _name,
     // space to be mapped to backing store, also remember what
     // memories constitute the range so we can go and find out if we
     // have to init their parts to zero
+    vector<AddrRange> intlv_ranges;
     vector<AbstractMemory*> curr_memories;
     for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
          r != addrMap.end(); ++r) {
         // simply skip past all memories that are null and hence do
         // not need any backing store
         if (!r->second->isNull()) {
-            // this will eventually be extended to support merging of
-            // interleaved address ranges, and although it might seem
-            // overly complicated at this point it will all be used
-            curr_memories.push_back(r->second);
-            createBackingStore(r->first, curr_memories);
-            curr_memories.clear();
+            // if the range is interleaved then save it for now
+            if (r->first.interleaved()) {
+                // if we already got interleaved ranges that are not
+                // part of the same range, then first do a merge
+                // before we add the new one
+                if (!intlv_ranges.empty() &&
+                    !intlv_ranges.back().mergesWith(r->first)) {
+                    AddrRange merged_range(intlv_ranges);
+                    createBackingStore(merged_range, curr_memories);
+                    intlv_ranges.clear();
+                    curr_memories.clear();
+                }
+                intlv_ranges.push_back(r->first);
+                curr_memories.push_back(r->second);
+            } else {
+                vector<AbstractMemory*> single_memory;
+                single_memory.push_back(r->second);
+                createBackingStore(r->first, single_memory);
+            }
         }
+    }
+
+    // if there is still interleaved ranges waiting to be merged, go
+    // ahead and do it
+    if (!intlv_ranges.empty()) {
+        AddrRange merged_range(intlv_ranges);
+        createBackingStore(merged_range, curr_memories);
     }
 }
 
