@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409293000                       # Number of ticks simulated
 final_tick                               4321201686500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               19440889                       # Simulator instruction rate (inst/s)
-host_op_rate                                 19440880                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7408936081                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 472492                       # Number of bytes of host memory used
-host_seconds                                    27.05                       # Real time elapsed on the host
+host_inst_rate                               11931696                       # Simulator instruction rate (inst/s)
+host_op_rate                                 11931689                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4547176905                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 472520                       # Number of bytes of host memory used
+host_seconds                                    44.07                       # Real time elapsed on the host
 sim_insts                                   525869186                       # Number of instructions simulated
 sim_ops                                     525869186                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read::cpu.inst         81048564                       # Number of bytes read from this memory
@@ -91,26 +91,13 @@ testsys.physmem.readPktSize::3                      0                       # Ca
 testsys.physmem.readPktSize::4                      0                       # Categorize read packet sizes
 testsys.physmem.readPktSize::5                      0                       # Categorize read packet sizes
 testsys.physmem.readPktSize::6                      0                       # Categorize read packet sizes
-testsys.physmem.readPktSize::7                      0                       # Categorize read packet sizes
-testsys.physmem.readPktSize::8                      0                       # Categorize read packet sizes
-testsys.physmem.writePktSize::0                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::1                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::2                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::3                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::4                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::5                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::6                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::7                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::8                     0                       # categorize write packet sizes
-testsys.physmem.neitherpktsize::0                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::1                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::2                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::3                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::4                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::5                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::6                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::7                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::8                   0                       # categorize neither packet sizes
+testsys.physmem.writePktSize::0                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::1                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::2                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::3                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::4                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::5                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::6                     0                       # Categorize write packet sizes
 testsys.physmem.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
@@ -143,7 +130,6 @@ testsys.physmem.rdQLenPdf::28                       0                       # Wh
 testsys.physmem.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
-testsys.physmem.rdQLenPdf::32                       0                       # What read queue length does an incoming req see
 testsys.physmem.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
@@ -176,7 +162,6 @@ testsys.physmem.wrQLenPdf::28                       0                       # Wh
 testsys.physmem.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
-testsys.physmem.wrQLenPdf::32                       0                       # What write queue length does an incoming req see
 testsys.physmem.totQLat                             0                       # Total cycles spent in queuing delays
 testsys.physmem.totMemAccLat                        0                       # Sum of mem lat for all requests
 testsys.physmem.totBusLat                           0                       # Total cycles spent in databus access
@@ -462,26 +447,13 @@ drivesys.physmem.readPktSize::3                     0                       # Ca
 drivesys.physmem.readPktSize::4                     0                       # Categorize read packet sizes
 drivesys.physmem.readPktSize::5                     0                       # Categorize read packet sizes
 drivesys.physmem.readPktSize::6                     0                       # Categorize read packet sizes
-drivesys.physmem.readPktSize::7                     0                       # Categorize read packet sizes
-drivesys.physmem.readPktSize::8                     0                       # Categorize read packet sizes
-drivesys.physmem.writePktSize::0                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::1                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::2                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::3                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::4                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::5                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::6                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::7                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::8                    0                       # categorize write packet sizes
-drivesys.physmem.neitherpktsize::0                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::1                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::2                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::3                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::4                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::5                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::6                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::7                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::8                  0                       # categorize neither packet sizes
+drivesys.physmem.writePktSize::0                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::1                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::2                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::3                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::4                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::5                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::6                    0                       # Categorize write packet sizes
 drivesys.physmem.rdQLenPdf::0                       0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::1                       0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::2                       0                       # What read queue length does an incoming req see
@@ -514,7 +486,6 @@ drivesys.physmem.rdQLenPdf::28                      0                       # Wh
 drivesys.physmem.rdQLenPdf::29                      0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::30                      0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::31                      0                       # What read queue length does an incoming req see
-drivesys.physmem.rdQLenPdf::32                      0                       # What read queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::0                       0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::1                       0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::2                       0                       # What write queue length does an incoming req see
@@ -547,7 +518,6 @@ drivesys.physmem.wrQLenPdf::28                      0                       # Wh
 drivesys.physmem.wrQLenPdf::29                      0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::30                      0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::31                      0                       # What write queue length does an incoming req see
-drivesys.physmem.wrQLenPdf::32                      0                       # What write queue length does an incoming req see
 drivesys.physmem.totQLat                            0                       # Total cycles spent in queuing delays
 drivesys.physmem.totMemAccLat                       0                       # Sum of mem lat for all requests
 drivesys.physmem.totBusLat                          0                       # Total cycles spent in databus access
@@ -751,11 +721,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407365500                       # Number of ticks simulated
 final_tick                               4321609052000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            12024534237                       # Simulator instruction rate (inst/s)
-host_op_rate                              12021051237                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             9308365303                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 472492                       # Number of bytes of host memory used
-host_seconds                                     0.04                       # Real time elapsed on the host
+host_inst_rate                             6212406894                       # Simulator instruction rate (inst/s)
+host_op_rate                               6210790807                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4809282801                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 472520                       # Number of bytes of host memory used
+host_seconds                                     0.08                       # Real time elapsed on the host
 sim_insts                                   525940622                       # Number of instructions simulated
 sim_ops                                     525940622                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read::cpu.inst           141136                       # Number of bytes read from this memory
@@ -835,26 +805,13 @@ testsys.physmem.readPktSize::3                      0                       # Ca
 testsys.physmem.readPktSize::4                      0                       # Categorize read packet sizes
 testsys.physmem.readPktSize::5                      0                       # Categorize read packet sizes
 testsys.physmem.readPktSize::6                      0                       # Categorize read packet sizes
-testsys.physmem.readPktSize::7                      0                       # Categorize read packet sizes
-testsys.physmem.readPktSize::8                      0                       # Categorize read packet sizes
-testsys.physmem.writePktSize::0                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::1                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::2                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::3                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::4                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::5                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::6                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::7                     0                       # categorize write packet sizes
-testsys.physmem.writePktSize::8                     0                       # categorize write packet sizes
-testsys.physmem.neitherpktsize::0                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::1                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::2                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::3                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::4                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::5                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::6                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::7                   0                       # categorize neither packet sizes
-testsys.physmem.neitherpktsize::8                   0                       # categorize neither packet sizes
+testsys.physmem.writePktSize::0                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::1                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::2                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::3                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::4                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::5                     0                       # Categorize write packet sizes
+testsys.physmem.writePktSize::6                     0                       # Categorize write packet sizes
 testsys.physmem.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
@@ -887,7 +844,6 @@ testsys.physmem.rdQLenPdf::28                       0                       # Wh
 testsys.physmem.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
 testsys.physmem.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
-testsys.physmem.rdQLenPdf::32                       0                       # What read queue length does an incoming req see
 testsys.physmem.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
@@ -920,7 +876,6 @@ testsys.physmem.wrQLenPdf::28                       0                       # Wh
 testsys.physmem.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
 testsys.physmem.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
-testsys.physmem.wrQLenPdf::32                       0                       # What write queue length does an incoming req see
 testsys.physmem.totQLat                             0                       # Total cycles spent in queuing delays
 testsys.physmem.totMemAccLat                        0                       # Sum of mem lat for all requests
 testsys.physmem.totBusLat                           0                       # Total cycles spent in databus access
@@ -1157,26 +1112,13 @@ drivesys.physmem.readPktSize::3                     0                       # Ca
 drivesys.physmem.readPktSize::4                     0                       # Categorize read packet sizes
 drivesys.physmem.readPktSize::5                     0                       # Categorize read packet sizes
 drivesys.physmem.readPktSize::6                     0                       # Categorize read packet sizes
-drivesys.physmem.readPktSize::7                     0                       # Categorize read packet sizes
-drivesys.physmem.readPktSize::8                     0                       # Categorize read packet sizes
-drivesys.physmem.writePktSize::0                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::1                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::2                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::3                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::4                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::5                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::6                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::7                    0                       # categorize write packet sizes
-drivesys.physmem.writePktSize::8                    0                       # categorize write packet sizes
-drivesys.physmem.neitherpktsize::0                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::1                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::2                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::3                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::4                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::5                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::6                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::7                  0                       # categorize neither packet sizes
-drivesys.physmem.neitherpktsize::8                  0                       # categorize neither packet sizes
+drivesys.physmem.writePktSize::0                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::1                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::2                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::3                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::4                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::5                    0                       # Categorize write packet sizes
+drivesys.physmem.writePktSize::6                    0                       # Categorize write packet sizes
 drivesys.physmem.rdQLenPdf::0                       0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::1                       0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::2                       0                       # What read queue length does an incoming req see
@@ -1209,7 +1151,6 @@ drivesys.physmem.rdQLenPdf::28                      0                       # Wh
 drivesys.physmem.rdQLenPdf::29                      0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::30                      0                       # What read queue length does an incoming req see
 drivesys.physmem.rdQLenPdf::31                      0                       # What read queue length does an incoming req see
-drivesys.physmem.rdQLenPdf::32                      0                       # What read queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::0                       0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::1                       0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::2                       0                       # What write queue length does an incoming req see
@@ -1242,7 +1183,6 @@ drivesys.physmem.wrQLenPdf::28                      0                       # Wh
 drivesys.physmem.wrQLenPdf::29                      0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::30                      0                       # What write queue length does an incoming req see
 drivesys.physmem.wrQLenPdf::31                      0                       # What write queue length does an incoming req see
-drivesys.physmem.wrQLenPdf::32                      0                       # What write queue length does an incoming req see
 drivesys.physmem.totQLat                            0                       # Total cycles spent in queuing delays
 drivesys.physmem.totMemAccLat                       0                       # Sum of mem lat for all requests
 drivesys.physmem.totBusLat                          0                       # Total cycles spent in databus access

@@ -4,11 +4,11 @@ sim_seconds                                  0.000015                       # Nu
 sim_ticks                                    14724500                       # Number of ticks simulated
 final_tick                                   14724500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  87376                       # Simulator instruction rate (inst/s)
-host_op_rate                                    87343                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              221965921                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 222644                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_inst_rate                                  62176                       # Simulator instruction rate (inst/s)
+host_op_rate                                    62167                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              158021685                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 222660                       # Number of bytes of host memory used
+host_seconds                                     0.09                       # Real time elapsed on the host
 sim_insts                                        5792                       # Number of instructions simulated
 sim_ops                                          5792                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             22080                       # Number of bytes read from this memory
@@ -78,26 +78,13 @@ system.physmem.readPktSize::3                       0                       # Ca
 system.physmem.readPktSize::4                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::5                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::6                     446                       # Categorize read packet sizes
-system.physmem.readPktSize::7                       0                       # Categorize read packet sizes
-system.physmem.readPktSize::8                       0                       # Categorize read packet sizes
-system.physmem.writePktSize::0                      0                       # categorize write packet sizes
-system.physmem.writePktSize::1                      0                       # categorize write packet sizes
-system.physmem.writePktSize::2                      0                       # categorize write packet sizes
-system.physmem.writePktSize::3                      0                       # categorize write packet sizes
-system.physmem.writePktSize::4                      0                       # categorize write packet sizes
-system.physmem.writePktSize::5                      0                       # categorize write packet sizes
-system.physmem.writePktSize::6                      0                       # categorize write packet sizes
-system.physmem.writePktSize::7                      0                       # categorize write packet sizes
-system.physmem.writePktSize::8                      0                       # categorize write packet sizes
-system.physmem.neitherpktsize::0                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::1                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::2                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::3                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::4                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::5                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::6                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::7                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::8                    0                       # categorize neither packet sizes
+system.physmem.writePktSize::0                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::1                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::2                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::3                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::4                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::5                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::6                      0                       # Categorize write packet sizes
 system.physmem.rdQLenPdf::0                       232                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::1                       147                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::2                        48                       # What read queue length does an incoming req see
@@ -130,7 +117,6 @@ system.physmem.rdQLenPdf::28                        0                       # Wh
 system.physmem.rdQLenPdf::29                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::30                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::31                        0                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::32                        0                       # What read queue length does an incoming req see
 system.physmem.wrQLenPdf::0                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::1                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::2                         0                       # What write queue length does an incoming req see
@@ -163,15 +149,14 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::32                        0                       # What write queue length does an incoming req see
-system.physmem.totQLat                        2286195                       # Total cycles spent in queuing delays
-system.physmem.totMemAccLat                  12779945                       # Sum of mem lat for all requests
+system.physmem.totQLat                        2285750                       # Total cycles spent in queuing delays
+system.physmem.totMemAccLat                  12779500                       # Sum of mem lat for all requests
 system.physmem.totBusLat                      2230000                       # Total cycles spent in databus access
 system.physmem.totBankLat                     8263750                       # Total cycles spent in bank access
-system.physmem.avgQLat                        5126.00                       # Average queueing delay per request
+system.physmem.avgQLat                        5125.00                       # Average queueing delay per request
 system.physmem.avgBankLat                    18528.59                       # Average bank access latency per request
 system.physmem.avgBusLat                      5000.00                       # Average bus latency per request
-system.physmem.avgMemAccLat                  28654.59                       # Average memory access latency
+system.physmem.avgMemAccLat                  28653.59                       # Average memory access latency
 system.physmem.avgRdBW                        1938.54                       # Average achieved read bandwidth in MB/s
 system.physmem.avgWrBW                           0.00                       # Average achieved write bandwidth in MB/s
 system.physmem.avgConsumedRdBW                1938.54                       # Average consumed read bandwidth in MB/s
@@ -553,13 +538,13 @@ system.cpu.icache.overall_avg_mshr_miss_latency::cpu.inst 50659.544160          
 system.cpu.icache.overall_avg_mshr_miss_latency::total 50659.544160                       # average overall mshr miss latency
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.l2cache.replacements                     0                       # number of replacements
-system.cpu.l2cache.tagsinuse               198.145802                       # Cycle average of tags in use
+system.cpu.l2cache.tagsinuse               198.145822                       # Cycle average of tags in use
 system.cpu.l2cache.total_refs                       7                       # Total number of references to valid blocks.
 system.cpu.l2cache.sampled_refs                   399                       # Sample count of references to valid blocks.
 system.cpu.l2cache.avg_refs                  0.017544                       # Average number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu.l2cache.occ_blocks::cpu.inst    166.786148                       # Average occupied blocks per requestor
-system.cpu.l2cache.occ_blocks::cpu.data     31.359654                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.inst    166.786167                       # Average occupied blocks per requestor
+system.cpu.l2cache.occ_blocks::cpu.data     31.359655                       # Average occupied blocks per requestor
 system.cpu.l2cache.occ_percent::cpu.inst     0.005090                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_percent::cpu.data     0.000957                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_percent::total        0.006047                       # Average percentage of cache occupancy
@@ -646,17 +631,17 @@ system.cpu.l2cache.demand_mshr_misses::total          446                       
 system.cpu.l2cache.overall_mshr_misses::cpu.inst          345                       # number of overall MSHR misses
 system.cpu.l2cache.overall_mshr_misses::cpu.data          101                       # number of overall MSHR misses
 system.cpu.l2cache.overall_mshr_misses::total          446                       # number of overall MSHR misses
-system.cpu.l2cache.ReadReq_mshr_miss_latency::cpu.inst     13081037                       # number of ReadReq MSHR miss cycles
-system.cpu.l2cache.ReadReq_mshr_miss_latency::cpu.data      2509304                       # number of ReadReq MSHR miss cycles
-system.cpu.l2cache.ReadReq_mshr_miss_latency::total     15590341                       # number of ReadReq MSHR miss cycles
-system.cpu.l2cache.ReadExReq_mshr_miss_latency::cpu.data      2332794                       # number of ReadExReq MSHR miss cycles
-system.cpu.l2cache.ReadExReq_mshr_miss_latency::total      2332794                       # number of ReadExReq MSHR miss cycles
-system.cpu.l2cache.demand_mshr_miss_latency::cpu.inst     13081037                       # number of demand (read+write) MSHR miss cycles
-system.cpu.l2cache.demand_mshr_miss_latency::cpu.data      4842098                       # number of demand (read+write) MSHR miss cycles
-system.cpu.l2cache.demand_mshr_miss_latency::total     17923135                       # number of demand (read+write) MSHR miss cycles
-system.cpu.l2cache.overall_mshr_miss_latency::cpu.inst     13081037                       # number of overall MSHR miss cycles
-system.cpu.l2cache.overall_mshr_miss_latency::cpu.data      4842098                       # number of overall MSHR miss cycles
-system.cpu.l2cache.overall_mshr_miss_latency::total     17923135                       # number of overall MSHR miss cycles
+system.cpu.l2cache.ReadReq_mshr_miss_latency::cpu.inst     13080769                       # number of ReadReq MSHR miss cycles
+system.cpu.l2cache.ReadReq_mshr_miss_latency::cpu.data      2509277                       # number of ReadReq MSHR miss cycles
+system.cpu.l2cache.ReadReq_mshr_miss_latency::total     15590046                       # number of ReadReq MSHR miss cycles
+system.cpu.l2cache.ReadExReq_mshr_miss_latency::cpu.data      2332772                       # number of ReadExReq MSHR miss cycles
+system.cpu.l2cache.ReadExReq_mshr_miss_latency::total      2332772                       # number of ReadExReq MSHR miss cycles
+system.cpu.l2cache.demand_mshr_miss_latency::cpu.inst     13080769                       # number of demand (read+write) MSHR miss cycles
+system.cpu.l2cache.demand_mshr_miss_latency::cpu.data      4842049                       # number of demand (read+write) MSHR miss cycles
+system.cpu.l2cache.demand_mshr_miss_latency::total     17922818                       # number of demand (read+write) MSHR miss cycles
+system.cpu.l2cache.overall_mshr_miss_latency::cpu.inst     13080769                       # number of overall MSHR miss cycles
+system.cpu.l2cache.overall_mshr_miss_latency::cpu.data      4842049                       # number of overall MSHR miss cycles
+system.cpu.l2cache.overall_mshr_miss_latency::total     17922818                       # number of overall MSHR miss cycles
 system.cpu.l2cache.ReadReq_mshr_miss_rate::cpu.inst     0.982906                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_miss_rate::cpu.data     0.981818                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_miss_rate::total     0.982759                       # mshr miss rate for ReadReq accesses
@@ -668,17 +653,17 @@ system.cpu.l2cache.demand_mshr_miss_rate::total     0.984547                    
 system.cpu.l2cache.overall_mshr_miss_rate::cpu.inst     0.982906                       # mshr miss rate for overall accesses
 system.cpu.l2cache.overall_mshr_miss_rate::cpu.data     0.990196                       # mshr miss rate for overall accesses
 system.cpu.l2cache.overall_mshr_miss_rate::total     0.984547                       # mshr miss rate for overall accesses
-system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::cpu.inst 37916.049275                       # average ReadReq mshr miss latency
-system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::cpu.data 46468.592593                       # average ReadReq mshr miss latency
-system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::total 39073.536341                       # average ReadReq mshr miss latency
-system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency::cpu.data 49633.914894                       # average ReadExReq mshr miss latency
-system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency::total 49633.914894                       # average ReadExReq mshr miss latency
-system.cpu.l2cache.demand_avg_mshr_miss_latency::cpu.inst 37916.049275                       # average overall mshr miss latency
-system.cpu.l2cache.demand_avg_mshr_miss_latency::cpu.data 47941.564356                       # average overall mshr miss latency
-system.cpu.l2cache.demand_avg_mshr_miss_latency::total 40186.401345                       # average overall mshr miss latency
-system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.inst 37916.049275                       # average overall mshr miss latency
-system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.data 47941.564356                       # average overall mshr miss latency
-system.cpu.l2cache.overall_avg_mshr_miss_latency::total 40186.401345                       # average overall mshr miss latency
+system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::cpu.inst 37915.272464                       # average ReadReq mshr miss latency
+system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::cpu.data 46468.092593                       # average ReadReq mshr miss latency
+system.cpu.l2cache.ReadReq_avg_mshr_miss_latency::total 39072.796992                       # average ReadReq mshr miss latency
+system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency::cpu.data 49633.446809                       # average ReadExReq mshr miss latency
+system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency::total 49633.446809                       # average ReadExReq mshr miss latency
+system.cpu.l2cache.demand_avg_mshr_miss_latency::cpu.inst 37915.272464                       # average overall mshr miss latency
+system.cpu.l2cache.demand_avg_mshr_miss_latency::cpu.data 47941.079208                       # average overall mshr miss latency
+system.cpu.l2cache.demand_avg_mshr_miss_latency::total 40185.690583                       # average overall mshr miss latency
+system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.inst 37915.272464                       # average overall mshr miss latency
+system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.data 47941.079208                       # average overall mshr miss latency
+system.cpu.l2cache.overall_avg_mshr_miss_latency::total 40185.690583                       # average overall mshr miss latency
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu.dcache.replacements                      0                       # number of replacements
 system.cpu.dcache.tagsinuse                 63.324462                       # Cycle average of tags in use

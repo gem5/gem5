@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            29045358432                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 222412                       # Number of bytes of host memory used
-host_seconds                                     3.44                       # Real time elapsed on the host
+host_tick_rate                            31852968745                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 226592                       # Number of bytes of host memory used
+host_seconds                                     3.14                       # Real time elapsed on the host
 system.physmem.bytes_read::cpu              213337536                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            213337536                       # Number of bytes read from this memory
 system.physmem.num_reads::cpu                 3333399                       # Number of read requests responded to by this memory
@@ -66,37 +66,24 @@ system.physmem.readPktSize::3                       0                       # Ca
 system.physmem.readPktSize::4                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::5                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::6                 3333400                       # Categorize read packet sizes
-system.physmem.readPktSize::7                       0                       # Categorize read packet sizes
-system.physmem.readPktSize::8                       0                       # Categorize read packet sizes
-system.physmem.writePktSize::0                      0                       # categorize write packet sizes
-system.physmem.writePktSize::1                      0                       # categorize write packet sizes
-system.physmem.writePktSize::2                      0                       # categorize write packet sizes
-system.physmem.writePktSize::3                      0                       # categorize write packet sizes
-system.physmem.writePktSize::4                      0                       # categorize write packet sizes
-system.physmem.writePktSize::5                      0                       # categorize write packet sizes
-system.physmem.writePktSize::6                      0                       # categorize write packet sizes
-system.physmem.writePktSize::7                      0                       # categorize write packet sizes
-system.physmem.writePktSize::8                      0                       # categorize write packet sizes
-system.physmem.neitherpktsize::0                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::1                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::2                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::3                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::4                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::5                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::6                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::7                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::8                    0                       # categorize neither packet sizes
+system.physmem.writePktSize::0                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::1                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::2                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::3                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::4                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::5                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::6                      0                       # Categorize write packet sizes
 system.physmem.rdQLenPdf::0                   3200711                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::1                    105371                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::2                      4811                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::3                      3752                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::4                      4283                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::5                      3751                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::3                      4280                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::4                      3757                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::5                      3749                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::6                      3205                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::7                      2146                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::8                      1602                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::9                      2146                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::10                     1076                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::9                      2148                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::10                     1074                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::11                      546                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::12                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::13                        0                       # What read queue length does an incoming req see
@@ -118,7 +105,6 @@ system.physmem.rdQLenPdf::28                        0                       # Wh
 system.physmem.rdQLenPdf::29                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::30                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::31                        0                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::32                        0                       # What read queue length does an incoming req see
 system.physmem.wrQLenPdf::0                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::1                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::2                         0                       # What write queue length does an incoming req see
@@ -151,15 +137,14 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::32                        0                       # What write queue length does an incoming req see
-system.physmem.totQLat                     6115686626                       # Total cycles spent in queuing delays
-system.physmem.totMemAccLat               69505296626                       # Sum of mem lat for all requests
+system.physmem.totQLat                     6112380100                       # Total cycles spent in queuing delays
+system.physmem.totMemAccLat               69501990100                       # Sum of mem lat for all requests
 system.physmem.totBusLat                  16667000000                       # Total cycles spent in databus access
 system.physmem.totBankLat                 46722610000                       # Total cycles spent in bank access
-system.physmem.avgQLat                        1834.67                       # Average queueing delay per request
+system.physmem.avgQLat                        1833.68                       # Average queueing delay per request
 system.physmem.avgBankLat                    14016.50                       # Average bank access latency per request
 system.physmem.avgBusLat                      5000.00                       # Average bus latency per request
-system.physmem.avgMemAccLat                  20851.17                       # Average memory access latency
+system.physmem.avgMemAccLat                  20850.18                       # Average memory access latency
 system.physmem.avgRdBW                        2133.38                       # Average achieved read bandwidth in MB/s
 system.physmem.avgWrBW                           0.00                       # Average achieved write bandwidth in MB/s
 system.physmem.avgConsumedRdBW                2133.38                       # Average consumed read bandwidth in MB/s
@@ -278,9 +263,9 @@ system.monitor.writeBandwidthHist::total          100                       # Hi
 system.monitor.averageWriteBandwidth                0                       # Average write bandwidth (bytes/s)
 system.monitor.totalWrittenBytes                    0                       # Number of bytes written
 system.monitor.readLatencyHist::samples       3333399                       # Read request-response latency
-system.monitor.readLatencyHist::mean     20879.051770                       # Read request-response latency
-system.monitor.readLatencyHist::gmean    19622.150808                       # Read request-response latency
-system.monitor.readLatencyHist::stdev    15688.008500                       # Read request-response latency
+system.monitor.readLatencyHist::mean     20878.092191                       # Read request-response latency
+system.monitor.readLatencyHist::gmean    19621.155070                       # Read request-response latency
+system.monitor.readLatencyHist::stdev    15688.085413                       # Read request-response latency
 system.monitor.readLatencyHist::0-32767       3201881     96.05%     96.05% # Read request-response latency
 system.monitor.readLatencyHist::32768-65535       104731      3.14%     99.20% # Read request-response latency
 system.monitor.readLatencyHist::65536-98303         5355      0.16%     99.36% # Read request-response latency
