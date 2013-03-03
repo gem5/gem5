@@ -536,12 +536,17 @@ RubySystem::functionalWrite(PacketPtr pkt)
     unsigned int size_in_bytes = pkt->getSize();
     unsigned startByte = addr.getAddress() - line_addr.getAddress();
 
+    uint32_t M5_VAR_USED num_functional_writes = 0;
+
     for (unsigned int i = 0; i < num_controllers;++i) {
-        m_abs_cntrl_vec[i]->functionalWriteBuffers(pkt);
+        num_functional_writes +=
+            m_abs_cntrl_vec[i]->functionalWriteBuffers(pkt);
 
         access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_addr);
         if (access_perm != AccessPermission_Invalid &&
             access_perm != AccessPermission_NotPresent) {
+
+            num_functional_writes++;
 
             DataBlock& block = m_abs_cntrl_vec[i]->getDataBlock(line_addr);
             DPRINTF(RubySystem, "%s\n",block);
@@ -552,7 +557,6 @@ RubySystem::functionalWrite(PacketPtr pkt)
         }
     }
 
-    uint32_t M5_VAR_USED num_functional_writes = 0;
     for (unsigned int i = 0; i < m_memory_controller_vec.size() ;++i) {
         num_functional_writes +=
             m_memory_controller_vec[i]->functionalWriteBuffers(pkt);
