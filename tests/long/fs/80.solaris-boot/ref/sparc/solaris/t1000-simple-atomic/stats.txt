@@ -4,11 +4,11 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                2957774                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2958936                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                5930129                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 530032                       # Number of bytes of host memory used
-host_seconds                                   753.37                       # Real time elapsed on the host
+host_inst_rate                                3081772                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3082983                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                6178737                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 519228                       # Number of bytes of host memory used
+host_seconds                                   723.05                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.hypervisor_desc.bytes_read::cpu.data        16792                       # Number of bytes read from this memory
@@ -19,20 +19,6 @@ system.hypervisor_desc.bw_read::cpu.data         7517                       # To
 system.hypervisor_desc.bw_read::total            7517                       # Total read bandwidth from this memory (bytes/s)
 system.hypervisor_desc.bw_total::cpu.data         7517                       # Total bandwidth to/from this memory (bytes/s)
 system.hypervisor_desc.bw_total::total           7517                       # Total bandwidth to/from this memory (bytes/s)
-system.nvram.bytes_read::cpu.data                 284                       # Number of bytes read from this memory
-system.nvram.bytes_read::total                    284                       # Number of bytes read from this memory
-system.nvram.bytes_written::cpu.data               92                       # Number of bytes written to this memory
-system.nvram.bytes_written::total                  92                       # Number of bytes written to this memory
-system.nvram.num_reads::cpu.data                  284                       # Number of read requests responded to by this memory
-system.nvram.num_reads::total                     284                       # Number of read requests responded to by this memory
-system.nvram.num_writes::cpu.data                  92                       # Number of write requests responded to by this memory
-system.nvram.num_writes::total                     92                       # Number of write requests responded to by this memory
-system.nvram.bw_read::cpu.data                    127                       # Total read bandwidth from this memory (bytes/s)
-system.nvram.bw_read::total                       127                       # Total read bandwidth from this memory (bytes/s)
-system.nvram.bw_write::cpu.data                    41                       # Write bandwidth from this memory (bytes/s)
-system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
-system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
-system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
 system.partition_desc.bytes_read::cpu.data         4846                       # Number of bytes read from this memory
 system.partition_desc.bytes_read::total          4846                       # Number of bytes read from this memory
 system.partition_desc.num_reads::cpu.data          608                       # Number of read requests responded to by this memory
@@ -41,204 +27,6 @@ system.partition_desc.bw_read::cpu.data          2169                       # To
 system.partition_desc.bw_read::total             2169                       # Total read bandwidth from this memory (bytes/s)
 system.partition_desc.bw_total::cpu.data         2169                       # Total bandwidth to/from this memory (bytes/s)
 system.partition_desc.bw_total::total            2169                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem2.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
-system.physmem2.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
-system.physmem2.bytes_read::total          9813991967                       # Number of bytes read from this memory
-system.physmem2.bytes_inst_read::cpu.inst   8318106840                       # Number of instructions bytes read from this memory
-system.physmem2.bytes_inst_read::total     8318106840                       # Number of instructions bytes read from this memory
-system.physmem2.bytes_written::cpu.data     897268422                       # Number of bytes written to this memory
-system.physmem2.bytes_written::total        897268422                       # Number of bytes written to this memory
-system.physmem2.num_reads::cpu.inst        2079526710                       # Number of read requests responded to by this memory
-system.physmem2.num_reads::cpu.data         323962420                       # Number of read requests responded to by this memory
-system.physmem2.num_reads::total           2403489130                       # Number of read requests responded to by this memory
-system.physmem2.num_writes::cpu.data        187387796                       # Number of write requests responded to by this memory
-system.physmem2.num_writes::total           187387796                       # Number of write requests responded to by this memory
-system.physmem2.num_other::cpu.data           5403067                       # Number of other requests responded to by this memory
-system.physmem2.num_other::total              5403067                       # Number of other requests responded to by this memory
-system.physmem2.bw_read::cpu.inst          3723784842                       # Total read bandwidth from this memory (bytes/s)
-system.physmem2.bw_read::cpu.data           669666123                       # Total read bandwidth from this memory (bytes/s)
-system.physmem2.bw_read::total             4393450966                       # Total read bandwidth from this memory (bytes/s)
-system.physmem2.bw_inst_read::cpu.inst     3723784842                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem2.bw_inst_read::total        3723784842                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem2.bw_write::cpu.data          401682091                       # Write bandwidth from this memory (bytes/s)
-system.physmem2.bw_write::total             401682091                       # Write bandwidth from this memory (bytes/s)
-system.physmem2.bw_total::cpu.inst         3723784842                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem2.bw_total::cpu.data         1071348214                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem2.bw_total::total            4795133057                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem2.readReqs                            0                       # Total number of read requests seen
-system.physmem2.writeReqs                           0                       # Total number of write requests seen
-system.physmem2.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
-system.physmem2.bytesRead                           0                       # Total number of bytes read from memory
-system.physmem2.bytesWritten                        0                       # Total number of bytes written to memory
-system.physmem2.bytesConsumedRd                     0                       # bytesRead derated as per pkt->getSize()
-system.physmem2.bytesConsumedWr                     0                       # bytesWritten derated as per pkt->getSize()
-system.physmem2.servicedByWrQ                       0                       # Number of read reqs serviced by write Q
-system.physmem2.neitherReadNorWrite                 0                       # Reqs where no action is needed
-system.physmem2.perBankRdReqs::0                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::1                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::2                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::3                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::4                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::5                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::6                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::7                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::8                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::9                    0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::10                   0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::11                   0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::12                   0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::13                   0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::14                   0                       # Track reads on a per bank basis
-system.physmem2.perBankRdReqs::15                   0                       # Track reads on a per bank basis
-system.physmem2.perBankWrReqs::0                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::1                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::2                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::3                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::4                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::5                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::6                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::7                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::8                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::9                    0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::10                   0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::11                   0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::12                   0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::13                   0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::14                   0                       # Track writes on a per bank basis
-system.physmem2.perBankWrReqs::15                   0                       # Track writes on a per bank basis
-system.physmem2.numRdRetry                          0                       # Number of times rd buffer was full causing retry
-system.physmem2.numWrRetry                          0                       # Number of times wr buffer was full causing retry
-system.physmem2.totGap                              0                       # Total gap between requests
-system.physmem2.readPktSize::0                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::1                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::2                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::3                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::4                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::5                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::6                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::7                      0                       # Categorize read packet sizes
-system.physmem2.readPktSize::8                      0                       # Categorize read packet sizes
-system.physmem2.writePktSize::0                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::1                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::2                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::3                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::4                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::5                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::6                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::7                     0                       # categorize write packet sizes
-system.physmem2.writePktSize::8                     0                       # categorize write packet sizes
-system.physmem2.neitherpktsize::0                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::1                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::2                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::3                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::4                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::5                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::6                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::7                   0                       # categorize neither packet sizes
-system.physmem2.neitherpktsize::8                   0                       # categorize neither packet sizes
-system.physmem2.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::3                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::4                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::5                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::6                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::7                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::8                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::9                        0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::10                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::11                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::12                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::13                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::14                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::15                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::16                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::17                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::18                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::19                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::20                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::21                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::22                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::23                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::24                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::25                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::26                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::27                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::28                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
-system.physmem2.rdQLenPdf::32                       0                       # What read queue length does an incoming req see
-system.physmem2.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::3                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::4                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::5                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::6                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::7                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::8                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::9                        0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::10                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::11                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::12                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::13                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::14                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::15                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::16                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::17                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::18                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::19                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::20                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::21                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::22                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::23                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::24                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::25                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::26                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::27                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::28                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
-system.physmem2.wrQLenPdf::32                       0                       # What write queue length does an incoming req see
-system.physmem2.totQLat                             0                       # Total cycles spent in queuing delays
-system.physmem2.totMemAccLat                        0                       # Sum of mem lat for all requests
-system.physmem2.totBusLat                           0                       # Total cycles spent in databus access
-system.physmem2.totBankLat                          0                       # Total cycles spent in bank access
-system.physmem2.avgQLat                           nan                       # Average queueing delay per request
-system.physmem2.avgBankLat                        nan                       # Average bank access latency per request
-system.physmem2.avgBusLat                         nan                       # Average bus latency per request
-system.physmem2.avgMemAccLat                      nan                       # Average memory access latency
-system.physmem2.avgRdBW                          0.00                       # Average achieved read bandwidth in MB/s
-system.physmem2.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
-system.physmem2.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
-system.physmem2.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
-system.physmem2.peakBW                       12800.00                       # Theoretical peak bandwidth in MB/s
-system.physmem2.busUtil                          0.00                       # Data bus utilization in percentage
-system.physmem2.avgRdQLen                        0.00                       # Average read queue length over time
-system.physmem2.avgWrQLen                        0.00                       # Average write queue length over time
-system.physmem2.readRowHits                         0                       # Number of row buffer hits during reads
-system.physmem2.writeRowHits                        0                       # Number of row buffer hits during writes
-system.physmem2.readRowHitRate                    nan                       # Row buffer hit rate for reads
-system.physmem2.writeRowHitRate                   nan                       # Row buffer hit rate for writes
-system.physmem2.avgGap                            nan                       # Average gap between requests
-system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
-system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
-system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
-system.rom.bytes_inst_read::cpu.inst           432296                       # Number of instructions bytes read from this memory
-system.rom.bytes_inst_read::total              432296                       # Number of instructions bytes read from this memory
-system.rom.num_reads::cpu.inst                 108074                       # Number of read requests responded to by this memory
-system.rom.num_reads::cpu.data                  87049                       # Number of read requests responded to by this memory
-system.rom.num_reads::total                    195123                       # Number of read requests responded to by this memory
-system.rom.bw_read::cpu.inst                   193527                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_read::cpu.data                   311755                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_read::total                      505282                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_inst_read::cpu.inst              193527                       # Instruction read bandwidth from this memory (bytes/s)
-system.rom.bw_inst_read::total                 193527                       # Instruction read bandwidth from this memory (bytes/s)
-system.rom.bw_total::cpu.inst                  193527                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bw_total::cpu.data                  311755                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bw_total::total                     505282                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::cpu.inst         612291324                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.data          97534024                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            709825348                       # Number of bytes read from this memory
@@ -314,26 +102,13 @@ system.physmem.readPktSize::3                       0                       # Ca
 system.physmem.readPktSize::4                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::5                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::6                       0                       # Categorize read packet sizes
-system.physmem.readPktSize::7                       0                       # Categorize read packet sizes
-system.physmem.readPktSize::8                       0                       # Categorize read packet sizes
-system.physmem.writePktSize::0                      0                       # categorize write packet sizes
-system.physmem.writePktSize::1                      0                       # categorize write packet sizes
-system.physmem.writePktSize::2                      0                       # categorize write packet sizes
-system.physmem.writePktSize::3                      0                       # categorize write packet sizes
-system.physmem.writePktSize::4                      0                       # categorize write packet sizes
-system.physmem.writePktSize::5                      0                       # categorize write packet sizes
-system.physmem.writePktSize::6                      0                       # categorize write packet sizes
-system.physmem.writePktSize::7                      0                       # categorize write packet sizes
-system.physmem.writePktSize::8                      0                       # categorize write packet sizes
-system.physmem.neitherpktsize::0                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::1                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::2                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::3                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::4                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::5                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::6                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::7                    0                       # categorize neither packet sizes
-system.physmem.neitherpktsize::8                    0                       # categorize neither packet sizes
+system.physmem.writePktSize::0                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::1                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::2                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::3                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::4                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::5                      0                       # Categorize write packet sizes
+system.physmem.writePktSize::6                      0                       # Categorize write packet sizes
 system.physmem.rdQLenPdf::0                         0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::1                         0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::2                         0                       # What read queue length does an incoming req see
@@ -366,7 +141,6 @@ system.physmem.rdQLenPdf::28                        0                       # Wh
 system.physmem.rdQLenPdf::29                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::30                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::31                        0                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::32                        0                       # What read queue length does an incoming req see
 system.physmem.wrQLenPdf::0                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::1                         0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::2                         0                       # What write queue length does an incoming req see
@@ -399,7 +173,6 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::32                        0                       # What write queue length does an incoming req see
 system.physmem.totQLat                              0                       # Total cycles spent in queuing delays
 system.physmem.totMemAccLat                         0                       # Sum of mem lat for all requests
 system.physmem.totBusLat                            0                       # Total cycles spent in databus access
@@ -421,6 +194,203 @@ system.physmem.writeRowHits                         0                       # Nu
 system.physmem.readRowHitRate                     nan                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                    nan                       # Row buffer hit rate for writes
 system.physmem.avgGap                             nan                       # Average gap between requests
+system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
+system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
+system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
+system.rom.bytes_inst_read::cpu.inst           432296                       # Number of instructions bytes read from this memory
+system.rom.bytes_inst_read::total              432296                       # Number of instructions bytes read from this memory
+system.rom.num_reads::cpu.inst                 108074                       # Number of read requests responded to by this memory
+system.rom.num_reads::cpu.data                  87049                       # Number of read requests responded to by this memory
+system.rom.num_reads::total                    195123                       # Number of read requests responded to by this memory
+system.rom.bw_read::cpu.inst                   193527                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_read::cpu.data                   311755                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_read::total                      505282                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_inst_read::cpu.inst              193527                       # Instruction read bandwidth from this memory (bytes/s)
+system.rom.bw_inst_read::total                 193527                       # Instruction read bandwidth from this memory (bytes/s)
+system.rom.bw_total::cpu.inst                  193527                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bw_total::cpu.data                  311755                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bw_total::total                     505282                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem2.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
+system.physmem2.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
+system.physmem2.bytes_read::total          9813991967                       # Number of bytes read from this memory
+system.physmem2.bytes_inst_read::cpu.inst   8318106840                       # Number of instructions bytes read from this memory
+system.physmem2.bytes_inst_read::total     8318106840                       # Number of instructions bytes read from this memory
+system.physmem2.bytes_written::cpu.data     897268422                       # Number of bytes written to this memory
+system.physmem2.bytes_written::total        897268422                       # Number of bytes written to this memory
+system.physmem2.num_reads::cpu.inst        2079526710                       # Number of read requests responded to by this memory
+system.physmem2.num_reads::cpu.data         323962420                       # Number of read requests responded to by this memory
+system.physmem2.num_reads::total           2403489130                       # Number of read requests responded to by this memory
+system.physmem2.num_writes::cpu.data        187387796                       # Number of write requests responded to by this memory
+system.physmem2.num_writes::total           187387796                       # Number of write requests responded to by this memory
+system.physmem2.num_other::cpu.data           5403067                       # Number of other requests responded to by this memory
+system.physmem2.num_other::total              5403067                       # Number of other requests responded to by this memory
+system.physmem2.bw_read::cpu.inst          3723784842                       # Total read bandwidth from this memory (bytes/s)
+system.physmem2.bw_read::cpu.data           669666123                       # Total read bandwidth from this memory (bytes/s)
+system.physmem2.bw_read::total             4393450966                       # Total read bandwidth from this memory (bytes/s)
+system.physmem2.bw_inst_read::cpu.inst     3723784842                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem2.bw_inst_read::total        3723784842                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem2.bw_write::cpu.data          401682091                       # Write bandwidth from this memory (bytes/s)
+system.physmem2.bw_write::total             401682091                       # Write bandwidth from this memory (bytes/s)
+system.physmem2.bw_total::cpu.inst         3723784842                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem2.bw_total::cpu.data         1071348214                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem2.bw_total::total            4795133057                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem2.readReqs                            0                       # Total number of read requests seen
+system.physmem2.writeReqs                           0                       # Total number of write requests seen
+system.physmem2.cpureqs                             0                       # Reqs generatd by CPU via cache - shady
+system.physmem2.bytesRead                           0                       # Total number of bytes read from memory
+system.physmem2.bytesWritten                        0                       # Total number of bytes written to memory
+system.physmem2.bytesConsumedRd                     0                       # bytesRead derated as per pkt->getSize()
+system.physmem2.bytesConsumedWr                     0                       # bytesWritten derated as per pkt->getSize()
+system.physmem2.servicedByWrQ                       0                       # Number of read reqs serviced by write Q
+system.physmem2.neitherReadNorWrite                 0                       # Reqs where no action is needed
+system.physmem2.perBankRdReqs::0                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::1                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::2                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::3                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::4                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::5                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::6                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::7                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::8                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::9                    0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::10                   0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::11                   0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::12                   0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::13                   0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::14                   0                       # Track reads on a per bank basis
+system.physmem2.perBankRdReqs::15                   0                       # Track reads on a per bank basis
+system.physmem2.perBankWrReqs::0                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::1                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::2                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::3                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::4                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::5                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::6                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::7                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::8                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::9                    0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::10                   0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::11                   0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::12                   0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::13                   0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::14                   0                       # Track writes on a per bank basis
+system.physmem2.perBankWrReqs::15                   0                       # Track writes on a per bank basis
+system.physmem2.numRdRetry                          0                       # Number of times rd buffer was full causing retry
+system.physmem2.numWrRetry                          0                       # Number of times wr buffer was full causing retry
+system.physmem2.totGap                              0                       # Total gap between requests
+system.physmem2.readPktSize::0                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::1                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::2                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::3                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::4                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::5                      0                       # Categorize read packet sizes
+system.physmem2.readPktSize::6                      0                       # Categorize read packet sizes
+system.physmem2.writePktSize::0                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::1                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::2                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::3                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::4                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::5                     0                       # Categorize write packet sizes
+system.physmem2.writePktSize::6                     0                       # Categorize write packet sizes
+system.physmem2.rdQLenPdf::0                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::1                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::2                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::3                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::4                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::5                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::6                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::7                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::8                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::9                        0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::10                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::11                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::12                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::13                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::14                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::15                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::16                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::17                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::18                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::19                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::20                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::21                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::22                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::23                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::24                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::25                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::26                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::27                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::28                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::29                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::30                       0                       # What read queue length does an incoming req see
+system.physmem2.rdQLenPdf::31                       0                       # What read queue length does an incoming req see
+system.physmem2.wrQLenPdf::0                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::1                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::2                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::3                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::4                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::5                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::6                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::7                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::8                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::9                        0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::10                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::11                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::12                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::13                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::14                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::15                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::16                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::17                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::18                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::19                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::20                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::21                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::22                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::23                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::24                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::25                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::26                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::27                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::28                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::29                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::30                       0                       # What write queue length does an incoming req see
+system.physmem2.wrQLenPdf::31                       0                       # What write queue length does an incoming req see
+system.physmem2.totQLat                             0                       # Total cycles spent in queuing delays
+system.physmem2.totMemAccLat                        0                       # Sum of mem lat for all requests
+system.physmem2.totBusLat                           0                       # Total cycles spent in databus access
+system.physmem2.totBankLat                          0                       # Total cycles spent in bank access
+system.physmem2.avgQLat                           nan                       # Average queueing delay per request
+system.physmem2.avgBankLat                        nan                       # Average bank access latency per request
+system.physmem2.avgBusLat                         nan                       # Average bus latency per request
+system.physmem2.avgMemAccLat                      nan                       # Average memory access latency
+system.physmem2.avgRdBW                          0.00                       # Average achieved read bandwidth in MB/s
+system.physmem2.avgWrBW                          0.00                       # Average achieved write bandwidth in MB/s
+system.physmem2.avgConsumedRdBW                  0.00                       # Average consumed read bandwidth in MB/s
+system.physmem2.avgConsumedWrBW                  0.00                       # Average consumed write bandwidth in MB/s
+system.physmem2.peakBW                       12800.00                       # Theoretical peak bandwidth in MB/s
+system.physmem2.busUtil                          0.00                       # Data bus utilization in percentage
+system.physmem2.avgRdQLen                        0.00                       # Average read queue length over time
+system.physmem2.avgWrQLen                        0.00                       # Average write queue length over time
+system.physmem2.readRowHits                         0                       # Number of row buffer hits during reads
+system.physmem2.writeRowHits                        0                       # Number of row buffer hits during writes
+system.physmem2.readRowHitRate                    nan                       # Row buffer hit rate for reads
+system.physmem2.writeRowHitRate                   nan                       # Row buffer hit rate for writes
+system.physmem2.avgGap                            nan                       # Average gap between requests
+system.nvram.bytes_read::cpu.data                 284                       # Number of bytes read from this memory
+system.nvram.bytes_read::total                    284                       # Number of bytes read from this memory
+system.nvram.bytes_written::cpu.data               92                       # Number of bytes written to this memory
+system.nvram.bytes_written::total                  92                       # Number of bytes written to this memory
+system.nvram.num_reads::cpu.data                  284                       # Number of read requests responded to by this memory
+system.nvram.num_reads::total                     284                       # Number of read requests responded to by this memory
+system.nvram.num_writes::cpu.data                  92                       # Number of write requests responded to by this memory
+system.nvram.num_writes::total                     92                       # Number of write requests responded to by this memory
+system.nvram.bw_read::cpu.data                    127                       # Total read bandwidth from this memory (bytes/s)
+system.nvram.bw_read::total                       127                       # Total read bandwidth from this memory (bytes/s)
+system.nvram.bw_write::cpu.data                    41                       # Write bandwidth from this memory (bytes/s)
+system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
+system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
+system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
