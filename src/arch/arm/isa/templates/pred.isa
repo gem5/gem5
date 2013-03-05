@@ -77,7 +77,7 @@ def template DataImmConstructor {{
             }
         }
 
-        if (%(is_branch)s){
+        if (%(is_branch)s && !isFloating()){
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
@@ -117,7 +117,7 @@ def template DataRegConstructor {{
             }
         }
 
-        if (%(is_branch)s){
+        if (%(is_branch)s && !isFloating()){
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
