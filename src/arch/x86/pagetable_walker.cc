@@ -574,6 +574,9 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
     assert(!read);
     inflight--;
     if (pkt->isRead()) {
+        // @todo someone should pay for this
+        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+
         state = nextState;
         nextState = Ready;
         PacketPtr write = NULL;
