@@ -114,5 +114,7 @@ for (i, cpu) in enumerate(system.cpu):
         cpu.interrupts.int_master = system.piobus.slave
         cpu.interrupts.int_slave = system.piobus.master
 
+    system.ruby._cpu_ruby_ports[i].access_phys_mem = True
+
 root = Root(full_system = True, system = system)
 Simulation.run(options, root, system, FutureClass)

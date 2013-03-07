@@ -77,7 +77,7 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
                     wakeup_frequency = 10, num_cpus = options.num_cpus)
 
-system = System(tester = tester, physmem = SimpleMemory())
+system = System(tester = tester, physmem = SimpleMemory(null = True))
 
 Ruby.create_system(options, system)
 
@@ -103,12 +103,6 @@ for ruby_port in system.ruby._cpu_ruby_ports:
     # copies the subblock back to the checker
     #
     ruby_port.using_ruby_tester = True
-
-    #
-    # Ruby doesn't need the backing image of memory when running with
-    # the tester.
-    #
-    ruby_port.access_phys_mem = False
 
 # -----------------------
 # run simulation

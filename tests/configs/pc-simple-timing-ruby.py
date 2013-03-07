@@ -74,5 +74,8 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.interrupts.int_slave = system.piobus.master
     cpu.clock = '2GHz'
 
+    # Set access_phys_mem to True for ruby port
+    system.ruby._cpu_ruby_ports[i].access_phys_mem = True
+
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')

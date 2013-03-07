@@ -187,6 +187,9 @@ if options.ruby:
         print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
         sys.exit(1)
 
+    # Set the option for physmem so that it is not allocated any space
+    system.physmem.null = True
+
     options.use_map = True
     Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))

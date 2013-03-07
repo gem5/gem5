@@ -79,8 +79,8 @@ options.num_cpus = nb_cores
 # system simulated
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
-                funcbus = NoncoherentBus(),
-                physmem = SimpleMemory())
+                physmem = SimpleMemory(null = True),
+                funcbus = NoncoherentBus())
 
 Ruby.create_system(options, system)
 
@@ -99,12 +99,6 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
      # threshold to 1 million cycles
      #
      ruby_port.deadlock_threshold = 1000000
-
-     #
-     # Ruby doesn't need the backing image of memory when running with
-     # the tester.
-     #
-     ruby_port.access_phys_mem = False
 
 # connect reference memory to funcbus
 system.funcmem.port = system.funcbus.master

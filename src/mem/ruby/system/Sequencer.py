@@ -41,7 +41,7 @@ class RubyPort(MemObject):
     pio_port = MasterPort("Ruby_pio_port")
     using_ruby_tester = Param.Bool(False, "")
     using_network_tester = Param.Bool(False, "")
-    access_phys_mem = Param.Bool(True,
+    access_phys_mem = Param.Bool(False,
         "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
     system = Param.System(Parent.any, "system object")
@@ -52,6 +52,7 @@ class RubyPort(MemObject):
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'
     cxx_header = "mem/ruby/system/RubyPortProxy.hh"
+    access_phys_mem = True
     
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
@@ -67,3 +68,4 @@ class RubySequencer(RubyPort):
 class DMASequencer(RubyPort):
     type = 'DMASequencer'
     cxx_header = "mem/ruby/system/DMASequencer.hh"
+    access_phys_mem = True
