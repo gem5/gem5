@@ -63,6 +63,8 @@ class NetworkInterface_d : public Consumer
     void print(std::ostream& out) const;
     int get_vnet(int vc);
 
+    uint32_t functionalWrite(Packet *);
+
   private:
     GarnetNetwork_d *m_net_ptr;
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;

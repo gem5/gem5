@@ -74,3 +74,10 @@ flit_d::print(std::ostream& out) const
     out << "Enqueue Time=" << m_enqueue_time << " ";
     out << "]";
 }
+
+bool
+flit_d::functionalWrite(Packet *pkt)
+{
+    Message *msg = m_msg_ptr.get();
+    return msg->functionalWrite(pkt);
+}

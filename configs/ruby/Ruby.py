@@ -53,8 +53,8 @@ def define_options(parser):
                  help="check src/mem/ruby/network/topologies for complete set")
     parser.add_option("--mesh-rows", type="int", default=1,
                       help="the number of rows in the mesh topology")
-    parser.add_option("--garnet-network", type="string", default=None,
-                      help="'fixed'|'flexible'")
+    parser.add_option("--garnet-network", type="choice",
+                      choices=['fixed', 'flexible'], help="'fixed'|'flexible'")
     parser.add_option("--network-fault-model", action="store_true", default=False,
                       help="enable network fault model: see src/mem/ruby/network/fault_model/")
 

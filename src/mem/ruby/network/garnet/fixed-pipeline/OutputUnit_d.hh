@@ -87,6 +87,8 @@ class OutputUnit_d : public Consumer
         m_out_link->scheduleEvent(Cycles(1));
     }
 
+    uint32_t functionalWrite(Packet *pkt);
+
   private:
     int m_id;
     int m_num_vcs;

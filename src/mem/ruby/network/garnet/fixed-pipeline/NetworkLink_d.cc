@@ -99,3 +99,9 @@ CreditLink_dParams::create()
 {
     return new CreditLink_d(this);
 }
+
+uint32_t
+NetworkLink_d::functionalWrite(Packet *pkt)
+{
+    return linkBuffer->functionalWrite(pkt);
+}

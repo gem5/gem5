@@ -95,3 +95,15 @@ Switch_d::check_for_wakeup()
         }
     }
 }
+
+uint32_t
+Switch_d::functionalWrite(Packet *pkt)
+{
+   uint32_t num_functional_writes = 0;
+
+   for (uint32_t i = 0; i < m_switch_buffer.size(); ++i) {
+       num_functional_writes += m_switch_buffer[i]->functionalWrite(pkt);
+   }
+
+   return num_functional_writes;
+}

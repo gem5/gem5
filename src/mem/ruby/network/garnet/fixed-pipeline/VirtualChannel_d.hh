@@ -87,6 +87,8 @@ class VirtualChannel_d
         return m_input_buffer->getTopFlit();
     }
 
+    uint32_t functionalWrite(Packet *pkt);
+
   private:
     int m_id;
     flitBuffer_d *m_input_buffer;

@@ -51,17 +51,12 @@ class Switch_d : public Consumer
     void check_for_wakeup();
     void print(std::ostream& out) const {};
 
-    inline void
-    update_sw_winner(int inport, flit_d *t_flit)
-    {
-        m_switch_buffer[inport]->insert(t_flit);
-    }
+    inline void update_sw_winner(int inport, flit_d *t_flit)
+    { m_switch_buffer[inport]->insert(t_flit); }
 
-    inline double
-    get_crossbar_count()
-    {
-        return m_crossbar_activity;
-    }
+    inline double get_crossbar_count() { return m_crossbar_activity; }
+
+    uint32_t functionalWrite(Packet *pkt);
 
   private:
     int m_num_vcs;

@@ -94,3 +94,14 @@ InputUnit_d::wakeup()
         m_num_buffer_reads[vnet]++;
     }
 }
+
+uint32_t
+InputUnit_d::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+    for (int i=0; i < m_num_vcs; i++) {
+        num_functional_writes += m_vcs[i]->functionalWrite(pkt);
+    }
+
+    return num_functional_writes;
+}

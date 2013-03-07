@@ -108,3 +108,9 @@ OutputUnit_d::update_vc(int vc, int in_port, int in_vc)
     m_router->update_incredit(in_port, in_vc,
                               m_outvc_state[vc]->get_credit_count());
 }
+
+uint32_t
+OutputUnit_d::functionalWrite(Packet *pkt)
+{
+    return m_out_buffer->functionalWrite(pkt);
+}

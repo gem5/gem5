@@ -105,6 +105,8 @@ class Router_d : public BasicRouter
                                                       aggregate_fault_prob);
     }
 
+    uint32_t functionalWrite(Packet *);
+
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork_d *m_network_ptr;

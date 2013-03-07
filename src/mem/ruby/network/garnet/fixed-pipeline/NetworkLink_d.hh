@@ -64,12 +64,12 @@ class NetworkLink_d : public ClockedObject, public Consumer
 
     inline bool isReady(Cycles curTime)
     { return linkBuffer->isReady(curTime); }
+
     inline flit_d* peekLink()       { return linkBuffer->peekTopFlit(); }
     inline flit_d* consumeLink()    { return linkBuffer->getTopFlit(); }
-    void init_net_ptr(GarnetNetwork_d* net_ptr)
-    {
-        m_net_ptr = net_ptr;
-    }
+
+    void init_net_ptr(GarnetNetwork_d* net_ptr) { m_net_ptr = net_ptr; }
+    uint32_t functionalWrite(Packet *);
 
   protected:
     int m_id;

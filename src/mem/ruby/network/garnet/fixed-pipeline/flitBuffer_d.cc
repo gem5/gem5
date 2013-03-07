@@ -85,3 +85,17 @@ flitBuffer_d::setMaxSize(int maximum)
 {
     max_size = maximum;
 }
+
+uint32_t
+flitBuffer_d::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (unsigned int i = 0; i < m_buffer.size(); ++i) {
+        if (m_buffer[i]->functionalWrite(pkt)) {
+            num_functional_writes++;
+        }
+    }
+
+    return num_functional_writes;
+}

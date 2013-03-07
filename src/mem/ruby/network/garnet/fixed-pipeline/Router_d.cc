@@ -204,6 +204,23 @@ Router_d::printAggregateFaultProbability(std::ostream& out)
     out << aggregate_fault_prob << endl;
 }
 
+uint32_t
+Router_d::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+    num_functional_writes += m_switch->functionalWrite(pkt);
+
+    for (uint32_t i = 0; i < m_input_unit.size(); i++) {
+        num_functional_writes += m_input_unit[i]->functionalWrite(pkt);
+    }
+
+    for (uint32_t i = 0; i < m_output_unit.size(); i++) {
+        num_functional_writes += m_output_unit[i]->functionalWrite(pkt);
+    }
+
+    return num_functional_writes;
+}
+
 Router_d *
 GarnetRouter_dParams::create()
 {

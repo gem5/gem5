@@ -346,3 +346,23 @@ GarnetNetwork_dParams::create()
 {
     return new GarnetNetwork_d(this);
 }
+
+uint32_t
+GarnetNetwork_d::functionalWrite(Packet *pkt)
+{
+    uint32_t num_functional_writes = 0;
+
+    for (unsigned int i = 0; i < m_router_ptr_vector.size(); i++) {
+        num_functional_writes += m_router_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    for (unsigned int i = 0; i < m_ni_ptr_vector.size(); ++i) {
+        num_functional_writes += m_ni_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    for (unsigned int i = 0; i < m_link_ptr_vector.size(); ++i) {
+        num_functional_writes += m_link_ptr_vector[i]->functionalWrite(pkt);
+    }
+
+    return num_functional_writes;
+}

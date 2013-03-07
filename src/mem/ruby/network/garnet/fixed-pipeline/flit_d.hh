@@ -79,11 +79,7 @@ class flit_d
         m_stage.second = curTime + Cycles(1);
     }
 
-    std::pair<flit_stage, Cycles>
-    get_stage()
-    {
-        return m_stage;
-    }
+    std::pair<flit_stage, Cycles> get_stage() { return m_stage; }
 
     void set_delay(Cycles delay) { src_delay = delay; }
     Cycles get_delay() { return src_delay; }
@@ -98,6 +94,8 @@ class flit_d
             return (n1->get_time() > n2->get_time());
         }
     }
+
+    bool functionalWrite(Packet *pkt);
 
   private:
     int m_id;

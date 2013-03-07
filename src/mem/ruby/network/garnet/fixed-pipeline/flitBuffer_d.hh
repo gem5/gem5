@@ -73,6 +73,8 @@ class flitBuffer_d
         std::push_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
     }
 
+    uint32_t functionalWrite(Packet *pkt);
+
   private:
     std::vector<flit_d *> m_buffer;
     int max_size;

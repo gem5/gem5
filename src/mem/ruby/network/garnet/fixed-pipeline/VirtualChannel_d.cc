@@ -85,3 +85,9 @@ VirtualChannel_d::need_stage_nextcycle(VC_state_type state, flit_stage stage,
     }
     return false;
 }
+
+uint32_t
+VirtualChannel_d::functionalWrite(Packet *pkt)
+{
+    return m_input_buffer->functionalWrite(pkt);
+}
