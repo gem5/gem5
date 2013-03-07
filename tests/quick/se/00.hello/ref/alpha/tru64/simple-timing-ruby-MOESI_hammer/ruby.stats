@@ -1,4 +1,4 @@
-Real time: Feb/02/2013 08:11:05
+Real time: Mar/06/2013 20:34:50
 
 Profiler Stats
 --------------
@@ -16,9 +16,9 @@ Ruby_current_time: 35432
 Ruby_start_time: 0
 Ruby_cycles: 35432
 
-mbytes_resident: 51.3359
-mbytes_total: 266.984
-resident_ratio: 0.192325
+mbytes_resident: 52.5391
+mbytes_total: 144.84
+resident_ratio: 0.362793
 
 ruby_cycles_executed: [ 35433 ]
 
@@ -89,11 +89,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10808
+page_reclaims: 10230
 page_faults: 0
 swaps: 0
-block_inputs: 0
-block_outputs: 96
+block_inputs: 8
+block_outputs: 88
 
 Network Stats
 -------------

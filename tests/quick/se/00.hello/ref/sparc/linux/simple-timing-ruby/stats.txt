@@ -4,35 +4,13 @@ sim_seconds                                  0.000108                       # Nu
 sim_ticks                                      107952                       # Number of ticks simulated
 final_tick                                     107952                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  30407                       # Simulator instruction rate (inst/s)
-host_op_rate                                    30404                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 616066                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 289524                       # Number of bytes of host memory used
-host_seconds                                     0.18                       # Real time elapsed on the host
+host_inst_rate                                  19134                       # Simulator instruction rate (inst/s)
+host_op_rate                                    19132                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 387691                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 158116                       # Number of bytes of host memory used
+host_seconds                                     0.28                       # Real time elapsed on the host
 sim_insts                                        5327                       # Number of instructions simulated
 sim_ops                                          5327                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read::cpu.inst             21480                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu.data              4602                       # Number of bytes read from this memory
-system.physmem.bytes_read::total                26082                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read::cpu.inst        21480                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::total           21480                       # Number of instructions bytes read from this memory
-system.physmem.bytes_written::cpu.data           5065                       # Number of bytes written to this memory
-system.physmem.bytes_written::total              5065                       # Number of bytes written to this memory
-system.physmem.num_reads::cpu.inst               5370                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu.data                715                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total                  6085                       # Number of read requests responded to by this memory
-system.physmem.num_writes::cpu.data               673                       # Number of write requests responded to by this memory
-system.physmem.num_writes::total                  673                       # Number of write requests responded to by this memory
-system.physmem.bw_read::cpu.inst            198977323                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu.data             42630058                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total               241607381                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu.inst       198977323                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total          198977323                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu.data            46919001                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::total               46919001                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total::cpu.inst           198977323                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu.data            89549059                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total              288526382                       # Total bandwidth to/from this memory (bytes/s)
 system.ruby.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.ruby.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.ruby.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
