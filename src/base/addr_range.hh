@@ -140,7 +140,10 @@ class AddrRange
      *
      * @return The size of the regions created by the interleaving bits
      */
-    uint64_t granularity() const { return ULL(1) << intlvHighBit; }
+    uint64_t granularity() const
+    {
+        return ULL(1) << (intlvHighBit - intlvBits);
+    }
 
     /**
      * Determine the number of interleaved address stripes this range
