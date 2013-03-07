@@ -118,6 +118,14 @@ void Wire::calc_opt_buffering(
                             (1.4*1.5*BufferDriveResistance*c_c))/(0.7*r*BufferInputCapacitance));
                 break;
             }
+        default:
+            {
+                // make gcc happy although all the cases of the enum
+                // are already covered
+                *k_ = 0;
+                *h_ = 0;
+                break;
+            }
     }
     return;
 }
