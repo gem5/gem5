@@ -1,4 +1,5 @@
 // Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2012-13 Mark D. Hill and David A. Wood
 // All rights reserved.
 //
 // The license below extends only to copyright in the software and shall
@@ -34,11 +35,13 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Gabe Black
+//          Nilay Vaish
 
 format WarnUnimpl {
     0x1B: decode OPCODE_OP_BOTTOM3 {
         //0x0: esc0();
         0x0: decode MODRM_REG {
+            // ST(0) = ST(0) + 32-bit Mem
             0x0: fadd();
             0x1: fmul();
             0x2: fcom();
@@ -50,7 +53,11 @@ format WarnUnimpl {
         }
         //0x1: esc1();
         0x1: decode MODRM_REG {
-            0x0: fld();
+            0x0: decode MODRM_MOD {
+                0x3: Inst::FLD(Eq);
+                // 32-bit load
+                default: Inst::FLD(Md);
+            }
             0x1: decode MODRM_MOD {
                 0x3: fxch();
                 default: Inst::UD2();
@@ -78,24 +85,24 @@ format WarnUnimpl {
             }
             0x5: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
-                    0x0: fld1();
-                    0x1: fldl2t();
-                    0x2: fldl2e();
-                    0x3: fldpi();
-                    0x4: fldlg2();
-                    0x5: fldln2();
-                    0x6: fldz();
+                    0x0: Inst::FLD1();
+                    0x1: Inst::FLDL2T();
+                    0x2: Inst::FLDL2E();
+                    0x3: Inst::FLDPI();
+                    0x4: Inst::FLDLG2();
+                    0x5: Inst::FLDLN2();
+                    0x6: Inst::FLDZ();
                 }
-                default: fldcw_Mw();
+                default: Inst::FLDCW(Mw);
             }
             0x6: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x0: f2xm1();
-                    0x1: fyl2x();
-                    0x2: fptan();
+                    0x1: Inst::FYL2X();
+                    0x2: Inst::FPTAN();
                     0x3: fpatan();
                     0x4: fxtract();
-                    0x5: fprem1();
+                    0x5: Inst::FPREM1();
                     0x6: fdecstp();
                     0x7: fincstp();
                 }
@@ -103,7 +110,7 @@ format WarnUnimpl {
             }
             0x7: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
-                    0x0: fprem();
+                    0x0: Inst::FPREM();
                     0x1: fyl2xp1();
                     0x2: fsqrt();
                     0x3: Inst::FSINCOS();
@@ -181,6 +188,7 @@ format WarnUnimpl {
             }
             0x5: decode MODRM_MOD {
                 0x3: fucomi();
+                // 80-bit load
                 default: fld();
             }
             0x6: decode MODRM_MOD {
@@ -225,6 +233,7 @@ format WarnUnimpl {
         0x5: decode MODRM_REG {
             0x0: decode MODRM_MOD {
                 0x3: ffree();
+                // 64-bit load
                 default: Inst::FLD(Mq);
             }
             0x1: decode MODRM_MOD {

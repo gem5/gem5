@@ -36,6 +36,11 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FPREM
-# FPREM1
+def macroop FPREM {
+    premfp st(0), st(1), st(0)
+};
+
+def macroop FPREM1 {
+    premfp st(0), st(1), st(0)
+};
 '''

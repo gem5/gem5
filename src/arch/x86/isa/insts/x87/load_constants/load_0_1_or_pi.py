@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,9 +35,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Gabe Black
+#          Nilay Vaish
 
 microcode = '''
-# FLDZ
-# FLD1
-# FLDPI
+
+def macroop FLDZ {
+    limm ufp1, "double(0)"
+    movfp st(-1), ufp1, spm=-1
+};
+
+def macroop FLD1 {
+    limm ufp1, "double(1)"
+    movfp st(-1), ufp1, spm=-1
+};
+
+def macroop FLDPI {
+    limm ufp1, "double(3.14159265359)"
+    movfp st(-1), ufp1, spm=-1
+};
+
 '''

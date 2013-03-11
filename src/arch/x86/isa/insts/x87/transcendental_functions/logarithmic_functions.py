@@ -38,6 +38,10 @@
 microcode = '''
 # F2XM1
 # FSCALE
-# FYL2X
+
+def macroop FYL2X {
+    yl2xfp st(1), st(0), st(1), spm=1
+};
+
 # FYL2XP1
 '''
