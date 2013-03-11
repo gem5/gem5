@@ -4,13 +4,13 @@ sim_seconds                                  0.000122                       # Nu
 sim_ticks                                      121759                       # Number of ticks simulated
 final_tick                                     121759                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  20307                       # Simulator instruction rate (inst/s)
-host_op_rate                                    36781                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 459428                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 167176                       # Number of bytes of host memory used
-host_seconds                                     0.27                       # Real time elapsed on the host
+host_inst_rate                                  25458                       # Simulator instruction rate (inst/s)
+host_op_rate                                    46114                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 575943                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 167352                       # Number of bytes of host memory used
+host_seconds                                     0.21                       # Real time elapsed on the host
 sim_insts                                        5381                       # Number of instructions simulated
-sim_ops                                          9747                       # Number of ops (including micro ops) simulated
+sim_ops                                          9748                       # Number of ops (including micro ops) simulated
 system.ruby.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
 system.ruby.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
 system.ruby.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
@@ -22,19 +22,19 @@ system.cpu.numCycles                           121759                       # nu
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                        5381                       # Number of instructions committed
-system.cpu.committedOps                          9747                       # Number of ops (including micro ops) committed
-system.cpu.num_int_alu_accesses                  9653                       # Number of integer alu accesses
+system.cpu.committedOps                          9748                       # Number of ops (including micro ops) committed
+system.cpu.num_int_alu_accesses                  9655                       # Number of integer alu accesses
 system.cpu.num_fp_alu_accesses                      0                       # Number of float alu accesses
 system.cpu.num_func_calls                           0                       # number of times a function call or return occured
 system.cpu.num_conditional_control_insts          899                       # number of instructions that are conditional controls
-system.cpu.num_int_insts                         9653                       # number of integer instructions
+system.cpu.num_int_insts                         9655                       # number of integer instructions
 system.cpu.num_fp_insts                             0                       # number of float instructions
-system.cpu.num_int_register_reads               24817                       # number of times the integer registers were read
-system.cpu.num_int_register_writes              11061                       # number of times the integer registers were written
+system.cpu.num_int_register_reads               24822                       # number of times the integer registers were read
+system.cpu.num_int_register_writes              11063                       # number of times the integer registers were written
 system.cpu.num_fp_register_reads                    0                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                   0                       # number of times the floating registers were written
-system.cpu.num_mem_refs                          1987                       # number of memory refs
-system.cpu.num_load_insts                        1052                       # Number of load instructions
+system.cpu.num_mem_refs                          1988                       # number of memory refs
+system.cpu.num_load_insts                        1053                       # Number of load instructions
 system.cpu.num_store_insts                        935                       # Number of store instructions
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
 system.cpu.num_busy_cycles                     121759                       # Number of busy cycles

@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-tim
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2013 16:30:44
-gem5 started Jan 23 2013 16:34:52
+gem5 compiled Mar 11 2013 13:21:48
+gem5 started Mar 11 2013 13:21:58
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby -re tests/run.py build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby
 Global frequency set at 1000000000 ticks per second

@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/s
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2013 16:30:44
-gem5 started Jan 23 2013 19:08:30
+gem5 compiled Mar 11 2013 13:21:48
+gem5 started Mar 11 2013 13:30:24
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sav
@@ -26,4 +26,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 82648140000 because target called exit()
+122 123 124 Exiting @ tick 82877188500 because target called exit()

@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/long/se/00.gzip/x86/linux/simple-timin
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2013 16:30:44
-gem5 started Jan 23 2013 18:22:44
+gem5 compiled Mar 11 2013 13:21:48
+gem5 started Mar 11 2013 13:30:24
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/00.gzip/x86/linux/simple-timing -re tests/run.py build/X86/tests/opt/long/se/00.gzip/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
@@ -41,4 +41,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 1800193397000 because target called exit()
+Exiting @ tick 1800193398000 because target called exit()
