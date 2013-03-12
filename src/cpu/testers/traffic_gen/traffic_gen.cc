@@ -324,13 +324,14 @@ TrafficGen::StateGraph::transition()
     // determine next state
     double p = random_mt.gen_real1();
     assert(currState < transitionMatrix.size());
-    double cumulative = transitionMatrix[currState][0];
-    size_t i = 1;
-    while (p < cumulative && i != transitionMatrix[currState].size()) {
+    double cumulative = 0.0;
+    size_t i = 0;
+    do {
         cumulative += transitionMatrix[currState][i];
         ++i;
-    }
-    enterState(i);
+    } while (cumulative < p && i < transitionMatrix[currState].size());
+
+    enterState(i - 1);
 }
 
 void
