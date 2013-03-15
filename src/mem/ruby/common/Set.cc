@@ -351,11 +351,9 @@ Set::print(std::ostream& out) const
         return;
     }
 
-    char buff[24];
     out << "[Set (" << m_nSize << ")";
     for (int i = m_nArrayLen - 1; i >= 0; i--) {
-        csprintf(buff," 0x%08X", m_p_nArray[i]);
-        out << buff;
+        out << csprintf(" 0x%08X", m_p_nArray[i]);
     }
     out << " ]";
 }
