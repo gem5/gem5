@@ -505,6 +505,12 @@ Export('MakeAction')
 main['LTO_CCFLAGS'] = []
 main['LTO_LDFLAGS'] = []
 
+# According to the readme, tcmalloc works best if the compiler doesn't
+# assume that we're using the builtin malloc and friends. These flags
+# are compiler-specific, so we need to set them after we detect which
+# compiler we're using.
+main['TCMALLOC_CCFLAGS'] = []
+
 CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
@@ -581,6 +587,9 @@ if main['GCC']:
             main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
                                    '-fuse-linker-plugin']
 
+    main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
+                                  '-fno-builtin-realloc', '-fno-builtin-free'])
+
 elif main['CLANG']:
     # Check for a supported version of clang, >= 2.9 is needed to
     # support similar features as gcc 4.4. See
@@ -606,6 +615,8 @@ elif main['CLANG']:
     main.Append(CCFLAGS=['-Wno-tautological-compare',
                          '-Wno-parentheses',
                          '-Wno-self-assign'])
+
+    main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
     # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
     # opposed to libstdc++ to make the transition from TR1 to
@@ -914,7 +925,9 @@ have_posix_clock = \
     conf.CheckLibWithHeader('rt', 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
 
-if not conf.CheckLib('tcmalloc_minimal'):
+if conf.CheckLib('tcmalloc_minimal'):
+    main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+else:
     print termcap.Yellow + termcap.Bold + \
           "You can get a 12% performance improvement by installing tcmalloc "\
           "(libgoogle-perftools-dev package on Ubuntu or RedHat)." + \
