@@ -739,6 +739,9 @@ SimpleDRAM::accessAndRespond(PacketPtr pkt)
         // next tick
         port.schedTimingResp(pkt, curTick() + 1);
     } else {
+        // @todo the packet is going to be deleted, and the DRAMPacket
+        // is still having a pointer to it
+        pendingDelete.push_back(pkt);
     }
 
     DPRINTF(DRAM, "Done\n");
