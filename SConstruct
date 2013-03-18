@@ -925,7 +925,9 @@ have_posix_clock = \
     conf.CheckLibWithHeader('rt', 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
 
-if conf.CheckLib('tcmalloc_minimal'):
+if conf.CheckLib('tcmalloc'):
+    main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+elif conf.CheckLib('tcmalloc_minimal'):
     main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
 else:
     print termcap.Yellow + termcap.Bold + \
