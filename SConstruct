@@ -839,6 +839,11 @@ py_lib_path = [ py_getvar('LIBDIR') ]
 # shared library in prefix/lib/.
 if not py_getvar('Py_ENABLE_SHARED'):
     py_lib_path.append(py_getvar('LIBPL'))
+    # Python requires the flags in LINKFORSHARED to be added the
+    # linker flags when linking with a statically with Python. Failing
+    # to do so can lead to errors from the Python's dynamic module
+    # loader at start up.
+    main.Append(LINKFLAGS=[py_getvar('LINKFORSHARED').split()])
 
 py_libs = []
 for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
