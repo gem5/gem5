@@ -42,7 +42,9 @@
 #include "cpu/inorder/resources/graduation_unit.hh"
 #include "cpu/inorder/resources/inst_buffer.hh"
 #include "cpu/inorder/resources/mult_div_unit.hh"
-#include "cpu/inorder/resources/tlb_unit.hh"
+// The TLBUnit is only needed with the 9-stage pipe and is
+// triggering a gcc LTO bug
+//#include "cpu/inorder/resources/tlb_unit.hh"
 #include "cpu/inorder/resources/use_def.hh"
 
 #endif
