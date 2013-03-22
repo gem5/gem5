@@ -33,6 +33,7 @@
 #include <string>
 
 #include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -44,7 +45,6 @@
 #include "params/RubyController.hh"
 #include "sim/clocked_object.hh"
 
-class MessageBuffer;
 class Network;
 
 class AbstractController : public ClockedObject, public Consumer
@@ -115,6 +115,11 @@ class AbstractController : public ClockedObject, public Consumer
     void connectWithPeer(AbstractController *);
     virtual void getQueuesFromPeer(AbstractController *)
     { fatal("getQueuesFromPeer() should be called only if implemented!"); }
+
+    void stallBuffer(MessageBuffer* buf, Address addr);
+    void wakeUpBuffers(Address addr);
+    void wakeUpAllBuffers(Address addr);
+    void wakeUpAllBuffers();
 
   protected:
     int m_transitions_per_cycle;

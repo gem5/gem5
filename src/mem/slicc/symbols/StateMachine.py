@@ -262,9 +262,6 @@ class $c_ident : public AbstractController
     const int & getVersion() const;
     const std::string toString() const;
     const std::string getName() const;
-    void stallBuffer(MessageBuffer* buf, Address addr);
-    void wakeUpBuffers(Address addr);
-    void wakeUpAllBuffers();
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
     void print(std::ostream& out) const;
     void wakeup();
@@ -746,70 +743,6 @@ const string
 $c_ident::getName() const
 {
     return m_name;
-}
-
-void
-$c_ident::stallBuffer(MessageBuffer* buf, Address addr)
-{
-    if (m_waiting_buffers.count(addr) == 0) {
-        MsgVecType* msgVec = new MsgVecType;
-        msgVec->resize(m_max_in_port_rank, NULL);
-        m_waiting_buffers[addr] = msgVec;
-    }
-    (*(m_waiting_buffers[addr]))[m_cur_in_port_rank] = buf;
-}
-
-void
-$c_ident::wakeUpBuffers(Address addr)
-{
-    if (m_waiting_buffers.count(addr) > 0) {
-        //
-        // Wake up all possible lower rank (i.e. lower priority) buffers that could
-        // be waiting on this message.
-        //
-        for (int in_port_rank = m_cur_in_port_rank - 1;
-             in_port_rank >= 0;
-             in_port_rank--) {
-            if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
-                (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
-            }
-        }
-        delete m_waiting_buffers[addr];
-        m_waiting_buffers.erase(addr);
-    }
-}
-
-void
-$c_ident::wakeUpAllBuffers()
-{
-    //
-    // Wake up all possible buffers that could be waiting on any message.
-    //
-
-    std::vector<MsgVecType*> wokeUpMsgVecs;
-    
-    if(m_waiting_buffers.size() > 0) {
-        for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
-             buf_iter != m_waiting_buffers.end();
-             ++buf_iter) {
-             for (MsgVecType::iterator vec_iter = buf_iter->second->begin();
-                  vec_iter != buf_iter->second->end();
-                  ++vec_iter) {
-                  if (*vec_iter != NULL) {
-                      (*vec_iter)->reanalyzeAllMessages();
-                  }
-             }
-             wokeUpMsgVecs.push_back(buf_iter->second);
-        }
-
-        for (std::vector<MsgVecType*>::iterator wb_iter = wokeUpMsgVecs.begin();
-             wb_iter != wokeUpMsgVecs.end();
-             ++wb_iter) {
-             delete (*wb_iter);
-        }
-
-        m_waiting_buffers.clear();
-    }
 }
 
 void
