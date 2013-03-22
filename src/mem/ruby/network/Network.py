@@ -32,22 +32,18 @@ from m5.SimObject import SimObject
 from ClockedObject import ClockedObject
 from BasicLink import BasicLink
 
-class Topology(SimObject):
-    type = 'Topology'
-    cxx_header = "mem/ruby/network/Topology.hh"
-    description = Param.String("Not Specified",
-                               "the name of the imported topology module")
-    num_routers = Param.UInt32("Number of routers in the network")
-    ext_links = VectorParam.BasicExtLink("Links to external nodes")
-    int_links = VectorParam.BasicIntLink("Links between internal nodes")
-
 class RubyNetwork(ClockedObject):
     type = 'RubyNetwork'
     cxx_class = 'Network'
     cxx_header = "mem/ruby/network/Network.hh"
     abstract = True
-    number_of_virtual_networks = Param.Int(10, "");
-    topology = Param.Topology("");
-    control_msg_size = Param.Int(8, "");
-    ruby_system = Param.RubySystem("");
+    topology = Param.String("Not Specified",
+                            "the name of the imported topology module")
+
+    number_of_virtual_networks = Param.Int(10, "")
+    control_msg_size = Param.Int(8, "")
+    ruby_system = Param.RubySystem("")
+
     routers = VectorParam.BasicRouter("Network routers")
+    ext_links = VectorParam.BasicExtLink("Links to external nodes")
+    int_links = VectorParam.BasicIntLink("Links between internal nodes")

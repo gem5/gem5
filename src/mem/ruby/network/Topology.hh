@@ -37,8 +37,8 @@
  * nodes. All edges have latency.
  */
 
-#ifndef __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__
-#define __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__
+#ifndef __MEM_RUBY_NETWORK_TOPOLOGY_HH__
+#define __MEM_RUBY_NETWORK_TOPOLOGY_HH__
 
 #include <iostream>
 #include <string>
@@ -46,9 +46,7 @@
 
 #include "mem/protocol/LinkDirection.hh"
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/network/BasicRouter.hh"
-#include "params/Topology.hh"
-#include "sim/sim_object.hh"
+#include "mem/ruby/network/BasicLink.hh"
 
 class NetDest;
 class Network;
@@ -63,21 +61,14 @@ struct LinkEntry
 
 typedef std::map<std::pair<int, int>, LinkEntry> LinkMap;
 
-class Topology : public SimObject
+class Topology
 {
   public:
-    typedef TopologyParams Params;
-    Topology(const Params *p);
-    virtual ~Topology() {}
-    const Params *params() const { return (const Params *)_params; }
+    Topology(uint32_t num_routers, std::vector<BasicExtLink *> ext_links,
+             std::vector<BasicIntLink *> int_links);
 
-    void init();
-    int numSwitches() const { return m_number_of_switches; }
+    uint32_t numSwitches() const { return m_number_of_switches; }
     void createLinks(Network *net, bool isReconfiguration);
-
-    void initNetworkPtr(Network* net_ptr);
-
-    const std::string getName() { return m_name; }
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   protected:
@@ -87,14 +78,8 @@ class Topology : public SimObject
                   const NetDest& routing_table_entry, 
                   bool isReconfiguration);
 
-    std::string getDesignStr();
-    // Private copy constructor and assignment operator
-    Topology(const Topology& obj);
-    Topology& operator=(const Topology& obj);
-
-    std::string m_name;
     NodeID m_nodes;
-    int m_number_of_switches;
+    uint32_t m_number_of_switches;
 
     std::vector<BasicExtLink*> m_ext_link_vector;
     std::vector<BasicIntLink*> m_int_link_vector;
@@ -103,7 +88,6 @@ class Topology : public SimObject
     Matrix m_component_inter_switches;
 
     LinkMap m_link_map;
-    std::vector<BasicRouter*> m_router_vector;
 };
 
 inline std::ostream&
@@ -114,4 +98,4 @@ operator<<(std::ostream& out, const Topology& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__
+#endif // __MEM_RUBY_NETWORK_TOPOLOGY_HH__

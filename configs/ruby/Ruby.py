@@ -142,19 +142,12 @@ def create_system(options, system, piobus = None, dma_ports = []):
     # the controllers. Hence the separation between topology definition and
     # instantiation.
     #
-    # gem5 SimObject defined in src/mem/ruby/network/Network.py
-    net_topology = Topology()
-    net_topology.description = topology.description
 
     routers, int_links, ext_links = topology.makeTopology(options,
                                     IntLinkClass, ExtLinkClass, RouterClass)
-
-    net_topology.num_routers = len(routers)
-    net_topology.int_links = int_links
-    net_topology.ext_links = ext_links
-
-    network = NetworkClass(ruby_system = ruby, topology = net_topology,
-                           routers = routers)
+    network = NetworkClass(ruby_system = ruby, routers = routers,
+                           int_links = int_links, ext_links = ext_links,
+                           topology = topology.description)
 
     if options.network_fault_model:
         assert(options.garnet_network == "fixed")

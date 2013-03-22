@@ -28,8 +28,8 @@
 
 #include "base/misc.hh"
 #include "mem/protocol/MachineType.hh"
+#include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/system/System.hh"
 
 uint32_t Network::m_virtual_networks;
@@ -40,20 +40,25 @@ Network::Network(const Params *p)
     : ClockedObject(p)
 {
     m_virtual_networks = p->number_of_virtual_networks;
-    m_topology_ptr = p->topology;
     m_control_msg_size = p->control_msg_size;
 
     // Total nodes/controllers in network
     // Must make sure this is called after the State Machine constructors
     m_nodes = MachineType_base_number(MachineType_NUM);
     assert(m_nodes != 0);
-
     assert(m_virtual_networks != 0);
-    assert(m_topology_ptr != NULL);
+
+    m_topology_ptr = new Topology(p->routers.size(), p->ext_links,
+                                  p->int_links);
+    p->ruby_system->registerNetwork(this);
 
     // Initialize the controller's network pointers
-    m_topology_ptr->initNetworkPtr(this);
-    p->ruby_system->registerNetwork(this);
+    for (std::vector<BasicExtLink*>::const_iterator i = p->ext_links.begin();
+         i != p->ext_links.end(); ++i) {
+        BasicExtLink *ext_link = (*i);
+        AbstractController *abs_cntrl = ext_link->params()->ext_node;
+        abs_cntrl->initNetworkPtr(this);
+    }
 }
 
 void

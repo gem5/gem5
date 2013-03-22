@@ -44,17 +44,17 @@
 #include <string>
 #include <vector>
 
-#include "mem/packet.hh"
 #include "mem/protocol/LinkDirection.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/network/Topology.hh"
+#include "mem/packet.hh"
 #include "params/RubyNetwork.hh"
 #include "sim/clocked_object.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
-class Topology;
 
 class Network : public ClockedObject
 {
@@ -62,6 +62,8 @@ class Network : public ClockedObject
     typedef RubyNetworkParams Params;
     Network(const Params *p);
     virtual ~Network() {}
+    const Params * params() const
+    { return dynamic_cast<const Params *>(_params);}
 
     virtual void init();
 

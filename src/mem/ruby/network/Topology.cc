@@ -33,7 +33,6 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
@@ -58,10 +57,10 @@ bool link_is_shortest_path_to_node(SwitchID src, SwitchID next,
 NetDest shortest_path_to_node(SwitchID src, SwitchID next,
     const Matrix& weights, const Matrix& dist);
 
-Topology::Topology(const Params *p)
-    : SimObject(p)
+Topology::Topology(uint32_t num_routers, vector<BasicExtLink *> ext_links,
+                   vector<BasicIntLink *> int_links)
+    : m_number_of_switches(num_routers)
 {
-    m_number_of_switches = p->num_routers;
 
     // initialize component latencies record
     m_component_latencies.resize(0);
@@ -72,18 +71,17 @@ Topology::Topology(const Params *p)
     m_nodes = MachineType_base_number(MachineType_NUM);
     assert(m_nodes > 1);
 
-    if (m_nodes != params()->ext_links.size() &&
-        m_nodes != params()->ext_links.size()) {
+    if (m_nodes != ext_links.size()) {
         fatal("m_nodes (%d) != ext_links vector length (%d)\n",
-              m_nodes, params()->ext_links.size());
+              m_nodes, ext_links.size());
     }
 
     // analyze both the internal and external links, create data structures
     // Note that the python created links are bi-directional, but that the
     // topology and networks utilize uni-directional links.  Thus each 
     // BasicLink is converted to two calls to add link, on for each direction
-    for (vector<BasicExtLink*>::const_iterator i = params()->ext_links.begin();
-         i != params()->ext_links.end(); ++i) {
+    for (vector<BasicExtLink*>::const_iterator i = ext_links.begin();
+         i != ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
         AbstractController *abs_cntrl = ext_link->params()->ext_node;
         BasicRouter *router = ext_link->params()->int_node;
@@ -102,8 +100,8 @@ Topology::Topology(const Params *p)
         addLink(int_idx, ext_idx2, ext_link, LinkDirection_Out);
     }
 
-    for (vector<BasicIntLink*>::const_iterator i = params()->int_links.begin();
-         i != params()->int_links.end(); ++i) {
+    for (vector<BasicIntLink*>::const_iterator i = int_links.begin();
+         i != int_links.end(); ++i) {
         BasicIntLink *int_link = (*i);
         BasicRouter *router_a = int_link->params()->node_a;
         BasicRouter *router_b = int_link->params()->node_b;
@@ -119,23 +117,6 @@ Topology::Topology(const Params *p)
         addLink(a, b, int_link, LinkDirection_In);
         //   the second direction is marked: Out
         addLink(b, a, int_link, LinkDirection_Out);
-    }
-}
-
-void
-Topology::init()
-{
-}
-
-
-void
-Topology::initNetworkPtr(Network* net_ptr)
-{
-    for (vector<BasicExtLink*>::const_iterator i = params()->ext_links.begin();
-         i != params()->ext_links.end(); ++i) {
-        BasicExtLink *ext_link = (*i);
-        AbstractController *abs_cntrl = ext_link->params()->ext_node;
-        abs_cntrl->initNetworkPtr(net_ptr);
     }
 }
 
@@ -354,10 +335,3 @@ shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& weights,
 
     return result;
 }
-
-Topology *
-TopologyParams::create()
-{
-    return new Topology(this);
-}
-

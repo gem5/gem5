@@ -46,17 +46,15 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
 
     // Currently Garnet only supports uniform bandwidth for all
     // links and network interfaces.
-    for (std::vector<BasicExtLink*>::const_iterator i = 
-             m_topology_ptr->params()->ext_links.begin();
-         i != m_topology_ptr->params()->ext_links.end(); ++i) {
+    for (std::vector<BasicExtLink*>::const_iterator i = p->ext_links.begin();
+         i != p->ext_links.end(); ++i) {
         BasicExtLink* ext_link = (*i);
         if (ext_link->params()->bandwidth_factor != m_ni_flit_size) {
             fatal("Garnet only supports uniform bw across all links and NIs\n");
         }
     }
-    for (std::vector<BasicIntLink*>::const_iterator i = 
-             m_topology_ptr->params()->int_links.begin();
-         i != m_topology_ptr->params()->int_links.end(); ++i) {
+    for (std::vector<BasicIntLink*>::const_iterator i =  p->int_links.begin();
+         i != p->int_links.end(); ++i) {
         BasicIntLink* int_link = (*i);
         if (int_link->params()->bandwidth_factor != m_ni_flit_size) {
             fatal("Garnet only supports uniform bw across all links and NIs\n");
@@ -187,4 +185,3 @@ BaseGarnetNetwork::printPerformanceStats(ostream& out) const
     out << "-------------" << endl;
     out << endl;
 }
-
