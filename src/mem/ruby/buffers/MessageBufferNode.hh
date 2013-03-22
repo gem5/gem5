@@ -40,7 +40,7 @@ class MessageBufferNode
         : m_time(0), m_msg_counter(0)
     {}
 
-    MessageBufferNode(const Cycles& time, uint64_t counter,
+    MessageBufferNode(const Tick time, uint64_t counter,
                       const MsgPtr& msgptr)
         : m_time(time), m_msg_counter(counter), m_msgptr(msgptr)
     {}
@@ -48,7 +48,7 @@ class MessageBufferNode
     void print(std::ostream& out) const;
 
   public:
-    Cycles m_time;
+    Tick m_time;
     uint64_t m_msg_counter; // FIXME, should this be a 64-bit value?
     MsgPtr m_msgptr;
 };

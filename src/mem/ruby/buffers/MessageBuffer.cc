@@ -221,7 +221,8 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delay)
     msg_ptr->setLastEnqueueTime(arrival_time * m_receiver_ptr->clockPeriod());
 
     // Insert the message into the priority heap
-    MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
+    MessageBufferNode thisNode(arrival_time * m_receiver_ptr->clockPeriod(),
+                               m_msg_counter, message);
     m_prio_heap.push_back(thisNode);
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
@@ -309,7 +310,8 @@ MessageBuffer::recycle()
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    node.m_time = m_receiver_ptr->curCycle() + m_recycle_latency;
+    node.m_time = (m_receiver_ptr->curCycle() + m_recycle_latency) *
+                    m_receiver_ptr->clockPeriod();
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
@@ -322,7 +324,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages\n");
     assert(m_stall_msg_map.count(addr) > 0);
-    Cycles nextCycle = m_receiver_ptr->curCycle() + Cycles(1);
+    Tick nextTick = m_receiver_ptr->clockEdge(Cycles(1));
 
     //
     // Put all stalled messages associated with this address back on the
@@ -330,15 +332,14 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
     //
     while(!m_stall_msg_map[addr].empty()) {
         m_msg_counter++;
-        MessageBufferNode msgNode(nextCycle, m_msg_counter,
+        MessageBufferNode msgNode(nextTick, m_msg_counter,
                                   m_stall_msg_map[addr].front());
 
         m_prio_heap.push_back(msgNode);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                   greater<MessageBufferNode>());
 
-        m_consumer_ptr->
-            scheduleEventAbsolute(m_receiver_ptr->clockPeriod() * nextCycle);
+        m_consumer_ptr->scheduleEventAbsolute(nextTick);
         m_stall_msg_map[addr].pop_front();
     }
     m_stall_msg_map.erase(addr);
@@ -348,7 +349,7 @@ void
 MessageBuffer::reanalyzeAllMessages()
 {
     DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n");
-    Cycles nextCycle = m_receiver_ptr->curCycle() + Cycles(1);
+    Tick nextTick = m_receiver_ptr->clockEdge(Cycles(1));
 
     //
     // Put all stalled messages associated with this address back on the
@@ -360,15 +361,14 @@ MessageBuffer::reanalyzeAllMessages()
 
         while(!(map_iter->second).empty()) {
             m_msg_counter++;
-            MessageBufferNode msgNode(nextCycle, m_msg_counter,
+            MessageBufferNode msgNode(nextTick, m_msg_counter,
                                       (map_iter->second).front());
 
             m_prio_heap.push_back(msgNode);
             push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                       greater<MessageBufferNode>());
 
-            m_consumer_ptr->
-                scheduleEventAbsolute(m_receiver_ptr->clockPeriod() * nextCycle);
+            m_consumer_ptr->scheduleEventAbsolute(nextTick);
             (map_iter->second).pop_front();
         }
     }
@@ -433,7 +433,7 @@ bool
 MessageBuffer::isReady() const
 {
     return ((m_prio_heap.size() > 0) &&
-            (m_prio_heap.front().m_time <= m_receiver_ptr->curCycle()));
+            (m_prio_heap.front().m_time <= m_receiver_ptr->clockEdge()));
 }
 
 bool
