@@ -135,13 +135,13 @@ Router_d::route_req(flit_d *t_flit, InputUnit_d *in_unit, int invc)
 void
 Router_d::vcarb_req()
 {
-    m_vc_alloc->scheduleEvent(Cycles(1));
+    m_vc_alloc->scheduleEventAbsolute(clockEdge(Cycles(1)));
 }
 
 void
 Router_d::swarb_req()
 {
-    m_sw_alloc->scheduleEvent(Cycles(1));
+    m_sw_alloc->scheduleEventAbsolute(clockEdge(Cycles(1)));
 }
 
 void
@@ -154,7 +154,7 @@ void
 Router_d::update_sw_winner(int inport, flit_d *t_flit)
 {
     m_switch->update_sw_winner(inport, t_flit);
-    m_switch->scheduleEvent(Cycles(1));
+    m_switch->scheduleEventAbsolute(clockEdge(Cycles(1)));
 }
 
 void

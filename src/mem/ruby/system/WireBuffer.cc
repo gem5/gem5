@@ -80,7 +80,8 @@ WireBuffer::enqueue(MsgPtr message, Cycles latency)
     MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
     m_message_queue.push_back(thisNode);
     if (m_consumer_ptr != NULL) {
-        m_consumer_ptr->scheduleEventAbsolute(arrival_time);
+        m_consumer_ptr->
+            scheduleEventAbsolute(g_system_ptr->clockPeriod() * arrival_time);
     } else {
         panic("No Consumer for WireBuffer! %s\n", *this);
     }
@@ -128,7 +129,8 @@ WireBuffer::recycle()
     m_message_queue.back() = node;
     push_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MessageBufferNode>());
-    m_consumer_ptr->scheduleEventAbsolute(node.m_time);
+    m_consumer_ptr->
+        scheduleEventAbsolute(g_system_ptr->clockPeriod() * node.m_time);
 }
 
 bool

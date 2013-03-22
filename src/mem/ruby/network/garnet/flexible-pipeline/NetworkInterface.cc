@@ -321,7 +321,8 @@ NetworkInterface::scheduleOutputLink()
                 outSrcQueue->insert(t_flit);
 
                 // schedule the out link
-                outNetLink->scheduleEvent(Cycles(1));
+                outNetLink->
+                    scheduleEventAbsolute(m_net_ptr->clockEdge(Cycles(1)));
                 return;
             }
         }

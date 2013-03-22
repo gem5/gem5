@@ -231,7 +231,8 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delay)
 
     // Schedule the wakeup
     if (m_consumer_ptr != NULL) {
-        m_consumer_ptr->scheduleEventAbsolute(arrival_time);
+        m_consumer_ptr->scheduleEventAbsolute(
+                arrival_time * m_receiver_ptr->clockPeriod());
         m_consumer_ptr->storeEventInfo(m_vnet_id);
     } else {
         panic("No consumer: %s name: %s\n", *this, m_name);
@@ -312,8 +313,8 @@ MessageBuffer::recycle()
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
-    m_consumer_ptr->scheduleEventAbsolute(m_receiver_ptr->curCycle() +
-                                          m_recycle_latency);
+    m_consumer_ptr->
+        scheduleEventAbsolute(m_receiver_ptr->clockEdge(m_recycle_latency));
 }
 
 void
@@ -336,7 +337,8 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                   greater<MessageBufferNode>());
 
-        m_consumer_ptr->scheduleEventAbsolute(msgNode.m_time);
+        m_consumer_ptr->
+            scheduleEventAbsolute(m_receiver_ptr->clockPeriod() * nextCycle);
         m_stall_msg_map[addr].pop_front();
     }
     m_stall_msg_map.erase(addr);
@@ -365,7 +367,8 @@ MessageBuffer::reanalyzeAllMessages()
             push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                       greater<MessageBufferNode>());
 
-            m_consumer_ptr->scheduleEventAbsolute(msgNode.m_time);
+            m_consumer_ptr->
+                scheduleEventAbsolute(m_receiver_ptr->clockPeriod() * nextCycle);
             (map_iter->second).pop_front();
         }
     }

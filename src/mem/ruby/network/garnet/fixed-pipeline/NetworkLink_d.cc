@@ -70,7 +70,7 @@ NetworkLink_d::wakeup()
         flit_d *t_flit = link_srcQueue->getTopFlit();
         t_flit->set_time(curCycle() + m_latency);
         linkBuffer->insert(t_flit);
-        link_consumer->scheduleEvent(m_latency);
+        link_consumer->scheduleEventAbsolute(clockEdge(m_latency));
         m_link_utilized++;
         m_vc_load[t_flit->get_vc()]++;
     }

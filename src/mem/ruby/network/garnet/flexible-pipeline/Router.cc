@@ -139,7 +139,7 @@ Router::request_vc(int in_vc, int in_port, NetDest destination,
     m_in_vc_state[in_port][in_vc]->setState(VC_AB_, request_time);
     assert(request_time >= curCycle());
     if (request_time > curCycle())
-        m_vc_arbiter->scheduleEventAbsolute(request_time);
+        m_vc_arbiter->scheduleEventAbsolute(clockPeriod() * request_time);
     else
         vc_arbitrate();
 }
@@ -364,7 +364,9 @@ Router::scheduleOutputLinks()
                         m_router_buffers[port][vc_tolookat]->getTopFlit();
                     t_flit->set_time(curCycle() + Cycles(1));
                     m_out_src_queue[port]->insert(t_flit);
-                    m_out_link[port]->scheduleEvent(Cycles(1));
+
+                    m_out_link[port]->
+                        scheduleEventAbsolute(clockEdge(Cycles(1)));
                     break; // done for this port
                 }
             }
@@ -400,7 +402,7 @@ Router::check_arbiter_reschedule()
         for (int vc = 0; vc < m_num_vcs; vc++) {
             if (m_in_vc_state[port][vc]->isInState(VC_AB_, curCycle() +
                                                    Cycles(1))) {
-                m_vc_arbiter->scheduleEvent(Cycles(1));
+                m_vc_arbiter->scheduleEventAbsolute(clockEdge(Cycles(1)));
                 return;
             }
         }

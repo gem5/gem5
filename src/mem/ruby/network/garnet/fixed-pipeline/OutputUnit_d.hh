@@ -84,7 +84,7 @@ class OutputUnit_d : public Consumer
     insert_flit(flit_d *t_flit)
     {
         m_out_buffer->insert(t_flit);
-        m_out_link->scheduleEvent(Cycles(1));
+        m_out_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
     }
 
     uint32_t functionalWrite(Packet *pkt);

@@ -254,7 +254,8 @@ NetworkInterface_d::wakeup()
         flit_d *credit_flit = new flit_d(t_flit->get_vc(), free_signal,
                                          m_net_ptr->curCycle());
         creditQueue->insert(credit_flit);
-        m_ni_credit_link->scheduleEvent(Cycles(1));
+        m_ni_credit_link->
+            scheduleEventAbsolute(m_net_ptr->clockEdge(Cycles(1)));
 
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
@@ -328,7 +329,8 @@ NetworkInterface_d::scheduleOutputLink()
             t_flit->set_time(m_net_ptr->curCycle() + Cycles(1));
             outSrcQueue->insert(t_flit);
             // schedule the out link
-            outNetLink->scheduleEvent(Cycles(1));
+            outNetLink->
+                scheduleEventAbsolute(m_net_ptr->clockEdge(Cycles(1)));
 
             if (t_flit->get_type() == TAIL_ ||
                t_flit->get_type() == HEAD_TAIL_) {

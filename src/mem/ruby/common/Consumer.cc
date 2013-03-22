@@ -31,19 +31,15 @@
 void
 Consumer::scheduleEvent(Cycles timeDelta)
 {
-    timeDelta += em->curCycle();
-    scheduleEventAbsolute(timeDelta);
+    scheduleEventAbsolute(em->clockEdge(timeDelta));
 }
 
 void
-Consumer::scheduleEventAbsolute(Cycles timeAbs)
+Consumer::scheduleEventAbsolute(Tick evt_time)
 {
-    Tick evt_time = em->clockPeriod() * timeAbs;
     if (!alreadyScheduled(evt_time)) {
         // This wakeup is not redundant
         ConsumerEvent *evt = new ConsumerEvent(this);
-        assert(timeAbs > em->curCycle());
-
         em->schedule(evt, evt_time);
         insertScheduledWakeupTime(evt_time);
     }

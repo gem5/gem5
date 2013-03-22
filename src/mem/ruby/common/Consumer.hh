@@ -87,8 +87,10 @@ class Consumer
         m_scheduled_wakeups.erase(time);
     }
 
+    void scheduleEventAbsolute(Tick timeAbs);
+
+  protected:
     void scheduleEvent(Cycles timeDelta);
-    void scheduleEventAbsolute(Cycles timeAbs);
 
   private:
     Tick m_last_scheduled_wakeup;

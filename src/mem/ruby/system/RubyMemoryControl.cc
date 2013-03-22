@@ -384,7 +384,7 @@ RubyMemoryControl::enqueueToDirectory(MemoryNode req, Cycles latency)
             req.m_addr, req.m_is_mem_read ? 'R':'W', arrival_time);
 
     // schedule the wake up
-    m_consumer_ptr->scheduleEventAbsolute(ruby_arrival_time);
+    m_consumer_ptr->scheduleEventAbsolute(arrival_time);
 }
 
 // getBank returns an integer that is unique for each
