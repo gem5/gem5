@@ -212,7 +212,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
                     m5.checkpoint(joinpath(cptdir, "cpt.%d"))
                     num_checkpoints += 1
 
-    return exit_cause
+    return exit_event
 
 def benchCheckpoints(options, maxtick, cptdir):
     exit_event = m5.simulate(maxtick)
@@ -464,7 +464,7 @@ def run(options, root, testsys, cpu_class):
         # subsequent periods of <period>.  Checkpoint instructions
         # received from the benchmark running are ignored and skipped in
         # favor of command line checkpoint instructions.
-        exit_cause = scriptCheckpoints(options, maxtick, cptdir)
+        exit_event = scriptCheckpoints(options, maxtick, cptdir)
     else:
         if options.fast_forward:
             m5.stats.reset()
