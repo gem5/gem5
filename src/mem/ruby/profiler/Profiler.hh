@@ -104,18 +104,6 @@ class Profiler : public SimObject
     void profileConflictingRequests(const Address& addr);
 
     void
-    profileOutstandingRequest(int outstanding)
-    {
-        m_outstanding_requests.add(outstanding);
-    }
-
-    void
-    profileOutstandingPersistentRequest(int outstanding)
-    {
-        m_outstanding_persistent_requests.add(outstanding);
-    }
-
-    void
     profileAverageLatencyEstimate(int latency)
     {
         m_average_latency_estimate.add(latency);
@@ -213,11 +201,7 @@ class Profiler : public SimObject
     std::vector<Histogram> m_SWPrefetchLatencyHistograms;
     std::vector<Histogram> m_SWPrefetchMachLatencyHistograms;
 
-    Histogram m_outstanding_requests;
-    Histogram m_outstanding_persistent_requests;
-
     Histogram m_average_latency_estimate;
-
     m5::hash_set<Address> m_watch_address_set;
 
     //added by SS

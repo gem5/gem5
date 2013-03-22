@@ -467,15 +467,6 @@ Profiler::printStats(ostream& out, bool short_stats)
             out << endl;
         }
 
-        if (m_outstanding_requests.size() > 0) {
-            out << "outstanding_requests: ";
-            m_outstanding_requests.printPercent(out);
-            out << endl;
-            out << endl;
-        }
-    }
-
-    if (!short_stats) {
         printRequestProfile(out);
 
         out << "filter_action: " << m_filter_action_histogram << endl;
@@ -575,13 +566,6 @@ Profiler::clearStats()
     m_all_sharing_histogram.clear();
     m_cache_to_cache = 0;
     m_memory_to_cache = 0;
-
-    m_outstanding_requests.clear();
-    m_outstanding_persistent_requests.clear();
-
-    // Flush the prefetches through the system - used so that there
-    // are no outstanding requests after stats are cleared
-    //g_eventQueue_ptr->triggerAllEvents();
 
     // update the start time
     m_ruby_start = g_system_ptr->curCycle();

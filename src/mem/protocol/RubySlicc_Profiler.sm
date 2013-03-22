@@ -33,16 +33,11 @@
 void profile_miss(RubyRequest msg);
 
 // used by CMP protocols
-void profile_request(std::string L1CacheStateStr, std::string L2CacheStateStr,
-    std::string directoryStateStr, std::string requestTypeStr);
 void profileMessageReordering(bool wasReordered);
 void profileMessageReorderingByNetwork(int vnet, bool wasReordered);
 void profile_token_retry(Address addr, AccessType type, int count);
 void profile_persistent_prediction(Address addr, AccessType type);
 void profile_filter_action(int act);
-void profile_multicast_retry(Address addr, int count);
-void profile_outstanding_request(int outstanding);
-void profile_outstanding_persistent_request(int outstanding);
 // void profile_overlapping_persistent_request(int overlapping);
 void profile_average_latency_estimate(int latency);
 

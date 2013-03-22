@@ -42,8 +42,6 @@
 
 class Set;
 
-void profile_outstanding_persistent_request(int outstanding);
-void profile_outstanding_request(int outstanding);
 void profile_sharing(const Address& addr, AccessType type, NodeID requestor,
                      const Set& sharers, const Set& owner);
 void profile_miss(const RubyRequest& msg, NodeID id);
@@ -52,12 +50,9 @@ void profile_filter_action(int action);
 void profile_persistent_prediction(const Address& addr, AccessType type);
 void profile_average_latency_estimate(int latency);
 
-void profile_multicast_retry(const Address& addr, int count);
 void profileGetX(const Address& datablock, const Address& PC, const Set& owner,
                  const Set& sharers, NodeID requestor);
 void profileGetS(const Address& datablock, const Address& PC, const Set& owner,
                  const Set& sharers, NodeID requestor);
-
-void profileOverflow(const Address & addr, MachineID mach);
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__

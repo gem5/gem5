@@ -36,12 +36,6 @@
 using namespace std;
 
 void
-profile_outstanding_request(int outstanding)
-{
-    g_system_ptr->getProfiler()->profileOutstandingRequest(outstanding);
-}
-
-void
 profile_average_latency_estimate(int latency)
 {
     g_system_ptr->getProfiler()->profileAverageLatencyEstimate(latency);
