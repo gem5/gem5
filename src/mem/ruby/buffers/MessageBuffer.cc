@@ -150,15 +150,15 @@ random_time()
 }
 
 void
-MessageBuffer::enqueue(MsgPtr message, Cycles delay)
+MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 {
     m_msg_counter++;
     m_size++;
 
     // record current time incase we have a pop that also adjusts my size
-    if (m_time_last_time_enqueue < m_receiver->curCycle()) {
+    if (m_time_last_time_enqueue < m_sender->curCycle()) {
         m_msgs_this_cycle = 0;  // first msg this cycle
-        m_time_last_time_enqueue = m_receiver->curCycle();
+        m_time_last_time_enqueue = m_sender->curCycle();
     }
     m_msgs_this_cycle++;
 
@@ -168,24 +168,24 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delay)
 
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
-    assert(delay > 0);
-    Cycles delta = m_receiver->ticksToCycles(delay * m_sender->clockPeriod());
-
-    Cycles current_time(m_receiver->curCycle());
-    Cycles arrival_time(0);
+    assert(delta > 0);
+    Tick current_time = m_sender->clockEdge();
+    Tick arrival_time = 0;
 
     if (!RubySystem::getRandomization() || (m_randomization == false)) {
         // No randomization
-        arrival_time = current_time + delta;
+        arrival_time = current_time + delta * m_sender->clockPeriod();
     } else {
         // Randomization - ignore delta
         if (m_strict_fifo) {
             if (m_last_arrival_time < current_time) {
                 m_last_arrival_time = current_time;
             }
-            arrival_time = m_last_arrival_time + random_time();
+            arrival_time = m_last_arrival_time +
+                           random_time() * m_sender->clockPeriod();
         } else {
-            arrival_time = current_time + random_time();
+            arrival_time = current_time +
+                           random_time() * m_sender->clockPeriod();
         }
     }
 
@@ -195,10 +195,9 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delay)
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, m_name, current_time * m_receiver->clockPeriod(),
-                  delta * m_receiver->clockPeriod(),
-                  arrival_time * m_receiver->clockPeriod(),
-                  m_last_arrival_time * m_receiver->clockPeriod());
+                  *this, m_name, current_time,
+                  delta * m_sender->clockPeriod(),
+                  arrival_time, m_last_arrival_time);
         }
     }
 
@@ -211,28 +210,26 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delay)
     Message* msg_ptr = message.get();
     assert(msg_ptr != NULL);
 
-    assert(m_receiver->clockEdge() >= msg_ptr->getLastEnqueueTime() &&
+    assert(m_sender->clockEdge() >= msg_ptr->getLastEnqueueTime() &&
            "ensure we aren't dequeued early");
 
-    msg_ptr->setDelayedTicks(m_receiver->clockEdge() -
-                              msg_ptr->getLastEnqueueTime() +
-                              msg_ptr->getDelayedTicks());
-    msg_ptr->setLastEnqueueTime(arrival_time * m_receiver->clockPeriod());
+    msg_ptr->setDelayedTicks(m_sender->clockEdge() -
+                             msg_ptr->getLastEnqueueTime() +
+                             msg_ptr->getDelayedTicks());
+    msg_ptr->setLastEnqueueTime(arrival_time);
 
     // Insert the message into the priority heap
-    MessageBufferNode thisNode(arrival_time * m_receiver->clockPeriod(),
-                               m_msg_counter, message);
+    MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
     m_prio_heap.push_back(thisNode);
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
     DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
-            arrival_time * m_receiver->clockPeriod(), *(message.get()));
+            arrival_time, *(message.get()));
 
     // Schedule the wakeup
     if (m_consumer != NULL) {
-        m_consumer->scheduleEventAbsolute(
-                arrival_time * m_receiver->clockPeriod());
+        m_consumer->scheduleEventAbsolute(arrival_time);
         m_consumer->storeEventInfo(m_vnet_id);
     } else {
         panic("No consumer: %s name: %s\n", *this, m_name);
@@ -309,8 +306,7 @@ MessageBuffer::recycle()
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    node.m_time = (m_receiver->curCycle() + m_recycle_latency) *
-                    m_receiver->clockPeriod();
+    node.m_time = m_receiver->clockEdge(m_recycle_latency);
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());

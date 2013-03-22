@@ -210,7 +210,7 @@ class MessageBuffer
     bool m_ordering_set;
     bool m_randomization;
 
-    Cycles m_last_arrival_time;
+    Tick m_last_arrival_time;
 
     int m_input_link_id;
     int m_vnet_id;
