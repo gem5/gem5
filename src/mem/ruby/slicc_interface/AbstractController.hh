@@ -97,11 +97,24 @@ class AbstractController : public ClockedObject, public Consumer
     Histogram& getDelayVCHist(uint32_t index)
     { return m_delayVCHistogram[index]; }
 
+    MessageBuffer *getPeerQueue(uint32_t pid)
+    {
+        std::map<uint32_t, MessageBuffer *>::iterator it =
+                                        peerQueueMap.find(pid);
+        assert(it != peerQueueMap.end());
+        return (*it).second;
+    }
+
   protected:
     //! Profiles original cache requests including PUTs
     void profileRequest(const std::string &request);
     //! Profiles the delay associated with messages.
     void profileMsgDelay(uint32_t virtualNetwork, Cycles delay);
+
+    //! Function for connecting peer controllers
+    void connectWithPeer(AbstractController *);
+    virtual void getQueuesFromPeer(AbstractController *)
+    { fatal("getQueuesFromPeer() should be called only if implemented!"); }
 
   protected:
     int m_transitions_per_cycle;
@@ -119,6 +132,9 @@ class AbstractController : public ClockedObject, public Consumer
     int m_max_in_port_rank;
     int m_cur_in_port_rank;
     int m_number_of_TBEs;
+
+    //! Map from physical network number to the Message Buffer.
+    std::map<uint32_t, MessageBuffer*> peerQueueMap;
 
     //! Counter for the number of cycles when the transitions carried out
     //! were equal to the maximum allowed

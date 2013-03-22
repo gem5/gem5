@@ -79,3 +79,10 @@ AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
     m_delayHistogram.add(delay);
     m_delayVCHistogram[virtualNetwork].add(delay);
 }
+
+void
+AbstractController::connectWithPeer(AbstractController *c)
+{
+    getQueuesFromPeer(c);
+    c->getQueuesFromPeer(this);
+}

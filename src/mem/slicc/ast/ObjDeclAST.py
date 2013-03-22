@@ -41,7 +41,8 @@ class ObjDeclAST(DeclAST):
     def generate(self):
         machineComponentSym = False
 
-        if "network" in self and "virtual_network" not in self:
+        if "network" in self and not ("virtual_network" in self or
+                                      "physical_network" in self) :
             self.error("Network queues require a 'virtual_network' attribute")
 
         type = self.type_ast.type

@@ -239,9 +239,12 @@ class $py_ident(RubyController):
 ''')
 
         seen_types = set()
+        has_peer = False
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
                 code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
+            if "network" in var and "physical_network" in var:
+                has_peer = True
             seen_types.add(var.type.ident)
 
         # for adding information to the protocol debug trace
@@ -331,6 +334,8 @@ static int m_num_controllers;
             if proto:
                 code('$proto')
 
+        if has_peer:
+            code('void getQueuesFromPeer(AbstractController *);')
         if self.EntryType != None:
             code('''
 
@@ -388,6 +393,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
+        has_peer = False
 
         code('''
 /** \\file $c_ident.cc
@@ -515,7 +521,20 @@ m_dma_sequencer_ptr->setController(this);
 m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();
 m_${{var.c_ident}}_ptr->setReceiver(this);
 ''')
+            else:
+                if "network" in var and "physical_network" in var and \
+                   var["network"] == "To":
+                    has_peer = True
+                    code('''
+m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();
+peerQueueMap[${{var["physical_network"]}}] = m_${{var.c_ident}}_ptr;
+m_${{var.c_ident}}_ptr->setSender(this);
+''')
 
+        code('''
+if (p->peer != NULL)
+    connectWithPeer(p->peer);
+''')
         code.dedent()
         code('''
 }
@@ -549,10 +568,7 @@ $c_ident::init()
                         code('(*$vid) = ${{var["default"]}};')
                 else:
                     # Normal Object
-                    # added by SS
-                    if "factory" in var:
-                        code('$vid = ${{var["factory"]}};')
-                    elif var.ident.find("mandatoryQueue") < 0:
+                    if var.ident.find("mandatoryQueue") < 0:
                         th = var.get("template", "")
                         expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
                         args = ""
@@ -593,21 +609,22 @@ $c_ident::init()
                 # Network port object
                 network = var["network"]
                 ordered =  var["ordered"]
-                vnet = var["virtual_network"]
-                vnet_type = var["vnet_type"]
 
-                assert var.machine is not None
-                code('''
+                if "virtual_network" in var:
+                    vnet = var["virtual_network"]
+                    vnet_type = var["vnet_type"]
+
+                    assert var.machine is not None
+                    code('''
 $vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet, "$vnet_type");
+assert($vid != NULL);
 ''')
 
-                code('assert($vid != NULL);')
-
-                # Set the end
-                if network == "To":
-                    code('$vid->setSender(this);')
-                else:
-                    code('$vid->setReceiver(this);')
+                    # Set the end
+                    if network == "To":
+                        code('$vid->setSender(this);')
+                    else:
+                        code('$vid->setReceiver(this);')
 
                 # Set ordering
                 if "ordered" in var:
@@ -1006,6 +1023,26 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
     return num_functional_writes;
 }
 ''')
+
+        # Check if this controller has a peer, if yes then write the
+        # function for connecting to the peer.
+        if has_peer:
+            code('''
+
+void
+$c_ident::getQueuesFromPeer(AbstractController *peer)
+{
+''')
+            for var in self.objects:
+                if "network" in var and "physical_network" in var and \
+                   var["network"] == "From":
+                    code('''
+m_${{var.c_ident}}_ptr = peer->getPeerQueue(${{var["physical_network"]}});
+assert(m_${{var.c_ident}}_ptr != NULL);
+m_${{var.c_ident}}_ptr->setReceiver(this);
+
+''')
+            code('}')
 
         code.write(path, "%s.cc" % c_ident)
 
