@@ -68,6 +68,8 @@ class Sequencer : public RubyPort
 
     void printProgress(std::ostream& out) const;
 
+    void clearStats();
+
     void writeCallback(const Address& address, DataBlock& data);
 
     void writeCallback(const Address& address,
@@ -97,17 +99,12 @@ class Sequencer : public RubyPort
     RequestStatus makeRequest(PacketPtr pkt);
     bool empty() const;
     int outstandingCount() const { return m_outstanding_count; }
-    bool
-    isDeadlockEventScheduled() const
-    {
-        return deadlockCheckEvent.scheduled();
-    }
 
-    void
-    descheduleDeadlockEvent()
-    {
-        deschedule(deadlockCheckEvent);
-    }
+    bool isDeadlockEventScheduled() const
+    { return deadlockCheckEvent.scheduled(); }
+
+    void descheduleDeadlockEvent()
+    { deschedule(deadlockCheckEvent); }
 
     void print(std::ostream& out) const;
     void printStats(std::ostream& out) const;
@@ -119,6 +116,7 @@ class Sequencer : public RubyPort
     void invalidateSC(const Address& address);
 
     void recordRequestType(SequencerRequestType requestType);
+    Histogram& getOutstandReqHist() { return m_outstandReqHist; }
 
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
@@ -159,6 +157,9 @@ class Sequencer : public RubyPort
     uint32_t m_load_waiting_on_load_cycles;
 
     bool m_usingNetworkTester;
+
+    //! Histogram for number of outstanding requests per cycle.
+    Histogram m_outstandReqHist;
 
     class SequencerWakeupEvent : public Event
     {

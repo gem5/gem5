@@ -58,6 +58,7 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -171,7 +172,7 @@ Profiler::print(ostream& out) const
 }
 
 void
-Profiler::printRequestProfile(ostream &out)
+Profiler::printRequestProfile(ostream &out) const
 {
     out << "Request vs. RubySystem State Profile" << endl;
     out << "--------------------------------" << endl;
@@ -224,7 +225,7 @@ Profiler::printRequestProfile(ostream &out)
 }
 
 void
-Profiler::printDelayProfile(ostream &out)
+Profiler::printDelayProfile(ostream &out) const
 {
     out << "Message Delayed Cycles" << endl;
     out << "----------------------" << endl;
@@ -253,6 +254,28 @@ Profiler::printDelayProfile(ostream &out)
         out << "  virtual_network_" << i << "_delay_cycles: "
             << delayVCHistogram[i] << endl;
     }
+}
+
+void
+Profiler::printOutstandingReqProfile(ostream &out) const
+{
+    Histogram sequencerRequests;
+
+    for (uint32_t i = 0; i < MachineType_NUM; i++) {
+        for (map<uint32_t, AbstractController*>::iterator it =
+                  g_abs_controls[i].begin();
+             it != g_abs_controls[i].end(); ++it) {
+
+            AbstractController *ctr = (*it).second;
+            Sequencer *seq = ctr->getSequencer();
+            if (seq != NULL) {
+                sequencerRequests.add(seq->getOutstandReqHist());
+            }
+        }
+    }
+
+    out << "sequencer_requests_outstanding: "
+        << sequencerRequests << endl;
 }
 
 void
@@ -344,8 +367,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << "Busy Bank Count:" << m_busyBankCount << endl;
         out << endl;
 
-        out << "sequencer_requests_outstanding: "
-            << m_sequencer_requests << endl;
+        printOutstandingReqProfile(out);
         out << endl;
     }
 
@@ -548,7 +570,6 @@ Profiler::clearStats()
     }
     m_allSWPrefetchLatencyHistogram.clear(200);
 
-    m_sequencer_requests.clear();
     m_read_sharing_histogram.clear();
     m_write_sharing_histogram.clear();
     m_all_sharing_histogram.clear();

@@ -27,6 +27,7 @@
  */
 
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 
 AbstractController::AbstractController(const Params *p)
@@ -59,6 +60,11 @@ AbstractController::clearStats()
     m_delayVCHistogram.resize(size);
     for (uint32_t i = 0; i < size; i++) {
         m_delayVCHistogram[i].clear();
+    }
+
+    Sequencer *seq = getSequencer();
+    if (seq != NULL) {
+        seq->clearStats();
     }
 }
 

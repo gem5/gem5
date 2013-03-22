@@ -133,6 +133,11 @@ Sequencer::wakeup()
     }
 }
 
+void Sequencer::clearStats()
+{
+    m_outstandReqHist.clear();
+}
+
 void
 Sequencer::printStats(ostream & out) const
 {
@@ -268,7 +273,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         }
     }
 
-    g_system_ptr->getProfiler()->sequencerRequests(m_outstanding_count);
+    m_outstandReqHist.add(m_outstanding_count);
     assert(m_outstanding_count ==
         (m_writeRequestTable.size() + m_readRequestTable.size()));
 

@@ -144,8 +144,6 @@ class Profiler : public SimObject
     void swPrefetchLatency(Cycles t, RubyRequestType type,
                            const GenericMachineType respondingMach);
 
-    void sequencerRequests(int num) { m_sequencer_requests.add(num); }
-
     void print(std::ostream& out) const;
 
     void rubyWatch(int proc);
@@ -159,8 +157,9 @@ class Profiler : public SimObject
     bool getAllInstructions() { return m_all_instructions; }
 
   private:
-    void printRequestProfile(std::ostream &out);
-    void printDelayProfile(std::ostream &out);
+    void printRequestProfile(std::ostream &out) const;
+    void printDelayProfile(std::ostream &out) const;
+    void printOutstandingReqProfile(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -185,7 +184,6 @@ class Profiler : public SimObject
     Histogram m_filter_action_histogram;
     Histogram m_tbeProfile;
 
-    Histogram m_sequencer_requests;
     Histogram m_read_sharing_histogram;
     Histogram m_write_sharing_histogram;
     Histogram m_all_sharing_histogram;
