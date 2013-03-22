@@ -77,28 +77,28 @@ class MessageBuffer
     bool areNSlotsAvailable(int n);
     int getPriority() { return m_priority_rank; }
     void setPriority(int rank) { m_priority_rank = rank; }
-    void setConsumer(Consumer* consumer_ptr)
+    void setConsumer(Consumer* consumer)
     {
-        assert(m_consumer_ptr == NULL);
-        m_consumer_ptr = consumer_ptr;
+        assert(m_consumer == NULL);
+        m_consumer = consumer;
     }
 
     void setSender(ClockedObject* obj)
     {
-        assert(m_sender_ptr == NULL || m_sender_ptr == obj);
-        m_sender_ptr = obj;
+        assert(m_sender == NULL || m_sender == obj);
+        m_sender = obj;
     }
 
     void setReceiver(ClockedObject* obj)
     {
-        assert(m_receiver_ptr == NULL || m_receiver_ptr == obj);
-        m_receiver_ptr = obj;
+        assert(m_receiver == NULL || m_receiver == obj);
+        m_receiver = obj;
     }
 
     void setDescription(const std::string& name) { m_name = name; }
     std::string getDescription() { return m_name;}
 
-    Consumer* getConsumer() { return m_consumer_ptr; }
+    Consumer* getConsumer() { return m_consumer; }
 
     const Message* peekAtHeadOfQueue() const;
     const Message* peek() const { return peekAtHeadOfQueue(); }
@@ -174,11 +174,11 @@ class MessageBuffer
 
     // Data Members (m_ prefix)
     //! The two ends of the buffer.
-    ClockedObject* m_sender_ptr;
-    ClockedObject* m_receiver_ptr;
+    ClockedObject* m_sender;
+    ClockedObject* m_receiver;
 
     //! Consumer to signal a wakeup(), can be NULL
-    Consumer* m_consumer_ptr;
+    Consumer* m_consumer;
     std::vector<MessageBufferNode> m_prio_heap;
 
     // use a std::map for the stalled messages as this container is
