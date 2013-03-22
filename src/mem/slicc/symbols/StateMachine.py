@@ -482,19 +482,8 @@ $c_ident::$c_ident(const Params *p)
         # For the l1 cache controller, add the special atomic support which 
         # includes passing the sequencer a pointer to the controller.
         #
-        if self.ident == "L1Cache":
-            if not sequencers:
-                self.error("The L1Cache controller must include the sequencer " \
-                           "configuration parameter")
-
-            for seq in sequencers:
-                code('''
-m_${{seq}}_ptr->setController(this);
-    ''')
-
-        else:
-            for seq in sequencers:
-                code('''
+        for seq in sequencers:
+            code('''
 m_${{seq}}_ptr->setController(this);
     ''')
 
