@@ -590,6 +590,9 @@ $c_ident::init()
                         code('$vid->setReceiver(this);')
                     elif vtype.c_ident == "TimerTable":
                         code('$vid->setClockObj(this);')
+                    elif var.ident.find("optionalQueue") >= 0:
+                        code('$vid->setSender(this);')
+                        code('$vid->setReceiver(this);')
 
             else:
                 # Network port object
