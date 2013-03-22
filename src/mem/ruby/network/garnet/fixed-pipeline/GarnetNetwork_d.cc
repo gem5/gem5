@@ -59,9 +59,8 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     }
 
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i = 
-             m_topology_ptr->params()->routers.begin();
-         i != m_topology_ptr->params()->routers.end(); ++i) {
+    for (vector<BasicRouter*>::const_iterator i =  p->routers.begin();
+         i != p->routers.end(); ++i) {
         Router_d* router = safe_cast<Router_d*>(*i);
         m_router_ptr_vector.push_back(router);
     }
@@ -115,7 +114,6 @@ GarnetNetwork_d::init()
             router->printFaultVector(cout);
         }
     }
-
 }
 
 GarnetNetwork_d::~GarnetNetwork_d()

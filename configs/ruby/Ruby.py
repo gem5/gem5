@@ -149,18 +149,17 @@ def create_system(options, system, piobus = None, dma_ports = []):
     routers, int_links, ext_links = topology.makeTopology(options,
                                     IntLinkClass, ExtLinkClass, RouterClass)
 
-    net_topology.routers = routers
+    net_topology.num_routers = len(routers)
     net_topology.int_links = int_links
     net_topology.ext_links = ext_links
 
+    network = NetworkClass(ruby_system = ruby, topology = net_topology,
+                           routers = routers)
 
     if options.network_fault_model:
         assert(options.garnet_network == "fixed")
-        fault_model = FaultModel()
-        network = NetworkClass(ruby_system = ruby, topology = net_topology,\
-                               enable_fault_model=True, fault_model = fault_model)
-    else:
-        network = NetworkClass(ruby_system = ruby, topology = net_topology)
+        network.enable_fault_model = True
+        network.fault_model = FaultModel()
 
     #
     # Loop through the directory controlers.

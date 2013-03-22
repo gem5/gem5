@@ -80,9 +80,8 @@ SimpleNetwork::SimpleNetwork(const Params *p)
     }
 
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i =
-             m_topology_ptr->params()->routers.begin();
-         i != m_topology_ptr->params()->routers.end(); ++i) {
+    for (vector<BasicRouter*>::const_iterator i = p->routers.begin();
+         i != p->routers.end(); ++i) {
         Switch* s = safe_cast<Switch*>(*i);
         m_switch_ptr_vector.push_back(s);
         s->init_net_ptr(this);

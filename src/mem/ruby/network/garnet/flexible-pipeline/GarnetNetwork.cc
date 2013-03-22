@@ -53,9 +53,8 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     m_number_of_pipe_stages = p->number_of_pipe_stages;
 
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i = 
-             m_topology_ptr->params()->routers.begin();
-         i != m_topology_ptr->params()->routers.end(); ++i) {
+    for (vector<BasicRouter*>::const_iterator i = p->routers.begin();
+         i != p->routers.end(); ++i) {
         Router* router = safe_cast<Router*>(*i);
         m_router_ptr_vector.push_back(router);
     }

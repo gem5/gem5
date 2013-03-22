@@ -37,11 +37,9 @@ class Topology(SimObject):
     cxx_header = "mem/ruby/network/Topology.hh"
     description = Param.String("Not Specified",
                                "the name of the imported topology module")
+    num_routers = Param.UInt32("Number of routers in the network")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
-    routers = VectorParam.BasicRouter("Network routers")
-    print_config = Param.Bool(False,
-        "display topology config in the stats file")
 
 class RubyNetwork(ClockedObject):
     type = 'RubyNetwork'
@@ -52,3 +50,4 @@ class RubyNetwork(ClockedObject):
     topology = Param.Topology("");
     control_msg_size = Param.Int(8, "");
     ruby_system = Param.RubySystem("");
+    routers = VectorParam.BasicRouter("Network routers")
