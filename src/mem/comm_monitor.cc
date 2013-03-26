@@ -163,6 +163,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     bool isRead = pkt->isRead();
     bool isWrite = pkt->isWrite();
     int cmd = pkt->cmdToIndex();
+    Request::FlagsType req_flags = pkt->req->getFlags();
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
@@ -192,6 +193,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         Message::Packet pkt_msg;
         pkt_msg.set_tick(curTick());
         pkt_msg.set_cmd(cmd);
+        pkt_msg.set_flags(req_flags);
         pkt_msg.set_addr(addr);
         pkt_msg.set_size(size);
 
