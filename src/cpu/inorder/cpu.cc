@@ -84,7 +84,7 @@ using namespace ThePipeline;
 
 InOrderCPU::CachePort::CachePort(CacheUnit *_cacheUnit,
                                  const std::string& name) :
-    CpuPort(_cacheUnit->name() + name, _cacheUnit->cpu),
+    MasterPort(_cacheUnit->name() + name, _cacheUnit->cpu),
     cacheUnit(_cacheUnit)
 { }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -117,38 +117,6 @@ class BaseCPU : public MemObject
     /** Is the CPU switched out or active? */
     bool _switchedOut;
 
-    /**
-     * Define a base class for the CPU ports (instruction and data)
-     * that is refined in the subclasses. This class handles the
-     * common cases, i.e. the functional accesses and the status
-     * changes and address range queries. The default behaviour for
-     * both atomic and timing access is to panic and the corresponding
-     * subclasses have to override these methods.
-     */
-    class CpuPort : public MasterPort
-    {
-      public:
-
-        /**
-         * Create a CPU port with a name and a structural owner.
-         *
-         * @param _name port name including the owner
-         * @param _name structural owner of this port
-         */
-        CpuPort(const std::string& _name, MemObject* _owner) :
-            MasterPort(_name, _owner)
-        { }
-
-      protected:
-
-        virtual bool recvTimingResp(PacketPtr pkt);
-
-        virtual void recvRetry();
-
-        virtual void recvFunctionalSnoop(PacketPtr pkt);
-
-    };
-
   public:
 
     /**
@@ -157,7 +125,7 @@ class BaseCPU : public MemObject
      *
      * @return a reference to the data port
      */
-    virtual CpuPort &getDataPort() = 0;
+    virtual MasterPort &getDataPort() = 0;
 
     /**
      * Purely virtual method that returns a reference to the instruction
@@ -165,7 +133,7 @@ class BaseCPU : public MemObject
      *
      * @return a reference to the instruction port
      */
-    virtual CpuPort &getInstPort() = 0;
+    virtual MasterPort &getInstPort() = 0;
 
     /** Reads this CPU's ID. */
     int cpuId() { return _cpuId; }

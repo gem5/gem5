@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -152,12 +152,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * scheduling of handling of incoming packets in the following
      * cycle.
      */
-    class TimingCPUPort : public CpuPort
+    class TimingCPUPort : public MasterPort
     {
       public:
 
         TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
-            : CpuPort(_name, _cpu), cpu(_cpu), retryEvent(this)
+            : MasterPort(_name, _cpu), cpu(_cpu), retryEvent(this)
         { }
 
       protected:
@@ -248,10 +248,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
   protected:
 
      /** Return a reference to the data port. */
-    virtual CpuPort &getDataPort() { return dcachePort; }
+    virtual MasterPort &getDataPort() { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    virtual CpuPort &getInstPort() { return icachePort; }
+    virtual MasterPort &getInstPort() { return icachePort; }
 
   public:
 

@@ -117,13 +117,13 @@ CheckerCPU::setSystem(System *system)
 }
 
 void
-CheckerCPU::setIcachePort(CpuPort *icache_port)
+CheckerCPU::setIcachePort(MasterPort *icache_port)
 {
     icachePort = icache_port;
 }
 
 void
-CheckerCPU::setDcachePort(CpuPort *dcache_port)
+CheckerCPU::setDcachePort(MasterPort *dcache_port)
 {
     dcachePort = dcache_port;
 }

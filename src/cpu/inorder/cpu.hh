@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -112,10 +112,10 @@ class InOrderCPU : public BaseCPU
     void verifyMemoryMode() const;
 
     /** Return a reference to the data port. */
-    virtual CpuPort &getDataPort() { return dataPort; }
+    virtual MasterPort &getDataPort() { return dataPort; }
 
     /** Return a reference to the instruction port. */
-    virtual CpuPort &getInstPort() { return instPort; }
+    virtual MasterPort &getInstPort() { return instPort; }
 
     /** CPU ID */
     int cpu_id;
@@ -158,7 +158,7 @@ class InOrderCPU : public BaseCPU
      * CachePort class for the in-order CPU, interacting with a
      * specific CacheUnit in the pipeline.
      */
-    class CachePort : public CpuPort
+    class CachePort : public MasterPort
     {
 
       private:

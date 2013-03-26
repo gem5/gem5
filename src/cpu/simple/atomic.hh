@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -116,15 +116,17 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     /**
      * An AtomicCPUPort overrides the default behaviour of the
-     * recvAtomic and ignores the packet instead of panicking.
+     * recvAtomicSnoop and ignores the packet instead of panicking. It
+     * also provides an implementation for the purely virtual timing
+     * functions and panics on either of these.
      */
-    class AtomicCPUPort : public CpuPort
+    class AtomicCPUPort : public MasterPort
     {
 
       public:
 
         AtomicCPUPort(const std::string &_name, BaseCPU* _cpu)
-            : CpuPort(_name, _cpu)
+            : MasterPort(_name, _cpu)
         { }
 
       protected:
@@ -133,6 +135,17 @@ class AtomicSimpleCPU : public BaseSimpleCPU
         {
             // Snooping a coherence request, just return
             return 0;
+        }
+
+        bool recvTimingResp(PacketPtr pkt)
+        {
+            panic("Atomic CPU doesn't expect recvTimingResp!\n");
+            return true;
+        }
+
+        void recvRetry()
+        {
+            panic("Atomic CPU doesn't expect recvRetry!\n");
         }
 
     };
@@ -151,10 +164,10 @@ class AtomicSimpleCPU : public BaseSimpleCPU
   protected:
 
     /** Return a reference to the data port. */
-    virtual CpuPort &getDataPort() { return dcachePort; }
+    virtual MasterPort &getDataPort() { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    virtual CpuPort &getInstPort() { return icachePort; }
+    virtual MasterPort &getInstPort() { return icachePort; }
 
   public:
 

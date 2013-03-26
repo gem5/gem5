@@ -104,11 +104,11 @@ class CheckerCPU : public BaseCPU
 
     void setSystem(System *system);
 
-    void setIcachePort(CpuPort *icache_port);
+    void setIcachePort(MasterPort *icache_port);
 
-    void setDcachePort(CpuPort *dcache_port);
+    void setDcachePort(MasterPort *dcache_port);
 
-    CpuPort &getDataPort()
+    MasterPort &getDataPort()
     {
         // the checker does not have ports on its own so return the
         // data port of the actual CPU core
@@ -116,7 +116,7 @@ class CheckerCPU : public BaseCPU
         return *dcachePort;
     }
 
-    CpuPort &getInstPort()
+    MasterPort &getInstPort()
     {
         // the checker does not have ports on its own so return the
         // data port of the actual CPU core
@@ -130,8 +130,8 @@ class CheckerCPU : public BaseCPU
 
     System *systemPtr;
 
-    CpuPort *icachePort;
-    CpuPort *dcachePort;
+    MasterPort *icachePort;
+    MasterPort *dcachePort;
 
     ThreadContext *tc;
 

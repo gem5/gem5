@@ -312,7 +312,7 @@ BaseCPU::getMasterPort(const string &if_name, PortID idx)
     // Get the right port based on name. This applies to all the
     // subclasses of the base CPU and relies on their implementation
     // of getDataPort and getInstPort. In all cases there methods
-    // return a CpuPort pointer.
+    // return a MasterPort pointer.
     if (if_name == "dcache_port")
         return getDataPort();
     else if (if_name == "icache_port")
@@ -584,25 +584,4 @@ BaseCPU::traceFunctionsInternal(Addr pc)
                  curTick() - functionEntryTick, curTick(), sym_str);
         functionEntryTick = curTick();
     }
-}
-
-bool
-BaseCPU::CpuPort::recvTimingResp(PacketPtr pkt)
-{
-    panic("BaseCPU doesn't expect recvTiming!\n");
-    return true;
-}
-
-void
-BaseCPU::CpuPort::recvRetry()
-{
-    panic("BaseCPU doesn't expect recvRetry!\n");
-}
-
-void
-BaseCPU::CpuPort::recvFunctionalSnoop(PacketPtr pkt)
-{
-    // No internal storage to update (in the general case). A CPU with
-    // internal storage, e.g. an LSQ that should be part of the
-    // coherent memory has to check against stored data.
 }

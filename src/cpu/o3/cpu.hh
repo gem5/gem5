@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -129,7 +129,7 @@ class FullO3CPU : public BaseO3CPU
     /**
      * IcachePort class for instruction fetch.
      */
-    class IcachePort : public CpuPort
+    class IcachePort : public MasterPort
     {
       protected:
         /** Pointer to fetch. */
@@ -138,7 +138,7 @@ class FullO3CPU : public BaseO3CPU
       public:
         /** Default constructor. */
         IcachePort(DefaultFetch<Impl> *_fetch, FullO3CPU<Impl>* _cpu)
-            : CpuPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
+            : MasterPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
         { }
 
       protected:
@@ -155,7 +155,7 @@ class FullO3CPU : public BaseO3CPU
     /**
      * DcachePort class for the load/store queue.
      */
-    class DcachePort : public CpuPort
+    class DcachePort : public MasterPort
     {
       protected:
 
@@ -165,7 +165,7 @@ class FullO3CPU : public BaseO3CPU
       public:
         /** Default constructor. */
         DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : CpuPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq)
+            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq)
         { }
 
       protected:
@@ -175,6 +175,11 @@ class FullO3CPU : public BaseO3CPU
          * memory. */
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void recvTimingSnoopReq(PacketPtr pkt);
+
+        virtual void recvFunctionalSnoop(PacketPtr pkt)
+        {
+            // @todo: Is there a need for potential invalidation here?
+        }
 
         /** Handles doing a retry of the previous send. */
         virtual void recvRetry();
@@ -807,10 +812,10 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
-    virtual CpuPort &getInstPort() { return icachePort; }
+    virtual MasterPort &getInstPort() { return icachePort; }
 
     /** Get the dcache port (used to find block size for translations). */
-    virtual CpuPort &getDataPort() { return dcachePort; }
+    virtual MasterPort &getDataPort() { return dcachePort; }
 
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;
