@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            31243111314                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 230668                       # Number of bytes of host memory used
-host_seconds                                     3.20                       # Real time elapsed on the host
+host_tick_rate                            15527580566                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 226756                       # Number of bytes of host memory used
+host_seconds                                     6.44                       # Real time elapsed on the host
 system.physmem.bytes_read::cpu                     64                       # Number of bytes read from this memory
 system.physmem.bytes_read::total                   64                       # Number of bytes read from this memory
 system.physmem.bytes_written::cpu           213335552                       # Number of bytes written to this memory
@@ -151,9 +151,9 @@ system.monitor.readLatencyHist::36864-38911            0      0.00%    100.00% #
 system.monitor.readLatencyHist::38912-40959            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::total               1                       # Read request-response latency
 system.monitor.writeLatencyHist::samples      3333367                       # Write request-response latency
-system.monitor.writeLatencyHist::mean           30000                       # Write request-response latency
-system.monitor.writeLatencyHist::gmean   29999.999984                       # Write request-response latency
-system.monitor.writeLatencyHist::stdev              0                       # Write request-response latency
+system.monitor.writeLatencyHist::mean    30000.000098                       # Write request-response latency
+system.monitor.writeLatencyHist::gmean   30000.000081                       # Write request-response latency
+system.monitor.writeLatencyHist::stdev       0.179652                       # Write request-response latency
 system.monitor.writeLatencyHist::0-2047             0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::2048-4095            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::4096-6143            0      0.00%      0.00% # Write request-response latency
@@ -204,8 +204,8 @@ system.monitor.ittReadRead::min_value               0                       # Re
 system.monitor.ittReadRead::max_value               0                       # Read-to-read inter transaction time
 system.monitor.ittReadRead::total                   0                       # Read-to-read inter transaction time
 system.monitor.ittWriteWrite::samples         3333367                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::mean       29999.695203                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::stdev        539.134360                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::mean       29999.695301                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::stdev        539.310304                       # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::underflows            0      0.00%      0.00% # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::1-5000                0      0.00%      0.00% # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::5001-10000           99      0.00%      0.00% # Write-to-write inter transaction time
@@ -229,11 +229,11 @@ system.monitor.ittWriteWrite::90001-95000            0      0.00%    100.00% # W
 system.monitor.ittWriteWrite::95001-100000            0      0.00%    100.00% # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::overflows             1      0.00%    100.00% # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::min_value         10000                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::max_value        994000                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::max_value        994328                       # Write-to-write inter transaction time
 system.monitor.ittWriteWrite::total           3333367                       # Write-to-write inter transaction time
 system.monitor.ittReqReq::samples             3333368                       # Request-to-request inter transaction time
 system.monitor.ittReqReq::mean           29999.687703                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::stdev            539.308135                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::stdev            539.488612                       # Request-to-request inter transaction time
 system.monitor.ittReqReq::underflows                0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::1-5000                    1      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::5001-10000               99      0.00%      0.00% # Request-to-request inter transaction time
@@ -256,8 +256,8 @@ system.monitor.ittReqReq::85001-90000               0      0.00%    100.00% # Re
 system.monitor.ittReqReq::90001-95000               0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::95001-100000              0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::overflows                 1      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::min_value              5000                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::max_value            994000                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::min_value              4672                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::max_value            994328                       # Request-to-request inter transaction time
 system.monitor.ittReqReq::total               3333368                       # Request-to-request inter transaction time
 system.monitor.outstandingReadsHist::samples          100                       # Outstanding read transactions
 system.monitor.outstandingReadsHist::mean            0                       # Outstanding read transactions

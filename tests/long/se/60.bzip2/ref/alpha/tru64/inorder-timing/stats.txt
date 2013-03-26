@@ -4,11 +4,11 @@ sim_seconds                                  0.993559                       # Nu
 sim_ticks                                993559170500                       # Number of ticks simulated
 final_tick                               993559170500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 139940                       # Simulator instruction rate (inst/s)
-host_op_rate                                   139940                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               76403951                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 449176                       # Number of bytes of host memory used
-host_seconds                                 13004.03                       # Real time elapsed on the host
+host_inst_rate                                  90803                       # Simulator instruction rate (inst/s)
+host_op_rate                                    90803                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               49576515                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 449304                       # Number of bytes of host memory used
+host_seconds                                 20040.92                       # Real time elapsed on the host
 sim_insts                                  1819780127                       # Number of instructions simulated
 sim_ops                                    1819780127                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             54976                       # Number of bytes read from this memory
@@ -36,7 +36,7 @@ system.physmem.bw_total::cpu.data           126177745                       # To
 system.physmem.bw_total::total              191811167                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.readReqs                       1959688                       # Total number of read requests seen
 system.physmem.writeReqs                      1018058                       # Total number of write requests seen
-system.physmem.cpureqs                        2977859                       # Reqs generatd by CPU via cache - shady
+system.physmem.cpureqs                        2977748                       # Reqs generatd by CPU via cache - shady
 system.physmem.bytesRead                    125420032                       # Total number of bytes read from memory
 system.physmem.bytesWritten                  65155712                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd              125420032                       # bytesRead derated as per pkt->getSize()
@@ -76,7 +76,7 @@ system.physmem.perBankWrReqs::13                64147                       # Tr
 system.physmem.perBankWrReqs::14                63647                       # Track writes on a per bank basis
 system.physmem.perBankWrReqs::15                64278                       # Track writes on a per bank basis
 system.physmem.numRdRetry                           0                       # Number of times rd buffer was full causing retry
-system.physmem.numWrRetry                         113                       # Number of times wr buffer was full causing retry
+system.physmem.numWrRetry                           2                       # Number of times wr buffer was full causing retry
 system.physmem.totGap                    993559118500                       # Total gap between requests
 system.physmem.readPktSize::0                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::1                       0                       # Categorize read packet sizes
