@@ -4,11 +4,11 @@ sim_seconds                                  5.136865                       # Nu
 sim_ticks                                5136864508000                       # Number of ticks simulated
 final_tick                               5136864508000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 161248                       # Simulator instruction rate (inst/s)
-host_op_rate                                   318747                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2030694494                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 783308                       # Number of bytes of host memory used
-host_seconds                                  2529.61                       # Real time elapsed on the host
+host_inst_rate                                 157360                       # Simulator instruction rate (inst/s)
+host_op_rate                                   311060                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1981722494                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 783288                       # Number of bytes of host memory used
+host_seconds                                  2592.12                       # Real time elapsed on the host
 sim_insts                                   407895398                       # Number of instructions simulated
 sim_ops                                     806304609                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2499136                       # Number of bytes read from this memory
@@ -208,12 +208,12 @@ system.iocache.overall_misses::pc.south_bridge.ide        47629                 
 system.iocache.overall_misses::total            47629                       # number of overall misses
 system.iocache.ReadReq_miss_latency::pc.south_bridge.ide    144901871                       # number of ReadReq miss cycles
 system.iocache.ReadReq_miss_latency::total    144901871                       # number of ReadReq miss cycles
-system.iocache.WriteReq_miss_latency::pc.south_bridge.ide  10053195615                       # number of WriteReq miss cycles
-system.iocache.WriteReq_miss_latency::total  10053195615                       # number of WriteReq miss cycles
-system.iocache.demand_miss_latency::pc.south_bridge.ide  10198097486                       # number of demand (read+write) miss cycles
-system.iocache.demand_miss_latency::total  10198097486                       # number of demand (read+write) miss cycles
-system.iocache.overall_miss_latency::pc.south_bridge.ide  10198097486                       # number of overall miss cycles
-system.iocache.overall_miss_latency::total  10198097486                       # number of overall miss cycles
+system.iocache.WriteReq_miss_latency::pc.south_bridge.ide  10053199611                       # number of WriteReq miss cycles
+system.iocache.WriteReq_miss_latency::total  10053199611                       # number of WriteReq miss cycles
+system.iocache.demand_miss_latency::pc.south_bridge.ide  10198101482                       # number of demand (read+write) miss cycles
+system.iocache.demand_miss_latency::total  10198101482                       # number of demand (read+write) miss cycles
+system.iocache.overall_miss_latency::pc.south_bridge.ide  10198101482                       # number of overall miss cycles
+system.iocache.overall_miss_latency::total  10198101482                       # number of overall miss cycles
 system.iocache.ReadReq_accesses::pc.south_bridge.ide          909                       # number of ReadReq accesses(hits+misses)
 system.iocache.ReadReq_accesses::total            909                       # number of ReadReq accesses(hits+misses)
 system.iocache.WriteReq_accesses::pc.south_bridge.ide        46720                       # number of WriteReq accesses(hits+misses)
@@ -232,12 +232,12 @@ system.iocache.overall_miss_rate::pc.south_bridge.ide            1              
 system.iocache.overall_miss_rate::total             1                       # miss rate for overall accesses
 system.iocache.ReadReq_avg_miss_latency::pc.south_bridge.ide 159407.998900                       # average ReadReq miss latency
 system.iocache.ReadReq_avg_miss_latency::total 159407.998900                       # average ReadReq miss latency
-system.iocache.WriteReq_avg_miss_latency::pc.south_bridge.ide 215179.700664                       # average WriteReq miss latency
-system.iocache.WriteReq_avg_miss_latency::total 215179.700664                       # average WriteReq miss latency
-system.iocache.demand_avg_miss_latency::pc.south_bridge.ide 214115.297109                       # average overall miss latency
-system.iocache.demand_avg_miss_latency::total 214115.297109                       # average overall miss latency
-system.iocache.overall_avg_miss_latency::pc.south_bridge.ide 214115.297109                       # average overall miss latency
-system.iocache.overall_avg_miss_latency::total 214115.297109                       # average overall miss latency
+system.iocache.WriteReq_avg_miss_latency::pc.south_bridge.ide 215179.786194                       # average WriteReq miss latency
+system.iocache.WriteReq_avg_miss_latency::total 215179.786194                       # average WriteReq miss latency
+system.iocache.demand_avg_miss_latency::pc.south_bridge.ide 214115.381007                       # average overall miss latency
+system.iocache.demand_avg_miss_latency::total 214115.381007                       # average overall miss latency
+system.iocache.overall_avg_miss_latency::pc.south_bridge.ide 214115.381007                       # average overall miss latency
+system.iocache.overall_avg_miss_latency::total 214115.381007                       # average overall miss latency
 system.iocache.blocked_cycles::no_mshrs        138033                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                12531                       # number of cycles access was blocked
@@ -258,12 +258,12 @@ system.iocache.overall_mshr_misses::pc.south_bridge.ide        47629            
 system.iocache.overall_mshr_misses::total        47629                       # number of overall MSHR misses
 system.iocache.ReadReq_mshr_miss_latency::pc.south_bridge.ide     97611900                       # number of ReadReq MSHR miss cycles
 system.iocache.ReadReq_mshr_miss_latency::total     97611900                       # number of ReadReq MSHR miss cycles
-system.iocache.WriteReq_mshr_miss_latency::pc.south_bridge.ide   7622408830                       # number of WriteReq MSHR miss cycles
-system.iocache.WriteReq_mshr_miss_latency::total   7622408830                       # number of WriteReq MSHR miss cycles
-system.iocache.demand_mshr_miss_latency::pc.south_bridge.ide   7720020730                       # number of demand (read+write) MSHR miss cycles
-system.iocache.demand_mshr_miss_latency::total   7720020730                       # number of demand (read+write) MSHR miss cycles
-system.iocache.overall_mshr_miss_latency::pc.south_bridge.ide   7720020730                       # number of overall MSHR miss cycles
-system.iocache.overall_mshr_miss_latency::total   7720020730                       # number of overall MSHR miss cycles
+system.iocache.WriteReq_mshr_miss_latency::pc.south_bridge.ide   7622412826                       # number of WriteReq MSHR miss cycles
+system.iocache.WriteReq_mshr_miss_latency::total   7622412826                       # number of WriteReq MSHR miss cycles
+system.iocache.demand_mshr_miss_latency::pc.south_bridge.ide   7720024726                       # number of demand (read+write) MSHR miss cycles
+system.iocache.demand_mshr_miss_latency::total   7720024726                       # number of demand (read+write) MSHR miss cycles
+system.iocache.overall_mshr_miss_latency::pc.south_bridge.ide   7720024726                       # number of overall MSHR miss cycles
+system.iocache.overall_mshr_miss_latency::total   7720024726                       # number of overall MSHR miss cycles
 system.iocache.ReadReq_mshr_miss_rate::pc.south_bridge.ide            1                       # mshr miss rate for ReadReq accesses
 system.iocache.ReadReq_mshr_miss_rate::total            1                       # mshr miss rate for ReadReq accesses
 system.iocache.WriteReq_mshr_miss_rate::pc.south_bridge.ide            1                       # mshr miss rate for WriteReq accesses
@@ -274,12 +274,12 @@ system.iocache.overall_mshr_miss_rate::pc.south_bridge.ide            1         
 system.iocache.overall_mshr_miss_rate::total            1                       # mshr miss rate for overall accesses
 system.iocache.ReadReq_avg_mshr_miss_latency::pc.south_bridge.ide 107383.828383                       # average ReadReq mshr miss latency
 system.iocache.ReadReq_avg_mshr_miss_latency::total 107383.828383                       # average ReadReq mshr miss latency
-system.iocache.WriteReq_avg_mshr_miss_latency::pc.south_bridge.ide 163150.873930                       # average WriteReq mshr miss latency
-system.iocache.WriteReq_avg_mshr_miss_latency::total 163150.873930                       # average WriteReq mshr miss latency
-system.iocache.demand_avg_mshr_miss_latency::pc.south_bridge.ide 162086.559239                       # average overall mshr miss latency
-system.iocache.demand_avg_mshr_miss_latency::total 162086.559239                       # average overall mshr miss latency
-system.iocache.overall_avg_mshr_miss_latency::pc.south_bridge.ide 162086.559239                       # average overall mshr miss latency
-system.iocache.overall_avg_mshr_miss_latency::total 162086.559239                       # average overall mshr miss latency
+system.iocache.WriteReq_avg_mshr_miss_latency::pc.south_bridge.ide 163150.959461                       # average WriteReq mshr miss latency
+system.iocache.WriteReq_avg_mshr_miss_latency::total 163150.959461                       # average WriteReq mshr miss latency
+system.iocache.demand_avg_mshr_miss_latency::pc.south_bridge.ide 162086.643138                       # average overall mshr miss latency
+system.iocache.demand_avg_mshr_miss_latency::total 162086.643138                       # average overall mshr miss latency
+system.iocache.overall_avg_mshr_miss_latency::pc.south_bridge.ide 162086.643138                       # average overall mshr miss latency
+system.iocache.overall_avg_mshr_miss_latency::total 162086.643138                       # average overall mshr miss latency
 system.iocache.no_allocate_misses                   0                       # Number of misses that were no-allocate
 system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_bytes        34816                       # Number of bytes transfered via DMA reads (not PRD).

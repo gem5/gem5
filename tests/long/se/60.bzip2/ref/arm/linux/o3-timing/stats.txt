@@ -408,7 +408,7 @@ system.cpu.iew.lsq.thread0.squashedStores     46135476                       # N
 system.cpu.iew.lsq.thread0.invAddrSwpfs             0                       # Number of software prefetches ignored due to an invalid address
 system.cpu.iew.lsq.thread0.blockedLoads             0                       # Number of blocked loads due to partial load-store forwarding
 system.cpu.iew.lsq.thread0.rescheduledLoads            7                       # Number of loads that were rescheduled
-system.cpu.iew.lsq.thread0.cacheBlocked       4656763                       # Number of times an access to memory failed due to the cache being blocked
+system.cpu.iew.lsq.thread0.cacheBlocked       4656762                       # Number of times an access to memory failed due to the cache being blocked
 system.cpu.iew.iewIdleCycles                        0                       # Number of cycles IEW is idle
 system.cpu.iew.iewSquashCycles               69891405                       # Number of cycles IEW is squashing
 system.cpu.iew.iewBlockCycles                28868892                       # Number of cycles IEW is blocking
