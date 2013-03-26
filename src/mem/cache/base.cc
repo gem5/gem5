@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -88,6 +88,13 @@ BaseCache::CacheSlavePort::setBlocked()
     assert(!blocked);
     DPRINTF(CachePort, "Cache port %s blocking new requests\n", name());
     blocked = true;
+    // if we already scheduled a retry in this cycle, but it has not yet
+    // happened, cancel it
+    if (sendRetryEvent.scheduled()) {
+       owner.deschedule(sendRetryEvent);
+       DPRINTF(CachePort, "Cache port %s deschedule retry\n", name());
+       mustSendRetry = true;
+    }
 }
 
 void
