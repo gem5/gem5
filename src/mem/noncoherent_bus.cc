@@ -55,8 +55,10 @@
 #include "mem/noncoherent_bus.hh"
 
 NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p), reqLayer(*this, ".reqLayer"),
-      respLayer(*this, ".respLayer")
+    : BaseBus(p),
+      reqLayer(*this, ".reqLayer", p->port_master_connection_count +
+               p->port_default_connection_count),
+      respLayer(*this, ".respLayer", p->port_slave_connection_count)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -96,9 +98,12 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // we should never see express snoops on a non-coherent bus
     assert(!pkt->isExpressSnoop());
 
+    // determine the destination based on the address
+    PortID dest_port_id = findPort(pkt->getAddr());
+
     // test if the bus should be considered occupied for the current
     // port
-    if (!reqLayer.tryTiming(src_port)) {
+    if (!reqLayer.tryTiming(src_port, dest_port_id)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -113,9 +118,8 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
-    // since it is a normal request, determine the destination
-    // based on the address and attempt to send the packet
-    bool success = masterPorts[findPort(pkt->getAddr())]->sendTimingReq(pkt);
+    // since it is a normal request, attempt to send the packet
+    bool success = masterPorts[dest_port_id]->sendTimingReq(pkt);
 
     if (!success)  {
         // inhibited packets should never be forced to retry
@@ -128,7 +132,8 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         // occupy until the header is sent
-        reqLayer.failedTiming(src_port, clockEdge(Cycles(headerCycles)));
+        reqLayer.failedTiming(src_port, dest_port_id,
+                              clockEdge(Cycles(headerCycles)));
 
         return false;
     }
@@ -146,7 +151,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port)) {
+    if (!respLayer.tryTiming(src_port, pkt->getDest())) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -172,12 +177,12 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 }
 
 void
-NoncoherentBus::recvRetry()
+NoncoherentBus::recvRetry(PortID master_port_id)
 {
     // responses never block on forwarding them, so the retry will
     // always be coming from a port to which we tried to forward a
     // request
-    reqLayer.recvRetry();
+    reqLayer.recvRetry(master_port_id);
 }
 
 Tick

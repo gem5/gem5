@@ -173,7 +173,7 @@ class NoncoherentBus : public BaseBus
         /** When reciving a retry from the peer port (at id),
             pass it to the bus. */
         virtual void recvRetry()
-        { bus.recvRetry(); }
+        { bus.recvRetry(id); }
 
         /**
          * Get the maximum block size as seen by the bus.
@@ -193,7 +193,7 @@ class NoncoherentBus : public BaseBus
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry();
+    void recvRetry(PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/

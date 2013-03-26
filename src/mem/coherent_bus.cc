@@ -55,9 +55,13 @@
 #include "sim/system.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
-    : BaseBus(p), reqLayer(*this, ".reqLayer"),
-      respLayer(*this, ".respLayer"),
-      snoopRespLayer(*this, ".snoopRespLayer"),
+    : BaseBus(p),
+      reqLayer(*this, ".reqLayer", p->port_master_connection_count +
+               p->port_default_connection_count),
+      respLayer(*this, ".respLayer", p->port_slave_connection_count),
+      snoopRespLayer(*this, ".snoopRespLayer",
+                     p->port_master_connection_count +
+                     p->port_default_connection_count),
       system(p->system)
 {
     // create the ports based on the size of the master and slave
@@ -120,10 +124,13 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // remember if the packet is an express snoop
     bool is_express_snoop = pkt->isExpressSnoop();
 
+    // determine the destination based on the address
+    PortID dest_port_id = findPort(pkt->getAddr());
+
     // test if the bus should be considered occupied for the current
     // port, and exclude express snoops from the check
-    if (!is_express_snoop && !reqLayer.tryTiming(src_port)) {
-        DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
+    if (!is_express_snoop && !reqLayer.tryTiming(src_port, dest_port_id)) {
+        DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUS BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
@@ -161,9 +168,8 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         outstandingReq.insert(pkt->req);
     }
 
-    // since it is a normal request, determine the destination
-    // based on the address and attempt to send the packet
-    bool success = masterPorts[findPort(pkt->getAddr())]->sendTimingReq(pkt);
+    // since it is a normal request, attempt to send the packet
+    bool success = masterPorts[dest_port_id]->sendTimingReq(pkt);
 
     // if this is an express snoop, we are done at this point
     if (is_express_snoop) {
@@ -186,7 +192,8 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             // update the bus state and schedule an idle event
-            reqLayer.failedTiming(src_port, clockEdge(Cycles(headerCycles)));
+            reqLayer.failedTiming(src_port, dest_port_id,
+                                  clockEdge(Cycles(headerCycles)));
         } else {
             // update the bus state and schedule an idle event
             reqLayer.succeededTiming(packetFinishTime);
@@ -204,7 +211,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port)) {
+    if (!respLayer.tryTiming(src_port, pkt->getDest())) {
         DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -267,8 +274,10 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     SlavePort* src_port = slavePorts[slave_port_id];
 
     // test if the bus should be considered occupied for the current
-    // port
-    if (!snoopRespLayer.tryTiming(src_port)) {
+    // port, do not use the destination port in the check as we do not
+    // know yet if it is to be passed on as a snoop response or normal
+    // response and we never block on either
+    if (!snoopRespLayer.tryTiming(src_port, InvalidPortID)) {
         DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -346,12 +355,12 @@ CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
 }
 
 void
-CoherentBus::recvRetry()
+CoherentBus::recvRetry(PortID master_port_id)
 {
     // responses and snoop responses never block on forwarding them,
     // so the retry will always be coming from a port to which we
     // tried to forward a request
-    reqLayer.recvRetry();
+    reqLayer.recvRetry(master_port_id);
 }
 
 Tick

@@ -205,7 +205,7 @@ class CoherentBus : public BaseBus
         /** When reciving a retry from the peer port (at id),
             pass it to the bus. */
         virtual void recvRetry()
-        { bus.recvRetry(); }
+        { bus.recvRetry(id); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
@@ -248,7 +248,7 @@ class CoherentBus : public BaseBus
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry();
+    void recvRetry(PortID master_port_id);
 
     /**
      * Forward a timing packet to our snoopers, potentially excluding
