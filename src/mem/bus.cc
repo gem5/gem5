@@ -160,7 +160,7 @@ template <typename PortClass>
 BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name) :
     Drainable(),
     bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
-    releaseEvent(this)
+    retryingPort(NULL), releaseEvent(this)
 {
 }
 
@@ -192,11 +192,16 @@ BaseBus::Layer<PortClass>::tryTiming(PortClass* port)
 {
     // first we see if the bus is busy, next we check if we are in a
     // retry with a port other than the current one
-    if (state == BUSY || (state == RETRY && port != retryList.front())) {
+    if (state == BUSY || (state == RETRY && port != retryingPort)) {
         // put the port at the end of the retry list
         retryList.push_back(port);
         return false;
     }
+
+    // @todo: here we should no longer consider this port retrying
+    // once we can differentiate retries due to a busy bus and a
+    // failed forwarding, for now keep it so we can stick it back at
+    // the front of the retry list if needed
 
     // update the state which is shared for request, response and
     // snoop responses, if we were idle we are now busy, if we are in
@@ -211,12 +216,13 @@ template <typename PortClass>
 void
 BaseBus::Layer<PortClass>::succeededTiming(Tick busy_time)
 {
-    // if a retrying port succeeded, also take it off the retry list
+    // if a retrying port succeeded, update the state and reset the
+    // retrying port
     if (state == RETRY) {
-        DPRINTF(BaseBus, "Remove retry from list %s\n",
-                retryList.front()->name());
-        retryList.pop_front();
+        DPRINTF(BaseBus, "Succeeded retry from %s\n",
+                retryingPort->name());
         state = BUSY;
+        retryingPort = NULL;
     }
 
     // we should either have gone from idle to busy in the
@@ -231,10 +237,17 @@ template <typename PortClass>
 void
 BaseBus::Layer<PortClass>::failedTiming(PortClass* port, Tick busy_time)
 {
-    // if we are not in a retry, i.e. busy (but never idle), or we are
-    // in a retry but not for the current port, then add the port at
-    // the end of the retry list
-    if (state != RETRY || port != retryList.front()) {
+    // if the current failing port is the retrying one, then for now stick it
+    // back at the front of the retry list to not change any regressions
+    if (state == RETRY) {
+        // we should never see a retry from any port but the current
+        // retry port at this point
+        assert(port == retryingPort);
+        retryList.push_front(port);
+        retryingPort = NULL;
+    } else {
+        // if we are not in a retry, i.e. busy (but never idle), then
+        // add the port at the end of the retry list
         retryList.push_back(port);
     }
 
@@ -283,25 +296,28 @@ BaseBus::Layer<PortClass>::retryWaiting()
     // we always go to retrying from idle
     assert(state == IDLE);
 
-    // update the state which is shared for request, response and
-    // snoop responses
+    // update the state
     state = RETRY;
+
+    // set the retrying port to the front of the retry list and pop it
+    // off the list
+    assert(retryingPort == NULL);
+    retryingPort = retryList.front();
+    retryList.pop_front();
 
     // note that we might have blocked on the receiving port being
     // busy (rather than the bus itself) and now call retry before the
     // destination called retry on the bus
-    retryList.front()->sendRetry();
+    retryingPort->sendRetry();
 
     // If the bus is still in the retry state, sendTiming wasn't
     // called in zero time (e.g. the cache does this)
     if (state == RETRY) {
-        retryList.pop_front();
-
         //Burn a cycle for the missed grant.
 
-        // update the state which is shared for request, response and
-        // snoop responses
+        // update the state to busy and reset the retrying port
         state = BUSY;
+        retryingPort = NULL;
 
         // occupy the bus layer until the next cycle ends
         occupyLayer(bus.clockEdge(Cycles(1)));

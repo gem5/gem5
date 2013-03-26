@@ -212,6 +212,14 @@ class BaseBus : public MemObject
         std::deque<PortClass*> retryList;
 
         /**
+         * Port that we are currently in the process of telling to
+         * retry a previously failed attempt to perform a timing
+         * transaction. This is a valid port when in the retry state,
+         * and NULL when in busy or idle.
+         */
+        PortClass* retryingPort;
+
+        /**
          * Release the bus layer after being occupied and return to an
          * idle state where we proceed to send a retry to any
          * potential waiting port, or drain if asked to do so.
