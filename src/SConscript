@@ -892,7 +892,6 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     new_env.Append(**kwargs)
 
     swig_env = new_env.Clone()
-    swig_env.Append(CCFLAGS='-Werror')
 
     # Both gcc and clang have issues with unused labels and values in
     # the SWIG generated code
@@ -904,8 +903,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
     if env['GCC']:
         # Depending on the SWIG version, we also need to supress
-        # warnings about missing field initializers.
-        swig_env.Append(CCFLAGS='-Wno-missing-field-initializers')
+        # warnings about uninitialized variables and missing field
+        # initializers.
+        swig_env.Append(CCFLAGS=['-Wno-uninitialized',
+                                 '-Wno-missing-field-initializers'])
 
         if compareVersions(env['GCC_VERSION'], '4.6') >= 0:
             swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
