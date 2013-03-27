@@ -4,11 +4,11 @@ sim_seconds                                  0.000024                       # Nu
 sim_ticks                                    23775500                       # Number of ticks simulated
 final_tick                                   23775500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  69027                       # Simulator instruction rate (inst/s)
-host_op_rate                                    69023                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              113671122                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 232284                       # Number of bytes of host memory used
-host_seconds                                     0.21                       # Real time elapsed on the host
+host_inst_rate                                  12604                       # Simulator instruction rate (inst/s)
+host_op_rate                                    12604                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               20757401                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 277264                       # Number of bytes of host memory used
+host_seconds                                     1.15                       # Real time elapsed on the host
 sim_insts                                       14436                       # Number of instructions simulated
 sim_ops                                         14436                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             21504                       # Number of bytes read from this memory
@@ -183,17 +183,17 @@ system.cpu.workload.num_syscalls                   18                       # Nu
 system.cpu.numCycles                            47552                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.fetch.icacheStallCycles              12219                       # Number of cycles fetch is stalled on an Icache miss
+system.cpu.fetch.icacheStallCycles              12221                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.Insts                          31483                       # Number of instructions fetch has processed
 system.cpu.fetch.Branches                        6770                       # Number of branches that fetch encountered
 system.cpu.fetch.predictedBranches               2889                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.Cycles                          9186                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.SquashCycles                    3077                       # Number of cycles fetch has spent squashing
-system.cpu.fetch.BlockedCycles                   8389                       # Number of cycles fetch has spent blocked
+system.cpu.fetch.BlockedCycles                   8387                       # Number of cycles fetch has spent blocked
 system.cpu.fetch.MiscStallCycles                    4                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
 system.cpu.fetch.PendingTrapStallCycles          1048                       # Number of stall cycles due to pending traps
 system.cpu.fetch.CacheLines                      5341                       # Number of cache lines fetched
-system.cpu.fetch.IcacheSquashes                   446                       # Number of outstanding Icache misses that were squashed
+system.cpu.fetch.IcacheSquashes                   447                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.rateDist::samples              32753                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::mean              0.961225                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::stdev             2.154417                       # Number of instructions fetched each cycle (Total)
@@ -213,16 +213,16 @@ system.cpu.fetch.rateDist::max_value                8                       # Nu
 system.cpu.fetch.rateDist::total                32753                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.branchRate                  0.142370                       # Number of branch fetches per cycle
 system.cpu.fetch.rate                        0.662075                       # Number of inst fetches per cycle
-system.cpu.decode.IdleCycles                    12949                       # Number of cycles decode is idle
-system.cpu.decode.BlockedCycles                  9302                       # Number of cycles decode is blocked
+system.cpu.decode.IdleCycles                    12951                       # Number of cycles decode is idle
+system.cpu.decode.BlockedCycles                  9300                       # Number of cycles decode is blocked
 system.cpu.decode.RunCycles                      8402                       # Number of cycles decode is running
 system.cpu.decode.UnblockCycles                   193                       # Number of cycles decode is unblocking
 system.cpu.decode.SquashCycles                   1907                       # Number of cycles decode is squashing
 system.cpu.decode.DecodedInsts                  29379                       # Number of instructions handled by decode
 system.cpu.rename.SquashCycles                   1907                       # Number of cycles rename is squashing
-system.cpu.rename.IdleCycles                    13599                       # Number of cycles rename is idle
+system.cpu.rename.IdleCycles                    13601                       # Number of cycles rename is idle
 system.cpu.rename.BlockCycles                     381                       # Number of cycles rename is blocking
-system.cpu.rename.serializeStallCycles           8397                       # count of cycles rename stalled for serializing inst
+system.cpu.rename.serializeStallCycles           8395                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.RunCycles                      8002                       # Number of cycles rename is running
 system.cpu.rename.UnblockCycles                   467                       # Number of cycles rename is unblocking
 system.cpu.rename.RenamedInsts                  26943                       # Number of instructions processed by rename
