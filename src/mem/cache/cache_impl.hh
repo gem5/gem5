@@ -1242,7 +1242,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
     }
 
-    blk->whenReady = curTick() + pkt->busLastWordDelay;
+    blk->whenReady = curTick() + responseLatency * clockPeriod() +
+        pkt->busLastWordDelay;
 
     return blk;
 }
