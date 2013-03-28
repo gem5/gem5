@@ -411,10 +411,12 @@ X86ISA::I8042::write(PacketPtr pkt)
           case ReadOutputPort:
             panic("i8042 \"Read output port\" command not implemented.\n");
           case WriteOutputPort:
-            panic("i8042 \"Write output port\" command not implemented.\n");
+            warn("i8042 \"Write output port\" command not implemented.\n");
+            lastCommand = WriteOutputPort;
           case WriteKeyboardOutputBuff:
-            panic("i8042 \"Write keyboard output buffer\" "
+            warn("i8042 \"Write keyboard output buffer\" "
                     "command not implemented.\n");
+            lastCommand = WriteKeyboardOutputBuff;
           case WriteMouseOutputBuff:
             DPRINTF(I8042, "Got command to write to mouse output buffer.\n");
             lastCommand = WriteMouseOutputBuff;
@@ -432,7 +434,7 @@ X86ISA::I8042::write(PacketPtr pkt)
           case SystemReset:
             panic("i8042 \"System reset\" command not implemented.\n");
           default:
-            panic("Write to unknown i8042 "
+            warn("Write to unknown i8042 "
                     "(keyboard controller) command port.\n");
         }
     } else {

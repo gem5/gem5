@@ -597,9 +597,10 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                            curTick() + (newCount + 1) *
                            clockPeriod() - offset, true);
             } else {
-                reschedule(apicTimerEvent,
-                           curTick() + newCount *
-                           clockPeriod(), true);
+                if (newCount)
+                    reschedule(apicTimerEvent,
+                               curTick() + newCount *
+                               clockPeriod(), true);
             }
         }
         break;
