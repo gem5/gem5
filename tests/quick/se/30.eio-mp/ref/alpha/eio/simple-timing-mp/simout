@@ -1,12 +1,12 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp/simerr
+Redirecting stdout to build/ALPHA/tests/fast/quick/se/30.eio-mp/alpha/eio/simple-timing-mp/simout
+Redirecting stderr to build/ALPHA/tests/fast/quick/se/30.eio-mp/alpha/eio/simple-timing-mp/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 22 2012 20:21:46
-gem5 started Jul 23 2012 00:28:55
-gem5 executing on zizzer
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp -re tests/run.py build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp
+gem5 compiled Mar 28 2013 09:19:43
+gem5 started Mar 28 2013 09:22:33
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/quick/se/30.eio-mp/alpha/eio/simple-timing-mp -re tests/run.py build/ALPHA/tests/fast/quick/se/30.eio-mp/alpha/eio/simple-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 main dictionary has 1245 entries
@@ -17,4 +17,4 @@ main dictionary has 1245 entries
 49508 bytes wasted
 49508 bytes wasted
 49508 bytes wasted
->>>>Exiting @ tick 731328000 because a thread reached the max instruction count
+>>>>Exiting @ tick 729071000 because a thread reached the max instruction count
