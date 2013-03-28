@@ -536,7 +536,8 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     self.e820_table.entries = \
        [
         # Mark the first megabyte of memory as reserved
-        X86E820Entry(addr = 0, size = '1MB', range_type = 2),
+        X86E820Entry(addr = 0, size = '639kB', range_type = 1),
+        X86E820Entry(addr = 0x9fc00, size = '385kB', range_type = 2),
         # Mark the rest as available
         X86E820Entry(addr = 0x100000,
                 size = '%dB' % (phys_mem_size - 0x100000),
