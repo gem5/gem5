@@ -3,8 +3,8 @@ Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realvi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 26 2013 15:15:23
-gem5 started Mar 27 2013 01:26:55
+gem5 compiled Mar 28 2013 10:14:03
+gem5 started Mar 28 2013 10:14:28
 gem5 executing on ribera.cs.wisc.edu
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker -re tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker
 Global frequency set at 1000000000000 ticks per second
