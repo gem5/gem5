@@ -752,8 +752,10 @@ DefaultCommit<Impl>::handleInterrupt()
             cpu->checker->handlePendingInt();
         }
 
-        // CPU will handle interrupt.
-        cpu->processInterrupts(interrupt);
+        // CPU will handle interrupt. Note that we ignore the local copy of
+        // interrupt. This is because the local copy may no longer be the
+        // interrupt that the interrupt controller thinks is being handled.
+        cpu->processInterrupts(cpu->getInterrupts());
 
         thread[0]->noSquashFromTC = false;
 
