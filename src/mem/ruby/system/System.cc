@@ -331,7 +331,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
                             memory_trace_size);
         m_mem_vec_ptr->populatePages(uncompressed_trace);
 
-        delete uncompressed_trace;
+        delete [] uncompressed_trace;
         uncompressed_trace = NULL;
     }
 

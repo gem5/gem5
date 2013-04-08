@@ -61,7 +61,7 @@ CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
 CacheRecorder::~CacheRecorder()
 {
     if (m_uncompressed_trace != NULL) {
-        delete m_uncompressed_trace;
+        delete [] m_uncompressed_trace;
         m_uncompressed_trace = NULL;
     }
     m_seq_map.clear();
