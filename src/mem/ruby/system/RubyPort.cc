@@ -496,14 +496,19 @@ void
 RubyPort::ruby_eviction_callback(const Address& address)
 {
     DPRINTF(RubyPort, "Sending invalidations.\n");
-    // should this really be using funcMasterId?
-    Request req(address.getAddress(), 0, 0, Request::funcMasterId);
+    // This request is deleted in the stack-allocated packet destructor
+    // when this function exits
+    // TODO: should this really be using funcMasterId?
+    RequestPtr req =
+            new Request(address.getAddress(), 0, 0, Request::funcMasterId);
+    // Use a single packet to signal all snooping ports of the invalidation.
+    // This assumes that snooping ports do NOT modify the packet/request
+    Packet pkt(req, MemCmd::InvalidationReq);
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         // check if the connected master port is snooping
         if ((*p)->isSnooping()) {
-            Packet *pkt = new Packet(&req, MemCmd::InvalidationReq);
             // send as a snoop request
-            (*p)->sendTimingSnoopReq(pkt);
+            (*p)->sendTimingSnoopReq(&pkt);
         }
     }
 }
