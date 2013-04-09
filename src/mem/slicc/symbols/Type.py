@@ -540,9 +540,11 @@ ConvertMachToGenericMach(MachineType machType)
 {
 ''')
             for enum in self.enums.itervalues():
+                genericType = self.enums[enum.ident].get('genericType',
+                                                         enum.ident)
                 code('''
       if (machType == MachineType_${{enum.ident}})
-          return GenericMachineType_${{enum.ident}};
+          return GenericMachineType_${{genericType}};
 ''')
             code('''
       panic("cannot convert to a GenericMachineType");
