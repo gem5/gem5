@@ -560,6 +560,8 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     delete srequest;
 
     if (g_system_ptr->m_warmup_enabled) {
+        assert(pkt->req);
+        delete pkt->req;
         delete pkt;
         g_system_ptr->m_cache_recorder->enqueueNextFetchRequest();
     } else if (g_system_ptr->m_cooldown_enabled) {
