@@ -183,7 +183,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
         period = int(period)
         num_checkpoints = 0
 
-        exit_event = m5.simulate(when)
+        exit_event = m5.simulate(when - m5.curTick())
         exit_cause = exit_event.getCause()
         while exit_cause == "checkpoint":
             exit_event = m5.simulate(when - m5.curTick())
@@ -215,7 +215,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
     return exit_event
 
 def benchCheckpoints(options, maxtick, cptdir):
-    exit_event = m5.simulate(maxtick)
+    exit_event = m5.simulate(maxtick - m5.curTick())
     exit_cause = exit_event.getCause()
 
     num_checkpoints = 0
