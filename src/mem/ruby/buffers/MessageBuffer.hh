@@ -79,7 +79,11 @@ class MessageBuffer
     void setPriority(int rank) { m_priority_rank = rank; }
     void setConsumer(Consumer* consumer)
     {
-        assert(m_consumer == NULL);
+        if (m_consumer != NULL) {
+            fatal("Trying to connect %s to MessageBuffer %s. \
+                  \n%s already connected. Check the cntrl_id's.\n",
+                  *consumer, *this, *m_consumer);
+        }
         m_consumer = consumer;
     }
 
