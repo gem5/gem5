@@ -1,24 +1,24 @@
-Real time: Feb/02/2013 08:15:30
+Real time: Apr/09/2013 02:05:31
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 82
-Elapsed_time_in_minutes: 1.36667
-Elapsed_time_in_hours: 0.0227778
-Elapsed_time_in_days: 0.000949074
+Elapsed_time_in_seconds: 139
+Elapsed_time_in_minutes: 2.31667
+Elapsed_time_in_hours: 0.0386111
+Elapsed_time_in_days: 0.0016088
 
-Virtual_time_in_seconds: 80.54
-Virtual_time_in_minutes: 1.34233
-Virtual_time_in_hours:   0.0223722
-Virtual_time_in_days:    0.000932176
+Virtual_time_in_seconds: 139.38
+Virtual_time_in_minutes: 2.323
+Virtual_time_in_hours:   0.0387167
+Virtual_time_in_days:    0.00161319
 
 Ruby_current_time: 7257449
 Ruby_start_time: 0
 Ruby_cycles: 7257449
 
-mbytes_resident: 71.4336
-mbytes_total: 411.711
-resident_ratio: 0.173542
+mbytes_resident: 65.4102
+mbytes_total: 245.32
+resident_ratio: 0.266632
 
 ruby_cycles_executed: [ 7257450 7257450 7257450 7257450 7257450 7257450 7257450 7257450 ]
 
@@ -79,13 +79,13 @@ Total_delay_cycles: [binsize: 32 max: 952 count: 4856797 average: 43.4082 | stan
 Resource Usage
 --------------
 page_size: 4096
-user_time: 80
+user_time: 139
 system_time: 0
-page_reclaims: 10252
-page_faults: 0
+page_reclaims: 17300
+page_faults: 7
 swaps: 0
-block_inputs: 0
-block_outputs: 272
+block_inputs: 1648
+block_outputs: 296
 
 Network Stats
 -------------
@@ -315,40 +315,40 @@ Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
 
  --- L1Cache ---
  - Event Counts -
-Load [49747 49368 50044 49642 49778 49377 49516 49381 ] 396853
+Load [49778 49377 49516 49381 49747 49368 50044 49642 ] 396853
 Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [26897 26600 26631 26746 26786 26679 26651 26574 ] 213564
-Inv [73836 73403 73975 73550 73735 73350 73434 73266 ] 588549
-L1_Replacement [533499 530493 533236 532831 533617 530929 531837 527767 ] 4254209
-Fwd_GETX [215 204 212 216 198 220 198 200 ] 1663
-Fwd_GETS [149 129 133 142 159 151 153 155 ] 1171
+Store [26786 26679 26651 26574 26897 26600 26631 26746 ] 213564
+Inv [73735 73350 73434 73266 73836 73403 73975 73550 ] 588549
+L1_Replacement [533617 530929 531837 527767 533499 530493 533236 532831 ] 4254209
+Fwd_GETX [198 220 198 200 215 204 212 216 ] 1663
+Fwd_GETS [159 151 153 155 149 129 133 142 ] 1171
 Fwd_GET_INSTR [0 0 0 0 0 0 0 0 ] 0
-Data [3 2 1 1 1 2 1 0 ] 11
-Data_Exclusive [48923 48630 49230 48877 48989 48607 48775 48593 ] 390624
-DataS_fromL1 [133 124 182 136 147 148 149 152 ] 1171
-Data_all_Acks [27578 27207 27259 27370 27420 27295 27237 27204 ] 218570
-Ack [3 2 1 1 1 2 1 0 ] 11
-Ack_all [3 2 1 1 1 2 1 0 ] 11
-WB_Ack [40309 39563 40425 40081 40110 39623 40034 39662 ] 319807
+Data [1 2 1 0 3 2 1 1 ] 11
+Data_Exclusive [48989 48607 48775 48593 48923 48630 49230 48877 ] 390624
+DataS_fromL1 [147 148 149 152 133 124 182 136 ] 1171
+Data_all_Acks [27420 27295 27237 27204 27578 27207 27259 27370 ] 218570
+Ack [1 2 1 0 3 2 1 1 ] 11
+Ack_all [1 2 1 0 3 2 1 1 ] 11
+WB_Ack [40110 39623 40034 39662 40309 39563 40425 40081 ] 319807
 PF_Load [0 0 0 0 0 0 0 0 ] 0
 PF_Ifetch [0 0 0 0 0 0 0 0 ] 0
 PF_Store [0 0 0 0 0 0 0 0 ] 0
 
  - Transitions -
-NP  Load [49736 49359 50040 49632 49768 49368 49506 49370 ] 396779
+NP  Load [49768 49368 49506 49370 49736 49359 50040 49632 ] 396779
 NP  Ifetch [0 0 0 0 0 0 0 0 ] 0
-NP  Store [26890 26593 26629 26744 26783 26673 26639 26570 ] 213521
-NP  Inv [420 399 405 385 436 404 386 385 ] 3220
+NP  Store [26783 26673 26639 26570 26890 26593 26629 26744 ] 213521
+NP  Inv [436 404 386 385 420 399 405 385 ] 3220
 NP  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
 NP  PF_Load [0 0 0 0 0 0 0 0 ] 0
 NP  PF_Ifetch [0 0 0 0 0 0 0 0 ] 0
 NP  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
-I  Load [9 8 4 8 8 9 9 9 ] 64
+I  Load [8 9 9 9 9 8 4 8 ] 64
 I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [6 6 2 2 2 6 11 4 ] 39
+I  Store [2 6 11 4 6 6 2 2 ] 39
 I  Inv [0 0 0 0 0 0 0 0 ] 0
-I  L1_Replacement [35950 36049 35879 35962 36061 36066 35776 35948 ] 287691
+I  L1_Replacement [36061 36066 35776 35948 35950 36049 35879 35962 ] 287691
 I  PF_Load [0 0 0 0 0 0 0 0 ] 0
 I  PF_Ifetch [0 0 0 0 0 0 0 0 ] 0
 I  PF_Store [0 0 0 0 0 0 0 0 ] 0
@@ -356,29 +356,29 @@ I  PF_Store [0 0 0 0 0 0 0 0 ] 0
 S  Load [0 0 0 0 0 0 0 0 ] 0
 S  Ifetch [0 0 0 0 0 0 0 0 ] 0
 S  Store [0 0 0 0 0 0 0 0 ] 0
-S  Inv [526 446 511 500 475 488 482 528 ] 3956
-S  L1_Replacement [361 336 360 328 375 347 329 325 ] 2761
+S  Inv [475 488 482 528 526 446 511 500 ] 3956
+S  L1_Replacement [375 347 329 325 361 336 360 328 ] 2761
 S  PF_Load [0 0 0 0 0 0 0 0 ] 0
 S  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
-E  Load [1 0 0 2 2 0 0 0 ] 5
+E  Load [2 0 0 0 1 0 0 2 ] 5
 E  Ifetch [0 0 0 0 0 0 0 0 ] 0
 E  Store [0 0 0 0 0 0 0 0 ] 0
-E  Inv [22694 23009 22944 22917 22855 23068 22724 22855 ] 183066
-E  L1_Replacement [26159 25558 26202 25901 26080 25475 25987 25671 ] 207033
-E  Fwd_GETX [56 56 77 52 47 55 52 62 ] 457
-E  Fwd_GETS [14 7 7 7 7 9 12 5 ] 68
+E  Inv [22855 23068 22724 22855 22694 23009 22944 22917 ] 183066
+E  L1_Replacement [26080 25475 25987 25671 26159 25558 26202 25901 ] 207033
+E  Fwd_GETX [47 55 52 62 56 56 77 52 ] 457
+E  Fwd_GETS [7 9 12 5 14 7 7 7 ] 68
 E  Fwd_GET_INSTR [0 0 0 0 0 0 0 0 ] 0
 E  PF_Load [0 0 0 0 0 0 0 0 ] 0
 E  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
-M  Load [1 1 0 0 0 0 0 1 ] 3
+M  Load [0 0 0 1 1 1 0 0 ] 3
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
-M  Store [0 1 0 0 1 0 1 0 ] 3
-M  Inv [12663 12517 12326 12472 12660 12445 12509 12484 ] 100076
-M  L1_Replacement [14152 14005 14224 14181 14031 14149 14049 13992 ] 112783
-M  Fwd_GETX [26 36 27 32 34 25 30 32 ] 242
-M  Fwd_GETS [54 40 53 61 59 60 61 63 ] 451
+M  Store [1 0 1 0 0 1 0 0 ] 3
+M  Inv [12660 12445 12509 12484 12663 12517 12326 12472 ] 100076
+M  L1_Replacement [14031 14149 14049 13992 14152 14005 14224 14181 ] 112783
+M  Fwd_GETX [34 25 30 32 26 36 27 32 ] 242
+M  Fwd_GETS [59 60 61 63 54 40 53 61 ] 451
 M  Fwd_GET_INSTR [0 0 0 0 0 0 0 0 ] 0
 M  PF_Load [0 0 0 0 0 0 0 0 ] 0
 M  PF_Store [0 0 0 0 0 0 0 0 ] 0
@@ -386,11 +386,11 @@ M  PF_Store [0 0 0 0 0 0 0 0 ] 0
 IS  Load [0 0 0 0 0 0 0 0 ] 0
 IS  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IS  Store [0 0 0 0 0 0 0 0 ] 0
-IS  Inv [0 0 1 1 0 0 0 0 ] 2
-IS  L1_Replacement [297188 294582 298840 297864 297388 295578 296859 294148 ] 2372447
-IS  Data_Exclusive [48923 48630 49230 48877 48989 48607 48775 48593 ] 390624
-IS  DataS_fromL1 [133 124 182 136 147 148 149 152 ] 1171
-IS  Data_all_Acks [686 611 629 624 637 618 589 633 ] 5027
+IS  Inv [0 0 0 0 0 0 1 1 ] 2
+IS  L1_Replacement [297388 295578 296859 294148 297188 294582 298840 297864 ] 2372447
+IS  Data_Exclusive [48989 48607 48775 48593 48923 48630 49230 48877 ] 390624
+IS  DataS_fromL1 [147 148 149 152 133 124 182 136 ] 1171
+IS  Data_all_Acks [637 618 589 633 686 611 629 624 ] 5027
 IS  PF_Load [0 0 0 0 0 0 0 0 ] 0
 IS  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
@@ -398,9 +398,9 @@ IM  Load [0 0 0 0 0 0 0 0 ] 0
 IM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IM  Store [0 0 0 0 0 0 0 0 ] 0
 IM  Inv [0 0 0 0 0 0 0 0 ] 0
-IM  L1_Replacement [159689 159963 157731 158595 159682 159314 158837 157683 ] 1271494
-IM  Data [3 2 1 1 1 2 1 0 ] 11
-IM  Data_all_Acks [26892 26596 26629 26745 26783 26677 26648 26571 ] 213541
+IM  L1_Replacement [159682 159314 158837 157683 159689 159963 157731 158595 ] 1271494
+IM  Data [1 2 1 0 3 2 1 1 ] 11
+IM  Data_all_Acks [26783 26677 26648 26571 26892 26596 26629 26745 ] 213541
 IM  Ack [0 0 0 0 0 0 0 0 ] 0
 IM  PF_Load [0 0 0 0 0 0 0 0 ] 0
 IM  PF_Store [0 0 0 0 0 0 0 0 ] 0
@@ -410,8 +410,8 @@ SM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 SM  Store [0 0 0 0 0 0 0 0 ] 0
 SM  Inv [0 0 0 0 0 0 0 0 ] 0
 SM  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-SM  Ack [3 2 1 1 1 2 1 0 ] 11
-SM  Ack_all [3 2 1 1 1 2 1 0 ] 11
+SM  Ack [1 2 1 0 3 2 1 1 ] 11
+SM  Ack_all [1 2 1 0 3 2 1 1 ] 11
 SM  PF_Load [0 0 0 0 0 0 0 0 ] 0
 SM  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
@@ -422,28 +422,28 @@ IS_I  Inv [0 0 0 0 0 0 0 0 ] 0
 IS_I  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
 IS_I  Data_Exclusive [0 0 0 0 0 0 0 0 ] 0
 IS_I  DataS_fromL1 [0 0 0 0 0 0 0 0 ] 0
-IS_I  Data_all_Acks [0 0 1 1 0 0 0 0 ] 2
+IS_I  Data_all_Acks [0 0 0 0 0 0 1 1 ] 2
 IS_I  PF_Load [0 0 0 0 0 0 0 0 ] 0
 IS_I  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
 M_I  Load [0 0 0 0 0 0 0 0 ] 0
 M_I  Ifetch [0 0 0 0 0 0 0 0 ] 0
 M_I  Store [0 0 0 0 0 0 0 0 ] 0
-M_I  Inv [37511 37013 37760 37258 37277 36920 37310 36987 ] 298036
+M_I  Inv [37277 36920 37310 36987 37511 37013 37760 37258 ] 298036
 M_I  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-M_I  Fwd_GETX [133 112 108 132 117 140 116 106 ] 964
-M_I  Fwd_GETS [81 82 73 74 93 82 80 87 ] 652
+M_I  Fwd_GETX [117 140 116 106 133 112 108 132 ] 964
+M_I  Fwd_GETS [93 82 80 87 81 82 73 74 ] 652
 M_I  Fwd_GET_INSTR [0 0 0 0 0 0 0 0 ] 0
-M_I  WB_Ack [2584 2356 2484 2618 2624 2482 2530 2483 ] 20161
+M_I  WB_Ack [2624 2482 2530 2483 2584 2356 2484 2618 ] 20161
 M_I  PF_Load [0 0 0 0 0 0 0 0 ] 0
 M_I  PF_Store [0 0 0 0 0 0 0 0 ] 0
 
-SINK_WB_ACK  Load [0 0 0 0 0 0 1 1 ] 2
+SINK_WB_ACK  Load [0 0 1 1 0 0 0 0 ] 2
 SINK_WB_ACK  Ifetch [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  Store [1 0 0 0 0 0 0 0 ] 1
-SINK_WB_ACK  Inv [22 19 28 17 32 25 23 27 ] 193
+SINK_WB_ACK  Store [0 0 0 0 1 0 0 0 ] 1
+SINK_WB_ACK  Inv [32 25 23 27 22 19 28 17 ] 193
 SINK_WB_ACK  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  WB_Ack [37725 37207 37941 37463 37486 37141 37504 37179 ] 299646
+SINK_WB_ACK  WB_Ack [37486 37141 37504 37179 37725 37207 37941 37463 ] 299646
 SINK_WB_ACK  PF_Load [0 0 0 0 0 0 0 0 ] 0
 SINK_WB_ACK  PF_Store [0 0 0 0 0 0 0 0 ] 0
 

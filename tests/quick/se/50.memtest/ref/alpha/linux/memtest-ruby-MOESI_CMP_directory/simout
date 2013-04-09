@@ -3,10 +3,10 @@ Redirecting stderr to build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/50.memt
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov  9 2012 13:27:59
-gem5 started Nov 10 2012 16:11:47
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Apr  9 2013 02:05:20
+gem5 started Apr  9 2013 02:06:11
+gem5 executing on vein
 command line: build/ALPHA_MOESI_CMP_directory/gem5.opt -d build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 7473494 because maximum number of loads reached
+Exiting @ tick 7481441 because maximum number of loads reached

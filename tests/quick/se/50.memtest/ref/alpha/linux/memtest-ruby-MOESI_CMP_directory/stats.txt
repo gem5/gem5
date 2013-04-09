@@ -4,9 +4,9 @@ sim_seconds                                  0.007481                       # Nu
 sim_ticks                                     7481441                       # Number of ticks simulated
 final_tick                                    7481441                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  51711                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 421668                       # Number of bytes of host memory used
-host_seconds                                   144.68                       # Real time elapsed on the host
+host_tick_rate                                  33553                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 250412                       # Number of bytes of host memory used
+host_seconds                                   222.97                       # Real time elapsed on the host
 system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
 system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
 system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads

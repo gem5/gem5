@@ -1,10 +1,10 @@
-Warning: rounding error > tolerance
+warn: rounding error > tolerance
     0.072760 rounded to 0
-Warning: rounding error > tolerance
+warn: rounding error > tolerance
     0.072760 rounded to 0
-Warning: rounding error > tolerance
+warn: rounding error > tolerance
     0.072760 rounded to 0
-Warning: rounding error > tolerance
+warn: rounding error > tolerance
     0.072760 rounded to 0
 system.cpu3: completed 10000 read, 5373 write accesses @610961
 system.cpu5: completed 10000 read, 5365 write accesses @611018

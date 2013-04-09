@@ -1,24 +1,24 @@
-Real time: Feb/02/2013 08:07:46
+Real time: Apr/09/2013 01:55:51
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 77
-Elapsed_time_in_minutes: 1.28333
-Elapsed_time_in_hours: 0.0213889
-Elapsed_time_in_days: 0.000891204
+Elapsed_time_in_seconds: 52
+Elapsed_time_in_minutes: 0.866667
+Elapsed_time_in_hours: 0.0144444
+Elapsed_time_in_days: 0.000601852
 
-Virtual_time_in_seconds: 37.08
-Virtual_time_in_minutes: 0.618
-Virtual_time_in_hours:   0.0103
-Virtual_time_in_days:    0.000429167
+Virtual_time_in_seconds: 52.85
+Virtual_time_in_minutes: 0.880833
+Virtual_time_in_hours:   0.0146806
+Virtual_time_in_days:    0.00061169
 
 Ruby_current_time: 8664886
 Ruby_start_time: 0
 Ruby_cycles: 8664886
 
-mbytes_resident: 70.5195
-mbytes_total: 410.59
-resident_ratio: 0.17178
+mbytes_resident: 64.3945
+mbytes_total: 243.918
+resident_ratio: 0.264001
 
 ruby_cycles_executed: [ 8664887 8664887 8664887 8664887 8664887 8664887 8664887 8664887 ]
 
@@ -81,13 +81,13 @@ Total_delay_cycles: [binsize: 1 max: 22 count: 1237687 average: 0.00723931 | sta
 Resource Usage
 --------------
 page_size: 4096
-user_time: 36
+user_time: 52
 system_time: 0
-page_reclaims: 10596
+page_reclaims: 17037
 page_faults: 0
 swaps: 0
-block_inputs: 0
-block_outputs: 240
+block_inputs: 24
+block_outputs: 200
 
 Network Stats
 -------------
@@ -251,42 +251,42 @@ Cache Stats: system.ruby.l1_cntrl0.cacheMemory
 
  --- L1Cache ---
  - Event Counts -
-Load [50004 50305 50279 50578 50370 50258 50037 49672 ] 401503
+Load [50370 50258 50037 49672 50004 50305 50279 50578 ] 401503
 Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [27327 27084 27075 26703 27007 26935 26787 27153 ] 216071
-Data [77329 77385 77352 77277 77375 77192 76821 76821 ] 617552
-Fwd_GETX [995 1001 998 1019 1048 1042 1040 1065 ] 8208
+Store [27007 26935 26787 27153 27327 27084 27075 26703 ] 216071
+Data [77375 77192 76821 76821 77329 77385 77352 77277 ] 617552
+Fwd_GETX [1048 1042 1040 1065 995 1001 998 1019 ] 8208
 Inv [0 0 0 0 0 0 0 0 ] 0
-Replacement [77327 77385 77350 77277 77373 77189 76820 76821 ] 617542
-Writeback_Ack [76330 76378 76350 76253 76323 76144 75775 75751 ] 609304
-Writeback_Nack [327 344 310 313 342 322 324 341 ] 2623
+Replacement [77373 77189 76820 76821 77327 77385 77350 77277 ] 617542
+Writeback_Ack [76323 76144 75775 75751 76330 76378 76350 76253 ] 609304
+Writeback_Nack [342 322 324 341 327 344 310 313 ] 2623
 
  - Transitions -
-I  Load [50004 50305 50279 50578 50370 50258 50037 49672 ] 401503
+I  Load [50370 50258 50037 49672 50004 50305 50279 50578 ] 401503
 I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [27327 27084 27075 26703 27007 26935 26787 27153 ] 216071
+I  Store [27007 26935 26787 27153 27327 27084 27075 26703 ] 216071
 I  Inv [0 0 0 0 0 0 0 0 ] 0
-I  Replacement [668 657 688 706 706 720 716 724 ] 5585
+I  Replacement [706 720 716 724 668 657 688 706 ] 5585
 
-II  Writeback_Nack [327 344 310 313 342 322 324 341 ] 2623
+II  Writeback_Nack [342 322 324 341 327 344 310 313 ] 2623
 
 M  Load [0 0 0 0 0 0 0 0 ] 0
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
 M  Store [0 0 0 0 0 0 0 0 ] 0
-M  Fwd_GETX [668 657 688 706 706 720 716 724 ] 5585
+M  Fwd_GETX [706 720 716 724 668 657 688 706 ] 5585
 M  Inv [0 0 0 0 0 0 0 0 ] 0
-M  Replacement [76659 76728 76662 76571 76667 76469 76104 76097 ] 611957
+M  Replacement [76667 76469 76104 76097 76659 76728 76662 76571 ] 611957
 
-MI  Fwd_GETX [327 344 310 313 342 322 324 341 ] 2623
+MI  Fwd_GETX [342 322 324 341 327 344 310 313 ] 2623
 MI  Inv [0 0 0 0 0 0 0 0 ] 0
-MI  Writeback_Ack [76330 76378 76350 76253 76323 76144 75775 75751 ] 609304
+MI  Writeback_Ack [76323 76144 75775 75751 76330 76378 76350 76253 ] 609304
 MI  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
 
 MII  Fwd_GETX [0 0 0 0 0 0 0 0 ] 0
 
-IS  Data [50002 50301 50278 50576 50370 50258 50035 49669 ] 401489
+IS  Data [50370 50258 50035 49669 50002 50301 50278 50576 ] 401489
 
-IM  Data [27327 27084 27074 26701 27005 26934 26786 27152 ] 216063
+IM  Data [27005 26934 26786 27152 27327 27084 27074 26701 ] 216063
 
 Cache Stats: system.ruby.l1_cntrl1.cacheMemory
   system.ruby.l1_cntrl1.cacheMemory_total_misses: 77193

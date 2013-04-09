@@ -1,24 +1,24 @@
-Real time: Feb/02/2013 08:12:46
+Real time: Apr/09/2013 02:01:53
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 101
-Elapsed_time_in_minutes: 1.68333
-Elapsed_time_in_hours: 0.0280556
-Elapsed_time_in_days: 0.00116898
+Elapsed_time_in_seconds: 168
+Elapsed_time_in_minutes: 2.8
+Elapsed_time_in_hours: 0.0466667
+Elapsed_time_in_days: 0.00194444
 
-Virtual_time_in_seconds: 101.34
-Virtual_time_in_minutes: 1.689
-Virtual_time_in_hours:   0.02815
-Virtual_time_in_days:    0.00117292
+Virtual_time_in_seconds: 167.14
+Virtual_time_in_minutes: 2.78567
+Virtual_time_in_hours:   0.0464278
+Virtual_time_in_days:    0.00193449
 
 Ruby_current_time: 5795833
 Ruby_start_time: 0
 Ruby_cycles: 5795833
 
-mbytes_resident: 70.6875
-mbytes_total: 410.68
-resident_ratio: 0.172152
+mbytes_resident: 64.7773
+mbytes_total: 244.449
+resident_ratio: 0.264993
 
 ruby_cycles_executed: [ 5795834 5795834 5795834 5795834 5795834 5795834 5795834 5795834 ]
 
@@ -87,13 +87,13 @@ Total_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation
 Resource Usage
 --------------
 page_size: 4096
-user_time: 101
+user_time: 166
 system_time: 0
-page_reclaims: 10145
-page_faults: 0
+page_reclaims: 17148
+page_faults: 3
 swaps: 0
-block_inputs: 16
-block_outputs: 320
+block_inputs: 776
+block_outputs: 312
 
 Network Stats
 -------------
@@ -358,56 +358,56 @@ Cache Stats: system.ruby.l1_cntrl0.L2cacheMemory
 
  --- L1Cache ---
  - Event Counts -
-Load [50263 50069 50306 49970 50266 50315 50271 50212 ] 401672
+Load [50266 50315 50271 50212 50263 50069 50306 49970 ] 401672
 Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [27014 27080 27361 27054 26762 27215 27106 27272 ] 216864
-L2_Replacement [77135 76978 77528 76877 76877 77378 77204 77319 ] 617296
-L1_to_L2 [842565 841910 845488 839694 839684 843217 843158 840771 ] 6736487
-Trigger_L2_to_L1D [66 89 69 72 75 72 99 79 ] 621
+Store [26762 27215 27106 27272 27014 27080 27361 27054 ] 216864
+L2_Replacement [76877 77378 77204 77319 77135 76978 77528 76877 ] 617296
+L1_to_L2 [839684 843217 843158 840771 842565 841910 845488 839694 ] 6736487
+Trigger_L2_to_L1D [75 72 99 79 66 89 69 72 ] 621
 Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-Complete_L2_to_L1 [66 89 69 72 75 72 99 79 ] 621
-Other_GETX [189522 189457 189156 189455 189761 189309 189417 189262 ] 1515339
-Other_GETS [350354 350578 350311 350671 350360 350304 350380 350430 ] 2803388
-Merged_GETS [48 51 52 58 67 47 56 60 ] 439
+Complete_L2_to_L1 [75 72 99 79 66 89 69 72 ] 621
+Other_GETX [189761 189309 189417 189262 189522 189457 189156 189455 ] 1515339
+Other_GETS [350360 350304 350380 350430 350354 350578 350311 350671 ] 2803388
+Merged_GETS [67 47 56 60 48 51 52 58 ] 439
 Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 Invalidate [0 0 0 0 0 0 0 0 ] 0
-Ack [537124 535993 539952 535252 535380 538939 537669 538458 ] 4298767
-Shared_Ack [51 74 50 68 61 58 61 63 ] 486
-Data [2998 3000 2981 3082 2873 3045 2960 3027 ] 23966
-Shared_Data [1045 1094 1078 1123 1060 1048 1056 1053 ] 8557
-Exclusive_Data [73100 72896 73480 72683 72953 73296 73198 73248 ] 584854
-Writeback_Ack [72792 72564 73169 72340 72619 73022 72821 72965 ] 582292
+Ack [535380 538939 537669 538458 537124 535993 539952 535252 ] 4298767
+Shared_Ack [61 58 61 63 51 74 50 68 ] 486
+Data [2873 3045 2960 3027 2998 3000 2981 3082 ] 23966
+Shared_Data [1060 1048 1056 1053 1045 1094 1078 1123 ] 8557
+Exclusive_Data [72953 73296 73198 73248 73100 72896 73480 72683 ] 584854
+Writeback_Ack [72619 73022 72821 72965 72792 72564 73169 72340 ] 582292
 Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
-All_acks [1091 1156 1120 1180 1114 1096 1109 1107 ] 8973
-All_acks_no_sharers [76052 75834 76419 75708 75773 76294 76104 76221 ] 608405
+All_acks [1114 1096 1109 1107 1091 1156 1120 1180 ] 8973
+All_acks_no_sharers [75773 76294 76104 76221 76052 75834 76419 75708 ] 608405
 Flush_line [0 0 0 0 0 0 0 0 ] 0
 Block_Ack [0 0 0 0 0 0 0 0 ] 0
 
  - Transitions -
-I  Load [50191 49971 50219 49868 50174 50224 50155 50116 ] 400918
+I  Load [50174 50224 50155 50116 50191 49971 50219 49868 ] 400918
 I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [26955 27016 27320 27019 26713 27165 27060 27213 ] 216461
-I  L2_Replacement [1437 1441 1373 1479 1339 1403 1446 1410 ] 11328
-I  L1_to_L2 [292 256 261 290 263 295 253 281 ] 2191
-I  Trigger_L2_to_L1D [0 4 2 3 3 0 1 2 ] 15
+I  Store [26713 27165 27060 27213 26955 27016 27320 27019 ] 216461
+I  L2_Replacement [1339 1403 1446 1410 1437 1441 1373 1479 ] 11328
+I  L1_to_L2 [263 295 253 281 292 256 261 290 ] 2191
+I  Trigger_L2_to_L1D [3 0 1 2 0 4 2 3 ] 15
 I  Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-I  Other_GETX [188572 188504 188287 188527 188850 188385 188473 188307 ] 1507905
-I  Other_GETS [348712 348887 348575 348998 348728 348598 348711 348779 ] 2789988
+I  Other_GETX [188850 188385 188473 188307 188572 188504 188287 188527 ] 1507905
+I  Other_GETS [348728 348598 348711 348779 348712 348887 348575 348998 ] 2789988
 I  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 I  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 I  Invalidate [0 0 0 0 0 0 0 0 ] 0
 I  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-S  Load [0 0 1 1 1 1 2 0 ] 6
+S  Load [1 1 2 0 0 0 1 1 ] 6
 S  Ifetch [0 0 0 0 0 0 0 0 ] 0
 S  Store [0 0 0 0 0 0 0 0 ] 0
-S  L2_Replacement [2906 2973 2984 3058 2919 2953 2937 2944 ] 23674
-S  L1_to_L2 [2929 2993 3006 3086 2947 2984 2973 2971 ] 23889
-S  Trigger_L2_to_L1D [0 2 3 6 2 5 4 1 ] 23
+S  L2_Replacement [2919 2953 2937 2944 2906 2973 2984 3058 ] 23674
+S  L1_to_L2 [2947 2984 2973 2971 2929 2993 3006 3086 ] 23889
+S  Trigger_L2_to_L1D [2 5 4 1 0 2 3 6 ] 23
 S  Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-S  Other_GETX [32 28 25 31 29 31 38 33 ] 247
-S  Other_GETS [52 62 79 49 57 56 59 72 ] 486
+S  Other_GETX [29 31 38 33 32 28 25 31 ] 247
+S  Other_GETS [57 56 59 72 52 62 79 49 ] 486
 S  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 S  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 S  Invalidate [0 0 0 0 0 0 0 0 ] 0
@@ -415,106 +415,106 @@ S  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 O  Load [0 0 0 0 0 0 0 0 ] 0
 O  Ifetch [0 0 0 0 0 0 0 0 ] 0
-O  Store [0 0 0 0 1 0 0 0 ] 1
-O  L2_Replacement [972 1001 1015 980 1037 1033 990 999 ] 8027
-O  L1_to_L2 [190 218 217 198 204 188 202 199 ] 1616
-O  Trigger_L2_to_L1D [0 1 0 2 0 2 0 1 ] 6
+O  Store [1 0 0 0 0 0 0 0 ] 1
+O  L2_Replacement [1037 1033 990 999 972 1001 1015 980 ] 8027
+O  L1_to_L2 [204 188 202 199 190 218 217 198 ] 1616
+O  Trigger_L2_to_L1D [0 2 0 1 0 1 0 2 ] 6
 O  Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-O  Other_GETX [3 11 9 5 7 8 8 5 ] 56
-O  Other_GETS [13 9 9 13 9 14 12 12 ] 91
-O  Merged_GETS [3 1 1 1 4 3 2 6 ] 21
+O  Other_GETX [7 8 8 5 3 11 9 5 ] 56
+O  Other_GETS [9 14 12 12 13 9 9 13 ] 91
+O  Merged_GETS [4 3 2 6 3 1 1 1 ] 21
 O  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 O  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 O  Invalidate [0 0 0 0 0 0 0 0 ] 0
 O  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-M  Load [2 11 6 2 7 3 5 6 ] 42
+M  Load [7 3 5 6 2 11 6 2 ] 42
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
-M  Store [2 9 1 2 5 5 2 5 ] 31
-M  L2_Replacement [45746 45407 45688 45251 45647 45669 45641 45593 ] 364642
-M  L1_to_L2 [46980 46700 46933 46507 46941 46960 46927 46865 ] 374813
-M  Trigger_L2_to_L1D [41 55 37 40 49 40 60 51 ] 373
+M  Store [5 5 2 5 2 9 1 2 ] 31
+M  L2_Replacement [45647 45669 45641 45593 45746 45407 45688 45251 ] 364642
+M  L1_to_L2 [46941 46960 46927 46865 46980 46700 46933 46507 ] 374813
+M  Trigger_L2_to_L1D [49 40 60 51 41 55 37 40 ] 373
 M  Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-M  Other_GETX [520 540 502 539 529 518 538 533 ] 4219
-M  Other_GETS [931 962 974 928 983 999 944 950 ] 7671
-M  Merged_GETS [27 27 29 42 39 27 33 31 ] 255
+M  Other_GETX [529 518 538 533 520 540 502 539 ] 4219
+M  Other_GETS [983 999 944 950 931 962 974 928 ] 7671
+M  Merged_GETS [39 27 33 31 27 27 29 42 ] 255
 M  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 M  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 M  Invalidate [0 0 0 0 0 0 0 0 ] 0
 M  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-MM  Load [6 4 3 7 4 8 2 6 ] 40
+MM  Load [4 8 2 6 6 4 3 7 ] 40
 MM  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MM  Store [4 4 1 2 0 5 1 2 ] 19
-MM  L2_Replacement [26074 26156 26468 26109 25935 26320 26190 26373 ] 209625
-MM  L1_to_L2 [26817 26905 27186 26874 26603 27029 26955 27088 ] 215457
-MM  Trigger_L2_to_L1D [25 27 27 21 21 25 34 24 ] 204
+MM  Store [0 5 1 2 4 4 1 2 ] 19
+MM  L2_Replacement [25935 26320 26190 26373 26074 26156 26468 26109 ] 209625
+MM  L1_to_L2 [26603 27029 26955 27088 26817 26905 27186 26874 ] 215457
+MM  Trigger_L2_to_L1D [21 25 34 24 25 27 27 21 ] 204
 MM  Trigger_L2_to_L1I [0 0 0 0 0 0 0 0 ] 0
-MM  Other_GETX [334 308 279 308 296 298 301 320 ] 2444
-MM  Other_GETS [548 558 561 599 481 549 562 521 ] 4379
-MM  Merged_GETS [18 23 21 15 23 16 21 23 ] 160
+MM  Other_GETX [296 298 301 320 334 308 279 308 ] 2444
+MM  Other_GETS [481 549 562 521 548 558 561 599 ] 4379
+MM  Merged_GETS [23 16 21 23 18 23 21 15 ] 160
 MM  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MM  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MM  Invalidate [0 0 0 0 0 0 0 0 ] 0
 MM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-IR  Load [0 1 1 2 1 0 1 0 ] 6
+IR  Load [1 0 1 0 0 1 1 2 ] 6
 IR  Ifetch [0 0 0 0 0 0 0 0 ] 0
-IR  Store [0 3 1 1 2 0 0 2 ] 9
-IR  L1_to_L2 [0 11 0 2 0 0 0 0 ] 13
+IR  Store [2 0 0 2 0 3 1 1 ] 9
+IR  L1_to_L2 [0 0 0 0 0 11 0 2 ] 13
 IR  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-SR  Load [0 1 2 4 2 3 4 1 ] 17
+SR  Load [2 3 4 1 0 1 2 4 ] 17
 SR  Ifetch [0 0 0 0 0 0 0 0 ] 0
-SR  Store [0 1 1 2 0 2 0 0 ] 6
-SR  L1_to_L2 [0 0 0 13 0 3 0 0 ] 16
+SR  Store [0 2 0 0 0 1 1 2 ] 6
+SR  L1_to_L2 [0 3 0 0 0 0 0 13 ] 16
 SR  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-OR  Load [0 1 0 2 0 1 0 1 ] 5
+OR  Load [0 1 0 1 0 1 0 2 ] 5
 OR  Ifetch [0 0 0 0 0 0 0 0 ] 0
-OR  Store [0 0 0 0 0 1 0 0 ] 1
+OR  Store [0 1 0 0 0 0 0 0 ] 1
 OR  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
 OR  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-MR  Load [20 37 27 31 32 27 42 33 ] 249
+MR  Load [32 27 42 33 20 37 27 31 ] 249
 MR  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MR  Store [21 18 10 9 17 13 18 18 ] 124
-MR  L1_to_L2 [95 89 59 56 91 56 102 86 ] 634
+MR  Store [17 13 18 18 21 18 10 9 ] 124
+MR  L1_to_L2 [91 56 102 86 95 89 59 56 ] 634
 MR  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-MMR  Load [16 16 18 14 14 17 26 16 ] 137
+MMR  Load [14 17 26 16 16 16 18 14 ] 137
 MMR  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MMR  Store [9 11 9 7 7 8 8 8 ] 67
-MMR  L1_to_L2 [49 33 49 34 59 75 46 41 ] 386
+MMR  Store [7 8 8 8 9 11 9 7 ] 67
+MMR  L1_to_L2 [59 75 46 41 49 33 49 34 ] 386
 MMR  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 IM  Load [0 0 0 0 0 0 0 0 ] 0
 IM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IM  Store [0 0 0 0 0 0 0 0 ] 0
 IM  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-IM  L1_to_L2 [268056 268579 269306 265306 264282 266577 267890 269848 ] 2139844
-IM  Other_GETX [9 15 10 13 7 12 10 15 ] 91
-IM  Other_GETS [14 14 22 16 21 19 20 24 ] 150
+IM  L1_to_L2 [264282 266577 267890 269848 268056 268579 269306 265306 ] 2139844
+IM  Other_GETX [7 12 10 15 9 15 10 13 ] 91
+IM  Other_GETS [21 19 20 24 14 14 22 16 ] 150
 IM  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 IM  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 IM  Invalidate [0 0 0 0 0 0 0 0 ] 0
-IM  Ack [185299 185768 187652 185613 183448 186647 185973 187270 ] 1487670
-IM  Data [1105 1091 1048 1112 985 1103 1041 1101 ] 8586
-IM  Exclusive_Data [25848 25928 26272 25907 25729 26061 26018 26114 ] 207877
+IM  Ack [183448 186647 185973 187270 185299 185768 187652 185613 ] 1487670
+IM  Data [985 1103 1041 1101 1105 1091 1048 1112 ] 8586
+IM  Exclusive_Data [25729 26061 26018 26114 25848 25928 26272 25907 ] 207877
 IM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 SM  Load [0 0 0 0 0 0 0 0 ] 0
 SM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 SM  Store [0 0 0 0 0 0 0 0 ] 0
 SM  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-SM  L1_to_L2 [0 1 7 0 0 11 0 0 ] 19
+SM  L1_to_L2 [0 11 0 0 0 1 7 0 ] 19
 SM  Other_GETX [0 0 0 0 0 0 0 0 ] 0
 SM  Other_GETS [0 0 0 0 0 0 0 0 ] 0
 SM  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 SM  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 SM  Invalidate [0 0 0 0 0 0 0 0 ] 0
-SM  Ack [0 7 7 14 0 14 0 0 ] 42
-SM  Data [0 1 1 2 0 2 0 0 ] 6
+SM  Ack [0 14 0 0 0 7 7 14 ] 42
+SM  Data [0 2 0 0 0 1 1 2 ] 6
 SM  Exclusive_Data [0 0 0 0 0 0 0 0 ] 0
 SM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
@@ -529,92 +529,92 @@ OM  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 OM  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 OM  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 OM  Invalidate [0 0 0 0 0 0 0 0 ] 0
-OM  Ack [0 0 0 0 7 7 0 0 ] 14
+OM  Ack [7 7 0 0 0 0 0 0 ] 14
 OM  All_acks [0 0 0 0 0 0 0 0 ] 0
-OM  All_acks_no_sharers [0 0 0 0 1 1 0 0 ] 2
+OM  All_acks_no_sharers [1 1 0 0 0 0 0 0 ] 2
 OM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 ISM  Load [0 0 0 0 0 0 0 0 ] 0
 ISM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 ISM  Store [0 0 0 0 0 0 0 0 ] 0
 ISM  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-ISM  L1_to_L2 [1 0 14 1 2 0 0 0 ] 18
-ISM  Ack [100 106 115 87 104 73 108 117 ] 810
-ISM  All_acks_no_sharers [1105 1092 1049 1114 985 1105 1041 1101 ] 8592
+ISM  L1_to_L2 [2 0 0 0 1 0 14 1 ] 18
+ISM  Ack [104 73 108 117 100 106 115 87 ] 810
+ISM  All_acks_no_sharers [985 1105 1041 1101 1105 1092 1049 1114 ] 8592
 ISM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 M_W  Load [0 0 0 0 0 0 0 0 ] 0
 M_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
 M_W  Store [0 0 0 0 0 0 0 0 ] 0
 M_W  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-M_W  L1_to_L2 [478 492 525 425 539 550 404 533 ] 3946
-M_W  Ack [1665 1631 1583 1553 1618 1714 1578 1607 ] 12949
-M_W  All_acks_no_sharers [47252 46968 47208 46776 47224 47235 47179 47134 ] 376976
+M_W  L1_to_L2 [539 550 404 533 478 492 525 425 ] 3946
+M_W  Ack [1618 1714 1578 1607 1665 1631 1583 1553 ] 12949
+M_W  All_acks_no_sharers [47224 47235 47179 47134 47252 46968 47208 46776 ] 376976
 M_W  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MM_W  Load [0 0 0 0 0 0 0 0 ] 0
 MM_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
 MM_W  Store [0 0 0 0 0 0 0 0 ] 0
 MM_W  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-MM_W  L1_to_L2 [798 840 931 893 1079 875 817 808 ] 7041
-MM_W  Ack [2427 2427 2583 2531 2578 2557 2465 2275 ] 19843
-MM_W  All_acks_no_sharers [25848 25928 26272 25907 25729 26061 26018 26114 ] 207877
+MM_W  L1_to_L2 [1079 875 817 808 798 840 931 893 ] 7041
+MM_W  Ack [2578 2557 2465 2275 2427 2427 2583 2531 ] 19843
+MM_W  All_acks_no_sharers [25729 26061 26018 26114 25848 25928 26272 25907 ] 207877
 MM_W  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 IS  Load [0 0 0 0 0 0 0 0 ] 0
 IS  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IS  Store [0 0 0 0 0 0 0 0 ] 0
 IS  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-IS  L1_to_L2 [494908 493655 495921 494562 495283 496463 495139 490703 ] 3956634
-IS  Other_GETX [21 22 15 15 18 25 17 24 ] 157
-IS  Other_GETS [36 40 28 38 33 30 33 29 ] 267
+IS  L1_to_L2 [495283 496463 495139 490703 494908 493655 495921 494562 ] 3956634
+IS  Other_GETX [18 25 17 24 21 22 15 15 ] 157
+IS  Other_GETS [33 30 33 29 36 40 28 38 ] 267
 IS  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 IS  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 IS  Invalidate [0 0 0 0 0 0 0 0 ] 0
-IS  Ack [344619 343059 344891 342300 344673 344866 344538 344199 ] 2753145
-IS  Shared_Ack [48 68 45 64 57 54 57 59 ] 452
-IS  Data [1893 1908 1932 1968 1888 1940 1919 1926 ] 15374
-IS  Shared_Data [1045 1094 1078 1123 1060 1048 1056 1053 ] 8557
-IS  Exclusive_Data [47252 46968 47208 46776 47224 47235 47180 47134 ] 376977
+IS  Ack [344673 344866 344538 344199 344619 343059 344891 342300 ] 2753145
+IS  Shared_Ack [57 54 57 59 48 68 45 64 ] 452
+IS  Data [1888 1940 1919 1926 1893 1908 1932 1968 ] 15374
+IS  Shared_Data [1060 1048 1056 1053 1045 1094 1078 1123 ] 8557
+IS  Exclusive_Data [47224 47235 47180 47134 47252 46968 47208 46776 ] 376977
 IS  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 SS  Load [0 0 0 0 0 0 0 0 ] 0
 SS  Ifetch [0 0 0 0 0 0 0 0 ] 0
 SS  Store [0 0 0 0 0 0 0 0 ] 0
 SS  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-SS  L1_to_L2 [767 881 901 1161 1116 874 1194 1064 ] 7958
-SS  Ack [3014 2995 3121 3154 2952 3061 3007 2990 ] 24294
-SS  Shared_Ack [3 6 5 4 4 4 4 4 ] 34
-SS  All_acks [1091 1156 1120 1180 1114 1096 1109 1107 ] 8973
-SS  All_acks_no_sharers [1847 1846 1890 1911 1834 1892 1866 1872 ] 14958
+SS  L1_to_L2 [1116 874 1194 1064 767 881 901 1161 ] 7958
+SS  Ack [2952 3061 3007 2990 3014 2995 3121 3154 ] 24294
+SS  Shared_Ack [4 4 4 4 3 6 5 4 ] 34
+SS  All_acks [1114 1096 1109 1107 1091 1156 1120 1180 ] 8973
+SS  All_acks_no_sharers [1834 1892 1866 1872 1847 1846 1890 1911 ] 14958
 SS  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-OI  Load [0 0 0 0 0 1 2 0 ] 3
+OI  Load [0 1 2 0 0 0 0 0 ] 3
 OI  Ifetch [0 0 0 0 0 0 0 0 ] 0
 OI  Store [0 0 0 0 0 0 0 0 ] 0
 OI  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 OI  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
-OI  Other_GETX [0 0 0 0 0 0 2 0 ] 2
-OI  Other_GETS [0 0 0 1 1 0 0 1 ] 3
-OI  Merged_GETS [0 0 1 0 0 0 0 0 ] 1
+OI  Other_GETX [0 0 2 0 0 0 0 0 ] 2
+OI  Other_GETS [1 0 0 1 0 0 0 1 ] 3
+OI  Merged_GETS [0 0 0 0 0 0 1 0 ] 1
 OI  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 OI  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 OI  Invalidate [0 0 0 0 0 0 0 0 ] 0
-OI  Writeback_Ack [1020 1047 1077 1009 1085 1073 1027 1041 ] 8379
+OI  Writeback_Ack [1085 1073 1027 1041 1020 1047 1077 1009 ] 8379
 OI  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-MI  Load [12 8 7 12 10 11 14 12 ] 86
+MI  Load [10 11 14 12 12 8 7 12 ] 86
 MI  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MI  Store [9 7 8 7 7 4 4 12 ] 58
+MI  Store [7 4 4 12 9 7 8 7 ] 58
 MI  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 MI  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
-MI  Other_GETX [31 29 29 17 25 32 30 25 ] 218
-MI  Other_GETS [48 46 63 29 47 39 39 42 ] 353
-MI  Merged_GETS [0 0 0 0 1 1 0 0 ] 2
+MI  Other_GETX [25 32 30 25 31 29 29 17 ] 218
+MI  Other_GETS [47 39 39 42 48 46 63 29 ] 353
+MI  Merged_GETS [1 1 0 0 0 0 0 0 ] 2
 MI  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MI  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MI  Invalidate [0 0 0 0 0 0 0 0 ] 0
-MI  Writeback_Ack [71741 71488 72063 71314 71509 71917 71762 71899 ] 573693
+MI  Writeback_Ack [71509 71917 71762 71899 71741 71488 72063 71314 ] 573693
 MI  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 II  Load [0 0 0 0 0 0 0 0 ] 0
@@ -627,44 +627,44 @@ II  Other_GETS [0 0 0 0 0 0 0 0 ] 0
 II  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 II  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 II  Invalidate [0 0 0 0 0 0 0 0 ] 0
-II  Writeback_Ack [31 29 29 17 25 32 32 25 ] 220
+II  Writeback_Ack [25 32 32 25 31 29 29 17 ] 220
 II  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
 II  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
-IT  Load [0 0 0 2 0 0 1 0 ] 3
+IT  Load [0 0 1 0 0 0 0 2 ] 3
 IT  Ifetch [0 0 0 0 0 0 0 0 ] 0
-IT  Store [0 1 0 0 0 0 0 1 ] 2
+IT  Store [0 0 0 1 0 1 0 0 ] 2
 IT  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-IT  L1_to_L2 [0 11 9 3 0 0 0 1 ] 24
-IT  Complete_L2_to_L1 [0 4 2 3 3 0 1 2 ] 15
+IT  L1_to_L2 [0 0 0 1 0 11 9 3 ] 24
+IT  Complete_L2_to_L1 [3 0 1 2 0 4 2 3 ] 15
 
-ST  Load [0 1 0 3 0 1 0 0 ] 5
+ST  Load [0 1 0 0 0 1 0 3 ] 5
 ST  Ifetch [0 0 0 0 0 0 0 0 ] 0
-ST  Store [0 0 0 1 0 0 0 0 ] 1
+ST  Store [0 0 0 0 0 0 0 1 ] 1
 ST  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-ST  L1_to_L2 [0 0 5 25 10 21 7 9 ] 77
-ST  Complete_L2_to_L1 [0 2 3 6 2 5 4 1 ] 23
+ST  L1_to_L2 [10 21 7 9 0 0 5 25 ] 77
+ST  Complete_L2_to_L1 [2 5 4 1 0 2 3 6 ] 23
 
-OT  Load [0 0 0 2 0 0 0 0 ] 2
+OT  Load [0 0 0 0 0 0 0 2 ] 2
 OT  Ifetch [0 0 0 0 0 0 0 0 ] 0
 OT  Store [0 0 0 0 0 0 0 0 ] 0
 OT  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-OT  L1_to_L2 [0 0 0 0 0 0 0 6 ] 6
-OT  Complete_L2_to_L1 [0 1 0 2 0 2 0 1 ] 6
+OT  L1_to_L2 [0 0 0 6 0 0 0 0 ] 6
+OT  Complete_L2_to_L1 [0 2 0 1 0 1 0 2 ] 6
 
-MT  Load [10 14 13 15 13 7 10 13 ] 95
+MT  Load [13 7 10 13 10 14 13 15 ] 95
 MT  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MT  Store [9 7 5 2 6 9 9 9 ] 56
+MT  Store [6 9 9 9 9 7 5 2 ] 56
 MT  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-MT  L1_to_L2 [115 155 80 166 179 117 164 171 ] 1147
-MT  Complete_L2_to_L1 [41 55 37 40 49 40 60 51 ] 373
+MT  L1_to_L2 [179 117 164 171 115 155 80 166 ] 1147
+MT  Complete_L2_to_L1 [49 40 60 51 41 55 37 40 ] 373
 
-MMT  Load [6 4 9 5 8 11 7 8 ] 58
+MMT  Load [8 11 7 8 6 4 9 5 ] 58
 MMT  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MMT  Store [5 3 5 2 4 3 4 2 ] 28
+MMT  Store [4 3 4 2 5 3 5 2 ] 28
 MMT  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
-MMT  L1_to_L2 [90 91 78 92 86 139 85 97 ] 758
-MMT  Complete_L2_to_L1 [25 27 27 21 21 25 34 24 ] 204
+MMT  L1_to_L2 [86 139 85 97 90 91 78 92 ] 758
+MMT  Complete_L2_to_L1 [21 25 34 24 25 27 27 21 ] 204
 
 MI_F  Load [0 0 0 0 0 0 0 0 ] 0
 MI_F  Ifetch [0 0 0 0 0 0 0 0 ] 0

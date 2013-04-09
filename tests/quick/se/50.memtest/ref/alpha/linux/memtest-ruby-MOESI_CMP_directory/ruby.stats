@@ -1,24 +1,24 @@
-Real time: Feb/02/2013 08:19:23
+Real time: Apr/09/2013 02:09:54
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 144
-Elapsed_time_in_minutes: 2.4
-Elapsed_time_in_hours: 0.04
-Elapsed_time_in_days: 0.00166667
+Elapsed_time_in_seconds: 223
+Elapsed_time_in_minutes: 3.71667
+Elapsed_time_in_hours: 0.0619444
+Elapsed_time_in_days: 0.00258102
 
-Virtual_time_in_seconds: 135.17
-Virtual_time_in_minutes: 2.25283
-Virtual_time_in_hours:   0.0375472
-Virtual_time_in_days:    0.00156447
+Virtual_time_in_seconds: 221.76
+Virtual_time_in_minutes: 3.696
+Virtual_time_in_hours:   0.0616
+Virtual_time_in_days:    0.00256667
 
 Ruby_current_time: 7481441
 Ruby_start_time: 0
 Ruby_cycles: 7481441
 
-mbytes_resident: 71.4609
-mbytes_total: 411.781
-resident_ratio: 0.173579
+mbytes_resident: 65.2656
+mbytes_total: 244.539
+resident_ratio: 0.266892
 
 ruby_cycles_executed: [ 7481442 7481442 7481442 7481442 7481442 7481442 7481442 7481442 ]
 
@@ -79,13 +79,13 @@ Total_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation
 Resource Usage
 --------------
 page_size: 4096
-user_time: 135
+user_time: 221
 system_time: 0
-page_reclaims: 10357
-page_faults: 0
+page_reclaims: 17271
+page_faults: 2
 swaps: 0
-block_inputs: 0
-block_outputs: 296
+block_inputs: 240
+block_outputs: 304
 
 Network Stats
 -------------
@@ -391,93 +391,93 @@ Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
 
  --- L1Cache ---
  - Event Counts -
-Load [50375 50577 50611 50361 50249 50370 49923 50235 ] 402701
+Load [50249 50370 49923 50235 50375 50577 50611 50361 ] 402701
 Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [27079 26983 27113 27205 27052 27339 27175 27153 ] 217099
-L1_Replacement [9608029 9605100 9598595 9603783 9611009 9602265 9618315 9608777 ] 76855873
-Own_GETX [0 0 0 0 0 0 0 1 ] 1
-Fwd_GETX [393 374 406 457 395 352 364 433 ] 3174
-Fwd_GETS [692 715 690 649 764 770 739 739 ] 5758
+Store [27052 27339 27175 27153 27079 26983 27113 27205 ] 217099
+L1_Replacement [9611009 9602265 9618315 9608777 9608029 9605100 9598595 9603783 ] 76855873
+Own_GETX [0 0 0 1 0 0 0 0 ] 1
+Fwd_GETX [395 352 364 433 393 374 406 457 ] 3174
+Fwd_GETS [764 770 739 739 692 715 690 649 ] 5758
 Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
-Inv [2 1 3 1 6 3 0 3 ] 19
-Ack [372 350 417 380 376 376 382 351 ] 3004
-Data [738 721 703 719 720 712 716 661 ] 5690
-Exclusive_Data [76686 76787 76960 76807 76548 76964 76362 76663 ] 613777
-Writeback_Ack [639 632 619 639 637 632 612 579 ] 4989
-Writeback_Ack_Data [76717 76818 76980 76828 76553 76972 76401 76678 ] 613947
-Writeback_Nack [37 44 37 38 52 53 49 52 ] 362
-All_acks [27069 26960 27107 27196 27041 27326 27165 27136 ] 217000
-Use_Timeout [76686 76787 76959 76807 76548 76964 76362 76664 ] 613777
+Inv [6 3 0 3 2 1 3 1 ] 19
+Ack [376 376 382 351 372 350 417 380 ] 3004
+Data [720 712 716 661 738 721 703 719 ] 5690
+Exclusive_Data [76548 76964 76362 76663 76686 76787 76960 76807 ] 613777
+Writeback_Ack [637 632 612 579 639 632 619 639 ] 4989
+Writeback_Ack_Data [76553 76972 76401 76678 76717 76818 76980 76828 ] 613947
+Writeback_Nack [52 53 49 52 37 44 37 38 ] 362
+All_acks [27041 27326 27165 27136 27069 26960 27107 27196 ] 217000
+Use_Timeout [76548 76964 76362 76664 76686 76787 76959 76807 ] 613777
 
  - Transitions -
-I  Load [50358 50550 50559 50332 50230 50351 49916 50192 ] 402488
+I  Load [50230 50351 49916 50192 50358 50550 50559 50332 ] 402488
 I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [27070 26961 27107 27196 27042 27328 27166 27136 ] 217006
-I  L1_Replacement [67 57 62 56 70 67 65 64 ] 508
+I  Store [27042 27328 27166 27136 27070 26961 27107 27196 ] 217006
+I  L1_Replacement [70 67 65 64 67 57 62 56 ] 508
 I  Inv [0 0 0 0 0 0 0 0 ] 0
 
-S  Load [0 0 0 0 0 0 0 1 ] 1
+S  Load [0 0 0 1 0 0 0 0 ] 1
 S  Ifetch [0 0 0 0 0 0 0 0 ] 0
 S  Store [0 0 0 0 0 0 0 0 ] 0
-S  L1_Replacement [736 720 701 719 719 712 716 660 ] 5683
+S  L1_Replacement [719 712 716 660 736 720 701 719 ] 5683
 S  Fwd_GETS [0 0 0 0 0 0 0 0 ] 0
 S  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
-S  Inv [2 1 2 0 1 0 0 1 ] 7
+S  Inv [1 0 0 1 2 1 2 0 ] 7
 
 O  Load [0 0 0 0 0 0 0 0 ] 0
 O  Ifetch [0 0 0 0 0 0 0 0 ] 0
-O  Store [0 0 0 0 0 0 0 1 ] 1
-O  L1_Replacement [37 50 34 43 50 43 42 40 ] 339
+O  Store [0 0 0 1 0 0 0 0 ] 1
+O  L1_Replacement [50 43 42 40 37 50 34 43 ] 339
 O  Fwd_GETX [0 0 0 0 0 0 0 0 ] 0
-O  Fwd_GETS [1 0 1 1 0 2 1 0 ] 6
+O  Fwd_GETS [0 2 1 0 1 0 1 1 ] 6
 O  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 
-M  Load [2 5 2 2 2 3 2 5 ] 23
+M  Load [2 3 2 5 2 5 2 2 ] 23
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
-M  Store [3 0 0 5 3 0 2 2 ] 15
-M  L1_Replacement [49545 49751 49794 49535 49426 49555 49122 49457 ] 396185
-M  Fwd_GETX [27 19 22 25 24 29 29 27 ] 202
-M  Fwd_GETS [37 50 34 43 50 43 42 41 ] 340
+M  Store [3 0 2 2 3 0 0 5 ] 15
+M  L1_Replacement [49426 49555 49122 49457 49545 49751 49794 49535 ] 396185
+M  Fwd_GETX [24 29 29 27 27 19 22 25 ] 202
+M  Fwd_GETS [50 43 42 41 37 50 34 43 ] 340
 M  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 
-M_W  Load [7 7 6 8 9 8 3 9 ] 57
+M_W  Load [9 8 3 9 7 7 6 8 ] 57
 M_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
-M_W  Store [5 7 2 2 4 10 2 1 ] 33
-M_W  L1_Replacement [893182 893219 892511 891162 888542 887409 886648 890208 ] 7122881
+M_W  Store [4 10 2 1 5 7 2 2 ] 33
+M_W  L1_Replacement [888542 887409 886648 890208 893182 893219 892511 891162 ] 7122881
 M_W  Own_GETX [0 0 0 0 0 0 0 0 ] 0
-M_W  Fwd_GETX [15 9 19 17 14 10 15 16 ] 115
-M_W  Fwd_GETS [14 29 32 25 35 22 26 25 ] 208
+M_W  Fwd_GETX [14 10 15 16 15 9 19 17 ] 115
+M_W  Fwd_GETS [35 22 26 25 14 29 32 25 ] 208
 M_W  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 M_W  Inv [0 0 0 0 0 0 0 0 ] 0
-M_W  Use_Timeout [49612 49820 49850 49609 49503 49628 49195 49527 ] 396744
+M_W  Use_Timeout [49503 49628 49195 49527 49612 49820 49850 49609 ] 396744
 
-MM  Load [3 0 3 1 3 3 0 4 ] 17
+MM  Load [3 3 0 4 3 0 3 1 ] 17
 MM  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MM  Store [0 1 1 1 0 0 1 3 ] 7
-MM  L1_Replacement [27039 26929 27071 27171 27003 27298 27133 27103 ] 216747
-MM  Fwd_GETX [11 13 10 14 9 7 14 11 ] 89
-MM  Fwd_GETS [27 24 28 17 36 31 22 25 ] 210
+MM  Store [0 0 1 3 0 1 1 1 ] 7
+MM  L1_Replacement [27003 27298 27133 27103 27039 26929 27071 27171 ] 216747
+MM  Fwd_GETX [9 7 14 11 11 13 10 14 ] 89
+MM  Fwd_GETS [36 31 22 25 27 24 28 17 ] 210
 MM  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 
-MM_W  Load [1 3 4 3 4 5 2 5 ] 27
+MM_W  Load [4 5 2 5 1 3 4 3 ] 27
 MM_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MM_W  Store [0 2 3 1 2 1 2 1 ] 12
-MM_W  L1_Replacement [498638 499252 498871 501742 503603 505001 504191 503264 ] 4014562
+MM_W  Store [2 1 2 1 0 2 3 1 ] 12
+MM_W  L1_Replacement [503603 505001 504191 503264 498638 499252 498871 501742 ] 4014562
 MM_W  Own_GETX [0 0 0 0 0 0 0 0 ] 0
-MM_W  Fwd_GETX [9 11 5 14 8 6 8 14 ] 75
-MM_W  Fwd_GETS [19 12 18 2 20 15 9 19 ] 114
+MM_W  Fwd_GETX [8 6 8 14 9 11 5 14 ] 75
+MM_W  Fwd_GETS [20 15 9 19 19 12 18 2 ] 114
 MM_W  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 MM_W  Inv [0 0 0 0 0 0 0 0 ] 0
-MM_W  Use_Timeout [27074 26967 27109 27198 27045 27336 27167 27137 ] 217033
+MM_W  Use_Timeout [27045 27336 27167 27137 27074 26967 27109 27198 ] 217033
 
 IM  Load [0 0 0 0 0 0 0 0 ] 0
 IM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IM  Store [0 0 0 0 0 0 0 0 ] 0
-IM  L1_Replacement [2844320 2831082 2837633 2852830 2854379 2860141 2888247 2844877 ] 22813509
+IM  L1_Replacement [2854379 2860141 2888247 2844877 2844320 2831082 2837633 2852830 ] 22813509
 IM  Inv [0 0 0 0 0 0 0 0 ] 0
-IM  Ack [370 346 410 376 374 373 380 346 ] 2975
+IM  Ack [374 373 380 346 370 346 410 376 ] 2975
 IM  Data [0 0 0 0 0 0 0 0 ] 0
-IM  Exclusive_Data [27069 26960 27107 27196 27041 27326 27165 27135 ] 216999
+IM  Exclusive_Data [27041 27326 27165 27135 27069 26960 27107 27196 ] 216999
 
 SM  Load [0 0 0 0 0 0 0 0 ] 0
 SM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -493,53 +493,53 @@ SM  Exclusive_Data [0 0 0 0 0 0 0 0 ] 0
 OM  Load [0 0 0 0 0 0 0 0 ] 0
 OM  Ifetch [0 0 0 0 0 0 0 0 ] 0
 OM  Store [0 0 0 0 0 0 0 0 ] 0
-OM  L1_Replacement [15663 15820 15975 15323 15977 16015 16094 15787 ] 126654
-OM  Own_GETX [0 0 0 0 0 0 0 1 ] 1
+OM  L1_Replacement [15977 16015 16094 15787 15663 15820 15975 15323 ] 126654
+OM  Own_GETX [0 0 0 1 0 0 0 0 ] 1
 OM  Fwd_GETX [0 0 0 0 0 0 0 0 ] 0
 OM  Fwd_GETS [0 0 0 0 0 0 0 0 ] 0
 OM  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
-OM  Ack [2 4 7 4 2 3 2 5 ] 29
-OM  All_acks [27069 26960 27107 27196 27041 27326 27165 27136 ] 217000
+OM  Ack [2 3 2 5 2 4 7 4 ] 29
+OM  All_acks [27041 27326 27165 27136 27069 26960 27107 27196 ] 217000
 
 IS  Load [0 0 0 0 0 0 0 0 ] 0
 IS  Ifetch [0 0 0 0 0 0 0 0 ] 0
 IS  Store [0 0 0 0 0 0 0 0 ] 0
-IS  L1_Replacement [5278802 5288220 5275943 5265202 5271240 5256024 5246057 5277317 ] 42158805
+IS  L1_Replacement [5271240 5256024 5246057 5277317 5278802 5288220 5275943 5265202 ] 42158805
 IS  Inv [0 0 0 0 0 0 0 0 ] 0
-IS  Data [738 721 703 719 720 712 716 661 ] 5690
-IS  Exclusive_Data [49617 49827 49853 49611 49507 49638 49197 49528 ] 396778
+IS  Data [720 712 716 661 738 721 703 719 ] 5690
+IS  Exclusive_Data [49507 49638 49197 49528 49617 49827 49853 49611 ] 396778
 
 SI  Load [0 0 0 0 0 0 0 0 ] 0
 SI  Ifetch [0 0 0 0 0 0 0 0 ] 0
 SI  Store [0 0 0 0 0 0 0 0 ] 0
 SI  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-SI  Fwd_GETS [1 0 1 0 2 0 3 1 ] 8
+SI  Fwd_GETS [2 0 3 1 1 0 1 0 ] 8
 SI  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
-SI  Inv [0 0 1 1 5 3 0 2 ] 12
-SI  Writeback_Ack [639 632 619 639 637 632 612 579 ] 4989
-SI  Writeback_Ack_Data [97 88 81 79 77 77 104 79 ] 682
+SI  Inv [5 3 0 2 0 0 1 1 ] 12
+SI  Writeback_Ack [637 632 612 579 639 632 619 639 ] 4989
+SI  Writeback_Ack_Data [77 77 104 79 97 88 81 79 ] 682
 SI  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
 
 OI  Load [0 0 0 0 0 0 0 0 ] 0
 OI  Ifetch [0 0 0 0 0 0 0 0 ] 0
 OI  Store [0 0 0 0 0 0 0 0 ] 0
 OI  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-OI  Fwd_GETX [2 1 3 1 3 1 1 0 ] 12
-OI  Fwd_GETS [4 2 5 1 1 5 2 0 ] 20
+OI  Fwd_GETX [3 1 1 0 2 1 3 1 ] 12
+OI  Fwd_GETS [1 5 2 0 4 2 5 1 ] 20
 OI  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 OI  Writeback_Ack [0 0 0 0 0 0 0 0 ] 0
-OI  Writeback_Ack_Data [624 647 602 602 667 694 675 668 ] 5179
-OI  Writeback_Nack [36 44 36 37 45 49 49 49 ] 345
+OI  Writeback_Ack_Data [667 694 675 668 624 647 602 602 ] 5179
+OI  Writeback_Nack [45 49 49 49 36 44 36 37 ] 345
 
-MI  Load [4 12 37 15 1 0 0 19 ] 88
+MI  Load [1 0 0 19 4 12 37 15 ] 88
 MI  Ifetch [0 0 0 0 0 0 0 0 ] 0
-MI  Store [1 12 0 0 1 0 2 9 ] 25
+MI  Store [1 0 2 9 1 12 0 0 ] 25
 MI  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-MI  Fwd_GETX [329 321 347 386 337 299 297 365 ] 2681
-MI  Fwd_GETS [589 598 571 560 620 652 634 628 ] 4852
+MI  Fwd_GETX [337 299 297 365 329 321 347 386 ] 2681
+MI  Fwd_GETS [620 652 634 628 589 598 571 560 ] 4852
 MI  Fwd_DMA [0 0 0 0 0 0 0 0 ] 0
 MI  Writeback_Ack [0 0 0 0 0 0 0 0 ] 0
-MI  Writeback_Ack_Data [75666 75761 75947 75760 75471 75902 75324 75567 ] 605398
+MI  Writeback_Ack_Data [75471 75902 75324 75567 75666 75761 75947 75760 ] 605398
 MI  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
 
 II  Load [0 0 0 0 0 0 0 0 ] 0
@@ -548,8 +548,8 @@ II  Store [0 0 0 0 0 0 0 0 ] 0
 II  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
 II  Inv [0 0 0 0 0 0 0 0 ] 0
 II  Writeback_Ack [0 0 0 0 0 0 0 0 ] 0
-II  Writeback_Ack_Data [330 322 350 387 338 299 298 364 ] 2688
-II  Writeback_Nack [1 0 1 1 7 4 0 3 ] 17
+II  Writeback_Ack_Data [338 299 298 364 330 322 350 387 ] 2688
+II  Writeback_Nack [7 4 0 3 1 0 1 1 ] 17
 
 Cache Stats: system.ruby.l1_cntrl1.L1IcacheMemory
   system.ruby.l1_cntrl1.L1IcacheMemory_total_misses: 0
