@@ -1346,7 +1346,9 @@ ${ident}_ProfileDumper::${ident}_ProfileDumper()
 void
 ${ident}_ProfileDumper::registerProfiler(${ident}_Profiler* profiler)
 {
-    m_profilers.push_back(profiler);
+    if (profiler->getVersion() >= m_profilers.size())
+        m_profilers.resize(profiler->getVersion() + 1);
+    m_profilers[profiler->getVersion()] = profiler;
 }
 
 void
@@ -1413,6 +1415,7 @@ class ${ident}_Profiler
   public:
     ${ident}_Profiler();
     void setVersion(int version);
+    int getVersion();
     void countTransition(${ident}_State state, ${ident}_Event event);
     void possibleTransition(${ident}_State state, ${ident}_Event event);
     uint64 getEventCount(${ident}_Event event);
@@ -1460,6 +1463,12 @@ void
 ${ident}_Profiler::setVersion(int version)
 {
     m_version = version;
+}
+
+int
+${ident}_Profiler::getVersion()
+{
+    return m_version;
 }
 
 void
