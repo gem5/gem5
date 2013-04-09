@@ -48,7 +48,7 @@ class IfStatementAST(StatementAST):
 
         if cond_type != self.symtab.find("bool", Type):
             self.cond.error("Condition of if stmt must be bool, type was '%s'",
-                            ctype)
+                            cond_type)
 
         # Conditional
         code.indent()
