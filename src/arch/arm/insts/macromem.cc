@@ -110,6 +110,10 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
                     // This must be the exception return form of ldm.
                     *++uop = new MicroLdrRetUop(machInst, regIdx,
                                                INTREG_UREG0, up, addr);
+                    if (!(condCode == COND_AL || condCode == COND_UC))
+                        (*uop)->setFlag(StaticInst::IsCondControl);
+                    else
+                        (*uop)->setFlag(StaticInst::IsUncondControl);
                 } else {
                     *++uop = new MicroLdrUop(machInst, regIdx,
                                             INTREG_UREG0, up, addr);
