@@ -89,6 +89,9 @@ class ObjectFile
             std::numeric_limits<Addr>::max()) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max()) = 0;
+    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr addrMask =
+            std::numeric_limits<Addr>::max())
+    { return false; }
 
     virtual bool isDynamic() { return false; }
     virtual bool hasTLS() { return false; }

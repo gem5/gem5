@@ -415,6 +415,12 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 }
 
 bool
+ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr addrMask)
+{
+    return loadSomeSymbols(symtab, STB_WEAK, addrMask);
+}
+
+bool
 ElfObject::loadSections(PortProxy& memProxy, Addr addrMask)
 {
     if (!ObjectFile::loadSections(memProxy, addrMask))

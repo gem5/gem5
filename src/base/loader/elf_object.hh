@@ -71,6 +71,8 @@ class ElfObject : public ObjectFile
             std::numeric_limits<Addr>::max());
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());
+    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr addrMask =
+            std::numeric_limits<Addr>::max());
 
     virtual bool isDynamic() { return sectionExists(".interp"); }
     virtual bool hasTLS() { return sectionExists(".tbss"); }

@@ -574,7 +574,8 @@ LiveProcess::LiveProcess(LiveProcessParams * params, ObjectFile *_objFile)
     if (!debugSymbolTable) {
         debugSymbolTable = new SymbolTable();
         if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
-            !objFile->loadLocalSymbols(debugSymbolTable)) {
+            !objFile->loadLocalSymbols(debugSymbolTable) ||
+            !objFile->loadWeakSymbols(debugSymbolTable)) {
             // didn't load any symbols
             delete debugSymbolTable;
             debugSymbolTable = NULL;
