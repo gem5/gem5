@@ -944,6 +944,26 @@ if not have_fenv:
     print "Warning: Header file <fenv.h> not found."
     print "         This host has no IEEE FP rounding mode control."
 
+# Check if we should enable KVM-based hardware virtualization
+have_kvm = conf.CheckHeader('linux/kvm.h', '<>')
+if not have_kvm:
+    print "Info: Header file <linux/kvm.h> not found, " \
+        "disabling KVM support."
+
+# Check if the requested target ISA is compatible with the host
+def is_isa_kvm_compatible(isa):
+    isa_comp_table = {
+        }
+    try:
+        import platform
+        host_isa = platform.machine()
+    except:
+        print "Warning: Failed to determine host ISA."
+        return False
+
+    return host_isa in isa_comp_table.get(isa, [])
+
+
 ######################################################################
 #
 # Finish the configuration
@@ -1038,6 +1058,7 @@ sticky_vars.AddVariables(
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
+    BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models', have_kvm),
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
     )
@@ -1204,6 +1225,15 @@ for variant_path in variant_paths:
 
     if env['EFENCE']:
         env.Append(LIBS=['efence'])
+
+    if env['USE_KVM']:
+        if not have_kvm:
+            print "Warning: Can not enable KVM, host seems to lack KVM support"
+            env['USE_KVM'] = False
+        elif not is_isa_kvm_compatible(env['TARGET_ISA']):
+            print "Info: KVM support disabled due to unsupported host and " \
+                "target ISA combination"
+            env['USE_KVM'] = False
 
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
