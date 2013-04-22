@@ -48,6 +48,7 @@
 #define __SYSTEM_HH__
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/loader/symtab.hh"
@@ -353,29 +354,83 @@ class System : public MemObject
         panic("Base fixFuncEventAddr not implemented.\n");
     }
 
+    /** @{ */
     /**
      * Add a function-based event to the given function, to be looked
      * up in the specified symbol table.
+     *
+     * The ...OrPanic flavor of the method causes the simulator to
+     * panic if the symbol can't be found.
+     *
+     * @param symtab Symbol table to use for look up.
+     * @param lbl Function to hook the event to.
+     * @param desc Description to be passed to the event.
+     * @param args Arguments to be forwarded to the event constructor.
      */
-    template <class T>
-    T *addFuncEvent(SymbolTable *symtab, const char *lbl)
+    template <class T, typename... Args>
+    T *addFuncEvent(const SymbolTable *symtab, const char *lbl,
+                    const std::string &desc, Args... args)
     {
         Addr addr = 0; // initialize only to avoid compiler warning
 
         if (symtab->findAddress(lbl, addr)) {
-            T *ev = new T(&pcEventQueue, lbl, fixFuncEventAddr(addr));
+            T *ev = new T(&pcEventQueue, desc, fixFuncEventAddr(addr),
+                          std::forward<Args>(args)...);
             return ev;
         }
 
         return NULL;
     }
 
-    /** Add a function-based event to kernel code. */
     template <class T>
-    T *addKernelFuncEvent(const char *lbl)
+    T *addFuncEvent(const SymbolTable *symtab, const char *lbl)
     {
-        return addFuncEvent<T>(kernelSymtab, lbl);
+        return addFuncEvent<T>(symtab, lbl, lbl);
     }
+
+    template <class T, typename... Args>
+    T *addFuncEventOrPanic(const SymbolTable *symtab, const char *lbl,
+                           Args... args)
+    {
+        T *e(addFuncEvent<T>(symtab, lbl, std::forward<Args>(args)...));
+        if (!e)
+            panic("Failed to find symbol '%s'", lbl);
+        return e;
+    }
+    /** @} */
+
+    /** @{ */
+    /**
+     * Add a function-based event to a kernel symbol.
+     *
+     * These functions work like their addFuncEvent() and
+     * addFuncEventOrPanic() counterparts. The only difference is that
+     * they automatically use the kernel symbol table. All arguments
+     * are forwarded to the underlying method.
+     *
+     * @see addFuncEvent()
+     * @see addFuncEventOrPanic()
+     *
+     * @param lbl Function to hook the event to.
+     * @param args Arguments to be passed to addFuncEvent
+     */
+    template <class T, typename... Args>
+    T *addKernelFuncEvent(const char *lbl, Args... args)
+    {
+        return addFuncEvent<T>(kernelSymtab, lbl,
+                               std::forward<Args>(args)...);
+    }
+
+    template <class T, typename... Args>
+    T *addKernelFuncEventOrPanic(const char *lbl, Args... args)
+    {
+        T *e(addFuncEvent<T>(kernelSymtab, lbl,
+                             std::forward<Args>(args)...));
+        if (!e)
+            panic("Failed to find kernel symbol '%s'", lbl);
+        return e;
+    }
+    /** @} */
 
   public:
     std::vector<BaseRemoteGDB *> remoteGDB;

@@ -51,14 +51,10 @@ Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
     }
 
 #ifdef DEBUG
-    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
-    if (!kernelPanicEvent)
-        panic("could not find kernel symbol \'panic\'");
+    kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 #endif
 
-    badaddrEvent = addKernelFuncEvent<BadAddrEvent>("badaddr");
-    if (!badaddrEvent)
-        panic("could not find kernel symbol \'badaddr\'");
+    badaddrEvent = addKernelFuncEventOrPanic<BadAddrEvent>("badaddr");
 
     skipPowerStateEvent =
         addKernelFuncEvent<SkipFuncEvent>("tl_v48_capture_power_state");

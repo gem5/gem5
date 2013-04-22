@@ -65,28 +65,17 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
 {
 #ifndef NDEBUG
-    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
-    if (!kernelPanicEvent)
-        panic("could not find kernel symbol \'panic\'");
+    kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 #endif
 
     // With ARM udelay() is #defined to __udelay
-    Addr addr = 0;
-    if (kernelSymtab->findAddress("__udelay", addr)) {
-        uDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__udelay",
-                fixFuncEventAddr(addr), 1000, 0);
-    } else {
-        panic("couldn't find kernel symbol \'udelay\'");
-    }
+    uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+        "__udelay", "__udelay", 1000, 0);
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    if (kernelSymtab->findAddress("__const_udelay", addr)) {
-        constUDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__const_udelay",
-                fixFuncEventAddr(addr), 1000, 107374);
-    } else {
-        panic("couldn't find kernel symbol \'udelay\'");
-    }
+    constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+        "__const_udelay", "__const_udelay", 1000, 107374);
 
     secDataPtrAddr = 0;
     secDataAddr = 0;

@@ -120,14 +120,10 @@ LinuxAlphaSystem::setupFuncEvents()
 {
     AlphaSystem::setupFuncEvents();
 #ifndef NDEBUG
-    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
-    if (!kernelPanicEvent)
-        panic("could not find kernel symbol \'panic\'");
+    kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 
 #if 0
-    kernelDieEvent = addKernelFuncEvent<BreakPCEvent>("die_if_kernel");
-    if (!kernelDieEvent)
-        panic("could not find kernel symbol \'die_if_kernel\'");
+    kernelDieEvent = addKernelFuncEventOrPanic<BreakPCEvent>("die_if_kernel");
 #endif
 
 #endif
