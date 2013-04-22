@@ -102,13 +102,27 @@ class BaseKvmCPU : public BaseCPU
     void deallocateContext(ThreadID thread_num);
     void haltContext(ThreadID thread_num);
 
+    ThreadContext *getContext(int tn);
+
     Counter totalInsts() const;
     Counter totalOps() const;
 
     /** Dump the internal state to the terminal. */
     virtual void dump();
 
-    /** SimpleThread object, provides all the architectural state. */
+    /**
+     * A cached copy of a thread's state in the form of a SimpleThread
+     * object.
+     *
+     * Normally the actual thread state is stored in the KVM vCPU. If KVM has
+     * been running this copy is will be out of date. If we recently handled
+     * some events within gem5 that required state to be updated this could be
+     * the most up-to-date copy. When getContext() or updateThreadContext() is
+     * called this copy gets updated.  The method syncThreadContext can
+     * be used within a KVM CPU to update the thread context if the
+     * KVM state is dirty (i.e., the vCPU has been run since the last
+     * update).
+     */
     SimpleThread *thread;
 
     /** ThreadContext object, provides an interface for external
@@ -272,6 +286,17 @@ class BaseKvmCPU : public BaseCPU
      * and update gem5's thread state.
      */
     virtual void updateThreadContext() = 0;
+
+    /**
+     * Update a thread context if the KVM state is dirty with respect
+     * to the cached thread context.
+     */
+    void syncThreadContext();
+
+    /**
+     * Update the KVM if the thread context is dirty.
+     */
+    void syncKvmState();
     /** @} */
 
     /** @{ */
@@ -391,7 +416,13 @@ class BaseKvmCPU : public BaseCPU
      * Is the gem5 context dirty? Set to true to force an update of
      * the KVM vCPU state upon the next call to kvmRun().
      */
-    bool contextDirty;
+    bool threadContextDirty;
+
+    /**
+     * Is the KVM state dirty? Set to true to force an update of
+     * the KVM vCPU state upon the next call to kvmRun().
+     */
+    bool kvmStateDirty;
 
     /** KVM internal ID of the vCPU */
     const long vcpuID;

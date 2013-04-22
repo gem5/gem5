@@ -252,7 +252,7 @@ class BaseCPU : public MemObject
    int findContext(ThreadContext *tc);
 
    /// Given a thread num get tho thread context for it
-   ThreadContext *getContext(int tn) { return threadContexts[tn]; }
+   virtual ThreadContext *getContext(int tn) { return threadContexts[tn]; }
 
   public:
     typedef BaseCPUParams Params;

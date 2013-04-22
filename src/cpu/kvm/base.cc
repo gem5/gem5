@@ -72,7 +72,8 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       _status(Idle),
       dataPort(name() + ".dcache_port", this),
       instPort(name() + ".icache_port", this),
-      contextDirty(true),
+      threadContextDirty(true),
+      kvmStateDirty(false),
       vcpuID(vm.allocVCPUID()), vcpuFD(-1), vcpuMMapSize(0),
       _kvmRun(NULL), mmioRing(NULL),
       pageSize(sysconf(_SC_PAGE_SIZE)),
@@ -205,6 +206,9 @@ BaseKvmCPU::regStats()
 void
 BaseKvmCPU::serializeThread(std::ostream &os, ThreadID tid)
 {
+    // Update the thread context so we have something to serialize.
+    syncThreadContext();
+
     assert(tid == 0);
     assert(_status == Idle);
     thread->serialize(os);
@@ -217,7 +221,7 @@ BaseKvmCPU::unserializeThread(Checkpoint *cp, const std::string &section,
     assert(tid == 0);
     assert(_status == Idle);
     thread->unserialize(cp, section);
-    contextDirty = true;
+    threadContextDirty = true;
 }
 
 unsigned int
@@ -263,9 +267,13 @@ BaseKvmCPU::drainResume()
 void
 BaseKvmCPU::switchOut()
 {
-    BaseCPU::switchOut();
-
     DPRINTF(Kvm, "switchOut\n");
+
+    // Make sure to update the thread context in case, the new CPU
+    // will need to access it.
+    syncThreadContext();
+
+    BaseCPU::switchOut();
 
     // We should have drained prior to executing a switchOut, which
     // means that the tick event shouldn't be scheduled and the CPU is
@@ -288,8 +296,9 @@ BaseKvmCPU::takeOverFrom(BaseCPU *cpu)
     assert(_status == Idle);
     assert(threadContexts.size() == 1);
 
-    // Force a gem5 -> KVM context synchronization
-    contextDirty = true;
+    // The BaseCPU updated the thread context, make sure that we
+    // synchronize next time we enter start the CPU.
+    threadContextDirty = true;
 }
 
 void
@@ -368,6 +377,15 @@ BaseKvmCPU::haltContext(ThreadID thread_num)
     suspendContext(thread_num);
 }
 
+ThreadContext *
+BaseKvmCPU::getContext(int tn)
+{
+    assert(tn == 0);
+    syncThreadContext();
+    return tc;
+}
+
+
 Counter
 BaseKvmCPU::totalInsts() const
 {
@@ -394,14 +412,8 @@ BaseKvmCPU::tick()
 
     DPRINTF(KvmRun, "Entering KVM...\n");
 
-    if (contextDirty) {
-        contextDirty = false;
-        updateKvmState();
-    }
-
     Tick ticksToExecute(mainEventQueue.nextTick() - curTick());
     Tick ticksExecuted(kvmRun(ticksToExecute));
-    updateThreadContext();
 
     Tick delay(ticksExecuted + handleKvmExit());
 
@@ -422,6 +434,13 @@ BaseKvmCPU::kvmRun(Tick ticks)
 {
     uint64_t baseCycles(hwCycles.read());
     uint64_t baseInstrs(hwInstructions.read());
+
+    // We might need to update the KVM state.
+    syncKvmState();
+    // Entering into KVM implies that we'll have to reload the thread
+    // context from KVM if we want to access it. Flag the KVM state as
+    // dirty with respect to the cached thread context.
+    kvmStateDirty = true;
 
     if (ticks < runTimer->resolution()) {
         DPRINTF(KvmRun, "KVM: Adjusting tick count (%i -> %i)\n",
@@ -602,6 +621,30 @@ BaseKvmCPU::getAndFormatOneReg(uint64_t id) const
 #else
     panic("KVM_GET_ONE_REG is unsupported on this platform.\n");
 #endif
+}
+
+void
+BaseKvmCPU::syncThreadContext()
+{
+    if (!kvmStateDirty)
+        return;
+
+    assert(!threadContextDirty);
+
+    updateThreadContext();
+    kvmStateDirty = false;
+}
+
+void
+BaseKvmCPU::syncKvmState()
+{
+    if (!threadContextDirty)
+        return;
+
+    assert(!kvmStateDirty);
+
+    updateKvmState();
+    threadContextDirty = false;
 }
 
 Tick
