@@ -68,12 +68,10 @@ SimpleTimingPort::recvTimingReq(PacketPtr pkt)
         delete pendingDelete[x];
     pendingDelete.clear();
 
-    if (pkt->memInhibitAsserted()) {
-        // snooper will supply based on copy of packet
-        // still target's responsibility to delete packet
-        delete pkt;
-        return true;
-    }
+    // the SimpleTimingPort should not be used anywhere where there is
+    // a need to deal with inhibited packets
+    if (pkt->memInhibitAsserted())
+        panic("SimpleTimingPort should never see an inhibited request\n");
 
     bool needsResponse = pkt->needsResponse();
     Tick latency = recvAtomic(pkt);

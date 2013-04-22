@@ -168,18 +168,8 @@ RubyPort::M5Port::recvTimingReq(PacketPtr pkt)
 
     //dsm: based on SimpleTimingPort::recvTimingReq(pkt);
 
-    // The received packets should only be M5 requests, which should never
-    // get nacked.  There used to be code to hanldle nacks here, but
-    // I'm pretty sure it didn't work correctly with the drain code,
-    // so that would need to be fixed if we ever added it back.
-
-    if (pkt->memInhibitAsserted()) {
-        warn("memInhibitAsserted???");
-        // snooper will supply based on copy of packet
-        // still target's responsibility to delete packet
-        delete pkt;
-        return true;
-    }
+    if (pkt->memInhibitAsserted())
+        panic("RubyPort should never see an inhibited request\n");
 
     // Save the port in the sender state object to be used later to
     // route the response
