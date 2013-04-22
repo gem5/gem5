@@ -61,3 +61,6 @@ class AtomicSimpleCPU(BaseSimpleCPU):
     simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
     simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")
     fastmem = Param.Bool(False, "Access memory directly")
+    simpoint_profile = Param.Bool(False, "Generate SimPoint BBVs")
+    simpoint_interval = Param.UInt64(100000000, "SimPoint Interval Size (insts)")
+    simpoint_profile_file = Param.String("simpoint.bb.gz", "SimPoint BBV file")

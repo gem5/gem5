@@ -153,6 +153,18 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         }
     }
 
+    // Set up instruction-count-based termination events for SimPoints
+    // Typically, there are more than one action points.
+    // Simulation.py is responsible to take the necessary actions upon
+    // exitting the simulation loop.
+    if (!p->simpoint_start_insts.empty()) {
+        const char *cause = "simpoint starting point found";
+        for (size_t i = 0; i < p->simpoint_start_insts.size(); ++i) {
+            Event *event = new SimLoopExitEvent(cause, 0);
+            comInstEventQueue[0]->schedule(event, p->simpoint_start_insts[i]);
+        }
+    }
+
     if (p->max_insts_all_threads != 0) {
         const char *cause = "all threads reached the max instruction count";
 

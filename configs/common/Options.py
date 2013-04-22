@@ -50,6 +50,10 @@ def addCommonOptions(parser):
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")
     parser.add_option("--fastmem", action="store_true")
+    parser.add_option("--simpoint-profile", action="store_true",
+                      help="Enable basic block profiling for SimPoints")
+    parser.add_option("--simpoint-interval", type="int", default=10000000,
+                      help="SimPoint interval in num of instructions")
     parser.add_option("--clock", action="store", type="string", default='2GHz')
     parser.add_option("--num-dirs", type="int", default=1)
     parser.add_option("--num-l2caches", type="int", default=1)

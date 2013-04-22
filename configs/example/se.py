@@ -166,6 +166,13 @@ if options.fastmem:
     if (options.caches or options.l2cache):
         fatal("You cannot use fastmem in combination with caches!")
 
+if options.simpoint_profile:
+    if not options.fastmem:
+        # Atomic CPU checked with fastmem option already
+        fatal("SimPoint generation should be done with atomic cpu and fastmem")
+    if np > 1:
+        fatal("SimPoint generation not supported with more than one CPUs")
+
 for i in xrange(np):
     if options.smt:
         system.cpu[i].workload = multiprocesses
@@ -176,6 +183,10 @@ for i in xrange(np):
 
     if options.fastmem:
         system.cpu[i].fastmem = True
+
+    if options.simpoint_profile:
+        system.cpu[i].simpoint_profile = True
+        system.cpu[i].simpoint_interval = options.simpoint_interval
 
     if options.checker:
         system.cpu[i].addCheckerCpu()

@@ -44,6 +44,7 @@
 #include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
+#include "base/output.hh"
 #include "config/the_isa.hh"
 #include "cpu/simple/atomic.hh"
 #include "cpu/exetrace.hh"
@@ -109,9 +110,20 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       drain_manager(NULL),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
-      fastmem(p->fastmem)
+      fastmem(p->fastmem),
+      simpoint(p->simpoint_profile),
+      intervalSize(p->simpoint_interval),
+      intervalCount(0),
+      intervalDrift(0),
+      simpointStream(NULL),
+      currentBBV(0, 0),
+      currentBBVInstCount(0)
 {
     _status = Idle;
+
+    if (simpoint) {
+        simpointStream = simout.create(p->simpoint_profile_file, false);
+    }
 }
 
 
@@ -119,6 +131,9 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 {
     if (tickEvent.scheduled()) {
         deschedule(tickEvent);
+    }
+    if (simpointStream) {
+        simout.close(simpointStream);
     }
 }
 
@@ -534,6 +549,13 @@ AtomicSimpleCPU::tick()
                         curStaticInst->isFirstMicroop()))
                 instCnt++;
 
+            // profile for SimPoints if enabled and macro inst is finished
+            if (simpoint && curStaticInst && (fault == NoFault) &&
+                    (!curStaticInst->isMicroop() ||
+                     curStaticInst->isLastMicroop())) {
+                profileSimPoint();
+            }
+
             Tick stall_ticks = 0;
             if (simulate_inst_stalls && icache_access)
                 stall_ticks += icache_latency;
@@ -572,6 +594,67 @@ AtomicSimpleCPU::printAddr(Addr a)
     dcachePort.printAddr(a);
 }
 
+void
+AtomicSimpleCPU::profileSimPoint()
+{
+    if (!currentBBVInstCount)
+        currentBBV.first = thread->pcState().instAddr();
+
+    ++intervalCount;
+    ++currentBBVInstCount;
+
+    // If inst is control inst, assume end of basic block.
+    if (curStaticInst->isControl()) {
+        currentBBV.second = thread->pcState().instAddr();
+
+        auto map_itr = bbMap.find(currentBBV);
+        if (map_itr == bbMap.end()){
+            // If a new (previously unseen) basic block is found,
+            // add a new unique id, record num of insts and insert into bbMap.
+            BBInfo info;
+            info.id = bbMap.size() + 1;
+            info.insts = currentBBVInstCount;
+            info.count = currentBBVInstCount;
+            bbMap.insert(std::make_pair(currentBBV, info));
+        } else {
+            // If basic block is seen before, just increment the count by the
+            // number of insts in basic block.
+            BBInfo& info = map_itr->second;
+            assert(info.insts == currentBBVInstCount);
+            info.count += currentBBVInstCount;
+        }
+        currentBBVInstCount = 0;
+
+        // Reached end of interval if the sum of the current inst count
+        // (intervalCount) and the excessive inst count from the previous
+        // interval (intervalDrift) is greater than/equal to the interval size.
+        if (intervalCount + intervalDrift >= intervalSize) {
+            // summarize interval and display BBV info
+            std::vector<pair<uint64_t, uint64_t> > counts;
+            for (auto map_itr = bbMap.begin(); map_itr != bbMap.end();
+                    ++map_itr) {
+                BBInfo& info = map_itr->second;
+                if (info.count != 0) {
+                    counts.push_back(std::make_pair(info.id, info.count));
+                    info.count = 0;
+                }
+            }
+            std::sort(counts.begin(), counts.end());
+
+            // Print output BBV info
+            *simpointStream << "T";
+            for (auto cnt_itr = counts.begin(); cnt_itr != counts.end();
+                    ++cnt_itr) {
+                *simpointStream << ":" << cnt_itr->first
+                                << ":" << cnt_itr->second << " ";
+            }
+            *simpointStream << "\n";
+
+            intervalDrift = (intervalCount + intervalDrift) - intervalSize;
+            intervalCount = 0;
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 //
