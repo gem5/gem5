@@ -40,122 +40,80 @@
  * Authors: Nathan Binkert
  *          Ali Saidi
  *          Chander Sudanthi
+ *          Andreas Sandberg
  */
 .syntax unified
 #ifdef __thumb__
 .thumb
 #endif
 
-#define m5_op 0xEE
-
 #include "m5ops.h"
-
-#ifdef __thumb__
-#define INST(op, ra, rb, func)                          \
-        .short (((op) << 8) | (func));                  \
-        .short (((ra) << 12) | (0x1 << 8) | (0x1 << 4) | (rb))
-/*               m5ops           m5func         */
-/*                ra         coproc 1       op=1       rb   */
-#else
-#define INST(op, ra, rb, func) \
-        .long (((op) << 24) | ((func) << 16) | ((ra) << 12) | (0x1 << 8) | (0x1 << 4) | (rb))
-/*               m5ops           m5func             ra         coproc 1       op=1       rb   */
-#endif
-
-#define LEAF(func)    \
-        .globl  func; \
-func:
-
-#define RET           \
-        mov pc,lr
-
-#define END(func)     \
-
-#define SIMPLE_OP(_f, _o)       \
-        LEAF(_f)                \
-                _o;             \
-                RET;            \
-        END(_f)
-
-#define ARM INST(m5_op, 0, 0, arm_func)
-#define QUIESCE INST(m5_op, 0, 0, quiesce_func)
-#define QUIESCENS INST(m5_op, 0, 0, quiescens_func)
-#define QUIESCECYC INST(m5_op, 0, 0, quiescecycle_func)
-#define QUIESCETIME INST(m5_op, 0, 0, quiescetime_func)
-#define RPNS INST(m5_op, 0, 0, rpns_func)
-#define WAKE_CPU INST(m5_op, 0, 0, wakecpu_func)
-#define M5EXIT INST(m5_op, 0, 0, exit_func)
-#define INITPARAM INST(m5_op, 0, 0, initparam_func)
-#define LOADSYMBOL INST(m5_op, 0, 0, loadsymbol_func)
-#define RESET_STATS INST(m5_op, 0, 0, resetstats_func)
-#define DUMP_STATS INST(m5_op, 0, 0, dumpstats_func)
-#define DUMPRST_STATS INST(m5_op, 0, 0, dumprststats_func)
-#define CHECKPOINT INST(m5_op, 0, 0, ckpt_func)
-#define READFILE INST(m5_op, 0, 0, readfile_func)
-#define WRITEFILE INST(m5_op, 0, 0, writefile_func)
-#define DEBUGBREAK INST(m5_op, 0, 0, debugbreak_func)
-#define SWITCHCPU INST(m5_op, 0, 0, switchcpu_func)
-#define ADDSYMBOL INST(m5_op, 0, 0, addsymbol_func)
-#define PANIC INST(m5_op, 0, 0, panic_func)
-#define WORK_BEGIN INST(m5_op, 0, 0, work_begin_func)
-#define WORK_END INST(m5_op, 0, 0, work_end_func)
-
-#define AN_BSM INST(m5_op, an_bsm, 0, annotate_func)
-#define AN_ESM INST(m5_op, an_esm, 0, annotate_func)
-#define AN_BEGIN INST(m5_op, an_begin, 0, annotate_func)
-#define AN_END INST(m5_op, an_end, 0, annotate_func)
-#define AN_Q INST(m5_op, an_q, 0, annotate_func)
-#define AN_RQ INST(m5_op, an_rq, 0, annotate_func)
-#define AN_DQ INST(m5_op, an_dq, 0, annotate_func)
-#define AN_WF INST(m5_op, an_wf, 0, annotate_func)
-#define AN_WE INST(m5_op, an_we, 0, annotate_func)
-#define AN_WS INST(m5_op, an_ws, 0, annotate_func)
-#define AN_SQ INST(m5_op, an_sq, 0, annotate_func)
-#define AN_AQ INST(m5_op, an_aq, 0, annotate_func)
-#define AN_PQ INST(m5_op, an_pq, 0, annotate_func)
-#define AN_L INST(m5_op, an_l, 0, annotate_func)
-#define AN_IDENTIFY INST(m5_op, an_identify, 0, annotate_func)
-#define AN_GETID INST(m5_op, an_getid, 0, annotate_func)
 
 .text
 
-SIMPLE_OP(arm, ARM)
-SIMPLE_OP(quiesce, QUIESCE)
-SIMPLE_OP(quiesceNs, QUIESCENS)
-SIMPLE_OP(quiesceCycle, QUIESCECYC)
-SIMPLE_OP(quiesceTime, QUIESCETIME)
-SIMPLE_OP(rpns, RPNS)
-SIMPLE_OP(wakeCPU, WAKE_CPU)
-SIMPLE_OP(m5_exit, M5EXIT)
-SIMPLE_OP(m5_initparam, INITPARAM)
-SIMPLE_OP(m5_loadsymbol, LOADSYMBOL)
-SIMPLE_OP(m5_reset_stats, RESET_STATS)
-SIMPLE_OP(m5_dump_stats, DUMP_STATS)
-SIMPLE_OP(m5_dumpreset_stats, DUMPRST_STATS)
-SIMPLE_OP(m5_checkpoint, CHECKPOINT)
-SIMPLE_OP(m5_readfile, READFILE)
-SIMPLE_OP(m5_writefile, WRITEFILE)
-SIMPLE_OP(m5_debugbreak, DEBUGBREAK)
-SIMPLE_OP(m5_switchcpu, SWITCHCPU)
-SIMPLE_OP(m5_addsymbol, ADDSYMBOL)
-SIMPLE_OP(m5_panic, PANIC)
-SIMPLE_OP(m5_work_begin, WORK_BEGIN)
-SIMPLE_OP(m5_work_end, WORK_END)
+.macro simple_op name, func, subfunc
+        .globl \name
+\name:
+        /* First, try to trap into m5 using the m5-kvm hypercall
+         * hack. The bxj will become a branch to the fallback code
+         * if it is executed in the normal m5 environment.
+         */
+        push {lr}
+        ldr lr, =1f
+        ldr ip, =((((\func) & 0xFF) << 8) | ((\subfunc) & 0xFF))
+        bxj lr
+        pop {pc}
 
-SIMPLE_OP(m5a_bsm, AN_BSM)
-SIMPLE_OP(m5a_esm, AN_ESM)
-SIMPLE_OP(m5a_begin, AN_BEGIN)
-SIMPLE_OP(m5a_end, AN_END)
-SIMPLE_OP(m5a_q, AN_Q)
-SIMPLE_OP(m5a_rq, AN_RQ)
-SIMPLE_OP(m5a_dq, AN_DQ)
-SIMPLE_OP(m5a_wf, AN_WF)
-SIMPLE_OP(m5a_we, AN_WE)
-SIMPLE_OP(m5a_ws, AN_WS)
-SIMPLE_OP(m5a_sq, AN_SQ)
-SIMPLE_OP(m5a_aq, AN_AQ)
-SIMPLE_OP(m5a_pq, AN_PQ)
-SIMPLE_OP(m5a_l, AN_L)
-SIMPLE_OP(m5a_identify, AN_IDENTIFY)
-SIMPLE_OP(m5a_getid, AN_GETID)
+        /* Old-style m5 pseudo instruction using CP1 accesses */
+1:
+#ifdef __thumb__
+        .short 0xEE00 | \func
+        .short 0x0110 | (\subfunc << 12)
+#else
+#define INST(op, ra, rb, func) \
+        .long (0xEE000110 | (\func << 16) | (\subfunc << 12)
+#endif
+        pop {pc}
+.endm
 
+#define SIMPLE_OP(name, func, subfunc) simple_op name, func, subfunc
+
+SIMPLE_OP(arm, arm_func, 0)
+SIMPLE_OP(quiesce, quiesce_func, 0)
+SIMPLE_OP(quiesceNs, quiescens_func, 0)
+SIMPLE_OP(quiesceCycle, quiescecycle_func, 0)
+SIMPLE_OP(quiesceTime, quiescetime_func, 0)
+SIMPLE_OP(rpns, rpns_func, 0)
+SIMPLE_OP(wakeCPU, wakecpu_func, 0)
+SIMPLE_OP(m5_exit, exit_func, 0)
+SIMPLE_OP(m5_initparam, initparam_func, 0)
+SIMPLE_OP(m5_loadsymbol, loadsymbol_func, 0)
+SIMPLE_OP(m5_reset_stats, resetstats_func, 0)
+SIMPLE_OP(m5_dump_stats, dumpstats_func, 0)
+SIMPLE_OP(m5_dumpreset_stats, dumprststats_func, 0)
+SIMPLE_OP(m5_checkpoint, ckpt_func, 0)
+SIMPLE_OP(m5_readfile, readfile_func, 0)
+SIMPLE_OP(m5_writefile, writefile_func, 0)
+SIMPLE_OP(m5_debugbreak, debugbreak_func, 0)
+SIMPLE_OP(m5_switchcpu, switchcpu_func, 0)
+SIMPLE_OP(m5_addsymbol, addsymbol_func, 0)
+SIMPLE_OP(m5_panic, panic_func, 0)
+SIMPLE_OP(m5_work_begin, work_begin_func, 0)
+SIMPLE_OP(m5_work_end, work_end_func, 0)
+
+SIMPLE_OP(m5a_bsm, annotate_func, an_bsm)
+SIMPLE_OP(m5a_esm, annotate_func, an_esm)
+SIMPLE_OP(m5a_begin, annotate_func, an_begin)
+SIMPLE_OP(m5a_end, annotate_func, an_end)
+SIMPLE_OP(m5a_q, annotate_func, an_q)
+SIMPLE_OP(m5a_rq, annotate_func, an_rq)
+SIMPLE_OP(m5a_dq, annotate_func, an_dq)
+SIMPLE_OP(m5a_wf, annotate_func, an_wf)
+SIMPLE_OP(m5a_we, annotate_func, an_we)
+SIMPLE_OP(m5a_ws, annotate_func, an_ws)
+SIMPLE_OP(m5a_sq, annotate_func, an_sq)
+SIMPLE_OP(m5a_aq, annotate_func, an_aq)
+SIMPLE_OP(m5a_pq, annotate_func, an_pq)
+SIMPLE_OP(m5a_l, annotate_func, an_l)
+SIMPLE_OP(m5a_identify, annotate_func, an_identify)
+SIMPLE_OP(m5a_getid, annotate_func, an_getid)

@@ -94,6 +94,8 @@ class ArmKvmCPU : public BaseKvmCPU
     void updateKvmState();
     void updateThreadContext();
 
+    Tick onKvmExitHypercall();
+
     /**
      * Get a list of registers supported by getOneReg() and setOneReg().
      */
