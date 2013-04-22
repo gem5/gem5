@@ -110,3 +110,37 @@ PosixKvmTimer::calcResolution()
 
     return resolution;
 }
+
+
+PerfKvmTimer::PerfKvmTimer(PerfKvmCounter &ctr,
+                           int signo, float hostFactor, Tick hostFreq)
+    : BaseKvmTimer(signo, hostFactor, hostFreq),
+      hwOverflow(ctr)
+{
+    hwOverflow.enableSignals(signo);
+}
+
+PerfKvmTimer::~PerfKvmTimer()
+{
+}
+
+void
+PerfKvmTimer::arm(Tick ticks)
+{
+    hwOverflow.period(hostCycles(ticks));
+    hwOverflow.refresh(1);
+}
+
+void
+PerfKvmTimer::disarm()
+{
+    hwOverflow.stop();
+}
+
+Tick
+PerfKvmTimer::calcResolution()
+{
+    // This is a bit arbitrary, but in practice, we can't really do
+    // anything useful in less than ~1000 anyway.
+    return ticksFromHostCycles(1000);
+}

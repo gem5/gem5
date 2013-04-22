@@ -42,6 +42,7 @@
 
 #include <ctime>
 
+#include "cpu/kvm/perfevent.hh"
 #include "sim/core.hh"
 
 /**
@@ -201,6 +202,46 @@ class PosixKvmTimer : public BaseKvmTimer
   private:
     clockid_t clockID;
     timer_t timer;
+};
+
+/**
+ * PerfEvent based timer using the host's CPU cycle counter.
+ *
+ * @warning There is a known problem in some versions of the PerfEvent
+ * API that prevents the counter overflow period from being updated
+ * reliably, which might break this timer. See PerfKvmCounter::period()
+ * for details.
+ */
+class PerfKvmTimer : public BaseKvmTimer
+{
+  public:
+    /**
+     * Create a timer that uses an existing hardware cycle counter.
+     *
+     * @note The performance counter must be configured for overflow
+     * sampling, which in practice means that it must have a non-zero
+     * sample period. The initial sample period is ignored since
+     * period will be updated when arm() is called.
+     *
+     * @param ctr Attached performance counter configured for overflow
+     *            reporting.
+     * @param signo Signal to deliver
+     * @param hostFactor Performance scaling factor
+     * @param hostFreq Clock frequency of the host
+     */
+    PerfKvmTimer(PerfKvmCounter &ctr,
+                 int signo,
+                 float hostFactor, Tick hostFreq);
+    ~PerfKvmTimer();
+
+    void arm(Tick ticks);
+    void disarm();
+
+  protected:
+    Tick calcResolution();
+
+  private:
+    PerfKvmCounter &hwOverflow;
 };
 
 #endif

@@ -69,4 +69,5 @@ class BaseKvmCPU(BaseCPU):
         return True
 
     kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')
+    usePerfOverflow = Param.Bool(False, "Use perf event overflow counters (EXPERIMENTAL)")
     hostFactor = Param.Float(1.0, "Cycle scale factor")

@@ -217,7 +217,8 @@ public:
      * like the new period isn't effective until after the next
      * counter overflow. If you use this method to change the sample
      * period, you will see one sample with the old period and then
-     * start sampling with the new period.
+     * start sampling with the new period. This problem was fixed for
+     * ARM in version 3.7 of the kernel.
      *
      * @warning This method doesn't work at all on some 2.6.3x kernels
      * since it has inverted check for the return value when copying

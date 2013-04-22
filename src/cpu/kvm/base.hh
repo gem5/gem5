@@ -460,12 +460,6 @@ class BaseKvmCPU : public BaseCPU
     /** Setup hardware performance counters */
     void setupCounters();
 
-    /** @{ */
-    /** Start/stop counting HW performance events */
-    void startCounters();
-    void stopCounters();
-    /** @} */
-
     /** KVM vCPU file descriptor */
     int vcpuFD;
     /** Size of MMAPed kvm_run area */
@@ -494,6 +488,15 @@ class BaseKvmCPU : public BaseCPU
     PerfKvmCounter hwCycles;
     PerfKvmCounter hwInstructions;
     /** @} */
+
+    /**
+     * Does the runTimer control the performance counters?
+     *
+     * The run timer will automatically enable and disable performance
+     * counters if a PerfEvent-based timer is used to control KVM
+     * exits.
+     */
+    bool perfControlledByTimer;
 
     /**
      * Timer used to force execution into the monitor after a

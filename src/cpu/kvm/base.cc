@@ -78,6 +78,7 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       _kvmRun(NULL), mmioRing(NULL),
       pageSize(sysconf(_SC_PAGE_SIZE)),
       tickEvent(*this),
+      perfControlledByTimer(params->usePerfOverflow),
       hostFactor(params->hostFactor)
 {
     if (pageSize == -1)
@@ -93,9 +94,15 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
     setupCounters();
     setupSignalHandler();
 
-    runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
-                                     params->hostFactor,
-                                     params->clock));
+    if (params->usePerfOverflow)
+        runTimer.reset(new PerfKvmTimer(hwCycles,
+                                        KVM_TIMER_SIGNAL,
+                                        params->hostFactor,
+                                        params->clock));
+    else
+        runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
+                                         params->hostFactor,
+                                         params->clock));
 }
 
 BaseKvmCPU::~BaseKvmCPU()
@@ -450,15 +457,25 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
     DPRINTF(KvmRun, "KVM: Executing for %i ticks\n", ticks);
     timerOverflowed = false;
+
+    // Arm the run timer and start the cycle timer if it isn't
+    // controlled by the overflow timer. Starting/stopping the cycle
+    // timer automatically starts the other perf timers as they are in
+    // the same counter group.
     runTimer->arm(ticks);
-    startCounters();
+    if (!perfControlledByTimer)
+        hwCycles.start();
+
     if (ioctl(KVM_RUN) == -1) {
         if (errno != EINTR)
             panic("KVM: Failed to start virtual CPU (errno: %i)\n",
                   errno);
     }
-    stopCounters();
+
     runTimer->disarm();
+    if (!perfControlledByTimer)
+        hwCycles.stop();
+
 
     uint64_t cyclesExecuted(hwCycles.read() - baseCycles);
     Tick ticksExecuted(runTimer->ticksFromHostCycles(cyclesExecuted));
@@ -821,6 +838,17 @@ BaseKvmCPU::setupCounters()
                                 PERF_COUNT_HW_CPU_CYCLES);
     cfgCycles.disabled(true)
         .pinned(true);
+
+    if (perfControlledByTimer) {
+        // We need to configure the cycles counter to send overflows
+        // since we are going to use it to trigger timer signals that
+        // trap back into m5 from KVM. In practice, this means that we
+        // need to set some non-zero sample period that gets
+        // overridden when the timer is armed.
+        cfgCycles.wakeupEvents(1)
+            .samplePeriod(42);
+    }
+
     hwCycles.attach(cfgCycles,
                     0); // TID (0 => currentThread)
 
@@ -830,19 +858,4 @@ BaseKvmCPU::setupCounters()
     hwInstructions.attach(cfgInstructions,
                           0, // TID (0 => currentThread)
                           hwCycles);
-}
-
-void
-BaseKvmCPU::startCounters()
-{
-    // We only need to start/stop the hwCycles counter since hwCycles
-    // and hwInstructions are a counter group with hwCycles as the
-    // group leader.
-    hwCycles.start();
-}
-
-void
-BaseKvmCPU::stopCounters()
-{
-    hwCycles.stop();
 }
