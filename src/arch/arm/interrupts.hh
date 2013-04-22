@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -150,6 +150,24 @@ class Interrupts : public SimObject
         return intStatus;
     }
 
+    /**
+     * Check the state of a particular interrupt, ignoring CPSR masks.
+     *
+     * This method is primarily used when running the target CPU in a
+     * hardware VM (e.g., KVM) to check if interrupts should be
+     * delivered upon guest entry.
+     *
+     * @param interrupt Interrupt type to check the state of.
+     * @return true if the interrupt is asserted, false otherwise.
+     */
+    bool
+    checkRaw(InterruptTypes interrupt) const
+    {
+        if (interrupt >= NumInterruptTypes)
+            panic("Interrupt number out of range.\n");
+
+        return interrupts[interrupt];
+    }
 
     Fault
     getInterrupt(ThreadContext *tc)
