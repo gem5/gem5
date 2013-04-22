@@ -50,10 +50,10 @@ BaseGen::BaseGen(QueuedMasterPort& _port, MasterID master_id, Tick _duration)
 }
 
 void
-BaseGen::send(Addr addr, unsigned size, const MemCmd& cmd)
+BaseGen::send(Addr addr, unsigned size, const MemCmd& cmd,
+              Request::FlagsType flags)
 {
     // Create new request
-    Request::Flags flags;
     Request *req = new Request(addr, size, flags, masterID);
 
     // Embed it in a packet
@@ -215,6 +215,8 @@ TraceGen::InputStream::read(TraceElement& element)
         element.addr = pkt_msg.addr();
         element.blocksize = pkt_msg.size();
         element.tick = pkt_msg.tick();
+        if (pkt_msg.has_flags())
+            element.flags = pkt_msg.flags();
         return true;
     }
 
@@ -280,14 +282,15 @@ TraceGen::execute()
     // state graph from executing the state if it should not
     assert(currElement.isValid());
 
-    DPRINTF(TrafficGen, "TraceGen::execute: %c %d %d %d\n",
+    DPRINTF(TrafficGen, "TraceGen::execute: %c %d %d %d 0x%x\n",
             currElement.cmd.isRead() ? 'r' : 'w',
             currElement.addr,
             currElement.blocksize,
-            currElement.tick);
+            currElement.tick,
+            currElement.flags);
 
     send(currElement.addr + addrOffset, currElement.blocksize,
-         currElement.cmd);
+         currElement.cmd, currElement.flags);
 }
 
 void

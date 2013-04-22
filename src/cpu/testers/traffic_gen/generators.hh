@@ -75,8 +75,10 @@ class BaseGen
      * @param addr Physical address to use
      * @param size Size of the request
      * @param cmd Memory command to send
+     * @param flags Optional request flags
      */
-    void send(Addr addr, unsigned size, const MemCmd& cmd);
+    void send(Addr addr, unsigned size, const MemCmd& cmd,
+              Request::FlagsType flags = 0);
 
   public:
 
@@ -327,6 +329,9 @@ class TraceGen : public BaseGen
 
         /** The time at which the request should be sent */
         Tick tick;
+
+        /** Potential request flags to use */
+        Request::FlagsType flags;
 
         /**
          * Check validity of this element.
