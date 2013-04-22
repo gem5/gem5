@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2012 ARM Limited
 # All rights reserved.
 #
@@ -37,28 +35,9 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from BaseKvmCPU import BaseKvmCPU
 
-if env['USE_KVM']:
-    SimObject('KvmVM.py')
-    SimObject('BaseKvmCPU.py')
-
-    Source('base.cc')
-    Source('vm.cc')
-    Source('perfevent.cc')
-    Source('timer.cc')
-
-    if env['TARGET_ISA'] == 'arm':
-        SimObject('ArmKvmCPU.py')
-        Source('arm_cpu.cc')
-
-    DebugFlag('Kvm', 'Basic KVM Functionality')
-    DebugFlag('KvmContext', 'KVM/gem5 context synchronization')
-    DebugFlag('KvmIO', 'KVM MMIO diagnostics')
-    DebugFlag('KvmInt', 'KVM Interrupt handling')
-    DebugFlag('KvmRun', 'KvmRun entry/exit diagnostics')
-    DebugFlag('KvmTimer', 'KVM timing')
-
-    CompoundFlag('KvmAll', [ 'Kvm', 'KvmContext', 'KvmRun',
-                             'KvmIO', 'KvmInt', 'KvmTimer' ],
-                 'All KVM debug flags')
+class ArmKvmCPU(BaseKvmCPU):
+    type = 'ArmKvmCPU'
+    cxx_header = "cpu/kvm/arm_cpu.hh"

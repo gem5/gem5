@@ -953,6 +953,7 @@ if not have_kvm:
 # Check if the requested target ISA is compatible with the host
 def is_isa_kvm_compatible(isa):
     isa_comp_table = {
+        "arm" : ( "armv7l" ),
         }
     try:
         import platform
