@@ -66,6 +66,8 @@ class ArmKvmCPU : public BaseKvmCPU
 
     void startup();
 
+    void dump();
+
   protected:
     struct KvmIntRegInfo {
         /** KVM ID */
@@ -127,6 +129,11 @@ class ArmKvmCPU : public BaseKvmCPU
      * value is written into n in this case). True on success.
      */
     bool getRegList(struct kvm_reg_list &regs) const;
+
+    void dumpKvmStateCore();
+    void dumpKvmStateMisc();
+    void dumpKvmStateCoProc(uint64_t id);
+    void dumpKvmStateVFP(uint64_t id);
 
     void updateKvmStateCore();
     void updateKvmStateMisc();

@@ -286,6 +286,13 @@ ArmKvmCPU::tick()
 }
 
 void
+ArmKvmCPU::dump()
+{
+    dumpKvmStateCore();
+    dumpKvmStateMisc();
+}
+
+void
 ArmKvmCPU::updateKvmState()
 {
     DPRINTF(KvmContext, "Updating KVM state...\n");
@@ -430,6 +437,130 @@ ArmKvmCPU::getRegList(struct kvm_reg_list &regs) const
 }
 
 void
+ArmKvmCPU::dumpKvmStateCore()
+{
+    /* Print core registers */
+    uint32_t pc(getOneRegU32(REG_CORE32(usr_regs.ARM_pc)));
+    inform("PC: 0x%x\n", pc);
+
+    for (const KvmIntRegInfo *ri(kvmIntRegs);
+         ri->idx != NUM_INTREGS; ++ri) {
+
+        uint32_t value(getOneRegU32(ri->id));
+        inform("%s: 0x%x\n", ri->name, value);
+    }
+
+    for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
+         ri->idx != NUM_MISCREGS; ++ri) {
+
+        uint32_t value(getOneRegU32(ri->id));
+        inform("%s: 0x%x\n", miscRegName[ri->idx], value);
+    }
+}
+
+void
+ArmKvmCPU::dumpKvmStateMisc()
+{
+    /* Print co-processor registers */
+    const RegIndexVector &reg_ids(getRegList());;
+    for (RegIndexVector::const_iterator it(reg_ids.begin());
+         it != reg_ids.end(); ++it) {
+        uint64_t id(*it);
+
+        if (REG_IS_ARM(id) && REG_CP(id) <= 15) {
+            dumpKvmStateCoProc(id);
+        } else if (REG_IS_ARM(id) && REG_IS_VFP(id)) {
+            dumpKvmStateVFP(id);
+        } else if (REG_IS_ARM(id) && REG_IS_DEMUX(id)) {
+            switch (id & KVM_REG_ARM_DEMUX_ID_MASK) {
+              case KVM_REG_ARM_DEMUX_ID_CCSIDR:
+                inform("CCSIDR [0x%x]: %s\n",
+                       EXTRACT_FIELD(id,
+                                     KVM_REG_ARM_DEMUX_VAL_MASK,
+                                     KVM_REG_ARM_DEMUX_VAL_SHIFT),
+                       getAndFormatOneReg(id));
+                break;
+              default:
+                inform("DEMUX [0x%x, 0x%x]: %s\n",
+                       EXTRACT_FIELD(id,
+                                     KVM_REG_ARM_DEMUX_ID_MASK,
+                                     KVM_REG_ARM_DEMUX_ID_SHIFT),
+                       EXTRACT_FIELD(id,
+                                     KVM_REG_ARM_DEMUX_VAL_MASK,
+                                     KVM_REG_ARM_DEMUX_VAL_SHIFT),
+                       getAndFormatOneReg(id));
+                break;
+            }
+        } else if (!REG_IS_CORE(id)) {
+            inform("0x%x: %s\n", id, getAndFormatOneReg(id));
+        }
+    }
+}
+
+void
+ArmKvmCPU::dumpKvmStateCoProc(uint64_t id)
+{
+    assert(REG_IS_ARM(id));
+    assert(REG_CP(id) <= 15);
+
+    if (REG_IS_32BIT(id)) {
+        // 32-bit co-proc registers
+        MiscRegIndex idx(decodeCoProcReg(id));
+        uint32_t value(getOneRegU32(id));
+
+        if (idx != NUM_MISCREGS &&
+            !(idx >= MISCREG_CP15_UNIMP_START && idx < MISCREG_CP15_END)) {
+            const char *name(miscRegName[idx]);
+            const unsigned m5_ne(tc->readMiscRegNoEffect(idx));
+            const unsigned m5_e(tc->readMiscReg(idx));
+            inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i]: "
+                   "[%s]: 0x%x/0x%x\n",
+                   REG_CP(id), REG_CRN(id), REG_OPC1(id), REG_CRM(id),
+                   REG_OPC2(id), isInvariantReg(id),
+                   name, value, m5_e);
+            if (m5_e != m5_ne) {
+                inform("readMiscReg: %x, readMiscRegNoEffect: %x\n",
+                       m5_e, m5_ne);
+            }
+        } else {
+            const char *name(idx != NUM_MISCREGS ? miscRegName[idx] : "-");
+            inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i]: [%s]: "
+                   "0x%x\n",
+                   REG_CP(id), REG_CRN(id), REG_OPC1(id), REG_CRM(id),
+                   REG_OPC2(id), isInvariantReg(id), name, value);
+        }
+    } else {
+        inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i "
+               "len: 0x%x]: %s\n",
+               REG_CP(id), REG_CRN(id), REG_OPC1(id), REG_CRM(id),
+               REG_OPC2(id), isInvariantReg(id),
+               EXTRACT_FIELD(id, KVM_REG_SIZE_MASK, KVM_REG_SIZE_SHIFT),
+               getAndFormatOneReg(id));
+    }
+}
+
+void
+ArmKvmCPU::dumpKvmStateVFP(uint64_t id)
+{
+    assert(REG_IS_ARM(id));
+    assert(REG_IS_VFP(id));
+
+    if (REG_IS_VFP_REG(id)) {
+        const unsigned idx(id & KVM_REG_ARM_VFP_MASK);
+        inform("VFP reg %i: %s", idx, getAndFormatOneReg(id));
+    } else if (REG_IS_VFP_CTRL(id)) {
+        MiscRegIndex idx(decodeVFPCtrlReg(id));
+        if (idx != NUM_MISCREGS) {
+            inform("VFP [%s]: %s", miscRegName[idx], getAndFormatOneReg(id));
+        } else {
+            inform("VFP [0x%x]: %s", id, getAndFormatOneReg(id));
+        }
+    } else {
+        inform("VFP [0x%x]: %s", id, getAndFormatOneReg(id));
+    }
+}
+
+void
 ArmKvmCPU::updateKvmStateCore()
 {
     for (const KvmIntRegInfo *ri(kvmIntRegs);
@@ -450,6 +581,9 @@ ArmKvmCPU::updateKvmStateCore()
         DPRINTF(KvmContext, "kvm(%s) := 0x%x\n", ri->name, value);
         setOneReg(ri->id, value);
     }
+
+    if (DTRACE(KvmContext))
+        dumpKvmStateCore();
 }
 
 void
@@ -486,6 +620,8 @@ ArmKvmCPU::updateKvmStateMisc()
     }
 
     warned = true;
+    if (DTRACE(KvmContext))
+        dumpKvmStateMisc();
 }
 
 void
@@ -589,6 +725,9 @@ ArmKvmCPU::updateTCStateCore()
     PCState pc(tc->pcState());
     pc.set(getOneRegU32(REG_CORE32(usr_regs.ARM_pc)));
     tc->pcState(pc);
+
+    if (DTRACE(KvmContext))
+        dumpKvmStateCore();
 }
 
 void
@@ -619,6 +758,9 @@ ArmKvmCPU::updateTCStateMisc()
     }
 
     warned = true;
+
+    if (DTRACE(KvmContext))
+        dumpKvmStateMisc();
 }
 
 void
