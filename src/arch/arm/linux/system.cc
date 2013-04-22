@@ -62,11 +62,22 @@ using namespace Linux;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p),
-      enableContextSwitchStatsDump(p->enable_context_switch_stats_dump)
+      enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
+      kernelPanicEvent(NULL), kernelOopsEvent(NULL)
 {
+    if (p->panic_on_panic) {
+        kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
+            "panic", "Kernel panic in simulated kernel");
+    } else {
 #ifndef NDEBUG
-    kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
+        kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 #endif
+    }
+
+    if (p->panic_on_oops) {
+        kernelOopsEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
+            "oops_exit", "Kernel oops in guest");
+    }
 
     // With ARM udelay() is #defined to __udelay
     uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(

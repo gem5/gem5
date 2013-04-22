@@ -98,10 +98,12 @@ class LinuxArmSystem : public ArmSystem
     void mapPid(ThreadContext* tc, uint32_t pid);
 
   private:
-#ifndef NDEBUG
     /** Event to halt the simulator if the kernel calls panic()  */
-    BreakPCEvent *kernelPanicEvent;
-#endif
+    PCEvent *kernelPanicEvent;
+
+    /** Event to halt the simulator if the kernel calls oopses  */
+    PCEvent *kernelOopsEvent;
+
     /**
      * PC based event to skip udelay(<time>) calls and quiesce the
      * processor for the appropriate amount of time. This is not functionally

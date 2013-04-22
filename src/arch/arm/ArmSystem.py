@@ -68,3 +68,8 @@ class LinuxArmSystem(ArmSystem):
     early_kernel_symbols = Param.Bool(False,
         "enable early kernel symbol tables before MMU")
     enable_context_switch_stats_dump = Param.Bool(False, "enable stats/task info dumping at context switch boundaries")
+
+    panic_on_panic = Param.Bool(False, "Trigger a gem5 panic if the " \
+                                    "guest kernel panics")
+    panic_on_oops = Param.Bool(False, "Trigger a gem5 panic if the " \
+                                   "guest kernel oopses")

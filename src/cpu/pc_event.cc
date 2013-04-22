@@ -158,3 +158,15 @@ sched_break_pc(Addr addr)
     }
 
 }
+
+PanicPCEvent::PanicPCEvent(PCEventQueue *q, const std::string &desc, Addr pc)
+    : PCEvent(q, desc, pc)
+{
+}
+
+void
+PanicPCEvent::process(ThreadContext *tc)
+{
+    StringWrap name(tc->getCpuPtr()->name() + ".panic_event");
+    panic(descr());
+}

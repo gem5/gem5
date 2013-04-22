@@ -146,4 +146,11 @@ void sched_break_pc_sys(System *sys, Addr addr);
 
 void sched_break_pc(Addr addr);
 
+class PanicPCEvent : public PCEvent
+{
+  public:
+    PanicPCEvent(PCEventQueue *q, const std::string &desc, Addr pc);
+    virtual void process(ThreadContext *tc);
+};
+
 #endif // __PC_EVENT_HH__
