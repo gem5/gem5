@@ -142,6 +142,16 @@ class Pl111(AmbaDmaDevice):
     vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
 
+class HDLcd(AmbaDmaDevice):
+    type = 'HDLcd'
+    cxx_header = "dev/arm/hdlcd.hh"
+    pixel_clock = Param.Clock('65MHz', "Clock frequency of the pixel clock "
+                                       "(i.e. PXLREFCLK / OSCCLK 5; 23.75MHz "
+                                       "default up to 165MHz)")
+    vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
+                                     "display")
+    amba_id = 0x00141000
+
 class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
@@ -333,6 +343,7 @@ class VExpress_EMM(RealView):
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
+    hdlcd  = HDLcd(pio_addr=0x2b000000, int_num=117)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
@@ -376,9 +387,11 @@ class VExpress_EMM(RealView):
     def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.master
        self.local_cpu_timer.pio = bus.master
+       self.hdlcd.dma           = bus.slave
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, a9scu)
        bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
+                        AddrRange(0x2B000000, size='4MB'),
                         AddrRange(0x30000000, size='256MB'),
                         AddrRange(0x40000000, size='512MB'),
                         AddrRange(0x18000000, size='64MB'),
@@ -394,6 +407,7 @@ class VExpress_EMM(RealView):
        self.timer1.pio          = bus.master
        self.clcd.pio            = bus.master
        self.clcd.dma            = bus.slave
+       self.hdlcd.pio           = bus.master
        self.kmi0.pio            = bus.master
        self.kmi1.pio            = bus.master
        self.cf_ctrl.pio         = bus.master
