@@ -1049,7 +1049,8 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
     if (checkStall(tid) &&
         fetchStatus[tid] != IcacheWaitResponse &&
         fetchStatus[tid] != IcacheWaitRetry &&
-        fetchStatus[tid] != ItlbWait) {
+        fetchStatus[tid] != ItlbWait &&
+        fetchStatus[tid] != QuiescePending) {
         DPRINTF(Fetch, "[tid:%i]: Setting to blocked\n",tid);
 
         fetchStatus[tid] = Blocked;
