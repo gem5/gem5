@@ -71,6 +71,13 @@ if args:
 DriveCPUClass = AtomicSimpleCPU
 drive_mem_mode = 'atomic'
 
+# Check if KVM support has been enabled, we might need to do VM
+# configuration if that's the case.
+have_kvm_support = 'BaseKvmCPU' in globals()
+def is_kvm_cpu(cpu_class):
+    return have_kvm_support and cpu_class != None and \
+        issubclass(cpu_class, BaseKvmCPU)
+
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
@@ -115,6 +122,9 @@ if options.script is not None:
 test_sys.init_param = options.init_param
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
+
+if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
+    test_sys.vm = KvmVM()
 
 if options.caches or options.l2cache:
     test_sys.iocache = IOCache(clock = '1GHz',
@@ -162,6 +172,9 @@ if len(bm) == 2:
         drive_sys.cpu.fastmem = True
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
+
+    if is_kvm_cpu(DriveCPUClass):
+        drive_sys.vm = KvmVM()
 
     drive_sys.iobridge = Bridge(delay='50ns',
                                 ranges = drive_sys.mem_ranges)
