@@ -363,8 +363,11 @@ AbstractMemory::access(PacketPtr pkt)
             bytesInstRead[pkt->req->masterId()] += pkt->getSize();
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
-            if (pmemAddr)
+            if (pmemAddr) {
                 memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+                DPRINTF(MemoryAccess, "%s wrote %x bytes to address %x\n",
+                        __func__, pkt->getSize(), pkt->getAddr());
+            }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
             numWrites[pkt->req->masterId()]++;

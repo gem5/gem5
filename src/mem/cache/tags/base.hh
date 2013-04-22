@@ -159,6 +159,11 @@ class BaseTags
      *Needed to clear all lock tracking at once
      */
     virtual void clearLocks() {}
+
+    /**
+     * Print all tags used
+     */
+    virtual std::string print() const = 0;
 };
 
 class BaseTagsCallback : public Callback

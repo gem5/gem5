@@ -337,6 +337,9 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 void
 CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
 {
+    DPRINTF(CoherentBus, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
     // snoops should only happen if the system isn't bypassing caches
     assert(!system->bypassCaches());
 

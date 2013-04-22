@@ -249,6 +249,11 @@ public:
     virtual void cleanupRefs();
 
     /**
+     * Print all tags used
+     */
+    virtual std::string print() const;
+
+    /**
      * Visit each block in the tag store and apply a visitor to the
      * block.
      *

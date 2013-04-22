@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -338,6 +338,13 @@ Packet::print(ostream &o, const int verbosity, const string &prefix) const
 {
     ccprintf(o, "%s[%x:%x] %s\n", prefix,
              getAddr(), getAddr() + getSize() - 1, cmdString());
+}
+
+std::string
+Packet::print() const {
+    ostringstream str;
+    print(str);
+    return str.str();
 }
 
 Packet::PrintReqState::PrintReqState(ostream &_os, int _verbosity)

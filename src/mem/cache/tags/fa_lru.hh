@@ -301,6 +301,11 @@ public:
     virtual void clearLocks();
 
     /**
+     * @todo Implement as in lru. Currently not used
+     */
+    virtual std::string print() const { return ""; }
+
+    /**
      * Visit each block in the tag store and apply a visitor to the
      * block.
      *

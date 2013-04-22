@@ -55,6 +55,7 @@
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
+#include "debug/CacheTags.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/cache.hh"
@@ -278,6 +279,8 @@ bool
 Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         Cycles &lat, PacketList &writebacks)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (pkt->req->isUncacheable()) {
         uncacheableFlush(pkt);
         blk = NULL;
@@ -288,9 +291,9 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
     blk = tags->accessBlock(pkt->getAddr(), lat, id);
 
-    DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s%s %x %s %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
-            pkt->getAddr(), (blk) ? "hit" : "miss");
+            pkt->getAddr(), blk ? "hit" : "miss", blk ? blk->print() : "");
 
     if (blk != NULL) {
 
@@ -330,6 +333,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
+        DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         return true;
     }
@@ -360,6 +364,8 @@ template<class TagStore>
 void
 Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     Tick time = clockEdge(hitLatency);
 
     assert(pkt->isResponse());
@@ -391,6 +397,7 @@ template<class TagStore>
 bool
 Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 {
+    DPRINTF(CacheTags, "%s tags: %s\n", __func__, tags->print());
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
@@ -630,6 +637,8 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
     pkt->allocate();
+    DPRINTF(Cache, "%s created %s address %x size %d\n",
+            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     return pkt;
 }
 
@@ -850,7 +859,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
     }
 
-    DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
+    DPRINTF(Cache, "Handling response to %s for address %x\n",
+            pkt->cmdString(), pkt->getAddr());
 
     MSHRQueue *mq = mshr->queue;
     bool wasFull = mq->isFull();
@@ -959,6 +969,9 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // propagate that.  Response should not have
                 // isInvalidate() set otherwise.
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
+                DPRINTF(Cache, "%s updated cmd to %s for address %x\n",
+                        __func__, target->pkt->cmdString(),
+                        target->pkt->getAddr());
             }
             // reset the bus additional time as it is now accounted for
             target->pkt->busFirstWordDelay = target->pkt->busLastWordDelay = 0;
@@ -1031,6 +1044,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         blk->invalidate();
     }
 
+    DPRINTF(Cache, "Leaving %s with %s for address %x\n", __func__,
+            pkt->cmdString(), pkt->getAddr());
     delete pkt;
 }
 
@@ -1234,8 +1249,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             blk->status |= BlkDirty;
     }
 
-    DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
-            addr, old_state, blk->status);
+    DPRINTF(Cache, "Block addr %x moving from state %x to %s\n",
+            addr, old_state, blk->print());
 
     // if we got new data, copy it in
     if (pkt->isRead()) {
@@ -1261,6 +1276,8 @@ Cache<TagStore>::
 doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
                        bool already_copied, bool pending_inval)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            req_pkt->cmdString(), req_pkt->getAddr(), req_pkt->getSize());
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
     PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
@@ -1282,6 +1299,8 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
         // invalidate it.
         pkt->cmd = MemCmd::ReadRespWithInvalidate;
     }
+    DPRINTF(Cache, "%s created response: %s address %x size %d\n",
+            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     memSidePort->schedTimingSnoopResp(pkt, clockEdge(hitLatency));
 }
 
@@ -1291,6 +1310,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
                              bool is_timing, bool is_deferred,
                              bool pending_inval)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     // deferred snoops can only happen in timing mode
     assert(!(is_deferred && !is_timing));
     // pending_inval only makes sense on deferred snoops
@@ -1336,9 +1357,15 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         }
     }
 
-    if (!blk || !blk->isValid()) {
-        return;
-    }
+     if (!blk || !blk->isValid()) {
+         DPRINTF(Cache, "%s snoop miss for %s address %x size %d\n",
+                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+         return;
+     } else {
+        DPRINTF(Cache, "%s snoop hit for %s for address %x size %d, "
+                "old state is %s\n", __func__, pkt->cmdString(),
+                pkt->getAddr(), pkt->getSize(), blk->print());
+     }
 
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
@@ -1359,10 +1386,6 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         }
         blk->status &= ~bits_to_clear;
     }
-
-    DPRINTF(Cache, "snooped a %s request for addr %x, %snew state is %i\n",
-            pkt->cmdString(), blockAlign(pkt->getAddr()),
-            respond ? "responding, " : "", invalidate ? 0 : blk->status);
 
     if (respond) {
         assert(!pkt->memInhibitAsserted());
@@ -1390,6 +1413,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         tags->invalidate(blk);
         blk->invalidate();
     }
+
+    DPRINTF(Cache, "new state is %s\n", blk->print());
 }
 
 
@@ -1397,6 +1422,9 @@ template<class TagStore>
 void
 Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
@@ -1417,8 +1445,9 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
     if (mshr && mshr->handleSnoop(pkt, order++)) {
-        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x\n",
-                blk_addr);
+        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x."
+                "mshrs: %s\n", blk_addr, mshr->print());
+
         if (mshr->getNumTargets() > numTarget)
             warn("allocating bonus target for snoop"); //handle later
         return;
@@ -1597,6 +1626,9 @@ Cache<TagStore>::getTimingPacket()
     // use request from 1st target
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
+
+    DPRINTF(CachePort, "%s %s for address %x size %d\n", __func__,
+            tgt_pkt->cmdString(), tgt_pkt->getAddr(), tgt_pkt->getSize());
 
     if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq ||
         tgt_pkt->cmd == MemCmd::StoreCondFailReq) {

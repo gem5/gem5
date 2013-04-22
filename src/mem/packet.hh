@@ -923,6 +923,14 @@ class Packet : public Printable
 
     void print(std::ostream &o, int verbosity = 0,
                const std::string &prefix = "") const;
+
+    /**
+     * A no-args wrapper of print(std::ostream...)
+     * meant to be invoked from DPRINTFs
+     * avoiding string overheads in fast mode
+     * @return string with the request's type and start<->end addresses
+     */
+    std::string print() const;
 };
 
 #endif //__MEM_PACKET_HH

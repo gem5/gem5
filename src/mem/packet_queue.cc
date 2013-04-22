@@ -107,6 +107,8 @@ PacketQueue::schedSendEvent(Tick when)
 void
 PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
 {
+    DPRINTF(PacketQueue, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     // we can still send a packet before the end of this tick
     assert(when >= curTick());
 

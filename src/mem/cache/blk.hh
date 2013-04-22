@@ -289,6 +289,42 @@ class CacheBlk
     }
 
     /**
+     * Pretty-print a tag, and interpret state bits to readable form
+     * including mapping to a MOESI stat.
+     *
+     * @return string with basic state information
+     */
+    std::string print() const
+    {
+        /**
+         *  state       M   O   E   S   I
+         *  writable    1   0   1   0   0
+         *  dirty       1   1   0   0   0
+         *  valid       1   1   1   1   0
+         *
+         *  state   writable    dirty   valid
+         *  M       1           1       1
+         *  O       0           1       1
+         *  E       1           0       1
+         *  S       0           0       1
+         *  I       0           0       0
+         **/
+        unsigned state = isWritable() << 2 | isDirty() << 1 | isValid();
+        char s = '?';
+        switch (state) {
+          case 0b111: s = 'M'; break;
+          case 0b011: s = 'O'; break;
+          case 0b101: s = 'E'; break;
+          case 0b001: s = 'S'; break;
+          case 0b000: s = 'I'; break;
+          default:    s = 'T'; break; // @TODO add other types
+        }
+        return csprintf("state: %x (%c) valid: %d writable: %d readable: %d "
+                        "dirty: %d tag: %x data: %x", status, s, isValid(),
+                        isWritable(), isReadable(), isDirty(), tag, *data);
+    }
+
+    /**
      * Handle interaction of load-locked operations and stores.
      * @return True if write should proceed, false otherwise.  Returns
      * false only in the case of a failed store conditional.

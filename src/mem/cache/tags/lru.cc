@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -36,6 +48,7 @@
 #include <string>
 
 #include "base/intmath.hh"
+#include "debug/Cache.hh"
 #include "debug/CacheRepl.hh"
 #include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/tags/lru.hh"
@@ -224,6 +237,23 @@ LRU::clearLocks()
     for (int i = 0; i < numBlocks; i++){
         blks[i].clearLoadLocks();
     }
+}
+
+std::string
+LRU::print() const {
+    std::string cache_state;
+    for (unsigned i = 0; i < numSets; ++i) {
+        // link in the data blocks
+        for (unsigned j = 0; j < assoc; ++j) {
+            BlkType *blk = sets[i].blks[j];
+            if (blk->isValid())
+                cache_state += csprintf("\tset: %d block: %d %s\n", i, j,
+                        blk->print());
+        }
+    }
+    if (cache_state.empty())
+        cache_state = "no valid tags\n";
+    return cache_state;
 }
 
 void

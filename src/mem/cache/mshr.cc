@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -303,6 +315,8 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
+    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (!inService || (pkt->isExpressSnoop() && downstreamPending)) {
         // Request has not been issued yet, or it's been issued
         // locally but is buffered unissued at some downstream cache
@@ -465,6 +479,14 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
         ccprintf(os, "%s  Deferred Targets:\n", prefix);
         deferredTargets->print(os, verbosity, prefix + "      ");
     }
+}
+
+std::string
+MSHR::print() const
+{
+    ostringstream str;
+    print(str);
+    return str.str();
 }
 
 MSHR::~MSHR()
