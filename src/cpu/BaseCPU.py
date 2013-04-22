@@ -98,6 +98,7 @@ class BaseCPU(MemObject):
     void takeOverFrom(BaseCPU *cpu);
     bool switchedOut();
     void flushTLBs();
+    Counter totalInsts();
 ''')
 
     @classmethod
