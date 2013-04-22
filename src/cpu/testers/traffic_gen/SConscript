@@ -44,6 +44,7 @@ Import('*')
 if env['HAVE_PROTOBUF']:
     SimObject('TrafficGen.py')
 
+    Source('generators.cc')
     Source('traffic_gen.cc')
 
     DebugFlag('TrafficGen')
