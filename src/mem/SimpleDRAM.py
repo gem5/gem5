@@ -43,10 +43,12 @@ from AbstractMemory import *
 # First-Served and a First-Row Hit then First-Come First-Served
 class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 
-# Enum for the address mapping, currently corresponding to either
+# Enum for the address mapping. With Ra, Co, Ba and Ch denoting rank,
+# column, bank and channel, respectively, and going from MSB to LSB,
+# the two schemes available are RaBaChCo and CoRaBaCh, either
 # optimising for sequential accesses hitting in the open row, or
-# striping across banks.
-class AddrMap(Enum): vals = ['openmap', 'closemap']
+# maximising parallelism.
+class AddrMap(Enum): vals = ['RaBaChCo', 'CoRaBaCh']
 
 # Enum for the page policy, either open or close.
 class PageManage(Enum): vals = ['open', 'close']
@@ -105,7 +107,7 @@ class SimpleDRAM(AbstractMemory):
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
-    addr_mapping = Param.AddrMap('openmap', "Address mapping policy")
+    addr_mapping = Param.AddrMap('RaBaChCo', "Address mapping policy")
     page_policy = Param.PageManage('open', "Page closure management policy")
 
     # the physical organisation of the DRAM

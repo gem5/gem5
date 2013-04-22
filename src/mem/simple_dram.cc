@@ -112,15 +112,15 @@ SimpleDRAM::init()
             panic("%s has %d interleaved address stripes but %d channel(s)\n",
                   name(), range.stripes(), channels);
 
-        if (addrMapping == Enums::openmap) {
+        if (addrMapping == Enums::RaBaChCo) {
             if (bytesPerCacheLine * linesPerRowBuffer !=
                 range.granularity()) {
-                panic("Interleaving of %s doesn't match open address map\n",
+                panic("Interleaving of %s doesn't match RaBaChCo address map\n",
                       name());
             }
-        } else if (addrMapping == Enums::closemap) {
+        } else if (addrMapping == Enums::CoRaBaCh) {
             if (bytesPerCacheLine != range.granularity())
-                panic("Interleaving of %s doesn't match closed address map\n",
+                panic("Interleaving of %s doesn't match CoRaBaCh address map\n",
                       name());
         }
     }
@@ -175,9 +175,9 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
 {
     // decode the address based on the address mapping scheme
     //
-    // with R, C, B and K denoting rank, column, bank and rank,
+    // with Ra, Co, Ba and Ch denoting rank, column, bank and channel,
     // respectively, and going from MSB to LSB, the two schemes are
-    // RKBC (openmap) and RCKB (closedmap)
+    // RaBaChCo and CoRaBaCh
     uint8_t rank;
     uint16_t bank;
     uint16_t row;
@@ -191,7 +191,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     // position within the cache line, proceed and select the
     // appropriate bits for bank, rank and row (no column address is
     // needed)
-    if (addrMapping == Enums::openmap) {
+    if (addrMapping == Enums::RaBaChCo) {
         // the lowest order bits denote the column to ensure that
         // sequential cache lines occupy the same row
         addr = addr / linesPerRowBuffer;
@@ -201,7 +201,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
         // controllers in the address mapping
         addr = addr / channels;
 
-        // after the column bits, we get the bank bits to interleave
+        // after the channel bits, we get the bank bits to interleave
         // over the banks
         bank = addr % banksPerRank;
         addr = addr / banksPerRank;
@@ -214,7 +214,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
         // lastly, get the row bits
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
-    } else if (addrMapping == Enums::closemap) {
+    } else if (addrMapping == Enums::CoRaBaCh) {
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
 
@@ -473,8 +473,8 @@ SimpleDRAM::printParams() const
             linesPerRowBuffer * rowsPerBank * banksPerRank * ranksPerChannel);
 
     string scheduler =  memSchedPolicy == Enums::fcfs ? "FCFS" : "FR-FCFS";
-    string address_mapping = addrMapping == Enums::openmap ? "OPENMAP" :
-        "CLOSEMAP";
+    string address_mapping = addrMapping == Enums::RaBaChCo ? "RaBaChCo" :
+        "CoRaBaCh";
     string page_policy = pageMgmt == Enums::open ? "OPEN" : "CLOSE";
 
     DPRINTF(DRAM,
