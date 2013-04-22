@@ -118,6 +118,11 @@ SimpleDRAM::init()
                 panic("Interleaving of %s doesn't match RaBaChCo address map\n",
                       name());
             }
+        } else if (addrMapping == Enums::RaBaCoCh) {
+            if (bytesPerCacheLine != range.granularity()) {
+                panic("Interleaving of %s doesn't match RaBaCoCh address map\n",
+                      name());
+            }
         } else if (addrMapping == Enums::CoRaBaCh) {
             if (bytesPerCacheLine != range.granularity())
                 panic("Interleaving of %s doesn't match CoRaBaCh address map\n",
@@ -173,11 +178,9 @@ SimpleDRAM::writeQueueFull() const
 SimpleDRAM::DRAMPacket*
 SimpleDRAM::decodeAddr(PacketPtr pkt)
 {
-    // decode the address based on the address mapping scheme
-    //
-    // with Ra, Co, Ba and Ch denoting rank, column, bank and channel,
-    // respectively, and going from MSB to LSB, the two schemes are
-    // RaBaChCo and CoRaBaCh
+    // decode the address based on the address mapping scheme, with
+    // Ra, Co, Ba and Ch denoting rank, column, bank and channel,
+    // respectively
     uint8_t rank;
     uint16_t bank;
     uint16_t row;
@@ -188,20 +191,36 @@ SimpleDRAM::decodeAddr(PacketPtr pkt)
     addr = addr / bytesPerCacheLine;
 
     // we have removed the lowest order address bits that denote the
-    // position within the cache line, proceed and select the
-    // appropriate bits for bank, rank and row (no column address is
-    // needed)
+    // position within the cache line
     if (addrMapping == Enums::RaBaChCo) {
         // the lowest order bits denote the column to ensure that
         // sequential cache lines occupy the same row
         addr = addr / linesPerRowBuffer;
 
-        // take out the channel part of the address, note that this has
-        // to match with how accesses are interleaved between the
-        // controllers in the address mapping
+        // take out the channel part of the address
         addr = addr / channels;
 
-        // after the channel bits, we get the bank bits to interleave
+        // after the channel bits, get the bank bits to interleave
+        // over the banks
+        bank = addr % banksPerRank;
+        addr = addr / banksPerRank;
+
+        // after the bank, we get the rank bits which thus interleaves
+        // over the ranks
+        rank = addr % ranksPerChannel;
+        addr = addr / ranksPerChannel;
+
+        // lastly, get the row bits
+        row = addr % rowsPerBank;
+        addr = addr / rowsPerBank;
+    } else if (addrMapping == Enums::RaBaCoCh) {
+        // take out the channel part of the address
+        addr = addr / channels;
+
+        // next, the column
+        addr = addr / linesPerRowBuffer;
+
+        // after the column bits, we get the bank bits to interleave
         // over the banks
         bank = addr % banksPerRank;
         addr = addr / banksPerRank;
@@ -474,7 +493,7 @@ SimpleDRAM::printParams() const
 
     string scheduler =  memSchedPolicy == Enums::fcfs ? "FCFS" : "FR-FCFS";
     string address_mapping = addrMapping == Enums::RaBaChCo ? "RaBaChCo" :
-        "CoRaBaCh";
+        (addrMapping == Enums::RaBaCoCh ? "RaBaCoCh" : "CoRaBaCh");
     string page_policy = pageMgmt == Enums::open ? "OPEN" : "CLOSE";
 
     DPRINTF(DRAM,

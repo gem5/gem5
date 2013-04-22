@@ -44,11 +44,11 @@ from AbstractMemory import *
 class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 
 # Enum for the address mapping. With Ra, Co, Ba and Ch denoting rank,
-# column, bank and channel, respectively, and going from MSB to LSB,
-# the two schemes available are RaBaChCo and CoRaBaCh, either
-# optimising for sequential accesses hitting in the open row, or
-# maximising parallelism.
-class AddrMap(Enum): vals = ['RaBaChCo', 'CoRaBaCh']
+# column, bank and channel, respectively, and going from MSB to LSB.
+# Available are RaBaChCo and RaBaCoCh, that are suitable for an
+# open-page policy, optimising for sequential accesses hitting in the
+# open row. For a closed-page policy, CoRaBaCh maximises parallelism.
+class AddrMap(Enum): vals = ['RaBaChCo', 'RaBaCoCh', 'CoRaBaCh']
 
 # Enum for the page policy, either open or close.
 class PageManage(Enum): vals = ['open', 'close']
