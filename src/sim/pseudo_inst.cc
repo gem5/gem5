@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,8 +47,10 @@
 #include <cerrno>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "arch/kernel_stats.hh"
+#include "arch/utility.hh"
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
@@ -81,6 +83,118 @@ static inline void
 panicFsOnlyPseudoInst(const char *name)
 {
     panic("Pseudo inst \"%s\" is only available in Full System mode.");
+}
+
+uint64_t
+pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
+{
+    uint64_t args[4];
+
+    // We need to do this in a slightly convoluted way since
+    // getArgument() might have side-effects on arg_num. We could have
+    // used the Argument class, but due to the possible side effects
+    // from getArgument, it'd most likely break.
+    int arg_num(0);
+    for (int i = 0; i < sizeof(args) / sizeof(*args); ++i)
+        args[arg_num++] = getArgument(tc, arg_num, sizeof(uint64_t), false);
+
+    switch (func) {
+      case 0x00: // arm_func
+        arm(tc);
+        break;
+
+      case 0x01: // quiesce_func
+        quiesce(tc);
+        break;
+
+      case 0x02: // quiescens_func
+        quiesceSkip(tc);
+        break;
+
+      case 0x03: // quiescecycle_func
+        quiesceNs(tc, args[0]);
+        break;
+
+      case 0x04: // quiescetime_func
+        return quiesceTime(tc);
+
+      case 0x07: // rpns_func
+        return rpns(tc);
+
+      case 0x09: // wakecpu_func
+        wakeCPU(tc, args[0]);
+        break;
+
+      case 0x21: // exit_func
+        m5exit(tc, args[0]);
+        break;
+
+      case 0x30: // initparam_func
+        return initParam(tc);
+
+      case 0x31: // loadsymbol_func
+        loadsymbol(tc);
+        break;
+
+      case 0x40: // resetstats_func
+        resetstats(tc, args[0], args[1]);
+        break;
+
+      case 0x41: // dumpstats_func
+        dumpstats(tc, args[0], args[1]);
+        break;
+
+      case 0x42: // dumprststats_func
+        dumpresetstats(tc, args[0], args[1]);
+        break;
+
+      case 0x43: // ckpt_func
+        m5checkpoint(tc, args[0], args[1]);
+        break;
+
+      case 0x4f: // writefile_func
+        return writefile(tc, args[0], args[1], args[2], args[3]);
+
+      case 0x50: // readfile_func
+        return readfile(tc, args[0], args[1], args[2]);
+
+      case 0x51: // debugbreak_func
+        debugbreak(tc);
+        break;
+
+      case 0x52: // switchcpu_func
+        switchcpu(tc);
+        break;
+
+      case 0x53: // addsymbol_func
+        addsymbol(tc, args[0], args[1]);
+        break;
+
+      case 0x54: // panic_func
+        panic("M5 panic instruction called at %s\n", tc->pcState());
+
+      case 0x5a: // work_begin_func
+        workbegin(tc, args[0], args[1]);
+        break;
+
+      case 0x5b: // work_end_func
+        workend(tc, args[0], args[1]);
+        break;
+
+      case 0x55: // annotate_func
+      case 0x56: // reserved2_func
+      case 0x57: // reserved3_func
+      case 0x58: // reserved4_func
+      case 0x59: // reserved5_func
+        warn("Unimplemented m5 op (0x%x)\n", func);
+        break;
+
+      default:
+        warn("Unhandled m5 op: 0x%x\n", func);
+        break;
+    }
+
+    return 0;
 }
 
 void

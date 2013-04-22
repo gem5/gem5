@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -37,6 +49,19 @@ class ThreadContext;
 #include "base/types.hh"
 
 namespace PseudoInst {
+
+/**
+ * Execute a decoded M5 pseudo instruction
+ *
+ * The ISA-specific code is responsible to decode the pseudo inst
+ * function number and subfunction number. After that has been done,
+ * the rest of the instruction can be implemented in an ISA-agnostic
+ * manner using the ISA-specific getArguments functions.
+ *
+ * @param func M5 pseudo op major function number (see utility/m5/m5ops.h)
+ * @param subfunc M5 minor function number. Mainly used for annotations.
+ */
+uint64_t pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc);
 
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
