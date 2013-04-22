@@ -1,3 +1,15 @@
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -32,9 +44,14 @@ from m5.objects import *
 from Benchmarks import *
 
 import CpuConfig
+import MemConfig
 
 def _listCpuTypes(option, opt, value, parser):
     CpuConfig.print_cpu_list()
+    sys.exit(0)
+
+def _listMemTypes(option, opt, value, parser):
+    MemConfig.print_mem_list()
     sys.exit(0)
 
 def addCommonOptions(parser):
@@ -45,6 +62,12 @@ def addCommonOptions(parser):
     parser.add_option("--cpu-type", type="choice", default="atomic",
                       choices=CpuConfig.cpu_names(),
                       help = "type of cpu to run with")
+    parser.add_option("--list-mem-types",
+                      action="callback", callback=_listMemTypes,
+                      help="List available memory types")
+    parser.add_option("--mem-type", type="choice", default="simple_mem",
+                      choices=MemConfig.mem_names(),
+                      help = "type of memory to use")
     parser.add_option("--checker", action="store_true");
     parser.add_option("-n", "--num-cpus", type="int", default=1)
     parser.add_option("--caches", action="store_true")

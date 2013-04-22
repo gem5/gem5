@@ -150,13 +150,15 @@ else:
 CPUClass.clock = options.clock
 CPUClass.numThreads = numThreads
 
+MemClass = Simulation.setMemClass(options)
+
 # Check -- do not allow SMT with multiple CPUs
 if options.smt and options.num_cpus > 1:
     fatal("You cannot use SMT with multiple CPUs!")
 
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = SimpleMemory(range=AddrRange("512MB")),
+                physmem = MemClass(range=AddrRange("512MB")),
                 membus = CoherentBus(), mem_mode = test_mem_mode)
 
 # Sanity check

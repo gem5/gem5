@@ -59,7 +59,7 @@ class LinuxAlphaSystemBuilder(object):
         pass
 
     def create_system(self):
-        system = FSConfig.makeLinuxAlphaSystem(self.mem_mode)
+        system = FSConfig.makeLinuxAlphaSystem(self.mem_mode, SimpleDDR3)
         self.init_system(system)
         return system
 

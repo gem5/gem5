@@ -55,7 +55,7 @@ options.num_cpus = 2
 
 #the system
 mdesc = SysConfig(disk = 'linux-x86.img')
-system = FSConfig.makeLinuxX86System('timing', options.num_cpus,
+system = FSConfig.makeLinuxX86System('timing', SimpleDDR3, options.num_cpus,
                                      mdesc=mdesc, Ruby=True)
 system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9.smp')
 system.cpu = [TimingSimpleCPU(cpu_id=i) for i in xrange(options.num_cpus)]

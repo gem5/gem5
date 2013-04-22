@@ -84,6 +84,11 @@ def is_kvm_cpu(cpu_class):
 TestCPUClass.clock = options.clock
 DriveCPUClass.clock = options.clock
 
+# Match the memories with the CPUs, the driver system always simple,
+# and based on the options for the test system
+DriveMemClass = SimpleMemory
+TestMemClass = Simulation.setMemClass(options)
+
 if options.benchmark:
     try:
         bm = Benchmarks[options.benchmark]
@@ -100,16 +105,18 @@ else:
 np = options.num_cpus
 
 if buildEnv['TARGET_ISA'] == "alpha":
-    test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
+    test_sys = makeLinuxAlphaSystem(test_mem_mode, TestMemClass, bm[0])
 elif buildEnv['TARGET_ISA'] == "mips":
-    test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0])
+    test_sys = makeLinuxMipsSystem(test_mem_mode, TestMemClass, bm[0])
 elif buildEnv['TARGET_ISA'] == "sparc":
-    test_sys = makeSparcSystem(test_mem_mode, bm[0])
+    test_sys = makeSparcSystem(test_mem_mode, TestMemClass, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
-    test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0])
+    test_sys = makeLinuxX86System(test_mem_mode, TestMemClass,
+                                  options.num_cpus, bm[0])
 elif buildEnv['TARGET_ISA'] == "arm":
-    test_sys = makeArmSystem(test_mem_mode, options.machine_type, bm[0],
-            options.dtb_filename, bare_metal=options.bare_metal)
+    test_sys = makeArmSystem(test_mem_mode, options.machine_type,
+                             TestMemClass, bm[0], options.dtb_filename,
+                             bare_metal=options.bare_metal)
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
@@ -154,15 +161,16 @@ CacheConfig.config_cache(options, test_sys)
 
 if len(bm) == 2:
     if buildEnv['TARGET_ISA'] == 'alpha':
-        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
+        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, DriveMemClass, bm[1])
     elif buildEnv['TARGET_ISA'] == 'mips':
-        drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1])
+        drive_sys = makeLinuxMipsSystem(drive_mem_mode, DriveMemClass, bm[1])
     elif buildEnv['TARGET_ISA'] == 'sparc':
-        drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
+        drive_sys = makeSparcSystem(drive_mem_mode, DriveMemClass, bm[1])
     elif buildEnv['TARGET_ISA'] == 'x86':
-        drive_sys = makeX86System(drive_mem_mode, np, bm[1])
+        drive_sys = makeX86System(drive_mem_mode, DriveMemClass, np, bm[1])
     elif buildEnv['TARGET_ISA'] == 'arm':
-        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
+        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type,
+                                  DriveMemClass, bm[1])
 
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.createThreads()

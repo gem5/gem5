@@ -32,7 +32,7 @@ m5.util.addToPath('../configs/common')
 from FSConfig import *
 from Benchmarks import *
 
-test_sys = makeLinuxAlphaSystem('atomic',
+test_sys = makeLinuxAlphaSystem('atomic', SimpleDDR3,
                                  SysConfig('netperf-stream-client.rcS'))
 test_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller
@@ -46,7 +46,7 @@ test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
 test_sys.iobridge.slave = test_sys.iobus.master
 test_sys.iobridge.master = test_sys.membus.slave
 
-drive_sys = makeLinuxAlphaSystem('atomic',
+drive_sys = makeLinuxAlphaSystem('atomic', SimpleDDR3,
                                  SysConfig('netperf-server.rcS'))
 drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller

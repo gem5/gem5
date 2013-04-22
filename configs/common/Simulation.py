@@ -44,6 +44,7 @@ from os import getcwd
 from os.path import join as joinpath
 
 import CpuConfig
+import MemConfig
 
 import m5
 from m5.defines import buildEnv
@@ -83,6 +84,11 @@ def setCPUClass(options):
         test_mem_mode = 'atomic'
 
     return (TmpClass, test_mem_mode, CPUClass)
+
+def setMemClass(options):
+    """Returns a memory controller class."""
+
+    return MemConfig.get(options.mem_type)
 
 def setWorkCountOptions(system, options):
     if options.work_item_id != None:
