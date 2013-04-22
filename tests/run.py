@@ -44,6 +44,8 @@ import re
 import string
 
 from os.path import join as joinpath
+import os.path
+import os
 
 import m5
 
@@ -92,6 +94,46 @@ def require_sim_object(name, fatal=False):
             m5.fatal(msg)
         else:
             skip_test(msg)
+
+
+def require_file(path, fatal=False, mode=os.F_OK):
+    """Test if a file exists and abort/skip test if not.
+
+    Arguments:
+      path -- File to test for.
+
+    Keyword arguments:
+      fatal -- Set to True to indicate that the test should fail
+               instead of being skipped.
+      modes -- Mode to test for, default to existence. See the
+               Python documentation for os.access().
+    """
+
+    if os.access(path, mode):
+        return
+    else:
+        msg = "Test requires '%s'" % path
+        if not os.path.exists(path):
+            msg += " which does not exist."
+        else:
+            msg += " which has incorrect permissions."
+
+        if fatal:
+            m5.fatal(msg)
+        else:
+            skip_test(msg)
+
+def require_kvm(kvm_dev="/dev/kvm", fatal=False):
+    """Test if KVM is available.
+
+    Keyword arguments:
+      kvm_dev -- Device to test (normally /dev/kvm)
+      fatal -- Set to True to indicate that the test should fail
+               instead of being skipped.
+    """
+
+    require_sim_object("BaseKvmCPU", fatal=fatal)
+    require_file(kvm_dev, fatal=fatal, mode=os.R_OK | os.W_OK)
 
 def run_test(root):
     """Default run_test implementations. Scripts can override it."""

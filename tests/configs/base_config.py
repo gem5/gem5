@@ -43,6 +43,8 @@ m5.util.addToPath('../configs/common')
 import FSConfig
 from Caches import *
 
+_have_kvm_support = 'BaseKvmCPU' in globals()
+
 class BaseSystem(object):
     """Base system builder.
 
@@ -111,6 +113,14 @@ class BaseSystem(object):
         """
         cpu.createInterruptController()
 
+    def init_kvm(self, system):
+        """Do KVM-specific system initialization.
+
+        Arguments:
+          system -- System to work on.
+        """
+        system.vm = KvmVM()
+
     def init_system(self, system):
         """Initialize a system.
 
@@ -118,6 +128,10 @@ class BaseSystem(object):
           system -- System to initialize.
         """
         system.cpu = self.create_cpus()
+
+        if _have_kvm_support and \
+                any([isinstance(c, BaseKvmCPU) for c in system.cpu]):
+            self.init_kvm(system)
 
         sha_bus = self.create_caches_shared(system)
         for cpu in system.cpu:
