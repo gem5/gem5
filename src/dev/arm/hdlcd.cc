@@ -282,7 +282,7 @@ HDLcd::write(PacketPtr pkt)
             if (new_command.enable) {
                 doUpdateParams = true;
                 if (!frameUnderway) {
-                    schedule(startFrameEvent, nextCycle());
+                    schedule(startFrameEvent, clockEdge());
                 }
             }
         }
@@ -514,7 +514,7 @@ HDLcd::renderPixel()
             frameUnderrun = true;
             int_rawstat.underrun = 1;
             if (!intEvent.scheduled())
-                schedule(intEvent, nextCycle());
+                schedule(intEvent, clockEdge());
         } else {
             // emulate the pixel read from the internal buffer
             pixelBufferSize -= bytesPerPixel() * count;
@@ -524,7 +524,7 @@ HDLcd::renderPixel()
     // the DMA may have previously stalled due to the buffer being full;
     //   give it a kick; it knows not to fill if at end of frame, underrun, etc
     if (!fillPixelBufferEvent.scheduled())
-        schedule(fillPixelBufferEvent, nextCycle());
+        schedule(fillPixelBufferEvent, clockEdge());
 
     // schedule the next pixel read according to where it is in the frame
     pixelIndex += count;
@@ -597,7 +597,7 @@ HDLcd::dmaDone(DmaDoneEvent *event)
     if ((dmaCurAddr < dmaMaxAddr) &&
         (bytesFreeInPixelBuffer() + targetTransSize < PIXEL_BUFFER_CAPACITY) &&
         !fillPixelBufferEvent.scheduled()) {
-        schedule(fillPixelBufferEvent, nextCycle());
+        schedule(fillPixelBufferEvent, clockEdge());
     }
 }
 

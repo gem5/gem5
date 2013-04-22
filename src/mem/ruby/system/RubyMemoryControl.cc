@@ -307,7 +307,7 @@ RubyMemoryControl::enqueueMemRef(MemoryNode& memRef)
     m_input_queue.push_back(memRef);
 
     if (!m_event.scheduled()) {
-        schedule(m_event, nextCycle());
+        schedule(m_event, clockEdge());
     }
 }
 

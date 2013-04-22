@@ -1720,7 +1720,7 @@ FullO3CPU<Impl>::wakeCPU()
     idleCycles += cycles;
     numCycles += cycles;
 
-    schedule(tickEvent, nextCycle());
+    schedule(tickEvent, clockEdge());
 }
 
 template <class Impl>

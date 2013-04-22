@@ -135,7 +135,7 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
     // the bus will be called at a time that is not necessarily
     // coinciding with its own clock, so start by determining how long
     // until the next clock edge (could be zero)
-    Tick offset = nextCycle() - curTick();
+    Tick offset = clockEdge() - curTick();
 
     // determine how many cycles are needed to send the data
     unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;

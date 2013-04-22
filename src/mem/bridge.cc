@@ -277,7 +277,7 @@ Bridge::BridgeMasterPort::trySendTiming()
             req = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
             bridge.schedule(sendEvent, std::max(req.tick,
-                                                bridge.nextCycle()));
+                                                bridge.clockEdge()));
         }
 
         // if we have stalled a request due to a full request queue,
@@ -318,7 +318,7 @@ Bridge::BridgeSlavePort::trySendTiming()
             resp = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
             bridge.schedule(sendEvent, std::max(resp.tick,
-                                                bridge.nextCycle()));
+                                                bridge.clockEdge()));
         }
 
         // if there is space in the request queue and we were stalling

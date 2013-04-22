@@ -172,13 +172,14 @@ class ClockedObject : public SimObject
     }
 
     /**
-     * Based on the clock of the object, determine the tick when the
-     * next cycle begins, in other words, return the next clock edge.
+     * Based on the clock of the object, determine the tick when the next
+     * cycle begins, in other words, return the next clock edge.
+     * (This can never be the current tick.)
      *
      * @return The tick when the next cycle starts
      */
     Tick nextCycle() const
-    { return clockEdge(); }
+    { return clockEdge(Cycles(1)); }
 
     inline uint64_t frequency() const { return SimClock::Frequency / clock; }
 

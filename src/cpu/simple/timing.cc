@@ -120,7 +120,7 @@ TimingSimpleCPU::drain(DrainManager *drain_manager)
         // succeed on the first attempt. We need to reschedule it if
         // the CPU is waiting for a microcode routine to complete.
         if (_status == BaseSimpleCPU::Running && !fetchEvent.scheduled())
-            schedule(fetchEvent, nextCycle());
+            schedule(fetchEvent, clockEdge());
 
         return 1;
     }
@@ -616,7 +616,7 @@ TimingSimpleCPU::advanceInst(Fault fault)
     if (fault != NoFault) {
         advancePC(fault);
         DPRINTF(SimpleCPU, "Fault occured, scheduling fetch event\n");
-        reschedule(fetchEvent, nextCycle(), true);
+        reschedule(fetchEvent, clockEdge(), true);
         _status = Faulting;
         return;
     }
@@ -715,7 +715,7 @@ TimingSimpleCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
     DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
     // delay processing of returned data until next CPU clock edge
-    Tick next_tick = cpu->nextCycle();
+    Tick next_tick = cpu->clockEdge();
 
     if (next_tick == curTick())
         cpu->completeIfetch(pkt);
@@ -807,7 +807,7 @@ bool
 TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)
 {
     // delay processing of returned data until next CPU clock edge
-    Tick next_tick = cpu->nextCycle();
+    Tick next_tick = cpu->clockEdge();
 
     if (next_tick == curTick()) {
         cpu->completeDataAccess(pkt);

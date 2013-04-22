@@ -1715,7 +1715,7 @@ InOrderCPU::wakeCPU()
 
     numCycles += extra_cycles;
 
-    schedule(&tickEvent, nextCycle());
+    schedule(&tickEvent, clockEdge());
 }
 
 // Lots of copied full system code...place into BaseCPU class?
