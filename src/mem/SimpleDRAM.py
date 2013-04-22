@@ -239,3 +239,39 @@ class SimpleLPDDR2_S4(SimpleDRAM):
     # Irrespective of size, tFAW is 50 ns
     tXAW = '50ns'
     activation_limit = 4
+
+# High-level model of a single WideIO x128 interface (one command and
+# address bus), with default timings based on an estimated WIO-200 8
+# Gbit part.
+class SimpleWideIO(SimpleDRAM):
+    # Assuming 64 byte cache lines, use a 4kbyte page size, this
+    # depends on the memory density
+    lines_per_rowbuffer = 64
+
+    # Use one rank for a one-high die stack
+    ranks_per_channel = 1
+
+    # WideIO has 4 banks in all configurations
+    banks_per_rank = 4
+
+    # WIO-200
+    tRCD = '18ns'
+    tCL = '18ns'
+    tRP = '18ns'
+
+    # Assuming 64 byte cache lines, across an x128 SDR interface,
+    # translates to BL4, 4 clocks @ 200 MHz
+    tBURST = '20ns'
+
+    # WIO 8 Gb
+    tRFC = '210ns'
+
+    # WIO 8 Gb, <=85C, half for >85C
+    tREFI = '3.9us'
+
+    # Greater of 2 CK or 15 ns, 2 CK @ 200 MHz = 10 ns
+    tWTR = '15ns'
+
+    # Two instead of four activation window
+    tXAW = '50ns'
+    activation_limit = 2
