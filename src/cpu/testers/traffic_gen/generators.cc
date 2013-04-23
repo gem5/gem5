@@ -215,8 +215,7 @@ TraceGen::InputStream::read(TraceElement& element)
         element.addr = pkt_msg.addr();
         element.blocksize = pkt_msg.size();
         element.tick = pkt_msg.tick();
-        if (pkt_msg.has_flags())
-            element.flags = pkt_msg.flags();
+        element.flags = pkt_msg.has_flags() ? pkt_msg.flags() : 0;
         return true;
     }
 
