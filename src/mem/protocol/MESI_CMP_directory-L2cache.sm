@@ -72,7 +72,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     // Blocking states
     SS_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from SS";
     MT_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from MT";
-    M_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from M";
 
     MT_IIB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
@@ -817,21 +816,21 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   // BASE STATE - I
 
   // Transitions from I (Idle)
-  transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, M_MB, MT_IB, MT_SB}, L1_PUTX) {
+  transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, MT_IB, MT_SB}, L1_PUTX) {
     t_sendWBAck;    
     jj_popL1RequestQueue;
   }
 
-  transition({NP, SS, M, MT, M_I, I_I, S_I, IS, ISS, IM, M_MB, MT_IB, MT_SB}, L1_PUTX_old) {
+  transition({NP, SS, M, MT, M_I, I_I, S_I, IS, ISS, IM, MT_IB, MT_SB}, L1_PUTX_old) {
     t_sendWBAck;    
     jj_popL1RequestQueue;
   }
 
-  transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean}) {
+  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean}) {
     zz_stallAndWaitL1RequestQueue;
   }
 
-  transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {         
+  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {         
     zn_recycleResponseNetwork;
   }
 
@@ -840,7 +839,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
 
-  transition({SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
+  transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
     zz_stallAndWaitL1RequestQueue;
   }
 
@@ -1040,14 +1039,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     kd_wakeUpDependents;
   }
 
-  transition(SS_MB, Exclusive_Unblock, MT) {
-    // update actual directory
-    mmu_markExclusiveFromUnblock;
-    k_popUnblockQueue;
-    kd_wakeUpDependents;
-  }
-
-  transition({M_MB, MT_MB}, Exclusive_Unblock, MT) {
+  transition({SS_MB,MT_MB}, Exclusive_Unblock, MT) {
     // update actual directory
     mmu_markExclusiveFromUnblock;
     k_popUnblockQueue;
