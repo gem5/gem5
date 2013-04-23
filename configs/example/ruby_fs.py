@@ -82,10 +82,13 @@ if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
 
 CPUClass.clock = options.clock
 
+TestMemClass = Simulation.setMemClass(options)
+
 if buildEnv['TARGET_ISA'] == "alpha":
-    system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
+    system = makeLinuxAlphaRubySystem(test_mem_mode, TestMemClass, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
-    system = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0], True)
+    system = makeLinuxX86System(test_mem_mode, TestMemClass,
+                                options.num_cpus, bm[0], True)
     Simulation.setWorkCountOptions(system, options)
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
