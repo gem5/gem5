@@ -69,6 +69,11 @@ def macroop RET_FAR {
     # Get the return CS
     ld t2, ss, [1, t0, rsp], ssz
 
+    # increment the stack pointer to pop the instruction pointer
+    # and the code segment from the stack.
+    addi rsp, rsp, dsz
+    addi rsp, rsp, dsz
+
     # Get the rpl
     andi t3, t2, 0x3
 
