@@ -3,12 +3,12 @@ Redirecting stderr to build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-bo
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 28 2013 10:05:24
-gem5 started Mar 28 2013 10:05:51
+gem5 compiled Apr 18 2013 13:38:36
+gem5 started Apr 18 2013 13:38:48
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86_MESI_CMP_directory/gem5.opt -d build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory -re tests/run.py build/X86_MESI_CMP_directory/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_CMP_directory
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9.smp
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5208135619000 because m5_exit instruction encountered
+Exiting @ tick 5205148879000 because m5_exit instruction encountered

@@ -3,8 +3,8 @@ Redirecting stderr to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 26 2013 15:13:59
-gem5 started Mar 27 2013 00:05:57
+gem5 compiled Apr 18 2013 13:37:41
+gem5 started Apr 18 2013 14:16:02
 gem5 executing on ribera.cs.wisc.edu
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -81,4 +81,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 434516346000 because target called exit()
+Exiting @ tick 434543595000 because target called exit()
