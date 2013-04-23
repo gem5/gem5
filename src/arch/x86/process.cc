@@ -98,7 +98,7 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
     vsyscallPage.base = 0xffffffffff600000ULL;
     vsyscallPage.size = VMPageSize;
     vsyscallPage.vtimeOffset = 0x400;
-    vsyscallPage.vgettimeofdayOffset = 0x410;
+    vsyscallPage.vgettimeofdayOffset = 0x0;
 
     // Set up stack. On X86_64 Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space plus one page
