@@ -55,9 +55,9 @@ PageTable::PageTable(const std::string &__name, uint64_t _pid, Addr _pageSize)
       pid(_pid), _name(__name)
 {
     assert(isPowerOf2(pageSize));
-    pTableCache[0].vaddr = 0;
-    pTableCache[1].vaddr = 0;
-    pTableCache[2].vaddr = 0;
+    pTableCache[0].valid = false;
+    pTableCache[1].valid = false;
+    pTableCache[2].valid = false;
 }
 
 PageTable::~PageTable()
@@ -79,6 +79,7 @@ PageTable::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
         }
 
         pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr);
+        eraseCacheEntry(vaddr);
         updateCache(vaddr, pTable[vaddr]);
     }
 }
@@ -97,6 +98,7 @@ PageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 
         pTable[new_vaddr] = pTable[vaddr];
         pTable.erase(vaddr);
+        eraseCacheEntry(vaddr);
         pTable[new_vaddr].updateVaddr(new_vaddr);
         updateCache(new_vaddr, pTable[new_vaddr]);
     }
@@ -111,8 +113,8 @@ PageTable::unmap(Addr vaddr, int64_t size)
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
         assert(pTable.find(vaddr) != pTable.end());
-
         pTable.erase(vaddr);
+        eraseCacheEntry(vaddr);
     }
 
 }
@@ -137,15 +139,15 @@ PageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
 {
     Addr page_addr = pageAlign(vaddr);
 
-    if (pTableCache[0].vaddr == page_addr) {
+    if (pTableCache[0].valid && pTableCache[0].vaddr == page_addr) {
         entry = pTableCache[0].entry;
         return true;
     }
-    if (pTableCache[1].vaddr == page_addr) {
+    if (pTableCache[1].valid && pTableCache[1].vaddr == page_addr) {
         entry = pTableCache[1].entry;
         return true;
     }
-    if (pTableCache[2].vaddr == page_addr) {
+    if (pTableCache[2].valid && pTableCache[2].vaddr == page_addr) {
         entry = pTableCache[2].entry;
         return true;
     }

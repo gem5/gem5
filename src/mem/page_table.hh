@@ -57,6 +57,7 @@ class PageTable
     PTable pTable;
 
     struct cacheElement {
+        bool valid;
         Addr vaddr;
         TheISA::TlbEntry entry;
     };
@@ -132,12 +133,32 @@ class PageTable
     {
         pTableCache[2].entry = pTableCache[1].entry;
         pTableCache[2].vaddr = pTableCache[1].vaddr;
+        pTableCache[2].valid = pTableCache[1].valid;
+
         pTableCache[1].entry = pTableCache[0].entry;
         pTableCache[1].vaddr = pTableCache[0].vaddr;
+        pTableCache[1].valid = pTableCache[0].valid;
+
         pTableCache[0].entry = entry;
         pTableCache[0].vaddr = vaddr;
+        pTableCache[0].valid = true;
     }
 
+    /**
+     * Erase an entry from the page table cache.
+     * @param vaddr virtual address (page aligned) to check
+     */
+    inline void eraseCacheEntry(Addr vaddr)
+    {
+        // Invalidate cached entries if necessary
+        if (pTableCache[0].valid && pTableCache[0].vaddr == vaddr) {
+            pTableCache[0].valid = false;
+        } else if (pTableCache[1].valid && pTableCache[1].vaddr == vaddr) {
+            pTableCache[1].valid = false;
+        } else if (pTableCache[2].valid && pTableCache[2].vaddr == vaddr) {
+            pTableCache[2].valid = false;
+        }
+    }
 
     void serialize(std::ostream &os);
 
