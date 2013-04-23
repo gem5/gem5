@@ -1,0 +1,12 @@
+Redirecting stdout to build/X86/tests/fast/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full/simout
+Redirecting stderr to build/X86/tests/fast/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Apr 22 2013 15:54:37
+gem5 started Apr 22 2013 16:25:06
+gem5 executing on ribera.cs.wisc.edu
+command line: build/X86/gem5.fast -d build/X86/tests/fast/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full -re tests/run.py build/X86/tests/fast/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full
+Global frequency set at 1000000000000 ticks per second
+info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9
+info: Entering event queue @ 0.  Starting simulation...

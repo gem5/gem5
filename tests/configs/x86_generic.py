@@ -107,3 +107,11 @@ class LinuxX86FSSystemUniprocessor(LinuxX86SystemBuilder,
                                       L2Cache(size='4MB', assoc=8),
                                       PageTableWalkerCache(),
                                       PageTableWalkerCache())
+
+
+class LinuxX86FSSwitcheroo(LinuxX86SystemBuilder, BaseFSSwitcheroo):
+    """Uniprocessor X86 system prepared for CPU switching"""
+
+    def __init__(self, **kwargs):
+        BaseFSSwitcheroo.__init__(self, **kwargs)
+        LinuxX86SystemBuilder.__init__(self)

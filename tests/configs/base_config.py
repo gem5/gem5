@@ -104,14 +104,18 @@ class BaseSystem(object):
         system.l2c.mem_side = system.membus.slave
         return system.toL2Bus
 
-    def init_cpu(self, system, cpu):
+    def init_cpu(self, system, cpu, sha_bus):
         """Initialize a CPU.
 
         Arguments:
           system -- System to work on.
           cpu -- CPU to initialize.
         """
-        cpu.createInterruptController()
+        if not cpu.switched_out:
+            self.create_caches_private(cpu)
+            cpu.createInterruptController()
+            cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
+                                system.membus)
 
     def init_kvm(self, system):
         """Do KVM-specific system initialization.
@@ -135,13 +139,7 @@ class BaseSystem(object):
 
         sha_bus = self.create_caches_shared(system)
         for cpu in system.cpu:
-            if not cpu.switched_out:
-                self.create_caches_private(cpu)
-                self.init_cpu(system, cpu)
-                cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
-                                    system.membus)
-            else:
-                self.init_cpu(system, cpu)
+            self.init_cpu(system, cpu, sha_bus)
 
     @abstractmethod
     def create_system(self):

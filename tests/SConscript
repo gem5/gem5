@@ -323,7 +323,8 @@ if env['TARGET_ISA'] == 'arm':
 if env['TARGET_ISA'] == 'x86':
     configs += ['pc-simple-atomic',
                 'pc-simple-timing',
-                'pc-o3-timing']
+                'pc-o3-timing',
+                'pc-switcheroo-full']
 
 configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
             'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
