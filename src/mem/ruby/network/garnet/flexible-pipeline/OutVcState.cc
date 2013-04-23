@@ -31,6 +31,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 
 OutVcState::OutVcState(int id)
+    : m_time(0)
 {
     m_id = id;
     m_vc_state = IDLE_;

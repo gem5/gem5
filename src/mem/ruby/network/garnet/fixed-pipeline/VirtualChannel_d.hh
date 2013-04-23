@@ -39,7 +39,7 @@
 class VirtualChannel_d
 {
   public:
-    VirtualChannel_d(int id, Cycles curTime);
+    VirtualChannel_d(int id);
     ~VirtualChannel_d();
 
     bool need_stage(VC_state_type state, flit_stage stage, Cycles curTime);

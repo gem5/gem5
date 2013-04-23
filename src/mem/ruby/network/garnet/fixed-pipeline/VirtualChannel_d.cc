@@ -30,13 +30,13 @@
 
 #include "mem/ruby/network/garnet/fixed-pipeline/VirtualChannel_d.hh"
 
-VirtualChannel_d::VirtualChannel_d(int id, Cycles curTime)
+VirtualChannel_d::VirtualChannel_d(int id)
     : m_enqueue_time(INFINITE_)
 {
     m_id = id;
     m_input_buffer = new flitBuffer_d();
     m_vc_state.first = IDLE_;
-    m_vc_state.second = curTime;
+    m_vc_state.second = Cycles(0);
 }
 
 VirtualChannel_d::~VirtualChannel_d()

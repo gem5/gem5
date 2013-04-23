@@ -36,7 +36,7 @@
 using namespace std;
 
 BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
-    : Network(p), m_ruby_start(0)
+    : Network(p)
 {
     m_ni_flit_size = p->ni_flit_size;
     m_vcs_per_vnet = p->vcs_per_vnet;
@@ -123,13 +123,6 @@ BaseGarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
 void
 BaseGarnetNetwork::clearStats()
 {
-    m_ruby_start = curCycle();
-}
-
-Cycles
-BaseGarnetNetwork::getRubyStartTime()
-{
-    return m_ruby_start;
 }
 
 void

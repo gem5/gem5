@@ -94,13 +94,6 @@ RubySystem::RubySystem(const Params *p)
 }
 
 void
-RubySystem::init()
-{
-    m_profiler_ptr->clearStats();
-    m_network_ptr->clearStats();
-}
-
-void
 RubySystem::registerNetwork(Network* network_ptr)
 {
   m_network_ptr = network_ptr;
@@ -311,12 +304,6 @@ RubySystem::readCompressedTrace(string filename, uint8_t *&raw_data,
 void
 RubySystem::unserialize(Checkpoint *cp, const string &section)
 {
-    //
-    // The main purpose for clearing stats in the unserialize process is so
-    // that the profiler can correctly set its start time to the unserialized
-    // value of curTick()
-    //
-    resetStats();
     uint8_t *uncompressed_trace = NULL;
 
     if (m_mem_vec_ptr != NULL) {
@@ -368,6 +355,23 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
 void
 RubySystem::startup()
 {
+
+    // Ruby restores state from a checkpoint by resetting the clock to 0 and
+    // playing the requests that can possibly re-generate the cache state.
+    // The clock value is set to the actual checkpointed value once all the
+    // requests have been executed.
+    //
+    // This way of restoring state is pretty finicky. For example, if a
+    // Ruby component reads time before the state has been restored, it would
+    // cache this value and hence its clock would not be reset to 0, when
+    // Ruby resets the global clock. This can potentially result in a
+    // deadlock.
+    //
+    // The solution is that no Ruby component should read time before the
+    // simulation starts. And then one also needs to hope that the time
+    // Ruby finishes restoring the state is less than the time when the
+    // state was checkpointed.
+
     if (m_warmup_enabled) {
         // save the current tick value
         Tick curtick_original = curTick();
@@ -397,6 +401,8 @@ RubySystem::startup()
         setCurTick(curtick_original);
         resetClock();
     }
+
+    resetStats();
 }
 
 void
@@ -417,6 +423,8 @@ RubySystem::resetStats()
     for (uint32_t cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
         m_abs_cntrl_vec[cntrl]->clearStats();
     }
+
+    g_ruby_start = curCycle();
 }
 
 bool

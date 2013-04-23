@@ -134,8 +134,6 @@ class RubySystem : public ClockedObject
     RubySystem(const RubySystem& obj);
     RubySystem& operator=(const RubySystem& obj);
 
-    void init();
-
     void readCompressedTrace(std::string filename,
                              uint8_t *&raw_data,
                              uint64& uncompressed_trace_size);

@@ -515,11 +515,7 @@ Profiler::clearStats()
 
     m_cycles_executed_at_start.resize(m_num_of_sequencers);
     for (int i = 0; i < m_num_of_sequencers; i++) {
-        if (g_system_ptr == NULL) {
-            m_cycles_executed_at_start[i] = 0;
-        } else {
-            m_cycles_executed_at_start[i] = g_system_ptr->curCycle();
-        }
+        m_cycles_executed_at_start[i] = g_system_ptr->curCycle();
     }
 
     m_busyBankCount = 0;

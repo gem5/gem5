@@ -33,12 +33,17 @@
 #include <vector>
 
 #include "base/str.hh"
+#include "base/types.hh"
 
 class RubySystem;
 extern RubySystem* g_system_ptr;
 
 class AbstractController;
 extern std::vector<std::map<uint32_t, AbstractController *> > g_abs_controls;
+
+// A globally visible time at which the actual execution started. Meant only
+// for components with in Ruby. Initialized in RubySystem::startup().
+extern Cycles g_ruby_start;
 
 #endif // __MEM_RUBY_COMMON_GLOBAL_HH__
 

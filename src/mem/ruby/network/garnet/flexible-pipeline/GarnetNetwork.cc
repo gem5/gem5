@@ -254,7 +254,7 @@ GarnetNetwork::printLinkStats(ostream& out) const
     for (int i = 0; i < m_link_ptr_vector.size(); i++) {
         average_link_utilization +=
             (double(m_link_ptr_vector[i]->getLinkUtilization())) /
-            (double(curCycle() - m_ruby_start));
+            (double(curCycle() - g_ruby_start));
 
         vector<int> vc_load = m_link_ptr_vector[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
@@ -273,7 +273,7 @@ GarnetNetwork::printLinkStats(ostream& out) const
             continue;
 
         average_vc_load[i] = double(average_vc_load[i]) /
-            (double(curCycle() - m_ruby_start));
+            (double(curCycle() - g_ruby_start));
         out << "Average VC Load [" << i << "] = " << average_vc_load[i]
             << " flits/cycle " << endl;
     }

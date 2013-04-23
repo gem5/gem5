@@ -33,16 +33,15 @@
 #include "mem/ruby/system/System.hh"
 
 OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
+    : m_time(0)
 {
-    m_network_ptr = network_ptr;
     m_id = id;
     m_vc_state = IDLE_;
-    m_time = m_network_ptr->curCycle();
 
-    if (m_network_ptr->get_vnet_type(id) == DATA_VNET_)
-        m_credit_count = m_network_ptr->getBuffersPerDataVC();
+    if (network_ptr->get_vnet_type(id) == DATA_VNET_)
+        m_credit_count = network_ptr->getBuffersPerDataVC();
     else
-        m_credit_count = m_network_ptr->getBuffersPerCtrlVC();
+        m_credit_count = network_ptr->getBuffersPerCtrlVC();
 
     assert(m_credit_count >= 1);
 }

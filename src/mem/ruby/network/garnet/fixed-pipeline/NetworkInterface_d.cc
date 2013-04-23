@@ -71,7 +71,6 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks,
 
     for (int i = 0; i < m_num_vcs; i++) {
         m_out_vc_state.push_back(new OutVcState_d(i, m_net_ptr));
-        m_out_vc_state[i]->setState(IDLE_, m_net_ptr->curCycle());
     }
 }
 

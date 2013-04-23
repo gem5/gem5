@@ -53,7 +53,7 @@ InputUnit_d::InputUnit_d(int id, Router_d *router) : Consumer(router)
     // Instantiating the virtual channels
     m_vcs.resize(m_num_vcs);
     for (int i=0; i < m_num_vcs; i++) {
-        m_vcs[i] = new VirtualChannel_d(i, m_router->curCycle());
+        m_vcs[i] = new VirtualChannel_d(i);
     }
 }
 
