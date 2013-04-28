@@ -32,7 +32,7 @@ m5.util.addToPath('../configs/common')
 import FSConfig
 
 cpu = AtomicSimpleCPU(cpu_id=0)
-system = FSConfig.makeSparcSystem('atomic')
+system = FSConfig.makeSparcSystem('atomic', SimpleDDR3)
 system.cpu = cpu
 # create the interrupt controller
 cpu.createInterruptController()
