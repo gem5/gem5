@@ -48,6 +48,7 @@
 
 #include "arch/utility.hh"
 #include "cpu/kvm/base.hh"
+#include "debug/Checkpoint.hh"
 #include "debug/Kvm.hh"
 #include "debug/KvmIO.hh"
 #include "debug/KvmRun.hh"
@@ -213,6 +214,11 @@ BaseKvmCPU::regStats()
 void
 BaseKvmCPU::serializeThread(std::ostream &os, ThreadID tid)
 {
+    if (DTRACE(Checkpoint)) {
+        DPRINTF(Checkpoint, "KVM: Serializing thread %i:\n", tid);
+        dump();
+    }
+
     // Update the thread context so we have something to serialize.
     syncThreadContext();
 
@@ -225,6 +231,8 @@ void
 BaseKvmCPU::unserializeThread(Checkpoint *cp, const std::string &section,
                               ThreadID tid)
 {
+    DPRINTF(Checkpoint, "KVM: Unserialize thread %i:\n", tid);
+
     assert(tid == 0);
     assert(_status == Idle);
     thread->unserialize(cp, section);
