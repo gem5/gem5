@@ -772,9 +772,7 @@ BaseKvmCPU::handleKvmExitFailEntry()
 Tick
 BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
 {
-    mmio_req.setPhys(paddr, size,
-                     0, /* flags */
-                     dataMasterId());
+    mmio_req.setPhys(paddr, size, Request::UNCACHEABLE, dataMasterId());
 
     const MemCmd cmd(write ? MemCmd::WriteReq : MemCmd::ReadReq);
     Packet pkt(&mmio_req, cmd);
