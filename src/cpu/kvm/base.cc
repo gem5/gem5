@@ -175,6 +175,11 @@ BaseKvmCPU::regStats()
 
     BaseCPU::regStats();
 
+    numInsts
+        .name(name() + ".committedInsts")
+        .desc("Number of instructions committed")
+        ;
+
     numVMExits
         .name(name() + ".numVMExits")
         .desc("total number of KVM exits")
@@ -485,8 +490,10 @@ BaseKvmCPU::kvmRun(Tick ticks)
         hwCycles.stop();
 
 
-    uint64_t cyclesExecuted(hwCycles.read() - baseCycles);
-    Tick ticksExecuted(runTimer->ticksFromHostCycles(cyclesExecuted));
+    const uint64_t hostCyclesExecuted(hwCycles.read() - baseCycles);
+    const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
+    const uint64_t instsExecuted(hwInstructions.read() - baseInstrs);
+    const Tick ticksExecuted(runTimer->ticksFromHostCycles(hostCyclesExecuted));
 
     if (ticksExecuted < ticks &&
         timerOverflowed &&
@@ -496,14 +503,13 @@ BaseKvmCPU::kvmRun(Tick ticks)
              ticks, ticksExecuted);
     }
 
-    numCycles += cyclesExecuted * hostFactor;
+    /* Update statistics */
+    numCycles += simCyclesExecuted;;
     ++numVMExits;
+    numInsts += instsExecuted;
 
     DPRINTF(KvmRun, "KVM: Executed %i instructions in %i cycles (%i ticks, sim cycles: %i).\n",
-            hwInstructions.read() - baseInstrs,
-            cyclesExecuted,
-            ticksExecuted,
-            cyclesExecuted * hostFactor);
+            instsExecuted, hostCyclesExecuted, ticksExecuted, simCyclesExecuted);
 
     return ticksExecuted + flushCoalescedMMIO();
 }
