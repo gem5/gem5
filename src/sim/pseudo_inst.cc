@@ -129,6 +129,10 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         m5exit(tc, args[0]);
         break;
 
+      case 0x22:
+        m5fail(tc, args[0], args[1]);
+        break;
+
       case 0x30: // initparam_func
         return initParam(tc);
 
