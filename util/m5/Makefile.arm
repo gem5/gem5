@@ -69,7 +69,7 @@ all: libm5.a m5
 %.o: %.c
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
-m5: $(OBJS)
+m5: $(OBJS) libm5.a
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
 libm5.a: $(LIB_OBJS)
