@@ -735,6 +735,7 @@ BaseKvmCPU::handleKvmExit()
               _kvmRun->internal.suberror);
 
       default:
+        dump();
         panic("KVM: Unexpected exit (exit_reason: %u)\n", _kvmRun->exit_reason);
     }
 }
@@ -764,6 +765,7 @@ BaseKvmCPU::handleKvmExitIRQWindowOpen()
 Tick
 BaseKvmCPU::handleKvmExitUnknown()
 {
+    dump();
     panic("KVM: Unknown error when starting vCPU (hw reason: 0x%llx)\n",
           _kvmRun->hw.hardware_exit_reason);
 }
@@ -771,6 +773,7 @@ BaseKvmCPU::handleKvmExitUnknown()
 Tick
 BaseKvmCPU::handleKvmExitException()
 {
+    dump();
     panic("KVM: Got exception when starting vCPU "
           "(exception: %u, error_code: %u)\n",
           _kvmRun->ex.exception, _kvmRun->ex.error_code);
@@ -779,6 +782,7 @@ BaseKvmCPU::handleKvmExitException()
 Tick
 BaseKvmCPU::handleKvmExitFailEntry()
 {
+    dump();
     panic("KVM: Failed to enter virtualized mode (hw reason: 0x%llx)\n",
           _kvmRun->fail_entry.hardware_entry_failure_reason);
 }
