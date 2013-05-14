@@ -93,8 +93,8 @@ class BaseKvmCPU : public BaseCPU
 
     void verifyMemoryMode() const;
 
-    CpuPort &getDataPort() { return dataPort; }
-    CpuPort &getInstPort() { return instPort; }
+    MasterPort &getDataPort() { return dataPort; }
+    MasterPort &getInstPort() { return instPort; }
 
     void wakeup();
     void activateContext(ThreadID thread_num, Cycles delay);
@@ -403,11 +403,38 @@ class BaseKvmCPU : public BaseCPU
     }
     /** @} */
 
+
+    /**
+     * KVM memory port. Uses the default MasterPort behavior, but
+     * panics on timing accesses.
+     */
+    class KVMCpuPort : public MasterPort
+    {
+
+      public:
+        KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu)
+            : MasterPort(_name, _cpu)
+        { }
+
+      protected:
+        bool recvTimingResp(PacketPtr pkt)
+        {
+            panic("The KVM CPU doesn't expect recvTimingResp!\n");
+            return true;
+        }
+
+        void recvRetry()
+        {
+            panic("The KVM CPU doesn't expect recvRetry!\n");
+        }
+
+    };
+
     /** Port for data requests */
-    CpuPort dataPort;
+    KVMCpuPort dataPort;
 
     /** Unused dummy port for the instruction interface */
-    CpuPort instPort;
+    KVMCpuPort instPort;
 
     /** Pre-allocated MMIO memory request */
     Request mmio_req;
