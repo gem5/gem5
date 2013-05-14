@@ -133,6 +133,9 @@ BaseKvmCPU::init()
 void
 BaseKvmCPU::startup()
 {
+    const BaseKvmCPUParams * const p(
+        dynamic_cast<const BaseKvmCPUParams *>(params()));
+
     Kvm &kvm(vm.kvm);
 
     BaseCPU::startup();
@@ -159,7 +162,9 @@ BaseKvmCPU::startup()
     // available. The offset into the KVM's communication page is
     // provided by the coalesced MMIO capability.
     int mmioOffset(kvm.capCoalescedMMIO());
-    if (mmioOffset) {
+    if (!p->useCoalescedMMIO) {
+        inform("KVM: Coalesced MMIO disabled by config.\n");
+    } else if (mmioOffset) {
         inform("KVM: Coalesced IO available\n");
         mmioRing = (struct kvm_coalesced_mmio_ring *)(
             (char *)_kvmRun + (mmioOffset * pageSize));
