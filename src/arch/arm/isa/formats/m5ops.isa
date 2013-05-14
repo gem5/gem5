@@ -53,6 +53,7 @@ def format M5ops() {{
             case 0x11: return new Deprecated_ivle(machInst);
             case 0x20: return new Deprecated_exit (machInst);
             case 0x21: return new M5exit(machInst);
+            case 0x22: return new M5fail(machInst);
             case 0x31: return new Loadsymbol(machInst);
             case 0x30: return new Initparam(machInst);
             case 0x40: return new Resetstats(machInst);
