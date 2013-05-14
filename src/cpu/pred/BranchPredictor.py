@@ -40,10 +40,8 @@ class BranchPredictor(SimObject):
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
     localCtrBits = Param.Unsigned(2, "Bits per counter")
     localHistoryTableSize = Param.Unsigned(2048, "Size of local history table")
-    localHistoryBits = Param.Unsigned(11, "Bits for the local history")
     globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
     globalCtrBits = Param.Unsigned(2, "Bits per counter")
-    globalHistoryBits = Param.Unsigned(13, "Bits of history")
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 

@@ -46,17 +46,28 @@
 
 TournamentBP::TournamentBP(const Params *params)
     : BPredUnit(params),
+      localPredictorSize(params->localPredictorSize),
       localCtrBits(params->localCtrBits),
       localHistoryTableSize(params->localHistoryTableSize),
-      localHistoryBits(params->localHistoryBits),
+      localHistoryBits(ceilLog2(params->localPredictorSize)),
       globalPredictorSize(params->globalPredictorSize),
       globalCtrBits(params->globalCtrBits),
-      globalHistoryBits(params->globalHistoryBits),
+      globalHistoryBits(
+          ceilLog2(params->globalPredictorSize) >
+          ceilLog2(params->choicePredictorSize) ?
+          ceilLog2(params->globalPredictorSize) :
+          ceilLog2(params->choicePredictorSize)),
       choicePredictorSize(params->choicePredictorSize),
       choiceCtrBits(params->choiceCtrBits),
       instShiftAmt(params->instShiftAmt)
 {
-    localPredictorSize = ULL(1) << localHistoryBits;
+    if (!isPowerOf2(localPredictorSize)) {
+        fatal("Invalid local predictor size!\n");
+    }
+
+    if (!isPowerOf2(globalPredictorSize)) {
+        fatal("Invalid global predictor size!\n");
+    }
 
     //Set up the array of counters for the local predictor
     localCtrs.resize(localPredictorSize);
@@ -75,10 +86,6 @@ TournamentBP::TournamentBP(const Params *params)
 
     for (int i = 0; i < localHistoryTableSize; ++i)
         localHistoryTable[i] = 0;
-
-    if (!isPowerOf2(globalPredictorSize)) {
-        fatal("Invalid global predictor size!\n");
-    }
 
     //Setup the array of counters for the global predictor
     globalCtrs.resize(globalPredictorSize);

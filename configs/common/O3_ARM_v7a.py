@@ -90,12 +90,11 @@ class O3_ARM_v7a_FUP(FUPool):
 # Tournament Branch Predictor
 class O3_ARM_v7a_BP(BranchPredictor):
     predType = "tournament"
+    localPredictorSize = 2048
     localCtrBits = 2
-    localHistoryTableSize = 64
-    localHistoryBits = 6
+    localHistoryTableSize = 1024
     globalPredictorSize = 8192
     globalCtrBits = 2
-    globalHistoryBits = 13
     choicePredictorSize = 8192
     choiceCtrBits = 2
     BTBEntries = 2048
