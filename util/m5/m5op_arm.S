@@ -52,6 +52,7 @@
 .text
 
 .macro simple_op name, func, subfunc
+        .align 2
         .globl \name
 \name:
         /* First, try to trap into m5 using the m5-kvm hypercall
@@ -59,7 +60,11 @@
          * if it is executed in the normal m5 environment.
          */
         push {lr}
-        ldr lr, =1f
+#ifdef __thumb__
+        adr lr, 1f+1
+#else
+        adr lr, 1f
+#endif
         ldr ip, =((((\func) & 0xFF) << 8) | ((\subfunc) & 0xFF))
         bxj lr
         pop {pc}
@@ -70,8 +75,7 @@
         .short 0xEE00 | \func
         .short 0x0110 | (\subfunc << 12)
 #else
-#define INST(op, ra, rb, func) \
-        .long (0xEE000110 | (\func << 16) | (\subfunc << 12)
+        .long (0xEE000110 | (\func << 16) | (\subfunc << 12))
 #endif
         pop {pc}
 .endm
