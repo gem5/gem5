@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +28,8 @@
 
 machine(L1Cache, "MESI Directory L1 Cache CMP")
  : Sequencer * sequencer,
-   CacheMemory * L1IcacheMemory,
-   CacheMemory * L1DcacheMemory,
+   CacheMemory * L1Icache,
+   CacheMemory * L1Dcache,
    Prefetcher * prefetcher = 'NULL',
    int l2_select_num_bits,
    Cycles l1_request_latency = 2,
@@ -155,27 +154,27 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // inclusive cache returns L1 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory[addr]);
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache[addr]);
     if(is_valid(L1Dcache_entry)) {
       return L1Dcache_entry;
     }
 
-    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory[addr]);
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache[addr]);
     return L1Icache_entry;
   }
 
   Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory[addr]);
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache[addr]);
     return L1Dcache_entry;
   }
 
   Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory[addr]);
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache[addr]);
     return L1Icache_entry;
   }
 
   State getState(TBE tbe, Entry cache_entry, Address addr) {
-    assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
+    assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     if(is_valid(tbe)) {
       return tbe.TBEState;
@@ -186,7 +185,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
-    assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
+    assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     // MUST CHANGE
     if(is_valid(tbe)) {
@@ -294,7 +293,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                               L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
                   }
 
-                  if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
+                  if (L1Icache.cacheAvail(in_msg.LineAddress)) {
                       // L1 does't have the line, but we have space for it
                       // in the L1 so let's see if the L2 has it
                       trigger(prefetch_request_type_to_event(in_msg.Type),
@@ -303,9 +302,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                   } else {
                       // No room in the L1, so we need to make room in the L1
                       trigger(Event:L1_Replacement,
-                              L1IcacheMemory.cacheProbe(in_msg.LineAddress),
-                              getL1ICacheEntry(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
-                              L1_TBEs[L1IcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                              L1Icache.cacheProbe(in_msg.LineAddress),
+                              getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
+                              L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
                   }
               } else {
                   // Data prefetch
@@ -328,7 +327,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                               L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
                   }
 
-                  if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
+                  if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
                       // L1 does't have the line, but we have space for it in
                       // the L1 let's see if the L2 has it
                       trigger(prefetch_request_type_to_event(in_msg.Type),
@@ -337,9 +336,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                   } else {
                       // No room in the L1, so we need to make room in the L1
                       trigger(Event:L1_Replacement,
-                              L1DcacheMemory.cacheProbe(in_msg.LineAddress),
-                              getL1DCacheEntry(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
-                              L1_TBEs[L1DcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                              L1Dcache.cacheProbe(in_msg.LineAddress),
+                              getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
+                              L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
                   }
               }
           }
@@ -397,7 +396,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
         if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.Address, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:UPGRADE) {
+        } else if (in_msg.Type == CoherenceRequestType:GETX ||
+                   in_msg.Type == CoherenceRequestType:UPGRADE) {
           // upgrade transforms to GETX due to race
           trigger(Event:Fwd_GETX, in_msg.Address, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
@@ -436,15 +436,16 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
             }
 
-            if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
-              // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
+            if (L1Icache.cacheAvail(in_msg.LineAddress)) {
+              // L1 does't have the line, but we have space for it
+              // in the L1 so let's see if the L2 has it.
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
                       L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL1ICacheEntry(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1IcacheMemory.cacheProbe(in_msg.LineAddress)]);
+              trigger(Event:L1_Replacement, L1Icache.cacheProbe(in_msg.LineAddress),
+                      getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         } else {
@@ -465,15 +466,16 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
             }
 
-            if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
-              // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
+            if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
+              // L1 does't have the line, but we have space for it
+              // in the L1 let's see if the L2 has it.
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
                       L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL1DCacheEntry(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1DcacheMemory.cacheProbe(in_msg.LineAddress)]);
+              trigger(Event:L1_Replacement, L1Dcache.cacheProbe(in_msg.LineAddress),
+                      getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         }
@@ -846,23 +848,23 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(ff_deallocateL1CacheBlock, "\f", desc="Deallocate L1 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
-    if (L1DcacheMemory.isTagPresent(address)) {
-      L1DcacheMemory.deallocate(address);
+    if (L1Dcache.isTagPresent(address)) {
+      L1Dcache.deallocate(address);
     } else {
-      L1IcacheMemory.deallocate(address);
+      L1Icache.deallocate(address);
     }
     unset_cache_entry();
   }
 
   action(oo_allocateL1DCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B.") {
     if (is_invalid(cache_entry)) {
-      set_cache_entry(L1DcacheMemory.allocate(address, new Entry));
+      set_cache_entry(L1Dcache.allocate(address, new Entry));
     }
   }
 
   action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
     if (is_invalid(cache_entry)) {
-      set_cache_entry(L1IcacheMemory.allocate(address, new Entry));
+      set_cache_entry(L1Icache.allocate(address, new Entry));
     }
   }
 
@@ -875,19 +877,19 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
-      ++L1IcacheMemory.demand_misses;
+      ++L1Icache.demand_misses;
   }
 
   action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
-      ++L1IcacheMemory.demand_hits;
+      ++L1Icache.demand_hits;
   }
 
   action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
-      ++L1DcacheMemory.demand_misses;
+      ++L1Dcache.demand_misses;
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
-      ++L1DcacheMemory.demand_hits;
+      ++L1Dcache.demand_hits;
   }
 
   action(po_observeMiss, "\po", desc="Inform the prefetcher about the miss") {

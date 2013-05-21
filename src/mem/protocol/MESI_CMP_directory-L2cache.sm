@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +32,7 @@
  */
 
 machine(L2Cache, "MESI Directory L2 Cache CMP")
- : CacheMemory * L2cacheMemory,
+ : CacheMemory * L2cache,
    Cycles l2_request_latency = 2,
    Cycles l2_response_latency = 2,
    Cycles to_l1_latency = 1
@@ -76,7 +75,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     MT_IIB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
- 
+
   }
 
   // EVENTS
@@ -160,7 +159,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // inclusive cache, returns L2 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
-    return static_cast(Entry, "pointer", L2cacheMemory[addr]);
+    return static_cast(Entry, "pointer", L2cache[addr]);
   }
 
   std::string getCoherenceRequestTypeStr(CoherenceRequestType type) {
@@ -372,20 +371,20 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
                                                 in_msg.Requestor, cache_entry),
                   in_msg.Address, cache_entry, tbe);
         } else {
-          if (L2cacheMemory.cacheAvail(in_msg.Address)) {
+          if (L2cache.cacheAvail(in_msg.Address)) {
             // L2 does't have the line, but we have space for it in the L2
             trigger(L1Cache_request_type_to_event(in_msg.Type, in_msg.Address,
                                                   in_msg.Requestor, cache_entry),
                     in_msg.Address, cache_entry, tbe);
           } else {
             // No room in the L2, so we need to make room before handling the request
-            Entry L2cache_entry := getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address));
+            Entry L2cache_entry := getCacheEntry(L2cache.cacheProbe(in_msg.Address));
             if (isDirty(L2cache_entry)) {
-              trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address),
-                      L2cache_entry, L2_TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
+              trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.Address),
+                      L2cache_entry, L2_TBEs[L2cache.cacheProbe(in_msg.Address)]);
             } else {
-              trigger(Event:L2_Replacement_clean, L2cacheMemory.cacheProbe(in_msg.Address),
-                      L2cache_entry, L2_TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
+              trigger(Event:L2_Replacement_clean, L2cache.cacheProbe(in_msg.Address),
+                      L2cache_entry, L2_TBEs[L2cache.cacheProbe(in_msg.Address)]);
             }
           }
         }
@@ -679,17 +678,17 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(set_setMRU, "\set", desc="set the MRU entry") {
-    L2cacheMemory.setMRU(address);
+    L2cache.setMRU(address);
   }
 
   action(qq_allocateL2CacheBlock, "\q", desc="Set L2 cache tag equal to tag of block B.") {
     if (is_invalid(cache_entry)) {
-      set_cache_entry(L2cacheMemory.allocate(address, new Entry));
+      set_cache_entry(L2cache.allocate(address, new Entry));
     }
   }
 
   action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
-    L2cacheMemory.deallocate(address);
+    L2cache.deallocate(address);
     unset_cache_entry();
   }
 
@@ -721,11 +720,11 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
-      ++L2cacheMemory.demand_misses;
+      ++L2cache.demand_misses;
   }
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
-      ++L2cacheMemory.demand_hits;
+      ++L2cache.demand_hits;
   }
 
   action(ww_profileMissNoDir, "\w", desc="Profile this transition at the L2 because Dir won't see the request") {
@@ -803,12 +802,12 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // Transitions from I (Idle)
   transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, MT_IB, MT_SB}, L1_PUTX) {
-    t_sendWBAck;    
+    t_sendWBAck;
     jj_popL1RequestQueue;
   }
 
   transition({NP, SS, M, MT, M_I, I_I, S_I, IS, ISS, IM, MT_IB, MT_SB}, L1_PUTX_old) {
-    t_sendWBAck;    
+    t_sendWBAck;
     jj_popL1RequestQueue;
   }
 
@@ -816,11 +815,11 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     zz_stallAndWaitL1RequestQueue;
   }
 
-  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {         
+  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {
     zn_recycleResponseNetwork;
   }
 
-  transition({S_I, M_I, MT_I}, MEM_Inv) {         
+  transition({S_I, M_I, MT_I}, MEM_Inv) {
     o_popIncomingResponseQueue;
   }
 
@@ -1037,7 +1036,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     k_popUnblockQueue;
     kd_wakeUpDependents;
   }
-  
+
   transition(MT_IIB, {L1_PUTX, L1_PUTX_old}){
     zz_stallAndWaitL1RequestQueue;
   }
@@ -1086,14 +1085,14 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(MCT_I, {WB_Data_clean, Ack_all}, M_I) {
-    c_exclusiveCleanReplacement;   
+    c_exclusiveCleanReplacement;
     o_popIncomingResponseQueue;
   }
 
   transition(MCT_I,  {L1_PUTX, L1_PUTX_old}){
-    zz_stallAndWaitL1RequestQueue; 
+    zz_stallAndWaitL1RequestQueue;
   }
-  
+
   // L1 never changed Dirty data
   transition(MT_I, Ack_all, M_I) {
     ct_exclusiveReplacementFromTBE;
@@ -1101,7 +1100,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(MT_I, {L1_PUTX, L1_PUTX_old}){
-    zz_stallAndWaitL1RequestQueue; 
+    zz_stallAndWaitL1RequestQueue;
   }
 
   // possible race between unblock and immediate replacement

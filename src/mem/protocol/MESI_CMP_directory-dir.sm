@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +34,7 @@
 // Copied here by aep 12/14/07
 
 
-machine(Directory, "MESI_CMP_filter_directory protocol") 
+machine(Directory, "MESI_CMP_filter_directory protocol")
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
    Cycles to_mem_ctrl_latency = 1,
@@ -53,7 +52,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     // Base states
     I, AccessPermission:Read_Write, desc="dir is the owner and memory is up-to-date, all other copies are Invalid";
     ID, AccessPermission:Busy, desc="Intermediate state for DMA_READ when in I";
-    ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";    
+    ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";
 
     M, AccessPermission:Maybe_Stale, desc="memory copy may be stale, i.e. other modified copies may exist";
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
@@ -84,7 +83,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
     NetDest Sharers,                   desc="Sharers for this block";
-    NetDest Owner,                     desc="Owner of this block"; 
+    NetDest Owner,                     desc="Owner of this block";
   }
 
   // TBE entries for DMA requests
@@ -94,13 +93,13 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
     int Len,               desc="...";
   }
-    
+
   structure(TBETable, external="yes") {
-    TBE lookup(Address);  
-    void allocate(Address); 
+    TBE lookup(Address);
+    void allocate(Address);
     void deallocate(Address);
     bool isPresent(Address);
-  } 
+  }
 
 
   // ** OBJECTS **
@@ -125,22 +124,22 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   State getState(TBE tbe, Address addr) {
     if (is_valid(tbe)) {
-      return tbe.TBEState;   
+      return tbe.TBEState;
     } else if (directory.isPresent(addr)) {
       return getDirectoryEntry(addr).DirectoryState;
     } else {
       return State:I;
     }
-  }  
-   
+  }
+
   void setState(TBE tbe, Address addr, State state) {
 
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
-  
+
     if (directory.isPresent(addr)) {
-  
+
       if (state == State:I)  {
         assert(getDirectoryEntry(addr).Owner.count() == 0);
         assert(getDirectoryEntry(addr).Sharers.count() == 0);
@@ -148,7 +147,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         assert(getDirectoryEntry(addr).Owner.count() == 1);
         assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
-      
+
       getDirectoryEntry(addr).DirectoryState := state;
     }
   }
@@ -458,10 +457,10 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     peek(requestNetwork_in, RequestMsg) {
       TBEs.allocate(address);
-      set_tbe(TBEs[address]); 
+      set_tbe(TBEs[address]);
       tbe.DataBlk := in_msg.DataBlk;
       tbe.PhysicalAddress := in_msg.Address;
-      tbe.Len := in_msg.Len; 
+      tbe.Len := in_msg.Len;
     }
   }
 
@@ -484,17 +483,17 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         //out_msg.DataBlk := in_msg.DataBlk;
         //out_msg.DataBlk.copyPartial(tbe.DataBlk, tbe.Offset, tbe.Len);
         out_msg.DataBlk.copyPartial(tbe.DataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
- 
+
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
-   
+
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
-    TBEs.deallocate(address); 
+    TBEs.deallocate(address);
     unset_tbe();
   }
 
@@ -595,7 +594,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   transition(M_DWR, Data, M_DWRI) {
     m_writeDataToMemory;
     qw_queueMemoryWBRequest_partialTBE;
-    k_popIncomingResponseQueue; 
+    k_popIncomingResponseQueue;
   }
 
   transition(M_DWRI, Memory_Ack, I) {
