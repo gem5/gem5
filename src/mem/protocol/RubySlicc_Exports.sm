@@ -144,39 +144,6 @@ enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL
   NULL,        desc="Invalid request type";
 }
 
-enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
-  GETS,        desc="gets request";
-  GET_INSTR,   desc="get instr request";
-  GETX,        desc="getx request";
-  UPGRADE,     desc="upgrade request";
-  DOWNGRADE,   desc="downgrade request";
-  INV,         desc="invalidate request";
-  INV_S,       desc="invalidate shared copy request";
-  PUTS,        desc="puts request";
-  PUTO,        desc="puto request";
-  PUTX,        desc="putx request";
-  L2_PF,       desc="L2 prefetch";
-  LD,          desc="Load";
-  ST,          desc="Store";
-  ATOMIC,      desc="Atomic Load/Store";
-  IFETCH,      desc="Instruction fetch";
-  IO,          desc="I/O";
-  NACK,        desc="Nack";
-  REPLACEMENT, desc="Replacement";
-  WB_ACK,      desc="WriteBack ack";
-  EXE_ACK,     desc="Execlusive ack";
-  COMMIT,      desc="Commit version";
-  LD_XACT,     desc="Transactional Load";
-  LDX_XACT,     desc="Transactional Load-Intend-Modify";
-  ST_XACT,     desc="Transactional Store";
-  BEGIN_XACT,  desc="Begin Transaction";
-  COMMIT_XACT, desc="Commit Transaction";
-  ABORT_XACT,  desc="Abort Transaction";	
-  DMA_READ,    desc="DMA READ";
-  DMA_WRITE,   desc="DMA WRITE";
-  NULL,        desc="null request type";
-}
-
 enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   DataArrayRead,    desc="Read access to the cache's data array";
   DataArrayWrite,   desc="Write access to the cache's data array";

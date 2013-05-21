@@ -53,7 +53,6 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/GenericMachineType.hh"
-#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"

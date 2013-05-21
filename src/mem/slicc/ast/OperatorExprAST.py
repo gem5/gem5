@@ -68,6 +68,7 @@ class InfixOperatorExprAST(ExprAST):
                 expected_types = [("int", "int", "int"),
                                   ("Cycles", "Cycles", "Cycles"),
                                   ("Cycles", "int", "Cycles"),
+                                  ("Scalar", "int", "Scalar"),
                                   ("int", "Cycles", "Cycles")]
             else:
                 self.error("No operator matched with {0}!" .format(self.op))
@@ -89,3 +90,23 @@ class InfixOperatorExprAST(ExprAST):
         code("($lcode ${{self.op}} $rcode)")
         code.fix(fix)
         return self.symtab.find(output, Type)
+
+class PrefixOperatorExprAST(ExprAST):
+    def __init__(self, slicc, op, operand):
+        super(PrefixOperatorExprAST, self).__init__(slicc)
+
+        self.op = op
+        self.operand = operand
+
+    def __repr__(self):
+        return "[PrefixExpr: %s %r]" % (self.op, self.operand)
+
+    def generate(self, code):
+        opcode = self.slicc.codeFormatter()
+        optype = self.operand.generate(opcode)
+
+        fix = code.nofix()
+        code("(${{self.op}} $opcode)")
+        code.fix(fix)
+
+        return self.symtab.find("void", Type)

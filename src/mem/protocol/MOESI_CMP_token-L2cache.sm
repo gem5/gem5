@@ -296,17 +296,6 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  GenericRequestType convertToGenericType(CoherenceRequestType type) {
-    if(type == CoherenceRequestType:GETS) {
-      return GenericRequestType:GETS;
-    } else if(type == CoherenceRequestType:GETX) {
-      return GenericRequestType:GETX;
-    } else {
-      DPRINTF(RubySlicc, "%s\n", type);
-      error("invalid CoherenceRequestType");
-    }
-  }
-
   // ** OUT_PORTS **
   out_port(globalRequestNetwork_out, RequestMsg, GlobalRequestFromL2Cache);
   out_port(localRequestNetwork_out, RequestMsg, L1RequestFromL2Cache);
@@ -976,14 +965,13 @@ machine(L2Cache, "Token protocol")
     unset_cache_entry();
   }
 
-  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(L1requestNetwork_in, RequestMsg) {
-      L2cacheMemory.profileGenericRequest(convertToGenericType(in_msg.Type),
-                                          in_msg.AccessMode,   
-                                          in_msg.Prefetch);
-    }
+  action(uu_profileMiss, "\um", desc="Profile the demand miss") {
+      ++L2cacheMemory.demand_misses;
   }
 
+  action(uu_profileHit, "\uh", desc="Profile the demand hit") {
+      ++L2cacheMemory.demand_hits;
+  }
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
     peek(responseNetwork_in, ResponseMsg) {
@@ -1257,6 +1245,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1265,6 +1254,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1351,6 +1341,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1358,6 +1349,7 @@ machine(L2Cache, "Token protocol")
     k_dataOwnerFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1394,6 +1386,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1401,6 +1394,7 @@ machine(L2Cache, "Token protocol")
     k_dataAndAllTokensFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1471,6 +1465,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1478,6 +1473,7 @@ machine(L2Cache, "Token protocol")
     k_dataFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 

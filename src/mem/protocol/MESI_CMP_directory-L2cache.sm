@@ -720,26 +720,12 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
-  GenericRequestType convertToGenericType(CoherenceRequestType type) {
-    if(type == CoherenceRequestType:GETS) {
-      return GenericRequestType:GETS;
-    } else if(type == CoherenceRequestType:GETX) {
-      return GenericRequestType:GETX;
-    } else if(type == CoherenceRequestType:GET_INSTR) {
-      return GenericRequestType:GET_INSTR;
-    } else if(type == CoherenceRequestType:UPGRADE) {
-      return GenericRequestType:UPGRADE;
-    } else {
-      DPRINTF(RubySlicc, "%s\n", type);
-      error("Invalid CoherenceRequestType\n");
-    }
+  action(uu_profileMiss, "\um", desc="Profile the demand miss") {
+      ++L2cacheMemory.demand_misses;
   }
 
-  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      L2cacheMemory.profileGenericRequest(convertToGenericType(in_msg.Type),
-                                       in_msg.AccessMode, in_msg.Prefetch);
-    }
+  action(uu_profileHit, "\uh", desc="Profile the demand hit") {
+      ++L2cacheMemory.demand_hits;
   }
 
   action(ww_profileMissNoDir, "\w", desc="Profile this transition at the L2 because Dir won't see the request") {
@@ -922,6 +908,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     ds_sendSharedDataToRequestor;
     nn_addSharer;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 
@@ -931,6 +918,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     // fw_sendFwdInvToSharers;
     fwm_sendFwdInvToSharersMinusRequestor;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 
@@ -938,6 +926,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     fwm_sendFwdInvToSharersMinusRequestor;
     ts_sendInvAckToUpgrader;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 
@@ -957,6 +946,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(M, L1_GETX, MT_MB) {
     d_sendDataToRequestor;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 
@@ -964,12 +954,14 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     d_sendDataToRequestor;
     nn_addSharer;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 
   transition(M, L1_GETS, MT_MB) {
     dd_sendExclusiveDataToRequestor;
     set_setMRU;
+    uu_profileHit;
     jj_popL1RequestQueue;
   }
 

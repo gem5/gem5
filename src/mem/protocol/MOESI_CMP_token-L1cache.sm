@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -665,7 +664,8 @@ machine(L1Cache, "Token protocol")
 
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
           if (is_valid(L1Icache_entry)) {
-            // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
+            // The tag matches for the L1, so the L1 fetches the line.
+            // We know it can't be in the L2 due to exclusion.
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Icache_entry, tbe);
           } else {
@@ -695,7 +695,8 @@ machine(L1Cache, "Token protocol")
 
           Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
           if (is_valid(L1Dcache_entry)) {
-            // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
+            // The tag matches for the L1, so the L1 fetches the line.
+            // We know it can't be in the L2 due to exclusion.
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Dcache_entry, tbe);
           } else {
@@ -1534,14 +1535,20 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, RubyRequest) {
-      if (L1DcacheMemory.isTagPresent(address)) {
-        L1DcacheMemory.profileMiss(in_msg);
-      } else {
-        L1IcacheMemory.profileMiss(in_msg);
-      }
-    }
+  action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
+      ++L1IcacheMemory.demand_misses;
+  }
+
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
+      ++L1IcacheMemory.demand_hits;
+  }
+
+  action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
+      ++L1DcacheMemory.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
+      ++L1DcacheMemory.demand_hits;
   }
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
@@ -1594,7 +1601,7 @@ machine(L1Cache, "Token protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1602,7 +1609,7 @@ machine(L1Cache, "Token protocol")
     pp_allocateL1ICacheBlock;
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileInstMiss;
     k_popMandatoryQueue;
   }
 
@@ -1610,7 +1617,7 @@ machine(L1Cache, "Token protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1631,21 +1638,21 @@ machine(L1Cache, "Token protocol")
   transition(I, Load, IS) {
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
   transition(I, Ifetch, IS) {
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileInstMiss;
     k_popMandatoryQueue;
   }
 
   transition(I, {Store, Atomic}, IM) {
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1698,15 +1705,22 @@ machine(L1Cache, "Token protocol")
   }
 
   // Transitions from Shared
-  transition({S, SM, S_L, SM_L}, {Load, Ifetch}) {
+  transition({S, SM, S_L, SM_L}, Load) {
     h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({S, SM, S_L, SM_L}, Ifetch) {
+    h_load_hit;
+    uu_profileInstHit;
     k_popMandatoryQueue;
   }
 
   transition(S, {Store, Atomic}, SM) {
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1779,15 +1793,22 @@ machine(L1Cache, "Token protocol")
   }
 
   // Transitions from Owned
-  transition({O, OM}, {Load, Ifetch}) {
+  transition({O, OM}, Ifetch) {
     h_load_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({O, OM}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(O, {Store, Atomic}, OM) {
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1862,23 +1883,33 @@ machine(L1Cache, "Token protocol")
   }
 
   // Transitions from Modified
-  transition({MM, MM_W}, {Load, Ifetch}) {
+  transition({MM, MM_W}, Ifetch) {
     h_load_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({MM, MM_W}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition({MM_W}, {Store, Atomic}) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(MM, Store) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(MM, Atomic, M) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
@@ -1927,28 +1958,39 @@ machine(L1Cache, "Token protocol")
   }
 
   // Transitions from Dirty Exclusive
-  transition({M, M_W}, {Load, Ifetch}) {
+  transition({M, M_W}, Ifetch) {
     h_load_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({M, M_W}, Load) {
+    h_load_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(M, Store, MM) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(M, Atomic) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(M_W, Store, MM_W) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(M_W, Atomic) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
@@ -2243,7 +2285,7 @@ machine(L1Cache, "Token protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -2251,7 +2293,7 @@ machine(L1Cache, "Token protocol")
     pp_allocateL1ICacheBlock;
     i_allocateTBE;
     a_issueReadRequest;
-    uu_profileMiss;
+    uu_profileInstMiss;
     k_popMandatoryQueue;
   }
 
@@ -2259,7 +2301,7 @@ machine(L1Cache, "Token protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -2269,7 +2311,7 @@ machine(L1Cache, "Token protocol")
   transition(S_L, {Store, Atomic}, SM_L) {
     i_allocateTBE;
     b_issueWriteRequest;
-    uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 

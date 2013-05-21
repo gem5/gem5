@@ -1475,11 +1475,12 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(L1requestNetwork_in, RequestMsg) {
-      // AccessModeType not implemented
-      //      profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize),  in_msg.Prefetch, machineIDToNodeID(in_msg.Requestor));
-    }
+  action(uu_profileMiss, "\um", desc="Profile the demand miss") {
+      ++L2cache.demand_misses;
+  }
+
+  action(uu_profileHit, "\uh", desc="Profile the demand hit") {
+      ++L2cache.demand_hits;
   }
 
   action(y_copyCacheStateToDir, "y", desc="Copy cache state to directory state") {
@@ -1909,7 +1910,7 @@ machine(L2Cache, "Token protocol")
     y_copyCacheStateToDir;
     r_setMRU;
     rr_deallocateL2CacheBlock;
-    uu_profileMiss;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -1922,6 +1923,7 @@ machine(L2Cache, "Token protocol")
   transition(OLSX, L1_GETS, OLSXS) {
     d_sendDataToL1GETS;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -2311,6 +2313,7 @@ machine(L2Cache, "Token protocol")
   transition(SLS, L1_GETS, SLSS ) {
     d_sendDataToL1GETS;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -2333,6 +2336,7 @@ machine(L2Cache, "Token protocol")
   transition(OLS, L1_GETS, OLSS) {
     d_sendDataToL1GETS;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -2361,10 +2365,11 @@ machine(L2Cache, "Token protocol")
     i_allocateTBE;
     // should count 0 of course
     h_countLocalSharersExceptRequestor;
-    d_sendDataToL1GETX
+    d_sendDataToL1GETX;
     y_copyCacheStateToDir;
     rr_deallocateL2CacheBlock;
     s_deallocateTBE;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -2380,12 +2385,14 @@ machine(L2Cache, "Token protocol")
     d_sendDataToL1GETX;
     r_setMRU;
     s_deallocateTBE;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
   transition(S, L1_GETS, SS) {
     d_sendDataToL1GETS;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 
@@ -2397,6 +2404,7 @@ machine(L2Cache, "Token protocol")
   transition(O, L1_GETS, OO) {
     d_sendDataToL1GETS;
     r_setMRU;
+    uu_profileHit;
     o_popL1RequestQueue;
   }
 

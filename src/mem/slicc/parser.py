@@ -132,6 +132,7 @@ class SLICC(Grammar):
                'LEFTSHIFT', 'RIGHTSHIFT',
                'NOT', 'AND', 'OR',
                'PLUS', 'DASH', 'STAR', 'SLASH',
+               'INCR', 'DECR',
                'DOUBLE_COLON', 'SEMI',
                'ASSIGN', 'DOT',
                'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING' ]
@@ -156,8 +157,11 @@ class SLICC(Grammar):
     t_SEMI = r';'
     t_ASSIGN = r':='
     t_DOT = r'\.'
+    t_INCR = r'\+\+'
+    t_DECR = r'--'
 
     precedence = (
+        ('left', 'INCR', 'DECR'),
         ('left', 'AND', 'OR'),
         ('left', 'EQ', 'NE'),
         ('left', 'LT', 'GT', 'LE', 'GE'),
@@ -670,8 +674,10 @@ class SLICC(Grammar):
     # FIXME - unary not
     def p_expr__unary_op(self, p):
         """expr : NOT expr
+                | INCR expr
+                | DECR expr
                 | DASH expr %prec UMINUS"""
-        p[0] = PrefixOperatorExpr(p[1], p[2])
+        p[0] = ast.PrefixOperatorExprAST(self, p[1], p[2])
 
     def p_expr__parens(self, p):
         "aexpr : '(' expr ')'"

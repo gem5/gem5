@@ -37,6 +37,7 @@
 
 external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
 external_type(OutPort, primitive="yes");
+external_type(Scalar, primitive="yes");
 
 structure(InPort, external = "yes", primitive="yes") {
   bool isReady();
@@ -148,15 +149,12 @@ structure (CacheMemory, external = "yes") {
   void deallocate(Address);
   AbstractCacheEntry lookup(Address);
   bool isTagPresent(Address);
-  void profileMiss(RubyRequest);
-
-  void profileGenericRequest(GenericRequestType,
-                             RubyAccessMode,
-                             PrefetchBit);
-
   void setMRU(Address);
   void recordRequestType(CacheRequestType);
   bool checkResourceAvailable(CacheResourceType, Address);
+
+  Scalar demand_misses;
+  Scalar demand_hits;
 }
 
 structure (WireBuffer, inport="yes", outport="yes", external = "yes") {

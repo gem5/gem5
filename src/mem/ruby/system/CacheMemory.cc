@@ -60,7 +60,6 @@ CacheMemory::CacheMemory(const Params *p)
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
     m_policy = p->replacement_policy;
-    m_profiler_ptr = new CacheProfiler(name());
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
@@ -97,7 +96,6 @@ CacheMemory::~CacheMemory()
 {
     if (m_replacementPolicy_ptr != NULL)
         delete m_replacementPolicy_ptr;
-    delete m_profiler_ptr;
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
             delete m_cache[i][j];
@@ -325,24 +323,6 @@ CacheMemory::setMRU(const Address& address)
 }
 
 void
-CacheMemory::profileMiss(const RubyRequest& msg)
-{
-    m_profiler_ptr->addCacheStatSample(msg.getType(), 
-                                       msg.getAccessMode(),
-                                       msg.getPrefetch());
-}
-
-void
-CacheMemory::profileGenericRequest(GenericRequestType requestType,
-                                   RubyAccessMode accessType,
-                                   PrefetchBit pfBit)
-{
-    m_profiler_ptr->addGenericStatSample(requestType, 
-                                         accessType, 
-                                         pfBit);
-}
-
-void
 CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 {
     uint64 warmedUpBlocks = 0;
@@ -407,18 +387,6 @@ CacheMemory::printData(ostream& out) const
 }
 
 void
-CacheMemory::clearStats() const
-{
-    m_profiler_ptr->clearStats();
-}
-
-void
-CacheMemory::printStats(ostream& out) const
-{
-    m_profiler_ptr->printStats(out);
-}
-
-void
 CacheMemory::setLocked(const Address& address, int context)
 {
     DPRINTF(RubyCache, "Setting Lock for addr: %x to %d\n", address, context);
@@ -453,7 +421,97 @@ CacheMemory::isLocked(const Address& address, int context)
 }
 
 void
-CacheMemory::recordRequestType(CacheRequestType requestType) {
+CacheMemory::regStats()
+{
+    m_demand_hits
+        .name(name() + ".demand_hits")
+        .desc("Number of cache demand hits")
+        ;
+
+    m_demand_misses
+        .name(name() + ".demand_misses")
+        .desc("Number of cache demand misses")
+        ;
+
+    m_demand_accesses
+        .name(name() + ".demand_accesses")
+        .desc("Number of cache demand accesses")
+        ;
+
+    m_demand_accesses = m_demand_hits + m_demand_misses;
+
+    m_sw_prefetches
+        .name(name() + ".total_sw_prefetches")
+        .desc("Number of software prefetches")
+        .flags(Stats::nozero)
+        ;
+
+    m_hw_prefetches
+        .name(name() + ".total_hw_prefetches")
+        .desc("Number of hardware prefetches")
+        .flags(Stats::nozero)
+        ;
+
+    m_prefetches
+        .name(name() + ".total_prefetches")
+        .desc("Number of prefetches")
+        .flags(Stats::nozero)
+        ;
+
+    m_prefetches = m_sw_prefetches + m_hw_prefetches;
+
+    m_accessModeType
+        .init(RubyRequestType_NUM)
+        .name(name() + ".access_mode")
+        .flags(Stats::pdf | Stats::total)
+        ;
+    for (int i = 0; i < RubyAccessMode_NUM; i++) {
+        m_accessModeType
+            .subname(i, RubyAccessMode_to_string(RubyAccessMode(i)))
+            .flags(Stats::nozero)
+            ;
+    }
+
+    numDataArrayReads
+        .name(name() + ".num_data_array_reads")
+        .desc("number of data array reads")
+        .flags(Stats::nozero)
+        ;
+
+    numDataArrayWrites
+        .name(name() + ".num_data_array_writes")
+        .desc("number of data array writes")
+        .flags(Stats::nozero)
+        ;
+
+    numTagArrayReads
+        .name(name() + ".num_tag_array_reads")
+        .desc("number of tag array reads")
+        .flags(Stats::nozero)
+        ;
+
+    numTagArrayWrites
+        .name(name() + ".num_tag_array_writes")
+        .desc("number of tag array writes")
+        .flags(Stats::nozero)
+        ;
+
+    numTagArrayStalls
+        .name(name() + ".num_tag_array_stalls")
+        .desc("number of stalls caused by tag array")
+        .flags(Stats::nozero)
+        ;
+
+    numDataArrayStalls
+        .name(name() + ".num_data_array_stalls")
+        .desc("number of stalls caused by data array")
+        .flags(Stats::nozero)
+        ;
+}
+
+void
+CacheMemory::recordRequestType(CacheRequestType requestType)
+{
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             CacheRequestType_to_string(requestType));
     switch(requestType) {
@@ -475,41 +533,6 @@ CacheMemory::recordRequestType(CacheRequestType requestType) {
     }
 }
 
-void
-CacheMemory::regStats() {
-    using namespace Stats;
-
-    numDataArrayReads
-        .name(name() + ".num_data_array_reads")
-        .desc("number of data array reads")
-        ;
-
-    numDataArrayWrites
-        .name(name() + ".num_data_array_writes")
-        .desc("number of data array writes")
-        ;
-
-    numTagArrayReads
-        .name(name() + ".num_tag_array_reads")
-        .desc("number of tag array reads")
-        ;
-
-    numTagArrayWrites
-        .name(name() + ".num_tag_array_writes")
-        .desc("number of tag array writes")
-        ;
-
-    numTagArrayStalls
-        .name(name() + ".num_tag_array_stalls")
-        .desc("number of stalls caused by tag array")
-        ;
-
-    numDataArrayStalls
-        .name(name() + ".num_data_array_stalls")
-        .desc("number of stalls caused by data array")
-        ;
-}
-
 bool
 CacheMemory::checkResourceAvailable(CacheResourceType res, Address addr)
 {
@@ -520,14 +543,18 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Address addr)
     if (res == CacheResourceType_TagArray) {
         if (tagArray.tryAccess(addressToCacheSet(addr))) return true;
         else {
-            DPRINTF(RubyResourceStalls, "Tag array stall on addr %s in set %d\n", addr, addressToCacheSet(addr));
+            DPRINTF(RubyResourceStalls,
+                    "Tag array stall on addr %s in set %d\n",
+                    addr, addressToCacheSet(addr));
             numTagArrayStalls++;
             return false;
         }
     } else if (res == CacheResourceType_DataArray) {
         if (dataArray.tryAccess(addressToCacheSet(addr))) return true;
         else {
-            DPRINTF(RubyResourceStalls, "Data array stall on addr %s in set %d\n", addr, addressToCacheSet(addr));
+            DPRINTF(RubyResourceStalls,
+                    "Data array stall on addr %s in set %d\n",
+                    addr, addressToCacheSet(addr));
             numDataArrayStalls++;
             return false;
         }

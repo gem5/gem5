@@ -874,16 +874,20 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     wakeUpBuffers(address);
   }
 
-  action(uu_profileInstMiss, "\ui", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, RubyRequest) {
-        L1IcacheMemory.profileMiss(in_msg);
-    }
+  action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
+      ++L1IcacheMemory.demand_misses;
   }
 
-  action(uu_profileDataMiss, "\ud", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, RubyRequest) {
-        L1DcacheMemory.profileMiss(in_msg);
-    }
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
+      ++L1IcacheMemory.demand_hits;
+  }
+
+  action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
+      ++L1DcacheMemory.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
+      ++L1DcacheMemory.demand_hits;
   }
 
   action(po_observeMiss, "\po", desc="Inform the prefetcher about the miss") {
@@ -1024,8 +1028,15 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from Shared
-  transition(S, {Load,Ifetch}) {
+  transition({S,E,M}, Load) {
     h_load_hit;
+    uu_profileDataHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({S,E,M}, Ifetch) {
+    h_load_hit;
+    uu_profileInstHit;
     k_popMandatoryQueue;
   }
 
@@ -1049,13 +1060,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Transitions from Exclusive
 
-  transition(E, {Load, Ifetch}) {
-    h_load_hit;
-    k_popMandatoryQueue;
-  }
-
-  transition(E, Store, M) {
+  transition({E,M}, Store, M) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
@@ -1087,15 +1094,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from Modified
-  transition(M, {Load, Ifetch}) {
-    h_load_hit;
-    k_popMandatoryQueue;
-  }
-
-  transition(M, Store) {
-    hh_store_hit;
-    k_popMandatoryQueue;
-  }
 
   transition(M, L1_Replacement, M_I) {
     forward_eviction_to_cpu;

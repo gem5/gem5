@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -859,10 +858,20 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, RubyRequest) {
-      //      profile_miss(in_msg);
-    }
+  action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
+      ++L1Icache.demand_misses;
+  }
+
+  action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
+      ++L1Icache.demand_hits;
+  }
+
+  action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
+      ++L1Dcache.demand_misses;
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
+      ++L1Dcache.demand_hits;
   }
 
   action(z_recycleRequestQueue, "z", desc="Send the head of the mandatory queue to the back of the queue.") {
@@ -899,7 +908,7 @@ machine(L1Cache, "Directory protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     a_issueGETS;
-    // uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -907,7 +916,7 @@ machine(L1Cache, "Directory protocol")
     jj_allocateL1ICacheBlock;
     i_allocateTBE;
     a_issueGETS;
-    // uu_profileMiss;
+    uu_profileInstMiss;
     k_popMandatoryQueue;
   }
 
@@ -915,7 +924,7 @@ machine(L1Cache, "Directory protocol")
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueGETX;
-    // uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -928,16 +937,23 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  // Transitions from Shared
-  transition({S, SM}, {Load, Ifetch}) {
+  transition({S, SM, O, OM, MM, MM_W, M, M_W}, Load) {
     h_load_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
+  transition({S, SM, O, OM, MM, MM_W, M, M_W}, Ifetch) {
+    h_load_hit;
+    uu_profileInstHit;
+    k_popMandatoryQueue;
+  }
+
+  // Transitions from Shared
   transition(S, Store, SM) {
     i_allocateTBE;
     b_issueGETX;
-    // uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -966,15 +982,10 @@ machine(L1Cache, "Directory protocol")
   }
 
   // Transitions from Owned
-  transition({O, OM}, {Load, Ifetch}) {
-    h_load_hit;
-    k_popMandatoryQueue;
-  }
-
   transition(O, Store, OM) {
     i_allocateTBE;
     b_issueGETX;
-    // uu_profileMiss;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -1003,13 +1014,9 @@ machine(L1Cache, "Directory protocol")
   }
 
   // Transitions from MM
-  transition({MM, MM_W}, {Load, Ifetch}) {
-    h_load_hit;
-    k_popMandatoryQueue;
-  }
-
   transition({MM, MM_W}, Store) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
@@ -1039,18 +1046,15 @@ machine(L1Cache, "Directory protocol")
   }
 
   // Transitions from M
-  transition({M, M_W}, {Load, Ifetch}) {
-    h_load_hit;
-    k_popMandatoryQueue;
-  }
-
   transition(M, Store, MM) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 
   transition(M_W, Store, MM_W) {
     hh_store_hit;
+    uu_profileDataHit;
     k_popMandatoryQueue;
   }
 

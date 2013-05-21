@@ -768,8 +768,7 @@ $c_ident::printStats(ostream& out) const
         # them.  Print out these stats before dumping state transition stats.
         #
         for param in self.config_parameters:
-            if param.type_ast.type.ident == "CacheMemory" or \
-               param.type_ast.type.ident == "DirectoryMemory" or \
+            if param.type_ast.type.ident == "DirectoryMemory" or \
                    param.type_ast.type.ident == "MemoryControl":
                 assert(param.pointer)
                 code('    m_${{param.ident}}_ptr->printStats(out);')
@@ -787,8 +786,7 @@ void $c_ident::clearStats() {
         # them.  These stats must be cleared too.
         #
         for param in self.config_parameters:
-            if param.type_ast.type.ident == "CacheMemory" or \
-                   param.type_ast.type.ident == "MemoryControl":
+            if param.type_ast.type.ident == "MemoryControl":
                 assert(param.pointer)
                 code('    m_${{param.ident}}_ptr->clearStats();')
 

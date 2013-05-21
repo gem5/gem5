@@ -36,10 +36,8 @@
 #include "base/statistics.hh"
 #include "mem/protocol/CacheResourceType.hh"
 #include "mem/protocol/CacheRequestType.hh"
-#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/DataBlock.hh"
-#include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
@@ -100,34 +98,37 @@ class CacheMemory : public SimObject
     // Set this address to most recently used
     void setMRU(const Address& address);
 
-    void profileMiss(const RubyRequest & msg);
-
-    void profileGenericRequest(GenericRequestType requestType,
-                               RubyAccessMode accessType,
-                               PrefetchBit pfBit);
-
     void setLocked (const Address& addr, int context);
     void clearLocked (const Address& addr);
     bool isLocked (const Address& addr, int context);
+
     // Print cache contents
     void print(std::ostream& out) const;
     void printData(std::ostream& out) const;
 
-    void clearStats() const;
-    void printStats(std::ostream& out) const;
-
-    void recordRequestType(CacheRequestType requestType);
     void regStats();
+    bool checkResourceAvailable(CacheResourceType res, Address addr);
+    void recordRequestType(CacheRequestType requestType);
+
+  public:
+    Stats::Scalar m_demand_hits;
+    Stats::Scalar m_demand_misses;
+    Stats::Formula m_demand_accesses;
+
+    Stats::Scalar m_sw_prefetches;
+    Stats::Scalar m_hw_prefetches;
+    Stats::Formula m_prefetches;
+
+    Stats::Vector m_accessModeType;
 
     Stats::Scalar numDataArrayReads;
     Stats::Scalar numDataArrayWrites;
     Stats::Scalar numTagArrayReads;
     Stats::Scalar numTagArrayWrites;
 
-    bool checkResourceAvailable(CacheResourceType res, Address addr);
-
     Stats::Scalar numTagArrayStalls;
     Stats::Scalar numDataArrayStalls;
+
   private:
     // convert a Address to its location in the cache
     Index addressToCacheSet(const Address& address) const;
@@ -155,8 +156,6 @@ class CacheMemory : public SimObject
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
     AbstractReplacementPolicy *m_replacementPolicy_ptr;
-
-    CacheProfiler* m_profiler_ptr;
 
     BankedArray dataArray;
     BankedArray tagArray;

@@ -335,10 +335,12 @@ machine(L1Cache, "MI Example L1 Cache")
     profileMsgDelay(2, forwardRequestNetwork_in.dequeue_getDelayCycles());
   }
 
-  action(p_profileMiss, "p", desc="Profile cache miss") {
-    peek(mandatoryQueue_in, RubyRequest) {
-      cacheMemory.profileMiss(in_msg);
-    }
+  action(p_profileMiss, "pi", desc="Profile cache miss") {
+      ++cacheMemory.demand_misses;
+  }
+
+  action(p_profileHit, "ph", desc="Profile cache miss") {
+      ++cacheMemory.demand_hits;
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
@@ -427,11 +429,13 @@ machine(L1Cache, "MI Example L1 Cache")
 
   transition(M, Store) {
     s_store_hit;
+    p_profileHit;
     m_popMandatoryQueue;
   }
 
   transition(M, {Load, Ifetch}) {
     r_load_hit;
+    p_profileHit;
     m_popMandatoryQueue;
   }
 
