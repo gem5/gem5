@@ -4,111 +4,60 @@ sim_seconds                                  0.007481                       # Nu
 sim_ticks                                     7481441                       # Number of ticks simulated
 final_tick                                    7481441                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  33553                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 250412                       # Number of bytes of host memory used
-host_seconds                                   222.97                       # Real time elapsed on the host
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+host_tick_rate                                  40613                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 299464                       # Number of bytes of host memory used
+host_seconds                                   184.21                       # Real time elapsed on the host
+system.ruby.l1_cntrl4.L1Dcache.demand_hits           21                       # Number of cache demand hits
+system.ruby.l1_cntrl4.L1Dcache.demand_misses        77428                       # Number of cache demand misses
+system.ruby.l1_cntrl4.L1Dcache.demand_accesses        77449                       # Number of cache demand accesses
+system.ruby.l1_cntrl4.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl4.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl4.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl5.L1Dcache.demand_hits           25                       # Number of cache demand hits
+system.ruby.l1_cntrl5.L1Dcache.demand_misses        77511                       # Number of cache demand misses
+system.ruby.l1_cntrl5.L1Dcache.demand_accesses        77536                       # Number of cache demand accesses
+system.ruby.l1_cntrl5.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl5.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl5.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl6.L1Dcache.demand_hits           21                       # Number of cache demand hits
+system.ruby.l1_cntrl6.L1Dcache.demand_misses        77666                       # Number of cache demand misses
+system.ruby.l1_cntrl6.L1Dcache.demand_accesses        77687                       # Number of cache demand accesses
+system.ruby.l1_cntrl6.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl6.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl6.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl7.L1Dcache.demand_hits           23                       # Number of cache demand hits
+system.ruby.l1_cntrl7.L1Dcache.demand_misses        77528                       # Number of cache demand misses
+system.ruby.l1_cntrl7.L1Dcache.demand_accesses        77551                       # Number of cache demand accesses
+system.ruby.l1_cntrl7.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl7.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl7.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Dcache.demand_hits           27                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses        77272                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses        77299                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Dcache.demand_hits           30                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses        77679                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses        77709                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl2.L1Dcache.demand_hits           14                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Dcache.demand_misses        77082                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Dcache.demand_accesses        77096                       # Number of cache demand accesses
+system.ruby.l1_cntrl2.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl3.L1Dcache.demand_hits           31                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Dcache.demand_misses        77329                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Dcache.demand_accesses        77360                       # Number of cache demand accesses
+system.ruby.l1_cntrl3.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l2_cntrl0.L2cache.demand_hits         5922                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       613572                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses       619494                       # Number of cache demand accesses
 system.cpu0.num_reads                           99553                       # number of read accesses completed
 system.cpu0.num_writes                          54274                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed

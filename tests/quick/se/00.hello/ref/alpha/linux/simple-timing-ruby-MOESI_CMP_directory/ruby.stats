@@ -164,22 +164,6 @@ links_utilized_percent_switch_3: 6.64705
   outgoing_messages_switch_3_link_2_Writeback_Control: 1992 15936 [ 0 1093 899 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_2_Unblock_Control: 1109 8872 [ 0 0 1109 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.l1_cntrl0.L1IcacheMemory
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_misses: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
-
-
-Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_misses: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
-
-
  --- L1Cache ---
  - Event Counts -
 Load [1183 ] 1183
@@ -341,14 +325,6 @@ II  Inv [0 ] 0
 II  Writeback_Ack [0 ] 0
 II  Writeback_Ack_Data [0 ] 0
 II  Writeback_Nack [0 ] 0
-
-Cache Stats: system.ruby.l2_cntrl0.L2cacheMemory
-  system.ruby.l2_cntrl0.L2cacheMemory_total_misses: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_demand_misses: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_prefetches: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
-
 
  --- L2Cache ---
  - Event Counts -

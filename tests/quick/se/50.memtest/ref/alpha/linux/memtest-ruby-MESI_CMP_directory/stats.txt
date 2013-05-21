@@ -4,21 +4,15 @@ sim_seconds                                  0.007257                       # Nu
 sim_ticks                                     7257449                       # Number of ticks simulated
 final_tick                                    7257449                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  51998                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 251212                       # Number of bytes of host memory used
-host_seconds                                   139.57                       # Real time elapsed on the host
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl4.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl4.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl4.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl4.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+host_tick_rate                                  64474                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 299312                       # Number of bytes of host memory used
+host_seconds                                   112.56                       # Real time elapsed on the host
+system.ruby.l1_cntrl4.L1Dcache.demand_hits            2                       # Number of cache demand hits
+system.ruby.l1_cntrl4.L1Dcache.demand_misses        76641                       # Number of cache demand misses
+system.ruby.l1_cntrl4.L1Dcache.demand_accesses        76643                       # Number of cache demand accesses
+system.ruby.l1_cntrl4.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl4.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl4.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl4.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl4.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl4.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -28,18 +22,12 @@ system.ruby.l1_cntrl4.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl4.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl4.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl4.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl5.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl5.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl5.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl5.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl5.L1Dcache.demand_hits            2                       # Number of cache demand hits
+system.ruby.l1_cntrl5.L1Dcache.demand_misses        75966                       # Number of cache demand misses
+system.ruby.l1_cntrl5.L1Dcache.demand_accesses        75968                       # Number of cache demand accesses
+system.ruby.l1_cntrl5.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl5.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl5.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl5.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl5.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl5.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -49,18 +37,12 @@ system.ruby.l1_cntrl5.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl5.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl5.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl5.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl6.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl6.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl6.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl6.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl6.L1Dcache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl6.L1Dcache.demand_misses        76675                       # Number of cache demand misses
+system.ruby.l1_cntrl6.L1Dcache.demand_accesses        76675                       # Number of cache demand accesses
+system.ruby.l1_cntrl6.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl6.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl6.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl6.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl6.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl6.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -70,18 +52,12 @@ system.ruby.l1_cntrl6.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl6.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl6.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl6.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl7.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl7.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl7.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl7.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl7.L1Dcache.demand_hits            2                       # Number of cache demand hits
+system.ruby.l1_cntrl7.L1Dcache.demand_misses        76386                       # Number of cache demand misses
+system.ruby.l1_cntrl7.L1Dcache.demand_accesses        76388                       # Number of cache demand accesses
+system.ruby.l1_cntrl7.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl7.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl7.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl7.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl7.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl7.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -91,18 +67,12 @@ system.ruby.l1_cntrl7.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl7.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl7.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl7.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.L1Dcache.demand_hits            3                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses        76561                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses        76564                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -112,18 +82,12 @@ system.ruby.l1_cntrl0.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl1.L1Dcache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses        76056                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses        76056                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -133,18 +97,12 @@ system.ruby.l1_cntrl1.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl2.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl2.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl2.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl2.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl2.L1Dcache.demand_hits            1                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Dcache.demand_misses        76165                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Dcache.demand_accesses        76166                       # Number of cache demand accesses
+system.ruby.l1_cntrl2.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl2.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl2.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl2.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -154,18 +112,12 @@ system.ruby.l1_cntrl2.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl2.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl2.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl2.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl3.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl3.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl3.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl3.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl3.L1Dcache.demand_hits            1                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Dcache.demand_misses        75953                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Dcache.demand_accesses        75954                       # Number of cache demand accesses
+system.ruby.l1_cntrl3.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Icache.demand_accesses            0                       # Number of cache demand accesses
 system.ruby.l1_cntrl3.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl3.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl3.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -175,12 +127,9 @@ system.ruby.l1_cntrl3.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl3.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl3.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl3.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l2_cntrl0.L2cache.demand_hits           33                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       610348                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses       610381                       # Number of cache demand accesses
 system.cpu0.num_reads                           99060                       # number of read accesses completed
 system.cpu0.num_writes                          53442                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed

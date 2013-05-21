@@ -4,14 +4,11 @@ sim_seconds                                  0.000222                       # Nu
 sim_ticks                                      221941                       # Number of ticks simulated
 final_tick                                     221941                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                2209091                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 276976                       # Number of bytes of host memory used
+host_tick_rate                                2117650                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 149428                       # Number of bytes of host memory used
 host_seconds                                     0.10                       # Real time elapsed on the host
-system.ruby.l1_cntrl0.cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.cacheMemory.demand_hits           38                       # Number of cache demand hits
+system.ruby.l1_cntrl0.cacheMemory.demand_misses          917                       # Number of cache demand misses
+system.ruby.l1_cntrl0.cacheMemory.demand_accesses          955                       # Number of cache demand accesses
 
 ---------- End Simulation Statistics   ----------

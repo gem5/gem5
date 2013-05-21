@@ -133,19 +133,6 @@ links_utilized_percent_switch_2: 6.00613
   outgoing_messages_switch_2_link_1_Control: 1730 13840 [ 0 0 1730 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Data: 1726 124272 [ 0 0 1726 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.l1_cntrl0.cacheMemory
-  system.ruby.l1_cntrl0.cacheMemory_total_misses: 1730
-  system.ruby.l1_cntrl0.cacheMemory_total_demand_misses: 1730
-  system.ruby.l1_cntrl0.cacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.cacheMemory_request_type_LD:   42.0231%
-  system.ruby.l1_cntrl0.cacheMemory_request_type_ST:   15.7803%
-  system.ruby.l1_cntrl0.cacheMemory_request_type_IFETCH:   42.1965%
-
-  system.ruby.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   1730    100%
-
  --- L1Cache ---
  - Event Counts -
 Load [1183 ] 1183

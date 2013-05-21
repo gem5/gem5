@@ -4,31 +4,22 @@ sim_seconds                                  0.000045                       # Nu
 sim_ticks                                       44968                       # Number of ticks simulated
 final_tick                                      44968                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                   8988                       # Simulator instruction rate (inst/s)
-host_op_rate                                     8987                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 156818                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 149468                       # Number of bytes of host memory used
-host_seconds                                     0.29                       # Real time elapsed on the host
+host_inst_rate                                  13243                       # Simulator instruction rate (inst/s)
+host_op_rate                                    13241                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 231036                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 152316                       # Number of bytes of host memory used
+host_seconds                                     0.19                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l2_cntrl0.L2cache.demand_hits           87                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses          423                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses          510                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Dcache.demand_hits          469                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses          240                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses          709                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits         2315                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses          270                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses         2585                       # Number of cache demand accesses
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv

@@ -144,42 +144,6 @@ links_utilized_percent_switch_2: 4.80443
   outgoing_messages_switch_2_link_1_Writeback_Control: 2066 16528 [ 0 0 1143 0 0 923 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Unblock_Control: 1159 9272 [ 0 0 0 0 0 1159 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.l1_cntrl0.L1IcacheMemory
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_misses: 646
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_demand_misses: 646
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.L1IcacheMemory_request_type_IFETCH:   100%
-
-  system.ruby.l1_cntrl0.L1IcacheMemory_access_mode_type_Supervisor:   646    100%
-
-Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_misses: 716
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_demand_misses: 716
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.L1DcacheMemory_request_type_LD:   73.324%
-  system.ruby.l1_cntrl0.L1DcacheMemory_request_type_ST:   26.676%
-
-  system.ruby.l1_cntrl0.L1DcacheMemory_access_mode_type_Supervisor:   716    100%
-
-Cache Stats: system.ruby.l1_cntrl0.L2cacheMemory
-  system.ruby.l1_cntrl0.L2cacheMemory_total_misses: 1362
-  system.ruby.l1_cntrl0.L2cacheMemory_total_demand_misses: 1362
-  system.ruby.l1_cntrl0.L2cacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L2cacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L2cacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.L2cacheMemory_request_type_LD:   38.5463%
-  system.ruby.l1_cntrl0.L2cacheMemory_request_type_ST:   14.0235%
-  system.ruby.l1_cntrl0.L2cacheMemory_request_type_IFETCH:   47.4302%
-
-  system.ruby.l1_cntrl0.L2cacheMemory_access_mode_type_Supervisor:   1362    100%
-
  --- L1Cache ---
  - Event Counts -
 Load [1191 ] 1191
@@ -576,14 +540,6 @@ MM_WF  L1_to_L2 [0 ] 0
 MM_WF  Ack [0 ] 0
 MM_WF  All_acks_no_sharers [0 ] 0
 MM_WF  Flush_line [0 ] 0
-
-Cache Stats: system.ruby.dir_cntrl0.probeFilter
-  system.ruby.dir_cntrl0.probeFilter_total_misses: 0
-  system.ruby.dir_cntrl0.probeFilter_total_demand_misses: 0
-  system.ruby.dir_cntrl0.probeFilter_total_prefetches: 0
-  system.ruby.dir_cntrl0.probeFilter_total_sw_prefetches: 0
-  system.ruby.dir_cntrl0.probeFilter_total_hw_prefetches: 0
-
 
 Memory controller: system.ruby.dir_cntrl0.memBuffer:
   memory_total_requests: 1379

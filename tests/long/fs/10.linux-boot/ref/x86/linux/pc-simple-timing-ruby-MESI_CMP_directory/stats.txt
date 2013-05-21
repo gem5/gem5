@@ -4,11 +4,11 @@ sim_seconds                                  5.205149                       # Nu
 sim_ticks                                5205148879000                       # Number of ticks simulated
 final_tick                               5205148879000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 128983                       # Simulator instruction rate (inst/s)
-host_op_rate                                   247272                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6293860084                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 868904                       # Number of bytes of host memory used
-host_seconds                                   827.02                       # Real time elapsed on the host
+host_inst_rate                                 134092                       # Simulator instruction rate (inst/s)
+host_op_rate                                   257066                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             6543163557                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 872300                       # Number of bytes of host memory used
+host_seconds                                   795.51                       # Real time elapsed on the host
 sim_insts                                   106671342                       # Number of instructions simulated
 sim_ops                                     204498755                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide        35240                       # Number of bytes read from this memory
@@ -227,18 +227,12 @@ system.pc.south_bridge.ide.disks1.dma_read_txs            0                     
 system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl0.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl0.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl0.L1Dcache.demand_hits     11503621                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses       550662                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses     12054283                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits     70015833                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses       352190                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses     70368023                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -248,18 +242,12 @@ system.ruby.l1_cntrl0.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1DcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1DcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l1_cntrl1.L1IcacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l1_cntrl1.L1IcacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l1_cntrl1.L1Dcache.demand_hits     12163827                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses      1291679                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses     13455506                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits     55549058                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses       459847                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses     56008905                       # Number of cache demand accesses
 system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -269,12 +257,9 @@ system.ruby.l1_cntrl1.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_reads            0                       # number of data array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_writes            0                       # number of data array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_reads            0                       # number of tag array reads
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_writes            0                       # number of tag array writes
-system.ruby.l2_cntrl0.L2cacheMemory.num_tag_array_stalls            0                       # number of stalls caused by tag array
-system.ruby.l2_cntrl0.L2cacheMemory.num_data_array_stalls            0                       # number of stalls caused by data array
+system.ruby.l2_cntrl0.L2cache.demand_hits      2426575                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       227803                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses      2654378                       # Number of cache demand accesses
 system.cpu0.numCycles                     10410297758                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed

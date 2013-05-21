@@ -160,29 +160,6 @@ links_utilized_percent_switch_3: 4.36236
   outgoing_messages_switch_3_link_2_Writeback_Data: 84 6048 [ 0 0 0 0 84 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_2_Writeback_Control: 365 2920 [ 0 0 0 0 365 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.l1_cntrl0.L1IcacheMemory
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_misses: 270
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_demand_misses: 270
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.L1IcacheMemory_request_type_IFETCH:   100%
-
-  system.ruby.l1_cntrl0.L1IcacheMemory_access_mode_type_Supervisor:   270    100%
-
-Cache Stats: system.ruby.l1_cntrl0.L1DcacheMemory
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_misses: 248
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_demand_misses: 248
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l1_cntrl0.L1DcacheMemory_request_type_LD:   73.3871%
-  system.ruby.l1_cntrl0.L1DcacheMemory_request_type_ST:   26.6129%
-
-  system.ruby.l1_cntrl0.L1DcacheMemory_access_mode_type_Supervisor:   248    100%
-
  --- L1Cache ---
  - Event Counts -
 Load [415 ] 415
@@ -533,18 +510,6 @@ IS_L  Persistent_GETX [0 ] 0
 IS_L  Persistent_GETS [0 ] 0
 IS_L  Own_Lock_or_Unlock [0 ] 0
 IS_L  Request_Timeout [0 ] 0
-
-Cache Stats: system.ruby.l2_cntrl0.L2cacheMemory
-  system.ruby.l2_cntrl0.L2cacheMemory_total_misses: 454
-  system.ruby.l2_cntrl0.L2cacheMemory_total_demand_misses: 454
-  system.ruby.l2_cntrl0.L2cacheMemory_total_prefetches: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
-  system.ruby.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
-
-  system.ruby.l2_cntrl0.L2cacheMemory_request_type_GETS:   87.2247%
-  system.ruby.l2_cntrl0.L2cacheMemory_request_type_GETX:   12.7753%
-
-  system.ruby.l2_cntrl0.L2cacheMemory_access_mode_type_Supervisor:   454    100%
 
  --- L2Cache ---
  - Event Counts -
