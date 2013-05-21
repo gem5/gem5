@@ -175,7 +175,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                          cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
-                                                             size = dir_size),
+                                             use_map = options.use_map,
+                                             size = dir_size),
                                          memBuffer = mem_cntrl,
                                          l2_select_num_bits = l2_bits,
                                          ruby_system = ruby_system)
