@@ -229,7 +229,8 @@ let {{
 
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, code, big_code, \
-                flag_code, cond_check, else_code, cond_control_flag_init):
+                flag_code, cond_check, else_code, cond_control_flag_init,
+                op_class):
 
             # Globals to stick the output in
             global header_output
@@ -257,7 +258,8 @@ let {{
                         matcher.sub(src2_name, flag_code),
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code),
-                        matcher.sub(src2_name, cond_control_flag_init))
+                        matcher.sub(src2_name, cond_control_flag_init),
+                        op_class)
                 imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
@@ -265,14 +267,15 @@ let {{
                         matcher.sub(imm_name, flag_code),
                         matcher.sub(imm_name, cond_check),
                         matcher.sub(imm_name, else_code),
-                        matcher.sub(imm_name, cond_control_flag_init))
+                        matcher.sub(imm_name, cond_control_flag_init),
+                        op_class)
                 return
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, big_code, "", "true", else_code, "")
+                        code, big_code, "", "true", else_code, "", op_class)
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to
@@ -315,15 +318,16 @@ let {{
                      "flag_code" : flag_code,
                      "cond_check" : cond_check,
                      "else_code" : else_code,
-                     "cond_control_flag_init" : cond_control_flag_init})]
+                     "cond_control_flag_init" : cond_control_flag_init,
+                     "op_class" : op_class})]
             if big_code != "":
                 iops += [InstObjParams(name, Name + suffix + "Big", base,
                          {"code" : big_code,
                           "flag_code" : flag_code,
                           "cond_check" : cond_check,
                           "else_code" : else_code,
-                          "cond_control_flag_init" :
-                              cond_control_flag_init})]
+                          "cond_control_flag_init" : cond_control_flag_init,
+                          "op_class" : op_class})]
 
             # Generate the actual code (finally!)
             for iop in iops:
@@ -349,11 +353,12 @@ let {{
                 cond_check = cls.cond_check
                 else_code = cls.else_code
                 cond_control_flag_init = cls.cond_control_flag_init
+                op_class = cls.op_class
 
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "", code, big_code,
                         flag_code, cond_check, else_code,
-                        cond_control_flag_init)
+                        cond_control_flag_init, op_class)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -381,6 +386,7 @@ let {{
         cond_check = "true"
         else_code = ";"
         cond_control_flag_init = ""
+        op_class = "IntAluOp"
 
         def __init__(self, dest, src1, op2, flags = None, dataSize = "env.dataSize"):
             self.dest = dest
@@ -538,6 +544,8 @@ let {{
         big_code = 'DestReg = result = (psrc1 ^ op2) & mask(dataSize * 8)'
 
     class Mul1s(WrRegOp):
+        op_class = 'IntMultOp'
+
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
@@ -568,6 +576,8 @@ let {{
         '''
 
     class Mul1u(WrRegOp):
+        op_class = 'IntMultOp'
+
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
@@ -605,6 +615,8 @@ let {{
 
     # One or two bit divide
     class Div1(WrRegOp):
+        op_class = 'IntDivOp'
+
         code = '''
             //These are temporaries so that modifying them later won't make
             //the ISA parser think they're also sources.
@@ -629,6 +641,8 @@ let {{
 
     # Step divide
     class Div2(RegOp):
+        op_class = 'IntDivOp'
+
         divCode = '''
             uint64_t dividend = Remainder;
             uint64_t divisor = Divisor;
