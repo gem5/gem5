@@ -87,6 +87,7 @@ namespace X86ISA
         // State to track each walk of the page table
         class WalkerState
         {
+          friend class Walker;
           private:
             enum State {
                 Ready,
@@ -176,6 +177,12 @@ namespace X86ISA
         System * sys;
         MasterID masterId;
 
+        // The number of outstanding walks that can be squashed per cycle.
+        unsigned numSquashable;
+
+        // Wrapper for checking for squashes before starting a translation.
+        void startWalkWrapper();
+
         // Functions for dealing with packets.
         bool recvTimingResp(PacketPtr pkt);
         void recvRetry();
@@ -199,7 +206,8 @@ namespace X86ISA
         Walker(const Params *params) :
             MemObject(params), port(name() + ".port", this),
             funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system),
-            masterId(sys->getMasterId(name()))
+            masterId(sys->getMasterId(name())),
+            numSquashable(params->num_squash_per_cycle)
         {
         }
     };

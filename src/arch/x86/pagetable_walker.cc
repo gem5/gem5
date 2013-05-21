@@ -139,11 +139,8 @@ Walker::recvTimingResp(PacketPtr pkt)
         delete senderWalk;
         // Since we block requests when another is outstanding, we
         // need to check if there is a waiting request to be serviced
-        if (currStates.size()) {
-            WalkerState * newState = currStates.front();
-            if (!newState->wasStarted())
-                newState->startWalk();
-        }
+        if (currStates.size())
+            startWalkWrapper();
     }
     return true;
 }
@@ -190,6 +187,36 @@ Walker::WalkerState::initState(ThreadContext * _tc,
     tc = _tc;
     mode = _mode;
     timing = _isTiming;
+}
+
+void
+Walker::startWalkWrapper()
+{
+    unsigned num_squashed = 0;
+    WalkerState *currState = currStates.front();
+    while ((num_squashed < numSquashable) && currState &&
+        currState->translation->squashed()) {
+        currStates.pop_front();
+        num_squashed++;
+
+        DPRINTF(PageTableWalker, "Squashing table walk for address %#x\n",
+            currState->req->getVaddr());
+
+        // finish the translation which will delete the translation object
+        currState->translation->finish(new UnimpFault("Squashed Inst"),
+                currState->req, currState->tc, currState->mode);
+
+        // delete the current request
+        delete currState;
+
+        // check the next translation request, if it exists
+        if (currStates.size())
+            currState = currStates.front();
+        else
+            currState = NULL;
+    }
+    if (currState && !currState->wasStarted())
+        currState->startWalk();
 }
 
 Fault

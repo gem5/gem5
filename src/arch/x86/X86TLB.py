@@ -47,6 +47,8 @@ class X86PagetableWalker(MemObject):
     cxx_header = 'arch/x86/pagetable_walker.hh'
     port = MasterPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
+    num_squash_per_cycle = Param.Unsigned(4,
+            "Number of outstanding walks that can be squashed per cycle")
 
 class X86TLB(BaseTLB):
     type = 'X86TLB'
