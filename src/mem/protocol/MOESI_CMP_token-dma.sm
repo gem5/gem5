@@ -27,7 +27,7 @@
  */
 
 
-machine(DMA, "DMA Controller") 
+machine(DMA, "DMA Controller")
 : DMASequencer * dma_sequencer,
   Cycles request_latency = 6
 {
@@ -108,7 +108,7 @@ machine(DMA, "DMA Controller")
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
         out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-        out_msg.LineAddress := in_msg.LineAddress; 
+        out_msg.LineAddress := in_msg.LineAddress;
         out_msg.Type := DMARequestType:READ;
         out_msg.Requestor := machineID;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -123,7 +123,7 @@ machine(DMA, "DMA Controller")
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
           out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-          out_msg.LineAddress := in_msg.LineAddress; 
+          out_msg.LineAddress := in_msg.LineAddress;
           out_msg.Type := DMARequestType:WRITE;
           out_msg.Requestor := machineID;
           out_msg.DataBlk := in_msg.DataBlk;

@@ -100,8 +100,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
 
         l1_cntrl = L1Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
-                                      L1IcacheMemory = l1i_cache,
-                                      L1DcacheMemory = l1d_cache,
+                                      L1Icache = l1i_cache,
+                                      L1Dcache = l1d_cache,
                                       l2_select_num_bits = l2_bits,
                                       N_tokens = n_tokens,
                                       retry_threshold = \
@@ -147,7 +147,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
-                                      L2cacheMemory = l2_cache,
+                                      L2cache = l2_cache,
                                       N_tokens = n_tokens,
                                       ruby_system = ruby_system)
         

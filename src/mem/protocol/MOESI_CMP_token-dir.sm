@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,12 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
-
-machine(Directory, "Token protocol") 
+machine(Directory, "Token protocol")
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
    int l2_select_num_bits,
@@ -198,7 +192,7 @@ machine(Directory, "Token protocol")
 
     if (state == State:L || state == State:DW_L || state == State:DR_L) {
       assert(getDirectoryEntry(addr).Tokens == 0);
-    } 
+    }
 
     // We have one or zero owners
     assert((getDirectoryEntry(addr).Owner.count() == 0) || (getDirectoryEntry(addr).Owner.count() == 1));
@@ -245,14 +239,14 @@ machine(Directory, "Token protocol")
   out_port(persistentNetwork_out, PersistentMsg, persistentFromDir);
   out_port(requestNetwork_out, RequestMsg, requestFromDir);
   out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
-  
+
   //
   // Memory buffer for memory controller to DIMM communication
   //
   out_port(memQueue_out, MemoryMsg, memBuffer);
 
   // ** IN_PORTS **
-  
+
   // off-chip memory request/response is done
   in_port(memQueue_in, MemoryMsg, memBuffer) {
     if (memQueue_in.isReady()) {
@@ -346,7 +340,7 @@ machine(Directory, "Token protocol")
             } else {
               // locked
               trigger(Event:Lockdown, in_msg.Address, TBEs[in_msg.Address]);
-            }   
+            }
           } else {
             // unlocked
             trigger(Event:Unlockdown, in_msg.Address, TBEs[in_msg.Address]);
@@ -447,7 +441,7 @@ machine(Directory, "Token protocol")
         // pertinent L2 cache exist.
         //
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
-            
+
         out_msg.Destination.add(mapAddressToRange(address,
                                                   MachineType:L2Cache,
                                                   l2_select_low_bit,
@@ -517,7 +511,7 @@ machine(Directory, "Token protocol")
         // pertinent L2 cache exist.
         //
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
-            
+
         out_msg.Destination.add(mapAddressToRange(address,
                                                   MachineType:L2Cache,
                                                   l2_select_low_bit,
@@ -614,7 +608,7 @@ machine(Directory, "Token protocol")
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
-      }   
+      }
     }
     getDirectoryEntry(address).Tokens := 0;
   }
@@ -635,7 +629,7 @@ machine(Directory, "Token protocol")
   }
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
-    peek(requestNetwork_in, RequestMsg) {    
+    peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
@@ -661,7 +655,7 @@ machine(Directory, "Token protocol")
   }
 
   action(fd_memoryDma, "fd", desc="Queue off-chip fetch request") {
-    peek(dmaRequestQueue_in, DMARequestMsg) {    
+    peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
@@ -893,7 +887,7 @@ machine(Directory, "Token protocol")
       out_msg.PhysicalAddress := address;
       out_msg.LineAddress := address;
       out_msg.Type := DMAResponseType:ACK;
-      out_msg.Destination.add(tbe.DmaRequestor); 
+      out_msg.Destination.add(tbe.DmaRequestor);
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -905,7 +899,7 @@ machine(Directory, "Token protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         //
-        // we send the entire data block and rely on the dma controller to 
+        // we send the entire data block and rely on the dma controller to
         // split it up if need be
         //
         out_msg.DataBlk := in_msg.DataBlk;
@@ -922,7 +916,7 @@ machine(Directory, "Token protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         //
-        // we send the entire data block and rely on the dma controller to 
+        // we send the entire data block and rely on the dma controller to
         // split it up if need be
         //
         out_msg.DataBlk := in_msg.DataBlk;
@@ -935,7 +929,7 @@ machine(Directory, "Token protocol")
   // TRANSITIONS
 
   //
-  // Trans. from base state O 
+  // Trans. from base state O
   // the directory has valid data
   //
   transition(O, GETX, NO_W) {
@@ -1267,7 +1261,7 @@ machine(Directory, "Token protocol")
   // presistent request is issued and resolve before memory returns with data
   //
   transition(O_W, {Memory_Ack, Memory_Data}, O) {
-    l_popMemQueue; 
+    l_popMemQueue;
   }
 
   transition({O, NO}, {Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}) {

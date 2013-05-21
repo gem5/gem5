@@ -31,10 +31,10 @@
  *
  */
 
-machine(L1Cache, "Token protocol") 
+machine(L1Cache, "Token protocol")
  : Sequencer * sequencer,
-   CacheMemory * L1IcacheMemory,
-   CacheMemory * L1DcacheMemory,
+   CacheMemory * L1Icache,
+   CacheMemory * L1Dcache,
    int l2_select_num_bits,
    int N_tokens,
 
@@ -175,7 +175,7 @@ machine(L1Cache, "Token protocol")
     int countStarvingForAddress(Address);
     int countReadStarvingForAddress(Address);
   }
- 
+
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -224,12 +224,12 @@ machine(L1Cache, "Token protocol")
   }
 
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory.lookup(addr));
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
     if(is_valid(L1Dcache_entry)) {
       return L1Dcache_entry;
     }
 
-    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory.lookup(addr));
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
     return L1Icache_entry;
   }
 
@@ -238,12 +238,12 @@ machine(L1Cache, "Token protocol")
   }
 
   Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory.lookup(addr));
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
     return L1Dcache_entry;
   }
 
   Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
-    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory.lookup(addr));
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
     return L1Icache_entry;
   }
 
@@ -271,7 +271,7 @@ machine(L1Cache, "Token protocol")
   }
 
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
-    assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
+    assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     if (is_valid(tbe)) {
       assert(state != State:I);
@@ -404,10 +404,10 @@ machine(L1Cache, "Token protocol")
       //
       // NOTE direct local hits should not call this
       //
-      return GenericMachineType:L1Cache_wCC;  
+      return GenericMachineType:L1Cache_wCC;
     } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
 
-      if (sender == (mapAddressToRange(addr, 
+      if (sender == (mapAddressToRange(addr,
                                        MachineType:L2Cache,
                                        l2_select_low_bit,
                                        l2_select_num_bits))) {
@@ -501,7 +501,7 @@ machine(L1Cache, "Token protocol")
 
         // React to the message based on the current state of the table
         Entry cache_entry := getCacheEntry(in_msg.Address);
-        TBE tbe := L1_TBEs[in_msg.Address]; 
+        TBE tbe := L1_TBEs[in_msg.Address];
 
         if (persistentTable.isLocked(in_msg.Address)) {
           if (persistentTable.findSmallest(in_msg.Address) == machineID) {
@@ -623,7 +623,7 @@ machine(L1Cache, "Token protocol")
                     cache_entry, tbe);
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          if (getTokens(cache_entry) == 1 || 
+          if (getTokens(cache_entry) == 1 ||
               getTokens(cache_entry) == (max_tokens() / 2) + 1) {
             if (in_msg.isLocal) {
               trigger(Event:Transient_Local_GETS_Last_Token, in_msg.Address,
@@ -678,16 +678,16 @@ machine(L1Cache, "Token protocol")
                         L1Dcache_entry, tbe);
             }
 
-            if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
+            if (L1Icache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
               trigger(mandatory_request_type_to_event(in_msg.Type),
                       in_msg.LineAddress, L1Icache_entry, tbe);
             } else {
               // No room in the L1, so we need to make room
               trigger(Event:L1_Replacement,
-                      L1IcacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL1ICacheEntry(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1IcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                      L1Icache.cacheProbe(in_msg.LineAddress),
+                      getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         } else {
@@ -709,16 +709,16 @@ machine(L1Cache, "Token protocol")
                       L1Icache_entry, tbe);
             }
 
-            if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
+            if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
               trigger(mandatory_request_type_to_event(in_msg.Type),
                       in_msg.LineAddress, L1Dcache_entry, tbe);
             } else {
               // No room in the L1, so we need to make room
               trigger(Event:L1_Replacement,
-                      L1DcacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL1DCacheEntry(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1DcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                      L1Dcache.cacheProbe(in_msg.LineAddress),
+                      getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         }
@@ -744,14 +744,14 @@ machine(L1Cache, "Token protocol")
             out_msg.Type := PersistentRequestType:GETS_PERSISTENT;
             out_msg.Requestor := machineID;
             out_msg.Destination.broadcast(MachineType:L1Cache);
-            
+
             //
             // Currently the configuration system limits the system to only one
             // chip.  Therefore, if we assume one shared L2 cache, then only one
             // pertinent L2 cache exist.
             //
             //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
-            
+
             out_msg.Destination.add(mapAddressToRange(address,
                                                       MachineType:L2Cache,
                                                       l2_select_low_bit,
@@ -872,7 +872,7 @@ machine(L1Cache, "Token protocol")
             // pertinent L2 cache exist.
             //
             //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
-            
+
             out_msg.Destination.add(mapAddressToRange(address,
                                                       MachineType:L2Cache,
                                                       l2_select_low_bit,
@@ -1289,8 +1289,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
-    sequencer.readCallback(address, 
-                           GenericMachineType:L1Cache, 
+    sequencer.readCallback(address,
+                           GenericMachineType:L1Cache,
                            cache_entry.DataBlk);
 
   }
@@ -1301,7 +1301,7 @@ machine(L1Cache, "Token protocol")
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
 
-      sequencer.readCallback(address, 
+      sequencer.readCallback(address,
                              getNondirectHitMachType(address, in_msg.Sender),
                              cache_entry.DataBlk);
 
@@ -1313,8 +1313,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
-    sequencer.writeCallback(address, 
-                            GenericMachineType:L1Cache, 
+    sequencer.writeCallback(address,
+                            GenericMachineType:L1Cache,
                             cache_entry.DataBlk);
 
     cache_entry.Dirty := true;
@@ -1506,10 +1506,10 @@ machine(L1Cache, "Token protocol")
 
   action(gg_deallocateL1CacheBlock, "\g", desc="Deallocate cache block.  Sets the cache to invalid, allowing a replacement in parallel with a fetch.") {
     assert(getTokens(cache_entry) == 0);
-    if (L1DcacheMemory.isTagPresent(address)) {
-      L1DcacheMemory.deallocate(address);
+    if (L1Dcache.isTagPresent(address)) {
+      L1Dcache.deallocate(address);
     } else {
-      L1IcacheMemory.deallocate(address);
+      L1Icache.deallocate(address);
     }
     unset_cache_entry();
   }
@@ -1517,14 +1517,14 @@ machine(L1Cache, "Token protocol")
   action(ii_allocateL1DCacheBlock, "\i", desc="Set L1 D-cache tag equal to tag of block B.") {
     if (is_valid(cache_entry)) {
     } else {
-      set_cache_entry(L1DcacheMemory.allocate(address, new Entry));
+      set_cache_entry(L1Dcache.allocate(address, new Entry));
     }
   }
 
   action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
     if (is_valid(cache_entry)) {
     } else {
-      set_cache_entry(L1IcacheMemory.allocate(address, new Entry));
+      set_cache_entry(L1Icache.allocate(address, new Entry));
     }
   }
 
@@ -1536,19 +1536,19 @@ machine(L1Cache, "Token protocol")
   }
 
   action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
-      ++L1IcacheMemory.demand_misses;
+      ++L1Icache.demand_misses;
   }
 
   action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
-      ++L1IcacheMemory.demand_hits;
+      ++L1Icache.demand_hits;
   }
 
   action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
-      ++L1DcacheMemory.demand_misses;
+      ++L1Dcache.demand_misses;
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
-      ++L1DcacheMemory.demand_hits;
+      ++L1Dcache.demand_hits;
   }
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
@@ -1561,8 +1561,8 @@ machine(L1Cache, "Token protocol")
   action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(mandatoryQueue_in, RubyRequest) {
       APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
-    } 
-    stall_and_wait(mandatoryQueue_in, address);    
+    }
+    stall_and_wait(mandatoryQueue_in, address);
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
@@ -2261,7 +2261,7 @@ machine(L1Cache, "Token protocol")
     s_deallocateTBE;
     j_unsetReissueTimer;
     n_popResponseQueue;
-    kd_wakeUpDependents;    
+    kd_wakeUpDependents;
   }
 
   transition(IS, Data_All_Tokens, M_W) {

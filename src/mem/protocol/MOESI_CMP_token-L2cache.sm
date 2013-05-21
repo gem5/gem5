@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-machine(L2Cache, "Token protocol") 
- : CacheMemory * L2cacheMemory,
+machine(L2Cache, "Token protocol")
+ : CacheMemory * L2cache,
    int N_tokens,
    Cycles l2_request_latency = 5,
    Cycles l2_response_latency = 5,
@@ -152,10 +146,10 @@ machine(L2Cache, "Token protocol")
   void unset_cache_entry();
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
-    Entry cache_entry := static_cast(Entry, "pointer", L2cacheMemory.lookup(address));
+    Entry cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
     return cache_entry;
   }
- 
+
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
     return getCacheEntry(addr).DataBlk;
   }
@@ -411,7 +405,7 @@ machine(L2Cache, "Token protocol")
                      in_msg.Type == CoherenceResponseType:WB_OWNED ||
                      in_msg.Type == CoherenceResponseType:WB_SHARED_DATA) {
 
-            if (L2cacheMemory.cacheAvail(in_msg.Address) || is_valid(cache_entry)) {
+            if (L2cache.cacheAvail(in_msg.Address) || is_valid(cache_entry)) {
 
               // either room is available or the block is already present
 
@@ -429,8 +423,8 @@ machine(L2Cache, "Token protocol")
             }
             else {
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(in_msg.Address),
-                        getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)));
+                        L2cache.cacheProbe(in_msg.Address),
+                        getCacheEntry(L2cache.cacheProbe(in_msg.Address)));
             }
           } else if (in_msg.Type == CoherenceResponseType:INV) {
             trigger(Event:L1_INV, in_msg.Address, cache_entry);
@@ -447,7 +441,7 @@ machine(L2Cache, "Token protocol")
           } else if (in_msg.Type == CoherenceResponseType:WB_TOKENS ||
                      in_msg.Type == CoherenceResponseType:WB_OWNED ||
                      in_msg.Type == CoherenceResponseType:WB_SHARED_DATA) {
-            if (L2cacheMemory.cacheAvail(in_msg.Address) || is_valid(cache_entry)) {
+            if (L2cache.cacheAvail(in_msg.Address) || is_valid(cache_entry)) {
 
               // either room is available or the block is already present
 
@@ -466,8 +460,8 @@ machine(L2Cache, "Token protocol")
             }
             else {
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(in_msg.Address),
-                        getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)));
+                        L2cache.cacheProbe(in_msg.Address),
+                        getCacheEntry(L2cache.cacheProbe(in_msg.Address)));
             }
           } else if (in_msg.Type == CoherenceResponseType:INV) {
             trigger(Event:L1_INV, in_msg.Address, cache_entry);
@@ -497,7 +491,7 @@ machine(L2Cache, "Token protocol")
            out_msg.RetryNum := in_msg.RetryNum;
 
            //
-           // If a statically shared L2 cache, then no other L2 caches can 
+           // If a statically shared L2 cache, then no other L2 caches can
            // store the block
            //
            //out_msg.Destination.broadcast(MachineType:L2Cache);
@@ -778,7 +772,7 @@ machine(L2Cache, "Token protocol")
         enqueue(localRequestNetwork_out, RequestMsg, latency=l2_response_latency ) {
            out_msg.Address := in_msg.Address;
            out_msg.Requestor := in_msg.Requestor;
-           
+
            //
            // Currently assuming only one chip so all L1s are local
            //
@@ -905,7 +899,7 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
       if ((machineIDToMachineType(in_msg.Requestor) == MachineType:L1Cache) &&
           (is_valid(cache_entry))) {
-        L2cacheMemory.setMRU(address);
+        L2cache.setMRU(address);
       }
     }
   }
@@ -957,20 +951,20 @@ machine(L2Cache, "Token protocol")
   }
 
   action(vv_allocateL2CacheBlock, "\v", desc="Set L2 cache tag equal to tag of block B.") {
-    set_cache_entry(L2cacheMemory.allocate(address, new Entry));
+    set_cache_entry(L2cache.allocate(address, new Entry));
   }
 
   action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
-    L2cacheMemory.deallocate(address);
+    L2cache.deallocate(address);
     unset_cache_entry();
   }
 
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
-      ++L2cacheMemory.demand_misses;
+      ++L2cache.demand_misses;
   }
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
-      ++L2cacheMemory.demand_hits;
+      ++L2cache.demand_hits;
   }
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
@@ -1053,8 +1047,8 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  transition(NP, 
-             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, 
+  transition(NP,
+             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token},
              I_L) {
     l_popPersistentQueue;
   }
@@ -1089,8 +1083,8 @@ machine(L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 
-  transition(I, 
-             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, 
+  transition(I,
+             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token},
              I_L) {
     e_sendAckWithCollectedTokens;
     l_popPersistentQueue;
