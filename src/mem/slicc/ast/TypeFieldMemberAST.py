@@ -54,4 +54,4 @@ class TypeFieldMemberAST(TypeFieldAST):
         if not type.addDataMember(self.field_id, field_type, self.pairs,
                                   init_code):
 
-            self.error("Duplicate data member: %s:%s" % (type_ptr, field_id))
+            self.error("Duplicate data member: %s:%s" % (field_type, self.field_id))
