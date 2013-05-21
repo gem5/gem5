@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,14 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-machine(L2Cache, "Token protocol") 
-: CacheMemory * L2cacheMemory,
-  Cycles response_latency = 2, 
+machine(L2Cache, "Token protocol")
+: CacheMemory * L2cache,
+  Cycles response_latency = 2,
   Cycles request_latency = 2
 {
 
@@ -233,7 +227,7 @@ machine(L2Cache, "Token protocol")
   void unset_tbe();
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
-    return static_cast(Entry, "pointer", L2cacheMemory[address]);
+    return static_cast(Entry, "pointer", L2cache[address]);
   }
 
   bool isDirTagPresent(Address addr) {
@@ -453,7 +447,7 @@ machine(L2Cache, "Token protocol")
   }
 
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
-    assert((localDirectory.isTagPresent(addr) && L2cacheMemory.isTagPresent(addr)) == false);
+    assert((localDirectory.isTagPresent(addr) && L2cache.isTagPresent(addr)) == false);
 
     if (is_valid(tbe)) {
       tbe.TBEState := state;
@@ -653,10 +647,10 @@ machine(L2Cache, "Token protocol")
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
           Entry cache_entry := getCacheEntry(in_msg.Address);
           if (is_invalid(cache_entry) &&
-                   L2cacheMemory.cacheAvail(in_msg.Address) == false) {
-            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address),
-                    getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)),
-                    TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
+                   L2cache.cacheAvail(in_msg.Address) == false) {
+            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.Address),
+                    getCacheEntry(L2cache.cacheProbe(in_msg.Address)),
+                    TBEs[L2cache.cacheProbe(in_msg.Address)]);
           }
           else {
             trigger(Event:L1_WBDIRTYDATA, in_msg.Address,
@@ -665,10 +659,10 @@ machine(L2Cache, "Token protocol")
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA) {
           Entry cache_entry := getCacheEntry(in_msg.Address);
           if (is_invalid(cache_entry) &&
-                   L2cacheMemory.cacheAvail(in_msg.Address) == false) {
-            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address),
-                    getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)),
-                    TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
+                   L2cache.cacheAvail(in_msg.Address) == false) {
+            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.Address),
+                    getCacheEntry(L2cache.cacheProbe(in_msg.Address)),
+                    TBEs[L2cache.cacheProbe(in_msg.Address)]);
           }
           else {
             trigger(Event:L1_WBCLEANDATA, in_msg.Address,
@@ -1406,7 +1400,7 @@ machine(L2Cache, "Token protocol")
 
   action( r_setMRU, "\rrr", desc="manually set the MRU bit for cache line" ) {
     if(is_valid(cache_entry)) {
-      L2cacheMemory.setMRU(address);
+      L2cache.setMRU(address);
     }
   }
 
@@ -1459,11 +1453,11 @@ machine(L2Cache, "Token protocol")
   }
 
   action(vv_allocateL2CacheBlock, "\v", desc="Set L2 cache tag equal to tag of block B.") {
-    set_cache_entry(L2cacheMemory.allocate(address, new Entry));
+    set_cache_entry(L2cache.allocate(address, new Entry));
   }
 
   action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
-    L2cacheMemory.deallocate(address);
+    L2cache.deallocate(address);
     unset_cache_entry();
   }
 

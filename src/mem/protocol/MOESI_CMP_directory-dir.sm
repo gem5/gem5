@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
-machine(Directory, "Directory protocol") 
+machine(Directory, "Directory protocol")
 :  DirectoryMemory * directory,
    MemoryControl * memBuffer,
    Cycles directory_latency = 6
@@ -39,7 +35,7 @@ machine(Directory, "Directory protocol")
   // ** IN QUEUES **
   MessageBuffer requestToDir, network="From", virtual_network="1", ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
   MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
-  
+
   MessageBuffer forwardFromDir, network="To", virtual_network="1", ordered="false", vnet_type="forward";
   MessageBuffer responseFromDir, network="To", virtual_network="2", ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
 
@@ -196,7 +192,8 @@ machine(Directory, "Directory protocol")
     return getDirectoryEntry(addr).DataBlk;
   }
 
-  // if no sharers, then directory can be considered both a sharer and exclusive w.r.t. coherence checking
+  // if no sharers, then directory can be considered
+  // both a sharer and exclusive w.r.t. coherence checking
   bool isBlockShared(Address addr) {
     if (directory.isPresent(addr)) {
       if (getDirectoryEntry(addr).DirectoryState == State:I) {
@@ -219,7 +216,6 @@ machine(Directory, "Directory protocol")
   // ** OUT_PORTS **
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
-//  out_port(requestQueue_out, ResponseMsg, requestFromDir); // For recycling requests
   out_port(memQueue_out, MemoryMsg, memBuffer);
 
   // ** IN_PORTS **
@@ -422,7 +418,8 @@ machine(Directory, "Directory protocol")
   action(g_sendInvalidations, "g", desc="Send invalidations to sharers, not including the requester") {
     peek(requestQueue_in, RequestMsg) {
       if ((getDirectoryEntry(in_msg.Address).Sharers.count() > 1) ||
-          ((getDirectoryEntry(in_msg.Address).Sharers.count() > 0) && (getDirectoryEntry(in_msg.Address).Sharers.isElement(in_msg.Requestor) == false))) {
+          ((getDirectoryEntry(in_msg.Address).Sharers.count() > 0) &&
+           (getDirectoryEntry(in_msg.Address).Sharers.isElement(in_msg.Requestor) == false))) {
         enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:INV;
@@ -509,7 +506,8 @@ machine(Directory, "Directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := false;
         // These are not used by memory but are passed back here with the read data:
-        out_msg.ReadX := (in_msg.Type == CoherenceRequestType:GETS && getDirectoryEntry(address).Sharers.count() == 0);
+        out_msg.ReadX := (in_msg.Type == CoherenceRequestType:GETS &&
+                          getDirectoryEntry(address).Sharers.count() == 0);
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
@@ -606,7 +604,7 @@ machine(Directory, "Directory protocol")
 
   action(l_writeDMADataToMemoryFromTBE, "\ll", desc="Write data from a DMA_WRITE to memory") {
     assert(is_valid(tbe));
-    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, 
+    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk,
                       addressOffset(tbe.PhysicalAddress), tbe.Len);
   }
 
