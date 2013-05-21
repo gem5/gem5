@@ -141,13 +141,21 @@ let {{
             self.adjust_disp += val
         def serializing(self):
             self.serializing = True
+
+        def function_call(self):
+            self.function_call = True
+        def function_return(self):
+            self.function_return = True
+
         def __init__(self, name):
             super(X86Macroop, self).__init__(name)
             self.directives = {
                 "adjust_env" : self.setAdjustEnv,
                 "adjust_imm" : self.adjustImm,
                 "adjust_disp" : self.adjustDisp,
-                "serializing" : self.serializing
+                "serializing" : self.serializing,
+                "function_call" : self.function_call,
+                "function_return" : self.function_return
             }
             self.declared = False
             self.adjust_env = ""
@@ -163,6 +171,9 @@ let {{
                 adjustedDisp = adjustedDisp;
             '''
             self.serializing = False
+            self.function_call = False
+            self.function_return = False
+
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % \
                     (self.name, env.getAllocator())
@@ -192,9 +203,15 @@ let {{
                 flags = ["IsMicroop"]
                 if micropc == numMicroops - 1:
                     flags.append("IsLastMicroop")
+
                     if self.serializing:
                         flags.append("IsSerializing")
                         flags.append("IsSerializeAfter")
+
+                    if self.function_call:
+                        flags.append("IsCall")
+                    if self.function_return:
+                        flags.append("IsReturn")
                 else:
                     flags.append("IsDelayedCommit")
                 if micropc == 0:
