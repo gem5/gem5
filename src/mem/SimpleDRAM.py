@@ -203,17 +203,16 @@ class SimpleDDR3(SimpleDRAM):
     activation_limit = 4
 
 
-# High-level model of a single LPDDR2-S4 x64 interface (one
+# High-level model of a single LPDDR2-S4 x32 interface (one
 # command/address bus), with default timings based on a LPDDR2-1066
-# 4Gbit part, which whould amount to 1 GByte of memory in 2x32 or
-# 2GByte in 4x16 configuration.
+# 4 Gbit part
 class SimpleLPDDR2_S4(SimpleDRAM):
-    # Assuming 64 byte cache lines, use a 2kbyte page size, this
+    # Assuming 64 byte cache lines, use a 1kbyte page size, this
     # depends on the memory density
-    lines_per_rowbuffer = 32
+    lines_per_rowbuffer = 16
 
-    # Use two ranks
-    ranks_per_channel = 2
+    # Use a single rank
+    ranks_per_channel = 1
 
     # LPDDR2-S4 has 8 banks in all configurations
     banks_per_rank = 8
@@ -227,18 +226,19 @@ class SimpleLPDDR2_S4(SimpleDRAM):
     # Pre-charge one bank 15 ns and all banks 18 ns
     tRP = '18ns'
 
-    # Assuming 64 byte cache lines, across a x64 interface (2x32 or
-    # 4x16), translates to BL8, 4 clocks @ 533 MHz
-    tBURST = '7.5ns'
+    # Assuming 64 byte cache lines, across a x32 DDR interface
+    # translates to two BL8, 8 clocks @ 533 MHz. Note that this is a
+    # simplification
+    tBURST = '15ns'
 
-    # LPDDR2-S4, 4 Gb
+    # LPDDR2-S4, 4 Gbit
     tRFC = '130ns'
     tREFI = '3.9us'
 
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
 
-    # Irrespective of size, tFAW is 50 ns
+    # Irrespective of density, tFAW is 50 ns
     tXAW = '50ns'
     activation_limit = 4
 
