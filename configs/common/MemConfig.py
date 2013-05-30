@@ -50,10 +50,10 @@ _mem_classes = {}
 # first available memory controller model in the tuple will be used.
 _mem_aliases_all = [
     ("simple_mem", "SimpleMemory"),
-    ("ddr3-1600", "SimpleDDR3"),
-    ("lpddr2_s4-1066", "SimpleLPDDR2_S4"),
-    ("lpddr3-1600", "SimpleLPDDR3"),
-    ("wio-200", "SimpleWideIO"),
+    ("ddr3_1600_x64", "DDR3_1600_x64"),
+    ("lpddr2_s4_1066_x32", "LPDDR2_S4_1066_x32"),
+    ("lpddr3_1600_x32", "LPDDR3_1600_x32"),
+    ("wio_200_x128", "WideIO_200_x128"),
     ]
 
 # Filtered list of aliases. Only aliases for existing memory

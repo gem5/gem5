@@ -61,7 +61,7 @@ class LinuxArmSystemBuilder(object):
     def create_system(self):
         system = FSConfig.makeArmSystem(self.mem_mode,
                                         self.machine_type,
-                                        SimpleDDR3,
+                                        DDR3_1600_x64,
                                         None, False)
 
         # We typically want the simulator to panic if the kernel

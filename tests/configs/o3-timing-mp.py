@@ -36,7 +36,7 @@ cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus,
-                physmem = SimpleDDR3(),
+                physmem = DDR3_1600_x64(),
                 membus = CoherentBus(),
                 mem_mode = "timing")
 

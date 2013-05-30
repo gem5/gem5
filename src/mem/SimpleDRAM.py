@@ -172,14 +172,13 @@ class SimpleDRAM(AbstractMemory):
 
     # burst length for an access derived from peerBlockSize
 
-# High-level model of a single DDR3 x64 interface (one command and
-# address bus), with default timings based on a DDR3-1600 4 Gbit part,
-# which would amount to 4 Gbyte of memory in 8x8 or 8 GByte in 16x4
-# configuration.
-class SimpleDDR3(SimpleDRAM):
-    # Assuming 64 byte cache lines, use a 2kbyte page size, this
-    # depends on the memory density
-    lines_per_rowbuffer = 32
+# A single DDR3 x64 interface (one command and address bus), with
+# default timings based on DDR3-1600 4 Gbit parts in an 8x8
+# configuration, which would amount to 4 Gbyte of memory.
+class DDR3_1600_x64(SimpleDRAM):
+    # Assuming 64 byte cache lines, and a 1kbyte page size per module
+    # (this depends on the memory density)
+    lines_per_rowbuffer = 128
 
     # Use two ranks
     ranks_per_channel = 2
@@ -192,11 +191,11 @@ class SimpleDDR3(SimpleDRAM):
     tCL = '13.75ns'
     tRP = '13.75ns'
 
-    # Assuming 64 byte cache lines, across an x64 (8x8 or 16x4)
+    # Assuming 64 byte cache lines, across an x64
     # interface, translates to BL8, 4 clocks @ 800 MHz
     tBURST = '5ns'
 
-    # DDR3, 4 Gb has a tRFC of 240 CK and tCK = 1.25 ns
+    # DDR3, 4 Gbit has a tRFC of 240 CK and tCK = 1.25 ns
     tRFC = '300ns'
 
     # DDR3, <=85C, half for >85C
@@ -210,10 +209,10 @@ class SimpleDDR3(SimpleDRAM):
     activation_limit = 4
 
 
-# High-level model of a single LPDDR2-S4 x32 interface (one
-# command/address bus), with default timings based on a LPDDR2-1066
-# 4 Gbit part
-class SimpleLPDDR2_S4(SimpleDRAM):
+# A single LPDDR2-S4 x32 interface (one command/address bus), with
+# default timings based on a LPDDR2-1066 4 Gbit part in a 1x32
+# configuration.
+class LPDDR2_S4_1066_x32(SimpleDRAM):
     # Assuming 64 byte cache lines, use a 1kbyte page size, this
     # depends on the memory density
     lines_per_rowbuffer = 16
@@ -230,8 +229,8 @@ class SimpleLPDDR2_S4(SimpleDRAM):
     # 8 CK read latency, 4 CK write latency @ 533 MHz, 1.876 ns cycle time
     tCL = '15ns'
 
-    # Pre-charge one bank 15 ns and all banks 18 ns
-    tRP = '18ns'
+    # Pre-charge one bank 15 ns (all banks 18 ns)
+    tRP = '15ns'
 
     # Assuming 64 byte cache lines, across a x32 DDR interface
     # translates to two BL8, 8 clocks @ 533 MHz. Note that this is a
@@ -249,10 +248,9 @@ class SimpleLPDDR2_S4(SimpleDRAM):
     tXAW = '50ns'
     activation_limit = 4
 
-# High-level model of a single WideIO x128 interface (one command and
-# address bus), with default timings based on an estimated WIO-200 8
-# Gbit part.
-class SimpleWideIO(SimpleDRAM):
+# A single WideIO x128 interface (one command and address bus), with
+# default timings based on an estimated WIO-200 8 Gbit part.
+class WideIO_200_x128(SimpleDRAM):
     # Assuming 64 byte cache lines, use a 4kbyte page size, this
     # depends on the memory density
     lines_per_rowbuffer = 64
@@ -285,12 +283,12 @@ class SimpleWideIO(SimpleDRAM):
     tXAW = '50ns'
     activation_limit = 2
 
-# High-level model of a single LPDDR3 x32 interface (one
-# command/address bus), with default timings based on a LPDDR3-1600 4
-# Gbit part
-class SimpleLPDDR3(SimpleDRAM):
-    # 4 Gb and 8 Gb devices use a 1 kByte page size, so ssuming 64 byte
-    # cache lines, that is 16 lines
+# A single LPDDR3 x32 interface (one command/address bus), with
+# default timings based on a LPDDR3-1600 4 Gbit part in a 1x32
+# configuration
+class LPDDR3_1600_x32(SimpleDRAM):
+    # 4 Gbit and 8 Gbit devices use a 1 kByte page size, so ssuming 64
+    # byte cache lines, that is 16 lines
     lines_per_rowbuffer = 16
 
     # Use a single rank
@@ -305,8 +303,8 @@ class SimpleLPDDR3(SimpleDRAM):
     # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
     tCL = '15ns'
 
-    # Pre-charge one bank 15 ns and all banks 18 ns
-    tRP = '18ns'
+    # Pre-charge one bank 15 ns (all banks 18 ns)
+    tRP = '15ns'
 
     # Assuming 64 byte cache lines, across a x32 DDR interface
     # translates to two bursts of BL8, 8 clocks @ 800 MHz
