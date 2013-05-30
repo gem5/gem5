@@ -71,3 +71,9 @@ class TrafficGen(MemObject):
 
     # System used to determine the mode of the memory system
     system = Param.System(Parent.any, "System this generator is part of")
+
+    # Should requests respond to back-pressure or not, if true, the
+    # rate of the traffic generator will be slowed down if requests
+    # are not immediately accepted
+    elastic_req = Param.Bool(False,
+                             "Slow down requests in case of backpressure")

@@ -116,6 +116,12 @@ class TrafficGen : public MemObject
      */
     const std::string configFile;
 
+    /**
+     * Determine whether to add elasticity in the request injection,
+     * thus responding to backpressure by slowing things down.
+     */
+    const bool elasticReq;
+
     /** Time of next transition */
     Tick nextTransitionTick;
 

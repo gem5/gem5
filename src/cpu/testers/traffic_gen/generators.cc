@@ -112,7 +112,7 @@ LinearGen::getNextPacket()
 }
 
 Tick
-LinearGen::nextPacketTick() const
+LinearGen::nextPacketTick(bool elastic, Tick delay) const
 {
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
@@ -123,7 +123,19 @@ LinearGen::nextPacketTick() const
         return MaxTick;
     } else {
         // return the time when the next request should take place
-        return curTick() + random_mt.random<Tick>(minPeriod, maxPeriod);
+        Tick wait = random_mt.random<Tick>(minPeriod, maxPeriod);
+
+        // compensate for the delay experienced to not be elastic, by
+        // default the value we generate is from the time we are
+        // asked, so the elasticity happens automatically
+        if (!elastic) {
+            if (wait < delay)
+                wait = 0;
+            else
+                wait -= delay;
+        }
+
+        return curTick() + wait;
     }
 }
 
@@ -162,7 +174,7 @@ RandomGen::getNextPacket()
 }
 
 Tick
-RandomGen::nextPacketTick() const
+RandomGen::nextPacketTick(bool elastic, Tick delay) const
 {
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
@@ -173,8 +185,20 @@ RandomGen::nextPacketTick() const
         // No more requests. Return MaxTick.
         return MaxTick;
     } else {
-        // Return the time when the next request should take place.
-        return curTick() + random_mt.random<Tick>(minPeriod, maxPeriod);
+        // return the time when the next request should take place
+        Tick wait = random_mt.random<Tick>(minPeriod, maxPeriod);
+
+        // compensate for the delay experienced to not be elastic, by
+        // default the value we generate is from the time we are
+        // asked, so the elasticity happens automatically
+        if (!elastic) {
+            if (wait < delay)
+                wait = 0;
+            else
+                wait -= delay;
+        }
+
+        return curTick() + wait;
     }
 }
 
@@ -217,7 +241,7 @@ TraceGen::InputStream::read(TraceElement& element)
 }
 
 Tick
-TraceGen::nextPacketTick() const
+TraceGen::nextPacketTick(bool elastic, Tick delay) const
 {
     if (traceComplete) {
         DPRINTF(TrafficGen, "No next tick as trace is finished\n");
@@ -232,7 +256,11 @@ TraceGen::nextPacketTick() const
     DPRINTF(TrafficGen, "Next packet tick is %d\n", tickOffset +
             nextElement.tick);
 
-    return tickOffset + nextElement.tick;
+    // if the playback is supposed to be elastic, add the delay
+    if (elastic)
+        tickOffset += delay;
+
+    return std::max(tickOffset + nextElement.tick, curTick());
 }
 
 void

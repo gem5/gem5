@@ -124,9 +124,11 @@ class BaseGen
      * means that there will not be any further packets in the current
      * activation cycle of the generator.
      *
+     * @param elastic should the injection respond to flow control or not
+     * @param delay time the previous packet spent waiting
      * @return next tick when a packet is available
      */
-    virtual Tick nextPacketTick() const = 0;
+    virtual Tick nextPacketTick(bool elastic, Tick delay) const = 0;
 
 };
 
@@ -146,7 +148,7 @@ class IdleGen : public BaseGen
 
     PacketPtr getNextPacket() { return NULL; }
 
-    Tick nextPacketTick() const { return MaxTick; }
+    Tick nextPacketTick(bool elastic, Tick delay) const { return MaxTick; }
 };
 
 /**
@@ -192,7 +194,7 @@ class LinearGen : public BaseGen
 
     PacketPtr getNextPacket();
 
-    Tick nextPacketTick() const;
+    Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
 
@@ -269,7 +271,7 @@ class RandomGen : public BaseGen
 
     PacketPtr getNextPacket();
 
-    Tick nextPacketTick() const;
+    Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
 
@@ -403,6 +405,7 @@ class TraceGen : public BaseGen
              const std::string& trace_file, Addr addr_offset)
         : BaseGen(_name, master_id, _duration),
           trace(trace_file),
+          tickOffset(0),
           addrOffset(addr_offset),
           traceComplete(false)
     {
@@ -419,7 +422,7 @@ class TraceGen : public BaseGen
      * the end of the file has been reached, it returns MaxTick to
      * indicate that there will be no more requests.
      */
-    Tick nextPacketTick() const;
+    Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
 
@@ -432,9 +435,10 @@ class TraceGen : public BaseGen
 
     /**
      * Stores the time when the state was entered. This is to add an
-     * offset to the times stored in the trace file.
+     * offset to the times stored in the trace file. This is mutable
+     * to allow us to change it as part of nextPacketTick.
      */
-    Tick tickOffset;
+    mutable Tick tickOffset;
 
     /**
      * Offset for memory requests. Used to shift the trace

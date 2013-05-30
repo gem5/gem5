@@ -55,6 +55,7 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       system(p->system),
       masterID(system->getMasterId(name())),
       configFile(p->config_file),
+      elasticReq(p->elastic_req),
       nextTransitionTick(0),
       nextPacketTick(0),
       port(name() + ".port", *this),
@@ -107,7 +108,7 @@ TrafficGen::initState()
     // when not restoring from a checkpoint, make sure we kick things off
     if (system->isTimingMode()) {
         // call nextPacketTick on the state to advance it
-        nextPacketTick = states[currState]->nextPacketTick();
+        nextPacketTick = states[currState]->nextPacketTick(elasticReq, 0);
         schedule(updateEvent, std::min(nextPacketTick, nextTransitionTick));
     } else {
         DPRINTF(TrafficGen,
@@ -165,7 +166,7 @@ TrafficGen::unserialize(Checkpoint* cp, const string& section)
 
     // @todo In the case of a stateful generator state such as the
     // trace player we would also have to restore the position in the
-    // trace playback
+    // trace playback and the tick offset
     UNSERIALIZE_SCALAR(currState);
 }
 
@@ -193,7 +194,7 @@ TrafficGen::update()
     if (retryPkt == NULL) {
         // schedule next update event based on either the next execute
         // tick or the next transition, which ever comes first
-        nextPacketTick = states[currState]->nextPacketTick();
+        nextPacketTick = states[currState]->nextPacketTick(elasticReq, 0);
         Tick nextEventTick = std::min(nextPacketTick, nextTransitionTick);
         DPRINTF(TrafficGen, "Next event scheduled at %lld\n", nextEventTick);
         schedule(updateEvent, nextEventTick);
@@ -386,14 +387,16 @@ TrafficGen::recvRetry()
     if (port.sendTimingReq(retryPkt)) {
         retryPkt = NULL;
         // remember how much delay was incurred due to back-pressure
-        // when sending the request
+        // when sending the request, we also use this to derive
+        // the tick for the next packet
         Tick delay = curTick() - retryPktTick;
         retryPktTick = 0;
         retryTicks += delay;
 
         if (drainManager == NULL) {
             // packet is sent, so find out when the next one is due
-            nextPacketTick = states[currState]->nextPacketTick();
+            nextPacketTick = states[currState]->nextPacketTick(elasticReq,
+                                                               delay);
             Tick nextEventTick = std::min(nextPacketTick, nextTransitionTick);
             schedule(updateEvent, std::max(curTick(), nextEventTick));
         } else {
