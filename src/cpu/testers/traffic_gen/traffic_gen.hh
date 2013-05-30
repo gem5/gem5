@@ -74,25 +74,22 @@ class TrafficGen : public MemObject
     void enterState(uint32_t newState);
 
     /**
-     * Get the tick of the next event, either an execution or a
+     * Get the tick of the next event, either a new packet or a
      * transition.
      *
      * @return tick of the next update event
      */
     Tick nextEventTick()
     {
-        return std::min(states[currState]->nextExecuteTick(),
+        return std::min(states[currState]->nextPacketTick(),
                         nextTransitionTick);
     }
 
     /**
      * Parse the config file and build the state map and
      * transition matrix.
-     *
-     * @param file_name Config file name to parse
-     * @param master_id MasterID to use for generated requests
      */
-    void parseConfig(const std::string& file_name, MasterID master_id);
+    void parseConfig();
 
     /**
      * Schedules event for next update and executes an update on the
@@ -118,6 +115,11 @@ class TrafficGen : public MemObject
      * MasterID used in generated requests.
      */
     MasterID masterID;
+
+    /**
+     * The config file to parse.
+     */
+    const std::string configFile;
 
     /** Time of next transition */
     Tick nextTransitionTick;

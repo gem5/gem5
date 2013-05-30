@@ -54,11 +54,11 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
     : MemObject(p),
       system(p->system),
       masterID(system->getMasterId(name())),
+      configFile(p->config_file),
       nextTransitionTick(0),
       port(name() + ".port", *this),
       updateEvent(this)
 {
-    parseConfig(p->config_file, masterID);
 }
 
 TrafficGen*
@@ -86,6 +86,8 @@ TrafficGen::init()
     // if the system is in timing mode active the request generator
     if (system->isTimingMode()) {
         DPRINTF(TrafficGen, "Timing mode, activating request generator\n");
+
+        parseConfig();
 
         // enter initial state
         enterState(currState);
@@ -166,12 +168,13 @@ TrafficGen::update()
         transition();
     } else {
         // we are still in the current state and should execute it
-        states[currState]->execute();
+        PacketPtr pkt = states[currState]->getNextPacket();
+        port.schedTimingReq(pkt, curTick());
     }
 }
 
 void
-TrafficGen::parseConfig(const string& file_name, MasterID master_id)
+TrafficGen::parseConfig()
 {
     // keep track of the transitions parsed to create the matrix when
     // done
@@ -179,10 +182,10 @@ TrafficGen::parseConfig(const string& file_name, MasterID master_id)
 
     // open input file
     ifstream infile;
-    infile.open(file_name.c_str(), ifstream::in);
+    infile.open(configFile.c_str(), ifstream::in);
     if (!infile.is_open()) {
         fatal("Traffic generator %s config file not found at %s\n",
-              name(), file_name);
+              name(), configFile);
     }
 
     // read line by line and determine the action based on the first
@@ -213,11 +216,11 @@ TrafficGen::parseConfig(const string& file_name, MasterID master_id)
 
                     is >> traceFile >> addrOffset;
 
-                    states[id] = new TraceGen(port, master_id, duration,
+                    states[id] = new TraceGen(name(), masterID, duration,
                                               traceFile, addrOffset);
                     DPRINTF(TrafficGen, "State: %d TraceGen\n", id);
                 } else if (mode == "IDLE") {
-                    states[id] = new IdleGen(port, master_id, duration);
+                    states[id] = new IdleGen(name(), masterID, duration);
                     DPRINTF(TrafficGen, "State: %d IdleGen\n", id);
                 } else if (mode == "LINEAR" || mode == "RANDOM") {
                     uint32_t read_percent;
@@ -236,18 +239,25 @@ TrafficGen::parseConfig(const string& file_name, MasterID master_id)
                             mode, start_addr, end_addr, blocksize, min_period,
                             max_period, read_percent);
 
+
+                    if (port.deviceBlockSize() &&
+                        blocksize > port.deviceBlockSize())
+                        fatal("TrafficGen %s block size (%d) is larger than "
+                              "port block size (%d)\n", name(),
+                              blocksize, port.deviceBlockSize());
+
                     if (read_percent > 100)
-                        panic("%s cannot have more than 100% reads", name());
+                        fatal("%s cannot have more than 100% reads", name());
 
                     if (mode == "LINEAR") {
-                        states[id] = new LinearGen(port, master_id,
+                        states[id] = new LinearGen(name(), masterID,
                                                    duration, start_addr,
                                                    end_addr, blocksize,
                                                    min_period, max_period,
                                                    read_percent, data_limit);
                         DPRINTF(TrafficGen, "State: %d LinearGen\n", id);
                     } else if (mode == "RANDOM") {
-                        states[id] = new RandomGen(port, master_id,
+                        states[id] = new RandomGen(name(), masterID,
                                                    duration, start_addr,
                                                    end_addr, blocksize,
                                                    min_period, max_period,

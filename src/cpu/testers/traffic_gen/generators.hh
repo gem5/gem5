@@ -49,7 +49,7 @@
 #ifndef __CPU_TRAFFIC_GEN_GENERATORS_HH__
 #define __CPU_TRAFFIC_GEN_GENERATORS_HH__
 
-#include "mem/qport.hh"
+#include "mem/packet.hh"
 #include "proto/protoio.hh"
 
 /**
@@ -62,23 +62,22 @@ class BaseGen
 
   protected:
 
-    /** Port used to send requests */
-    QueuedMasterPort& port;
+    /** Name to use for status and debug printing */
+    const std::string _name;
 
     /** The MasterID used for generating requests */
     const MasterID masterID;
 
     /**
-     * Create a new request and associated packet and schedule
-     * it to be sent in the current tick.
+     * Generate a new request and associated packet
      *
      * @param addr Physical address to use
      * @param size Size of the request
      * @param cmd Memory command to send
      * @param flags Optional request flags
      */
-    void send(Addr addr, unsigned size, const MemCmd& cmd,
-              Request::FlagsType flags = 0);
+    PacketPtr getPacket(Addr addr, unsigned size, const MemCmd& cmd,
+                        Request::FlagsType flags = 0);
 
   public:
 
@@ -88,21 +87,20 @@ class BaseGen
     /**
      * Create a base generator.
      *
-     * @param _port port used to send requests
+     * @param _name Name to use for status and debug
      * @param master_id MasterID set on each request
      * @param _duration duration of this state before transitioning
      */
-    BaseGen(QueuedMasterPort& _port, MasterID master_id,
-            Tick _duration);
+    BaseGen(const std::string& _name, MasterID master_id, Tick _duration);
 
     virtual ~BaseGen() { }
 
     /**
      * Get the name, useful for DPRINTFs.
      *
-     * @return the port name
+     * @return the given name
      */
-    std::string name() const { return port.name(); }
+    std::string name() const { return _name; }
 
     /**
      * Enter this generator state.
@@ -110,9 +108,11 @@ class BaseGen
     virtual void enter() = 0;
 
     /**
-     * Execute this generator state.
+     * Get the next generated packet.
+     *
+     * @return A packet to be sent at the current tick
      */
-    virtual void execute() = 0;
+    virtual PacketPtr getNextPacket() = 0;
 
     /**
      * Exit this generator state. By default do nothing.
@@ -120,13 +120,13 @@ class BaseGen
     virtual void exit() { };
 
     /**
-     * Determine the next execute tick. MaxTick means that
-     * there will not be any further event in the current
-     * activation cycle of the state.
+     * Determine the tick when the next packet is available. MaxTick
+     * means that there will not be any further packets in the current
+     * activation cycle of the generator.
      *
-     * @return next tick when the state should be executed
+     * @return next tick when a packet is available
      */
-    virtual Tick nextExecuteTick() = 0;
+    virtual Tick nextPacketTick() = 0;
 
 };
 
@@ -138,16 +138,15 @@ class IdleGen : public BaseGen
 
   public:
 
-    IdleGen(QueuedMasterPort& _port, MasterID master_id,
-            Tick _duration)
-        : BaseGen(_port, master_id, _duration)
+    IdleGen(const std::string& _name, MasterID master_id, Tick _duration)
+        : BaseGen(_name, master_id, _duration)
     { }
 
     void enter() { }
 
-    void execute() { }
+    PacketPtr getNextPacket() { return NULL; }
 
-    Tick nextExecuteTick() { return MaxTick; }
+    Tick nextPacketTick() { return MaxTick; }
 };
 
 /**
@@ -167,7 +166,7 @@ class LinearGen : public BaseGen
      * min_period == max_period for a fixed inter-transaction
      * time.
      *
-     * @param _port port used to send requests
+     * @param _name Name to use for status and debug
      * @param master_id MasterID set on each request
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
@@ -178,11 +177,11 @@ class LinearGen : public BaseGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    LinearGen(QueuedMasterPort& _port, MasterID master_id,
-              Tick _duration, Addr start_addr, Addr end_addr,
-              Addr _blocksize, Tick min_period, Tick max_period,
+    LinearGen(const std::string& _name, MasterID master_id, Tick _duration,
+              Addr start_addr, Addr end_addr, Addr _blocksize,
+              Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
-        : BaseGen(_port, master_id, _duration),
+        : BaseGen(_name, master_id, _duration),
           startAddr(start_addr), endAddr(end_addr),
           blocksize(_blocksize), minPeriod(min_period),
           maxPeriod(max_period), readPercent(read_percent),
@@ -191,9 +190,9 @@ class LinearGen : public BaseGen
 
     void enter();
 
-    void execute();
+    PacketPtr getNextPacket();
 
-    Tick nextExecuteTick();
+    Tick nextPacketTick();
 
   private:
 
@@ -244,7 +243,7 @@ class RandomGen : public BaseGen
      * min_period == max_period for a fixed inter-transaction
      * time.
      *
-     * @param _port port used to send requests
+     * @param _name Name to use for status and debug
      * @param master_id MasterID set on each request
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
@@ -255,11 +254,11 @@ class RandomGen : public BaseGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    RandomGen(QueuedMasterPort& _port, MasterID master_id,
-              Tick _duration, Addr start_addr, Addr end_addr,
-              Addr _blocksize, Tick min_period, Tick max_period,
+    RandomGen(const std::string& _name, MasterID master_id, Tick _duration,
+              Addr start_addr, Addr end_addr, Addr _blocksize,
+              Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
-        : BaseGen(_port, master_id, _duration),
+        : BaseGen(_name, master_id, _duration),
           startAddr(start_addr), endAddr(end_addr),
           blocksize(_blocksize), minPeriod(min_period),
           maxPeriod(max_period), readPercent(read_percent),
@@ -268,9 +267,9 @@ class RandomGen : public BaseGen
 
     void enter();
 
-    void execute();
+    PacketPtr getNextPacket();
 
-    Tick nextExecuteTick();
+    Tick nextPacketTick();
 
   private:
 
@@ -394,16 +393,15 @@ class TraceGen : public BaseGen
     /**
      * Create a trace generator.
      *
-     * @param _port port used to send requests
+     * @param _name Name to use for status and debug
      * @param master_id MasterID set on each request
      * @param _duration duration of this state before transitioning
      * @param trace_file File to read the transactions from
      * @param addr_offset Positive offset to add to trace address
      */
-    TraceGen(QueuedMasterPort& _port, MasterID master_id,
-             Tick _duration, const std::string& trace_file,
-             Addr addr_offset)
-        : BaseGen(_port, master_id, _duration),
+    TraceGen(const std::string& _name, MasterID master_id, Tick _duration,
+             const std::string& trace_file, Addr addr_offset)
+        : BaseGen(_name, master_id, _duration),
           trace(trace_file),
           addrOffset(addr_offset),
           traceComplete(false)
@@ -412,7 +410,7 @@ class TraceGen : public BaseGen
 
     void enter();
 
-    void execute();
+    PacketPtr getNextPacket();
 
     void exit();
 
@@ -422,7 +420,7 @@ class TraceGen : public BaseGen
      * of the file has been reached, it returns MaxTick to
      * indicate that there will be no more requests.
      */
-    Tick nextExecuteTick();
+    Tick nextPacketTick();
 
   private:
 

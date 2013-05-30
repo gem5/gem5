@@ -40,18 +40,19 @@
  */
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "cpu/testers/traffic_gen/generators.hh"
 #include "debug/TrafficGen.hh"
 #include "proto/packet.pb.h"
 
-BaseGen::BaseGen(QueuedMasterPort& _port, MasterID master_id, Tick _duration)
-    : port(_port), masterID(master_id), duration(_duration)
+BaseGen::BaseGen(const std::string& _name, MasterID master_id, Tick _duration)
+    : _name(_name), masterID(master_id), duration(_duration)
 {
 }
 
-void
-BaseGen::send(Addr addr, unsigned size, const MemCmd& cmd,
-              Request::FlagsType flags)
+PacketPtr
+BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
+                   Request::FlagsType flags)
 {
     // Create new request
     Request *req = new Request(addr, size, flags, masterID);
@@ -66,7 +67,7 @@ BaseGen::send(Addr addr, unsigned size, const MemCmd& cmd,
         memset(pkt_data, 0xA, req->getSize());
     }
 
-    port.schedTimingReq(pkt, curTick());
+    return pkt;
 }
 
 void
@@ -75,16 +76,10 @@ LinearGen::enter()
     // reset the address and the data counter
     nextAddr = startAddr;
     dataManipulated = 0;
-
-    // this test only needs to happen once, but cannot be performed
-    // before init() is called and the ports are connected
-    if (port.deviceBlockSize() && blocksize > port.deviceBlockSize())
-        fatal("TrafficGen %s block size (%d) is larger than port"
-              " block size (%d)\n", blocksize, port.deviceBlockSize());
 }
 
-void
-LinearGen::execute()
+PacketPtr
+LinearGen::getNextPacket()
 {
     // choose if we generate a read or a write here
     bool isRead = readPercent != 0 &&
@@ -93,20 +88,23 @@ LinearGen::execute()
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
 
-    DPRINTF(TrafficGen, "LinearGen::execute: %c to addr %x, size %d\n",
+    DPRINTF(TrafficGen, "LinearGen::getNextPacket: %c to addr %x, size %d\n",
             isRead ? 'r' : 'w', nextAddr, blocksize);
 
-    send(nextAddr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    // Add the amount of data manipulated to the total
+    dataManipulated += blocksize;
+
+    PacketPtr pkt = getPacket(nextAddr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // increment the address
     nextAddr += blocksize;
 
-    // Add the amount of data manipulated to the total
-    dataManipulated += blocksize;
+    return pkt;
 }
 
 Tick
-LinearGen::nextExecuteTick()
+LinearGen::nextPacketTick()
 {
     // If we have reached the end of the address space, reset the
     // address to the start of the range
@@ -134,16 +132,10 @@ RandomGen::enter()
 {
     // reset the counter to zero
     dataManipulated = 0;
-
-    // this test only needs to happen once, but cannot be performed
-    // before init() is called and the ports are connected
-    if (port.deviceBlockSize() && blocksize > port.deviceBlockSize())
-        fatal("TrafficGen %s block size (%d) is larger than port"
-              " block size (%d)\n", blocksize, port.deviceBlockSize());
 }
 
-void
-RandomGen::execute()
+PacketPtr
+RandomGen::getNextPacket()
 {
     // choose if we generate a read or a write here
     bool isRead = readPercent != 0 &&
@@ -158,18 +150,19 @@ RandomGen::execute()
     // round down to start address of block
     addr -= addr % blocksize;
 
-    DPRINTF(TrafficGen, "RandomGen::execute: %c to addr %x, size %d\n",
+    DPRINTF(TrafficGen, "RandomGen::getNextPacket: %c to addr %x, size %d\n",
             isRead ? 'r' : 'w', addr, blocksize);
 
-    // send a new request packet
-    send(addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
-
-    // Add the amount of data manipulated to the total
+    // add the amount of data manipulated to the total
     dataManipulated += blocksize;
+
+    // create a new request packet
+    return getPacket(addr, blocksize,
+                     isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 }
 
 Tick
-RandomGen::nextExecuteTick()
+RandomGen::nextPacketTick()
 {
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
@@ -224,7 +217,7 @@ TraceGen::InputStream::read(TraceElement& element)
 }
 
 Tick
-TraceGen::nextExecuteTick() {
+TraceGen::nextPacketTick() {
     if (traceComplete)
         // We are at the end of the file, thus we have no more data in
         // the trace Return MaxTick to signal that there will be no
@@ -274,22 +267,22 @@ TraceGen::enter()
     traceComplete = false;
 }
 
-void
-TraceGen::execute()
+PacketPtr
+TraceGen::getNextPacket()
 {
-    // it is the responsibility of nextExecuteTick to prevent the
+    // it is the responsibility of nextPacketTick to prevent the
     // state graph from executing the state if it should not
     assert(currElement.isValid());
 
-    DPRINTF(TrafficGen, "TraceGen::execute: %c %d %d %d 0x%x\n",
+    DPRINTF(TrafficGen, "TraceGen::getNextPacket: %c %d %d %d 0x%x\n",
             currElement.cmd.isRead() ? 'r' : 'w',
             currElement.addr,
             currElement.blocksize,
             currElement.tick,
             currElement.flags);
 
-    send(currElement.addr + addrOffset, currElement.blocksize,
-         currElement.cmd, currElement.flags);
+    return getPacket(currElement.addr + addrOffset, currElement.blocksize,
+                     currElement.cmd, currElement.flags);
 }
 
 void
