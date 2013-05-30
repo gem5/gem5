@@ -126,7 +126,7 @@ class BaseGen
      *
      * @return next tick when a packet is available
      */
-    virtual Tick nextPacketTick() = 0;
+    virtual Tick nextPacketTick() const = 0;
 
 };
 
@@ -146,7 +146,7 @@ class IdleGen : public BaseGen
 
     PacketPtr getNextPacket() { return NULL; }
 
-    Tick nextPacketTick() { return MaxTick; }
+    Tick nextPacketTick() const { return MaxTick; }
 };
 
 /**
@@ -192,7 +192,7 @@ class LinearGen : public BaseGen
 
     PacketPtr getNextPacket();
 
-    Tick nextPacketTick();
+    Tick nextPacketTick() const;
 
   private:
 
@@ -269,7 +269,7 @@ class RandomGen : public BaseGen
 
     PacketPtr getNextPacket();
 
-    Tick nextPacketTick();
+    Tick nextPacketTick() const;
 
   private:
 
@@ -415,12 +415,11 @@ class TraceGen : public BaseGen
     void exit();
 
     /**
-     * Read a line of the trace file. Returns the raw tick
-     * when the next request should be generated. If the end
-     * of the file has been reached, it returns MaxTick to
+     * Returns the tick when the next request should be generated. If
+     * the end of the file has been reached, it returns MaxTick to
      * indicate that there will be no more requests.
      */
-    Tick nextPacketTick();
+    Tick nextPacketTick() const;
 
   private:
 

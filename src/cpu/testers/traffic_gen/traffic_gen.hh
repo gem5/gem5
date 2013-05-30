@@ -42,6 +42,7 @@
 #define __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 
 #include "base/hashmap.hh"
+#include "base/statistics.hh"
 #include "cpu/testers/traffic_gen/generators.hh"
 #include "mem/mem_object.hh"
 #include "mem/qport.hh"
@@ -74,18 +75,6 @@ class TrafficGen : public MemObject
     void enterState(uint32_t newState);
 
     /**
-     * Get the tick of the next event, either a new packet or a
-     * transition.
-     *
-     * @return tick of the next update event
-     */
-    Tick nextEventTick()
-    {
-        return std::min(states[currState]->nextPacketTick(),
-                        nextTransitionTick);
-    }
-
-    /**
      * Parse the config file and build the state map and
      * transition matrix.
      */
@@ -97,6 +86,12 @@ class TrafficGen : public MemObject
      * the current state, depending on the current time.
      */
     void update();
+
+    /**
+     * Receive a retry from the neighbouring port and attempt to
+     * resend the waiting packet.
+     */
+    void recvRetry();
 
     /** Struct to represent a probabilistic transition during parsing. */
     struct Transition {
@@ -124,6 +119,9 @@ class TrafficGen : public MemObject
     /** Time of next transition */
     Tick nextTransitionTick;
 
+    /** Time of the next packet. */
+    Tick nextPacketTick;
+
     /** State transition matrix */
     std::vector<std::vector<double> > transitionMatrix;
 
@@ -133,31 +131,50 @@ class TrafficGen : public MemObject
     /** Map of generator states */
     m5::hash_map<uint32_t, BaseGen*> states;
 
-    /** Queued master port */
-    class TrafficGenPort : public QueuedMasterPort
+    /** Master port specialisation for the traffic generator */
+    class TrafficGenPort : public MasterPort
     {
       public:
 
-        TrafficGenPort(const std::string& name, TrafficGen& _owner)
-            : QueuedMasterPort(name, &_owner, queue), queue(_owner, *this)
+        TrafficGenPort(const std::string& name, TrafficGen& traffic_gen)
+            : MasterPort(name, &traffic_gen), trafficGen(traffic_gen)
         { }
 
       protected:
+
+        void recvRetry() { trafficGen.recvRetry(); }
 
         bool recvTimingResp(PacketPtr pkt);
 
       private:
 
-        MasterPacketQueue queue;
+        TrafficGen& trafficGen;
 
     };
 
     /** The instance of master port used by the traffic generator. */
     TrafficGenPort port;
 
+    /** Packet waiting to be sent. */
+    PacketPtr retryPkt;
+
+    /** Tick when the stalled packet was meant to be sent. */
+    Tick retryPktTick;
+
     /** Event for scheduling updates */
     EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
 
+    /** Manager to signal when drained */
+    DrainManager* drainManager;
+
+    /** Count the number of generated packets. */
+    Stats::Scalar numPackets;
+
+    /** Count the number of retries. */
+    Stats::Scalar numRetries;
+
+    /** Count the time incurred from back-pressure. */
+    Stats::Scalar retryTicks;
 
   public:
 
@@ -177,6 +194,9 @@ class TrafficGen : public MemObject
     void serialize(std::ostream &os);
 
     void unserialize(Checkpoint* cp, const std::string& section);
+
+    /** Register statistics */
+    void regStats();
 
 };
 

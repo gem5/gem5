@@ -100,20 +100,20 @@ LinearGen::getNextPacket()
     // increment the address
     nextAddr += blocksize;
 
-    return pkt;
-}
-
-Tick
-LinearGen::nextPacketTick()
-{
     // If we have reached the end of the address space, reset the
     // address to the start of the range
-    if (nextAddr + blocksize > endAddr) {
+    if (nextAddr > endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
                 "the range\n");
         nextAddr = startAddr;
     }
 
+    return pkt;
+}
+
+Tick
+LinearGen::nextPacketTick() const
+{
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
     // generating requests for the entire residency in this state.
@@ -162,7 +162,7 @@ RandomGen::getNextPacket()
 }
 
 Tick
-RandomGen::nextPacketTick()
+RandomGen::nextPacketTick() const
 {
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
@@ -217,38 +217,19 @@ TraceGen::InputStream::read(TraceElement& element)
 }
 
 Tick
-TraceGen::nextPacketTick() {
-    if (traceComplete)
+TraceGen::nextPacketTick() const
+{
+    if (traceComplete) {
+        DPRINTF(TrafficGen, "No next tick as trace is finished\n");
         // We are at the end of the file, thus we have no more data in
         // the trace Return MaxTick to signal that there will be no
         // more transactions in this active period for the state.
         return MaxTick;
-
-
-    //Reset the nextElement to the default values
-    currElement = nextElement;
-    nextElement.clear();
-
-    // We need to look at the next line to calculate the next time an
-    // event occurs, or potentially return MaxTick to signal that
-    // nothing has to be done.
-    if (!trace.read(nextElement)) {
-        traceComplete = true;
-        return MaxTick;
     }
 
-    DPRINTF(TrafficGen, "currElement: %c addr %d size %d tick %d (%d)\n",
-            currElement.cmd.isRead() ? 'r' : 'w',
-            currElement.addr,
-            currElement.blocksize,
-            currElement.tick + tickOffset,
-            currElement.tick);
+    assert(nextElement.isValid());
 
-    DPRINTF(TrafficGen, "nextElement: %c addr %d size %d tick %d (%d)\n",
-            nextElement.cmd.isRead() ? 'r' : 'w',
-            nextElement.addr,
-            nextElement.blocksize,
-            nextElement.tick + tickOffset,
+    DPRINTF(TrafficGen, "Next packet tick is %d\n", tickOffset +
             nextElement.tick);
 
     return tickOffset + nextElement.tick;
@@ -261,17 +242,24 @@ TraceGen::enter()
     tickOffset = curTick();
 
     // clear everything
-    nextElement.clear();
     currElement.clear();
 
-    traceComplete = false;
+    // read the first element in the file and set the complete flag
+    traceComplete = !trace.read(nextElement);
 }
 
 PacketPtr
 TraceGen::getNextPacket()
 {
-    // it is the responsibility of nextPacketTick to prevent the
-    // state graph from executing the state if it should not
+    // shift things one step forward
+    currElement = nextElement;
+    nextElement.clear();
+
+    // read the next element and set the complete flag
+    traceComplete = !trace.read(nextElement);
+
+    // it is the responsibility of the traceComplete flag to ensure we
+    // always have a valid element here
     assert(currElement.isValid());
 
     DPRINTF(TrafficGen, "TraceGen::getNextPacket: %c %d %d %d 0x%x\n",
@@ -281,8 +269,19 @@ TraceGen::getNextPacket()
             currElement.tick,
             currElement.flags);
 
-    return getPacket(currElement.addr + addrOffset, currElement.blocksize,
-                     currElement.cmd, currElement.flags);
+    PacketPtr pkt = getPacket(currElement.addr + addrOffset,
+                              currElement.blocksize,
+                              currElement.cmd, currElement.flags);
+
+    if (!traceComplete)
+        DPRINTF(TrafficGen, "nextElement: %c addr %d size %d tick %d (%d)\n",
+                nextElement.cmd.isRead() ? 'r' : 'w',
+                nextElement.addr,
+                nextElement.blocksize,
+                nextElement.tick + tickOffset,
+                nextElement.tick);
+
+    return pkt;
 }
 
 void

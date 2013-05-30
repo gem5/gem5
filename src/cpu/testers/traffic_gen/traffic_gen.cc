@@ -56,8 +56,12 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       masterID(system->getMasterId(name())),
       configFile(p->config_file),
       nextTransitionTick(0),
+      nextPacketTick(0),
       port(name() + ".port", *this),
-      updateEvent(this)
+      retryPkt(NULL),
+      retryPktTick(0),
+      updateEvent(this),
+      drainManager(NULL)
 {
 }
 
@@ -102,7 +106,9 @@ TrafficGen::initState()
 {
     // when not restoring from a checkpoint, make sure we kick things off
     if (system->isTimingMode()) {
-        schedule(updateEvent, nextEventTick());
+        // call nextPacketTick on the state to advance it
+        nextPacketTick = states[currState]->nextPacketTick();
+        schedule(updateEvent, std::min(nextPacketTick, nextTransitionTick));
     } else {
         DPRINTF(TrafficGen,
                 "Traffic generator is only active in timing mode\n");
@@ -112,9 +118,16 @@ TrafficGen::initState()
 unsigned int
 TrafficGen::drain(DrainManager *dm)
 {
-    // @todo we should also stop putting new requests in the queue and
-    // either interrupt the current state or wait for a transition
-    return port.drain(dm);
+    if (retryPkt == NULL) {
+        // shut things down
+        nextPacketTick = MaxTick;
+        nextTransitionTick = MaxTick;
+        deschedule(updateEvent);
+        return 0;
+    } else {
+        drainManager = dm;
+        return 1;
+    }
 }
 
 void
@@ -123,18 +136,17 @@ TrafficGen::serialize(ostream &os)
     DPRINTF(Checkpoint, "Serializing TrafficGen\n");
 
     // save ticks of the graph event if it is scheduled
-    Tick nextEvent = updateEvent.scheduled() ?
-        updateEvent.when() : 0;
+    Tick nextEvent = updateEvent.scheduled() ? updateEvent.when() : 0;
 
-    DPRINTF(TrafficGen, "Saving nextEvent=%llu\n",
-            nextEvent);
+    DPRINTF(TrafficGen, "Saving nextEvent=%llu\n", nextEvent);
 
     SERIALIZE_SCALAR(nextEvent);
 
     SERIALIZE_SCALAR(nextTransitionTick);
 
-    // @todo: also serialise the current state, figure out the best
-    // way to drain and restore
+    SERIALIZE_SCALAR(nextPacketTick);
+
+    SERIALIZE_SCALAR(currState);
 }
 
 void
@@ -148,28 +160,43 @@ TrafficGen::unserialize(Checkpoint* cp, const string& section)
     }
 
     UNSERIALIZE_SCALAR(nextTransitionTick);
+
+    UNSERIALIZE_SCALAR(nextPacketTick);
+
+    // @todo In the case of a stateful generator state such as the
+    // trace player we would also have to restore the position in the
+    // trace playback
+    UNSERIALIZE_SCALAR(currState);
 }
 
 void
 TrafficGen::update()
 {
-    // schedule next update event based on either the next execute
-    // tick or the next transition, which ever comes first
-    Tick nextEvent = nextEventTick();
-    DPRINTF(TrafficGen, "Updating state graph, next event at %lld\n",
-            nextEvent);
-    schedule(updateEvent, nextEvent);
-
-    // perform the update associated with the current update event
-
     // if we have reached the time for the next state transition, then
     // perform the transition
     if (curTick() >= nextTransitionTick) {
         transition();
     } else {
-        // we are still in the current state and should execute it
+        assert(curTick() >= nextPacketTick);
+        // get the next packet and try to send it
         PacketPtr pkt = states[currState]->getNextPacket();
-        port.schedTimingReq(pkt, curTick());
+        numPackets++;
+        if (!port.sendTimingReq(pkt)) {
+            retryPkt = pkt;
+            retryPktTick = curTick();
+        }
+    }
+
+    // if we are waiting for a retry, do not schedule any further
+    // events, in the case of a transition or a successful send, go
+    // ahead and determine when the next update should take place
+    if (retryPkt == NULL) {
+        // schedule next update event based on either the next execute
+        // tick or the next transition, which ever comes first
+        nextPacketTick = states[currState]->nextPacketTick();
+        Tick nextEventTick = std::min(nextPacketTick, nextTransitionTick);
+        DPRINTF(TrafficGen, "Next event scheduled at %lld\n", nextEventTick);
+        schedule(updateEvent, nextEventTick);
     }
 }
 
@@ -340,8 +367,63 @@ TrafficGen::enterState(uint32_t newState)
     DPRINTF(TrafficGen, "Transition to state %d\n", newState);
 
     currState = newState;
-    nextTransitionTick += states[currState]->duration;
+    // we could have been delayed and not transitioned on the exact
+    // tick when we were supposed to (due to back pressure when
+    // sending a packet)
+    nextTransitionTick = curTick() + states[currState]->duration;
     states[currState]->enter();
+}
+
+void
+TrafficGen::recvRetry()
+{
+    assert(retryPkt != NULL);
+
+    DPRINTF(TrafficGen, "Received retry\n");
+    numRetries++;
+    // attempt to send the packet, and if we are successful start up
+    // the machinery again
+    if (port.sendTimingReq(retryPkt)) {
+        retryPkt = NULL;
+        // remember how much delay was incurred due to back-pressure
+        // when sending the request
+        Tick delay = curTick() - retryPktTick;
+        retryPktTick = 0;
+        retryTicks += delay;
+
+        if (drainManager == NULL) {
+            // packet is sent, so find out when the next one is due
+            nextPacketTick = states[currState]->nextPacketTick();
+            Tick nextEventTick = std::min(nextPacketTick, nextTransitionTick);
+            schedule(updateEvent, std::max(curTick(), nextEventTick));
+        } else {
+            // shut things down
+            nextPacketTick = MaxTick;
+            nextTransitionTick = MaxTick;
+            drainManager->signalDrainDone();
+            // Clear the drain event once we're done with it.
+            drainManager = NULL;
+        }
+    }
+}
+
+void
+TrafficGen::regStats()
+{
+    // Initialise all the stats
+    using namespace Stats;
+
+    numPackets
+        .name(name() + ".numPackets")
+        .desc("Number of packets generated");
+
+    numRetries
+        .name(name() + ".numRetries")
+        .desc("Number of retries");
+
+    retryTicks
+        .name(name() + ".retryTicks")
+        .desc("Time spent waiting due to back-pressure (ticks)");
 }
 
 bool
