@@ -110,6 +110,13 @@ class SimpleDRAM(AbstractMemory):
     addr_mapping = Param.AddrMap('RaBaChCo', "Address mapping policy")
     page_policy = Param.PageManage('open', "Page closure management policy")
 
+    # pipeline latency of the controller and PHY, split into a
+    # frontend part and a backend part, with reads and writes serviced
+    # by the queues only seeing the frontend contribution, and reads
+    # serviced by the memory seeing the sum of the two
+    static_frontend_latency = Param.Latency("10ns", "Static frontend latency")
+    static_backend_latency = Param.Latency("10ns", "Static backend latency")
+
     # the physical organisation of the DRAM
     lines_per_rowbuffer = Param.Unsigned("Row buffer size in cache lines")
     ranks_per_channel = Param.Unsigned("Number of ranks per channel")

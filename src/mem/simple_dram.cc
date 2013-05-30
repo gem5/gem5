@@ -66,6 +66,8 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
+    frontendLatency(p->static_frontend_latency),
+    backendLatency(p->static_backend_latency),
     busBusyUntil(0), writeStartTime(0),
     prevArrival(0), numReqs(0)
 {
@@ -294,7 +296,7 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt)
             DPRINTF(DRAM, "Read to %lld serviced by write queue\n", addr);
             bytesRead += bytesPerCacheLine;
             bytesConsumedRd += pkt->getSize();
-            accessAndRespond(pkt);
+            accessAndRespond(pkt, frontendLatency);
             return;
         }
     }
@@ -467,7 +469,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt)
 
     bytesConsumedWr += pkt->getSize();
     bytesWritten += bytesPerCacheLine;
-    accessAndRespond(pkt);
+    accessAndRespond(pkt, frontendLatency);
 
     // If your write buffer is starting to fill up, drain it!
     if (writeQueue.size() > writeThreshold && !stopReads){
@@ -609,7 +611,7 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
     } else {
         DPRINTF(DRAM,"Neither read nor write, ignore timing\n");
         neitherReadNorWrite++;
-        accessAndRespond(pkt);
+        accessAndRespond(pkt, 1);
     }
 
     retryRdReq = false;
@@ -628,7 +630,7 @@ SimpleDRAM::processRespondEvent()
      // Actually responds to the requestor
      bytesConsumedRd += pkt->getSize();
      bytesRead += bytesPerCacheLine;
-     accessAndRespond(pkt);
+     accessAndRespond(pkt, frontendLatency + backendLatency);
 
      delete respQueue.front();
      respQueue.pop_front();
@@ -737,7 +739,7 @@ SimpleDRAM::chooseNextRead()
 }
 
 void
-SimpleDRAM::accessAndRespond(PacketPtr pkt)
+SimpleDRAM::accessAndRespond(PacketPtr pkt, Tick static_latency)
 {
     DPRINTF(DRAM, "Responding to Address %lld.. ",pkt->getAddr());
 
@@ -754,9 +756,9 @@ SimpleDRAM::accessAndRespond(PacketPtr pkt)
         // @todo someone should pay for this
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
-        // queue the packet in the response queue to be sent out the
-        // next tick
-        port.schedTimingResp(pkt, curTick() + 1);
+        // queue the packet in the response queue to be sent out after
+        // the static latency has passed
+        port.schedTimingResp(pkt, curTick() + static_latency);
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it

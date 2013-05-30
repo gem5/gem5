@@ -265,8 +265,9 @@ class SimpleDRAM : public AbstractMemory
      * world requestor.
      *
      * @param pkt The packet from the outside world
+     * @param static_latency Static latency to add before sending the packet
      */
-    void accessAndRespond(PacketPtr pkt);
+    void accessAndRespond(PacketPtr pkt, Tick static_latency);
 
     /**
      * Address decoder to figure out physical mapping onto ranks,
@@ -408,6 +409,20 @@ class SimpleDRAM : public AbstractMemory
     Enums::MemSched memSchedPolicy;
     Enums::AddrMap addrMapping;
     Enums::PageManage pageMgmt;
+
+    /**
+     * Pipeline latency of the controller frontend. The frontend
+     * contribution is added to writes (that complete when they are in
+     * the write buffer) and reads that are serviced the write buffer.
+     */
+    const Tick frontendLatency;
+
+    /**
+     * Pipeline latency of the backend and PHY. Along with the
+     * frontend contribution, this latency is added to reads serviced
+     * by the DRAM.
+     */
+    const Tick backendLatency;
 
     /**
      * Till when has the main data bus been spoken for already?
