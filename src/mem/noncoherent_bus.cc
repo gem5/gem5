@@ -99,11 +99,11 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     assert(!pkt->isExpressSnoop());
 
     // determine the destination based on the address
-    PortID dest_port_id = findPort(pkt->getAddr());
+    PortID master_port_id = findPort(pkt->getAddr());
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!reqLayer.tryTiming(src_port, dest_port_id)) {
+    if (!reqLayer.tryTiming(src_port, master_port_id)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -112,6 +112,11 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
+    // store size and command as they might be modified when
+    // forwarding the packet
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
+
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
 
@@ -119,7 +124,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
     // since it is a normal request, attempt to send the packet
-    bool success = masterPorts[dest_port_id]->sendTimingReq(pkt);
+    bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
 
     if (!success)  {
         // inhibited packets should never be forced to retry
@@ -132,13 +137,19 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         // occupy until the header is sent
-        reqLayer.failedTiming(src_port, dest_port_id,
+        reqLayer.failedTiming(src_port, master_port_id,
                               clockEdge(Cycles(headerCycles)));
 
         return false;
     }
 
     reqLayer.succeededTiming(packetFinishTime);
+
+    // stats updates
+    dataThroughBus += pkt_size;
+    pktCount[slave_port_id][master_port_id]++;
+    totPktSize[slave_port_id][master_port_id] += pkt_size;
+    transDist[pkt_cmd]++;
 
     return true;
 }
@@ -160,11 +171,18 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
+    // store size and command as they might be modified when
+    // forwarding the packet
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
+
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
-    // send the packet to the destination through one of our slave
-    // ports, as determined by the destination field
+    // determine the destination based on what is stored in the packet
+    PortID slave_port_id = pkt->getDest();
+
+    // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTimingResp(pkt);
 
     // currently it is illegal to block responses... can lead to
@@ -172,6 +190,12 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     assert(success);
 
     respLayer.succeededTiming(packetFinishTime);
+
+    // stats updates
+    dataThroughBus += pkt_size;
+    pktCount[slave_port_id][master_port_id]++;
+    totPktSize[slave_port_id][master_port_id] += pkt_size;
+    transDist[pkt_cmd]++;
 
     return true;
 }
@@ -192,11 +216,18 @@ NoncoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             slavePorts[slave_port_id]->name(), pkt->getAddr(),
             pkt->cmdString());
 
+    // add the request data
+    dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+
     // determine the destination port
     PortID dest_id = findPort(pkt->getAddr());
 
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
+
+    // add the response data
+    if (pkt->isResponse())
+        dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
 
     // @todo: Not setting first-word time
     pkt->busLastWordDelay = response_latency;
@@ -232,4 +263,26 @@ NoncoherentBus*
 NoncoherentBusParams::create()
 {
     return new NoncoherentBus(this);
+}
+
+void
+NoncoherentBus::regStats()
+{
+    // register the stats of the base class and our two bus layers
+    BaseBus::regStats();
+    reqLayer.regStats();
+    respLayer.regStats();
+
+    dataThroughBus
+        .name(name() + ".data_through_bus")
+        .desc("Total data (bytes)")
+        ;
+
+    throughput
+        .name(name() + ".throughput")
+        .desc("Throughput (bytes/s)")
+        .precision(0)
+        ;
+
+    throughput = dataThroughBus / simSeconds;
 }

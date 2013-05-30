@@ -179,6 +179,9 @@ void BaseBus::Layer<PortClass>::occupyLayer(Tick until)
     assert(until != 0);
     bus.schedule(releaseEvent, until);
 
+    // account for the occupied ticks
+    occupancy += until - curTick();
+
     DPRINTF(BaseBus, "The bus is now busy from tick %d to %d\n",
             curTick(), until);
 }
@@ -558,6 +561,52 @@ BaseBus::deviceBlockSize() const
     return blockSize;
 }
 
+void
+BaseBus::regStats()
+{
+    using namespace Stats;
+
+    transDist
+        .init(MemCmd::NUM_MEM_CMDS)
+        .name(name() + ".trans_dist")
+        .desc("Transaction distribution")
+        .flags(nozero);
+
+    // get the string representation of the commands
+    for (int i = 0; i < MemCmd::NUM_MEM_CMDS; i++) {
+        MemCmd cmd(i);
+        const std::string &cstr = cmd.toString();
+        transDist.subname(i, cstr);
+    }
+
+    pktCount
+        .init(slavePorts.size(), masterPorts.size())
+        .name(name() + ".pkt_count")
+        .desc("Packet count per connected master and slave (bytes)")
+        .flags(total | nozero | nonan);
+
+    totPktSize
+        .init(slavePorts.size(), masterPorts.size())
+        .name(name() + ".tot_pkt_size")
+        .desc("Cumulative packet size per connected master and slave (bytes)")
+        .flags(total | nozero | nonan);
+
+    // both the packet count and total size are two-dimensional
+    // vectors, indexed by slave port id and master port id, thus the
+    // neighbouring master and slave, they do not differentiate what
+    // came from the master and was forwarded to the slave (requests
+    // and snoop responses) and what came from the slave and was
+    // forwarded to the master (responses and snoop requests)
+    for (int i = 0; i < slavePorts.size(); i++) {
+        pktCount.subname(i, slavePorts[i]->getMasterPort().name());
+        totPktSize.subname(i, slavePorts[i]->getMasterPort().name());
+        for (int j = 0; j < masterPorts.size(); j++) {
+            pktCount.ysubname(j, masterPorts[j]->getSlavePort().name());
+            totPktSize.ysubname(j, masterPorts[j]->getSlavePort().name());
+        }
+    }
+}
+
 template <typename PortClass>
 unsigned int
 BaseBus::Layer<PortClass>::drain(DrainManager *dm)
@@ -571,6 +620,26 @@ BaseBus::Layer<PortClass>::drain(DrainManager *dm)
         return 1;
     }
     return 0;
+}
+
+template <typename PortClass>
+void
+BaseBus::Layer<PortClass>::regStats()
+{
+    using namespace Stats;
+
+    occupancy
+        .name(name() + ".occupancy")
+        .desc("Layer occupancy (ticks)")
+        .flags(nozero);
+
+    utilization
+        .name(name() + ".utilization")
+        .desc("Layer utilization (%)")
+        .precision(1)
+        .flags(nozero);
+
+    utilization = 100 * occupancy / simTicks;
 }
 
 /**

@@ -300,6 +300,9 @@ class CoherentBus : public BaseBus
      */
     void forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id);
 
+    Stats::Scalar dataThroughBus;
+    Stats::Scalar snoopDataThroughBus;
+
   public:
 
     virtual void init();
@@ -307,6 +310,8 @@ class CoherentBus : public BaseBus
     CoherentBus(const CoherentBusParams *p);
 
     unsigned int drain(DrainManager *dm);
+
+    virtual void regStats();
 };
 
 #endif //__MEM_COHERENT_BUS_HH__

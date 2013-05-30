@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -125,11 +125,11 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     bool is_express_snoop = pkt->isExpressSnoop();
 
     // determine the destination based on the address
-    PortID dest_port_id = findPort(pkt->getAddr());
+    PortID master_port_id = findPort(pkt->getAddr());
 
     // test if the bus should be considered occupied for the current
     // port, and exclude express snoops from the check
-    if (!is_express_snoop && !reqLayer.tryTiming(src_port, dest_port_id)) {
+    if (!is_express_snoop && !reqLayer.tryTiming(src_port, master_port_id)) {
         DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUS BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -138,6 +138,11 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     DPRINTF(CoherentBus, "recvTimingReq: src %s %s expr %d 0x%x\n",
             src_port->name(), pkt->cmdString(), is_express_snoop,
             pkt->getAddr());
+
+    // store size and command as they might be modified when
+    // forwarding the packet
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
 
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
@@ -169,11 +174,12 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     }
 
     // since it is a normal request, attempt to send the packet
-    bool success = masterPorts[dest_port_id]->sendTimingReq(pkt);
+    bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
 
     // if this is an express snoop, we are done at this point
     if (is_express_snoop) {
         assert(success);
+        snoopDataThroughBus += pkt_size;
     } else {
         // for normal requests, check if successful
         if (!success)  {
@@ -192,12 +198,20 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             // update the bus state and schedule an idle event
-            reqLayer.failedTiming(src_port, dest_port_id,
+            reqLayer.failedTiming(src_port, master_port_id,
                                   clockEdge(Cycles(headerCycles)));
         } else {
             // update the bus state and schedule an idle event
             reqLayer.succeededTiming(packetFinishTime);
+            dataThroughBus += pkt_size;
         }
+    }
+
+    // stats updates only consider packets that were successfully sent
+    if (success) {
+        pktCount[slave_port_id][master_port_id]++;
+        totPktSize[slave_port_id][master_port_id] += pkt_size;
+        transDist[pkt_cmd]++;
     }
 
     return success;
@@ -220,6 +234,11 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
+    // store size and command as they might be modified when
+    // forwarding the packet
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
+
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
@@ -230,15 +249,23 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // remove it as outstanding
     outstandingReq.erase(pkt->req);
 
-    // send the packet to the destination through one of our slave
-    // ports, as determined by the destination field
-    bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTimingResp(pkt);
+    // determine the destination based on what is stored in the packet
+    PortID slave_port_id = pkt->getDest();
+
+    // send the packet through the destination slave port
+    bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
 
     // currently it is illegal to block responses... can lead to
     // deadlock
     assert(success);
 
     respLayer.succeededTiming(packetFinishTime);
+
+    // stats updates
+    dataThroughBus += pkt_size;
+    pktCount[slave_port_id][master_port_id]++;
+    totPktSize[slave_port_id][master_port_id] += pkt_size;
+    transDist[pkt_cmd]++;
 
     return true;
 }
@@ -249,6 +276,10 @@ CoherentBus::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     DPRINTF(CoherentBus, "recvTimingSnoopReq: src %s %s 0x%x\n",
             masterPorts[master_port_id]->name(), pkt->cmdString(),
             pkt->getAddr());
+
+    // update stats here as we know the forwarding will succeed
+    transDist[pkt->cmdToIndex()]++;
+    snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
 
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
@@ -286,8 +317,13 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     DPRINTF(CoherentBus, "recvTimingSnoop: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
+    // store size and command as they might be modified when
+    // forwarding the packet
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
+
     // get the destination from the packet
-    PortID dest = pkt->getDest();
+    PortID dest_port_id = pkt->getDest();
 
     // responses are never express snoops
     assert(!pkt->isExpressSnoop());
@@ -303,7 +339,10 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // this is a snoop response to a snoop request we
         // forwarded, e.g. coming from the L1 and going to the L2
         // this should be forwarded as a snoop response
-        bool success M5_VAR_USED = masterPorts[dest]->sendTimingSnoopResp(pkt);
+        bool success M5_VAR_USED =
+            masterPorts[dest_port_id]->sendTimingSnoopResp(pkt);
+        pktCount[slave_port_id][dest_port_id]++;
+        totPktSize[slave_port_id][dest_port_id] += pkt_size;
         assert(success);
     } else {
         // we got a snoop response on one of our slave ports,
@@ -317,11 +356,12 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // request, hence it should never go back to where the
         // snoop response came from, but instead to where the
         // original request came from
-        assert(slave_port_id != dest);
+        assert(slave_port_id != dest_port_id);
 
         // as a normal response, it should go back to a master
         // through one of our slave ports
-        bool success M5_VAR_USED = slavePorts[dest]->sendTimingResp(pkt);
+        bool success M5_VAR_USED =
+            slavePorts[dest_port_id]->sendTimingResp(pkt);
 
         // currently it is illegal to block responses... can lead
         // to deadlock
@@ -329,6 +369,10 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     }
 
     snoopRespLayer.succeededTiming(packetFinishTime);
+
+    // stats updates
+    transDist[pkt_cmd]++;
+    snoopDataThroughBus += pkt_size;
 
     return true;
 }
@@ -373,6 +417,9 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             slavePorts[slave_port_id]->name(), pkt->getAddr(),
             pkt->cmdString());
 
+    // add the request data
+    dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
 
@@ -400,6 +447,10 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         response_latency = snoop_response_latency;
     }
 
+    // add the response data
+    if (pkt->isResponse())
+        dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+
     // @todo: Not setting first-word time
     pkt->busLastWordDelay = response_latency;
     return response_latency;
@@ -412,6 +463,9 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
             masterPorts[master_port_id]->name(), pkt->getAddr(),
             pkt->cmdString());
 
+    // add the request snoop data
+    snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+
     // forward to all snoopers
     std::pair<MemCmd, Tick> snoop_result =
         forwardAtomic(pkt, InvalidPortID);
@@ -420,6 +474,10 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
 
     if (snoop_response_cmd != MemCmd::InvalidCmd)
         pkt->cmd = snoop_response_cmd;
+
+    // add the response snoop data
+    if (pkt->isResponse())
+        snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
 
     // @todo: Not setting first-word time
     pkt->busLastWordDelay = snoop_response_latency;
@@ -540,6 +598,34 @@ CoherentBus::drain(DrainManager *dm)
 {
     // sum up the individual layers
     return reqLayer.drain(dm) + respLayer.drain(dm) + snoopRespLayer.drain(dm);
+}
+
+void
+CoherentBus::regStats()
+{
+    // register the stats of the base class and our three bus layers
+    BaseBus::regStats();
+    reqLayer.regStats();
+    respLayer.regStats();
+    snoopRespLayer.regStats();
+
+    dataThroughBus
+        .name(name() + ".data_through_bus")
+        .desc("Total data (bytes)")
+        ;
+
+    snoopDataThroughBus
+        .name(name() + ".snoop_data_through_bus")
+        .desc("Total snoop data (bytes)")
+    ;
+
+    throughput
+        .name(name() + ".throughput")
+        .desc("Throughput (bytes/s)")
+        .precision(0)
+        ;
+
+    throughput = (dataThroughBus + snoopDataThroughBus) / simSeconds;
 }
 
 CoherentBus *

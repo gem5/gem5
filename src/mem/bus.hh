@@ -57,6 +57,7 @@
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "params/BaseBus.hh"
+#include "sim/stats.hh"
 
 /**
  * The base bus contains the common elements of the non-coherent and
@@ -179,6 +180,11 @@ class BaseBus : public MemObject
          */
         void recvRetry(PortID port_id);
 
+        /**
+         * Register stats for the layer
+         */
+        void regStats();
+
       private:
 
         /** The bus this layer is a part of. */
@@ -245,6 +251,14 @@ class BaseBus : public MemObject
 
         /** event used to schedule a release of the layer */
         EventWrapper<Layer, &Layer::releaseLayer> releaseEvent;
+
+        /**
+         * Stats for occupancy and utilization. These stats capture
+         * the time the bus spends in the busy state and are thus only
+         * relevant when the memory system is in timing mode.
+         */
+        Stats::Scalar occupancy;
+        Stats::Formula utilization;
 
     };
 
@@ -381,6 +395,20 @@ class BaseBus : public MemObject
 
     virtual ~BaseBus();
 
+    /**
+     * Stats for transaction distribution and data passing through the
+     * bus. The transaction distribution is globally counting
+     * different types of commands. The packet count and total packet
+     * size are two-dimensional vectors that are indexed by the bus
+     * slave port and master port id (thus the neighbouring master and
+     * neighbouring slave), summing up both directions (request and
+     * response).
+     */
+    Stats::Formula throughput;
+    Stats::Vector transDist;
+    Stats::Vector2d pktCount;
+    Stats::Vector2d totPktSize;
+
   public:
 
     virtual void init();
@@ -392,6 +420,8 @@ class BaseBus : public MemObject
                                 PortID idx = InvalidPortID);
 
     virtual unsigned int drain(DrainManager *dm) = 0;
+
+    virtual void regStats();
 
 };
 

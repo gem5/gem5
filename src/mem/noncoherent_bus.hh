@@ -209,6 +209,11 @@ class NoncoherentBus : public BaseBus
 
     unsigned int drain(DrainManager *dm);
 
+    /**
+     * stats
+     */
+    virtual void regStats();
+    Stats::Scalar dataThroughBus;
 };
 
 #endif //__MEM_NONCOHERENT_BUS_HH__
