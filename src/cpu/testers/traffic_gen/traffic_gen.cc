@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,10 +54,11 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
     : MemObject(p),
       system(p->system),
       masterID(system->getMasterId(name())),
+      nextTransitionTick(0),
       port(name() + ".port", *this),
-      stateGraph(*this, port, p->config_file, masterID),
-      updateStateGraphEvent(this)
+      updateEvent(this)
 {
+    parseConfig(p->config_file, masterID);
 }
 
 TrafficGen*
@@ -87,7 +88,7 @@ TrafficGen::init()
         DPRINTF(TrafficGen, "Timing mode, activating request generator\n");
 
         // enter initial state
-        stateGraph.enterState(stateGraph.currState);
+        enterState(currState);
     } else {
         DPRINTF(TrafficGen,
                 "Traffic generator is only active in timing mode\n");
@@ -99,8 +100,7 @@ TrafficGen::initState()
 {
     // when not restoring from a checkpoint, make sure we kick things off
     if (system->isTimingMode()) {
-        Tick nextStateGraphEvent = stateGraph.nextEventTick();
-        schedule(updateStateGraphEvent, nextStateGraphEvent);
+        schedule(updateEvent, nextEventTick());
     } else {
         DPRINTF(TrafficGen,
                 "Traffic generator is only active in timing mode\n");
@@ -121,15 +121,14 @@ TrafficGen::serialize(ostream &os)
     DPRINTF(Checkpoint, "Serializing TrafficGen\n");
 
     // save ticks of the graph event if it is scheduled
-    Tick nextStateGraphEvent = updateStateGraphEvent.scheduled() ?
-        updateStateGraphEvent.when() : 0;
+    Tick nextEvent = updateEvent.scheduled() ?
+        updateEvent.when() : 0;
 
-    DPRINTF(TrafficGen, "Saving nextStateGraphEvent=%llu\n",
-            nextStateGraphEvent);
+    DPRINTF(TrafficGen, "Saving nextEvent=%llu\n",
+            nextEvent);
 
-    SERIALIZE_SCALAR(nextStateGraphEvent);
+    SERIALIZE_SCALAR(nextEvent);
 
-    Tick nextTransitionTick = stateGraph.nextTransitionTick;
     SERIALIZE_SCALAR(nextTransitionTick);
 
     // @todo: also serialise the current state, figure out the best
@@ -140,34 +139,39 @@ void
 TrafficGen::unserialize(Checkpoint* cp, const string& section)
 {
     // restore scheduled events
-    Tick nextStateGraphEvent;
-    UNSERIALIZE_SCALAR(nextStateGraphEvent);
-    if (nextStateGraphEvent != 0) {
-        schedule(updateStateGraphEvent, nextStateGraphEvent);
+    Tick nextEvent;
+    UNSERIALIZE_SCALAR(nextEvent);
+    if (nextEvent != 0) {
+        schedule(updateEvent, nextEvent);
     }
 
-    Tick nextTransitionTick;
     UNSERIALIZE_SCALAR(nextTransitionTick);
-    stateGraph.nextTransitionTick = nextTransitionTick;
 }
 
 void
-TrafficGen::updateStateGraph()
+TrafficGen::update()
 {
     // schedule next update event based on either the next execute
     // tick or the next transition, which ever comes first
-    Tick nextStateGraphEvent = stateGraph.nextEventTick();
+    Tick nextEvent = nextEventTick();
     DPRINTF(TrafficGen, "Updating state graph, next event at %lld\n",
-            nextStateGraphEvent);
-    schedule(updateStateGraphEvent, nextStateGraphEvent);
+            nextEvent);
+    schedule(updateEvent, nextEvent);
 
     // perform the update associated with the current update event
-    stateGraph.update();
+
+    // if we have reached the time for the next state transition, then
+    // perform the transition
+    if (curTick() >= nextTransitionTick) {
+        transition();
+    } else {
+        // we are still in the current state and should execute it
+        states[currState]->execute();
+    }
 }
 
 void
-TrafficGen::StateGraph::parseConfig(const string& file_name,
-                                    MasterID master_id)
+TrafficGen::parseConfig(const string& file_name, MasterID master_id)
 {
     // keep track of the transitions parsed to create the matrix when
     // done
@@ -178,7 +182,7 @@ TrafficGen::StateGraph::parseConfig(const string& file_name,
     infile.open(file_name.c_str(), ifstream::in);
     if (!infile.is_open()) {
         fatal("Traffic generator %s config file not found at %s\n",
-              owner.name(), file_name);
+              name(), file_name);
     }
 
     // read line by line and determine the action based on the first
@@ -302,20 +306,7 @@ TrafficGen::StateGraph::parseConfig(const string& file_name,
 }
 
 void
-TrafficGen::StateGraph::update()
-{
-    // if we have reached the time for the next state transition, then
-    // perform the transition
-    if (curTick() >= nextTransitionTick) {
-        transition();
-    } else {
-        // we are still in the current state and should execute it
-        states[currState]->execute();
-    }
-}
-
-void
-TrafficGen::StateGraph::transition()
+TrafficGen::transition()
 {
     // exit the current state
     states[currState]->exit();
@@ -334,7 +325,7 @@ TrafficGen::StateGraph::transition()
 }
 
 void
-TrafficGen::StateGraph::enterState(uint32_t newState)
+TrafficGen::enterState(uint32_t newState)
 {
     DPRINTF(TrafficGen, "Transition to state %d\n", newState);
 

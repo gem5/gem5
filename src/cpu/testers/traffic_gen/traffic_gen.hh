@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,17 +49,64 @@
 
 /**
  * The traffic generator is a master module that generates stimuli for
- * the memory system, based on a collection of simple behaviours that
- * are either probabilistic or based on traces. It can be used stand
- * alone for creating test cases for interconnect and memory
- * controllers, or function as a black box replacement for system
- * components that are not yet modelled in detail, e.g. a video engine
- * or baseband subsystem.
+ * the memory system, based on a collection of simple generator
+ * behaviours that are either probabilistic or based on traces. It can
+ * be used stand alone for creating test cases for interconnect and
+ * memory controllers, or function as a black box replacement for
+ * system components that are not yet modelled in detail, e.g. a video
+ * engine or baseband subsystem.
  */
 class TrafficGen : public MemObject
 {
 
   private:
+
+    /**
+     * Determine next state and perform the transition.
+     */
+    void transition();
+
+    /**
+     * Enter a new state.
+     *
+     * @param newState identifier of state to enter
+     */
+    void enterState(uint32_t newState);
+
+    /**
+     * Get the tick of the next event, either an execution or a
+     * transition.
+     *
+     * @return tick of the next update event
+     */
+    Tick nextEventTick()
+    {
+        return std::min(states[currState]->nextExecuteTick(),
+                        nextTransitionTick);
+    }
+
+    /**
+     * Parse the config file and build the state map and
+     * transition matrix.
+     *
+     * @param file_name Config file name to parse
+     * @param master_id MasterID to use for generated requests
+     */
+    void parseConfig(const std::string& file_name, MasterID master_id);
+
+    /**
+     * Schedules event for next update and executes an update on the
+     * state graph, either performing a state transition or executing
+     * the current state, depending on the current time.
+     */
+    void update();
+
+    /** Struct to represent a probabilistic transition during parsing. */
+    struct Transition {
+        uint32_t from;
+        uint32_t to;
+        double p;
+    };
 
     /**
      * The system used to determine which mode we are currently operating
@@ -72,113 +119,19 @@ class TrafficGen : public MemObject
      */
     MasterID masterID;
 
-  protected:
+    /** Time of next transition */
+    Tick nextTransitionTick;
 
-    /**
-     * The state graph is responsible for instantiating and keeping
-     * track of the various generator states and also perform the
-     * transitions and call the appropriate functions when entering,
-     * executing and exiting a state.
-     */
-    class StateGraph
-    {
+    /** State transition matrix */
+    std::vector<std::vector<double> > transitionMatrix;
 
-      public:
+    /** Index of the current state */
+    uint32_t currState;
 
-        /**
-         * Create a state graph from an input file.
-         *
-         * @param _owner used solely for the name
-         * @param _port port used to send requests
-         * @param file_name configuration description to read in
-         * @param master_id the unique id used for all requests
-         */
-        StateGraph(TrafficGen& _owner, QueuedMasterPort& _port,
-                   const std::string& file_name, MasterID master_id)
-            : nextTransitionTick(0), owner(_owner), port(_port)
-        {
-            parseConfig(file_name, master_id);
-        }
+    /** Map of generator states */
+    m5::hash_map<uint32_t, BaseGen*> states;
 
-        /**
-         * Get the name, used for DPRINTFs.
-         *
-         * @return the owner's name
-         */
-        std::string name() const { return owner.name(); }
-
-        /**
-         * Either perform a state transition or execute the current
-         * state, depending on the current time.
-         */
-        void update();
-
-        /**
-         * Determine next state and perform the transition.
-         */
-        void transition();
-
-        /**
-         * Enter a new state.
-         *
-         * @param newState identifier of state to enter
-         */
-        void enterState(uint32_t newState);
-
-        /**
-         * Get the tick of the next event, either an execution or a
-         * transition.
-         *
-         * @return tick of the next state graph event
-         */
-        Tick nextEventTick()
-        {
-            return std::min(states[currState]->nextExecuteTick(),
-                            nextTransitionTick);
-
-        }
-
-        /** Time of next transition */
-        Tick nextTransitionTick;
-
-      private:
-
-        /**
-         * Parse the config file and build the state map and
-         * transition matrix.
-         *
-         * @param file_name Config file name to parse
-         * @param master_id MasterID to use for generated requests
-         */
-        void parseConfig(const std::string& file_name, MasterID master_id);
-
-        /** Struct to represent a probabilistic transition during parsing. */
-        struct Transition {
-            uint32_t from;
-            uint32_t to;
-            double p;
-        };
-
-        /** Pointer to owner of request handler */
-        TrafficGen& owner;
-
-        /** Pointer to request handler */
-        QueuedMasterPort& port;
-
-        /** State transition matrix */
-        std::vector<std::vector<double> > transitionMatrix;
-
-      public:
-
-        /** Index of the current state */
-        uint32_t currState;
-
-        /** Map of states */
-        m5::hash_map<uint32_t, BaseGen*> states;
-    };
-
-
-    /** Queued handler */
+    /** Queued master port */
     class TrafficGenPort : public QueuedMasterPort
     {
       public:
@@ -197,20 +150,11 @@ class TrafficGen : public MemObject
 
     };
 
+    /** The instance of master port used by the traffic generator. */
     TrafficGenPort port;
 
-    /** Request generator state graph */
-    StateGraph stateGraph;
-
-    /**
-     * Schedules event for next update and executes an update on the
-     * state graph.
-     */
-    void updateStateGraph();
-
-    /** Event for updating the state graph */
-    EventWrapper<TrafficGen,
-                 &TrafficGen::updateStateGraph> updateStateGraphEvent;
+    /** Event for scheduling updates */
+    EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
 
 
   public:
