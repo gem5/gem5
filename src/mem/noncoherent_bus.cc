@@ -55,10 +55,7 @@
 #include "mem/noncoherent_bus.hh"
 
 NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p),
-      reqLayer(*this, ".reqLayer", p->port_master_connection_count +
-               p->port_default_connection_count),
-      respLayer(*this, ".respLayer", p->port_slave_connection_count)
+    : BaseBus(p)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -67,6 +64,8 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
         std::string portName = csprintf("%s.master[%d]", name(), i);
         MasterPort* bp = new NoncoherentBusMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
+        reqLayers.push_back(new ReqLayer(*bp, *this,
+                                         csprintf(".reqLayer%d", i)));
     }
 
     // see if we have a default slave device connected and if so add
@@ -77,6 +76,8 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
         MasterPort* bp = new NoncoherentBusMasterPort(portName, *this,
                                                       defaultPortID);
         masterPorts.push_back(bp);
+        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
+                                                              defaultPortID)));
     }
 
     // create the slave ports, once again starting at zero
@@ -84,9 +85,19 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
         std::string portName = csprintf("%s.slave[%d]", name(), i);
         SlavePort* bp = new NoncoherentBusSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
+        respLayers.push_back(new RespLayer(*bp, *this,
+                                           csprintf(".respLayer%d", i)));
     }
 
     clearPortCache();
+}
+
+NoncoherentBus::~NoncoherentBus()
+{
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        delete *l;
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        delete *l;
 }
 
 bool
@@ -103,7 +114,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!reqLayer.tryTiming(src_port, master_port_id)) {
+    if (!reqLayers[master_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -137,13 +148,13 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         // occupy until the header is sent
-        reqLayer.failedTiming(src_port, master_port_id,
-                              clockEdge(headerCycles));
+        reqLayers[master_port_id]->failedTiming(src_port,
+                                                clockEdge(headerCycles));
 
         return false;
     }
 
-    reqLayer.succeededTiming(packetFinishTime);
+    reqLayers[master_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
     dataThroughBus += pkt_size;
@@ -165,7 +176,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port, slave_port_id)) {
+    if (!respLayers[slave_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -189,7 +200,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // deadlock
     assert(success);
 
-    respLayer.succeededTiming(packetFinishTime);
+    respLayers[slave_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
     dataThroughBus += pkt_size;
@@ -206,7 +217,7 @@ NoncoherentBus::recvRetry(PortID master_port_id)
     // responses never block on forwarding them, so the retry will
     // always be coming from a port to which we tried to forward a
     // request
-    reqLayer.recvRetry(master_port_id);
+    reqLayers[master_port_id]->recvRetry();
 }
 
 Tick
@@ -256,7 +267,12 @@ unsigned int
 NoncoherentBus::drain(DrainManager *dm)
 {
     // sum up the individual layers
-    return reqLayer.drain(dm) + respLayer.drain(dm);
+    unsigned int total = 0;
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        total += (*l)->drain(dm);
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        total += (*l)->drain(dm);
+    return total;
 }
 
 NoncoherentBus*
@@ -270,8 +286,10 @@ NoncoherentBus::regStats()
 {
     // register the stats of the base class and our two bus layers
     BaseBus::regStats();
-    reqLayer.regStats();
-    respLayer.regStats();
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        (*l)->regStats();
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        (*l)->regStats();
 
     dataThroughBus
         .name(name() + ".data_through_bus")

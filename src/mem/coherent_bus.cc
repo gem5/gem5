@@ -55,14 +55,7 @@
 #include "sim/system.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
-    : BaseBus(p),
-      reqLayer(*this, ".reqLayer", p->port_master_connection_count +
-               p->port_default_connection_count),
-      respLayer(*this, ".respLayer", p->port_slave_connection_count),
-      snoopRespLayer(*this, ".snoopRespLayer",
-                     p->port_master_connection_count +
-                     p->port_default_connection_count),
-      system(p->system)
+    : BaseBus(p), system(p->system)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -71,6 +64,10 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
         std::string portName = csprintf("%s.master[%d]", name(), i);
         MasterPort* bp = new CoherentBusMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
+        reqLayers.push_back(new ReqLayer(*bp, *this,
+                                         csprintf(".reqLayer%d", i)));
+        snoopLayers.push_back(new SnoopLayer(*bp, *this,
+                                             csprintf(".snoopLayer%d", i)));
     }
 
     // see if we have a default slave device connected and if so add
@@ -81,6 +78,11 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
         MasterPort* bp = new CoherentBusMasterPort(portName, *this,
                                                    defaultPortID);
         masterPorts.push_back(bp);
+        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
+                                             defaultPortID)));
+        snoopLayers.push_back(new SnoopLayer(*bp, *this,
+                                             csprintf(".snoopLayer%d",
+                                                      defaultPortID)));
     }
 
     // create the slave ports, once again starting at zero
@@ -88,9 +90,21 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
         std::string portName = csprintf("%s.slave[%d]", name(), i);
         SlavePort* bp = new CoherentBusSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
+        respLayers.push_back(new RespLayer(*bp, *this,
+                                           csprintf(".respLayer%d", i)));
     }
 
     clearPortCache();
+}
+
+CoherentBus::~CoherentBus()
+{
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        delete *l;
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        delete *l;
+    for (auto l = snoopLayers.begin(); l != snoopLayers.end(); ++l)
+        delete *l;
 }
 
 void
@@ -129,7 +143,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // test if the bus should be considered occupied for the current
     // port, and exclude express snoops from the check
-    if (!is_express_snoop && !reqLayer.tryTiming(src_port, master_port_id)) {
+    if (!is_express_snoop && !reqLayers[master_port_id]->tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x BUS BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -198,11 +212,11 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
 
             // update the bus state and schedule an idle event
-            reqLayer.failedTiming(src_port, master_port_id,
-                                  clockEdge(headerCycles));
+            reqLayers[master_port_id]->failedTiming(src_port,
+                                                    clockEdge(headerCycles));
         } else {
             // update the bus state and schedule an idle event
-            reqLayer.succeededTiming(packetFinishTime);
+            reqLayers[master_port_id]->succeededTiming(packetFinishTime);
             dataThroughBus += pkt_size;
         }
     }
@@ -228,7 +242,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port, slave_port_id)) {
+    if (!respLayers[slave_port_id]->tryTiming(src_port)) {
         DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -259,7 +273,7 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // deadlock
     assert(success);
 
-    respLayer.succeededTiming(packetFinishTime);
+    respLayers[slave_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
     dataThroughBus += pkt_size;
@@ -318,10 +332,12 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // port, note that the check is bypassed if the response is being
     // passed on as a normal response since this is occupying the
     // response layer rather than the snoop response layer
-    if (forwardAsSnoop && !snoopRespLayer.tryTiming(src_port, dest_port_id)) {
-        DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
-        return false;
+    if (forwardAsSnoop) {
+        if (!snoopLayers[dest_port_id]->tryTiming(src_port)) {
+            DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
+                    src_port->name(), pkt->cmdString(), pkt->getAddr());
+            return false;
+        }
     }
 
     DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x\n",
@@ -349,7 +365,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         totPktSize[slave_port_id][dest_port_id] += pkt_size;
         assert(success);
 
-        snoopRespLayer.succeededTiming(packetFinishTime);
+        snoopLayers[dest_port_id]->succeededTiming(packetFinishTime);
     } else {
         // we got a snoop response on one of our slave ports,
         // i.e. from a coherent master connected to the bus, and
@@ -416,7 +432,7 @@ CoherentBus::recvRetry(PortID master_port_id)
     // responses and snoop responses never block on forwarding them,
     // so the retry will always be coming from a port to which we
     // tried to forward a request
-    reqLayer.recvRetry(master_port_id);
+    reqLayers[master_port_id]->recvRetry();
 }
 
 Tick
@@ -606,7 +622,14 @@ unsigned int
 CoherentBus::drain(DrainManager *dm)
 {
     // sum up the individual layers
-    return reqLayer.drain(dm) + respLayer.drain(dm) + snoopRespLayer.drain(dm);
+    unsigned int total = 0;
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        total += (*l)->drain(dm);
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        total += (*l)->drain(dm);
+    for (auto l = snoopLayers.begin(); l != snoopLayers.end(); ++l)
+        total += (*l)->drain(dm);
+    return total;
 }
 
 void
@@ -614,9 +637,12 @@ CoherentBus::regStats()
 {
     // register the stats of the base class and our three bus layers
     BaseBus::regStats();
-    reqLayer.regStats();
-    respLayer.regStats();
-    snoopRespLayer.regStats();
+    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
+        (*l)->regStats();
+    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
+        (*l)->regStats();
+    for (auto l = snoopLayers.begin(); l != snoopLayers.end(); ++l)
+        (*l)->regStats();
 
     dataThroughBus
         .name(name() + ".data_through_bus")

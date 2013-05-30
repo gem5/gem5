@@ -73,11 +73,13 @@ class NoncoherentBus : public BaseBus
   protected:
 
     /**
-     * Declare the two layers of this bus, one for requests and one
+     * Declare the layers of this bus, one vector for requests and one
      * for responses.
      */
-    Layer<SlavePort> reqLayer;
-    Layer<MasterPort> respLayer;
+    typedef Layer<SlavePort,MasterPort> ReqLayer;
+    typedef Layer<MasterPort,SlavePort> RespLayer;
+    std::vector<ReqLayer*> reqLayers;
+    std::vector<RespLayer*> respLayers;
 
     /**
      * Declaration of the non-coherent bus slave port type, one will
@@ -206,6 +208,8 @@ class NoncoherentBus : public BaseBus
   public:
 
     NoncoherentBus(const NoncoherentBusParams *p);
+
+    virtual ~NoncoherentBus();
 
     unsigned int drain(DrainManager *dm);
 

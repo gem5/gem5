@@ -72,12 +72,15 @@ class CoherentBus : public BaseBus
   protected:
 
     /**
-     * Declare the three layers of this bus, one for requests, one
+     * Declare the layers of this bus, one vector for requests, one
      * for responses, and one for snoop responses
      */
-    Layer<SlavePort> reqLayer;
-    Layer<MasterPort> respLayer;
-    Layer<SlavePort> snoopRespLayer;
+    typedef Layer<SlavePort,MasterPort> ReqLayer;
+    typedef Layer<MasterPort,SlavePort> RespLayer;
+    typedef Layer<SlavePort,MasterPort> SnoopLayer;
+    std::vector<ReqLayer*> reqLayers;
+    std::vector<RespLayer*> respLayers;
+    std::vector<SnoopLayer*> snoopLayers;
 
     /**
      * Declaration of the coherent bus slave port type, one will be
@@ -308,6 +311,8 @@ class CoherentBus : public BaseBus
     virtual void init();
 
     CoherentBus(const CoherentBusParams *p);
+
+    virtual ~CoherentBus();
 
     unsigned int drain(DrainManager *dm);
 

@@ -156,18 +156,17 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
         offset;
 }
 
-template <typename PortClass>
-BaseBus::Layer<PortClass>::Layer(BaseBus& _bus, const std::string& _name,
-                                 uint16_t num_dest_ports) :
-    Drainable(),
-    bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
-    retryingPort(NULL), waitingForPeer(num_dest_ports, NULL),
+template <typename SrcType, typename DstType>
+BaseBus::Layer<SrcType,DstType>::Layer(DstType& _port, BaseBus& _bus,
+                                       const std::string& _name) :
+    port(_port), bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
+    retryingPort(NULL), waitingForPeer(NULL),
     releaseEvent(this)
 {
 }
 
-template <typename PortClass>
-void BaseBus::Layer<PortClass>::occupyLayer(Tick until)
+template <typename SrcType, typename DstType>
+void BaseBus::Layer<SrcType,DstType>::occupyLayer(Tick until)
 {
     // ensure the state is busy at this point, as the bus should
     // transition from idle as soon as it has decided to forward the
@@ -186,21 +185,21 @@ void BaseBus::Layer<PortClass>::occupyLayer(Tick until)
             curTick(), until);
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 bool
-BaseBus::Layer<PortClass>::tryTiming(PortClass* port, PortID dest_port_id)
+BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 {
-    // first we see if the bus is busy, next we check if we are in a
+    // first we see if the layer is busy, next we check if we are in a
     // retry with a port other than the current one, lastly we check
     // if the destination port is already engaged in a transaction
     // waiting for a retry from the peer
-    if (state == BUSY || (state == RETRY && port != retryingPort) ||
-        waitingForPeer[dest_port_id] != NULL) {
+    if (state == BUSY || (state == RETRY && src_port != retryingPort) ||
+        waitingForPeer != NULL) {
         // put the port at the end of the retry list waiting for the
         // layer to be freed up (and in the case of a busy peer, for
         // that transaction to go through, and then the bus to free
         // up)
-        waitingForLayer.push_back(port);
+        waitingForLayer.push_back(src_port);
         return false;
     }
 
@@ -213,9 +212,9 @@ BaseBus::Layer<PortClass>::tryTiming(PortClass* port, PortID dest_port_id)
     return true;
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::succeededTiming(Tick busy_time)
+BaseBus::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
 {
     // we should have gone from idle or retry to busy in the tryTiming
     // test
@@ -225,19 +224,19 @@ BaseBus::Layer<PortClass>::succeededTiming(Tick busy_time)
     occupyLayer(busy_time);
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::failedTiming(PortClass* src_port,
-                                        PortID dest_port_id, Tick busy_time)
+BaseBus::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
+                                              Tick busy_time)
 {
     // ensure no one got in between and tried to send something to
     // this port
-    assert(waitingForPeer[dest_port_id] == NULL);
+    assert(waitingForPeer == NULL);
 
     // if the source port is the current retrying one or not, we have
     // failed in forwarding and should track that we are now waiting
     // for the peer to send a retry
-    waitingForPeer[dest_port_id] = src_port;
+    waitingForPeer = src_port;
 
     // we should have gone from idle or retry to busy in the tryTiming
     // test
@@ -247,9 +246,9 @@ BaseBus::Layer<PortClass>::failedTiming(PortClass* src_port,
     occupyLayer(busy_time);
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::releaseLayer()
+BaseBus::Layer<SrcType,DstType>::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
@@ -270,9 +269,9 @@ BaseBus::Layer<PortClass>::releaseLayer()
     }
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::retryWaiting()
+BaseBus::Layer<SrcType,DstType>::retryWaiting()
 {
     // this should never be called with no one waiting
     assert(!waitingForLayer.empty());
@@ -306,23 +305,21 @@ BaseBus::Layer<PortClass>::retryWaiting()
     }
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::recvRetry(PortID port_id)
+BaseBus::Layer<SrcType,DstType>::recvRetry()
 {
     // we should never get a retry without having failed to forward
     // something to this port
-    assert(waitingForPeer[port_id] != NULL);
+    assert(waitingForPeer != NULL);
 
-    // find the port where the failed packet originated and remove the
-    // item from the waiting list
-    PortClass* retry_port = waitingForPeer[port_id];
-    waitingForPeer[port_id] = NULL;
+    // add the port where the failed packet originated to the front of
+    // the waiting ports for the layer, this allows us to call retry
+    // on the port immediately if the bus layer is idle
+    waitingForLayer.push_front(waitingForPeer);
 
-    // add this port at the front of the waiting ports for the layer,
-    // this allows us to call retry on the port immediately if the bus
-    // layer is idle
-    waitingForLayer.push_front(retry_port);
+    // we are no longer waiting for the peer
+    waitingForPeer = NULL;
 
     // if the bus layer is idle, retry this port straight away, if we
     // are busy, then simply let the port wait for its turn
@@ -606,9 +603,9 @@ BaseBus::regStats()
     }
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 unsigned int
-BaseBus::Layer<PortClass>::drain(DrainManager *dm)
+BaseBus::Layer<SrcType,DstType>::drain(DrainManager *dm)
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
@@ -621,9 +618,9 @@ BaseBus::Layer<PortClass>::drain(DrainManager *dm)
     return 0;
 }
 
-template <typename PortClass>
+template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<PortClass>::regStats()
+BaseBus::Layer<SrcType,DstType>::regStats()
 {
     using namespace Stats;
 
@@ -646,5 +643,5 @@ BaseBus::Layer<PortClass>::regStats()
  * file, but since there are only two given options (MasterPort and
  * SlavePort) it seems a bit excessive at this point.
  */
-template class BaseBus::Layer<SlavePort>;
-template class BaseBus::Layer<MasterPort>;
+template class BaseBus::Layer<SlavePort,MasterPort>;
+template class BaseBus::Layer<MasterPort,SlavePort>;
