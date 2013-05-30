@@ -199,7 +199,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
             // update the bus state and schedule an idle event
             reqLayer.failedTiming(src_port, master_port_id,
-                                  clockEdge(Cycles(headerCycles)));
+                                  clockEdge(headerCycles));
         } else {
             // update the bus state and schedule an idle event
             reqLayer.succeededTiming(packetFinishTime);
@@ -223,9 +223,12 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine the source port based on the id
     MasterPort *src_port = masterPorts[master_port_id];
 
+    // determine the destination based on what is stored in the packet
+    PortID slave_port_id = pkt->getDest();
+
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port, pkt->getDest())) {
+    if (!respLayer.tryTiming(src_port, slave_port_id)) {
         DPRINTF(CoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -248,9 +251,6 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // remove it as outstanding
     outstandingReq.erase(pkt->req);
-
-    // determine the destination based on what is stored in the packet
-    PortID slave_port_id = pkt->getDest();
 
     // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);

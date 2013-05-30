@@ -138,7 +138,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
         // occupy until the header is sent
         reqLayer.failedTiming(src_port, master_port_id,
-                              clockEdge(Cycles(headerCycles)));
+                              clockEdge(headerCycles));
 
         return false;
     }
@@ -160,9 +160,12 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine the source port based on the id
     MasterPort *src_port = masterPorts[master_port_id];
 
+    // determine the destination based on what is stored in the packet
+    PortID slave_port_id = pkt->getDest();
+
     // test if the bus should be considered occupied for the current
     // port
-    if (!respLayer.tryTiming(src_port, pkt->getDest())) {
+    if (!respLayer.tryTiming(src_port, slave_port_id)) {
         DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
@@ -179,11 +182,8 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
-    // determine the destination based on what is stored in the packet
-    PortID slave_port_id = pkt->getDest();
-
     // send the packet through the destination slave port
-    bool success M5_VAR_USED = slavePorts[pkt->getDest()]->sendTimingResp(pkt);
+    bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
 
     // currently it is illegal to block responses... can lead to
     // deadlock
