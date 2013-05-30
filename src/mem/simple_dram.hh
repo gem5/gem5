@@ -133,8 +133,10 @@ class SimpleDRAM : public AbstractMemory
     std::deque<Tick> actTicks;
 
     /**
-     * A basic class to track the bank state indirectly via
-     * times "freeAt" and "tRASDoneAt" and what page is currently open
+     * A basic class to track the bank state indirectly via times
+     * "freeAt" and "tRASDoneAt" and what page is currently open. The
+     * bank also keeps track of how many bytes have been accessed in
+     * the open row since it was opened.
      */
     class Bank
     {
@@ -148,7 +150,10 @@ class SimpleDRAM : public AbstractMemory
         Tick freeAt;
         Tick tRASDoneAt;
 
-        Bank() : openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0)
+        uint32_t bytesAccessed;
+
+        Bank() :
+            openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0), bytesAccessed(0)
         { }
     };
 
@@ -452,7 +457,7 @@ class SimpleDRAM : public AbstractMemory
     Stats::Vector writePktSize;
     Stats::Vector rdQLenPdf;
     Stats::Vector wrQLenPdf;
-
+    Stats::Histogram bytesPerActivate;
 
     // Latencies summed over all requests
     Stats::Scalar totQLat;

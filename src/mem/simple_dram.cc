@@ -363,11 +363,17 @@ SimpleDRAM::processWriteEvent()
             bank.openRow = dram_pkt->row;
             bank.freeAt = schedTime + tBURST + std::max(accessLat, tCL);
             busBusyUntil = bank.freeAt - tCL;
+            bank.bytesAccessed += bytesPerCacheLine;
 
             if (!rowHitFlag) {
                 bank.tRASDoneAt = bank.freeAt + tRP;
                 recordActivate(bank.freeAt - tCL - tRCD);
                 busBusyUntil = bank.freeAt - tCL - tRCD;
+
+                // sample the number of bytes accessed and reset it as
+                // we are now closing this row
+                bytesPerActivate.sample(bank.bytesAccessed);
+                bank.bytesAccessed = 0;
             }
         } else if (pageMgmt == Enums::close) {
             bank.freeAt = schedTime + tBURST + accessLat + tRP + tRP;
@@ -378,6 +384,7 @@ SimpleDRAM::processWriteEvent()
                     "banks_id %d is %lld\n",
                     dram_pkt->rank * banksPerRank + dram_pkt->bank,
                     bank.freeAt);
+            bytesPerActivate.sample(bytesPerCacheLine);
         } else
             panic("Unknown page management policy chosen\n");
 
@@ -898,6 +905,8 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     if (pageMgmt == Enums::open) {
         bank.openRow = dram_pkt->row;
         bank.freeAt = curTick() + addDelay + accessLat;
+        bank.bytesAccessed += bytesPerCacheLine;
+
         // If you activated a new row do to this access, the next access
         // will have to respect tRAS for this bank. Assume tRAS ~= 3 * tRP.
         // Also need to account for t_XAW
@@ -905,6 +914,10 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             bank.tRASDoneAt = bank.freeAt + tRP;
             recordActivate(bank.freeAt - tCL - tRCD); //since this is open page,
                                                       //no tRP by default
+            // sample the number of bytes accessed and reset it as
+            // we are now closing this row
+            bytesPerActivate.sample(bank.bytesAccessed);
+            bank.bytesAccessed = 0;
         }
     } else if (pageMgmt == Enums::close) { // accounting for tRAS also
         // assuming that tRAS ~= 3 * tRP, and tRC ~= 4 * tRP, as is common
@@ -912,6 +925,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
         bank.freeAt = curTick() + addDelay + accessLat + tRP + tRP;
         recordActivate(bank.freeAt - tRP - tRP - tCL - tRCD); //essentially (freeAt - tRC)
         DPRINTF(DRAM,"doDRAMAccess::bank.freeAt is %lld\n",bank.freeAt);
+        bytesPerActivate.sample(bytesPerCacheLine);
     } else
         panic("No page management policy chosen\n");
 
@@ -1192,6 +1206,11 @@ SimpleDRAM::regStats()
         .name(name() + ".wrQLenPdf")
         .desc("What write queue length does an incoming req see");
 
+     bytesPerActivate
+         .init(bytesPerCacheLine * linesPerRowBuffer)
+         .name(name() + ".bytesPerActivate")
+         .desc("Bytes accessed per row activation")
+         .flags(nozero);
 
     bytesRead
         .name(name() + ".bytesRead")
