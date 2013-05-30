@@ -85,7 +85,23 @@
 
 import struct
 import sys
-import packet_pb2
+
+# Import the packet proto definitions. If they are not found, attempt
+# to generate them automatically. This assumes that the script is
+# executed from the gem5 root.
+try:
+    import packet_pb2
+except:
+    print "Did not find packet proto definitions, attempting to generate"
+    from subprocess import call
+    error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
+                  'src/proto/packet.proto'])
+    if not error:
+        import packet_pb2
+        print "Generated packet proto definitions"
+    else:
+        print "Failed to import packet proto definitions"
+        exit(-1)
 
 def EncodeVarint(out_file, value):
   """
