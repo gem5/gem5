@@ -315,9 +315,9 @@ TrafficGen::parseConfig()
     }
 
     // resize and populate state transition matrix
-    transitionMatrix.resize(transitions.size());
-    for (size_t i = 0; i < transitions.size(); i++) {
-        transitionMatrix[i].resize(transitions.size());
+    transitionMatrix.resize(states.size());
+    for (size_t i = 0; i < states.size(); i++) {
+        transitionMatrix[i].resize(states.size());
     }
 
     for (vector<Transition>::iterator t = transitions.begin();
@@ -327,9 +327,9 @@ TrafficGen::parseConfig()
 
     // ensure the egress edges do not have a probability larger than
     // one
-    for (size_t i = 0; i < transitions.size(); i++) {
+    for (size_t i = 0; i < states.size(); i++) {
         double sum = 0;
-        for (size_t j = 0; j < transitions.size(); j++) {
+        for (size_t j = 0; j < states.size(); j++) {
             sum += transitionMatrix[i][j];
         }
 
