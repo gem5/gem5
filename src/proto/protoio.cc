@@ -45,7 +45,7 @@ using namespace google::protobuf;
 
 ProtoOutputStream::ProtoOutputStream(const string& filename) :
     fileStream(filename.c_str(), ios::out | ios::binary | ios::trunc),
-    zeroCopyStream(NULL), gzipStream(NULL), codedStream(NULL)
+    wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for writing\n", filename);
@@ -53,17 +53,18 @@ ProtoOutputStream::ProtoOutputStream(const string& filename) :
     // Wrap the output file in a zero copy stream, that in turn is
     // wrapped in a gzip stream if the filename ends with .gz. The
     // latter stream is in turn wrapped in a coded stream
-    zeroCopyStream = new io::OstreamOutputStream(&fileStream);
+    wrappedFileStream = new io::OstreamOutputStream(&fileStream);
     if (filename.find_last_of('.') != string::npos &&
         filename.substr(filename.find_last_of('.') + 1) == "gz") {
-        gzipStream = new io::GzipOutputStream(zeroCopyStream);
-        codedStream = new io::CodedOutputStream(gzipStream);
+        gzipStream = new io::GzipOutputStream(wrappedFileStream);
+        zeroCopyStream = gzipStream;
     } else {
-        codedStream = new io::CodedOutputStream(zeroCopyStream);
+        zeroCopyStream = wrappedFileStream;
     }
 
     // Write the magic number to the file
-    codedStream->WriteLittleEndian32(magicNumber);
+    io::CodedOutputStream codedStream(zeroCopyStream);
+    codedStream.WriteLittleEndian32(magicNumber);
 
     // Note that each type of stream (packet, instruction etc) should
     // add its own header and perform the appropriate checks
@@ -71,29 +72,32 @@ ProtoOutputStream::ProtoOutputStream(const string& filename) :
 
 ProtoOutputStream::~ProtoOutputStream()
 {
-    delete codedStream;
     // As the compression is optional, see if the stream exists
     if (gzipStream != NULL)
         delete gzipStream;
-    delete zeroCopyStream;
+    delete wrappedFileStream;
     fileStream.close();
 }
 
 void
 ProtoOutputStream::write(const Message& msg)
 {
+    // Due to the byte limit of the coded stream we create it for
+    // every single mesage (based on forum discussions around the size
+    // limitation)
+    io::CodedOutputStream codedStream(zeroCopyStream);
+
     // Write the size of the message to the stream
-    codedStream->WriteVarint32(msg.ByteSize());
+    codedStream.WriteVarint32(msg.ByteSize());
 
     // Write the message itself to the stream
-    if (!msg.SerializeToCodedStream(codedStream))
-        panic("Unable to write message to coded stream\n");
+    msg.SerializeWithCachedSizes(&codedStream);
 }
 
 ProtoInputStream::ProtoInputStream(const string& filename) :
     fileStream(filename.c_str(), ios::in | ios::binary), fileName(filename),
     useGzip(false),
-    zeroCopyStream(NULL), gzipStream(NULL), codedStream(NULL)
+    wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for reading\n", filename);
@@ -114,22 +118,23 @@ void
 ProtoInputStream::createStreams()
 {
     // All streams should be NULL at this point
-    assert(zeroCopyStream == NULL && gzipStream == NULL &&
-           codedStream == NULL);
+    assert(wrappedFileStream == NULL && gzipStream == NULL &&
+           zeroCopyStream == NULL);
 
     // Wrap the input file in a zero copy stream, that in turn is
     // wrapped in a gzip stream if the filename ends with .gz. The
     // latter stream is in turn wrapped in a coded stream
-    zeroCopyStream = new io::IstreamInputStream(&fileStream);
+    wrappedFileStream = new io::IstreamInputStream(&fileStream);
     if (useGzip) {
-        gzipStream = new io::GzipInputStream(zeroCopyStream);
-        codedStream = new io::CodedInputStream(gzipStream);
+        gzipStream = new io::GzipInputStream(wrappedFileStream);
+        zeroCopyStream = gzipStream;
     } else {
-        codedStream = new io::CodedInputStream(zeroCopyStream);
+        zeroCopyStream = wrappedFileStream;
     }
 
     uint32_t magic_check;
-    if (!codedStream->ReadLittleEndian32(&magic_check) ||
+    io::CodedInputStream codedStream(zeroCopyStream);
+    if (!codedStream.ReadLittleEndian32(&magic_check) ||
         magic_check != magicNumber)
         panic("Input file %s is not a valid gem5 proto format.\n",
               fileName);
@@ -138,14 +143,14 @@ ProtoInputStream::createStreams()
 void
 ProtoInputStream::destroyStreams()
 {
-    delete codedStream;
-    codedStream = NULL;
     // As the compression is optional, see if the stream exists
     if (gzipStream != NULL) {
         delete gzipStream;
         gzipStream = NULL;
     }
-    delete zeroCopyStream;
+    delete wrappedFileStream;
+    wrappedFileStream = NULL;
+
     zeroCopyStream = NULL;
 }
 
@@ -173,10 +178,15 @@ ProtoInputStream::read(Message& msg)
     // Read a message from the stream by getting the size, using it as
     // a limit when parsing the message, then popping the limit again
     uint32_t size;
-    if (codedStream->ReadVarint32(&size)) {
-        io::CodedInputStream::Limit limit = codedStream->PushLimit(size);
-        if (msg.ParseFromCodedStream(codedStream)) {
-            codedStream->PopLimit(limit);
+
+    // Due to the byte limit of the coded stream we create it for
+    // every single mesage (based on forum discussions around the size
+    // limitation)
+    io::CodedInputStream codedStream(zeroCopyStream);
+    if (codedStream.ReadVarint32(&size)) {
+        io::CodedInputStream::Limit limit = codedStream.PushLimit(size);
+        if (msg.ParseFromCodedStream(&codedStream)) {
+            codedStream.PopLimit(limit);
             // All went well, the message is parsed and the limit is
             // popped again
             return true;

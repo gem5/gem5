@@ -122,13 +122,13 @@ class ProtoOutputStream : public ProtoStream
     std::ofstream fileStream;
 
     /// Zero Copy stream wrapping the STL output stream
-    google::protobuf::io::OstreamOutputStream* zeroCopyStream;
+    google::protobuf::io::OstreamOutputStream* wrappedFileStream;
 
     /// Optional Gzip stream to wrap the Zero Copy stream
     google::protobuf::io::GzipOutputStream* gzipStream;
 
-    /// Top-level coded stream that messages are written to
-    google::protobuf::io::CodedOutputStream* codedStream;
+    /// Top-level zero-copy stream, either with compression or not
+    google::protobuf::io::ZeroCopyOutputStream* zeroCopyStream;
 
 };
 
@@ -193,13 +193,13 @@ class ProtoInputStream : public ProtoStream
     bool useGzip;
 
     /// Zero Copy stream wrapping the STL input stream
-    google::protobuf::io::IstreamInputStream* zeroCopyStream;
+    google::protobuf::io::IstreamInputStream* wrappedFileStream;
 
     /// Optional Gzip stream to wrap the Zero Copy stream
     google::protobuf::io::GzipInputStream* gzipStream;
 
-    /// Top-level coded stream that messages are read from
-    google::protobuf::io::CodedInputStream* codedStream;
+    /// Top-level zero-copy stream, either with compression or not
+    google::protobuf::io::ZeroCopyInputStream* zeroCopyStream;
 
 };
 
