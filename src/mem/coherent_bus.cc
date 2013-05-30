@@ -92,6 +92,7 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
         slavePorts.push_back(bp);
         respLayers.push_back(new RespLayer(*bp, *this,
                                            csprintf(".respLayer%d", i)));
+        snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
 
     clearPortCache();
@@ -105,6 +106,8 @@ CoherentBus::~CoherentBus()
         delete *l;
     for (auto l = snoopLayers.begin(); l != snoopLayers.end(); ++l)
         delete *l;
+    for (auto p = snoopRespPorts.begin(); p != snoopRespPorts.end(); ++p)
+        delete *p;
 }
 
 void
@@ -338,6 +341,14 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
             return false;
         }
+    } else {
+        // get the master port that mirrors this slave port internally
+        MasterPort* snoop_port = snoopRespPorts[slave_port_id];
+        if (!respLayers[dest_port_id]->tryTiming(snoop_port)) {
+            DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
+                    snoop_port->name(), pkt->cmdString(), pkt->getAddr());
+            return false;
+        }
     }
 
     DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x\n",
@@ -393,6 +404,8 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // currently it is illegal to block responses... can lead
         // to deadlock
         assert(success);
+
+        respLayers[dest_port_id]->succeededTiming(packetFinishTime);
     }
 
     // stats updates

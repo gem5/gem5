@@ -251,7 +251,7 @@ class MasterPort : public BaseMasterPort
      * Send a retry to the slave port that previously attempted a
      * sendTimingResp to this master port and failed.
      */
-    void sendRetry();
+    virtual void sendRetry();
 
     /**
      * Determine if this master port is snooping or not. The default

@@ -189,12 +189,20 @@ template <typename SrcType, typename DstType>
 bool
 BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 {
-    // first we see if the layer is busy, next we check if we are in a
-    // retry with a port other than the current one, lastly we check
-    // if the destination port is already engaged in a transaction
-    // waiting for a retry from the peer
-    if (state == BUSY || (state == RETRY && src_port != retryingPort) ||
-        waitingForPeer != NULL) {
+    // if we are in the retry state, we will not see anything but the
+    // retrying port (or in the case of the snoop ports the snoop
+    // response port that mirrors the actual slave port) as we leave
+    // this state again in zero time if the peer does not immediately
+    // call the bus when receiving the retry
+
+    // first we see if the layer is busy, next we check if the
+    // destination port is already engaged in a transaction waiting
+    // for a retry from the peer
+    if (state == BUSY || waitingForPeer != NULL) {
+        // the port should not be waiting already
+        assert(std::find(waitingForLayer.begin(), waitingForLayer.end(),
+                         src_port) == waitingForLayer.end());
+
         // put the port at the end of the retry list waiting for the
         // layer to be freed up (and in the case of a busy peer, for
         // that transaction to go through, and then the bus to free

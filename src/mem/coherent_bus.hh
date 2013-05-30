@@ -219,6 +219,57 @@ class CoherentBus : public BaseBus
 
     };
 
+    /**
+     * Internal class to bridge between an incoming snoop response
+     * from a slave port and forwarding it through an outgoing slave
+     * port. It is effectively a dangling master port.
+     */
+    class SnoopRespPort : public MasterPort
+    {
+
+      private:
+
+        /** The port which we mirror internally. */
+        SlavePort& slavePort;
+
+        /** The bus to which this port belongs. */
+        CoherentBus &bus;
+
+      public:
+
+        /**
+         * Create a snoop response port that mirrors a given slave port.
+         */
+        SnoopRespPort(SlavePort& slave_port, CoherentBus& _bus) :
+            MasterPort(slave_port.name() + ".snoopRespPort", &_bus),
+            slavePort(slave_port), bus(_bus) { }
+
+        /**
+         * Override the sending of retries and pass them on through
+         * the mirrored slave port.
+         */
+        void sendRetry() {
+            slavePort.sendRetry();
+        }
+
+        /**
+         * Provided as necessary.
+         */
+        void recvRetry() { panic("SnoopRespPort should never see retry\n"); }
+
+        /**
+         * Provided as necessary.
+         */
+        bool recvTimingResp(PacketPtr pkt)
+        {
+            panic("SnoopRespPort should never see timing response\n");
+            return false;
+        }
+
+    };
+
+    std::vector<SnoopRespPort*> snoopRespPorts;
+
     std::vector<SlavePort*> snoopPorts;
 
     /**
