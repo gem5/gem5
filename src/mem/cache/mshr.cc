@@ -462,7 +462,7 @@ MSHR::checkFunctional(PacketPtr pkt)
 void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
-    ccprintf(os, "%s[%x:%x] %s %s %s state: %s %s %s %s\n",
+    ccprintf(os, "%s[%x:%x] %s %s %s state: %s %s %s %s %s\n",
              prefix, addr, addr+size-1,
              isForward ? "Forward" : "",
              isForwardNoResponse() ? "ForwNoResp" : "",
