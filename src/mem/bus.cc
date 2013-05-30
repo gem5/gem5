@@ -259,7 +259,7 @@ BaseBus::Layer<PortClass>::releaseLayer()
     // bus layer is now idle, so if someone is waiting we can retry
     if (!waitingForLayer.empty()) {
         retryWaiting();
-    } else if (drainManager) {
+    } else if (waitingForPeer == NULL && drainManager) {
         DPRINTF(Drain, "Bus done draining, signaling drain manager\n");
         //If we weren't able to drain before, do it now.
         drainManager->signalDrainDone();
