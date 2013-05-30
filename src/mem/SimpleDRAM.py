@@ -277,3 +277,41 @@ class SimpleWideIO(SimpleDRAM):
     # Two instead of four activation window
     tXAW = '50ns'
     activation_limit = 2
+
+# High-level model of a single LPDDR3 x32 interface (one
+# command/address bus), with default timings based on a LPDDR3-1600 4
+# Gbit part
+class SimpleLPDDR3(SimpleDRAM):
+    # 4 Gb and 8 Gb devices use a 1 kByte page size, so ssuming 64 byte
+    # cache lines, that is 16 lines
+    lines_per_rowbuffer = 16
+
+    # Use a single rank
+    ranks_per_channel = 1
+
+    # LPDDR3 has 8 banks in all configurations
+    banks_per_rank = 8
+
+    # Fixed at 15 ns
+    tRCD = '15ns'
+
+    # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
+    tCL = '15ns'
+
+    # Pre-charge one bank 15 ns and all banks 18 ns
+    tRP = '18ns'
+
+    # Assuming 64 byte cache lines, across a x32 DDR interface
+    # translates to two bursts of BL8, 8 clocks @ 800 MHz
+    tBURST = '10ns'
+
+    # LPDDR3, 4 Gb
+    tRFC = '130ns'
+    tREFI = '3.9us'
+
+    # Irrespective of speed grade, tWTR is 7.5 ns
+    tWTR = '7.5ns'
+
+    # Irrespective of size, tFAW is 50 ns
+    tXAW = '50ns'
+    activation_limit = 4

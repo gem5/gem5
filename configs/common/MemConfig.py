@@ -52,6 +52,7 @@ _mem_aliases_all = [
     ("simple_mem", "SimpleMemory"),
     ("ddr3-1600", "SimpleDDR3"),
     ("lpddr2_s4-1066", "SimpleLPDDR2_S4"),
+    ("lpddr3-1600", "SimpleLPDDR3"),
     ("wio-200", "SimpleWideIO"),
     ]
 
