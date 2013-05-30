@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -63,15 +63,6 @@ class MSHRQueue : public Drainable
     /** Local label (for functional print requests) */
     const std::string label;
 
-    /**  MSHR storage. */
-    MSHR *registers;
-    /** Holds pointers to all allocated entries. */
-    MSHR::List allocatedList;
-    /** Holds pointers to entries that haven't been sent to the bus. */
-    MSHR::List readyList;
-    /** Holds non allocated entries. */
-    MSHR::List freeList;
-
     // Parameters
     /**
      * The total number of entries in this queue. This number is set as the
@@ -85,6 +76,15 @@ class MSHRQueue : public Drainable
      * operations can allocate upto 4 entries at one time.
      */
     const int numReserve;
+
+    /**  MSHR storage. */
+    std::vector<MSHR> registers;
+    /** Holds pointers to all allocated entries. */
+    MSHR::List allocatedList;
+    /** Holds pointers to entries that haven't been sent to the bus. */
+    MSHR::List readyList;
+    /** Holds non allocated entries. */
+    MSHR::List freeList;
 
     /** Drain manager to inform of a completed drain */
     DrainManager *drainManager;
@@ -109,9 +109,6 @@ class MSHRQueue : public Drainable
      */
     MSHRQueue(const std::string &_label, int num_entries, int reserve,
               int index);
-
-    /** Destructor */
-    ~MSHRQueue();
 
     /**
      * Find the first MSHR that matches the provided address.

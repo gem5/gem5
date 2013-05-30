@@ -61,13 +61,12 @@
 
 using namespace std;
 
-MSHR::MSHR()
+MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
+               pendingDirty(false), postInvalidate(false),
+               postDowngrade(false), queue(NULL), order(0), addr(0), size(0),
+               inService(false), isForward(false), threadNum(InvalidThreadID),
+               data(NULL)
 {
-    inService = false;
-    ntargets = 0;
-    threadNum = InvalidThreadID;
-    targets = new TargetList();
-    deferredTargets = new TargetList();
 }
 
 
@@ -215,14 +214,13 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     inService = false;
     downstreamPending = false;
     threadNum = 0;
-    ntargets = 1;
-    assert(targets->isReset());
+    assert(targets.isReset());
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem-side request), so set source according to request here
     Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
         Target::FromPrefetcher : Target::FromCPU;
-    targets->add(target, whenReady, _order, source, true);
-    assert(deferredTargets->isReset());
+    targets.add(target, whenReady, _order, source, true);
+    assert(deferredTargets.isReset());
     data = NULL;
 }
 
@@ -234,7 +232,7 @@ MSHR::clearDownstreamPending()
     downstreamPending = false;
     // recursively clear flag on any MSHRs we will be forwarding
     // responses to
-    targets->clearDownstreamPending();
+    targets.clearDownstreamPending();
 }
 
 bool
@@ -249,14 +247,14 @@ MSHR::markInService(PacketPtr pkt)
         return true;
     }
     inService = true;
-    pendingDirty = (targets->needsExclusive ||
+    pendingDirty = (targets.needsExclusive ||
                     (!pkt->sharedAsserted() && pkt->memInhibitAsserted()));
     postInvalidate = postDowngrade = false;
 
     if (!downstreamPending) {
         // let upstream caches know that the request has made it to a
         // level where it's going to get a response
-        targets->clearDownstreamPending();
+        targets.clearDownstreamPending();
     }
     return false;
 }
@@ -265,10 +263,9 @@ MSHR::markInService(PacketPtr pkt)
 void
 MSHR::deallocate()
 {
-    assert(targets->empty());
-    targets->resetFlags();
-    assert(deferredTargets->isReset());
-    assert(ntargets == 0);
+    assert(targets.empty());
+    targets.resetFlags();
+    assert(deferredTargets.isReset());
     inService = false;
 }
 
@@ -294,22 +291,20 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
     assert(pkt->cmd != MemCmd::HardPFReq);
 
     if (inService &&
-        (!deferredTargets->empty() || hasPostInvalidate() ||
+        (!deferredTargets.empty() || hasPostInvalidate() ||
          (pkt->needsExclusive() &&
           (!isPendingDirty() || hasPostDowngrade() || isForward)))) {
         // need to put on deferred list
         if (hasPostInvalidate())
             replaceUpgrade(pkt);
-        deferredTargets->add(pkt, whenReady, _order, Target::FromCPU, true);
+        deferredTargets.add(pkt, whenReady, _order, Target::FromCPU, true);
     } else {
         // No request outstanding, or still OK to append to
         // outstanding request: append to regular target list.  Only
         // mark pending if current request hasn't been issued yet
         // (isn't in service).
-        targets->add(pkt, whenReady, _order, Target::FromCPU, !inService);
+        targets.add(pkt, whenReady, _order, Target::FromCPU, !inService);
     }
-
-    ++ntargets;
 }
 
 bool
@@ -332,8 +327,8 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // local bus first, some other invalidating transaction
         // reached the global bus before the upgrade did.
         if (pkt->needsExclusive()) {
-            targets->replaceUpgrades();
-            deferredTargets->replaceUpgrades();
+            targets.replaceUpgrades();
+            deferredTargets.replaceUpgrades();
         }
 
         return false;
@@ -344,7 +339,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     if (pkt->needsExclusive()) {
         // snooped request still precedes the re-request we'll have to
         // issue for deferred targets, if any...
-        deferredTargets->replaceUpgrades();
+        deferredTargets.replaceUpgrades();
     }
 
     if (hasPostInvalidate()) {
@@ -365,9 +360,8 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // Actual target device (typ. a memory) will delete the
         // packet on reception, so we need to save a copy here.
         PacketPtr cp_pkt = new Packet(pkt, true);
-        targets->add(cp_pkt, curTick(), _order, Target::FromSnoop,
-                     downstreamPending && targets->needsExclusive);
-        ++ntargets;
+        targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
+                     downstreamPending && targets.needsExclusive);
 
         if (isPendingDirty()) {
             pkt->assertMemInhibit();
@@ -394,23 +388,19 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 bool
 MSHR::promoteDeferredTargets()
 {
-    assert(targets->empty());
-    if (deferredTargets->empty()) {
+    assert(targets.empty());
+    if (deferredTargets.empty()) {
         return false;
     }
 
     // swap targets & deferredTargets lists
-    TargetList *tmp = targets;
-    targets = deferredTargets;
-    deferredTargets = tmp;
-
-    assert(targets->size() == ntargets);
+    std::swap(targets, deferredTargets);
 
     // clear deferredTargets flags
-    deferredTargets->resetFlags();
+    deferredTargets.resetFlags();
 
-    order = targets->front().order;
-    readyTime = std::max(curTick(), targets->front().readyTime);
+    order = targets.front().order;
+    readyTime = std::max(curTick(), targets.front().readyTime);
 
     return true;
 }
@@ -421,7 +411,7 @@ MSHR::handleFill(Packet *pkt, CacheBlk *blk)
 {
     if (!pkt->sharedAsserted()
         && !(hasPostInvalidate() || hasPostDowngrade())
-        && deferredTargets->needsExclusive) {
+        && deferredTargets.needsExclusive) {
         // We got an exclusive response, but we have deferred targets
         // which are waiting to request an exclusive copy (not because
         // of a pending invalidate).  This can happen if the original
@@ -430,15 +420,15 @@ MSHR::handleFill(Packet *pkt, CacheBlk *blk)
         // MOESI/MESI protocol.  Since we got the exclusive copy
         // there's no need to defer the targets, so move them up to
         // the regular target list.
-        assert(!targets->needsExclusive);
-        targets->needsExclusive = true;
+        assert(!targets.needsExclusive);
+        targets.needsExclusive = true;
         // if any of the deferred targets were upper-level cache
         // requests marked downstreamPending, need to clear that
         assert(!downstreamPending);  // not pending here anymore
-        deferredTargets->clearDownstreamPending();
+        deferredTargets.clearDownstreamPending();
         // this clears out deferredTargets too
-        targets->splice(targets->end(), *deferredTargets);
-        deferredTargets->resetFlags();
+        targets.splice(targets.end(), deferredTargets);
+        deferredTargets.resetFlags();
     }
 }
 
@@ -453,8 +443,8 @@ MSHR::checkFunctional(PacketPtr pkt)
         pkt->checkFunctional(this, addr, size, NULL);
         return false;
     } else {
-        return (targets->checkFunctional(pkt) ||
-                deferredTargets->checkFunctional(pkt));
+        return (targets.checkFunctional(pkt) ||
+                deferredTargets.checkFunctional(pkt));
     }
 }
 
@@ -474,10 +464,10 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              hasPostDowngrade() ? "PostDowngr" : "");
 
     ccprintf(os, "%s  Targets:\n", prefix);
-    targets->print(os, verbosity, prefix + "    ");
-    if (!deferredTargets->empty()) {
+    targets.print(os, verbosity, prefix + "    ");
+    if (!deferredTargets.empty()) {
         ccprintf(os, "%s  Deferred Targets:\n", prefix);
-        deferredTargets->print(os, verbosity, prefix + "      ");
+        deferredTargets.print(os, verbosity, prefix + "      ");
     }
 }
 
@@ -487,10 +477,4 @@ MSHR::print() const
     ostringstream str;
     print(str);
     return str.str();
-}
-
-MSHR::~MSHR()
-{
-    delete[] targets;
-    delete[] deferredTargets;
 }

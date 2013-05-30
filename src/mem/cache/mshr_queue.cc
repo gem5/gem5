@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -51,22 +51,14 @@ using namespace std;
 
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve, int _index)
-    : label(_label),
-      numEntries(num_entries + reserve - 1), numReserve(reserve),
-      drainManager(NULL), index(_index)
+    : label(_label), numEntries(num_entries + reserve - 1),
+      numReserve(reserve), registers(numEntries),
+      drainManager(NULL), allocated(0), inServiceEntries(0), index(_index)
 {
-    allocated = 0;
-    inServiceEntries = 0;
-    registers = new MSHR[numEntries];
     for (int i = 0; i < numEntries; ++i) {
         registers[i].queue = this;
         freeList.push_back(&registers[i]);
     }
-}
-
-MSHRQueue::~MSHRQueue()
-{
-    delete [] registers;
 }
 
 MSHR *
@@ -253,7 +245,7 @@ MSHRQueue::squash(int threadNum)
                 assert(0/*target->req->threadId()*/ == threadNum);
             }
             assert(!mshr->hasTargets());
-            assert(mshr->ntargets==0);
+            assert(mshr->getNumTargets()==0);
             if (!mshr->inService) {
                 i = deallocateOne(mshr);
             } else {

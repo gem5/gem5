@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -64,6 +64,31 @@ class MSHRQueue;
 class MSHR : public Packet::SenderState, public Printable
 {
 
+    /**
+     * Consider the MSHRQueue a friend to avoid making everything public
+     */
+    friend class MSHRQueue;
+
+  private:
+
+    /** Cycle when ready to issue */
+    Tick readyTime;
+
+    /** True if the request is uncacheable */
+    bool _isUncacheable;
+
+    /** Flag set by downstream caches */
+    bool downstreamPending;
+
+    /** Will we have a dirty copy after this request? */
+    bool pendingDirty;
+
+    /** Did we snoop an invalidate while waiting for data? */
+    bool postInvalidate;
+
+    /** Did we snoop a read while waiting for data? */
+    bool postDowngrade;
+
   public:
 
     class Target {
@@ -121,9 +146,6 @@ class MSHR : public Packet::SenderState, public Printable
     /** Pointer to queue containing this MSHR. */
     MSHRQueue *queue;
 
-    /** Cycle when ready to issue */
-    Tick readyTime;
-
     /** Order number assigned by the miss queue. */
     Counter order;
 
@@ -139,42 +161,30 @@ class MSHR : public Packet::SenderState, public Printable
     /** True if the request is just a simple forward from an upper level */
     bool isForward;
 
-    /** True if we need to get an exclusive copy of the block. */
-    bool needsExclusive() const { return targets->needsExclusive; }
-
-    /** True if the request is uncacheable */
-    bool _isUncacheable;
-
-    bool downstreamPending;
-
     /** The pending* and post* flags are only valid if inService is
      *  true.  Using the accessor functions lets us detect if these
      *  flags are accessed improperly.
      */
 
-    /** Will we have a dirty copy after this request? */
-    bool pendingDirty;
+    /** True if we need to get an exclusive copy of the block. */
+    bool needsExclusive() const { return targets.needsExclusive; }
+
     bool isPendingDirty() const {
         assert(inService); return pendingDirty;
     }
 
-    /** Did we snoop an invalidate while waiting for data? */
-    bool postInvalidate;
     bool hasPostInvalidate() const {
         assert(inService); return postInvalidate;
     }
 
-    /** Did we snoop a read while waiting for data? */
-    bool postDowngrade;
     bool hasPostDowngrade() const {
         assert(inService); return postDowngrade;
     }
 
     /** Thread number of the miss. */
     ThreadID threadNum;
-    /** The number of currently allocated targets. */
-    unsigned short ntargets;
 
+  private:
 
     /** Data buffer (if needed).  Currently used only for pending
      * upgrade handling. */
@@ -192,15 +202,14 @@ class MSHR : public Packet::SenderState, public Printable
      */
     Iterator allocIter;
 
-private:
     /** List of all requests that match the address */
-    TargetList *targets;
+    TargetList targets;
 
-    TargetList *deferredTargets;
+    TargetList deferredTargets;
 
-public:
+  public:
 
-    bool isUncacheable() { return _isUncacheable; }
+    bool isUncacheable() const { return _isUncacheable; }
 
     /**
      * Allocate a miss to this MSHR.
@@ -231,35 +240,28 @@ public:
 
     /** A simple constructor. */
     MSHR();
-    /** A simple destructor. */
-    ~MSHR();
 
     /**
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets() const { return ntargets; }
-
-    /**
-     * Returns a pointer to the target list.
-     * @return a pointer to the target list.
-     */
-    TargetList *getTargetList() { return targets; }
+    int getNumTargets() const
+    { return targets.size() + deferredTargets.size(); }
 
     /**
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets() const { return !targets->empty(); }
+    bool hasTargets() const { return !targets.empty(); }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() const
+    Target *getTarget()
     {
         assert(hasTargets());
-        return &targets->front();
+        return &targets.front();
     }
 
     /**
@@ -267,15 +269,14 @@ public:
      */
     void popTarget()
     {
-        --ntargets;
-        targets->pop_front();
+        targets.pop_front();
     }
 
     bool isForwardNoResponse() const
     {
         if (getNumTargets() != 1)
             return false;
-        Target *tgt = getTarget();
+        const Target *tgt = &targets.front();
         return tgt->source == Target::FromCPU && !tgt->pkt->needsResponse();
     }
 
