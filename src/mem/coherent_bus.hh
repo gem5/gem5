@@ -51,6 +51,7 @@
 #ifndef __MEM_COHERENT_BUS_HH__
 #define __MEM_COHERENT_BUS_HH__
 
+#include "base/hashmap.hh"
 #include "mem/bus.hh"
 #include "params/CoherentBus.hh"
 
@@ -222,7 +223,7 @@ class CoherentBus : public BaseBus
      * we generated and which ones were merely forwarded. This is used
      * in the coherent bus when coherency responses come back.
      */
-    std::set<RequestPtr> outstandingReq;
+    m5::hash_set<RequestPtr> outstandingReq;
 
     /**
      * Keep a pointer to the system to be allow to querying memory system

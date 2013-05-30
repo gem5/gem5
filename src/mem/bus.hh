@@ -52,7 +52,6 @@
 #define __MEM_BUS_HH__
 
 #include <deque>
-#include <set>
 
 #include "base/addr_range_map.hh"
 #include "base/types.hh"
