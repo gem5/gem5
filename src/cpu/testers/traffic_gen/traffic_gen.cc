@@ -277,6 +277,9 @@ TrafficGen::parseConfig()
                     if (read_percent > 100)
                         fatal("%s cannot have more than 100% reads", name());
 
+                    if (min_period > max_period)
+                        fatal("%s cannot have min_period > max_period", name());
+
                     if (mode == "LINEAR") {
                         states[id] = new LinearGen(name(), masterID,
                                                    duration, start_addr,
