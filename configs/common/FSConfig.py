@@ -180,10 +180,8 @@ def makeSparcSystem(mem_mode, MemClass, mdesc = None):
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)
-    self.physmem = MemClass(range = AddrRange(Addr('1MB'), size = '64MB'),
-                            zero = True)
-    self.physmem2 = MemClass(range = AddrRange(Addr('2GB'), size ='256MB'),
-                             zero = True)
+    self.physmem = MemClass(range = AddrRange(Addr('1MB'), size = '64MB'))
+    self.physmem2 = MemClass(range = AddrRange(Addr('2GB'), size ='256MB'))
     self.mem_ranges = [self.physmem.range, self.physmem2.range]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
@@ -275,8 +273,7 @@ def makeArmSystem(mem_mode, machine_type, MemClass, mdesc = None,
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.physmem = MemClass(range = AddrRange(Addr(mdesc.mem())),
-                                zero = True)
+        self.physmem = MemClass(range = AddrRange(Addr(mdesc.mem())))
         self.mem_ranges = [self.physmem.range]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')

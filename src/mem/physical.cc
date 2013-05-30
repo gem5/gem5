@@ -162,10 +162,6 @@ PhysicalMemory::createBackingStore(AddrRange range,
     // it appropriately
     backingStore.push_back(make_pair(range, pmem));
 
-    // count how many of the memories are to be zero initialized so we
-    // can see if some but not all have this parameter set
-    uint32_t init_to_zero = 0;
-
     // point the memories to their backing store, and if requested,
     // initialize the memory range to 0
     for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
@@ -173,19 +169,6 @@ PhysicalMemory::createBackingStore(AddrRange range,
         DPRINTF(BusAddrRanges, "Mapping memory %s to backing store\n",
                 (*m)->name());
         (*m)->setBackingStore(pmem);
-
-        // if it should be zero, then go and make it so
-        if ((*m)->initToZero()) {
-            ++init_to_zero;
-        }
-    }
-
-    if (init_to_zero != 0) {
-        if (init_to_zero != _memories.size())
-            fatal("Some, but not all memories in range %s are set zero\n",
-                  range.to_string());
-
-        memset(pmem, 0, range.size());
     }
 }
 

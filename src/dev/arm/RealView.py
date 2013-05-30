@@ -162,8 +162,7 @@ class RealView(Platform):
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange(Addr('2GB'),
-                                                    size = '64MB'),
-                                  zero = True)
+                                                    size = '64MB'))
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot.arm')
 
@@ -360,8 +359,7 @@ class VExpress_EMM(RealView):
                         InterruptLine=2, InterruptPin=2)
 
 
-    vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
-                                  zero = True)
+    vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'))
     rtc            = PL031(pio_addr=0x1C170000, int_num=36)
 
     l2x0_fake      = IsaFake(pio_addr=0x2C100000, pio_size=0xfff)
@@ -376,8 +374,7 @@ class VExpress_EMM(RealView):
     mmc_fake       = AmbaFake(pio_addr=0x1c050000)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'),
-                                  zero = True)
+        self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'))
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot_emm.arm')
         cur_sys.atags_addr = 0x80000100

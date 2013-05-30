@@ -203,13 +203,6 @@ class AbstractMemory : public MemObject
     bool isNull() const { return params()->null; }
 
     /**
-     * See if this memory should be initialized to zero or not.
-     *
-     * @return true if zero
-     */
-    bool initToZero() const { return params()->zero; }
-
-    /**
      * Set the host memory backing store to be used by this memory
      * controller.
      *
