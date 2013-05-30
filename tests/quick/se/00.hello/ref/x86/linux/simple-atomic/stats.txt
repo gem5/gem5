@@ -33,6 +33,9 @@ system.physmem.bw_write::total             1266607302                       # Wr
 system.physmem.bw_total::cpu.inst          9779519145                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data          2525022262                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total            12304541407                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                  12304541407                       # Throughput (bytes/s)
+system.membus.data_through_bus                  69090                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
 system.cpu.numCycles                            11231                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

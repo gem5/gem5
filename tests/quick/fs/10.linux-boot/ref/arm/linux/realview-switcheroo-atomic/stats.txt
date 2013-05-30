@@ -4,25 +4,13 @@ sim_seconds                                  2.332810                       # Nu
 sim_ticks                                2332810264000                       # Number of ticks simulated
 final_tick                               2332810264000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1307768                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1681709                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            50502250863                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 395644                       # Number of bytes of host memory used
-host_seconds                                    46.19                       # Real time elapsed on the host
+host_inst_rate                                 662335                       # Simulator instruction rate (inst/s)
+host_op_rate                                   851722                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            25577480180                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 396424                       # Number of bytes of host memory used
+host_seconds                                    91.21                       # Real time elapsed on the host
 sim_insts                                    60408639                       # Number of instructions simulated
 sim_ops                                      77681819                       # Number of ops (including micro ops) simulated
-system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu0.inst            9                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total                9                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu0.inst            9                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu0.inst            9                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd    111673344                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker          128                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          192                       # Number of bytes read from this memory
@@ -196,6 +184,9 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
+system.physmem.bytesPerActivate::mean             nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::gmean            nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::stdev            nan                       # Bytes accessed per row activation
 system.physmem.totQLat                              0                       # Total cycles spent in queuing delays
 system.physmem.totMemAccLat                         0                       # Sum of mem lat for all requests
 system.physmem.totBusLat                            0                       # Total cycles spent in databus access
@@ -217,6 +208,21 @@ system.physmem.writeRowHits                         0                       # Nu
 system.physmem.readRowHitRate                     nan                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                    nan                       # Row buffer hit rate for writes
 system.physmem.avgGap                             nan                       # Average gap between requests
+system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu0.inst            9                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total                9                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu0.inst            9                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu0.inst            9                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                     55969561                       # Throughput (bytes/s)
+system.membus.data_through_bus              130566366                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.l2c.replacements                         62242                       # number of replacements
 system.l2c.tagsinuse                     50006.300222                       # Cycle average of tags in use
 system.l2c.total_refs                         1678485                       # Total number of references to valid blocks.
@@ -379,6 +385,11 @@ system.cf0.dma_read_txs                             0                       # Nu
 system.cf0.dma_write_full_pages                     0                       # Number of full page size DMA writes.
 system.cf0.dma_write_bytes                          0                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                            0                       # Number of DMA write transactions.
+system.toL2Bus.throughput                    59119250                       # Throughput (bytes/s)
+system.toL2Bus.data_through_bus             137913994                       # Total data (bytes)
+system.toL2Bus.snoop_data_through_bus               0                       # Total snoop data (bytes)
+system.iobus.throughput                      48895252                       # Throughput (bytes/s)
+system.iobus.data_through_bus               114063346                       # Total data (bytes)
 system.cpu0.dtb.inst_hits                           0                       # ITB inst hits
 system.cpu0.dtb.inst_misses                         0                       # ITB inst misses
 system.cpu0.dtb.read_hits                     7929205                       # DTB read hits

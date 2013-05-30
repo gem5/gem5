@@ -1,121 +1,121 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  5.205149                       # Number of seconds simulated
-sim_ticks                                5205148879000                       # Number of ticks simulated
-final_tick                               5205148879000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                5205149326500                       # Number of ticks simulated
+final_tick                               5205149326500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 131600                       # Simulator instruction rate (inst/s)
-host_op_rate                                   252290                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6421585329                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 872300                       # Number of bytes of host memory used
-host_seconds                                   810.57                       # Real time elapsed on the host
-sim_insts                                   106671342                       # Number of instructions simulated
-sim_ops                                     204498751                       # Number of ops (including micro ops) simulated
+host_inst_rate                                 156279                       # Simulator instruction rate (inst/s)
+host_op_rate                                   299599                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7625516175                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 825184                       # Number of bytes of host memory used
+host_seconds                                   682.60                       # Real time elapsed on the host
+sim_insts                                   106675228                       # Number of instructions simulated
+sim_ops                                     204505420                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide        35240                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.dtb.walker       160344                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.dtb.walker       160408                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker        75328                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.inst        562944184                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.data         41978278                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.dtb.walker        62896                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.inst        563007384                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.data         41989554                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.dtb.walker        62960                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.itb.walker        30152                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.inst        448071240                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.data         51341424                       # Number of bytes read from this memory
-system.physmem.bytes_read::total           1104699086                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read::cpu0.inst    562944184                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::cpu1.inst    448071240                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::total      1011015424                       # Number of instructions bytes read from this memory
+system.physmem.bytes_read::cpu1.inst        448053480                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.data         51339228                       # Number of bytes read from this memory
+system.physmem.bytes_read::total           1104753734                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu0.inst    563007384                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::cpu1.inst    448053480                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total      1011060864                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written::pc.south_bridge.ide      2991104                       # Number of bytes written to this memory
 system.physmem.bytes_written::cpu0.itb.walker           16                       # Number of bytes written to this memory
-system.physmem.bytes_written::cpu0.data      33612947                       # Number of bytes written to this memory
-system.physmem.bytes_written::cpu1.data      34199698                       # Number of bytes written to this memory
-system.physmem.bytes_written::total          70803765                       # Number of bytes written to this memory
+system.physmem.bytes_written::cpu0.data      33620576                       # Number of bytes written to this memory
+system.physmem.bytes_written::cpu1.data      34199208                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          70810904                       # Number of bytes written to this memory
 system.physmem.num_reads::pc.south_bridge.ide          821                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.dtb.walker        20043                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.dtb.walker        20051                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu0.itb.walker         9416                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.inst          70368023                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.data           6999506                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.dtb.walker         7862                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.inst          70375923                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.data           7001118                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.dtb.walker         7870                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.itb.walker         3769                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.inst          56008905                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.data           8662168                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total             142080513                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.inst          56006685                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.data           8661478                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total             142087131                       # Number of read requests responded to by this memory
 system.physmem.num_writes::pc.south_bridge.ide        46736                       # Number of write requests responded to by this memory
 system.physmem.num_writes::cpu0.itb.walker            2                       # Number of write requests responded to by this memory
-system.physmem.num_writes::cpu0.data          5025316                       # Number of write requests responded to by this memory
-system.physmem.num_writes::cpu1.data          4781707                       # Number of write requests responded to by this memory
-system.physmem.num_writes::total              9853761                       # Number of write requests responded to by this memory
+system.physmem.num_writes::cpu0.data          5026389                       # Number of write requests responded to by this memory
+system.physmem.num_writes::cpu1.data          4781632                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total              9854759                       # Number of write requests responded to by this memory
 system.physmem.bw_read::pc.south_bridge.ide         6770                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.dtb.walker         30805                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.dtb.walker         30817                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.itb.walker         14472                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.inst           108151409                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.data             8064760                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.dtb.walker         12083                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.inst           108163541                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.data             8066926                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.dtb.walker         12096                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.itb.walker          5793                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.inst            86082310                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.data             9863584                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total               212231986                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu0.inst      108151409                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu1.inst       86082310                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total          194233719                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.inst            86078891                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.data             9863161                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total               212242467                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu0.inst      108163541                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu1.inst       86078891                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total          194242432                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_write::pc.south_bridge.ide       574643                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_write::cpu0.itb.walker            3                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu0.data            6457634                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu1.data            6570359                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::total               13602640                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total::pc.south_bridge.ide       581414                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.dtb.walker        30805                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_write::cpu0.data            6459099                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu1.data            6570265                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total               13604010                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::pc.south_bridge.ide       581413                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.dtb.walker        30817                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.itb.walker        14475                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.inst          108151409                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.data           14522394                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.dtb.walker        12083                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.inst          108163541                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.data           14526025                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.dtb.walker        12096                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.itb.walker         5793                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.inst           86082310                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.data           16433943                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total              225834626                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.inst           86078891                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.data           16433426                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total              225846477                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.readReqs                           821                       # Total number of read requests seen
 system.physmem.writeReqs                        46736                       # Total number of write requests seen
-system.physmem.cpureqs                          47279                       # Reqs generatd by CPU via cache - shady
+system.physmem.cpureqs                          47259                       # Reqs generatd by CPU via cache - shady
 system.physmem.bytesRead                        52544                       # Total number of bytes read from memory
 system.physmem.bytesWritten                   2991104                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd                  35240                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                2991104                       # bytesWritten derated as per pkt->getSize()
 system.physmem.servicedByWrQ                        0                       # Number of read reqs serviced by write Q
 system.physmem.neitherReadNorWrite                  0                       # Reqs where no action is needed
-system.physmem.perBankRdReqs::0                    32                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::1                     0                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::2                    48                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::3                    64                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::4                   309                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::5                    32                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::6                    64                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::7                    64                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::8                    48                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::0                    80                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::1                    48                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::2                    16                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::3                    16                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::4                    32                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::5                    48                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::6                    48                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::7                    32                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::8                    32                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::9                    48                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::10                   32                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::11                   16                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::12                   16                       # Track reads on a per bank basis
-system.physmem.perBankRdReqs::13                   32                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::10                   80                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::11                    0                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::12                    0                       # Track reads on a per bank basis
+system.physmem.perBankRdReqs::13                  325                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::14                    0                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::15                   16                       # Track reads on a per bank basis
-system.physmem.perBankWrReqs::0                  2992                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::1                  2832                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::2                  3024                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::3                  2944                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::4                  2992                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::5                  2960                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::6                  2968                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::7                  2992                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::8                  2856                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::9                  2864                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::10                 2896                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::11                 2800                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::12                 2864                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::13                 2864                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::14                 2960                       # Track writes on a per bank basis
-system.physmem.perBankWrReqs::15                 2928                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::0                  2816                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::1                  2864                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::2                  2640                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::3                  2768                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::4                  2768                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::5                  3064                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::6                  2648                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::7                  2816                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::8                  3232                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::9                  3312                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::10                 3248                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::11                 3024                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::12                 2976                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::13                 2672                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::14                 2880                       # Track writes on a per bank basis
+system.physmem.perBankWrReqs::15                 3008                       # Track writes on a per bank basis
 system.physmem.numRdRetry                           0                       # Number of times rd buffer was full causing retry
-system.physmem.numWrRetry                          31                       # Number of times wr buffer was full causing retry
-system.physmem.totGap                     64277169000                       # Total gap between requests
+system.physmem.numWrRetry                          11                       # Number of times wr buffer was full causing retry
+system.physmem.totGap                     64277565999                       # Total gap between requests
 system.physmem.readPktSize::0                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::1                       0                       # Categorize read packet sizes
 system.physmem.readPktSize::2                       0                       # Categorize read packet sizes
@@ -162,15 +162,15 @@ system.physmem.rdQLenPdf::28                        2                       # Wh
 system.physmem.rdQLenPdf::29                        2                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::30                        2                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::31                        2                       # What read queue length does an incoming req see
-system.physmem.wrQLenPdf::0                      1965                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::1                      1974                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::2                      1995                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::3                      1997                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::4                      1997                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::5                      1997                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::6                      1997                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::7                      1998                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::8                      1999                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::0                      2010                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::1                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::2                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::3                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::4                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::5                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::6                      2020                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::7                      2021                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::8                      2021                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::9                      2032                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::10                     2032                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::11                     2032                       # What write queue length does an incoming req see
@@ -185,23 +185,66 @@ system.physmem.wrQLenPdf::19                     2032                       # Wh
 system.physmem.wrQLenPdf::20                     2032                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::21                     2032                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::22                     2032                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::23                       67                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::24                       58                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::25                       37                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::26                       35                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::27                       35                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::28                       35                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::29                       35                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::30                       34                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::31                       33                       # What write queue length does an incoming req see
-system.physmem.totQLat                       41690522                       # Total cycles spent in queuing delays
-system.physmem.totMemAccLat                  53523022                       # Sum of mem lat for all requests
+system.physmem.wrQLenPdf::23                       22                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::24                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::25                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::26                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::27                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::28                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::29                       12                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::30                       11                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::31                       11                       # What write queue length does an incoming req see
+system.physmem.bytesPerActivate::samples          539                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::mean     5552.207792                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::gmean    3362.695639                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::stdev    3316.858883                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::64-65             30      5.57%      5.57% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::128-129            2      0.37%      5.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::192-193            6      1.11%      7.05% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::256-257            9      1.67%      8.72% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::320-321            2      0.37%      9.09% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::384-385            3      0.56%      9.65% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::448-449            1      0.19%      9.83% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::512-513            1      0.19%     10.02% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::576-577            1      0.19%     10.20% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::640-641            2      0.37%     10.58% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::704-705            2      0.37%     10.95% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::768-769            1      0.19%     11.13% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::832-833            2      0.37%     11.50% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::896-897            1      0.19%     11.69% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::960-961            2      0.37%     12.06% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1024-1025           69     12.80%     24.86% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1088-1089            1      0.19%     25.05% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1216-1217            3      0.56%     25.60% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1280-1281            2      0.37%     25.97% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1344-1345            2      0.37%     26.35% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1408-1409            1      0.19%     26.53% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1536-1537            1      0.19%     26.72% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1600-1601            1      0.19%     26.90% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::2048-2049           11      2.04%     28.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::2816-2817            1      0.19%     29.13% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::3072-3073            9      1.67%     30.80% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::3200-3201            1      0.19%     30.98% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::3904-3905            1      0.19%     31.17% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::3968-3969            1      0.19%     31.35% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::4096-4097           41      7.61%     38.96% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::5120-5121            6      1.11%     40.07% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::5888-5889            1      0.19%     40.26% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::6144-6145            4      0.74%     41.00% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::6656-6657            1      0.19%     41.19% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::7168-7169            5      0.93%     42.12% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::7552-7553            1      0.19%     42.30% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::7808-7809            1      0.19%     42.49% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::8192-8193          310     57.51%    100.00% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::total            539                       # Bytes accessed per row activation
+system.physmem.totQLat                       47710768                       # Total cycles spent in queuing delays
+system.physmem.totMemAccLat                  58058268                       # Sum of mem lat for all requests
 system.physmem.totBusLat                      4105000                       # Total cycles spent in databus access
-system.physmem.totBankLat                     7727500                       # Total cycles spent in bank access
-system.physmem.avgQLat                       50780.17                       # Average queueing delay per request
-system.physmem.avgBankLat                     9412.30                       # Average bank access latency per request
+system.physmem.totBankLat                     6242500                       # Total cycles spent in bank access
+system.physmem.avgQLat                       58112.99                       # Average queueing delay per request
+system.physmem.avgBankLat                     7603.53                       # Average bank access latency per request
 system.physmem.avgBusLat                      5000.00                       # Average bus latency per request
-system.physmem.avgMemAccLat                  65192.48                       # Average memory access latency
+system.physmem.avgMemAccLat                  70716.53                       # Average memory access latency
 system.physmem.avgRdBW                           0.01                       # Average achieved read bandwidth in MB/s
 system.physmem.avgWrBW                           0.57                       # Average achieved write bandwidth in MB/s
 system.physmem.avgConsumedRdBW                   0.01                       # Average consumed read bandwidth in MB/s
@@ -210,11 +253,207 @@ system.physmem.peakBW                        12800.00                       # Th
 system.physmem.busUtil                           0.00                       # Data bus utilization in percentage
 system.physmem.avgRdQLen                         0.00                       # Average read queue length over time
 system.physmem.avgWrQLen                         0.15                       # Average write queue length over time
-system.physmem.readRowHits                        704                       # Number of row buffer hits during reads
-system.physmem.writeRowHits                     45223                       # Number of row buffer hits during writes
-system.physmem.readRowHitRate                   85.75                       # Row buffer hit rate for reads
-system.physmem.writeRowHitRate                  96.76                       # Row buffer hit rate for writes
-system.physmem.avgGap                      1351581.66                       # Average gap between requests
+system.physmem.readRowHits                        756                       # Number of row buffer hits during reads
+system.physmem.writeRowHits                     46262                       # Number of row buffer hits during writes
+system.physmem.readRowHitRate                   92.08                       # Row buffer hit rate for reads
+system.physmem.writeRowHitRate                  98.99                       # Row buffer hit rate for writes
+system.physmem.avgGap                      1351590.01                       # Average gap between requests
+system.piobus.throughput                       974238                       # Throughput (bytes/s)
+system.piobus.trans_dist::ReadReq              863748                       # Transaction distribution
+system.piobus.trans_dist::ReadResp             863748                       # Transaction distribution
+system.piobus.trans_dist::WriteReq              83560                       # Transaction distribution
+system.piobus.trans_dist::WriteResp             83560                       # Transaction distribution
+system.piobus.trans_dist::MessageReq             1915                       # Transaction distribution
+system.piobus.trans_dist::MessageResp            1915                       # Transaction distribution
+system.piobus.pkt_count_system.pc.south_bridge.ide.dma::system.physmem.port        95114                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.pc.south_bridge.ide.dma::total        95114                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         1680                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.cpu1.interrupts.int_slave         1624                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3304                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           36                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         6496                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           88                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          732                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic1.pio           90                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           42                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.speaker.pio       938970                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio         1000                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio           90                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio        15614                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio       748796                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.pciconfig.pio         2126                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::total      1714112                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.cmos.pio           16                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         4730                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           92                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          632                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic1.pio            4                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        31770                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          328                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        31858                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio        10796                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio         5100                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::total        85390                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave          330                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu0.interrupts.int_master::total          330                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave          196                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu1.interrupts.int_master::total          196                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.physmem.port        95114                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.cmos.pio           52                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.ide.pio        11226                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.ide-pciconf          180                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.keyboard.pio         1364                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.pic1.pio           94                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.pic2.pio           54                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.pit.pio        31800                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.speaker.pio       938970                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.south_bridge.io_apic.pio         1328                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.i_dont_exist.pio        31948                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.com_1.pio        26410                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.cpu0.interrupts.pio       748796                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.cpu0.interrupts.int_slave         1876                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.cpu1.interrupts.pio         5100                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.cpu1.interrupts.int_slave         1954                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::system.pc.pciconfig.pio         2126                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::total                1898446                       # Packet count per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.ide.dma::system.physmem.port      3026344                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.ide.dma::total      3026344                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         3360                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.cpu1.interrupts.int_slave         3248                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::total         6608                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           18                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         3698                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf          149                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          366                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic1.pio           45                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           21                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.speaker.pio       469485                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio         2000                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio           45                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio         7807                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio      1497586                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.pciconfig.pio         4252                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::total      1985488                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.cmos.pio            8                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         3066                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           72                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          316                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic1.pio            2                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        15885                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          656                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        15929                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio         5398                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio        10197                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::total        51561                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave          660                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::total          660                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave          392                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::total          392                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.physmem.port      3026344                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.cmos.pio           26                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.ide.pio         6764                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.ide-pciconf          221                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.keyboard.pio          682                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.pic1.pio           47                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.pic2.pio           27                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.pit.pio        15900                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.speaker.pio       469485                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.south_bridge.io_apic.pio         2656                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.i_dont_exist.pio        15974                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.com_1.pio        13205                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.cpu0.interrupts.pio      1497586                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.cpu0.interrupts.int_slave         3752                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.cpu1.interrupts.pio        10197                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.cpu1.interrupts.int_slave         3908                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::system.pc.pciconfig.pio         4252                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::total             5071053                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.data_through_bus                5071053                       # Total data (bytes)
+system.piobus.reqLayer0.occupancy           421750668                       # Layer occupancy (ticks)
+system.piobus.reqLayer0.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer1.occupancy               46000                       # Layer occupancy (ticks)
+system.piobus.reqLayer1.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer2.occupancy                6500                       # Layer occupancy (ticks)
+system.piobus.reqLayer2.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer3.occupancy            10348000                       # Layer occupancy (ticks)
+system.piobus.reqLayer3.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer4.occupancy              140500                       # Layer occupancy (ticks)
+system.piobus.reqLayer4.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer5.occupancy             1063000                       # Layer occupancy (ticks)
+system.piobus.reqLayer5.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer6.occupancy               95500                       # Layer occupancy (ticks)
+system.piobus.reqLayer6.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer7.occupancy               56000                       # Layer occupancy (ticks)
+system.piobus.reqLayer7.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer8.occupancy            21210500                       # Layer occupancy (ticks)
+system.piobus.reqLayer8.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer9.occupancy           586857500                       # Layer occupancy (ticks)
+system.piobus.reqLayer9.utilization               0.0                       # Layer utilization (%)
+system.piobus.reqLayer10.occupancy            1290500                       # Layer occupancy (ticks)
+system.piobus.reqLayer10.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer11.occupancy           39914000                       # Layer occupancy (ticks)
+system.piobus.reqLayer11.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer12.occupancy               2500                       # Layer occupancy (ticks)
+system.piobus.reqLayer12.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer13.occupancy           23057500                       # Layer occupancy (ticks)
+system.piobus.reqLayer13.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer14.occupancy              10500                       # Layer occupancy (ticks)
+system.piobus.reqLayer14.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer15.occupancy              10500                       # Layer occupancy (ticks)
+system.piobus.reqLayer15.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer16.occupancy              10500                       # Layer occupancy (ticks)
+system.piobus.reqLayer16.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer17.occupancy              12000                       # Layer occupancy (ticks)
+system.piobus.reqLayer17.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer18.occupancy          470748000                       # Layer occupancy (ticks)
+system.piobus.reqLayer18.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer19.occupancy            2244320                       # Layer occupancy (ticks)
+system.piobus.reqLayer19.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer20.occupancy            5358000                       # Layer occupancy (ticks)
+system.piobus.reqLayer20.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer21.occupancy            2333580                       # Layer occupancy (ticks)
+system.piobus.reqLayer21.utilization              0.0                       # Layer utilization (%)
+system.piobus.reqLayer22.occupancy            1074500                       # Layer occupancy (ticks)
+system.piobus.reqLayer22.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer0.occupancy           52258179                       # Layer occupancy (ticks)
+system.piobus.respLayer0.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer1.occupancy            2331400                       # Layer occupancy (ticks)
+system.piobus.respLayer1.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer2.occupancy         1919239500                       # Layer occupancy (ticks)
+system.piobus.respLayer2.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer3.occupancy           68175500                       # Layer occupancy (ticks)
+system.piobus.respLayer3.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer4.occupancy             210500                       # Layer occupancy (ticks)
+system.piobus.respLayer4.utilization              0.0                       # Layer utilization (%)
+system.piobus.respLayer5.occupancy             121000                       # Layer occupancy (ticks)
+system.piobus.respLayer5.utilization              0.0                       # Layer utilization (%)
 system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_bytes        32768                       # Number of bytes transfered via DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_txs           30                       # Number of DMA read transactions (not PRD).
@@ -227,12 +466,12 @@ system.pc.south_bridge.ide.disks1.dma_read_txs            0                     
 system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
-system.ruby.l1_cntrl0.L1Dcache.demand_hits     11503621                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Dcache.demand_misses       550662                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Dcache.demand_accesses     12054283                       # Number of cache demand accesses
-system.ruby.l1_cntrl0.L1Icache.demand_hits     70015833                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Icache.demand_misses       352190                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Icache.demand_accesses     70368023                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Dcache.demand_hits     11506236                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses       550740                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses     12056976                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits     70023521                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses       352402                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses     70375923                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -242,12 +481,12 @@ system.ruby.l1_cntrl0.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl1.L1Dcache.demand_hits     12163827                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Dcache.demand_misses      1291679                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Dcache.demand_accesses     13455506                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L1Icache.demand_hits     55549058                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Icache.demand_misses       459847                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Icache.demand_accesses     56008905                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Dcache.demand_hits     12162992                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses      1291757                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses     13454749                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits     55546818                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses       459867                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses     56006685                       # Number of cache demand accesses
 system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -257,55 +496,55 @@ system.ruby.l1_cntrl1.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l2_cntrl0.L2cache.demand_hits      2426575                       # Number of cache demand hits
-system.ruby.l2_cntrl0.L2cache.demand_misses       227803                       # Number of cache demand misses
-system.ruby.l2_cntrl0.L2cache.demand_accesses      2654378                       # Number of cache demand accesses
-system.cpu0.numCycles                     10410297758                       # number of cpu cycles simulated
+system.ruby.l2_cntrl0.L2cache.demand_hits      2426890                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       227876                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses      2654766                       # Number of cache demand accesses
+system.cpu0.numCycles                     10410298653                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu0.committedInsts                   60288276                       # Number of instructions committed
-system.cpu0.committedOps                    115773079                       # Number of ops (including micro ops) committed
-system.cpu0.num_int_alu_accesses            108731496                       # Number of integer alu accesses
+system.cpu0.committedInsts                   60294243                       # Number of instructions committed
+system.cpu0.committedOps                    115784968                       # Number of ops (including micro ops) committed
+system.cpu0.num_int_alu_accesses            108743289                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                     0                       # Number of float alu accesses
-system.cpu0.num_func_calls                    1065656                       # number of times a function call or return occured
-system.cpu0.num_conditional_control_insts     10277696                       # number of instructions that are conditional controls
-system.cpu0.num_int_insts                   108731496                       # number of integer instructions
+system.cpu0.num_func_calls                    1066196                       # number of times a function call or return occured
+system.cpu0.num_conditional_control_insts     10278204                       # number of instructions that are conditional controls
+system.cpu0.num_int_insts                   108743289                       # number of integer instructions
 system.cpu0.num_fp_insts                            0                       # number of float instructions
-system.cpu0.num_int_register_reads          267473663                       # number of times the integer registers were read
-system.cpu0.num_int_register_writes         137108635                       # number of times the integer registers were written
+system.cpu0.num_int_register_reads          267504308                       # number of times the integer registers were read
+system.cpu0.num_int_register_writes         137121782                       # number of times the integer registers were written
 system.cpu0.num_fp_register_reads                   0                       # number of times the floating registers were read
 system.cpu0.num_fp_register_writes                  0                       # number of times the floating registers were written
-system.cpu0.num_mem_refs                     12880520                       # number of memory refs
-system.cpu0.num_load_insts                    7843945                       # Number of load instructions
-system.cpu0.num_store_insts                   5036575                       # Number of store instructions
-system.cpu0.num_idle_cycles              9879714305.974102                       # Number of idle cycles
-system.cpu0.num_busy_cycles              530583452.025898                       # Number of busy cycles
-system.cpu0.not_idle_fraction                0.050967                       # Percentage of non-idle cycles
-system.cpu0.idle_fraction                    0.949033                       # Percentage of idle cycles
+system.cpu0.num_mem_refs                     12883291                       # number of memory refs
+system.cpu0.num_load_insts                    7845612                       # Number of load instructions
+system.cpu0.num_store_insts                   5037679                       # Number of store instructions
+system.cpu0.num_idle_cycles              9879654975.894102                       # Number of idle cycles
+system.cpu0.num_busy_cycles              530643677.105898                       # Number of busy cycles
+system.cpu0.not_idle_fraction                0.050973                       # Percentage of non-idle cycles
+system.cpu0.idle_fraction                    0.949027                       # Percentage of idle cycles
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                       0                       # number of quiesce instructions executed
-system.cpu1.numCycles                     10407399002                       # number of cpu cycles simulated
+system.cpu1.numCycles                     10407399919                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu1.committedInsts                   46383066                       # Number of instructions committed
-system.cpu1.committedOps                     88725672                       # Number of ops (including micro ops) committed
-system.cpu1.num_int_alu_accesses             85218419                       # Number of integer alu accesses
+system.cpu1.committedInsts                   46380985                       # Number of instructions committed
+system.cpu1.committedOps                     88720452                       # Number of ops (including micro ops) committed
+system.cpu1.num_int_alu_accesses             85213748                       # Number of integer alu accesses
 system.cpu1.num_fp_alu_accesses                     0                       # Number of float alu accesses
-system.cpu1.num_func_calls                    1670749                       # number of times a function call or return occured
-system.cpu1.num_conditional_control_insts      7955161                       # number of instructions that are conditional controls
-system.cpu1.num_int_insts                    85218419                       # number of integer instructions
+system.cpu1.num_func_calls                    1670555                       # number of times a function call or return occured
+system.cpu1.num_conditional_control_insts      7954622                       # number of instructions that are conditional controls
+system.cpu1.num_int_insts                    85213748                       # number of integer instructions
 system.cpu1.num_fp_insts                            0                       # number of float instructions
-system.cpu1.num_int_register_reads          213998429                       # number of times the integer registers were read
-system.cpu1.num_int_register_writes         102139748                       # number of times the integer registers were written
+system.cpu1.num_int_register_reads          213988355                       # number of times the integer registers were read
+system.cpu1.num_int_register_writes         102135039                       # number of times the integer registers were written
 system.cpu1.num_fp_register_reads                   0                       # number of times the floating registers were read
 system.cpu1.num_fp_register_writes                  0                       # number of times the floating registers were written
-system.cpu1.num_mem_refs                     13480502                       # number of memory refs
-system.cpu1.num_load_insts                    8673583                       # Number of load instructions
-system.cpu1.num_store_insts                   4806919                       # Number of store instructions
-system.cpu1.num_idle_cycles              10081113907.619320                       # Number of idle cycles
-system.cpu1.num_busy_cycles              326285094.380681                       # Number of busy cycles
-system.cpu1.not_idle_fraction                0.031351                       # Percentage of non-idle cycles
-system.cpu1.idle_fraction                    0.968649                       # Percentage of idle cycles
+system.cpu1.num_mem_refs                     13479662                       # number of memory refs
+system.cpu1.num_load_insts                    8672840                       # Number of load instructions
+system.cpu1.num_store_insts                   4806822                       # Number of store instructions
+system.cpu1.num_idle_cycles              10081140022.903200                       # Number of idle cycles
+system.cpu1.num_busy_cycles              326259896.096799                       # Number of busy cycles
+system.cpu1.not_idle_fraction                0.031349                       # Percentage of non-idle cycles
+system.cpu1.idle_fraction                    0.968651                       # Percentage of idle cycles
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 

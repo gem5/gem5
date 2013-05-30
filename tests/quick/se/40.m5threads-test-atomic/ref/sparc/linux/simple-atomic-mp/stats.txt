@@ -4,11 +4,11 @@ sim_seconds                                  0.000088                       # Nu
 sim_ticks                                    87707000                       # Number of ticks simulated
 final_tick                                   87707000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 205117                       # Simulator instruction rate (inst/s)
-host_op_rate                                   205116                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               26560282                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1206900                       # Number of bytes of host memory used
-host_seconds                                     3.30                       # Real time elapsed on the host
+host_inst_rate                                1256528                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1256465                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              162691956                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1160656                       # Number of bytes of host memory used
+host_seconds                                     0.54                       # Real time elapsed on the host
 sim_insts                                      677327                       # Number of instructions simulated
 sim_ops                                        677327                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu0.inst            18048                       # Number of bytes read from this memory
@@ -57,6 +57,12 @@ system.physmem.bw_total::cpu2.data            9486130                       # To
 system.physmem.bw_total::cpu3.inst            1459405                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu3.data            9486130                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total              407903588                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                    407903588                       # Throughput (bytes/s)
+system.membus.data_through_bus                  35776                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.toL2Bus.throughput                  1893577480                       # Throughput (bytes/s)
+system.toL2Bus.data_through_bus                166080                       # Total data (bytes)
+system.toL2Bus.snoop_data_through_bus               0                       # Total snoop data (bytes)
 system.cpu0.workload.num_syscalls                  89                       # Number of system calls
 system.cpu0.numCycles                          175415                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started

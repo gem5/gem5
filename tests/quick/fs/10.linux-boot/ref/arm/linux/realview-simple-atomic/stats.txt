@@ -4,11 +4,11 @@ sim_seconds                                  2.332810                       # Nu
 sim_ticks                                2332810264000                       # Number of ticks simulated
 final_tick                               2332810264000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1712706                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2202434                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            66139785958                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 391204                       # Number of bytes of host memory used
-host_seconds                                    35.27                       # Real time elapsed on the host
+host_inst_rate                                 692273                       # Simulator instruction rate (inst/s)
+host_op_rate                                   890221                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            26733610702                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 396420                       # Number of bytes of host memory used
+host_seconds                                    87.26                       # Real time elapsed on the host
 sim_insts                                    60408639                       # Number of instructions simulated
 sim_ops                                      77681819                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::realview.clcd    111673344                       # Number of bytes read from this memory
@@ -171,6 +171,9 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
+system.physmem.bytesPerActivate::mean             nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::gmean            nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::stdev            nan                       # Bytes accessed per row activation
 system.physmem.totQLat                              0                       # Total cycles spent in queuing delays
 system.physmem.totMemAccLat                         0                       # Sum of mem lat for all requests
 system.physmem.totBusLat                            0                       # Total cycles spent in databus access
@@ -204,12 +207,17 @@ system.realview.nvmem.bw_inst_read::cpu.inst            9                       
 system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
 system.realview.nvmem.bw_total::cpu.inst            9                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                     55969585                       # Throughput (bytes/s)
+system.membus.data_through_bus              130566422                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.cf0.dma_read_full_pages                      0                       # Number of full page size DMA reads (not PRD).
 system.cf0.dma_read_bytes                           0                       # Number of bytes transfered via DMA reads (not PRD).
 system.cf0.dma_read_txs                             0                       # Number of DMA read transactions (not PRD).
 system.cf0.dma_write_full_pages                     0                       # Number of full page size DMA writes.
 system.cf0.dma_write_bytes                          0                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                            0                       # Number of DMA write transactions.
+system.iobus.throughput                      48895252                       # Throughput (bytes/s)
+system.iobus.data_through_bus               114063346                       # Total data (bytes)
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
 system.cpu.dtb.read_hits                     14971214                       # DTB read hits
@@ -490,6 +498,9 @@ system.cpu.dcache.cache_copies                      0                       # nu
 system.cpu.dcache.writebacks::writebacks       592643                       # number of writebacks
 system.cpu.dcache.writebacks::total            592643                       # number of writebacks
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
+system.cpu.toL2Bus.throughput                59102649                       # Throughput (bytes/s)
+system.cpu.toL2Bus.data_through_bus         137875266                       # Total data (bytes)
+system.cpu.toL2Bus.snoop_data_through_bus            0                       # Total snoop data (bytes)
 system.iocache.replacements                         0                       # number of replacements
 system.iocache.tagsinuse                            0                       # Cycle average of tags in use
 system.iocache.total_refs                           0                       # Total number of references to valid blocks.

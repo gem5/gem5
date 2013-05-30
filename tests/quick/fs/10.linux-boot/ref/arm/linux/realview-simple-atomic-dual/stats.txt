@@ -4,11 +4,11 @@ sim_seconds                                  0.912097                       # Nu
 sim_ticks                                912096763500                       # Number of ticks simulated
 final_tick                               912096763500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1025890                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1320831                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            15183699019                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 392232                       # Number of bytes of host memory used
-host_seconds                                    60.07                       # Real time elapsed on the host
+host_inst_rate                                 749434                       # Simulator instruction rate (inst/s)
+host_op_rate                                   964895                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            11092016800                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 399496                       # Number of bytes of host memory used
+host_seconds                                    82.23                       # Real time elapsed on the host
 sim_insts                                    61625970                       # Number of instructions simulated
 sim_ops                                      79343340                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::realview.clcd     39321600                       # Number of bytes read from this memory
@@ -188,6 +188,9 @@ system.physmem.wrQLenPdf::28                        0                       # Wh
 system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
+system.physmem.bytesPerActivate::mean             nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::gmean            nan                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::stdev            nan                       # Bytes accessed per row activation
 system.physmem.totQLat                              0                       # Total cycles spent in queuing delays
 system.physmem.totMemAccLat                         0                       # Sum of mem lat for all requests
 system.physmem.totBusLat                            0                       # Total cycles spent in databus access
@@ -227,6 +230,9 @@ system.realview.nvmem.bw_inst_read::total           75                       # I
 system.realview.nvmem.bw_total::cpu0.inst           22                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bw_total::cpu1.inst           53                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bw_total::total              75                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                     64986577                       # Throughput (bytes/s)
+system.membus.data_through_bus               59274047                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.l2c.replacements                         70658                       # number of replacements
 system.l2c.tagsinuse                     51560.149653                       # Cycle average of tags in use
 system.l2c.total_refs                         1623339                       # Total number of references to valid blocks.
@@ -409,6 +415,11 @@ system.cf0.dma_read_txs                             0                       # Nu
 system.cf0.dma_write_full_pages                     0                       # Number of full page size DMA writes.
 system.cf0.dma_write_bytes                          0                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                            0                       # Number of DMA write transactions.
+system.toL2Bus.throughput                   154009014                       # Throughput (bytes/s)
+system.toL2Bus.data_through_bus             140471123                       # Total data (bytes)
+system.toL2Bus.snoop_data_through_bus               0                       # Total snoop data (bytes)
+system.iobus.throughput                      45730949                       # Throughput (bytes/s)
+system.iobus.data_through_bus                41711051                       # Total data (bytes)
 system.cpu0.dtb.inst_hits                           0                       # ITB inst hits
 system.cpu0.dtb.inst_misses                         0                       # ITB inst misses
 system.cpu0.dtb.read_hits                     7975768                       # DTB read hits

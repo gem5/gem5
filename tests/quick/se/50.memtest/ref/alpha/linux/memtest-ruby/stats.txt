@@ -4,9 +4,11 @@ sim_seconds                                  0.008665                       # Nu
 sim_ticks                                     8664886                       # Number of ticks simulated
 final_tick                                    8664886                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 174865                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 297912                       # Number of bytes of host memory used
-host_seconds                                    49.55                       # Real time elapsed on the host
+host_tick_rate                                 321644                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 252216                       # Number of bytes of host memory used
+host_seconds                                    26.94                       # Real time elapsed on the host
+system.funcbus.throughput                           0                       # Throughput (bytes/s)
+system.funcbus.data_through_bus                     0                       # Total data (bytes)
 system.ruby.l1_cntrl4.cacheMemory.demand_hits            0                       # Number of cache demand hits
 system.ruby.l1_cntrl4.cacheMemory.demand_misses        77331                       # Number of cache demand misses
 system.ruby.l1_cntrl4.cacheMemory.demand_accesses        77331                       # Number of cache demand accesses

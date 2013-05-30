@@ -4,11 +4,11 @@ sim_seconds                                  0.000033                       # Nu
 sim_ticks                                    32544000                       # Number of ticks simulated
 final_tick                                   32544000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  97330                       # Simulator instruction rate (inst/s)
-host_op_rate                                    97300                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              495402774                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 269640                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_inst_rate                                  19861                       # Simulator instruction rate (inst/s)
+host_op_rate                                    19860                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              101141711                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 224276                       # Number of bytes of host memory used
+host_seconds                                     0.32                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             17792                       # Number of bytes read from this memory
@@ -27,6 +27,21 @@ system.physmem.bw_inst_read::total          546705998                       # In
 system.physmem.bw_total::cpu.inst           546705998                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data           330383481                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total              877089479                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.throughput                    877089479                       # Throughput (bytes/s)
+system.membus.trans_dist::ReadReq                 373                       # Transaction distribution
+system.membus.trans_dist::ReadResp                373                       # Transaction distribution
+system.membus.trans_dist::ReadExReq                73                       # Transaction distribution
+system.membus.trans_dist::ReadExResp               73                       # Transaction distribution
+system.membus.pkt_count_system.cpu.l2cache.mem_side          892                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count                           892                       # Packet count per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.cpu.l2cache.mem_side        28544                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size                      28544                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.data_through_bus                  28544                       # Total data (bytes)
+system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.membus.reqLayer0.occupancy              446000                       # Layer occupancy (ticks)
+system.membus.reqLayer0.utilization               1.4                       # Layer utilization (%)
+system.membus.respLayer1.occupancy            4014000                       # Layer occupancy (ticks)
+system.membus.respLayer1.utilization             12.3                       # Layer utilization (%)
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
@@ -383,5 +398,24 @@ system.cpu.dcache.demand_avg_mshr_miss_latency::total        53000              
 system.cpu.dcache.overall_avg_mshr_miss_latency::cpu.data        53000                       # average overall mshr miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency::total        53000                       # average overall mshr miss latency
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
+system.cpu.toL2Bus.throughput               879056047                       # Throughput (bytes/s)
+system.cpu.toL2Bus.trans_dist::ReadReq            374                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::ReadResp           374                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::ReadExReq           73                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::ReadExResp           73                       # Transaction distribution
+system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side          558                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side          336                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count                      894                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side        17856                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side        10752                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size                 28608                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.data_through_bus             28608                       # Total data (bytes)
+system.cpu.toL2Bus.snoop_data_through_bus            0                       # Total snoop data (bytes)
+system.cpu.toL2Bus.reqLayer0.occupancy         223500                       # Layer occupancy (ticks)
+system.cpu.toL2Bus.reqLayer0.utilization          0.7                       # Layer utilization (%)
+system.cpu.toL2Bus.respLayer0.occupancy        418500                       # Layer occupancy (ticks)
+system.cpu.toL2Bus.respLayer0.utilization          1.3                       # Layer utilization (%)
+system.cpu.toL2Bus.respLayer1.occupancy        252000                       # Layer occupancy (ticks)
+system.cpu.toL2Bus.respLayer1.utilization          0.8                       # Layer utilization (%)
 
 ---------- End Simulation Statistics   ----------
