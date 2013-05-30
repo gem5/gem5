@@ -304,17 +304,27 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // determine the source port based on the id
     SlavePort* src_port = slavePorts[slave_port_id];
 
+    // get the destination from the packet
+    PortID dest_port_id = pkt->getDest();
+
+    // determine if the response is from a snoop request we
+    // created as the result of a normal request (in which case it
+    // should be in the outstandingReq), or if we merely forwarded
+    // someone else's snoop request
+    bool forwardAsSnoop = outstandingReq.find(pkt->req) ==
+        outstandingReq.end();
+
     // test if the bus should be considered occupied for the current
-    // port, do not use the destination port in the check as we do not
-    // know yet if it is to be passed on as a snoop response or normal
-    // response and we never block on either
-    if (!snoopRespLayer.tryTiming(src_port, InvalidPortID)) {
+    // port, note that the check is bypassed if the response is being
+    // passed on as a normal response since this is occupying the
+    // response layer rather than the snoop response layer
+    if (forwardAsSnoop && !snoopRespLayer.tryTiming(src_port, dest_port_id)) {
         DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(CoherentBus, "recvTimingSnoop: src %s %s 0x%x\n",
+    DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
@@ -322,28 +332,24 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    // get the destination from the packet
-    PortID dest_port_id = pkt->getDest();
-
     // responses are never express snoops
     assert(!pkt->isExpressSnoop());
 
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->busLastWordDelay + curTick();
 
-    // determine if the response is from a snoop request we
-    // created as the result of a normal request (in which case it
-    // should be in the outstandingReq), or if we merely forwarded
-    // someone else's snoop request
-    if (outstandingReq.find(pkt->req) == outstandingReq.end()) {
-        // this is a snoop response to a snoop request we
-        // forwarded, e.g. coming from the L1 and going to the L2
-        // this should be forwarded as a snoop response
+    // forward it either as a snoop response or a normal response
+    if (forwardAsSnoop) {
+        // this is a snoop response to a snoop request we forwarded,
+        // e.g. coming from the L1 and going to the L2, and it should
+        // be forwarded as a snoop response
         bool success M5_VAR_USED =
             masterPorts[dest_port_id]->sendTimingSnoopResp(pkt);
         pktCount[slave_port_id][dest_port_id]++;
         totPktSize[slave_port_id][dest_port_id] += pkt_size;
         assert(success);
+
+        snoopRespLayer.succeededTiming(packetFinishTime);
     } else {
         // we got a snoop response on one of our slave ports,
         // i.e. from a coherent master connected to the bus, and
@@ -358,17 +364,20 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // original request came from
         assert(slave_port_id != dest_port_id);
 
-        // as a normal response, it should go back to a master
-        // through one of our slave ports
+        // as a normal response, it should go back to a master through
+        // one of our slave ports, at this point we are ignoring the
+        // fact that the response layer could be busy and do not touch
+        // its state
         bool success M5_VAR_USED =
             slavePorts[dest_port_id]->sendTimingResp(pkt);
+
+        // @todo Put the response in an internal FIFO and pass it on
+        // to the response layer from there
 
         // currently it is illegal to block responses... can lead
         // to deadlock
         assert(success);
     }
-
-    snoopRespLayer.succeededTiming(packetFinishTime);
 
     // stats updates
     transDist[pkt_cmd]++;

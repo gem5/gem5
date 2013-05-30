@@ -130,8 +130,7 @@ class BaseBus : public MemObject
          * Determine if the bus layer accepts a packet from a specific
          * port. If not, the port in question is also added to the
          * retry list. In either case the state of the layer is
-         * updated accordingly. To ignore checking the destination
-         * port (used by snoops), pass InvalidPortID.
+         * updated accordingly.
          *
          * @param port Source port presenting the packet
          * @param dest_port_id Destination port id

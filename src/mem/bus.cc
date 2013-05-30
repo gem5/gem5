@@ -195,8 +195,7 @@ BaseBus::Layer<PortClass>::tryTiming(PortClass* port, PortID dest_port_id)
     // if the destination port is already engaged in a transaction
     // waiting for a retry from the peer
     if (state == BUSY || (state == RETRY && port != retryingPort) ||
-        (dest_port_id != InvalidPortID &&
-         waitingForPeer[dest_port_id] != NULL)) {
+        waitingForPeer[dest_port_id] != NULL) {
         // put the port at the end of the retry list waiting for the
         // layer to be freed up (and in the case of a busy peer, for
         // that transaction to go through, and then the bus to free
