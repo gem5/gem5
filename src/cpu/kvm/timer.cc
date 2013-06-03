@@ -59,8 +59,11 @@ PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
     sev.sigev_notify = SIGEV_SIGNAL;
     sev.sigev_signo = signo;
     sev.sigev_value.sival_ptr = NULL;
-    if (timer_create(clockID, &sev, &timer) == -1)
-        panic("timer_create");
+
+    while (timer_create(clockID, &sev, &timer) == -1) {
+        if (errno != EAGAIN)
+            panic("timer_create: %i", errno);
+    }
 }
 
 PosixKvmTimer::~PosixKvmTimer()
