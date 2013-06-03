@@ -456,12 +456,15 @@ BaseKvmCPU::tick()
     }
 }
 
+uint64_t
+BaseKvmCPU::getHostCycles() const
+{
+    return hwCycles.read();
+}
+
 Tick
 BaseKvmCPU::kvmRun(Tick ticks)
 {
-    uint64_t baseCycles(hwCycles.read());
-    uint64_t baseInstrs(hwInstructions.read());
-
     // We might need to update the KVM state.
     syncKvmState();
     // Entering into KVM implies that we'll have to reload the thread
@@ -477,6 +480,11 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
     DPRINTF(KvmRun, "KVM: Executing for %i ticks\n", ticks);
     timerOverflowed = false;
+
+    // Get hardware statistics after synchronizing contexts. The KVM
+    // state update might affect guest cycle counters.
+    uint64_t baseCycles(getHostCycles());
+    uint64_t baseInstrs(hwInstructions.read());
 
     // Arm the run timer and start the cycle timer if it isn't
     // controlled by the overflow timer. Starting/stopping the cycle
@@ -497,7 +505,7 @@ BaseKvmCPU::kvmRun(Tick ticks)
         hwCycles.stop();
 
 
-    const uint64_t hostCyclesExecuted(hwCycles.read() - baseCycles);
+    const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
     const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
     const uint64_t instsExecuted(hwInstructions.read() - baseInstrs);
     const Tick ticksExecuted(runTimer->ticksFromHostCycles(hostCyclesExecuted));

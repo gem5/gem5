@@ -154,6 +154,21 @@ class BaseKvmCPU : public BaseCPU
     virtual void tick();
 
     /**
+     * Get the value of the hardware cycle counter in the guest.
+     *
+     * This method is supposed to return the total number of cycles
+     * executed in hardware mode relative to some arbitrary point in
+     * the past. It's mainly used when estimating the number of cycles
+     * actually executed by the CPU in kvmRun(). The default behavior
+     * of this method is to use the cycles performance counter, but
+     * some architectures may want to use internal registers instead.
+     *
+     * @return Number of host cycles executed relative to an undefined
+     * point in the past.
+     */
+    virtual uint64_t getHostCycles() const;
+
+    /**
      * Request KVM to run the guest for a given number of ticks. The
      * method returns the approximate number of ticks executed.
      *
