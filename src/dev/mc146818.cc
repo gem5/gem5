@@ -144,7 +144,8 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
               // The "update in progress" bit is read only.
               stat_regA.uip = old_rega;
 
-              if (stat_regA.dv != RTCA_DV_32768HZ) {
+              if (!rega_dv_disabled(stat_regA) &&
+                  stat_regA.dv != RTCA_DV_32768HZ) {
                   inform("RTC: Unimplemented divider configuration: %i\n",
                         stat_regA.dv);
                   panic_unsupported = true;
@@ -155,14 +156,21 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
                         stat_regA.rs);
                   panic_unsupported = true;
               }
+
+              if (rega_dv_disabled(stat_regA)) {
+                  // The divider is disabled, make sure that we don't
+                  // schedule any ticks.
+                  if (tickEvent.scheduled())
+                      deschedule(tickEvent);
+              } else if (rega_dv_disabled(old_rega))  {
+                  // If the divider chain goes from reset to active, we
+                  // need to schedule a tick after precisely 0.5s.
+                  assert(!tickEvent.scheduled());
+                  schedule(tickEvent, curTick() + SimClock::Int::s / 2);
+              }
           } break;
           case RTC_STAT_REGB:
             stat_regB = data;
-            if (stat_regB.set) {
-                inform("RTC: Updating stopping not implemented.\n");
-                panic_unsupported = true;
-            }
-
             if (stat_regB.aie || stat_regB.uie) {
                 inform("RTC: Unimplemented interrupt configuration: %s %s\n",
                       stat_regB.aie ? "alarm" : "",
@@ -233,6 +241,8 @@ MC146818::readData(uint8_t addr)
 void
 MC146818::tickClock()
 {
+    assert(!rega_dv_disabled(stat_regA));
+
     if (stat_regB.set)
         return;
     time_t calTime = mkutctime(&curTime);
