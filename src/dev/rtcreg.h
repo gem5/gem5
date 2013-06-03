@@ -42,19 +42,17 @@ static const int RTC_MON = 0x08;
 static const int RTC_YEAR = 0x09;
 
 static const int RTC_STAT_REGA = 0x0A;
-static const int RTCA_1024HZ = 0x06;  /* 1024Hz periodic interrupt frequency */
-static const int RTCA_32768HZ = 0x20; /* 22-stage divider, 32.768KHz timebase */
-static const int RTCA_UIP = 0x80;     /* 1 = date and time update in progress */
+
+static const int RTCA_DV_4194304HZ = 0x0;
+static const int RTCA_DV_1048576HZ = 0x1;
+static const int RTCA_DV_32768HZ = 0x2;
+static const int RTCA_DV_DISABLED0 = 0x6;
+static const int RTCA_DV_DISABLED1 = 0x7;
+
+static const int RTCA_RS_DISABLED = 0x0;
+static const int RTCA_RS_1024HZ = 0x6;
 
 static const int RTC_STAT_REGB = 0x0B;
-static const int RTCB_DST = 0x01;     /* USA Daylight Savings Time enable */
-static const int RTCB_24HR = 0x02;    /* 0 = 12 hours, 1 = 24 hours */
-static const int RTCB_BIN = 0x04;     /* 0 = BCD, 1 = Binary coded time */
-static const int RTCB_SQWE = 0x08;    /* 1 = output sqare wave at SQW pin */
-static const int RTCB_UPDT_IE = 0x10; /* 1 = enable update-ended interrupt */
-static const int RTCB_ALRM_IE = 0x20; /* 1 = enable alarm interrupt */
-static const int RTCB_PRDC_IE = 0x40; /* 1 = enable periodic clock interrupt */
-static const int RTCB_NO_UPDT = 0x80; /* stop clock updates */
 
 static const int RTC_STAT_REGC = 0x0C;
 static const int RTC_STAT_REGD = 0x0D;

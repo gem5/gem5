@@ -77,7 +77,7 @@ MC146818::setTime(const struct tm time)
     // Datasheet says 1 is sunday
     wday = time.tm_wday + 1;
 
-    if (!(stat_regB & RTCB_BIN)) {
+    if (!stat_regB.dm) {
         // The datasheet says that the year field can be either BCD or
         // years since 1900.  Linux seems to be happy with years since
         // 1900.
@@ -95,10 +95,15 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
     : EventManager(em), _name(n), event(this, frequency), tickEvent(this)
 {
     memset(clock_data, 0, sizeof(clock_data));
-    stat_regA = RTCA_32768HZ | RTCA_1024HZ;
-    stat_regB = RTCB_PRDC_IE | RTCB_24HR;
-    if (!bcd)
-        stat_regB |= RTCB_BIN;
+
+    stat_regA = 0;
+    stat_regA.dv = RTCA_DV_32768HZ;
+    stat_regA.rs = RTCA_RS_1024HZ;
+
+    stat_regB = 0;
+    stat_regB.pie = 1;
+    stat_regB.format24h = 1;
+    stat_regB.dm = bcd ? 0 : 1;
 
     setTime(time);
     DPRINTFN("Real-time clock set to %s", asctime(&time));
@@ -110,9 +115,18 @@ MC146818::~MC146818()
     deschedule(event);
 }
 
+bool
+MC146818::rega_dv_disabled(const RtcRegA &reg)
+{
+    return reg.dv == RTCA_DV_DISABLED0 ||
+        reg.dv == RTCA_DV_DISABLED1;
+}
+
 void
 MC146818::writeData(const uint8_t addr, const uint8_t data)
 {
+    bool panic_unsupported(false);
+
     if (addr < RTC_STAT_REGA) {
         clock_data[addr] = data;
         curTime.tm_sec = unbcdize(sec);
@@ -124,24 +138,60 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
         curTime.tm_wday = unbcdize(wday) - 1;
     } else {
         switch (addr) {
-          case RTC_STAT_REGA:
-            // The "update in progress" bit is read only.
-            if ((data & ~RTCA_UIP) != (RTCA_32768HZ | RTCA_1024HZ))
-                panic("Unimplemented RTC register A value write!\n");
-            replaceBits(stat_regA, data, 6, 0);
-            break;
-          case RTC_STAT_REGB:
-            if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != RTCB_24HR)
-                panic("Write to RTC reg B bits that are not implemented!\n");
+          case RTC_STAT_REGA: {
+              RtcRegA old_rega(stat_regA);
+              stat_regA = data;
+              // The "update in progress" bit is read only.
+              stat_regA.uip = old_rega;
 
-            if (data & RTCB_PRDC_IE) {
+              if (stat_regA.dv != RTCA_DV_32768HZ) {
+                  inform("RTC: Unimplemented divider configuration: %i\n",
+                        stat_regA.dv);
+                  panic_unsupported = true;
+              }
+
+              if (stat_regA.rs != RTCA_RS_1024HZ) {
+                  inform("RTC: Unimplemented interrupt rate: %i\n",
+                        stat_regA.rs);
+                  panic_unsupported = true;
+              }
+          } break;
+          case RTC_STAT_REGB:
+            stat_regB = data;
+            if (stat_regB.set) {
+                inform("RTC: Updating stopping not implemented.\n");
+                panic_unsupported = true;
+            }
+
+            if (stat_regB.aie || stat_regB.uie) {
+                inform("RTC: Unimplemented interrupt configuration: %s %s\n",
+                      stat_regB.aie ? "alarm" : "",
+                      stat_regB.uie ? "update" : "");
+                panic_unsupported = true;
+            }
+
+            if (stat_regB.dm) {
+                inform("RTC: The binary interface is not fully implemented.\n");
+                panic_unsupported = true;
+            }
+
+            if (!stat_regB.format24h) {
+                inform("RTC: The 12h time format not supported.\n");
+                panic_unsupported = true;
+            }
+
+            if (stat_regB.dse) {
+                inform("RTC: Automatic daylight saving time not supported.\n");
+                panic_unsupported = true;
+            }
+
+            if (stat_regB.pie) {
                 if (!event.scheduled())
                     event.scheduleIntr();
             } else {
                 if (event.scheduled())
                     deschedule(event);
             }
-            stat_regB = data;
             break;
           case RTC_STAT_REGC:
           case RTC_STAT_REGD:
@@ -149,6 +199,10 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
             break;
         }
     }
+
+    if (panic_unsupported)
+        panic("Unimplemented RTC configuration!\n");
+
 }
 
 uint8_t
@@ -160,7 +214,7 @@ MC146818::readData(uint8_t addr)
         switch (addr) {
           case RTC_STAT_REGA:
             // toggle UIP bit for linux
-            stat_regA ^= RTCA_UIP;
+            stat_regA.uip = !stat_regA.uip;
             return stat_regA;
             break;
           case RTC_STAT_REGB:
@@ -179,7 +233,7 @@ MC146818::readData(uint8_t addr)
 void
 MC146818::tickClock()
 {
-    if (stat_regB & RTCB_NO_UPDT)
+    if (stat_regB.set)
         return;
     time_t calTime = mkutctime(&curTime);
     calTime++;
@@ -189,9 +243,12 @@ MC146818::tickClock()
 void
 MC146818::serialize(const string &base, ostream &os)
 {
+    uint8_t regA_serial(stat_regA);
+    uint8_t regB_serial(stat_regB);
+
     arrayParamOut(os, base + ".clock_data", clock_data, sizeof(clock_data));
-    paramOut(os, base + ".stat_regA", stat_regA);
-    paramOut(os, base + ".stat_regB", stat_regB);
+    paramOut(os, base + ".stat_regA", (uint8_t)regA_serial);
+    paramOut(os, base + ".stat_regB", (uint8_t)regB_serial);
 
     //
     // save the timer tick and rtc clock tick values to correctly reschedule 
@@ -207,10 +264,15 @@ void
 MC146818::unserialize(const string &base, Checkpoint *cp,
                       const string &section)
 {
+    uint8_t tmp8;
+
     arrayParamIn(cp, section, base + ".clock_data", clock_data,
                  sizeof(clock_data));
-    paramIn(cp, section, base + ".stat_regA", stat_regA);
-    paramIn(cp, section, base + ".stat_regB", stat_regB);
+
+    paramIn(cp, section, base + ".stat_regA", tmp8);
+    stat_regA = tmp8;
+    paramIn(cp, section, base + ".stat_regB", tmp8);
+    stat_regB = tmp8;
 
     //
     // properly schedule the timer and rtc clock events

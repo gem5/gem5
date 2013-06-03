@@ -33,6 +33,7 @@
 #ifndef __DEV_MC146818_HH__
 #define __DEV_MC146818_HH__
 
+#include "base/bitunion.hh"
 #include "sim/eventq_impl.hh"
 
 /** Real-Time Clock (MC146818) */
@@ -112,11 +113,40 @@ class MC146818 : public EventManager
 
     void setTime(const struct tm time);
 
+    BitUnion8(RtcRegA)
+        Bitfield<7> uip;    /// 1 = date and time update in progress
+        Bitfield<6, 4> dv;  /// Divider configuration
+        /** Rate selection
+            0 = Disabled
+            For 32768 Hz time bases:
+              Freq = 32768Hz / 2**(n-1) for n >= 3
+              Freq = 256Hz if n = 1
+              Freq = 128Hz if n = 2
+            Othwerise:
+              Freq = 32768Hz / 2**(n-1)
+        */
+        Bitfield<3, 0> rs;
+    EndBitUnion(RtcRegA)
+
+    /// Is the DV field in regA set to disabled?
+    static inline bool rega_dv_disabled(const RtcRegA &reg);
+
+    BitUnion8(RtcRegB)
+        Bitfield<7> set;       /// stop clock updates
+        Bitfield<6> pie;       /// 1 = enable periodic clock interrupt
+        Bitfield<5> aie;       /// 1 = enable alarm interrupt
+        Bitfield<4> uie;       /// 1 = enable update-ended interrupt
+        Bitfield<3> sqwe;      /// 1 = output sqare wave at SQW pin
+        Bitfield<2> dm;        /// 0 = BCD, 1 = Binary coded time
+        Bitfield<1> format24h; /// 0 = 12 hours, 1 = 24 hours
+        Bitfield<0> dse;       /// USA Daylight Savings Time enable
+    EndBitUnion(RtcRegB)
+
     /** RTC status register A */
-    uint8_t stat_regA;
+    RtcRegA stat_regA;
 
     /** RTC status register B */
-    uint8_t stat_regB;
+    RtcRegB stat_regB;
 
   public:
     MC146818(EventManager *em, const std::string &name, const struct tm time,
