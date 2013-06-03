@@ -54,8 +54,12 @@ class CodeImporter(object):
         import imp
         import os
         import sys
-        mod = imp.new_module(fullname)
-        sys.modules[fullname] = mod
+
+        try:
+            mod = sys.modules[fullname]
+        except KeyError:
+            mod = imp.new_module(fullname)
+            sys.modules[fullname] = mod
 
         try:
             mod.__loader__ = self
@@ -68,6 +72,9 @@ class CodeImporter(object):
 
             if os.path.basename(srcfile) == '__init__.py':
                 mod.__path__ = fullname.split('.')
+                mod.__package__ = fullname
+            else:
+                mod.__package__ = fullname.rpartition('.')[0]
             mod.__file__ = srcfile
 
             exec code in mod.__dict__
