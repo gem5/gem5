@@ -148,6 +148,7 @@ class TLB : public BaseTLB
      * translateFunctional stub function for future CheckerCPU support
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 };
 
 } // namespace AlphaISA

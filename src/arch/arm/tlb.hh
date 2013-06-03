@@ -207,6 +207,7 @@ class TLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     Fault translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
     void drainResume();
 

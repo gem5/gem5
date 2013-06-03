@@ -94,6 +94,12 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     return true;
 }
 
+Fault
+TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+{
+    return NoFault;
+}
+
 TlbEntry*
 TLB::lookup(Addr va, uint8_t cid, bool functional)
 {

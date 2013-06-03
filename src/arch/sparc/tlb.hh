@@ -169,6 +169,7 @@ class TLB : public BaseTLB
      *  does not support the Checker model at the moment
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
     Cycles doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Cycles doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);

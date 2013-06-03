@@ -164,6 +164,7 @@ class TLB : public BaseTLB
      *  supported by Checker at the moment
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
     // Checkpointing
     void serialize(std::ostream &os);

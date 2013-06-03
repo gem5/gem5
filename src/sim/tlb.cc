@@ -58,6 +58,12 @@ GenericTLB::translateTiming(RequestPtr req, ThreadContext *tc,
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
+Fault
+GenericTLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+{
+    return NoFault;
+}
+
 void
 GenericTLB::demapPage(Addr vaddr, uint64_t asn)
 {

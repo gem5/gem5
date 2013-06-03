@@ -848,6 +848,12 @@ TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
     return NoFault;
 }
 
+Fault
+TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+{
+    return NoFault;
+}
+
 Cycles
 TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {

@@ -226,6 +226,40 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
 }
 
 Fault
+TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+{
+    Addr paddr = req->getPaddr();
+
+    // Check for an access to the local APIC
+    if (FullSystem) {
+        LocalApicBase localApicBase =
+            tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
+        AddrRange apicRange(localApicBase.base * PageBytes,
+                            (localApicBase.base + 1) * PageBytes - 1);
+
+        if (apicRange.contains(paddr)) {
+            // The Intel developer's manuals say the below restrictions apply,
+            // but the linux kernel, because of a compiler optimization, breaks
+            // them.
+            /*
+            // Check alignment
+            if (paddr & ((32/8) - 1))
+                return new GeneralProtection(0);
+            // Check access size
+            if (req->getSize() != (32/8))
+                return new GeneralProtection(0);
+            */
+            // Force the access to be uncacheable.
+            req->setFlags(Request::UNCACHEABLE);
+            req->setPaddr(x86LocalAPICAddress(tc->contextId(),
+                                              paddr - apicRange.start()));
+        }
+    }
+
+    return NoFault;
+}
+
+Fault
 TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         Mode mode, bool &delayedResponse, bool timing)
 {
@@ -366,31 +400,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
         req->setPaddr(vaddr);
     }
-    // Check for an access to the local APIC
-    if (FullSystem) {
-        LocalApicBase localApicBase =
-            tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
-        Addr baseAddr = localApicBase.base * PageBytes;
-        Addr paddr = req->getPaddr();
-        if (baseAddr <= paddr && baseAddr + PageBytes > paddr) {
-            // The Intel developer's manuals say the below restrictions apply,
-            // but the linux kernel, because of a compiler optimization, breaks
-            // them.
-            /*
-            // Check alignment
-            if (paddr & ((32/8) - 1))
-                return new GeneralProtection(0);
-            // Check access size
-            if (req->getSize() != (32/8))
-                return new GeneralProtection(0);
-            */
-            // Force the access to be uncacheable.
-            req->setFlags(Request::UNCACHEABLE);
-            req->setPaddr(x86LocalAPICAddress(tc->contextId(),
-                        paddr - baseAddr));
-        }
-    }
-    return NoFault;
+
+    return finalizePhysical(req, tc, mode);
 }
 
 Fault

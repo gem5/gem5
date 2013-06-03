@@ -118,6 +118,7 @@ class TLB : public BaseTLB
      *  support the Checker model at the moment.
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
   private:
     Fault translateInst(RequestPtr req, ThreadContext *tc);

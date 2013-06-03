@@ -346,6 +346,12 @@ TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
     return NoFault;
 }
 
+Fault
+TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+{
+    return NoFault;
+}
+
 
 MipsISA::PTE &
 TLB::index(bool advance)

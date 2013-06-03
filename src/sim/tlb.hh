@@ -124,6 +124,23 @@ class GenericTLB : public BaseTLB
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
                          Translation *translation, Mode mode);
+
+
+    /**
+     * Do post-translation physical address finalization.
+     *
+     * This method is used by some architectures that need
+     * post-translation massaging of physical addresses. For example,
+     * X86 uses this to remap physical addresses in the APIC range to
+     * a range of physical memory not normally available to real x86
+     * implementations.
+     *
+     * @param req Request to updated in-place.
+     * @param tc Thread context that created the request.
+     * @param mode Request type (read/write/execute).
+     * @return A fault on failure, NoFault otherwise.
+     */
+    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 };
 
 #endif // __ARCH_SPARC_TLB_HH__
