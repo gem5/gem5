@@ -163,8 +163,10 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
                   if (tickEvent.scheduled())
                       deschedule(tickEvent);
               } else if (rega_dv_disabled(old_rega))  {
-                  // If the divider chain goes from reset to active, we
-                  // need to schedule a tick after precisely 0.5s.
+                  // According to the specification, the next tick
+                  // happens after 0.5s when the divider chain goes
+                  // from reset to active. So, we simply schedule the
+                  // tick after 0.5s.
                   assert(!tickEvent.scheduled());
                   schedule(tickEvent, curTick() + SimClock::Int::s / 2);
               }
