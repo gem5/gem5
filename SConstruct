@@ -724,9 +724,9 @@ if compareVersions(swig_version[2], min_swig_version) < 0:
     print '       Installed version:', swig_version[2]
     Exit(1)
 
-if swig_version[2] == "2.0.9":
+if swig_version[2] in ["2.0.9", "2.0.10"]:
     print '\n' + termcap.Yellow + termcap.Bold + \
-        'Warning: SWIG version 2.0.9 sometimes generates broken code.\n' + \
+        'Warning: SWIG version 2.0.9/10 sometimes generates broken code.\n' + \
         termcap.Normal + \
         'This problem only affects some platforms and some Python\n' + \
         'versions. See the following SWIG bug report for details:\n' + \
