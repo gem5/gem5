@@ -1,14 +1,12 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 22 2012 20:21:46
-gem5 started Jul 23 2012 00:28:55
+gem5 compiled Jun  8 2013 10:00:13
+gem5 started Jun  8 2013 10:00:28
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing -re tests/run.py build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 main dictionary has 1245 entries
 49508 bytes wasted
->Exiting @ tick 729729000 because a thread reached the max instruction count
+>Exiting @ tick 727072000 because a thread reached the max instruction count

@@ -6,5 +6,3 @@ hack: be nice to actually delete the event here
 gzip: stdout: Broken pipe
 
 gzip: stdout: Broken pipe
-
-gzip: stdout: Broken pipe
