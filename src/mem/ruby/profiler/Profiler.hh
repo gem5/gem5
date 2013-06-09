@@ -159,9 +159,6 @@ class Profiler : public SimObject
     std::vector<int64> m_instructions_executed_at_start;
     std::vector<int64> m_cycles_executed_at_start;
 
-    std::ostream* m_periodic_output_file_ptr;
-    int64_t m_stats_period;
-
     Cycles m_ruby_start;
     time_t m_real_time_start_time;
 
@@ -208,20 +205,6 @@ class Profiler : public SimObject
     bool m_all_instructions;
 
     int m_num_of_sequencers;
-
-  protected:
-    class ProfileEvent : public Event
-    {
-        public:
-            ProfileEvent(Profiler *_profiler)
-            {
-                profiler = _profiler;
-            }
-        private:
-            void process() { profiler->wakeup(); }
-            Profiler *profiler;
-    };
-    ProfileEvent m_event;
 };
 
 inline std::ostream&

@@ -68,14 +68,11 @@ static double process_memory_total();
 static double process_memory_resident();
 
 Profiler::Profiler(const Params *p)
-    : SimObject(p), m_event(this)
+    : SimObject(p)
 {
     m_inst_profiler_ptr = NULL;
     m_address_profiler_ptr = NULL;
-
     m_real_time_start_time = time(NULL); // Not reset in clearStats()
-    m_stats_period = 1000000; // Default
-    m_periodic_output_file_ptr = &cerr;
 
     m_hot_lines = p->hot_lines;
     m_all_instructions = p->all_instructions;
@@ -100,69 +97,6 @@ Profiler::Profiler(const Params *p)
 
 Profiler::~Profiler()
 {
-    if (m_periodic_output_file_ptr != &cerr) {
-        delete m_periodic_output_file_ptr;
-    }
-}
-
-void
-Profiler::wakeup()
-{
-    // FIXME - avoid the repeated code
-
-    vector<int64_t> perProcCycleCount(m_num_of_sequencers);
-
-    for (int i = 0; i < m_num_of_sequencers; i++) {
-        perProcCycleCount[i] =
-            g_system_ptr->curCycle() - m_cycles_executed_at_start[i] + 1;
-        // The +1 allows us to avoid division by zero
-    }
-
-    ostream &out = *m_periodic_output_file_ptr;
-
-    out << "ruby_cycles: " << g_system_ptr->curCycle()-m_ruby_start << endl
-        << "mbytes_resident: " << process_memory_resident() << endl
-        << "mbytes_total: " << process_memory_total() << endl;
-
-    if (process_memory_total() > 0) {
-        out << "resident_ratio: "
-            << process_memory_resident() / process_memory_total() << endl;
-    }
-
-    out << "miss_latency: " << m_allMissLatencyHistogram << endl;
-
-    out << endl;
-
-    if (m_all_instructions) {
-        m_inst_profiler_ptr->printStats(out);
-    }
-
-    //g_system_ptr->getNetwork()->printStats(out);
-    schedule(m_event, g_system_ptr->clockEdge(Cycles(m_stats_period)));
-}
-
-void
-Profiler::setPeriodicStatsFile(const string& filename)
-{
-    cout << "Recording periodic statistics to file '" << filename << "' every "
-         << m_stats_period << " Ruby cycles" << endl;
-
-    if (m_periodic_output_file_ptr != &cerr) {
-        delete m_periodic_output_file_ptr;
-    }
-
-    m_periodic_output_file_ptr = new ofstream(filename.c_str());
-    schedule(m_event, g_system_ptr->clockEdge(Cycles(1)));
-}
-
-void
-Profiler::setPeriodicStatsInterval(int64_t period)
-{
-    cout << "Recording periodic statistics every " << m_stats_period
-         << " Ruby cycles" << endl;
-
-    m_stats_period = period;
-    schedule(m_event, g_system_ptr->clockEdge(Cycles(1)));
 }
 
 void
