@@ -194,7 +194,7 @@ struct ScalarPrint
     Result cdf;
 
     void update(Result val, Result total);
-    void operator()(ostream &stream) const;
+    void operator()(ostream &stream, bool oneLine = false) const;
 };
 
 void
@@ -208,7 +208,7 @@ ScalarPrint::update(Result val, Result total)
 }
 
 void
-ScalarPrint::operator()(ostream &stream) const
+ScalarPrint::operator()(ostream &stream, bool oneLine) const
 {
     if ((flags.isSet(nozero) && value == 0.0) ||
         (flags.isSet(nonan) && std::isnan(value)))
@@ -222,14 +222,19 @@ ScalarPrint::operator()(ostream &stream) const
     if (!std::isnan(cdf))
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
-    ccprintf(stream, "%-40s %12s %10s %10s", name,
-             ValueToString(value, precision), pdfstr.str(), cdfstr.str());
+    if (oneLine) {
+        ccprintf(stream, " |%12s %10s %10s",
+                 ValueToString(value, precision), pdfstr.str(), cdfstr.str());
+    } else {
+        ccprintf(stream, "%-40s %12s %10s %10s", name,
+                 ValueToString(value, precision), pdfstr.str(), cdfstr.str());
 
-    if (descriptions) {
-        if (!desc.empty())
-            ccprintf(stream, " # %s", desc);
+        if (descriptions) {
+            if (!desc.empty())
+                ccprintf(stream, " # %s", desc);
+        }
+        stream << endl;
     }
-    stream << endl;
 }
 
 struct VectorPrint
@@ -279,15 +284,31 @@ VectorPrint::operator()(std::ostream &stream) const
         return;
     }
 
-    for (off_type i = 0; i < _size; ++i) {
-        if (havesub && (i >= subnames.size() || subnames[i].empty()))
-            continue;
+    if ((!flags.isSet(nozero)) || (total != 0)) {
+        if (flags.isSet(oneline)) {
+            ccprintf(stream, "%-40s", name);
+            print.flags = print.flags & (~nozero);
+        }
 
-        print.name = base + (havesub ? subnames[i] : to_string(i));
-        print.desc = subdescs.empty() ? desc : subdescs[i];
+        for (off_type i = 0; i < _size; ++i) {
+            if (havesub && (i >= subnames.size() || subnames[i].empty()))
+                continue;
 
-        print.update(vec[i], _total);
-        print(stream);
+            print.name = base + (havesub ? subnames[i] : to_string(i));
+            print.desc = subdescs.empty() ? desc : subdescs[i];
+
+            print.update(vec[i], _total);
+            print(stream, flags.isSet(oneline));
+        }
+
+        if (flags.isSet(oneline)) {
+            if (descriptions) {
+                if (!desc.empty())
+                    ccprintf(stream, " # %s", desc);
+            }
+
+            stream << endl;
+        }
     }
 
     if (flags.isSet(::Stats::total)) {
@@ -297,6 +318,10 @@ VectorPrint::operator()(std::ostream &stream) const
         print.desc = desc;
         print.value = total;
         print(stream);
+    }
+
+    if (flags.isSet(oneline) && ((!flags.isSet(nozero)) || (total != 0))) {
+        stream << endl;
     }
 }
 

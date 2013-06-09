@@ -57,6 +57,8 @@ const FlagsType dist =          0x0080;
 const FlagsType nozero =        0x0100;
 /** Don't print if this is NAN */
 const FlagsType nonan =         0x0200;
+/** Print all values on a single line. Useful only for histograms. */
+const FlagsType oneline =       0x0400;
 
 /** Mask of flags that can't be set directly */
 const FlagsType __reserved =    init | display;
