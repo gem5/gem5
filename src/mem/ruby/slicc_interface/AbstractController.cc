@@ -40,6 +40,12 @@ AbstractController::AbstractController(const Params *p)
     m_recycle_latency = p->recycle_latency;
     m_number_of_TBEs = p->number_of_TBEs;
     m_is_blocking = false;
+
+    if (m_version == 0) {
+        // Combine the statistics from all controllers
+        // of this particular type.
+        Stats::registerDumpCallback(new StatsCallback(this));
+    }
 }
 
 void

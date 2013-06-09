@@ -173,10 +173,6 @@ class StateMachine(Symbol):
         self.printControllerCC(path, includes)
         self.printCSwitch(path)
         self.printCWakeup(path, includes)
-        self.printProfilerCC(path)
-        self.printProfilerHH(path)
-        self.printProfileDumperCC(path)
-        self.printProfileDumperHH(path)
 
     def printControllerPython(self, path):
         code = self.symtab.codeFormatter()
@@ -228,8 +224,6 @@ class $py_ident(RubyController):
 #include <sstream>
 #include <string>
 
-#include "mem/protocol/${ident}_ProfileDumper.hh"
-#include "mem/protocol/${ident}_Profiler.hh"
 #include "mem/protocol/TransitionResult.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -263,10 +257,14 @@ class $c_ident : public AbstractController
     const std::string toString() const;
     const std::string getName() const;
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
+
     void print(std::ostream& out) const;
     void wakeup();
     void printStats(std::ostream& out) const;
     void clearStats();
+    void regStats();
+    void collateStats();
+
     void blockOnQueue(Address addr, MessageBuffer* port);
     void unblock(Address addr);
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
@@ -274,6 +272,12 @@ class $c_ident : public AbstractController
 
     bool functionalReadBuffers(PacketPtr&);
     uint32_t functionalWriteBuffers(PacketPtr&);
+
+    void countTransition(${ident}_State state, ${ident}_Event event);
+    void possibleTransition(${ident}_State state, ${ident}_Event event);
+    uint64 getEventCount(${ident}_Event event);
+    bool isPossible(${ident}_State state, ${ident}_Event event);
+    uint64 getTransitionCount(${ident}_State state, ${ident}_Event event);
 
 private:
 ''')
@@ -319,8 +323,12 @@ TransitionResult doTransitionWorker(${ident}_Event event,
         code('''
                                     const Address& addr);
 
-static ${ident}_ProfileDumper s_profileDumper;
-${ident}_Profiler m_profiler;
+int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
+int m_event_counters[${ident}_Event_NUM];
+bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
+
+static std::vector<Stats::Vector *> eventVec;
+static std::vector<std::vector<Stats::Vector *> > transVec;
 static int m_num_controllers;
 
 // Internal functions
@@ -440,7 +448,8 @@ ${c_ident}Params::create()
 }
 
 int $c_ident::m_num_controllers = 0;
-${ident}_ProfileDumper $c_ident::s_profileDumper;
+std::vector<Stats::Vector *>  $c_ident::eventVec;
+std::vector<std::vector<Stats::Vector *> >  $c_ident::transVec;
 
 // for adding information to the protocol debug trace
 stringstream ${ident}_transitionComment;
@@ -520,6 +529,16 @@ m_${{var.c_ident}}_ptr->setSender(this);
         code('''
 if (p->peer != NULL)
     connectWithPeer(p->peer);
+
+for (int state = 0; state < ${ident}_State_NUM; state++) {
+    for (int event = 0; event < ${ident}_Event_NUM; event++) {
+        m_possible[state][event] = false;
+        m_counters[state][event] = 0;
+    }
+}
+for (int event = 0; event < ${ident}_Event_NUM; event++) {
+    m_event_counters[event] = 0;
+}
 ''')
         code.dedent()
         code('''
@@ -528,17 +547,13 @@ if (p->peer != NULL)
 void
 $c_ident::init()
 {
-    MachineType machine_type;
-    int base;
-    machine_type = string_to_MachineType("${{var.machine.ident}}");
-    base = MachineType_base_number(machine_type);
+    MachineType machine_type = string_to_MachineType("${{var.machine.ident}}");
+    int base = MachineType_base_number(machine_type);
 
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
 
     // initialize objects
-    m_profiler.setVersion(m_version);
-    s_profileDumper.registerProfiler(&m_profiler);
 
 ''')
 
@@ -675,7 +690,7 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
             if not stall:
                 state = "%s_State_%s" % (self.ident, trans.state.ident)
                 event = "%s_Event_%s" % (self.ident, trans.event.ident)
-                code('m_profiler.possibleTransition($state, $event);')
+                code('possibleTransition($state, $event);')
 
         code.dedent()
         code('''
@@ -701,6 +716,107 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
                 seq_ident = "m_%s_ptr" % param.name
 
         code('''
+
+void
+$c_ident::regStats()
+{
+    if (m_version == 0) {
+        for (${ident}_Event event = ${ident}_Event_FIRST;
+             event < ${ident}_Event_NUM; ++event) {
+            Stats::Vector *t = new Stats::Vector();
+            t->init(m_num_controllers);
+            t->name(name() + "." + ${ident}_Event_to_string(event));
+            t->flags(Stats::pdf | Stats::total | Stats::oneline |
+                     Stats::nozero);
+
+            eventVec.push_back(t);
+        }
+
+        for (${ident}_State state = ${ident}_State_FIRST;
+             state < ${ident}_State_NUM; ++state) {
+
+            transVec.push_back(std::vector<Stats::Vector *>());
+
+            for (${ident}_Event event = ${ident}_Event_FIRST;
+                 event < ${ident}_Event_NUM; ++event) {
+
+                Stats::Vector *t = new Stats::Vector();
+                t->init(m_num_controllers);
+                t->name(name() + "." + ${ident}_State_to_string(state) +
+                        "." + ${ident}_Event_to_string(event));
+
+                t->flags(Stats::pdf | Stats::total | Stats::oneline |
+                         Stats::nozero);
+                transVec[state].push_back(t);
+            }
+        }
+    }
+}
+
+void
+$c_ident::collateStats()
+{
+    for (${ident}_Event event = ${ident}_Event_FIRST;
+         event < ${ident}_Event_NUM; ++event) {
+        for (unsigned int i = 0; i < m_num_controllers; ++i) {
+            std::map<uint32_t, AbstractController *>::iterator it =
+                                g_abs_controls[MachineType_${ident}].find(i);
+            assert(it != g_abs_controls[MachineType_${ident}].end());
+            (*eventVec[event])[i] =
+                (($c_ident *)(*it).second)->getEventCount(event);
+        }
+    }
+
+    for (${ident}_State state = ${ident}_State_FIRST;
+         state < ${ident}_State_NUM; ++state) {
+
+        for (${ident}_Event event = ${ident}_Event_FIRST;
+             event < ${ident}_Event_NUM; ++event) {
+
+            for (unsigned int i = 0; i < m_num_controllers; ++i) {
+                std::map<uint32_t, AbstractController *>::iterator it =
+                                g_abs_controls[MachineType_${ident}].find(i);
+                assert(it != g_abs_controls[MachineType_${ident}].end());
+                (*transVec[state][event])[i] =
+                    (($c_ident *)(*it).second)->getTransitionCount(state, event);
+            }
+        }
+    }
+}
+
+void
+$c_ident::countTransition(${ident}_State state, ${ident}_Event event)
+{
+    assert(m_possible[state][event]);
+    m_counters[state][event]++;
+    m_event_counters[event]++;
+}
+void
+$c_ident::possibleTransition(${ident}_State state,
+                             ${ident}_Event event)
+{
+    m_possible[state][event] = true;
+}
+
+uint64
+$c_ident::getEventCount(${ident}_Event event)
+{
+    return m_event_counters[event];
+}
+
+bool
+$c_ident::isPossible(${ident}_State state, ${ident}_Event event)
+{
+    return m_possible[state][event];
+}
+
+uint64
+$c_ident::getTransitionCount(${ident}_State state,
+                             ${ident}_Event event)
+{
+    return m_counters[state][event];
+}
+
 int
 $c_ident::getNumControllers()
 {
@@ -768,30 +884,25 @@ $c_ident::printStats(ostream& out) const
         # them.  Print out these stats before dumping state transition stats.
         #
         for param in self.config_parameters:
-            if param.type_ast.type.ident == "DirectoryMemory" or \
-                   param.type_ast.type.ident == "MemoryControl":
+            if param.type_ast.type.ident == "DirectoryMemory":
                 assert(param.pointer)
                 code('    m_${{param.ident}}_ptr->printStats(out);')
 
         code('''
-    if (m_version == 0) {
-        s_profileDumper.dumpStats(out);
-    }
 }
 
-void $c_ident::clearStats() {
-''')
-        #
-        # Cache and Memory Controllers have specific profilers associated with
-        # them.  These stats must be cleared too.
-        #
-        for param in self.config_parameters:
-            if param.type_ast.type.ident == "MemoryControl":
-                assert(param.pointer)
-                code('    m_${{param.ident}}_ptr->clearStats();')
+void $c_ident::clearStats()
+{
+    for (int state = 0; state < ${ident}_State_NUM; state++) {
+        for (int event = 0; event < ${ident}_Event_NUM; event++) {
+            m_counters[state][event] = 0;
+        }
+    }
 
-        code('''
-    m_profiler.clearStats();
+    for (int event = 0; event < ${ident}_Event_NUM; event++) {
+        m_event_counters[event] = 0;
+    }
+
     AbstractController::clearStats();
 }
 ''')
@@ -1130,7 +1241,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
     if (result == TransitionResult_Valid) {
         DPRINTF(RubyGenerated, "next_state: %s\\n",
                 ${ident}_State_to_string(next_state));
-        m_profiler.countTransition(state, event);
+        countTransition(state, event);
         DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %s %s\\n",
                  curTick(), m_version, "${ident}",
                  ${ident}_Event_to_string(event),
@@ -1292,231 +1403,6 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 ''')
         code.write(path, "%s_Transitions.cc" % self.ident)
 
-    def printProfileDumperHH(self, path):
-        code = self.symtab.codeFormatter()
-        ident = self.ident
-
-        code('''
-// Auto generated C++ code started by $__file__:$__line__
-// ${ident}: ${{self.short}}
-
-#ifndef __${ident}_PROFILE_DUMPER_HH__
-#define __${ident}_PROFILE_DUMPER_HH__
-
-#include <cassert>
-#include <iostream>
-#include <vector>
-
-#include "${ident}_Event.hh"
-#include "${ident}_Profiler.hh"
-
-typedef std::vector<${ident}_Profiler *> ${ident}_profilers;
-
-class ${ident}_ProfileDumper
-{
-  public:
-    ${ident}_ProfileDumper();
-    void registerProfiler(${ident}_Profiler* profiler);
-    void dumpStats(std::ostream& out) const;
-
-  private:
-    ${ident}_profilers m_profilers;
-};
-
-#endif // __${ident}_PROFILE_DUMPER_HH__
-''')
-        code.write(path, "%s_ProfileDumper.hh" % self.ident)
-
-    def printProfileDumperCC(self, path):
-        code = self.symtab.codeFormatter()
-        ident = self.ident
-
-        code('''
-// Auto generated C++ code started by $__file__:$__line__
-// ${ident}: ${{self.short}}
-
-#include "mem/protocol/${ident}_ProfileDumper.hh"
-
-${ident}_ProfileDumper::${ident}_ProfileDumper()
-{
-}
-
-void
-${ident}_ProfileDumper::registerProfiler(${ident}_Profiler* profiler)
-{
-    if (profiler->getVersion() >= m_profilers.size())
-        m_profilers.resize(profiler->getVersion() + 1);
-    m_profilers[profiler->getVersion()] = profiler;
-}
-
-void
-${ident}_ProfileDumper::dumpStats(std::ostream& out) const
-{
-    out << " --- ${ident} ---\\n";
-    out << " - Event Counts -\\n";
-    for (${ident}_Event event = ${ident}_Event_FIRST;
-         event < ${ident}_Event_NUM;
-         ++event) {
-        out << (${ident}_Event) event << " [";
-        uint64 total = 0;
-        for (int i = 0; i < m_profilers.size(); i++) {
-             out << m_profilers[i]->getEventCount(event) << " ";
-             total += m_profilers[i]->getEventCount(event);
-        }
-        out << "] " << total << "\\n";
-    }
-    out << "\\n";
-    out << " - Transitions -\\n";
-    for (${ident}_State state = ${ident}_State_FIRST;
-         state < ${ident}_State_NUM;
-         ++state) {
-        for (${ident}_Event event = ${ident}_Event_FIRST;
-             event < ${ident}_Event_NUM;
-             ++event) {
-            if (m_profilers[0]->isPossible(state, event)) {
-                out << (${ident}_State) state << "  "
-                    << (${ident}_Event) event << " [";
-                uint64 total = 0;
-                for (int i = 0; i < m_profilers.size(); i++) {
-                     out << m_profilers[i]->getTransitionCount(state, event) << " ";
-                     total += m_profilers[i]->getTransitionCount(state, event);
-                }
-                out << "] " << total << "\\n";
-            }
-        }
-        out << "\\n";
-    }
-}
-''')
-        code.write(path, "%s_ProfileDumper.cc" % self.ident)
-
-    def printProfilerHH(self, path):
-        code = self.symtab.codeFormatter()
-        ident = self.ident
-
-        code('''
-// Auto generated C++ code started by $__file__:$__line__
-// ${ident}: ${{self.short}}
-
-#ifndef __${ident}_PROFILER_HH__
-#define __${ident}_PROFILER_HH__
-
-#include <cassert>
-#include <iostream>
-
-#include "mem/protocol/${ident}_Event.hh"
-#include "mem/protocol/${ident}_State.hh"
-#include "mem/ruby/common/TypeDefines.hh"
-
-class ${ident}_Profiler
-{
-  public:
-    ${ident}_Profiler();
-    void setVersion(int version);
-    int getVersion();
-    void countTransition(${ident}_State state, ${ident}_Event event);
-    void possibleTransition(${ident}_State state, ${ident}_Event event);
-    uint64 getEventCount(${ident}_Event event);
-    bool isPossible(${ident}_State state, ${ident}_Event event);
-    uint64 getTransitionCount(${ident}_State state, ${ident}_Event event);
-    void clearStats();
-
-  private:
-    int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
-    int m_event_counters[${ident}_Event_NUM];
-    bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
-    int m_version;
-};
-
-#endif // __${ident}_PROFILER_HH__
-''')
-        code.write(path, "%s_Profiler.hh" % self.ident)
-
-    def printProfilerCC(self, path):
-        code = self.symtab.codeFormatter()
-        ident = self.ident
-
-        code('''
-// Auto generated C++ code started by $__file__:$__line__
-// ${ident}: ${{self.short}}
-
-#include <cassert>
-
-#include "mem/protocol/${ident}_Profiler.hh"
-
-${ident}_Profiler::${ident}_Profiler()
-{
-    for (int state = 0; state < ${ident}_State_NUM; state++) {
-        for (int event = 0; event < ${ident}_Event_NUM; event++) {
-            m_possible[state][event] = false;
-            m_counters[state][event] = 0;
-        }
-    }
-    for (int event = 0; event < ${ident}_Event_NUM; event++) {
-        m_event_counters[event] = 0;
-    }
-}
-
-void
-${ident}_Profiler::setVersion(int version)
-{
-    m_version = version;
-}
-
-int
-${ident}_Profiler::getVersion()
-{
-    return m_version;
-}
-
-void
-${ident}_Profiler::clearStats()
-{
-    for (int state = 0; state < ${ident}_State_NUM; state++) {
-        for (int event = 0; event < ${ident}_Event_NUM; event++) {
-            m_counters[state][event] = 0;
-        }
-    }
-
-    for (int event = 0; event < ${ident}_Event_NUM; event++) {
-        m_event_counters[event] = 0;
-    }
-}
-void
-${ident}_Profiler::countTransition(${ident}_State state, ${ident}_Event event)
-{
-    assert(m_possible[state][event]);
-    m_counters[state][event]++;
-    m_event_counters[event]++;
-}
-void
-${ident}_Profiler::possibleTransition(${ident}_State state,
-                                      ${ident}_Event event)
-{
-    m_possible[state][event] = true;
-}
-
-uint64
-${ident}_Profiler::getEventCount(${ident}_Event event)
-{
-    return m_event_counters[event];
-}
-
-bool
-${ident}_Profiler::isPossible(${ident}_State state, ${ident}_Event event)
-{
-    return m_possible[state][event];
-}
-
-uint64
-${ident}_Profiler::getTransitionCount(${ident}_State state,
-                                      ${ident}_Event event)
-{
-    return m_counters[state][event];
-}
-
-''')
-        code.write(path, "%s_Profiler.cc" % self.ident)
 
     # **************************
     # ******* HTML Files *******

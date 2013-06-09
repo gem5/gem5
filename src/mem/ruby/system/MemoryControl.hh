@@ -75,9 +75,6 @@ class MemoryControl : public ClockedObject, public Consumer
     virtual bool areNSlotsAvailable(int n) = 0;  // infinite queue length
 
     virtual void print(std::ostream& out) const = 0;
-    virtual void clearStats() const = 0;
-    virtual void printStats(std::ostream& out) const = 0;
-
     virtual void regStats() {};
 
     virtual const int getChannel(const physical_address_t addr) const = 0;

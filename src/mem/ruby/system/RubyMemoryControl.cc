@@ -221,6 +221,7 @@ RubyMemoryControl::init()
         m_tfaw_count[i] = 0;
     }
 }
+
 void
 RubyMemoryControl::reset()
 {
@@ -357,18 +358,6 @@ RubyMemoryControl::setConsumer(Consumer* consumer_ptr)
 void
 RubyMemoryControl::print(ostream& out) const
 {
-}
-
-void
-RubyMemoryControl::clearStats() const
-{
-    m_profiler_ptr->clearStats();
-}
-
-void
-RubyMemoryControl::printStats(ostream& out) const
-{
-    m_profiler_ptr->printStats(out);
 }
 
 // Queue up a completed request to send back to directory
@@ -787,6 +776,12 @@ RubyMemoryControl::functionalWriteBuffers(Packet *pkt)
     }
 
     return num_functional_writes;
+}
+
+void
+RubyMemoryControl::regStats()
+{
+    m_profiler_ptr->regStats();
 }
 
 RubyMemoryControl *

@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 
+#include "base/callback.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Address.hh"
@@ -54,6 +55,7 @@ class AbstractController : public ClockedObject, public Consumer
     AbstractController(const Params *p);
     void init();
     const Params *params() const { return (const Params *)_params; }
+
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual const int & getVersion() const = 0;
     virtual const std::string toString() const = 0;  // returns text version of
@@ -68,8 +70,9 @@ class AbstractController : public ClockedObject, public Consumer
     virtual void print(std::ostream & out) const = 0;
     virtual void printStats(std::ostream & out) const = 0;
     virtual void wakeup() = 0;
-    //  virtual void dumpStats(std::ostream & out) = 0;
     virtual void clearStats() = 0;
+    virtual void regStats() = 0;
+
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getSequencer() const = 0;
 
@@ -85,6 +88,12 @@ class AbstractController : public ClockedObject, public Consumer
     //! Function for enqueuing a prefetch request
     virtual void enqueuePrefetch(const Address&, const RubyRequestType&)
     { fatal("Prefetches not implemented!");}
+
+    //! Function for collating statistics from all the controllers of this
+    //! particular type. This function should only be called from the
+    //! version 0 of this controller type.
+    virtual void collateStats()
+    {fatal("collateStats() should be overridden!");}
 
   public:
     MachineID getMachineID() const { return m_machineID; }
@@ -154,6 +163,24 @@ class AbstractController : public ClockedObject, public Consumer
     //! cares for
     Histogram m_delayHistogram;
     std::vector<Histogram> m_delayVCHistogram;
+
+    //! Callback class used for collating statistics from all the
+    //! controller of this type.
+    class StatsCallback : public Callback
+    {
+      private:
+        AbstractController *ctr;
+
+      public:
+        virtual ~StatsCallback() {}
+
+        StatsCallback(AbstractController *_ctr)
+            : ctr(_ctr)
+        {
+        }
+
+        void process() {ctr->collateStats();}
+    };
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

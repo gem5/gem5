@@ -37,96 +37,10 @@ MemCntrlProfiler::MemCntrlProfiler(const string& description,
     m_banks_per_rank = banks_per_rank;
     m_ranks_per_dimm = ranks_per_dimm;
     m_dimms_per_channel = dimms_per_channel;
-
-    int totalBanks = banks_per_rank * ranks_per_dimm * dimms_per_channel;
-    m_memBankCount.resize(totalBanks);
-
-    clearStats();
 }
 
 MemCntrlProfiler::~MemCntrlProfiler()
 {
-}
-
-void
-MemCntrlProfiler::printStats(ostream& out) const
-{
-    if (!m_memReq && !m_memRefresh) {
-        out << "Memory Controller: " << m_description
-            << " no stats recorded." << endl
-            << endl
-            << endl;
-        return;
-    }
-
-    // if there's a memory controller at all
-    uint64 total_stalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
-    double stallsPerReq = total_stalls * 1.0 / m_memReq;
-    out << "Memory controller: " << m_description << ":" << endl;
-
-    // does not include refreshes
-    out << "  memory_total_requests: " << m_memReq << endl;
-    out << "  memory_reads: " << m_memRead << endl;
-    out << "  memory_writes: " << m_memWrite << endl;
-    out << "  memory_refreshes: " << m_memRefresh << endl;
-    out << "  memory_total_request_delays: " << total_stalls << endl;
-    out << "  memory_delays_per_request: " << stallsPerReq << endl;
-    out << "  memory_delays_in_input_queue: " << m_memInputQ << endl;
-    out << "  memory_delays_behind_head_of_bank_queue: "
-        << m_memBankQ << endl;
-    out << "  memory_delays_stalled_at_head_of_bank_queue: "
-        << m_memWaitCycles << endl;
-
-    // Note: The following "memory stalls" entries are a breakdown of
-    // the cycles which already showed up in m_memWaitCycles.  The
-    // order is significant; it is the priority of attributing the
-    // cycles.  For example, bank_busy is before arbitration because
-    // if the bank was busy, we didn't even check arbitration.
-    // Note: "not old enough" means that since we grouped waiting
-    // heads-of-queues into batches to avoid starvation, a request in
-    // a newer batch didn't try to arbitrate yet because there are
-    // older requests waiting.
-    out << "  memory_stalls_for_bank_busy: " << m_memBankBusy << endl;
-    out << "  memory_stalls_for_random_busy: " << m_memRandBusy << endl;
-    out << "  memory_stalls_for_anti_starvation: " << m_memNotOld << endl;
-    out << "  memory_stalls_for_arbitration: " << m_memArbWait << endl;
-    out << "  memory_stalls_for_bus: " << m_memBusBusy << endl;
-    out << "  memory_stalls_for_tfaw: " << m_memTfawBusy << endl;
-    out << "  memory_stalls_for_read_write_turnaround: "
-        << m_memReadWriteBusy << endl;
-    out << "  memory_stalls_for_read_read_turnaround: "
-        << m_memDataBusBusy << endl;
-    out << "  accesses_per_bank: ";
-
-    for (int bank = 0; bank < m_memBankCount.size(); bank++) {
-        out << m_memBankCount[bank] << "  ";
-    }
-    out << endl;
-    out << endl;
-}
-
-void
-MemCntrlProfiler::clearStats()
-{
-    m_memReq = 0;
-    m_memBankBusy = 0;
-    m_memBusBusy = 0;
-    m_memTfawBusy = 0;
-    m_memReadWriteBusy = 0;
-    m_memDataBusBusy = 0;
-    m_memRefresh = 0;
-    m_memRead = 0;
-    m_memWrite = 0;
-    m_memWaitCycles = 0;
-    m_memInputQ = 0;
-    m_memBankQ = 0;
-    m_memArbWait = 0;
-    m_memRandBusy = 0;
-    m_memNotOld = 0;
-
-    for (int bank = 0; bank < m_memBankCount.size(); bank++) {
-        m_memBankCount[bank] = 0;
-    }
 }
 
 void
@@ -220,4 +134,133 @@ MemCntrlProfiler::profileMemNotOld()
     m_memNotOld++;
 }
 
+void
+MemCntrlProfiler::regStats()
+{
+    m_memReq
+        .name(m_description + ".memReq")
+        .desc("Total number of memory requests")
+        .flags(Stats::nozero)
+        ;
+
+    m_memRead
+        .name(m_description + ".memRead")
+        .desc("Number of memory reads")
+        .flags(Stats::nozero)
+        ;
+
+    m_memWrite
+        .name(m_description + ".memWrite")
+        .desc("Number of memory writes")
+        .flags(Stats::nozero)
+        ;
+
+    m_memRefresh
+        .name(m_description + ".memRefresh")
+        .desc("Number of memory refreshes")
+        .flags(Stats::nozero)
+        ;
+
+    m_memInputQ
+        .name(m_description + ".memInputQ")
+        .desc("Delay in the input queue")
+        .flags(Stats::nozero)
+        ;
+
+    m_memBankQ
+        .name(m_description + ".memBankQ")
+        .desc("Delay behind the head of the bank queue")
+        .flags(Stats::nozero)
+        ;
+
+    m_memWaitCycles
+        .name(m_description + ".memWaitCycles")
+        .desc("Delay stalled at the head of the bank queue")
+        .flags(Stats::nozero)
+        ;
+
+    m_totalStalls
+        .name(m_description + ".totalStalls")
+        .desc("Total number of stall cycles")
+        .flags(Stats::nozero)
+        ;
+
+    m_totalStalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
+
+    m_stallsPerReq
+        .name(m_description + ".stallsPerReq")
+        .desc("Expected number of stall cycles per request")
+        .flags(Stats::nozero)
+        ;
+
+    m_stallsPerReq = m_totalStalls / m_memReq;
+
+    // Note: The following "memory stalls" entries are a breakdown of
+    // the cycles which already showed up in m_memWaitCycles.  The
+    // order is significant; it is the priority of attributing the
+    // cycles.  For example, bank_busy is before arbitration because
+    // if the bank was busy, we didn't even check arbitration.
+    // Note: "not old enough" means that since we grouped waiting
+    // heads-of-queues into batches to avoid starvation, a request in
+    // a newer batch didn't try to arbitrate yet because there are
+    // older requests waiting.
+    m_memBankBusy
+        .name(m_description + ".memBankBusy")
+        .desc("memory stalls due to busy bank")
+        .flags(Stats::nozero)
+        ;
+
+    m_memRandBusy
+        .name(m_description + ".memRandBusy")
+        .desc("memory stalls due to busy random")
+        .flags(Stats::nozero)
+        ;
+
+    m_memNotOld
+        .name(m_description + ".memNotOld")
+        .desc("memory stalls due to anti starvation")
+        .flags(Stats::nozero)
+        ;
+
+    m_memArbWait
+        .name(m_description + ".memArbWait")
+        .desc("memory stalls due to arbitration")
+        .flags(Stats::nozero)
+        ;
+
+    m_memBusBusy
+        .name(m_description + ".memBusBusy")
+        .desc("memory stalls due to busy bus")
+        .flags(Stats::nozero)
+        ;
+
+    m_memTfawBusy
+        .name(m_description + ".memTfawBusy")
+        .desc("memory stalls for Tfaw")
+        .flags(Stats::nozero)
+        ;
+
+    m_memReadWriteBusy
+        .name(m_description + ".memReadWriteBusy")
+        .desc("memory stalls due to read write turnaround")
+        .flags(Stats::nozero)
+        ;
+
+    m_memDataBusBusy
+        .name(m_description + ".memDataBusBusy")
+        .desc("memory stalls due to read read turnaround")
+        .flags(Stats::nozero)
+        ;
+
+    int totalBanks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
+    m_memBankCount
+        .init(totalBanks)
+        .name(m_description + ".memBankCount")
+        .desc("Number of accesses per bank")
+        .flags(Stats::pdf | Stats::total|Stats::oneline)
+        ;
+    for (int i = 0; i < totalBanks; i++) {
+        m_memBankCount.subname(i, "");
+    }
+}
 

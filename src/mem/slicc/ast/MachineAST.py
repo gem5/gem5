@@ -44,10 +44,6 @@ class MachineAST(DeclAST):
         s = set(('%s_Controller.cc' % self.ident,
                  '%s_Controller.hh' % self.ident,
                  '%s_Controller.py' % self.ident,
-                 '%s_Profiler.cc' % self.ident,
-                 '%s_Profiler.hh' % self.ident,
-                 '%s_ProfileDumper.cc' % self.ident,
-                 '%s_ProfileDumper.hh' % self.ident,
                  '%s_Transitions.cc' % self.ident,
                  '%s_Wakeup.cc' % self.ident))
 

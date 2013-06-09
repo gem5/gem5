@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
 class MemCntrlProfiler
@@ -42,8 +43,7 @@ class MemCntrlProfiler
                      int ranks_per_dimm, int dimms_per_channel);
     ~MemCntrlProfiler();
 
-    void printStats(std::ostream& out) const;
-    void clearStats();
+    void regStats();
 
     void profileMemReq(int bank);
     void profileMemBankBusy();
@@ -69,22 +69,27 @@ private:
     MemCntrlProfiler& operator=(const MemCntrlProfiler& obj);
 
     std::string m_description;
-    uint64 m_memReq;
-    uint64 m_memBankBusy;
-    uint64 m_memBusBusy;
-    uint64 m_memTfawBusy;
-    uint64 m_memReadWriteBusy;
-    uint64 m_memDataBusBusy;
-    uint64 m_memRefresh;
-    uint64 m_memRead;
-    uint64 m_memWrite;
-    uint64 m_memWaitCycles;
-    uint64 m_memInputQ;
-    uint64 m_memBankQ;
-    uint64 m_memArbWait;
-    uint64 m_memRandBusy;
-    uint64 m_memNotOld;
-    std::vector<uint64> m_memBankCount;
+    Stats::Scalar m_memReq;
+    Stats::Scalar m_memRead;
+    Stats::Scalar m_memWrite;
+    Stats::Scalar m_memRefresh;
+
+    Stats::Scalar m_memWaitCycles;
+    Stats::Scalar m_memInputQ;
+    Stats::Scalar m_memBankQ;
+    Stats::Formula m_totalStalls;
+    Stats::Formula m_stallsPerReq;
+
+    Stats::Scalar m_memBankBusy;
+    Stats::Scalar m_memBusBusy;
+    Stats::Scalar m_memTfawBusy;
+    Stats::Scalar m_memReadWriteBusy;
+    Stats::Scalar m_memDataBusBusy;
+    Stats::Scalar m_memArbWait;
+    Stats::Scalar m_memRandBusy;
+    Stats::Scalar m_memNotOld;
+    Stats::Vector m_memBankCount;
+
     int m_banks_per_rank;
     int m_ranks_per_dimm;
     int m_dimms_per_channel;

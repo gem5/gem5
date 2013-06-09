@@ -81,8 +81,7 @@ class RubyMemoryControl : public MemoryControl
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
     void print(std::ostream& out) const;
-    void clearStats() const;
-    void printStats(std::ostream& out) const;
+    void regStats();
 
     const int getBank(const physical_address_t addr) const;
     const int getRank(const physical_address_t addr) const;
