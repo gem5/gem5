@@ -72,9 +72,6 @@ class Address
     void makePageAddress();
     void makeNextStrideAddress(int stride);
 
-    int getBankSetNum() const;
-    int getBankSetDist() const;
-
     Index memoryModuleIndex() const;
 
     void print(std::ostream& out) const;
