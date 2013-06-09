@@ -108,12 +108,6 @@ class Profiler : public SimObject
         m_average_latency_estimate.add(latency);
     }
 
-    void recordPrediction(bool wasGood, bool wasPredicted);
-
-    void startTransaction(int cpu);
-    void endTransaction(int cpu);
-    void profilePFWait(Cycles waitTime);
-
     void controllerBusy(MachineID machID);
     void bankBusy();
 
@@ -156,25 +150,16 @@ class Profiler : public SimObject
     AddressProfiler* m_address_profiler_ptr;
     AddressProfiler* m_inst_profiler_ptr;
 
-    std::vector<int64> m_instructions_executed_at_start;
-    std::vector<int64> m_cycles_executed_at_start;
-
     Cycles m_ruby_start;
     time_t m_real_time_start_time;
 
     int64_t m_busyBankCount;
-    Histogram m_multicast_retry_histogram;
-
-    Histogram m_filter_action_histogram;
-    Histogram m_tbeProfile;
 
     Histogram m_read_sharing_histogram;
     Histogram m_write_sharing_histogram;
     Histogram m_all_sharing_histogram;
     int64 m_cache_to_cache;
     int64 m_memory_to_cache;
-
-    Histogram m_prefetchWaitHistogram;
 
     std::vector<Histogram> m_missLatencyHistograms;
     std::vector<Histogram> m_machLatencyHistograms;

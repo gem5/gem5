@@ -265,18 +265,6 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << endl;
     }
 
-    vector<int64_t> perProcCycleCount(m_num_of_sequencers);
-
-    for (int i = 0; i < m_num_of_sequencers; i++) {
-        perProcCycleCount[i] =
-            g_system_ptr->curCycle() - m_cycles_executed_at_start[i] + 1;
-        // The +1 allows us to avoid division by zero
-    }
-
-    out << "ruby_cycles_executed: " << perProcCycleCount << endl;
-
-    out << endl;
-
     if (!short_stats) {
         out << "Busy Controller Counts:" << endl;
         for (uint32_t i = 0; i < MachineType_NUM; i++) {
@@ -403,8 +391,6 @@ Profiler::printStats(ostream& out, bool short_stats)
 
         printRequestProfile(out);
 
-        out << "filter_action: " << m_filter_action_histogram << endl;
-
         if (!m_all_instructions) {
             m_address_profiler_ptr->printStats(out);
         }
@@ -446,11 +432,6 @@ Profiler::clearStats()
 {
     m_ruby_start = g_system_ptr->curCycle();
     m_real_time_start_time = time(NULL);
-
-    m_cycles_executed_at_start.resize(m_num_of_sequencers);
-    for (int i = 0; i < m_num_of_sequencers; i++) {
-        m_cycles_executed_at_start[i] = g_system_ptr->curCycle();
-    }
 
     m_busyBankCount = 0;
 
@@ -541,12 +522,6 @@ Profiler::profileSharing(const Address& addr, AccessType type,
     } else {
         m_cache_to_cache++;
     }
-}
-
-void
-Profiler::profilePFWait(Cycles waitTime)
-{
-    m_prefetchWaitHistogram.add(waitTime);
 }
 
 void
