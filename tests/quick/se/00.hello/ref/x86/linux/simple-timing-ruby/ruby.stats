@@ -1,26 +1,24 @@
-Real time: Mar/11/2013 13:21:59
+Real time: Jun/08/2013 14:40:51
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 1
-Elapsed_time_in_minutes: 0.0166667
-Elapsed_time_in_hours: 0.000277778
-Elapsed_time_in_days: 1.15741e-05
+Elapsed_time_in_seconds: 0
+Elapsed_time_in_minutes: 0
+Elapsed_time_in_hours: 0
+Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.6
-Virtual_time_in_minutes: 0.01
-Virtual_time_in_hours:   0.000166667
-Virtual_time_in_days:    6.94444e-06
+Virtual_time_in_seconds: 0.54
+Virtual_time_in_minutes: 0.009
+Virtual_time_in_hours:   0.00015
+Virtual_time_in_days:    6.25e-06
 
 Ruby_current_time: 121759
 Ruby_start_time: 0
 Ruby_cycles: 121759
 
-mbytes_resident: 66.582
-mbytes_total: 163.426
-resident_ratio: 0.407486
-
-ruby_cycles_executed: [ 121760 ]
+mbytes_resident: 66.5
+mbytes_total: 158.215
+resident_ratio: 0.420364
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -67,7 +65,6 @@ Request vs. RubySystem State Profile
 --------------------------------
 
 
-filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 Message Delayed Cycles
 ----------------------
@@ -88,11 +85,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 14769
+page_reclaims: 13753
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 88
+block_outputs: 96
 
 Network Stats
 -------------
@@ -135,130 +132,4 @@ links_utilized_percent_switch_2: 5.6464
   outgoing_messages_switch_2_link_0_Writeback_Control: 1373 10984 [ 0 0 0 1373 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Control: 1377 11016 [ 0 0 1377 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Data: 1373 98856 [ 0 0 1373 0 0 0 0 0 0 0 ] base_latency: 1
-
- --- L1Cache ---
- - Event Counts -
-Load [1045 ] 1045
-Ifetch [6864 ] 6864
-Store [943 ] 943
-Data [1377 ] 1377
-Fwd_GETX [0 ] 0
-Inv [0 ] 0
-Replacement [1373 ] 1373
-Writeback_Ack [1373 ] 1373
-Writeback_Nack [0 ] 0
-
- - Transitions -
-I  Load [499 ] 499
-I  Ifetch [623 ] 623
-I  Store [255 ] 255
-I  Inv [0 ] 0
-I  Replacement [0 ] 0
-
-II  Writeback_Nack [0 ] 0
-
-M  Load [546 ] 546
-M  Ifetch [6241 ] 6241
-M  Store [688 ] 688
-M  Fwd_GETX [0 ] 0
-M  Inv [0 ] 0
-M  Replacement [1373 ] 1373
-
-MI  Fwd_GETX [0 ] 0
-MI  Inv [0 ] 0
-MI  Writeback_Ack [1373 ] 1373
-MI  Writeback_Nack [0 ] 0
-
-MII  Fwd_GETX [0 ] 0
-
-IS  Data [1122 ] 1122
-
-IM  Data [255 ] 255
-
-Memory controller: system.ruby.dir_cntrl0.memBuffer:
-  memory_total_requests: 2750
-  memory_reads: 1377
-  memory_writes: 1373
-  memory_refreshes: 846
-  memory_total_request_delays: 1968
-  memory_delays_per_request: 0.715636
-  memory_delays_in_input_queue: 0
-  memory_delays_behind_head_of_bank_queue: 3
-  memory_delays_stalled_at_head_of_bank_queue: 1965
-  memory_stalls_for_bank_busy: 823
-  memory_stalls_for_random_busy: 0
-  memory_stalls_for_anti_starvation: 0
-  memory_stalls_for_arbitration: 65
-  memory_stalls_for_bus: 1044
-  memory_stalls_for_tfaw: 0
-  memory_stalls_for_read_write_turnaround: 33
-  memory_stalls_for_read_read_turnaround: 0
-  accesses_per_bank: 160  144  210  146  196  96  66  38  22  20  184  297  71  124  60  18  84  6  8  14  92  56  14  60  34  58  84  66  42  122  104  54  
-
- --- Directory ---
- - Event Counts -
-GETX [1377 ] 1377
-GETS [0 ] 0
-PUTX [1373 ] 1373
-PUTX_NotOwner [0 ] 0
-DMA_READ [0 ] 0
-DMA_WRITE [0 ] 0
-Memory_Data [1377 ] 1377
-Memory_Ack [1373 ] 1373
-
- - Transitions -
-I  GETX [1377 ] 1377
-I  PUTX_NotOwner [0 ] 0
-I  DMA_READ [0 ] 0
-I  DMA_WRITE [0 ] 0
-
-M  GETX [0 ] 0
-M  PUTX [1373 ] 1373
-M  PUTX_NotOwner [0 ] 0
-M  DMA_READ [0 ] 0
-M  DMA_WRITE [0 ] 0
-
-M_DRD  GETX [0 ] 0
-M_DRD  PUTX [0 ] 0
-
-M_DWR  GETX [0 ] 0
-M_DWR  PUTX [0 ] 0
-
-M_DWRI  GETX [0 ] 0
-M_DWRI  Memory_Ack [0 ] 0
-
-M_DRDI  GETX [0 ] 0
-M_DRDI  Memory_Ack [0 ] 0
-
-IM  GETX [0 ] 0
-IM  GETS [0 ] 0
-IM  PUTX [0 ] 0
-IM  PUTX_NotOwner [0 ] 0
-IM  DMA_READ [0 ] 0
-IM  DMA_WRITE [0 ] 0
-IM  Memory_Data [1377 ] 1377
-
-MI  GETX [0 ] 0
-MI  GETS [0 ] 0
-MI  PUTX [0 ] 0
-MI  PUTX_NotOwner [0 ] 0
-MI  DMA_READ [0 ] 0
-MI  DMA_WRITE [0 ] 0
-MI  Memory_Ack [1373 ] 1373
-
-ID  GETX [0 ] 0
-ID  GETS [0 ] 0
-ID  PUTX [0 ] 0
-ID  PUTX_NotOwner [0 ] 0
-ID  DMA_READ [0 ] 0
-ID  DMA_WRITE [0 ] 0
-ID  Memory_Data [0 ] 0
-
-ID_W  GETX [0 ] 0
-ID_W  GETS [0 ] 0
-ID_W  PUTX [0 ] 0
-ID_W  PUTX_NotOwner [0 ] 0
-ID_W  DMA_READ [0 ] 0
-ID_W  DMA_WRITE [0 ] 0
-ID_W  Memory_Ack [0 ] 0
 

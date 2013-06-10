@@ -4,16 +4,31 @@ sim_seconds                                  0.000144                       # Nu
 sim_ticks                                      143853                       # Number of ticks simulated
 final_tick                                     143853                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  31570                       # Simulator instruction rate (inst/s)
-host_op_rate                                    31567                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 710572                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 153096                       # Number of bytes of host memory used
-host_seconds                                     0.20                       # Real time elapsed on the host
+host_inst_rate                                  39172                       # Simulator instruction rate (inst/s)
+host_op_rate                                    39167                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 881633                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 145628                       # Number of bytes of host memory used
+host_seconds                                     0.16                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.ruby.l1_cntrl0.cacheMemory.demand_hits         6718                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses         1730                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses         8448                       # Number of cache demand accesses
+system.ruby.dir_cntrl0.memBuffer.memReq          3456                       # Total number of memory requests
+system.ruby.dir_cntrl0.memBuffer.memRead         1730                       # Number of memory reads
+system.ruby.dir_cntrl0.memBuffer.memWrite         1726                       # Number of memory writes
+system.ruby.dir_cntrl0.memBuffer.memRefresh          999                       # Number of memory refreshes
+system.ruby.dir_cntrl0.memBuffer.memWaitCycles         3037                       # Delay stalled at the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.memBankQ           11                       # Delay behind the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.totalStalls         3048                       # Total number of stall cycles
+system.ruby.dir_cntrl0.memBuffer.stallsPerReq     0.881944                       # Expected number of stall cycles per request
+system.ruby.dir_cntrl0.memBuffer.memBankBusy         1500                       # memory stalls due to busy bank
+system.ruby.dir_cntrl0.memBuffer.memBusBusy         1375                       # memory stalls due to busy bus
+system.ruby.dir_cntrl0.memBuffer.memReadWriteBusy           55                       # memory stalls due to read write turnaround
+system.ruby.dir_cntrl0.memBuffer.memArbWait          107                       # memory stalls due to arbitration
+system.ruby.dir_cntrl0.memBuffer.memBankCount |         162      4.69%      4.69% |          36      1.04%      5.73% |          92      2.66%      8.39% |         110      3.18%     11.57% |         106      3.07%     14.64% |         362     10.47%     25.12% |          98      2.84%     27.95% |          36      1.04%     28.99% |          32      0.93%     29.92% |          34      0.98%     30.90% |          83      2.40%     33.30% |          92      2.66%     35.97% |         110      3.18%     39.15% |         104      3.01%     42.16% |          84      2.43%     44.59% |          86      2.49%     47.08% |          83      2.40%     49.48% |          53      1.53%     51.01% |          50      1.45%     52.46% |          58      1.68%     54.14% |          64      1.85%     55.99% |         124      3.59%     59.58% |         212      6.13%     65.71% |          72      2.08%     67.80% |          66      1.91%     69.70% |          50      1.45%     71.15% |         122      3.53%     74.68% |         190      5.50%     80.18% |         220      6.37%     86.55% |         325      9.40%     95.95% |          42      1.22%     97.16% |          98      2.84%    100.00% # Number of accesses per bank
+system.ruby.dir_cntrl0.memBuffer.memBankCount::total         3456                       # Number of accesses per bank
+
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
@@ -69,5 +84,29 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                     143853                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.ruby.l1_cntrl0.Load                       1183      0.00%      0.00%
+system.ruby.l1_cntrl0.Ifetch                     6400      0.00%      0.00%
+system.ruby.l1_cntrl0.Store                       865      0.00%      0.00%
+system.ruby.l1_cntrl0.Data                       1730      0.00%      0.00%
+system.ruby.l1_cntrl0.Replacement                1726      0.00%      0.00%
+system.ruby.l1_cntrl0.Writeback_Ack              1726      0.00%      0.00%
+system.ruby.l1_cntrl0.I.Load                      727      0.00%      0.00%
+system.ruby.l1_cntrl0.I.Ifetch                    730      0.00%      0.00%
+system.ruby.l1_cntrl0.I.Store                     273      0.00%      0.00%
+system.ruby.l1_cntrl0.M.Load                      456      0.00%      0.00%
+system.ruby.l1_cntrl0.M.Ifetch                   5670      0.00%      0.00%
+system.ruby.l1_cntrl0.M.Store                     592      0.00%      0.00%
+system.ruby.l1_cntrl0.M.Replacement              1726      0.00%      0.00%
+system.ruby.l1_cntrl0.MI.Writeback_Ack           1726      0.00%      0.00%
+system.ruby.l1_cntrl0.IS.Data                    1457      0.00%      0.00%
+system.ruby.l1_cntrl0.IM.Data                     273      0.00%      0.00%
+system.ruby.dir_cntrl0.GETX                      1730      0.00%      0.00%
+system.ruby.dir_cntrl0.PUTX                      1726      0.00%      0.00%
+system.ruby.dir_cntrl0.Memory_Data               1730      0.00%      0.00%
+system.ruby.dir_cntrl0.Memory_Ack                1726      0.00%      0.00%
+system.ruby.dir_cntrl0.I.GETX                    1730      0.00%      0.00%
+system.ruby.dir_cntrl0.M.PUTX                    1726      0.00%      0.00%
+system.ruby.dir_cntrl0.IM.Memory_Data            1730      0.00%      0.00%
+system.ruby.dir_cntrl0.MI.Memory_Ack             1726      0.00%      0.00%
 
 ---------- End Simulation Statistics   ----------

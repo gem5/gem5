@@ -1,26 +1,24 @@
-Real time: Apr/09/2013 01:55:51
+Real time: Jun/08/2013 13:42:59
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 52
-Elapsed_time_in_minutes: 0.866667
-Elapsed_time_in_hours: 0.0144444
-Elapsed_time_in_days: 0.000601852
+Elapsed_time_in_seconds: 38
+Elapsed_time_in_minutes: 0.633333
+Elapsed_time_in_hours: 0.0105556
+Elapsed_time_in_days: 0.000439815
 
-Virtual_time_in_seconds: 52.85
-Virtual_time_in_minutes: 0.880833
-Virtual_time_in_hours:   0.0146806
-Virtual_time_in_days:    0.00061169
+Virtual_time_in_seconds: 38.03
+Virtual_time_in_minutes: 0.633833
+Virtual_time_in_hours:   0.0105639
+Virtual_time_in_days:    0.000440162
 
 Ruby_current_time: 8664886
 Ruby_start_time: 0
 Ruby_cycles: 8664886
 
-mbytes_resident: 64.3945
-mbytes_total: 243.918
-resident_ratio: 0.264001
-
-ruby_cycles_executed: [ 8664887 8664887 8664887 8664887 8664887 8664887 8664887 8664887 ]
+mbytes_resident: 69.8516
+mbytes_total: 283.504
+resident_ratio: 0.246414
 
 Busy Controller Counts:
 L1Cache-0:0  L1Cache-1:0  L1Cache-2:0  L1Cache-3:0  L1Cache-4:0  L1Cache-5:0  L1Cache-6:0  L1Cache-7:0  
@@ -62,7 +60,6 @@ Request vs. RubySystem State Profile
 --------------------------------
 
 
-filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 Message Delayed Cycles
 ----------------------
@@ -81,12 +78,12 @@ Total_delay_cycles: [binsize: 1 max: 22 count: 1237687 average: 0.00723931 | sta
 Resource Usage
 --------------
 page_size: 4096
-user_time: 52
+user_time: 37
 system_time: 0
-page_reclaims: 17037
+page_reclaims: 10989
 page_faults: 0
 swaps: 0
-block_inputs: 24
+block_inputs: 264
 block_outputs: 200
 
 Network Stats
@@ -236,130 +233,4 @@ links_utilized_percent_switch_9: 7.88828
   outgoing_messages_switch_9_link_7_Writeback_Control: 77585 620680 [ 0 0 0 77585 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_9_link_8_Control: 617562 4940496 [ 0 0 617562 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_9_link_8_Data: 611948 44060256 [ 0 0 611948 0 0 0 0 0 0 0 ] base_latency: 1
-
- --- L1Cache ---
- - Event Counts -
-Load [50370 50258 50037 49672 50004 50305 50279 50578 ] 401503
-Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [27007 26935 26787 27153 27327 27084 27075 26703 ] 216071
-Data [77375 77192 76821 76821 77329 77385 77352 77277 ] 617552
-Fwd_GETX [1048 1042 1040 1065 995 1001 998 1019 ] 8208
-Inv [0 0 0 0 0 0 0 0 ] 0
-Replacement [77373 77189 76820 76821 77327 77385 77350 77277 ] 617542
-Writeback_Ack [76323 76144 75775 75751 76330 76378 76350 76253 ] 609304
-Writeback_Nack [342 322 324 341 327 344 310 313 ] 2623
-
- - Transitions -
-I  Load [50370 50258 50037 49672 50004 50305 50279 50578 ] 401503
-I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [27007 26935 26787 27153 27327 27084 27075 26703 ] 216071
-I  Inv [0 0 0 0 0 0 0 0 ] 0
-I  Replacement [706 720 716 724 668 657 688 706 ] 5585
-
-II  Writeback_Nack [342 322 324 341 327 344 310 313 ] 2623
-
-M  Load [0 0 0 0 0 0 0 0 ] 0
-M  Ifetch [0 0 0 0 0 0 0 0 ] 0
-M  Store [0 0 0 0 0 0 0 0 ] 0
-M  Fwd_GETX [706 720 716 724 668 657 688 706 ] 5585
-M  Inv [0 0 0 0 0 0 0 0 ] 0
-M  Replacement [76667 76469 76104 76097 76659 76728 76662 76571 ] 611957
-
-MI  Fwd_GETX [342 322 324 341 327 344 310 313 ] 2623
-MI  Inv [0 0 0 0 0 0 0 0 ] 0
-MI  Writeback_Ack [76323 76144 75775 75751 76330 76378 76350 76253 ] 609304
-MI  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
-
-MII  Fwd_GETX [0 0 0 0 0 0 0 0 ] 0
-
-IS  Data [50370 50258 50035 49669 50002 50301 50278 50576 ] 401489
-
-IM  Data [27005 26934 26786 27152 27327 27084 27074 26701 ] 216063
-
-Memory controller: system.ruby.dir_cntrl0.memBuffer:
-  memory_total_requests: 1218678
-  memory_reads: 609346
-  memory_writes: 609308
-  memory_refreshes: 60173
-  memory_total_request_delays: 87480258
-  memory_delays_per_request: 71.7829
-  memory_delays_in_input_queue: 1522193
-  memory_delays_behind_head_of_bank_queue: 40100008
-  memory_delays_stalled_at_head_of_bank_queue: 45858057
-  memory_stalls_for_bank_busy: 7076344
-  memory_stalls_for_random_busy: 0
-  memory_stalls_for_anti_starvation: 11282671
-  memory_stalls_for_arbitration: 9195209
-  memory_stalls_for_bus: 12585722
-  memory_stalls_for_tfaw: 0
-  memory_stalls_for_read_write_turnaround: 4642017
-  memory_stalls_for_read_read_turnaround: 1076094
-  accesses_per_bank: 38404  37646  38381  38273  38109  38021  38580  38357  38057  38004  38123  37658  37751  38546  37560  38514  38232  38045  38749  38589  38066  37687  38032  38060  37804  38206  37726  38148  37682  38049  37701  37918  
-
- --- Directory ---
- - Event Counts -
-GETX [791175 ] 791175
-GETS [0 ] 0
-PUTX [609324 ] 609324
-PUTX_NotOwner [2623 ] 2623
-DMA_READ [0 ] 0
-DMA_WRITE [0 ] 0
-Memory_Data [609345 ] 609345
-Memory_Ack [609304 ] 609304
-
- - Transitions -
-I  GETX [609354 ] 609354
-I  PUTX_NotOwner [0 ] 0
-I  DMA_READ [0 ] 0
-I  DMA_WRITE [0 ] 0
-
-M  GETX [8208 ] 8208
-M  PUTX [609324 ] 609324
-M  PUTX_NotOwner [2623 ] 2623
-M  DMA_READ [0 ] 0
-M  DMA_WRITE [0 ] 0
-
-M_DRD  GETX [0 ] 0
-M_DRD  PUTX [0 ] 0
-
-M_DWR  GETX [0 ] 0
-M_DWR  PUTX [0 ] 0
-
-M_DWRI  GETX [0 ] 0
-M_DWRI  Memory_Ack [0 ] 0
-
-M_DRDI  GETX [0 ] 0
-M_DRDI  Memory_Ack [0 ] 0
-
-IM  GETX [65257 ] 65257
-IM  GETS [0 ] 0
-IM  PUTX [0 ] 0
-IM  PUTX_NotOwner [0 ] 0
-IM  DMA_READ [0 ] 0
-IM  DMA_WRITE [0 ] 0
-IM  Memory_Data [609345 ] 609345
-
-MI  GETX [108356 ] 108356
-MI  GETS [0 ] 0
-MI  PUTX [0 ] 0
-MI  PUTX_NotOwner [0 ] 0
-MI  DMA_READ [0 ] 0
-MI  DMA_WRITE [0 ] 0
-MI  Memory_Ack [609304 ] 609304
-
-ID  GETX [0 ] 0
-ID  GETS [0 ] 0
-ID  PUTX [0 ] 0
-ID  PUTX_NotOwner [0 ] 0
-ID  DMA_READ [0 ] 0
-ID  DMA_WRITE [0 ] 0
-ID  Memory_Data [0 ] 0
-
-ID_W  GETX [0 ] 0
-ID_W  GETS [0 ] 0
-ID_W  PUTX [0 ] 0
-ID_W  PUTX_NotOwner [0 ] 0
-ID_W  DMA_READ [0 ] 0
-ID_W  DMA_WRITE [0 ] 0
-ID_W  Memory_Ack [0 ] 0
 
