@@ -89,7 +89,7 @@ class ArmKvmCPU : public BaseKvmCPU
 
     typedef std::vector<uint64_t> RegIndexVector;
 
-    void tick();
+    Tick kvmRun(Tick ticks);
 
     void updateKvmState();
     void updateThreadContext();

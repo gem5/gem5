@@ -266,8 +266,8 @@ ArmKvmCPU::startup()
     kvmArmVCpuInit(KVM_ARM_TARGET_CORTEX_A15);
 }
 
-void
-ArmKvmCPU::tick()
+Tick
+ArmKvmCPU::kvmRun(Tick ticks)
 {
     bool simFIQ(interrupts->checkRaw(INT_FIQ));
     bool simIRQ(interrupts->checkRaw(INT_IRQ));
@@ -283,7 +283,7 @@ ArmKvmCPU::tick()
         vm.setIRQLine(INTERRUPT_VCPU_IRQ(vcpuID), simIRQ);
     }
 
-    BaseKvmCPU::tick();
+    return BaseKvmCPU::kvmRun(ticks);
 }
 
 void
