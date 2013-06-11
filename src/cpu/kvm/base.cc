@@ -83,6 +83,7 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       pageSize(sysconf(_SC_PAGE_SIZE)),
       tickEvent(*this),
       perfControlledByTimer(params->usePerfOverflow),
+      hostFreq(params->hostFreq),
       hostFactor(params->hostFactor),
       drainManager(NULL),
       ctrInsts(0)
@@ -103,11 +104,11 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
         runTimer.reset(new PerfKvmTimer(hwCycles,
                                         KVM_TIMER_SIGNAL,
                                         params->hostFactor,
-                                        params->clock));
+                                        params->hostFreq));
     else
         runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
                                          params->hostFactor,
-                                         params->clock));
+                                         params->hostFreq));
 }
 
 BaseKvmCPU::~BaseKvmCPU()
@@ -410,8 +411,7 @@ BaseKvmCPU::activateContext(ThreadID thread_num, Cycles delay)
     assert(_status == Idle);
     assert(!tickEvent.scheduled());
 
-    numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend)
-        * hostFactor;
+    numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
 
     schedule(tickEvent, clockEdge(delay));
     _status = Running;
