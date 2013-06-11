@@ -209,6 +209,10 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
 
+    // The TSC has to be updated with side-effects if the CPUs in a
+    // CPU switch have different frequencies.
+    dest->setMiscReg(MISCREG_TSC, src->readMiscReg(MISCREG_TSC));
+
     dest->getITBPtr()->flushAll();
     dest->getDTBPtr()->flushAll();
 }
