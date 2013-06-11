@@ -44,10 +44,6 @@
  * terminate the loop.  Exported to Python via SWIG.
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
-
-// record the clock cycle for last exit event
-Tick lastExitTick = 0;
-
 SimLoopExitEvent *
 simulate(Tick num_cycles)
 {
@@ -71,16 +67,6 @@ simulate(Tick num_cycles)
 
         Event *exit_event = mainEventQueue.serviceOne();
         if (exit_event != NULL) {
-            /*
-             * if there are multiple exit events in the same cycle, drain the
-             * following exit events since gem5 only allows one * exit event in
-             * a cycle
-             */
-            if (lastExitTick == curTick())
-                continue;
-            else
-                lastExitTick = curTick();
-
             // hit some kind of exit event; return to Python
             // event must be subclass of SimLoopExitEvent...
             SimLoopExitEvent *se_event;
