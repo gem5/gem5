@@ -561,6 +561,9 @@ class BaseKvmCPU : public BaseCPU
     Stats::Scalar numInterrupts;
     Stats::Scalar numHypercalls;
     /* @} */
+
+    /** Number of instructions executed by the CPU */
+    Counter ctrInsts;
 };
 
 #endif

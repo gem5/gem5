@@ -80,7 +80,8 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       pageSize(sysconf(_SC_PAGE_SIZE)),
       tickEvent(*this),
       perfControlledByTimer(params->usePerfOverflow),
-      hostFactor(params->hostFactor)
+      hostFactor(params->hostFactor),
+      ctrInsts(0)
 {
     if (pageSize == -1)
         panic("KVM: Failed to determine host page size (%i)\n",
@@ -416,14 +417,14 @@ BaseKvmCPU::getContext(int tn)
 Counter
 BaseKvmCPU::totalInsts() const
 {
-    return hwInstructions.read();
+    return ctrInsts;
 }
 
 Counter
 BaseKvmCPU::totalOps() const
 {
     hack_once("Pretending totalOps is equivalent to totalInsts()\n");
-    return hwInstructions.read();
+    return ctrInsts;
 }
 
 void
@@ -522,6 +523,8 @@ BaseKvmCPU::kvmRun(Tick ticks)
     numCycles += simCyclesExecuted;;
     ++numVMExits;
     numInsts += instsExecuted;
+    ctrInsts += instsExecuted;
+    system->totalNumInsts += instsExecuted;
 
     DPRINTF(KvmRun, "KVM: Executed %i instructions in %i cycles (%i ticks, sim cycles: %i).\n",
             instsExecuted, hostCyclesExecuted, ticksExecuted, simCyclesExecuted);
