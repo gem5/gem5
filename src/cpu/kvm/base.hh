@@ -687,6 +687,8 @@ class BaseKvmCPU : public BaseCPU
     /* @{ */
     Stats::Scalar numInsts;
     Stats::Scalar numVMExits;
+    Stats::Scalar numVMHalfEntries;
+    Stats::Scalar numExitSignal;
     Stats::Scalar numMMIO;
     Stats::Scalar numCoalescedMMIO;
     Stats::Scalar numIO;

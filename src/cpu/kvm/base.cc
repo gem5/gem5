@@ -201,6 +201,16 @@ BaseKvmCPU::regStats()
         .desc("total number of KVM exits")
         ;
 
+    numVMHalfEntries
+        .name(name() + ".numVMHalfEntries")
+        .desc("number of KVM entries to finalize pending operations")
+        ;
+
+    numExitSignal
+        .name(name() + ".numExitSignal")
+        .desc("exits due to signal delivery")
+        ;
+
     numMMIO
         .name(name() + ".numMMIO")
         .desc("number of VM exits due to memory mapped IO")
@@ -523,10 +533,12 @@ BaseKvmCPU::tick()
 
           // Enter into the RunningService state unless the
           // simulation was stopped by a timer.
-          if (_kvmRun->exit_reason !=  KVM_EXIT_INTR)
+          if (_kvmRun->exit_reason !=  KVM_EXIT_INTR) {
               _status = RunningService;
-          else
+          } else {
+              ++numExitSignal;
               _status = Running;
+          }
 
           if (tryDrain())
               _status = Idle;
@@ -573,6 +585,8 @@ BaseKvmCPU::kvmRun(Tick ticks)
         // into KVM that finishes pending operations (e.g., IO) and
         // then immediately exits.
         DPRINTF(KvmRun, "KVM: Delivering IO without full guest entry\n");
+
+        ++numVMHalfEntries;
 
         // This signal is always masked while we are executing in gem5
         // and gets unmasked temporarily as soon as we enter into
