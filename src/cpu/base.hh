@@ -395,6 +395,36 @@ class BaseCPU : public MemObject
 
     virtual Counter totalOps() const = 0;
 
+    /**
+     * Schedule an event that exits the simulation loops after a
+     * predefined number of instructions.
+     *
+     * This method is usually called from the configuration script to
+     * get an exit event some time in the future. It is typically used
+     * when the script wants to simulate for a specific number of
+     * instructions rather than ticks.
+     *
+     * @param tid Thread monitor.
+     * @param insts Number of instructions into the future.
+     * @param cause Cause to signal in the exit event.
+     */
+    void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
+
+    /**
+     * Schedule an event that exits the simulation loops after a
+     * predefined number of load operations.
+     *
+     * This method is usually called from the configuration script to
+     * get an exit event some time in the future. It is typically used
+     * when the script wants to simulate for a specific number of
+     * loads rather than ticks.
+     *
+     * @param tid Thread monitor.
+     * @param loads Number of load instructions into the future.
+     * @param cause Cause to signal in the exit event.
+     */
+    void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
+
     // Function tracing
   private:
     bool functionTracingEnabled;

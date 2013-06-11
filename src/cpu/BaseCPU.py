@@ -99,6 +99,8 @@ class BaseCPU(MemObject):
     bool switchedOut();
     void flushTLBs();
     Counter totalInsts();
+    void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
+    void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
 ''')
 
     @classmethod

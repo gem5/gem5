@@ -147,10 +147,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     //
     if (p->max_insts_any_thread != 0) {
         const char *cause = "a thread reached the max instruction count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new SimLoopExitEvent(cause, 0);
-            comInstEventQueue[tid]->schedule(event, p->max_insts_any_thread);
-        }
+        for (ThreadID tid = 0; tid < numThreads; ++tid)
+            scheduleInstStop(tid, p->max_insts_any_thread, cause);
     }
 
     // Set up instruction-count-based termination events for SimPoints
@@ -159,10 +157,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     // exitting the simulation loop.
     if (!p->simpoint_start_insts.empty()) {
         const char *cause = "simpoint starting point found";
-        for (size_t i = 0; i < p->simpoint_start_insts.size(); ++i) {
-            Event *event = new SimLoopExitEvent(cause, 0);
-            comInstEventQueue[0]->schedule(event, p->simpoint_start_insts[i]);
-        }
+        for (size_t i = 0; i < p->simpoint_start_insts.size(); ++i)
+            scheduleInstStop(0, p->simpoint_start_insts[i], cause);
     }
 
     if (p->max_insts_all_threads != 0) {
@@ -189,10 +185,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     //
     if (p->max_loads_any_thread != 0) {
         const char *cause = "a thread reached the max load count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid) {
-            Event *event = new SimLoopExitEvent(cause, 0);
-            comLoadEventQueue[tid]->schedule(event, p->max_loads_any_thread);
-        }
+        for (ThreadID tid = 0; tid < numThreads; ++tid)
+            scheduleLoadStop(tid, p->max_loads_any_thread, cause);
     }
 
     if (p->max_loads_all_threads != 0) {
@@ -570,6 +564,25 @@ BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
             unserializeThread(cp, csprintf("%s.xc.%i", section, i), i);
     }
 }
+
+void
+BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
+{
+    const Tick now(comInstEventQueue[tid]->getCurTick());
+    Event *event(new SimLoopExitEvent(cause, 0));
+
+    comInstEventQueue[tid]->schedule(event, now + insts);
+}
+
+void
+BaseCPU::scheduleLoadStop(ThreadID tid, Counter loads, const char *cause)
+{
+    const Tick now(comLoadEventQueue[tid]->getCurTick());
+    Event *event(new SimLoopExitEvent(cause, 0));
+
+    comLoadEventQueue[tid]->schedule(event, now + loads);
+}
+
 
 void
 BaseCPU::traceFunctionsInternal(Addr pc)
