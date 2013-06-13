@@ -159,7 +159,7 @@ if options.smt and options.num_cpus > 1:
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = MemClass(range=AddrRange("512MB")),
-                membus = CoherentBus(), mem_mode = test_mem_mode)
+                mem_mode = test_mem_mode)
 
 # Sanity check
 if options.fastmem:
@@ -225,6 +225,7 @@ if options.ruby:
             system.cpu[i].itb.walker.port = ruby_port.slave
             system.cpu[i].dtb.walker.port = ruby_port.slave
 else:
+    system.membus = CoherentBus()
     system.system_port = system.membus.slave
     system.physmem.port = system.membus.master
     CacheConfig.config_cache(options, system)
