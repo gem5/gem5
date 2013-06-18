@@ -134,6 +134,13 @@ namespace X86ISA
      * @param val New rflags value to store in TC
      */
     void setRFlags(ThreadContext *tc, uint64_t val);
+
+    /**
+     * Extract the bit string representing a double value.
+     */
+    inline uint64_t getDoubleBits(double val) {
+        return *(uint64_t *)(&val);
+    }
 }
 
 #endif // __ARCH_X86_UTILITY_HH__

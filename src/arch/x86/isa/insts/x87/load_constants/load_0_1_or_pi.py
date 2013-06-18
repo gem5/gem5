@@ -40,17 +40,17 @@
 microcode = '''
 
 def macroop FLDZ {
-    limm ufp1, "double(0)"
+    lfpimm ufp1, 0.0
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLD1 {
-    limm ufp1, "double(1)"
+    lfpimm ufp1, 1.0
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLDPI {
-    limm ufp1, "double(3.14159265359)"
+    lfpimm ufp1, 3.14159265359
     movfp st(-1), ufp1, spm=-1
 };
 

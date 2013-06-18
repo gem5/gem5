@@ -40,22 +40,22 @@
 microcode = '''
 
 def macroop FLDL2E {
-    limm ufp1, "double(1.44269504089)"
+    lfpimm ufp1, 1.44269504089
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLDL2T {
-    limm ufp1, "double(3.32192809489)"
+    lfpimm ufp1, 3.32192809489
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLDLG2 {
-    limm ufp1, "double(0.30102999566)"
+    lfpimm ufp1, 0.30102999566
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLDLN2 {
-    limm ufp1, "double(0.69314718056)"
+    lfpimm ufp1, 0.69314718056
     movfp st(-1), ufp1, spm=-1
 };
 

@@ -64,6 +64,7 @@ output header {{
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
+#include "arch/x86/utility.hh"
 #include "base/misc.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
