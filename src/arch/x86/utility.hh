@@ -105,6 +105,35 @@ namespace X86ISA
         return 0;
     }
 
+
+    /**
+     * Reconstruct the rflags register from the internal gem5 register
+     * state.
+     *
+     * gem5 stores rflags in several different registers to avoid
+     * pipeline dependencies. In order to get the true rflags value,
+     * we can't simply read the value of MISCREG_RFLAGS. Instead, we
+     * need to read out various state from microcode registers and
+     * merge that with MISCREG_RFLAGS.
+     *
+     * @param tc Thread context to read rflags from.
+     * @return rflags as seen by the guest.
+     */
+    uint64_t getRFlags(ThreadContext *tc);
+
+    /**
+     * Set update the rflags register and internal gem5 state.
+     *
+     * @note This function does not update MISCREG_M5_REG. You might
+     * need to update this register by writing anything to
+     * MISCREG_M5_REG with side-effects.
+     *
+     * @see X86ISA::getRFlags()
+     *
+     * @param tc Thread context to update
+     * @param val New rflags value to store in TC
+     */
+    void setRFlags(ThreadContext *tc, uint64_t val);
 }
 
 #endif // __ARCH_X86_UTILITY_HH__

@@ -236,5 +236,36 @@ skipFunction(ThreadContext *tc)
     panic("Not implemented for x86\n");
 }
 
+uint64_t
+getRFlags(ThreadContext *tc)
+{
+    const uint64_t ncc_flags(tc->readMiscRegNoEffect(MISCREG_RFLAGS));
+    const uint64_t cc_flags(tc->readIntReg(X86ISA::INTREG_PSEUDO(0)));
+    const uint64_t cfof_bits(tc->readIntReg(X86ISA::INTREG_PSEUDO(1)));
+    const uint64_t df_bit(tc->readIntReg(X86ISA::INTREG_PSEUDO(2)));
+    // ecf (PSEUDO(3)) & ezf (PSEUDO(4)) are only visible to
+    // microcode, so we can safely ignore them.
+
+    // Reconstruct the real rflags state, mask out internal flags, and
+    // make sure reserved bits have the expected values.
+    return ((ncc_flags | cc_flags | cfof_bits | df_bit) & 0x3F7FD5)
+        | 0x2;
+}
+
+void
+setRFlags(ThreadContext *tc, uint64_t val)
+{
+    tc->setIntReg(X86ISA::INTREG_PSEUDO(0), val & ccFlagMask);
+    tc->setIntReg(X86ISA::INTREG_PSEUDO(1), val & cfofMask);
+    tc->setIntReg(X86ISA::INTREG_PSEUDO(2), val & DFBit);
+
+    // Internal microcode registers (ECF & EZF)
+    tc->setIntReg(X86ISA::INTREG_PSEUDO(3), 0);
+    tc->setIntReg(X86ISA::INTREG_PSEUDO(4), 0);
+
+    // Update the RFLAGS misc reg with whatever didn't go into the
+    // magic registers.
+    tc->setMiscReg(MISCREG_RFLAGS, val & ~(ccFlagMask | cfofMask | DFBit));
+}
 
 } // namespace X86_ISA
