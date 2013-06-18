@@ -38,10 +38,10 @@
 microcode = '''
 
 def macroop FABS {
-    absfp st(0), st(0)
+    absfp st(0), st(0), SetStatus=True
 };
 
 def macroop FCHS {
-    chsfp st(0), st(0)
+    chsfp st(0), st(0), SetStatus=True
 };
 '''

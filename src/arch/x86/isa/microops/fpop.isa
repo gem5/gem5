@@ -365,9 +365,9 @@ let {{
 
     class absfp(FpUnaryOp):
         code = 'FpDestReg = fabs(FpSrcReg1);'
-        flag_code = 'FSW &= (~CC1Bit);'
+        flag_code = 'FSW = FSW & (~CC1Bit);'
 
     class chsfp(FpUnaryOp):
         code = 'FpDestReg = (-1) * (FpSrcReg1);'
-        flag_code = 'FSW &= (~CC1Bit);'
+        flag_code = 'FSW = FSW & (~CC1Bit);'
 }};
