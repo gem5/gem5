@@ -940,7 +940,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   transition({S,E,M,IS,IM,SM,IS_I,M_I,SINK_WB_ACK,PF_IS,PF_IM},
-             {PF_Load, PF_Store}) {
+             {PF_Load, PF_Store, PF_Ifetch}) {
       pq_popPrefetchQueue;
   }
 
