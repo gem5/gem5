@@ -330,10 +330,33 @@ let {{
 
     class PremFp(FpBinaryOp):
         code = '''
-            FpDestReg = fmod(FpSrcReg1, FpSrcReg2);
-            DPRINTF(X86, "src1: %lf, src2: %lf, dest: %lf\\n", FpSrcReg1, FpSrcReg2, FpDestReg);
+            MiscReg new_fsw(FSW);
+            int src1_exp;
+            int src2_exp;
+            std::frexp(FpSrcReg1, &src1_exp);
+            std::frexp(FpSrcReg2, &src2_exp);
+
+            const int d(src2_exp - src1_exp);
+            if (d < 64) {
+                const int64_t q(std::trunc(FpSrcReg2 / FpSrcReg1));
+                FpDestReg = FpSrcReg2 - FpSrcReg1 * q;
+                new_fsw &= ~(CC0Bit | CC1Bit | CC2Bit | CC2Bit);
+                new_fsw |= (q & 0x1) ? CC1Bit : 0;
+                new_fsw |= (q & 0x2) ? CC3Bit : 0;
+                new_fsw |= (q & 0x4) ? CC0Bit : 0;
+            } else {
+                const int n(42);
+                const int64_t qq(std::trunc(
+                    FpSrcReg2 / std::ldexp(FpSrcReg1, d - n)));
+                FpDestReg = FpSrcReg2 - std::ldexp(FpSrcReg1 * qq, d - n);
+                new_fsw |= CC2Bit;
+            }
+            DPRINTF(X86, "src1: %lf, src2: %lf, dest: %lf, FSW: 0x%x\\n",
+                    FpSrcReg1, FpSrcReg2, FpDestReg, new_fsw);
         '''
         op_class = 'FloatDivOp'
+
+        flag_code = 'FSW = new_fsw;'
 
     class Compfp(FpBinaryOp):
         def __init__(self, src1, src2, spm=0, setStatus=False, \

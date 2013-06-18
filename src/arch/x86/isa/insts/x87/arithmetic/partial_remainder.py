@@ -37,10 +37,10 @@
 
 microcode = '''
 def macroop FPREM {
-    premfp st(0), st(1), st(0)
+    premfp st(0), st(1), st(0), SetStatus=True
 };
 
 def macroop FPREM1 {
-    premfp st(0), st(1), st(0)
+    premfp st(0), st(1), st(0), SetStatus=True
 };
 '''
