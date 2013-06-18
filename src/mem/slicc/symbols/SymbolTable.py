@@ -68,6 +68,11 @@ class SymbolTable(object):
         if id in self.sym_map_vec[-1]:
             sym.error("Symbol '%s' redeclared in same scope.", id)
 
+        for sym_map in self.sym_map_vec:
+            if id in sym_map:
+                if type(self.sym_map_vec[0][id]) != type(sym):
+                    sym.error("Conflicting declaration of Symbol '%s'", id)
+
         # FIXME - warn on masking of a declaration in a previous frame
         self.sym_map_vec[-1][id] = sym
 
