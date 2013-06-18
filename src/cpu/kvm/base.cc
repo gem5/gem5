@@ -46,6 +46,7 @@
 #include <csignal>
 #include <ostream>
 
+#include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Checkpoint.hh"
@@ -949,12 +950,32 @@ BaseKvmCPU::handleKvmExitFailEntry()
 Tick
 BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
 {
+    ThreadContext *tc(thread->getTC());
+    syncThreadContext();
+
     mmio_req.setPhys(paddr, size, Request::UNCACHEABLE, dataMasterId());
+    // Some architectures do need to massage physical addresses a bit
+    // before they are inserted into the memory system. This enables
+    // APIC accesses on x86 and m5ops where supported through a MMIO
+    // interface.
+    BaseTLB::Mode tlb_mode(write ? BaseTLB::Write : BaseTLB::Read);
+    Fault fault(tc->getDTBPtr()->finalizePhysical(&mmio_req, tc, tlb_mode));
+    if (fault != NoFault)
+        warn("Finalization of MMIO address failed: %s\n", fault->name());
+
 
     const MemCmd cmd(write ? MemCmd::WriteReq : MemCmd::ReadReq);
     Packet pkt(&mmio_req, cmd);
     pkt.dataStatic(data);
-    return dataPort.sendAtomic(&pkt);
+
+    if (mmio_req.isMmappedIpr()) {
+        if (write)
+            return TheISA::handleIprWrite(tc, &pkt);
+        else
+            return TheISA::handleIprRead(tc, &pkt);
+    } else {
+        return dataPort.sendAtomic(&pkt);
+    }
 }
 
 void

@@ -321,15 +321,15 @@ class Request
     }
 
     /**
-     * Set just the physical address.  This should only be used to
-     * record the result of a translation, and thus the vaddr must be
-     * valid before this method is called.  Otherwise, use setPhys()
-     * to guarantee that the size and flags are also set.
+     * Set just the physical address.  This usually used to record the
+     * result of a translation. However, when using virtualized CPUs
+     * setPhys() is sometimes called to finalize a physical address
+     * without a virtual address, so we can't check if the virtual
+     * address is valid.
      */
     void
     setPaddr(Addr paddr)
     {
-        assert(privateFlags.isSet(VALID_VADDR));
         _paddr = paddr;
         privateFlags.set(VALID_PADDR);
     }
