@@ -268,4 +268,24 @@ setRFlags(ThreadContext *tc, uint64_t val)
     tc->setMiscReg(MISCREG_RFLAGS, val & ~(ccFlagMask | cfofMask | DFBit));
 }
 
+uint16_t
+genX87Tags(uint16_t ftw, uint8_t top, int8_t spm)
+{
+    const uint8_t new_top((top + spm + 8) % 8);
+
+    if (spm > 0) {
+        // Removing elements from the stack. Flag the elements as empty.
+        for (int i = top; i != new_top; i = (i + 1 + 8) % 8)
+            ftw |= 0x3 << (2 * i);
+    } else if (spm < 0) {
+        // Adding elements to the stack. Flag the new elements as
+        // valid. We should ideally decode them and "do the right
+        // thing".
+        for (int i = new_top; i != top; i = (i + 1 + 8) % 8)
+            ftw &= ~(0x3 << (2 * i));
+    }
+
+    return ftw;
+}
+
 } // namespace X86_ISA

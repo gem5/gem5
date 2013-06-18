@@ -141,6 +141,21 @@ namespace X86ISA
     inline uint64_t getDoubleBits(double val) {
         return *(uint64_t *)(&val);
     }
+
+    /**
+     * Generate and updated x87 tag register after a push/pop
+     * operation.
+     *
+     * @note There is currently no support for setting other tags than
+     * valid and invalid. A real x87 will set the tag value to zero or
+     * special for some special floating point values.
+     *
+     * @param ftw Current value of the FTW register.
+     * @param top Current x87 TOP value.
+     * @param spm Stack displacement.
+     * @return New value of the FTW register.
+     */
+    uint16_t genX87Tags(uint16_t ftw, uint8_t top, int8_t spm);
 }
 
 #endif // __ARCH_X86_UTILITY_HH__
