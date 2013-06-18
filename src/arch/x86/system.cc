@@ -163,7 +163,7 @@ X86System::initState()
     csDesc.g = 1; // Page granularity
     csDesc.s = 1; // Not a system segment
     csDesc.limitHigh = 0xF;
-    csDesc.limitLow = 0xFF;
+    csDesc.limitLow = 0xFFFF;
     //Because we're dealing with a pointer and I don't think it's
     //guaranteed that there isn't anything in a nonvirtual class between
     //it's beginning in memory and it's actual data, we'll use an
@@ -190,7 +190,7 @@ X86System::initState()
     dsDesc.g = 1; // Page granularity
     dsDesc.s = 1; // Not a system segment
     dsDesc.limitHigh = 0xF;
-    dsDesc.limitLow = 0xFF;
+    dsDesc.limitLow = 0xFFFF;
     uint64_t dsDescVal = dsDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
                         (uint8_t *)(&dsDescVal), 8);
@@ -216,9 +216,9 @@ X86System::initState()
     tssDesc.p = 1; // Present
     tssDesc.d = 1; // default operand size
     tssDesc.g = 1; // Page granularity
-    tssDesc.s = 1; // Not a system segment
+    tssDesc.s = 0;
     tssDesc.limitHigh = 0xF;
-    tssDesc.limitLow = 0xFF;
+    tssDesc.limitLow = 0xFFFF;
     uint64_t tssDescVal = tssDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
                         (uint8_t *)(&tssDescVal), 8);
