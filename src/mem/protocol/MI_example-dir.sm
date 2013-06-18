@@ -208,16 +208,16 @@ machine(Directory, "Directory protocol")
   in_port(requestQueue_in, RequestMsg, requestToDir) {
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
-        TBE tbe := TBEs[in_msg.Address];
+        TBE tbe := TBEs[in_msg.Addr];
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.Address, tbe);
+          trigger(Event:GETS, in_msg.Addr, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.Address, tbe);
+          trigger(Event:GETX, in_msg.Addr, tbe);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          if (getDirectoryEntry(in_msg.Address).Owner.isElement(in_msg.Requestor)) {
-            trigger(Event:PUTX, in_msg.Address, tbe);
+          if (getDirectoryEntry(in_msg.Addr).Owner.isElement(in_msg.Requestor)) {
+            trigger(Event:PUTX, in_msg.Addr, tbe);
           } else {
-            trigger(Event:PUTX_NotOwner, in_msg.Address, tbe);
+            trigger(Event:PUTX_NotOwner, in_msg.Addr, tbe);
           }
         } else {
           error("Invalid message");
@@ -231,11 +231,11 @@ machine(Directory, "Directory protocol")
   in_port(memQueue_in, MemoryMsg, memBuffer) {
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
-        TBE tbe := TBEs[in_msg.Address];
+        TBE tbe := TBEs[in_msg.Addr];
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address, tbe);
+          trigger(Event:Memory_Data, in_msg.Addr, tbe);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address, tbe);
+          trigger(Event:Memory_Ack, in_msg.Addr, tbe);
         } else {
           DPRINTF(RubySlicc,"%s\n", in_msg.Type);
           error("Invalid message");
@@ -249,7 +249,7 @@ machine(Directory, "Directory protocol")
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.Destination.add(in_msg.Requestor);
@@ -261,7 +261,7 @@ machine(Directory, "Directory protocol")
   action(l_sendWriteBackAck, "la", desc="Send writeback ack to requestor") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.OriginalRequestorMachId;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
@@ -273,7 +273,7 @@ machine(Directory, "Directory protocol")
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.Destination.add(in_msg.Requestor);
@@ -289,7 +289,7 @@ machine(Directory, "Directory protocol")
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
@@ -350,14 +350,14 @@ machine(Directory, "Directory protocol")
   action(f_forwardRequest, "f", desc="Forward request to owner") {
     peek(requestQueue_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT("Own: ");
-      APPEND_TRANSITION_COMMENT(getDirectoryEntry(in_msg.Address).Owner);
+      APPEND_TRANSITION_COMMENT(getDirectoryEntry(in_msg.Addr).Owner);
       APPEND_TRANSITION_COMMENT("Req: ");
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination := getDirectoryEntry(in_msg.Address).Owner;
+        out_msg.Destination := getDirectoryEntry(in_msg.Addr).Owner;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
@@ -366,7 +366,7 @@ machine(Directory, "Directory protocol")
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
         out_msg.Destination := getDirectoryEntry(in_msg.PhysicalAddress).Owner;
@@ -387,8 +387,8 @@ machine(Directory, "Directory protocol")
     peek(requestQueue_in, RequestMsg) {
       // assert(in_msg.Dirty);
       // assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
-      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
-      //getDirectoryEntry(in_msg.Address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
+      getDirectoryEntry(in_msg.Addr).DataBlk := in_msg.DataBlk;
+      //getDirectoryEntry(in_msg.Addr).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Addr), in_msg.Len);
     }
   }
   
@@ -441,12 +441,12 @@ machine(Directory, "Directory protocol")
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
         DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
@@ -455,7 +455,7 @@ machine(Directory, "Directory protocol")
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
         //out_msg.OriginalRequestorMachId := machineID;
@@ -469,7 +469,7 @@ machine(Directory, "Directory protocol")
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         //out_msg.OriginalRequestorMachId := machineID;
         //out_msg.DataBlk := in_msg.DataBlk;
@@ -486,7 +486,7 @@ machine(Directory, "Directory protocol")
     peek(requestQueue_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
         assert(is_valid(tbe));
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         // get incoming data
@@ -505,7 +505,7 @@ machine(Directory, "Directory protocol")
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;

@@ -224,28 +224,28 @@ machine(Directory, "Directory protocol")
     if (unblockNetwork_in.isReady()) {
       peek(unblockNetwork_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
-          if (getDirectoryEntry(in_msg.Address).WaitingUnblocks == 1) {
-            trigger(Event:Last_Unblock, in_msg.Address,
-                    TBEs[in_msg.Address]);
+          if (getDirectoryEntry(in_msg.Addr).WaitingUnblocks == 1) {
+            trigger(Event:Last_Unblock, in_msg.Addr,
+                    TBEs[in_msg.Addr]);
           } else {
-            trigger(Event:Unblock, in_msg.Address,
-                    TBEs[in_msg.Address]);
+            trigger(Event:Unblock, in_msg.Addr,
+                    TBEs[in_msg.Addr]);
           }
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
-          trigger(Event:Exclusive_Unblock, in_msg.Address,
-                  TBEs[in_msg.Address]);
+          trigger(Event:Exclusive_Unblock, in_msg.Addr,
+                  TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
-          trigger(Event:Dirty_Writeback, in_msg.Address,
-                  TBEs[in_msg.Address]);
+          trigger(Event:Dirty_Writeback, in_msg.Addr,
+                  TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_ACK) {
-          trigger(Event:Clean_Writeback, in_msg.Address,
-                  TBEs[in_msg.Address]);
+          trigger(Event:Clean_Writeback, in_msg.Addr,
+                  TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Data, in_msg.Address,
-                  TBEs[in_msg.Address]);
+          trigger(Event:Data, in_msg.Addr,
+                  TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
-          trigger(Event:DMA_ACK, in_msg.Address,
-                  TBEs[in_msg.Address]);
+          trigger(Event:DMA_ACK, in_msg.Addr,
+                  TBEs[in_msg.Addr]);
         } else {
           error("Invalid message");
         }
@@ -257,21 +257,21 @@ machine(Directory, "Directory protocol")
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:GETS, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:GETX, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          trigger(Event:PUTX, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:PUTX, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
-          trigger(Event:PUTO, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:PUTO, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
-          trigger(Event:PUTO_SHARERS, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:PUTO_SHARERS, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address),
-                  TBEs[makeLineAddress(in_msg.Address)]);
+          trigger(Event:DMA_READ, makeLineAddress(in_msg.Addr),
+                  TBEs[makeLineAddress(in_msg.Addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
-          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address),
-                  TBEs[makeLineAddress(in_msg.Address)]);
+          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Addr),
+                  TBEs[makeLineAddress(in_msg.Addr)]);
         } else {
           error("Invalid message");
         }
@@ -284,9 +284,9 @@ machine(Directory, "Directory protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:Memory_Data, in_msg.Addr, TBEs[in_msg.Addr]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address, TBEs[in_msg.Address]);
+          trigger(Event:Memory_Ack, in_msg.Addr, TBEs[in_msg.Addr]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -300,7 +300,7 @@ machine(Directory, "Directory protocol")
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := MachineType:Directory;
@@ -313,7 +313,7 @@ machine(Directory, "Directory protocol")
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := MachineType:Directory;
@@ -339,11 +339,11 @@ machine(Directory, "Directory protocol")
   action(d_sendDataMsg, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
-        //out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
+        //out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Acks := in_msg.Acks;
@@ -360,11 +360,11 @@ machine(Directory, "Directory protocol")
   action(p_fwdDataToDMA, "\d", desc="Send data to requestor") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -384,11 +384,11 @@ machine(Directory, "Directory protocol")
   action(f_forwardRequest, "f", desc="Forward request to owner") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
-        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
+        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Addr).Owner);
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
@@ -401,11 +401,11 @@ machine(Directory, "Directory protocol")
   action(f_forwardRequestDirIsRequestor, "\f", desc="Forward request to owner") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := machineID;
         out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
-        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
+        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Addr).Owner);
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
@@ -417,16 +417,16 @@ machine(Directory, "Directory protocol")
 
   action(g_sendInvalidations, "g", desc="Send invalidations to sharers, not including the requester") {
     peek(requestQueue_in, RequestMsg) {
-      if ((getDirectoryEntry(in_msg.Address).Sharers.count() > 1) ||
-          ((getDirectoryEntry(in_msg.Address).Sharers.count() > 0) &&
-           (getDirectoryEntry(in_msg.Address).Sharers.isElement(in_msg.Requestor) == false))) {
+      if ((getDirectoryEntry(in_msg.Addr).Sharers.count() > 1) ||
+          ((getDirectoryEntry(in_msg.Addr).Sharers.count() > 0) &&
+           (getDirectoryEntry(in_msg.Addr).Sharers.isElement(in_msg.Requestor) == false))) {
         enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-          out_msg.Address := address;
+          out_msg.Addr := address;
           out_msg.Type := CoherenceRequestType:INV;
           out_msg.Requestor := in_msg.Requestor;
           out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
-          // out_msg.Destination := getDirectoryEntry(in_msg.Address).Sharers;
-          out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Sharers);
+          // out_msg.Destination := getDirectoryEntry(in_msg.Addr).Sharers;
+          out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Addr).Sharers);
           out_msg.Destination.remove(in_msg.Requestor);
           out_msg.MessageSize := MessageSizeType:Invalidate_Control;
         }
@@ -446,17 +446,17 @@ machine(Directory, "Directory protocol")
     peek(unblockNetwork_in, ResponseMsg) {
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
-      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(in_msg.Addr).DataBlk := in_msg.DataBlk;
       DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-              in_msg.Address, in_msg.DataBlk);
+              in_msg.Addr, in_msg.DataBlk);
     }
   }
 
   action(p_writeFwdDataToMemory, "p", desc="Write Response data to memory") {
      peek(unblockNetwork_in, ResponseMsg) {
-      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(in_msg.Addr).DataBlk := in_msg.DataBlk;
       DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-              in_msg.Address, in_msg.DataBlk);
+              in_msg.Addr, in_msg.DataBlk);
     }
  }
 
@@ -470,9 +470,9 @@ machine(Directory, "Directory protocol")
       // message so we can assert the clean data matches the datablock
       // in memory
       DPRINTF(RubySlicc, "Address: %s, MsgDataBlock: %s MemoryDataBlock: %s\n",
-              in_msg.Address, in_msg.DataBlk,
-              getDirectoryEntry(in_msg.Address).DataBlk);
-      assert(getDirectoryEntry(in_msg.Address).DataBlk == in_msg.DataBlk);
+              in_msg.Addr, in_msg.DataBlk,
+              getDirectoryEntry(in_msg.Addr).DataBlk);
+      assert(getDirectoryEntry(in_msg.Addr).DataBlk == in_msg.DataBlk);
     }
   }
 
@@ -498,11 +498,11 @@ machine(Directory, "Directory protocol")
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := false;
         // These are not used by memory but are passed back here with the read data:
@@ -520,7 +520,7 @@ machine(Directory, "Directory protocol")
   action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
     peek(unblockNetwork_in, ResponseMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
         if (is_valid(tbe)) {
@@ -540,7 +540,7 @@ machine(Directory, "Directory protocol")
   action(qw_queueMemoryWBRequest2, "/qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, latency="1") {
-        out_msg.Address := address;
+        out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
@@ -567,7 +567,7 @@ machine(Directory, "Directory protocol")
   action(a_sendDMAAck, "\a", desc="Send DMA Ack that write completed, along with Inv Ack count") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
-      out_msg.Address := address;
+      out_msg.Addr := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:Directory;
       out_msg.Destination.add(in_msg.Requestor);
@@ -582,7 +582,7 @@ machine(Directory, "Directory protocol")
   action(a_sendDMAAck2, "\aa", desc="Send DMA Ack that write completed, along with Inv Ack count") {
     peek(unblockNetwork_in, ResponseMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
-      out_msg.Address := address;
+      out_msg.Addr := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:Directory;
       if (is_valid(tbe)) {
@@ -598,7 +598,7 @@ machine(Directory, "Directory protocol")
 
   action(l_writeDMADataToMemory, "\l", desc="Write data from a DMA_WRITE to memory") {
     peek(requestQueue_in, RequestMsg) {
-      getDirectoryEntry(address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
+      getDirectoryEntry(address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Addr), in_msg.Len);
     }
   }
 
@@ -612,7 +612,7 @@ machine(Directory, "Directory protocol")
     peek (requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
       set_tbe(TBEs[address]);
-      tbe.PhysicalAddress := in_msg.Address;
+      tbe.PhysicalAddress := in_msg.Addr;
       tbe.Len := in_msg.Len;
       tbe.DataBlk := in_msg.DataBlk;
       tbe.Requestor := in_msg.Requestor;

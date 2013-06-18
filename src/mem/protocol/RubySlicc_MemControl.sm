@@ -51,7 +51,7 @@ enumeration(MemoryRequestType, desc="...") {
 // Message to and from Memory Control
 
 structure(MemoryMsg, desc="...", interface="Message") {
-  Address Address,              desc="Physical address for this request";
+  Address Addr,              desc="Physical address for this request";
   MemoryRequestType Type,       desc="Type of memory request (MEMORY_READ or MEMORY_WB)";
   MachineID Sender,             desc="What component sent the data";
   MachineID OriginalRequestorMachId, desc="What component originally requested";
@@ -63,10 +63,10 @@ structure(MemoryMsg, desc="...", interface="Message") {
   int Acks,                     desc="How many acks to expect";
 
   bool functionalRead(Packet *pkt) {
-    return testAndRead(Address, DataBlk, pkt);
+    return testAndRead(Addr, DataBlk, pkt);
   }
 
   bool functionalWrite(Packet *pkt) {
-    return testAndWrite(Address, DataBlk, pkt);
+    return testAndWrite(Addr, DataBlk, pkt);
   }
 }

@@ -281,7 +281,7 @@ RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
 {
     Cycles arrival_time = curCycle() + latency;
     const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
-    physical_address_t addr = memMess->getAddress().getAddress();
+    physical_address_t addr = memMess->getAddr().getAddress();
     MemoryRequestType type = memMess->getType();
     bool is_mem_read = (type == MemoryRequestType_MEMORY_READ);
     MemoryNode thisReq(arrival_time, message, addr, is_mem_read, !is_mem_read);
