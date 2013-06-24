@@ -4,11 +4,11 @@ sim_seconds                                  5.143601                       # Nu
 sim_ticks                                5143601047500                       # Number of ticks simulated
 final_tick                               5143601047500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 337830                       # Simulator instruction rate (inst/s)
-host_op_rate                                   671266                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7140786618                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 909440                       # Number of bytes of host memory used
-host_seconds                                   720.31                       # Real time elapsed on the host
+host_inst_rate                                 255414                       # Simulator instruction rate (inst/s)
+host_op_rate                                   507504                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5398723492                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 908456                       # Number of bytes of host memory used
+host_seconds                                   952.74                       # Real time elapsed on the host
 sim_insts                                   243343656                       # Number of instructions simulated
 sim_ops                                     483521256                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2435392                       # Number of bytes read from this memory
@@ -1694,8 +1694,8 @@ system.cpu2.int_regfile_reads               494284042                       # nu
 system.cpu2.int_regfile_writes              320739139                       # number of integer regfile writes
 system.cpu2.fp_regfile_reads                    62606                       # number of floating regfile reads
 system.cpu2.fp_regfile_writes                   62592                       # number of floating regfile writes
-system.cpu2.misc_regfile_reads               86692309                       # number of misc regfile reads
-system.cpu2.misc_regfile_writes                109016                       # number of misc regfile writes
+system.cpu2.misc_regfile_reads               86693613                       # number of misc regfile reads
+system.cpu2.misc_regfile_writes                110320                       # number of misc regfile writes
 system.cpu2.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu2.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 

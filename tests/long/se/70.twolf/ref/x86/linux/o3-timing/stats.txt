@@ -4,11 +4,11 @@ sim_seconds                                  0.144456                       # Nu
 sim_ticks                                144456233500                       # Number of ticks simulated
 final_tick                               144456233500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  58579                       # Simulator instruction rate (inst/s)
-host_op_rate                                    98184                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               64072469                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 278680                       # Number of bytes of host memory used
-host_seconds                                  2254.58                       # Real time elapsed on the host
+host_inst_rate                                  74036                       # Simulator instruction rate (inst/s)
+host_op_rate                                   124090                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               80978511                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 278896                       # Number of bytes of host memory used
+host_seconds                                  1783.88                       # Real time elapsed on the host
 sim_insts                                   132071192                       # Number of instructions simulated
 sim_ops                                     221362962                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            217280                       # Number of bytes read from this memory
@@ -317,12 +317,12 @@ system.cpu.rename.ROBFullEvents                 10957                       # Nu
 system.cpu.rename.IQFullEvents               26042658                       # Number of times rename has blocked due to IQ full
 system.cpu.rename.LSQFullEvents              22711387                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.FullRegisterEvents              324                       # Number of times there has been no free registers
-system.cpu.rename.RenamedOperands           382665072                       # Number of destination operands rename has renamed
-system.cpu.rename.RenameLookups             918469595                       # Number of register rename lookups that rename has made
+system.cpu.rename.RenamedOperands           382666276                       # Number of destination operands rename has renamed
+system.cpu.rename.RenameLookups             918470799                       # Number of register rename lookups that rename has made
 system.cpu.rename.int_rename_lookups        910237815                       # Number of integer rename lookups
-system.cpu.rename.fp_rename_lookups           8231780                       # Number of floating rename lookups
-system.cpu.rename.CommittedMaps             259428606                       # Number of HB maps that are committed
-system.cpu.rename.UndoneMaps                123236466                       # Number of HB maps that are undone due to squashing
+system.cpu.rename.fp_rename_lookups           8232984                       # Number of floating rename lookups
+system.cpu.rename.CommittedMaps             259429450                       # Number of HB maps that are committed
+system.cpu.rename.UndoneMaps                123236826                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.serializingInsts               2077                       # count of serializing insts renamed
 system.cpu.rename.tempSerializingInsts           2071                       # count of temporary serializing insts renamed
 system.cpu.rename.skidInsts                 105014998                       # count of insts added to the skid buffer
@@ -523,8 +523,8 @@ system.cpu.int_regfile_reads                554359034                       # nu
 system.cpu.int_regfile_writes               293931276                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                   3216619                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                  2010069                       # number of floating regfile writes
-system.cpu.misc_regfile_reads               133442201                       # number of misc regfile reads
-system.cpu.misc_regfile_writes                    845                       # number of misc regfile writes
+system.cpu.misc_regfile_reads               133443045                       # number of misc regfile reads
+system.cpu.misc_regfile_writes                   1689                       # number of misc regfile writes
 system.cpu.toL2Bus.throughput                 3896100                       # Throughput (bytes/s)
 system.cpu.toL2Bus.trans_dist::ReadReq           7248                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadResp          7244                       # Transaction distribution
