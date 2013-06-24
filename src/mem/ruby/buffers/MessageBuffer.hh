@@ -193,18 +193,16 @@ class MessageBuffer
     StallMsgMapType m_stall_msg_map;
     std::string m_name;
 
-    int m_max_size;
-    int m_size;
-
+    unsigned int m_max_size;
     Cycles m_time_last_time_size_checked;
-    int m_size_last_time_size_checked;
+    unsigned int m_size_last_time_size_checked;
 
     // variables used so enqueues appear to happen imediately, while
     // pop happen the next cycle
     Cycles m_time_last_time_enqueue;
     Cycles m_time_last_time_pop;
-    int m_size_at_cycle_start;
-    int m_msgs_this_cycle;
+    unsigned int m_size_at_cycle_start;
+    unsigned int m_msgs_this_cycle;
 
     int m_not_avail_count;  // count the # of times I didn't have N
                             // slots available

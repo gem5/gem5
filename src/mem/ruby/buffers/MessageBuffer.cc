@@ -49,7 +49,6 @@ MessageBuffer::MessageBuffer(const string &name)
 
     m_ordering_set = false;
     m_strict_fifo = true;
-    m_size = 0;
     m_max_size = -1;
     m_randomization = true;
     m_size_last_time_size_checked = 0;
@@ -67,13 +66,12 @@ MessageBuffer::MessageBuffer(const string &name)
 int
 MessageBuffer::getSize()
 {
-    if (m_time_last_time_size_checked == m_receiver->curCycle()) {
-        return m_size_last_time_size_checked;
-    } else {
+    if (m_time_last_time_size_checked != m_receiver->curCycle()) {
         m_time_last_time_size_checked = m_receiver->curCycle();
-        m_size_last_time_size_checked = m_size;
-        return m_size;
+        m_size_last_time_size_checked = m_prio_heap.size();
     }
+
+    return m_size_last_time_size_checked;
 }
 
 bool
@@ -85,14 +83,15 @@ MessageBuffer::areNSlotsAvailable(int n)
         return true;
     }
 
-    // determine my correct size for the current cycle
+    // determine the correct size for the current cycle
     // pop operations shouldn't effect the network's visible size
     // until next cycle, but enqueue operations effect the visible
     // size immediately
-    int current_size = max(m_size_at_cycle_start, m_size);
+    unsigned int current_size = 0;
+
     if (m_time_last_time_pop < m_receiver->curCycle()) {
-        // no pops this cycle - m_size is correct
-        current_size = m_size;
+        // no pops this cycle - heap size is correct
+        current_size = m_prio_heap.size();
     } else {
         if (m_time_last_time_enqueue < m_receiver->curCycle()) {
             // no enqueues this cycle - m_size_at_cycle_start is correct
@@ -100,7 +99,7 @@ MessageBuffer::areNSlotsAvailable(int n)
         } else {
             // both pops and enqueues occured this cycle - add new
             // enqueued msgs to m_size_at_cycle_start
-            current_size = m_size_at_cycle_start+m_msgs_this_cycle;
+            current_size = m_size_at_cycle_start + m_msgs_this_cycle;
         }
     }
 
@@ -108,9 +107,9 @@ MessageBuffer::areNSlotsAvailable(int n)
     if (current_size + n <= m_max_size) {
         return true;
     } else {
-        DPRINTF(RubyQueue, "n: %d, current_size: %d, m_size: %d, "
+        DPRINTF(RubyQueue, "n: %d, current_size: %d, heap size: %d, "
                 "m_max_size: %d\n",
-                n, current_size, m_size, m_max_size);
+                n, current_size, m_prio_heap.size(), m_max_size);
         m_not_avail_count++;
         return false;
     }
@@ -153,7 +152,6 @@ void
 MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 {
     m_msg_counter++;
-    m_size++;
 
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < m_sender->curCycle()) {
@@ -271,17 +269,17 @@ MessageBuffer::pop()
 {
     DPRINTF(RubyQueue, "Popping\n");
     assert(isReady());
-    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MessageBufferNode>());
-    m_prio_heap.pop_back();
 
     // record previous size and time so the current buffer size isn't
     // adjusted until next cycle
     if (m_time_last_time_pop < m_receiver->curCycle()) {
-        m_size_at_cycle_start = m_size;
+        m_size_at_cycle_start = m_prio_heap.size();
         m_time_last_time_pop = m_receiver->curCycle();
     }
-    m_size--;
+
+    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
+        greater<MessageBufferNode>());
+    m_prio_heap.pop_back();
 }
 
 void
@@ -290,7 +288,6 @@ MessageBuffer::clear()
     m_prio_heap.clear();
 
     m_msg_counter = 0;
-    m_size = 0;
     m_time_last_time_enqueue = Cycles(0);
     m_time_last_time_pop = Cycles(0);
     m_size_at_cycle_start = 0;
@@ -343,7 +340,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 void
 MessageBuffer::reanalyzeAllMessages()
 {
-    DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n");
+    DPRINTF(RubyQueue, "ReanalyzeAllMessages\n");
     Tick nextTick = m_receiver->clockEdge(Cycles(1));
 
     //
