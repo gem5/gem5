@@ -156,6 +156,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   void set_tbe(TBE a);
   void unset_tbe();
   void wakeUpBuffers(Address a);
+  void profileMsgDelay(int virtualNetworkType, Cycles c);
 
   // inclusive cache, returns L2 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {

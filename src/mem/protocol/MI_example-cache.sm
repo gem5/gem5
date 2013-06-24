@@ -105,6 +105,7 @@ machine(L1Cache, "MI Example L1 Cache")
   void unset_cache_entry();
   void set_tbe(TBE b);
   void unset_tbe();
+  void profileMsgDelay(int virtualNetworkType, Cycles b);
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", cacheMemory.lookup(address));

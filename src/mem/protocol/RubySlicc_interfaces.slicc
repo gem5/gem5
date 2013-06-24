@@ -2,6 +2,5 @@ include "RubySlicc_Exports.sm";
 include "RubySlicc_Types.sm";
 include "RubySlicc_Util.sm";
 include "RubySlicc_ComponentMapping.sm";
-include "RubySlicc_Profiler.sm";
 include "RubySlicc_Defines.sm";
 include "RubySlicc_MemControl.sm";
