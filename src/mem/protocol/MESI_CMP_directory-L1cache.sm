@@ -790,16 +790,37 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     sequencer.invalidateSC(address);
   }
 
-  action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
+  action(h_load_hit, "h",
+         desc="If not prefetch, notify sequencer the load completed.")
+  {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
-  action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
+  action(hx_load_hit, "hx",
+         desc="If not prefetch, notify sequencer the load completed.")
+  {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
+  action(hh_store_hit, "\h",
+         desc="If not prefetch, notify sequencer that store completed.")
+  {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     sequencer.writeCallback(address, cache_entry.DataBlk);
+    cache_entry.Dirty := true;
+  }
+
+  action(hhx_store_hit, "\hx",
+         desc="If not prefetch, notify sequencer that store completed.")
+  {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.writeCallback(address, cache_entry.DataBlk, true);
     cache_entry.Dirty := true;
   }
 
@@ -1158,7 +1179,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(IS, Data_all_Acks, S) {
     u_writeDataToL1Cache;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -1174,7 +1195,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(IS_I, Data_all_Acks, I) {
     u_writeDataToL1Cache;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -1189,7 +1210,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   transition(IS, DataS_fromL1, S) {
     u_writeDataToL1Cache;
     j_sendUnblock;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -1206,7 +1227,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   transition(IS_I, DataS_fromL1, I) {
     u_writeDataToL1Cache;
     j_sendUnblock;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -1222,7 +1243,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   // directory is blocked when sending exclusive data
   transition(IS_I, Data_Exclusive, E) {
     u_writeDataToL1Cache;
-    h_load_hit;
+    hx_load_hit;
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
@@ -1240,7 +1261,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(IS, Data_Exclusive, E) {
     u_writeDataToL1Cache;
-    h_load_hit;
+    hx_load_hit;
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
@@ -1281,7 +1302,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(IM, Data_all_Acks, M) {
     u_writeDataToL1Cache;
-    hh_store_hit;
+    hhx_store_hit;
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
@@ -1311,7 +1332,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(SM, Ack_all, M) {
     jj_sendExclusiveUnblock;
-    hh_store_hit;
+    hhx_store_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
