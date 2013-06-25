@@ -629,10 +629,23 @@ machine(L1Cache, "Directory protocol")
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
+  action(hx_load_hit, "hx", desc="Notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     sequencer.writeCallback(address, cache_entry.DataBlk);
+    cache_entry.Dirty := true;
+  }
+
+  action(xx_store_hit, "\xx", desc="Notify sequencer that store completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.writeCallback(address, cache_entry.DataBlk, true);
     cache_entry.Dirty := true;
   }
 
@@ -1162,7 +1175,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   transition(OM, All_acks, MM_W) {
-    hh_store_hit;
+    xx_store_hit;
     gg_sendUnblockExclusive;
     s_deallocateTBE;
     o_scheduleUseTimeout;
@@ -1183,7 +1196,7 @@ machine(L1Cache, "Directory protocol")
   transition(IS, Data, S) {
     u_writeDataToCache;
     m_decrementNumberOfMessages;
-    h_load_hit;
+    hx_load_hit;
     g_sendUnblock;
     s_deallocateTBE;
     n_popResponseQueue;
@@ -1192,7 +1205,7 @@ machine(L1Cache, "Directory protocol")
   transition(IS, Exclusive_Data, M_W) {
     u_writeDataToCache;
     m_decrementNumberOfMessages;
-    h_load_hit;
+    hx_load_hit;
     gg_sendUnblockExclusive;
     o_scheduleUseTimeout;
     s_deallocateTBE;
