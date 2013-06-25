@@ -29,10 +29,11 @@ from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import StateMachine, Type
 
 class MachineAST(DeclAST):
-    def __init__(self, slicc, ident, pairs_ast, config_parameters, decls):
+    def __init__(self, slicc, idents, pairs_ast, config_parameters, decls):
         super(MachineAST, self).__init__(slicc, pairs_ast)
 
-        self.ident = ident
+        self.ident = idents[0]
+        self.machine_types = idents
         self.pairs_ast = pairs_ast
         self.config_parameters = config_parameters
         self.decls = decls
@@ -71,10 +72,18 @@ class MachineAST(DeclAST):
 
     def findMachines(self):
         # Add to MachineType enumeration
-        machine_type = self.symtab.find("MachineType", Type)
-        if not machine_type.addEnum(self.ident, self.pairs_ast.pairs):
-            self.error("Duplicate machine name: %s:%s" % (machine_type,
-                                                          self.ident))
+        for mtype in self.machine_types:
+            machine_type = self.symtab.find("MachineType", Type)
+            pairs = self.pairs_ast.pairs
+
+            if mtype == self.ident:
+                pairs["Primary"] = True
+            else:
+                pairs["Primary"] = False
+
+            if not machine_type.addEnum(mtype, pairs):
+                self.error("Duplicate machine name: %s:%s" % (
+                            machine_type, mtype))
 
         # Generate code for all the internal decls
         self.decls.findMachines()

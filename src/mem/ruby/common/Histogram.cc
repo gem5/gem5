@@ -124,7 +124,12 @@ Histogram::add(Histogram& hist)
     uint32_t t_bins = m_data.size();
 
     if (hist.getBins() != t_bins) {
-        fatal("Histograms with different number of bins cannot be combined!");
+        if (m_count == 0) {
+            m_data.resize(hist.getBins());
+        } else {
+            fatal("Histograms with different number of bins "
+                  "cannot be combined!");
+        }
     }
 
     m_max = max(m_max, hist.getMax());

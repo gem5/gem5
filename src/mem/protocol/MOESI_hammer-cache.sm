@@ -33,7 +33,7 @@
  *          Brad Beckmann
  */
 
-machine(L1Cache, "AMD Hammer-like protocol")
+machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 : Sequencer * sequencer,
   CacheMemory * L1Icache,
   CacheMemory * L1Dcache,
@@ -288,24 +288,12 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
-    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
-      //
-      // NOTE direct local hits should not call this
-      //
-      return GenericMachineType:L1Cache_wCC;
-    } else {
-      return ConvertMachToGenericMach(machineIDToMachineType(sender));
-    }
-  }
-
-  GenericMachineType testAndClearLocalHit(Entry cache_entry) {
+  MachineType testAndClearLocalHit(Entry cache_entry) {
     if (is_valid(cache_entry) && cache_entry.FromL2) {
       cache_entry.FromL2 := false;
-      return GenericMachineType:L2Cache;
-    } else {
-      return GenericMachineType:L1Cache;
+      return MachineType:L2Cache;
     }
+    return MachineType:L1Cache;
   }
 
   bool IsAtomicAccessed(Entry cache_entry) {
@@ -853,8 +841,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
-    sequencer.readCallback(address, testAndClearLocalHit(cache_entry),
-                           cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           testAndClearLocalHit(cache_entry));
   }
 
   action(hx_external_load_hit, "hx", desc="load required external msgs") {
@@ -863,12 +851,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(responseToCache_in, ResponseMsg) {
 
-      sequencer.readCallback(address,
-                             getNondirectHitMachType(in_msg.Addr, in_msg.Sender),
-                             cache_entry.DataBlk,
-                             tbe.InitialRequestTime,
-                             tbe.ForwardRequestTime,
-                             tbe.FirstResponseTime);
+      sequencer.readCallback(address, cache_entry.DataBlk, true,
+                 machineIDToMachineType(in_msg.Sender), tbe.InitialRequestTime,
+                 tbe.ForwardRequestTime, tbe.FirstResponseTime);
     }
   }
 
@@ -876,8 +861,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(mandatoryQueue_in, RubyRequest) {
-      sequencer.writeCallback(address, testAndClearLocalHit(cache_entry),
-                              cache_entry.DataBlk);
+      sequencer.writeCallback(address, cache_entry.DataBlk, false,
+                              testAndClearLocalHit(cache_entry));
 
       cache_entry.Dirty := true;
       if (in_msg.Type == RubyRequestType:ATOMIC) {
@@ -889,7 +874,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   action(hh_flush_hit, "\hf", desc="Notify sequencer that flush completed.") {
     assert(is_valid(tbe));
     DPRINTF(RubySlicc, "%s\n", tbe.DataBlk);
-    sequencer.writeCallback(address, GenericMachineType:L1Cache,tbe.DataBlk);
+    sequencer.writeCallback(address, tbe.DataBlk, false, MachineType:L1Cache);
   }
 
   action(sx_external_store_hit, "sx", desc="store required external msgs.") {
@@ -898,12 +883,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(responseToCache_in, ResponseMsg) {
 
-      sequencer.writeCallback(address,
-                              getNondirectHitMachType(address, in_msg.Sender),
-                              cache_entry.DataBlk,
-                              tbe.InitialRequestTime,
-                              tbe.ForwardRequestTime,
-                              tbe.FirstResponseTime);
+      sequencer.writeCallback(address, cache_entry.DataBlk, true,
+              machineIDToMachineType(in_msg.Sender), tbe.InitialRequestTime,
+              tbe.ForwardRequestTime, tbe.FirstResponseTime);
     }
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     cache_entry.Dirty := true;
@@ -914,12 +896,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
 
-    sequencer.writeCallback(address,
-                            getNondirectHitMachType(address, tbe.LastResponder),
-                            cache_entry.DataBlk,
-                            tbe.InitialRequestTime,
-                            tbe.ForwardRequestTime,
-                            tbe.FirstResponseTime);
+    sequencer.writeCallback(address, cache_entry.DataBlk, true,
+            machineIDToMachineType(tbe.LastResponder), tbe.InitialRequestTime,
+            tbe.ForwardRequestTime, tbe.FirstResponseTime);
 
     cache_entry.Dirty := true;
   }

@@ -213,6 +213,169 @@ Profiler::printOutstandingReqProfile(ostream &out) const
 }
 
 void
+Profiler::printMissLatencyProfile(ostream &out) const
+{
+    // Collate the miss latencies histograms from all the sequencers
+    Histogram latency_hist;
+    std::vector<Histogram> type_latency_hist(RubyRequestType_NUM);
+
+    Histogram hit_latency_hist;
+    std::vector<Histogram> hit_type_latency_hist(RubyRequestType_NUM);
+
+    std::vector<Histogram> hit_mach_latency_hist(MachineType_NUM);
+    std::vector<std::vector<Histogram> >
+        hit_type_mach_latency_hist(RubyRequestType_NUM,
+                               std::vector<Histogram>(MachineType_NUM));
+
+    Histogram miss_latency_hist;
+    std::vector<Histogram> miss_type_latency_hist(RubyRequestType_NUM);
+
+    std::vector<Histogram> miss_mach_latency_hist(MachineType_NUM);
+    std::vector<std::vector<Histogram> >
+        miss_type_mach_latency_hist(RubyRequestType_NUM,
+                               std::vector<Histogram>(MachineType_NUM));
+
+    std::vector<Histogram> issue_to_initial_delay_hist(MachineType_NUM);
+    std::vector<Histogram> initial_to_forward_delay_hist(MachineType_NUM);
+    std::vector<Histogram>
+        forward_to_first_response_delay_hist(MachineType_NUM);
+    std::vector<Histogram>
+        first_response_to_completion_delay_hist(MachineType_NUM);
+    std::vector<uint64_t> incomplete_times(MachineType_NUM);
+
+    for (uint32_t i = 0; i < MachineType_NUM; i++) {
+        for (map<uint32_t, AbstractController*>::iterator it =
+                  g_abs_controls[i].begin();
+             it != g_abs_controls[i].end(); ++it) {
+
+            AbstractController *ctr = (*it).second;
+            Sequencer *seq = ctr->getSequencer();
+            if (seq != NULL) {
+                // add all the latencies
+                latency_hist.add(seq->getLatencyHist());
+                hit_latency_hist.add(seq->getHitLatencyHist());
+                miss_latency_hist.add(seq->getMissLatencyHist());
+
+                // add the per request type latencies
+                for (uint32_t j = 0; j < RubyRequestType_NUM; ++j) {
+                    type_latency_hist[j]
+                        .add(seq->getTypeLatencyHist(j));
+                    hit_type_latency_hist[j]
+                        .add(seq->getHitTypeLatencyHist(j));
+                    miss_type_latency_hist[j]
+                        .add(seq->getMissTypeLatencyHist(j));
+                }
+
+                // add the per machine type miss latencies
+                for (uint32_t j = 0; j < MachineType_NUM; ++j) {
+                    hit_mach_latency_hist[j]
+                        .add(seq->getHitMachLatencyHist(j));
+                    miss_mach_latency_hist[j]
+                        .add(seq->getMissMachLatencyHist(j));
+
+                    issue_to_initial_delay_hist[j].add(
+                        seq->getIssueToInitialDelayHist(MachineType(j)));
+
+                    initial_to_forward_delay_hist[j].add(
+                        seq->getInitialToForwardDelayHist(MachineType(j)));
+                    forward_to_first_response_delay_hist[j].add(seq->
+                        getForwardRequestToFirstResponseHist(MachineType(j)));
+
+                    first_response_to_completion_delay_hist[j].add(seq->
+                        getFirstResponseToCompletionDelayHist(MachineType(j)));
+                    incomplete_times[j] +=
+                        seq->getIncompleteTimes(MachineType(j));
+                }
+
+                // add the per (request, machine) type miss latencies
+                for (uint32_t j = 0; j < RubyRequestType_NUM; j++) {
+                    for (uint32_t k = 0; k < MachineType_NUM; k++) {
+                        hit_type_mach_latency_hist[j][k].add(
+                            seq->getHitTypeMachLatencyHist(j,k));
+                        miss_type_mach_latency_hist[j][k].add(
+                            seq->getMissTypeMachLatencyHist(j,k));
+                    }
+                }
+            }
+        }
+    }
+
+    out << "latency: " << latency_hist << endl;
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        if (type_latency_hist[i].size() > 0) {
+            out << "latency: " << RubyRequestType(i) << ": "
+                << type_latency_hist[i] << endl;
+        }
+    }
+
+    out << "hit latency: " << hit_latency_hist << endl;
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        if (hit_type_latency_hist[i].size() > 0) {
+            out << "hit latency: " << RubyRequestType(i) << ": "
+                << hit_type_latency_hist[i] << endl;
+        }
+    }
+
+    for (int i = 0; i < MachineType_NUM; i++) {
+        if (hit_mach_latency_hist[i].size() > 0) {
+            out << "hit latency: " << MachineType(i) << ": "
+                << hit_mach_latency_hist[i] << endl;
+        }
+    }
+
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        for (int j = 0; j < MachineType_NUM; j++) {
+            if (hit_type_mach_latency_hist[i][j].size() > 0) {
+                out << "hit latency: " << RubyRequestType(i)
+                    << ": " << MachineType(j) << ": "
+                    << hit_type_mach_latency_hist[i][j] << endl;
+            }
+        }
+    }
+
+    out << "miss latency: " << miss_latency_hist << endl;
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        if (miss_type_latency_hist[i].size() > 0) {
+            out << "miss latency: " << RubyRequestType(i) << ": "
+                << miss_type_latency_hist[i] << endl;
+        }
+    }
+
+    for (int i = 0; i < MachineType_NUM; i++) {
+        if (miss_mach_latency_hist[i].size() > 0) {
+            out << "miss latency: " << MachineType(i) << ": "
+                << miss_mach_latency_hist[i] << endl;
+
+            out << "miss latency: " << MachineType(i)
+                << "::issue_to_initial_request: "
+                << issue_to_initial_delay_hist[i] << endl;
+            out << "miss latency: " << MachineType(i)
+                << "::initial_to_forward_request: "
+                << initial_to_forward_delay_hist[i] << endl;
+            out << "miss latency: " << MachineType(i)
+                << "::forward_to_first_response: "
+                << forward_to_first_response_delay_hist[i] << endl;
+            out << "miss latency: " << MachineType(i)
+                << "::first_response_to_completion: "
+                << first_response_to_completion_delay_hist[i] << endl;
+            out << "incomplete times: " << incomplete_times[i] << endl;
+        }
+    }
+
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        for (int j = 0; j < MachineType_NUM; j++) {
+            if (miss_type_mach_latency_hist[i][j].size() > 0) {
+                out << "miss latency: " << RubyRequestType(i)
+                    << ": " << MachineType(j) << ": "
+                    << miss_type_mach_latency_hist[i][j] << endl;
+            }
+        }
+    }
+
+    out << endl;
+}
+
+void
 Profiler::printStats(ostream& out, bool short_stats)
 {
     out << endl;
@@ -296,68 +459,7 @@ Profiler::printStats(ostream& out, bool short_stats)
     if (!short_stats) {
         out << "All Non-Zero Cycle Demand Cache Accesses" << endl;
         out << "----------------------------------------" << endl;
-        out << "miss_latency: " << m_allMissLatencyHistogram << endl;
-        for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
-            if (m_missLatencyHistograms[i].size() > 0) {
-                out << "miss_latency_" << RubyRequestType(i) << ": "
-                    << m_missLatencyHistograms[i] << endl;
-            }
-        }
-        for (int i = 0; i < m_machLatencyHistograms.size(); i++) {
-            if (m_machLatencyHistograms[i].size() > 0) {
-                out << "miss_latency_" << GenericMachineType(i) << ": "
-                    << m_machLatencyHistograms[i] << endl;
-            }
-        }
-
-        out << "miss_latency_wCC_issue_to_initial_request: " 
-            << m_wCCIssueToInitialRequestHistogram << endl;
-        out << "miss_latency_wCC_initial_forward_request: " 
-            << m_wCCInitialRequestToForwardRequestHistogram << endl;
-        out << "miss_latency_wCC_forward_to_first_response: " 
-            << m_wCCForwardRequestToFirstResponseHistogram << endl;
-        out << "miss_latency_wCC_first_response_to_completion: " 
-            << m_wCCFirstResponseToCompleteHistogram << endl;
-        out << "imcomplete_wCC_Times: " << m_wCCIncompleteTimes << endl;
-        out << "miss_latency_dir_issue_to_initial_request: " 
-            << m_dirIssueToInitialRequestHistogram << endl;
-        out << "miss_latency_dir_initial_forward_request: " 
-            << m_dirInitialRequestToForwardRequestHistogram << endl;
-        out << "miss_latency_dir_forward_to_first_response: " 
-            << m_dirForwardRequestToFirstResponseHistogram << endl;
-        out << "miss_latency_dir_first_response_to_completion: " 
-            << m_dirFirstResponseToCompleteHistogram << endl;
-        out << "imcomplete_dir_Times: " << m_dirIncompleteTimes << endl;
-
-        for (int i = 0; i < m_missMachLatencyHistograms.size(); i++) {
-            for (int j = 0; j < m_missMachLatencyHistograms[i].size(); j++) {
-                if (m_missMachLatencyHistograms[i][j].size() > 0) {
-                    out << "miss_latency_" << RubyRequestType(i) 
-                        << "_" << GenericMachineType(j) << ": "
-                        << m_missMachLatencyHistograms[i][j] << endl;
-                }
-            }
-        }
-
-        out << endl;
-
-        out << "All Non-Zero Cycle SW Prefetch Requests" << endl;
-        out << "------------------------------------" << endl;
-        out << "prefetch_latency: " << m_allSWPrefetchLatencyHistogram << endl;
-        for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
-            if (m_SWPrefetchLatencyHistograms[i].size() > 0) {
-                out << "prefetch_latency_" << RubyRequestType(i) << ": "
-                    << m_SWPrefetchLatencyHistograms[i] << endl;
-            }
-        }
-        for (int i = 0; i < m_SWPrefetchMachLatencyHistograms.size(); i++) {
-            if (m_SWPrefetchMachLatencyHistograms[i].size() > 0) {
-                out << "prefetch_latency_" << GenericMachineType(i) << ": "
-                    << m_SWPrefetchMachLatencyHistograms[i] << endl;
-            }
-        }
-        out << "prefetch_latency_L2Miss:"
-            << m_SWPrefetchL2MissLatencyHistogram << endl;
+        printMissLatencyProfile(out);
 
         if (m_all_sharing_histogram.size() > 0) {
             out << "all_sharing: " << m_all_sharing_histogram << endl;
@@ -434,44 +536,6 @@ Profiler::clearStats()
     m_real_time_start_time = time(NULL);
 
     m_busyBankCount = 0;
-
-    m_missLatencyHistograms.resize(RubyRequestType_NUM);
-    for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
-        m_missLatencyHistograms[i].clear(200);
-    }
-    m_machLatencyHistograms.resize(GenericMachineType_NUM+1);
-    for (int i = 0; i < m_machLatencyHistograms.size(); i++) {
-        m_machLatencyHistograms[i].clear(200);
-    }
-    m_missMachLatencyHistograms.resize(RubyRequestType_NUM);
-    for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
-        m_missMachLatencyHistograms[i].resize(GenericMachineType_NUM+1);
-        for (int j = 0; j < m_missMachLatencyHistograms[i].size(); j++) {
-            m_missMachLatencyHistograms[i][j].clear(200);
-        }
-    }
-    m_allMissLatencyHistogram.clear(200);
-    m_wCCIssueToInitialRequestHistogram.clear(200);
-    m_wCCInitialRequestToForwardRequestHistogram.clear(200);
-    m_wCCForwardRequestToFirstResponseHistogram.clear(200);
-    m_wCCFirstResponseToCompleteHistogram.clear(200);
-    m_wCCIncompleteTimes = 0;
-    m_dirIssueToInitialRequestHistogram.clear(200);
-    m_dirInitialRequestToForwardRequestHistogram.clear(200);
-    m_dirForwardRequestToFirstResponseHistogram.clear(200);
-    m_dirFirstResponseToCompleteHistogram.clear(200);
-    m_dirIncompleteTimes = 0;
-
-    m_SWPrefetchLatencyHistograms.resize(RubyRequestType_NUM);
-    for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
-        m_SWPrefetchLatencyHistograms[i].clear(200);
-    }
-    m_SWPrefetchMachLatencyHistograms.resize(GenericMachineType_NUM+1);
-    for (int i = 0; i < m_SWPrefetchMachLatencyHistograms.size(); i++) {
-        m_SWPrefetchMachLatencyHistograms[i].clear(200);
-    }
-    m_allSWPrefetchLatencyHistogram.clear(200);
-
     m_read_sharing_histogram.clear();
     m_write_sharing_histogram.clear();
     m_all_sharing_histogram.clear();
@@ -528,85 +592,6 @@ void
 Profiler::bankBusy()
 {
     m_busyBankCount++;
-}
-
-// non-zero cycle demand request
-void
-Profiler::missLatency(Cycles cycles,
-                      RubyRequestType type,
-                      const GenericMachineType respondingMach)
-{
-    m_allMissLatencyHistogram.add(cycles);
-    m_missLatencyHistograms[type].add(cycles);
-    m_machLatencyHistograms[respondingMach].add(cycles);
-    m_missMachLatencyHistograms[type][respondingMach].add(cycles);
-}
-
-void
-Profiler::missLatencyWcc(Cycles issuedTime,
-                         Cycles initialRequestTime,
-                         Cycles forwardRequestTime,
-                         Cycles firstResponseTime,
-                         Cycles completionTime)
-{
-    if ((issuedTime <= initialRequestTime) &&
-        (initialRequestTime <= forwardRequestTime) &&
-        (forwardRequestTime <= firstResponseTime) &&
-        (firstResponseTime <= completionTime)) {
-        m_wCCIssueToInitialRequestHistogram.add(initialRequestTime - issuedTime);
-        
-        m_wCCInitialRequestToForwardRequestHistogram.add(forwardRequestTime - 
-                                                         initialRequestTime);
-        
-        m_wCCForwardRequestToFirstResponseHistogram.add(firstResponseTime - 
-                                                        forwardRequestTime);
-        
-        m_wCCFirstResponseToCompleteHistogram.add(completionTime - 
-                                                  firstResponseTime);
-    } else {
-        m_wCCIncompleteTimes++;
-    }
-}
-
-void
-Profiler::missLatencyDir(Cycles issuedTime,
-                         Cycles initialRequestTime,
-                         Cycles forwardRequestTime,
-                         Cycles firstResponseTime,
-                         Cycles completionTime)
-{
-    if ((issuedTime <= initialRequestTime) &&
-        (initialRequestTime <= forwardRequestTime) &&
-        (forwardRequestTime <= firstResponseTime) &&
-        (firstResponseTime <= completionTime)) {
-        m_dirIssueToInitialRequestHistogram.add(initialRequestTime - issuedTime);
-        
-        m_dirInitialRequestToForwardRequestHistogram.add(forwardRequestTime - 
-                                                         initialRequestTime);
-        
-        m_dirForwardRequestToFirstResponseHistogram.add(firstResponseTime - 
-                                                        forwardRequestTime);
-        
-        m_dirFirstResponseToCompleteHistogram.add(completionTime - 
-                                                  firstResponseTime);
-    } else {
-        m_dirIncompleteTimes++;
-    }
-}
-
-// non-zero cycle prefetch request
-void
-Profiler::swPrefetchLatency(Cycles cycles, RubyRequestType type,
-                            const GenericMachineType respondingMach)
-{
-    m_allSWPrefetchLatencyHistogram.add(cycles);
-    m_SWPrefetchLatencyHistograms[type].add(cycles);
-    m_SWPrefetchMachLatencyHistograms[respondingMach].add(cycles);
-
-    if (respondingMach == GenericMachineType_Directory ||
-        respondingMach == GenericMachineType_NUM) {
-        m_SWPrefetchL2MissLatencyHistogram.add(cycles);
-    }
 }
 
 // Helper function

@@ -136,6 +136,61 @@ Sequencer::wakeup()
 void Sequencer::clearStats()
 {
     m_outstandReqHist.clear();
+
+    // Initialize the histograms that track latency of all requests
+    m_latencyHist.clear(20);
+    m_typeLatencyHist.resize(RubyRequestType_NUM);
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        m_typeLatencyHist[i].clear(20);
+    }
+
+    // Initialize the histograms that track latency of requests that
+    // hit in the cache attached to the sequencer.
+    m_hitLatencyHist.clear(20);
+    m_hitTypeLatencyHist.resize(RubyRequestType_NUM);
+    m_hitTypeMachLatencyHist.resize(RubyRequestType_NUM);
+
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        m_hitTypeLatencyHist[i].clear(20);
+        m_hitTypeMachLatencyHist[i].resize(MachineType_NUM);
+        for (int j = 0; j < MachineType_NUM; j++) {
+            m_hitTypeMachLatencyHist[i][j].clear(20);
+        }
+    }
+
+    // Initialize the histograms that track the latency of requests that
+    // missed in the cache attached to the sequencer.
+    m_missLatencyHist.clear(20);
+    m_missTypeLatencyHist.resize(RubyRequestType_NUM);
+    m_missTypeMachLatencyHist.resize(RubyRequestType_NUM);
+
+    for (int i = 0; i < RubyRequestType_NUM; i++) {
+        m_missTypeLatencyHist[i].clear(20);
+        m_missTypeMachLatencyHist[i].resize(MachineType_NUM);
+        for (int j = 0; j < MachineType_NUM; j++) {
+            m_missTypeMachLatencyHist[i][j].clear(20);
+        }
+    }
+
+    m_hitMachLatencyHist.resize(MachineType_NUM);
+    m_missMachLatencyHist.resize(MachineType_NUM);
+    m_IssueToInitialDelayHist.resize(MachineType_NUM);
+    m_InitialToForwardDelayHist.resize(MachineType_NUM);
+    m_ForwardToFirstResponseDelayHist.resize(MachineType_NUM);
+    m_FirstResponseToCompletionDelayHist.resize(MachineType_NUM);
+    m_IncompleteTimes.resize(MachineType_NUM);
+
+    for (int i = 0; i < MachineType_NUM; i++) {
+        m_missMachLatencyHist[i].clear(20);
+        m_hitMachLatencyHist[i].clear(20);
+
+        m_IssueToInitialDelayHist[i].clear(20);
+        m_InitialToForwardDelayHist[i].clear(20);
+        m_ForwardToFirstResponseDelayHist[i].clear(20);
+        m_FirstResponseToCompletionDelayHist[i].clear(20);
+
+        m_IncompleteTimes[i] = 0;
+    }
 }
 
 void
@@ -370,26 +425,58 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
 }
 
 void
-Sequencer::writeCallback(const Address& address, DataBlock& data)
+Sequencer::recordMissLatency(const Cycles cycles, const RubyRequestType type,
+                             const MachineType respondingMach,
+                             bool isExternalHit, Cycles issuedTime,
+                             Cycles initialRequestTime,
+                             Cycles forwardRequestTime,
+                             Cycles firstResponseTime, Cycles completionTime)
 {
-    writeCallback(address, GenericMachineType_NULL, data);
+    m_latencyHist.add(cycles);
+    m_typeLatencyHist[type].add(cycles);
+
+    if (isExternalHit) {
+        m_missLatencyHist.add(cycles);
+        m_missTypeLatencyHist[type].add(cycles);
+
+        if (respondingMach != MachineType_NUM) {
+            m_missMachLatencyHist[respondingMach].add(cycles);
+            m_missTypeMachLatencyHist[type][respondingMach].add(cycles);
+
+            if ((issuedTime <= initialRequestTime) &&
+                (initialRequestTime <= forwardRequestTime) &&
+                (forwardRequestTime <= firstResponseTime) &&
+                (firstResponseTime <= completionTime)) {
+
+                m_IssueToInitialDelayHist[respondingMach].add(
+                    initialRequestTime - issuedTime);
+                m_InitialToForwardDelayHist[respondingMach].add(
+                    forwardRequestTime - initialRequestTime);
+                m_ForwardToFirstResponseDelayHist[respondingMach].add(
+                    firstResponseTime - forwardRequestTime);
+                m_FirstResponseToCompletionDelayHist[respondingMach].add(
+                    completionTime - firstResponseTime);
+            } else {
+                m_IncompleteTimes[respondingMach]++;
+            }
+        }
+    } else {
+        m_hitLatencyHist.add(cycles);
+        m_hitTypeLatencyHist[type].add(cycles);
+
+        if (respondingMach != MachineType_NUM) {
+            m_hitMachLatencyHist[respondingMach].add(cycles);
+            m_hitTypeMachLatencyHist[type][respondingMach].add(cycles);
+        }
+    }
 }
 
 void
-Sequencer::writeCallback(const Address& address,
-                         GenericMachineType mach,
-                         DataBlock& data)
-{
-    writeCallback(address, mach, data, Cycles(0), Cycles(0), Cycles(0));
-}
-
-void
-Sequencer::writeCallback(const Address& address,
-                         GenericMachineType mach,
-                         DataBlock& data,
-                         Cycles initialRequestTime,
-                         Cycles forwardRequestTime,
-                         Cycles firstResponseTime)
+Sequencer::writeCallback(const Address& address, DataBlock& data,
+                         const bool externalHit, const MachineType mach,
+                         const Cycles initialRequestTime,
+                         const Cycles forwardRequestTime,
+                         const Cycles firstResponseTime)
 {
     assert(address == line_address(address));
     assert(m_writeRequestTable.count(line_address(address)));
@@ -427,28 +514,13 @@ Sequencer::writeCallback(const Address& address,
         m_controller->unblock(address);
     }
 
-    hitCallback(request, mach, data, success,
+    hitCallback(request, data, success, mach, externalHit,
                 initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
 void
-Sequencer::readCallback(const Address& address, DataBlock& data)
-{
-    readCallback(address, GenericMachineType_NULL, data);
-}
-
-void
-Sequencer::readCallback(const Address& address,
-                        GenericMachineType mach,
-                        DataBlock& data)
-{
-    readCallback(address, mach, data, Cycles(0), Cycles(0), Cycles(0));
-}
-
-void
-Sequencer::readCallback(const Address& address,
-                        GenericMachineType mach,
-                        DataBlock& data,
+Sequencer::readCallback(const Address& address, DataBlock& data,
+                        bool externalHit, const MachineType mach,
                         Cycles initialRequestTime,
                         Cycles forwardRequestTime,
                         Cycles firstResponseTime)
@@ -466,18 +538,17 @@ Sequencer::readCallback(const Address& address,
     assert((request->m_type == RubyRequestType_LD) ||
            (request->m_type == RubyRequestType_IFETCH));
 
-    hitCallback(request, mach, data, true,
+    hitCallback(request, data, true, mach, externalHit,
                 initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
 void
-Sequencer::hitCallback(SequencerRequest* srequest,
-                       GenericMachineType mach,
-                       DataBlock& data,
-                       bool success,
-                       Cycles initialRequestTime,
-                       Cycles forwardRequestTime,
-                       Cycles firstResponseTime)
+Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
+                       bool llscSuccess,
+                       const MachineType mach, const bool externalHit,
+                       const Cycles initialRequestTime,
+                       const Cycles forwardRequestTime,
+                       const Cycles firstResponseTime)
 {
     PacketPtr pkt = srequest->pkt;
     Address request_address(pkt->getAddr());
@@ -494,29 +565,17 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     }
 
     assert(curCycle() >= issued_time);
-    Cycles miss_latency = curCycle() - issued_time;
+    Cycles total_latency = curCycle() - issued_time;
 
-    // Profile the miss latency for all non-zero demand misses
-    if (miss_latency != 0) {
-        g_system_ptr->getProfiler()->missLatency(miss_latency, type, mach);
+    // Profile the latency for all demand accesses.
+    recordMissLatency(total_latency, type, mach, externalHit, issued_time,
+                      initialRequestTime, forwardRequestTime,
+                      firstResponseTime, curCycle());
 
-        if (mach == GenericMachineType_L1Cache_wCC) {
-            g_system_ptr->getProfiler()->missLatencyWcc(issued_time,
-                initialRequestTime, forwardRequestTime,
-                firstResponseTime, curCycle());
-        }
-
-        if (mach == GenericMachineType_Directory) {
-            g_system_ptr->getProfiler()->missLatencyDir(issued_time,
-                initialRequestTime, forwardRequestTime,
-                firstResponseTime, curCycle());
-        }
-
-        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
-                 curTick(), m_version, "Seq",
-                 success ? "Done" : "SC_Failed", "", "",
-                 request_address, miss_latency);
-    }
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
+             curTick(), m_version, "Seq",
+             llscSuccess ? "Done" : "SC_Failed", "", "",
+             request_address, total_latency);
 
     // update the data
     if (g_system_ptr->m_warmup_enabled) {

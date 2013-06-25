@@ -97,17 +97,18 @@ structure (NetDest, external = "yes", non_obj="yes") {
 
 structure (Sequencer, external = "yes") {
   void readCallback(Address, DataBlock);
-  void readCallback(Address, GenericMachineType, DataBlock);
-  void readCallback(Address, GenericMachineType, DataBlock,
+  void readCallback(Address, DataBlock, bool);
+  void readCallback(Address, DataBlock, bool, MachineType);
+  void readCallback(Address, DataBlock, bool, MachineType,
                     Cycles, Cycles, Cycles);
 
   void writeCallback(Address, DataBlock);
-  void writeCallback(Address, GenericMachineType, DataBlock);
-  void writeCallback(Address, GenericMachineType, DataBlock,
+  void writeCallback(Address, DataBlock, bool);
+  void writeCallback(Address, DataBlock, bool, MachineType);
+  void writeCallback(Address, DataBlock, bool, MachineType,
                      Cycles, Cycles, Cycles);
 
   void checkCoherence(Address);
-  void profileNack(Address, int, int, uint64);
   void evictionCallback(Address);
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Address);

@@ -177,18 +177,6 @@ machine(L1Cache, "MI Example L1 Cache")
     return getCacheEntry(addr).DataBlk;
   }
 
-  GenericMachineType getNondirectHitMachType(MachineID sender) {
-    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
-      //
-      // NOTE direct local hits should not call this
-      //
-      return GenericMachineType:L1Cache_wCC; 
-    } else {
-      return ConvertMachToGenericMach(machineIDToMachineType(sender));
-    }
-  }
-
-
   // NETWORK PORTS
 
   out_port(requestNetwork_out, RequestMsg, requestFromCache);
@@ -347,36 +335,30 @@ machine(L1Cache, "MI Example L1 Cache")
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-    sequencer.readCallback(address, 
-                           GenericMachineType:L1Cache,
-                           cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk, false);
   }
 
   action(rx_load_hit, "rx", desc="External load completed.") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-      sequencer.readCallback(address, 
-                             getNondirectHitMachType(in_msg.Sender),
-                             cache_entry.DataBlk);
+      sequencer.readCallback(address, cache_entry.DataBlk, true,
+                             machineIDToMachineType(in_msg.Sender));
     }
   }
 
   action(s_store_hit, "s", desc="Notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-    sequencer.writeCallback(address, 
-                            GenericMachineType:L1Cache,
-                            cache_entry.DataBlk);
+    sequencer.writeCallback(address, cache_entry.DataBlk, false);
   }
 
   action(sx_store_hit, "sx", desc="External store completed.") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-      sequencer.writeCallback(address, 
-                              getNondirectHitMachType(in_msg.Sender),
-                              cache_entry.DataBlk);
+      sequencer.writeCallback(address, cache_entry.DataBlk, true,
+                              machineIDToMachineType(in_msg.Sender));
     }
   }
 

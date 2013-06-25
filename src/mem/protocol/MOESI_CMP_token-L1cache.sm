@@ -399,26 +399,21 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
+  // NOTE: direct local hits should not call this function
+  bool isExternalHit(Address addr, MachineID sender) {
     if (machineIDToMachineType(sender) == MachineType:L1Cache) {
-      //
-      // NOTE direct local hits should not call this
-      //
-      return GenericMachineType:L1Cache_wCC;
+      return true;
     } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
 
-      if (sender == (mapAddressToRange(addr,
-                                       MachineType:L2Cache,
-                                       l2_select_low_bit,
-                                       l2_select_num_bits))) {
-
-        return GenericMachineType:L2Cache;
+      if (sender == mapAddressToRange(addr, MachineType:L2Cache,
+                      l2_select_low_bit, l2_select_num_bits)) {
+        return false;
       } else {
-        return GenericMachineType:L2Cache_wCC;
+        return  true;
       }
-    } else {
-      return ConvertMachToGenericMach(machineIDToMachineType(sender));
     }
+
+    return true;
   }
 
   bool okToIssueStarving(Address addr, MachineID machineID) {
@@ -1289,10 +1284,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
-    sequencer.readCallback(address,
-                           GenericMachineType:L1Cache,
-                           cache_entry.DataBlk);
-
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           MachineType:L1Cache);
   }
 
   action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
@@ -1300,11 +1293,9 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
-
-      sequencer.readCallback(address,
-                             getNondirectHitMachType(address, in_msg.Sender),
-                             cache_entry.DataBlk);
-
+      sequencer.readCallback(address, cache_entry.DataBlk,
+                             isExternalHit(address, in_msg.Sender),
+                             machineIDToMachineType(in_msg.Sender));
     }
   }
 
@@ -1313,10 +1304,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
-    sequencer.writeCallback(address,
-                            GenericMachineType:L1Cache,
-                            cache_entry.DataBlk);
-
+    sequencer.writeCallback(address, cache_entry.DataBlk, false,
+                            MachineType:L1Cache);
     cache_entry.Dirty := true;
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
   }
@@ -1326,11 +1315,9 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
-
-      sequencer.writeCallback(address,
-                              getNondirectHitMachType(address, in_msg.Sender),
-                              cache_entry.DataBlk);
-
+      sequencer.writeCallback(address, cache_entry.DataBlk,
+                              isExternalHit(address, in_msg.Sender),
+                              machineIDToMachineType(in_msg.Sender));
     }
     cache_entry.Dirty := true;
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);

@@ -168,18 +168,6 @@ enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestT
   Default,    desc="Replace this with access_types passed to the DMA Ruby object";
 }
 
-enumeration(GenericMachineType, desc="...", default="GenericMachineType_NULL") {
-  L1Cache,     desc="L1 Cache Mach";
-  L2Cache,     desc="L2 Cache Mach";
-  L3Cache,     desc="L3 Cache Mach";
-  Directory,   desc="Directory Mach";
-  DMA,         desc="DMA Mach";
-  Collector,   desc="Collector Mach";
-  L1Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";
-  L2Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";
-  NULL,        desc="null mach type";
-}
-
 // MessageSizeType
 enumeration(MessageSizeType, default="MessageSizeType_Undefined", desc="...") {
   Undefined,  desc="Undefined";

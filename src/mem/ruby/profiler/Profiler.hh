@@ -52,7 +52,6 @@
 
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
@@ -110,21 +109,7 @@ class Profiler : public SimObject
 
     void controllerBusy(MachineID machID);
     void bankBusy();
-
-    void missLatency(Cycles t, RubyRequestType type,
-                     const GenericMachineType respondingMach);
-
-    void missLatencyWcc(Cycles issuedTime, Cycles initialRequestTime,
-                        Cycles forwardRequestTime, Cycles firstResponseTime,
-                        Cycles completionTime);
     
-    void missLatencyDir(Cycles issuedTime, Cycles initialRequestTime,
-                        Cycles forwardRequestTime, Cycles firstResponseTime,
-                        Cycles completionTime);
-    
-    void swPrefetchLatency(Cycles t, RubyRequestType type,
-                           const GenericMachineType respondingMach);
-
     void print(std::ostream& out) const;
 
     void rubyWatch(int proc);
@@ -141,6 +126,7 @@ class Profiler : public SimObject
     void printRequestProfile(std::ostream &out) const;
     void printDelayProfile(std::ostream &out) const;
     void printOutstandingReqProfile(std::ostream &out) const;
+    void printMissLatencyProfile(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -160,27 +146,6 @@ class Profiler : public SimObject
     Histogram m_all_sharing_histogram;
     int64 m_cache_to_cache;
     int64 m_memory_to_cache;
-
-    std::vector<Histogram> m_missLatencyHistograms;
-    std::vector<Histogram> m_machLatencyHistograms;
-    std::vector< std::vector<Histogram> > m_missMachLatencyHistograms;
-    Histogram m_wCCIssueToInitialRequestHistogram;
-    Histogram m_wCCInitialRequestToForwardRequestHistogram;
-    Histogram m_wCCForwardRequestToFirstResponseHistogram;
-    Histogram m_wCCFirstResponseToCompleteHistogram;
-    int64 m_wCCIncompleteTimes;
-    Histogram m_dirIssueToInitialRequestHistogram;
-    Histogram m_dirInitialRequestToForwardRequestHistogram;
-    Histogram m_dirForwardRequestToFirstResponseHistogram;
-    Histogram m_dirFirstResponseToCompleteHistogram;
-    int64 m_dirIncompleteTimes;
-
-    Histogram m_allMissLatencyHistogram;
-
-    Histogram m_allSWPrefetchLatencyHistogram;
-    Histogram m_SWPrefetchL2MissLatencyHistogram;
-    std::vector<Histogram> m_SWPrefetchLatencyHistograms;
-    std::vector<Histogram> m_SWPrefetchMachLatencyHistograms;
 
     Histogram m_average_latency_estimate;
     m5::hash_set<Address> m_watch_address_set;

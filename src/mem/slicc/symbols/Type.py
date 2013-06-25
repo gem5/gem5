@@ -477,7 +477,6 @@ ${{self.c_ident}}::print(ostream& out) const
 
         if self.isMachineType:
             code('#include "base/misc.hh"')
-            code('#include "mem/protocol/GenericMachineType.hh"')
             code('#include "mem/ruby/common/Address.hh"')
             code('struct MachineID;')
 
@@ -532,23 +531,6 @@ MachineID map_Address_to_DMA(const Address &addr);
                 code('''
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
-''')
-
-            code('''
-inline GenericMachineType
-ConvertMachToGenericMach(MachineType machType)
-{
-''')
-            for enum in self.enums.itervalues():
-                genericType = self.enums[enum.ident].get('genericType',
-                                                         enum.ident)
-                code('''
-      if (machType == MachineType_${{enum.ident}})
-          return GenericMachineType_${{genericType}};
-''')
-            code('''
-      panic("cannot convert to a GenericMachineType");
-}
 ''')
 
         if self.isStateDecl:
@@ -610,7 +592,8 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 
         if self.isMachineType:
             for enum in self.enums.itervalues():
-                code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
+                if enum.get("Primary"):
+                    code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
             code('#include "mem/ruby/system/MachineID.hh"')
 
         code('''
@@ -747,7 +730,11 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             code.indent()
             code('  case ${{self.c_ident}}_NUM:')
             for enum in reversed(self.enums.values()):
-                code('    base += ${{enum.ident}}_Controller::getNumControllers();')
+                # Check if there is a defined machine with this type
+                if enum.get("Primary"):
+                    code('    base += ${{enum.ident}}_Controller::getNumControllers();')
+                else:
+                    code('    base += 0;')
                 code('  case ${{self.c_ident}}_${{enum.ident}}:')
             code('    break;')
             code.dedent()
@@ -771,10 +758,11 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 
             # For each field
             for enum in self.enums.itervalues():
-                code('''
-      case ${{self.c_ident}}_${{enum.ident}}:
-        return ${{enum.ident}}_Controller::getNumControllers();
-''')
+                code('case ${{self.c_ident}}_${{enum.ident}}:')
+                if enum.get("Primary"):
+                    code('return ${{enum.ident}}_Controller::getNumControllers();')
+                else:
+                    code('return 0;')
 
             # total num
             code('''
