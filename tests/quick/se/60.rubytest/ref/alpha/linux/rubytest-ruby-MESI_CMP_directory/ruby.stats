@@ -1,4 +1,4 @@
-Real time: Jun/08/2013 14:12:22
+Real time: Jun/24/2013 17:13:49
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.55
-Virtual_time_in_minutes: 0.00916667
-Virtual_time_in_hours:   0.000152778
-Virtual_time_in_days:    6.36574e-06
+Virtual_time_in_seconds: 0.59
+Virtual_time_in_minutes: 0.00983333
+Virtual_time_in_hours:   0.000163889
+Virtual_time_in_days:    6.8287e-06
 
 Ruby_current_time: 318321
 Ruby_start_time: 0
 Ruby_cycles: 318321
 
-mbytes_resident: 51.1211
-mbytes_total: 139.629
-resident_ratio: 0.366177
+mbytes_resident: 52.3711
+mbytes_total: 146.406
+resident_ratio: 0.357764
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -32,29 +32,18 @@ sequencer_requests_outstanding: [binsize: 1 max: 16 count: 1012 average: 15.8221
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 64 max: 8110 count: 997 average: 5056.15 | standard deviation: 2131.53 | 69 13 4 2 1 6 6 4 4 1 8 8 6 5 0 3 0 1 1 1 2 3 2 3 0 0 3 1 0 0 0 1 0 1 1 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 1 1 0 1 3 0 3 1 5 8 11 8 16 15 20 29 26 21 24 31 17 30 34 34 27 28 36 25 28 32 33 35 28 34 17 19 21 21 16 13 13 11 7 3 6 6 8 3 2 2 4 2 2 1 0 3 1 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_LD: [binsize: 64 max: 7764 count: 44 average: 5504.89 | standard deviation: 1648.56 | 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 1 1 0 1 2 0 1 3 1 1 1 2 1 0 0 3 3 0 2 1 1 1 3 1 2 1 0 1 1 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 ]
-miss_latency_ST: [binsize: 64 max: 8110 count: 897 average: 5296.67 | standard deviation: 1932.9 | 66 13 3 2 0 3 1 2 2 0 1 0 0 0 0 1 0 0 1 1 0 1 0 1 0 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 1 1 0 1 2 0 3 1 4 7 11 7 15 15 19 27 26 20 21 30 16 29 32 33 27 28 33 22 28 30 32 34 27 31 16 17 20 21 15 12 13 11 7 2 6 6 8 3 2 1 4 2 2 1 0 2 1 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_IFETCH: [binsize: 16 max: 2021 count: 56 average: 850.893 | standard deviation: 421.128 | 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 1 2 0 3 0 1 1 0 1 0 1 0 0 2 0 0 1 0 0 2 3 1 1 2 0 3 3 1 1 2 2 0 0 3 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 1 0 2 0 0 0 0 0 0 2 0 0 1 1 0 0 0 0 0 0 0 0 0 1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_NULL: [binsize: 64 max: 8110 count: 997 average: 5056.15 | standard deviation: 2131.53 | 69 13 4 2 1 6 6 4 4 1 8 8 6 5 0 3 0 1 1 1 2 3 2 3 0 0 3 1 0 0 0 1 0 1 1 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 1 1 0 1 3 0 3 1 5 8 11 8 16 15 20 29 26 21 24 31 17 30 34 34 27 28 36 25 28 32 33 35 28 34 17 19 21 21 16 13 13 11 7 3 6 6 8 3 2 2 4 2 2 1 0 3 1 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-imcomplete_wCC_Times: 0
-miss_latency_dir_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_dir_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-imcomplete_dir_Times: 0
-miss_latency_LD_NULL: [binsize: 64 max: 7764 count: 44 average: 5504.89 | standard deviation: 1648.56 | 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 1 1 0 1 2 0 1 3 1 1 1 2 1 0 0 3 3 0 2 1 1 1 3 1 2 1 0 1 1 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 ]
-miss_latency_ST_NULL: [binsize: 64 max: 8110 count: 897 average: 5296.67 | standard deviation: 1932.9 | 66 13 3 2 0 3 1 2 2 0 1 0 0 0 0 1 0 0 1 1 0 1 0 1 0 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 1 1 0 1 2 0 3 1 4 7 11 7 15 15 19 27 26 20 21 30 16 29 32 33 27 28 33 22 28 30 32 34 27 31 16 17 20 21 15 12 13 11 7 2 6 6 8 3 2 1 4 2 2 1 0 2 1 2 2 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_IFETCH_NULL: [binsize: 16 max: 2021 count: 56 average: 850.893 | standard deviation: 421.128 | 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 1 2 0 3 0 1 1 0 1 0 1 0 0 2 0 0 1 0 0 2 3 1 1 2 0 3 3 1 1 2 2 0 0 3 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 1 0 2 0 0 0 0 0 0 2 0 0 1 1 0 0 0 0 0 0 0 0 0 1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+latency: [binsize: 512 max: 8110 count: 997 average: 5056.15 | standard deviation: 2131.53 | 105 35 13 5 2 2 0 2 6 67 198 244 208 75 24 11 ]
+latency: LD: [binsize: 512 max: 7764 count: 44 average: 5504.89 | standard deviation: 1648.56 | 3 0 0 0 0 0 0 0 1 4 10 11 10 3 1 1 ]
+latency: ST: [binsize: 512 max: 8110 count: 897 average: 5296.67 | standard deviation: 1932.9 | 90 4 4 1 2 2 0 2 5 63 188 233 198 72 23 10 ]
+latency: IFETCH: [binsize: 128 max: 2021 count: 56 average: 850.893 | standard deviation: 421.128 | 0 1 4 7 3 15 11 2 1 0 4 4 0 3 0 1 ]
+hit latency: [binsize: 8 max: 117 count: 81 average: 19.5556 | standard deviation: 39.6538 | 68 0 0 0 0 0 0 0 0 0 0 0 2 6 5 ]
+hit latency: LD: [binsize: 1 max: 3 count: 2 average:     2 | standard deviation: 1.41421 | 0 1 0 1 ]
+hit latency: ST: [binsize: 8 max: 117 count: 79 average:    20 | standard deviation: 40.0577 | 66 0 0 0 0 0 0 0 0 0 0 0 2 6 5 ]
+miss latency: [binsize: 512 max: 8110 count: 916 average: 5501.52 | standard deviation: 1581.55 | 24 35 13 5 2 2 0 2 6 67 198 244 208 75 24 11 ]
+miss latency: LD: [binsize: 512 max: 7764 count: 42 average: 5766.93 | standard deviation: 1141.41 | 1 0 0 0 0 0 0 0 1 4 10 11 10 3 1 1 ]
+miss latency: ST: [binsize: 512 max: 8110 count: 818 average: 5806.28 | standard deviation: 1070 | 11 4 4 1 2 2 0 2 5 63 188 233 198 72 23 10 ]
+miss latency: IFETCH: [binsize: 128 max: 2021 count: 56 average: 850.893 | standard deviation: 421.128 | 0 1 4 7 3 15 11 2 1 0 4 4 0 3 0 1 ]
 
-All Non-Zero Cycle SW Prefetch Requests
-------------------------------------
-prefetch_latency: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-prefetch_latency_L2Miss:[binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 Request vs. RubySystem State Profile
 --------------------------------
 

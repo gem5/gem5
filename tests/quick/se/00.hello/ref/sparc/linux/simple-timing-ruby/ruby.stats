@@ -1,4 +1,4 @@
-Real time: Jun/08/2013 14:17:53
+Real time: Jun/24/2013 23:56:22
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.49
-Virtual_time_in_minutes: 0.00816667
-Virtual_time_in_hours:   0.000136111
-Virtual_time_in_days:    5.6713e-06
+Virtual_time_in_seconds: 0.51
+Virtual_time_in_minutes: 0.0085
+Virtual_time_in_hours:   0.000141667
+Virtual_time_in_days:    5.90278e-06
 
 Ruby_current_time: 107952
 Ruby_start_time: 0
 Ruby_cycles: 107952
 
-mbytes_resident: 55.6289
-mbytes_total: 144.984
-resident_ratio: 0.383743
+mbytes_resident: 56.8633
+mbytes_total: 157.191
+resident_ratio: 0.361795
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -31,33 +31,28 @@ sequencer_requests_outstanding: [binsize: 1 max: 1 count: 6759 average:     1 | 
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 1 max: 125 count: 6758 average: 14.974 | standard deviation: 24.8304 | 0 0 0 5469 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 9 10 284 430 440 7 1 3 10 10 11 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 5 23 35 1 0 3 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-miss_latency_LD: [binsize: 1 max: 93 count: 715 average: 37.3343 | standard deviation: 31.1717 | 0 0 0 320 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 6 4 94 137 128 1 0 0 4 1 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 9 1 ]
-miss_latency_ST: [binsize: 1 max: 125 count: 673 average: 20.0223 | standard deviation: 28.6826 | 0 0 0 494 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 43 50 63 1 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 4 8 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-miss_latency_IFETCH: [binsize: 1 max: 98 count: 5370 average: 11.3641 | standard deviation: 21.4696 | 0 0 0 4655 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 2 5 147 243 249 5 1 2 5 8 6 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 3 16 18 0 0 1 0 0 1 ]
-miss_latency_L1Cache: [binsize: 1 max: 3 count: 5469 average:     3 | standard deviation: 0 | 0 0 0 5469 ]
-miss_latency_Directory: [binsize: 1 max: 125 count: 1289 average: 65.7773 | standard deviation: 6.53621 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 9 10 284 430 440 7 1 3 10 10 11 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 5 23 35 1 0 3 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-miss_latency_wCC_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-imcomplete_wCC_Times: 0
-miss_latency_dir_issue_to_initial_request: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
-miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
-miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
-miss_latency_dir_first_response_to_completion: [binsize: 1 max: 61 count: 1 average:    61 | standard deviation: 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-imcomplete_dir_Times: 1288
-miss_latency_LD_L1Cache: [binsize: 1 max: 3 count: 320 average:     3 | standard deviation: 0 | 0 0 0 320 ]
-miss_latency_LD_Directory: [binsize: 1 max: 93 count: 395 average: 65.1494 | standard deviation: 5.26963 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 6 4 94 137 128 1 0 0 4 1 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 9 1 ]
-miss_latency_ST_L1Cache: [binsize: 1 max: 3 count: 494 average:     3 | standard deviation: 0 | 0 0 0 494 ]
-miss_latency_ST_Directory: [binsize: 1 max: 125 count: 179 average:    67 | standard deviation: 9.07893 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 43 50 63 1 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 4 8 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-miss_latency_IFETCH_L1Cache: [binsize: 1 max: 3 count: 4655 average:     3 | standard deviation: 0 | 0 0 0 4655 ]
-miss_latency_IFETCH_Directory: [binsize: 1 max: 98 count: 715 average: 65.8182 | standard deviation: 6.37188 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 2 5 147 243 249 5 1 2 5 8 6 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 3 16 18 0 0 1 0 0 1 ]
+latency: [binsize: 8 max: 125 count: 6758 average: 14.974 | standard deviation: 24.8304 | 5469 0 0 0 0 0 0 306 912 1 0 68 1 0 0 1 ]
+latency: LD: [binsize: 8 max: 93 count: 715 average: 37.3343 | standard deviation: 31.1717 | 320 0 0 0 0 0 0 105 276 0 0 14 ]
+latency: ST: [binsize: 8 max: 125 count: 673 average: 20.0223 | standard deviation: 28.6826 | 494 0 0 0 0 0 0 45 117 0 0 16 0 0 0 1 ]
+latency: IFETCH: [binsize: 8 max: 98 count: 5370 average: 11.3641 | standard deviation: 21.4696 | 4655 0 0 0 0 0 0 156 519 1 0 38 1 ]
+hit latency: [binsize: 1 max: 3 count: 5469 average:     3 | standard deviation: 0 | 0 0 0 5469 ]
+hit latency: LD: [binsize: 1 max: 3 count: 320 average:     3 | standard deviation: 0 | 0 0 0 320 ]
+hit latency: ST: [binsize: 1 max: 3 count: 494 average:     3 | standard deviation: 0 | 0 0 0 494 ]
+hit latency: IFETCH: [binsize: 1 max: 3 count: 4655 average:     3 | standard deviation: 0 | 0 0 0 4655 ]
+miss latency: [binsize: 8 max: 125 count: 1289 average: 65.7773 | standard deviation: 6.53621 | 0 0 0 0 0 0 0 306 912 1 0 68 1 0 0 1 ]
+miss latency: LD: [binsize: 8 max: 93 count: 395 average: 65.1494 | standard deviation: 5.26963 | 0 0 0 0 0 0 0 105 276 0 0 14 ]
+miss latency: ST: [binsize: 8 max: 125 count: 179 average:    67 | standard deviation: 9.07893 | 0 0 0 0 0 0 0 45 117 0 0 16 0 0 0 1 ]
+miss latency: IFETCH: [binsize: 8 max: 98 count: 715 average: 65.8182 | standard deviation: 6.37188 | 0 0 0 0 0 0 0 156 519 1 0 38 1 ]
+miss latency: Directory: [binsize: 8 max: 125 count: 1289 average: 65.7773 | standard deviation: 6.53621 | 0 0 0 0 0 0 0 306 912 1 0 68 1 0 0 1 ]
+miss latency: Directory::issue_to_initial_request: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
+miss latency: Directory::initial_to_forward_request: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
+miss latency: Directory::forward_to_first_response: [binsize: 1 max: 0 count: 1 average:     0 | standard deviation: 0 | 1 ]
+miss latency: Directory::first_response_to_completion: [binsize: 4 max: 61 count: 1 average:    61 | standard deviation: 0 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+incomplete times: 1288
+miss latency: LD: Directory: [binsize: 8 max: 93 count: 395 average: 65.1494 | standard deviation: 5.26963 | 0 0 0 0 0 0 0 105 276 0 0 14 ]
+miss latency: ST: Directory: [binsize: 8 max: 125 count: 179 average:    67 | standard deviation: 9.07893 | 0 0 0 0 0 0 0 45 117 0 0 16 0 0 0 1 ]
+miss latency: IFETCH: Directory: [binsize: 8 max: 98 count: 715 average: 65.8182 | standard deviation: 6.37188 | 0 0 0 0 0 0 0 156 519 1 0 38 1 ]
 
-All Non-Zero Cycle SW Prefetch Requests
-------------------------------------
-prefetch_latency: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-prefetch_latency_L2Miss:[binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 Request vs. RubySystem State Profile
 --------------------------------
 
