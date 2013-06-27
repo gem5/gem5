@@ -160,20 +160,19 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
 
     // Store relevant fields of packet, because packet may be modified
     // or even deleted when sendTiming() is called.
-    bool isRead = pkt->isRead();
-    bool isWrite = pkt->isWrite();
+    bool is_read = pkt->isRead();
+    bool is_write = pkt->isWrite();
     int cmd = pkt->cmdToIndex();
     Request::FlagsType req_flags = pkt->req->getFlags();
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
-    bool needsResponse = pkt->needsResponse();
-    bool memInhibitAsserted = pkt->memInhibitAsserted();
+    bool expects_response = pkt->needsResponse() && !pkt->memInhibitAsserted();
 
     // If a cache miss is served by a cache, a monitor near the memory
     // would see a request which needs a response, but this response
     // would be inhibited and not come back from the memory. Therefore
     // we additionally have to check the inhibit flag.
-    if (needsResponse && !memInhibitAsserted && !stats.disableLatencyHists) {
+    if (expects_response && !stats.disableLatencyHists) {
         pkt->pushSenderState(new CommMonitorSenderState(curTick()));
     }
 
@@ -182,7 +181,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     bool successful = masterPort.sendTimingReq(pkt);
 
     // If not successful, restore the sender state
-    if (!successful && needsResponse && !stats.disableLatencyHists) {
+    if (!successful && expects_response && !stats.disableLatencyHists) {
         delete pkt->popSenderState();
     }
 
@@ -200,7 +199,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         traceStream->write(pkt_msg);
     }
 
-    if (successful && isRead) {
+    if (successful && is_read) {
         DPRINTF(CommMonitor, "Forwarded read request\n");
 
         // Increment number of observed read transactions
@@ -220,7 +219,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
 
         // If it needs a response increment number of outstanding read
         // requests
-        if (!stats.disableOutstandingHists && needsResponse) {
+        if (!stats.disableOutstandingHists && expects_response) {
             ++stats.outstandingReadReqs;
         }
 
@@ -237,7 +236,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
             }
             stats.timeOfLastReq = curTick();
         }
-    } else if (successful && isWrite) {
+    } else if (successful && is_write) {
         DPRINTF(CommMonitor, "Forwarded write request\n");
 
         // Same as for reads
@@ -260,7 +259,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
             stats.writeAddrDist.sample(addr & writeAddrMask);
         }
 
-        if (!stats.disableOutstandingHists && needsResponse) {
+        if (!stats.disableOutstandingHists && expects_response) {
             ++stats.outstandingWriteReqs;
         }
 
@@ -292,20 +291,20 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
 
     // Store relevant fields of packet, because packet may be modified
     // or even deleted when sendTiming() is called.
-    bool isRead = pkt->isRead();
-    bool isWrite = pkt->isWrite();
+    bool is_read = pkt->isRead();
+    bool is_write = pkt->isWrite();
     unsigned size = pkt->getSize();
     Tick latency = 0;
-    CommMonitorSenderState* commReceivedState =
+    CommMonitorSenderState* received_state =
         dynamic_cast<CommMonitorSenderState*>(pkt->senderState);
 
     if (!stats.disableLatencyHists) {
         // Restore initial sender state
-        if (commReceivedState == NULL)
+        if (received_state == NULL)
             panic("Monitor got a response without monitor sender state\n");
 
         // Restore the sate
-        pkt->senderState = commReceivedState->predecessor;
+        pkt->senderState = received_state->predecessor;
     }
 
     // Attempt to send the packet
@@ -315,17 +314,17 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
         // If packet successfully send, sample value of latency,
         // afterwards delete sender state, otherwise restore state
         if (successful) {
-            latency = curTick() - commReceivedState->transmitTime;
+            latency = curTick() - received_state->transmitTime;
             DPRINTF(CommMonitor, "Latency: %d\n", latency);
-            delete commReceivedState;
+            delete received_state;
         } else {
             // Don't delete anything and let the packet look like we
             // did not touch it
-            pkt->senderState = commReceivedState;
+            pkt->senderState = received_state;
         }
     }
 
-    if (successful && isRead) {
+    if (successful && is_read) {
         // Decrement number of outstanding read requests
         DPRINTF(CommMonitor, "Received read response\n");
         if (!stats.disableOutstandingHists) {
@@ -343,7 +342,7 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
             stats.totalReadBytes += size;
         }
 
-    } else if (successful && isWrite) {
+    } else if (successful && is_write) {
         // Decrement number of outstanding write requests
         DPRINTF(CommMonitor, "Received write response\n");
         if (!stats.disableOutstandingHists) {
