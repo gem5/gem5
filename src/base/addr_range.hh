@@ -142,7 +142,7 @@ class AddrRange
      */
     uint64_t granularity() const
     {
-        return ULL(1) << (intlvHighBit - intlvBits);
+        return ULL(1) << (intlvHighBit - intlvBits + 1);
     }
 
     /**
