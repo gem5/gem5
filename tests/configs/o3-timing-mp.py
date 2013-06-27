@@ -39,6 +39,7 @@ system = System(cpu = cpus,
                 physmem = DDR3_1600_x64(),
                 membus = CoherentBus(),
                 mem_mode = "timing")
+system.clock = '1GHz'
 
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock = '2GHz')

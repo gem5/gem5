@@ -42,6 +42,7 @@ system = System(cpu = cpu,
                 physmem = ruby_memory,
                 membus = CoherentBus(),
                 mem_mode = "timing")
+system.clock = '1GHz'
 system.physmem.port = system.membus.master
 # create the interrupt controller
 cpu.createInterruptController()

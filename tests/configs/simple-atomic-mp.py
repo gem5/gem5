@@ -38,7 +38,7 @@ cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 system = System(cpu = cpus,
                 physmem = SimpleMemory(range = AddrRange('1024MB')),
                 membus = CoherentBus())
-
+system.clock = '1GHz'
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock = '2GHz')
 system.l2c = L2Cache(clock = '2GHz', size='4MB', assoc=8)

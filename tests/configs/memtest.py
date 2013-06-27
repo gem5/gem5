@@ -40,6 +40,7 @@ system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(),
                 membus = CoherentBus(width=16))
+system.clock = '1GHz'
 
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock="2GHz", width=16)

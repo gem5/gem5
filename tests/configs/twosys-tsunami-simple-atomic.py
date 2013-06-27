@@ -34,6 +34,7 @@ from Benchmarks import *
 
 test_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
                                  SysConfig('netperf-stream-client.rcS'))
+test_sys.clock = '1GHz'
 test_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller
 test_sys.cpu.createInterruptController()
@@ -48,6 +49,7 @@ test_sys.iobridge.master = test_sys.membus.slave
 
 drive_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
                                  SysConfig('netperf-server.rcS'))
+drive_sys.clock = '1GHz'
 drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller
 drive_sys.cpu.createInterruptController()

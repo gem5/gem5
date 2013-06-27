@@ -98,6 +98,7 @@ tester = RubyTester(check_flush = check_flush,
 # M5 memory size == Ruby memory size checks
 #
 system = System(tester = tester, physmem = SimpleMemory())
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 

@@ -144,6 +144,7 @@ for scale in treespec[:-2]:
 system = System(funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(latency = "100ns"))
+system.clock = options.sys_clock
 
 def make_level(spec, prototypes, attach_obj, attach_port):
      fanout = spec[0]

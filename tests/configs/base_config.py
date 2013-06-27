@@ -131,6 +131,7 @@ class BaseSystem(object):
         Arguments:
           system -- System to initialize.
         """
+        system.clock = '1GHz'
         system.cpu = self.create_cpus()
 
         if _have_kvm_support and \

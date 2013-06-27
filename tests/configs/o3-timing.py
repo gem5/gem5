@@ -44,6 +44,7 @@ system = System(cpu = cpu,
                 physmem = DDR3_1600_x64(),
                 membus = CoherentBus(),
                 mem_mode = "timing")
+system.clock = '1GHz'
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master
 # create the interrupt controller

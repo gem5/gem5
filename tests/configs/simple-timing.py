@@ -39,6 +39,7 @@ system = System(cpu = cpu,
                 physmem = SimpleMemory(),
                 membus = CoherentBus(),
                 mem_mode = "timing")
+system.clock = '1GHz'
 system.system_port = system.membus.slave
 system.physmem.port = system.membus.master
 # create the interrupt controller

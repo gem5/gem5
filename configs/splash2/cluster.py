@@ -214,6 +214,7 @@ else:
 system = System(cpu = all_cpus, l1_ = all_l1s, l1bus_ = all_l1buses,
                 physmem = SimpleMemory(),
                 membus = CoherentBus(clock = busFrequency))
+system.clock = '1GHz'
 
 system.toL2bus = CoherentBus(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)

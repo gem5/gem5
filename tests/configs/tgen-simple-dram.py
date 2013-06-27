@@ -50,6 +50,7 @@ cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-simple-dram.cfg")
 # system simulated
 system = System(cpu = cpu, physmem = DDR3_1600_x64(),
                 membus = NoncoherentBus(width = 16))
+system.clock = '1GHz'
 
 # add a communication monitor
 system.monitor = CommMonitor()

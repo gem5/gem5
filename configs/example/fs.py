@@ -120,6 +120,8 @@ elif buildEnv['TARGET_ISA'] == "arm":
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
+test_sys.clock = options.sys_clock
+
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)
 
@@ -171,6 +173,8 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type,
                                   DriveMemClass, bm[1])
+
+    drive_sys.clock = options.sys_clock
 
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.createThreads()

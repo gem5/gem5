@@ -93,6 +93,8 @@ elif buildEnv['TARGET_ISA'] == "x86":
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
 
+system.clock = options.sys_clock
+
 if options.kernel is not None:
     system.kernel = binary(options.kernel)
 

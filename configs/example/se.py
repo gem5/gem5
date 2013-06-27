@@ -160,6 +160,7 @@ np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = MemClass(range=AddrRange("512MB")),
                 mem_mode = test_mem_mode)
+system.clock = options.sys_clock
 
 # Sanity check
 if options.fastmem:

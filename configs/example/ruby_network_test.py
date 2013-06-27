@@ -105,6 +105,7 @@ cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
 # create the desired simulated system
 system = System(cpu = cpus,
                 physmem = SimpleMemory())
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 

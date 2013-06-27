@@ -93,7 +93,7 @@ else:
 # M5 memory size == Ruby memory size checks
 #
 system = System(physmem = SimpleMemory())
-
+system.clock = options.sys_clock
 #
 # Create the ruby random tester
 #

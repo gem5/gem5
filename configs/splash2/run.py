@@ -199,6 +199,7 @@ else:
 # ----------------------
 system = System(cpu = cpus, physmem = SimpleMemory(),
                 membus = CoherentBus(clock = busFrequency))
+system.clock = '1GHz'
 
 system.toL2bus = CoherentBus(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)

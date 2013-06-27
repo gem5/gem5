@@ -108,6 +108,7 @@ system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory())
+system.clock = options.sys_clock
 
 if options.num_dmas > 0:
     dmas = [ MemTest(atomic = False,

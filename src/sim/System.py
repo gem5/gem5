@@ -43,12 +43,6 @@ class System(MemObject):
     cxx_header = "sim/system.hh"
     system_port = MasterPort("System port")
 
-    # Override the clock from the ClockedObject which looks at the
-    # parent clock by default. The 1 GHz default system clock serves
-    # as a start for the modules that rely on the parent to provide
-    # the clock.
-    clock = '1GHz'
-
     @classmethod
     def export_method_cxx_predecls(cls, code):
         code('#include "sim/system.hh"')

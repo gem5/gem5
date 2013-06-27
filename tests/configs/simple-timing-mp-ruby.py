@@ -72,6 +72,7 @@ options.num_cpus = nb_cores
 
 # system simulated
 system = System(cpu = cpus, physmem = SimpleMemory())
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 

@@ -78,6 +78,7 @@ tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
                     wakeup_frequency = 10, num_cpus = options.num_cpus)
 
 system = System(tester = tester, physmem = SimpleMemory(null = True))
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 

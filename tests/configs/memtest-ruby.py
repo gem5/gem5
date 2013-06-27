@@ -81,6 +81,7 @@ system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
                 physmem = SimpleMemory(null = True),
                 funcbus = NoncoherentBus())
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 

@@ -68,6 +68,7 @@ options.num_cpus = 1
 
 cpu = TimingSimpleCPU(cpu_id=0)
 system = System(cpu = cpu, physmem = SimpleMemory(null = True))
+system.clock = options.sys_clock
 
 Ruby.create_system(options, system)
 
