@@ -48,6 +48,10 @@ def define_options(parser):
     # By default, ruby uses the simple timing cpu
     parser.set_defaults(cpu_type="timing")
 
+    parser.add_option("--ruby-clock", action="store", type="string",
+                      default='2GHz',
+                      help="Clock for blocks running at Ruby system's speed")
+
     # ruby network options
     parser.add_option("--topology", type="string", default="Crossbar",
                  help="check src/mem/ruby/network/topologies for complete set")
@@ -91,7 +95,7 @@ def create_topology(controllers, options):
 
 def create_system(options, system, piobus = None, dma_ports = []):
 
-    system.ruby = RubySystem(clock = options.clock,
+    system.ruby = RubySystem(clock = options.ruby_clock,
                              stats_filename = options.ruby_stats,
                              no_mem_vec = options.use_map)
     ruby = system.ruby

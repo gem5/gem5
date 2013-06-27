@@ -77,7 +77,6 @@ def addCommonOptions(parser):
                       help="Enable basic block profiling for SimPoints")
     parser.add_option("--simpoint-interval", type="int", default=10000000,
                       help="SimPoint interval in num of instructions")
-    parser.add_option("--clock", action="store", type="string", default='2GHz')
     parser.add_option("--sys-clock", action="store", type="string",
                       default='1GHz',
                       help = """Top-level clock for blocks running at system
