@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -53,11 +53,12 @@
 #include <list>
 
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/blk.hh"
 #include "mem/packet.hh"
+#include "params/LRU.hh"
 
 class BaseCache;
-class CacheSet;
 
 
 /**
@@ -71,19 +72,18 @@ class LRU : public BaseTags
     typedef CacheBlk BlkType;
     /** Typedef for a list of pointers to the local block class. */
     typedef std::list<BlkType*> BlkList;
+    /** Typedef the set type used in this tag store. */
+    typedef CacheSet<CacheBlk> SetType;
+
 
   protected:
-    /** The number of sets in the cache. */
-    const unsigned numSets;
-    /** The number of bytes in a block. */
-    const unsigned blkSize;
     /** The associativity of the cache. */
     const unsigned assoc;
-    /** The hit latency. */
-    const Cycles hitLatency;
+    /** The number of sets in the cache. */
+    const unsigned numSets;
 
     /** The cache sets. */
-    CacheSet *sets;
+    SetType *sets;
 
     /** The cache blocks. */
     BlkType *blks;
@@ -100,15 +100,14 @@ class LRU : public BaseTags
     unsigned blkMask;
 
 public:
+
+    /** Convenience typedef. */
+     typedef LRUParams Params;
+
     /**
      * Construct and initialize this tag store.
-     * @param _numSets The number of sets in the cache.
-     * @param _blkSize The number of bytes in a block.
-     * @param _assoc The associativity of the cache.
-     * @param _hit_latency The latency in cycles for a hit.
      */
-    LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
-        unsigned _hit_latency);
+    LRU(const Params *p);
 
     /**
      * Destructor
@@ -173,10 +172,10 @@ public:
     /**
      * Insert the new block into the cache.  For LRU this means inserting into
      * the MRU position of the set.
-     * @param addr The address to update.
+     * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-     void insertBlock(Addr addr, BlkType *blk, int context_src);
+     void insertBlock(PacketPtr pkt, BlkType *blk);
 
     /**
      * Generate the tag from the given address.

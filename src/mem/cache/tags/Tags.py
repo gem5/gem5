@@ -10,9 +10,6 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
-# All rights reserved.
-#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -36,38 +33,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Prakash Ramrakhyani
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
-from Prefetcher import BasePrefetcher
-from Tags import *
+from ClockedObject import ClockedObject
 
-class BaseCache(MemObject):
-    type = 'BaseCache'
-    cxx_header = "mem/cache/base.hh"
-    assoc = Param.Int("associativity")
-    block_size = Param.Int("block size in bytes")
-    hit_latency = Param.Cycles("The hit latency for this cache")
-    response_latency = Param.Cycles(
-            "Additional cache latency for the return path to core on a miss");
-    max_miss_count = Param.Counter(0,
-        "number of misses to handle before calling exit")
-    mshrs = Param.Int("number of MSHRs (max outstanding requests)")
-    size = Param.MemorySize("capacity in bytes")
-    forward_snoops = Param.Bool(True,
-        "forward snoops from mem side to cpu side")
-    is_top_level = Param.Bool(False, "Is this cache at the top level (e.g. L1)")
-    tgts_per_mshr = Param.Int("max number of accesses per MSHR")
-    two_queue = Param.Bool(False,
-        "whether the lifo should have two queue replacement")
-    write_buffers = Param.Int(8, "number of write buffers")
-    prefetch_on_access = Param.Bool(False,
-         "notify the hardware prefetcher on every access (not just misses)")
-    prefetcher = Param.BasePrefetcher(NULL,"Prefetcher attached to cache")
-    cpu_side = SlavePort("Port on side closer to CPU")
-    mem_side = MasterPort("Port on side closer to MEM")
-    addr_ranges = VectorParam.AddrRange([AllMemory], "The address range for the CPU-side port")
-    system = Param.System(Parent.any, "System we belong to")
-    tags = Param.BaseTags(LRU(), "Tag Store for LRU caches")
+class BaseTags(ClockedObject):
+    type = 'BaseTags'
+    abstract = True
+    cxx_header = "mem/cache/tags/base.hh"
+    # Get the size from the parent (cache)
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    # Get the block size from the parent (cache)
+    block_size = Param.Int(Parent.block_size, "block size in bytes")
+
+    # Get the hit latency from the parent (cache)
+    hit_latency = Param.Cycles(Parent.hit_latency,
+                               "The hit latency for this cache")
+
+class LRU(BaseTags):
+    type = 'LRU'
+    cxx_class = 'LRU'
+    cxx_header = "mem/cache/tags/lru.hh"
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+class FALRU(BaseTags):
+    type = 'FALRU'
+    cxx_class = 'FALRU'
+    cxx_header = "mem/cache/tags/fa_lru.hh"

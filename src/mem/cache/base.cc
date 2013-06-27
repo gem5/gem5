@@ -773,13 +773,19 @@ BaseCache::drain(DrainManager *dm)
 BaseCache *
 BaseCacheParams::create()
 {
-    int numSets = size / (assoc * block_size);
+    unsigned numSets = size / (assoc * block_size);
 
-    if (numSets == 1) {
-        FALRU *tags = new FALRU(block_size, size, hit_latency);
-        return new Cache<FALRU>(this, tags);
+    assert(tags);
+
+    if (dynamic_cast<FALRU*>(tags)) {
+        if (numSets != 1)
+            fatal("Got FALRU tags with more than one set\n");
+        return new Cache<FALRU>(this);
+    } else if (dynamic_cast<LRU*>(tags)) {
+        if (numSets == 1)
+            warn("Consider using FALRU tags for a fully associative cache\n");
+        return new Cache<LRU>(this);
     } else {
-        LRU *tags = new LRU(numSets, block_size, assoc, hit_latency);
-        return new Cache<LRU>(this, tags);
+        fatal("No suitable tags selected\n");
     }
 }

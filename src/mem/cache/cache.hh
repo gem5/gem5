@@ -409,7 +409,7 @@ class Cache : public BaseCache
 
   public:
     /** Instantiates a basic cache object. */
-    Cache(const Params *p, TagStore *tags);
+    Cache(const Params *p);
 
     void regStats();
 

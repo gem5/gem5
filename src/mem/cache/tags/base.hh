@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -53,20 +53,26 @@
 
 #include "base/callback.hh"
 #include "base/statistics.hh"
+#include "params/BaseTags.hh"
+#include "sim/clocked_object.hh"
 
 class BaseCache;
 
 /**
  * A common base class of Cache tagstore objects.
  */
-class BaseTags
+class BaseTags : public ClockedObject
 {
   protected:
+    /** The block size of the cache. */
+    const unsigned blkSize;
+    /** The size of the cache. */
+    const unsigned size;
+    /** The hit latency of the cache. */
+    const Cycles hitLatency;
+
     /** Pointer to the parent cache. */
     BaseCache *cache;
-
-    /** Local copy of the parent cache name. Used for DPRINTF. */
-    std::string objName;
 
     /**
      * The number of tags that need to be touched to meet the warmup
@@ -120,6 +126,8 @@ class BaseTags
      */
 
   public:
+    typedef BaseTagsParams Params;
+    BaseTags(const Params *p);
 
     /**
      * Destructor.
@@ -127,26 +135,15 @@ class BaseTags
     virtual ~BaseTags() {}
 
     /**
-     * Set the parent cache back pointer. Also copies the cache name to
-     * objName.
+     * Set the parent cache back pointer.
      * @param _cache Pointer to parent cache.
      */
     void setCache(BaseCache *_cache);
 
     /**
-     * Return the parent cache name.
-     * @return the parent cache name.
-     */
-    const std::string &name() const
-    {
-        return objName;
-    }
-
-    /**
      * Register local statistics.
-     * @param name The name to preceed each statistic name.
      */
-    void regStats(const std::string &name);
+    void regStats();
 
     /**
      * Average in the reference count for valid blocks when the simulation

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -43,6 +55,7 @@
 /**
  * An associative set of cache blocks.
  */
+template <class Blktype>
 class CacheSet
 {
   public:
@@ -50,28 +63,105 @@ class CacheSet
     int assoc;
 
     /** Cache blocks in this set, maintained in LRU order 0 = MRU. */
-    CacheBlk **blks;
+    Blktype **blks;
 
     /**
      * Find a block matching the tag in this set.
-     * @param asid The address space ID.
+     * @param way_id The id of the way that matches the tag.
      * @param tag The Tag to find.
-     * @return Pointer to the block if found.
+     * @return Pointer to the block if found. Set way_id to assoc if none found
      */
-    CacheBlk* findBlk(Addr tag) const;
+    Blktype* findBlk(Addr tag, int& way_id) const ;
+    Blktype* findBlk(Addr tag) const ;
 
     /**
      * Move the given block to the head of the list.
      * @param blk The block to move.
      */
-    void moveToHead(CacheBlk *blk);
+    void moveToHead(Blktype *blk);
 
     /**
      * Move the given block to the tail of the list.
      * @param blk The block to move
      */
-    void moveToTail(CacheBlk *blk);
+    void moveToTail(Blktype *blk);
 
 };
+
+template <class Blktype>
+Blktype*
+CacheSet<Blktype>::findBlk(Addr tag, int& way_id) const
+{
+    /**
+     * Way_id returns the id of the way that matches the block
+     * If no block is found way_id is set to assoc.
+     */
+    way_id = assoc;
+    for (int i = 0; i < assoc; ++i) {
+        if (blks[i]->tag == tag && blks[i]->isValid()) {
+            way_id = i;
+            return blks[i];
+        }
+    }
+    return NULL;
+}
+
+template <class Blktype>
+Blktype*
+CacheSet<Blktype>::findBlk(Addr tag) const
+{
+    int ignored_way_id;
+    return findBlk(tag, ignored_way_id);
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::moveToHead(Blktype *blk)
+{
+    // nothing to do if blk is already head
+    if (blks[0] == blk)
+        return;
+
+    // write 'next' block into blks[i], moving up from MRU toward LRU
+    // until we overwrite the block we moved to head.
+
+    // start by setting up to write 'blk' into blks[0]
+    int i = 0;
+    Blktype *next = blk;
+
+    do {
+        assert(i < assoc);
+        // swap blks[i] and next
+        Blktype *tmp = blks[i];
+        blks[i] = next;
+        next = tmp;
+        ++i;
+    } while (next != blk);
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::moveToTail(Blktype *blk)
+{
+    // nothing to do if blk is already tail
+    if (blks[assoc - 1] == blk)
+        return;
+
+    // write 'next' block into blks[i], moving from LRU to MRU
+    // until we overwrite the block we moved to tail.
+
+    // start by setting up to write 'blk' into tail
+    int i = assoc - 1;
+    Blktype *next = blk;
+
+    do {
+        assert(i >= 0);
+        // swap blks[i] and next
+        Blktype *tmp = blks[i];
+        blks[i] = next;
+        next = tmp;
+        --i;
+    } while (next != blk);
+}
 
 #endif

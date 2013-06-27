@@ -33,7 +33,8 @@ Import('*')
 if env['TARGET_ISA'] == 'no':
     Return()
 
+SimObject('Tags.py')
+
 Source('base.cc')
 Source('fa_lru.cc')
 Source('lru.cc')
-Source('cacheset.cc')

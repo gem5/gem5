@@ -63,9 +63,9 @@
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
-Cache<TagStore>::Cache(const Params *p, TagStore *tags)
+Cache<TagStore>::Cache(const Params *p)
     : BaseCache(p),
-      tags(tags),
+      tags(dynamic_cast<TagStore*>(p->tags)),
       prefetcher(p->prefetcher),
       doFastWrites(true),
       prefetchOnAccess(p->prefetch_on_access)
@@ -88,7 +88,6 @@ void
 Cache<TagStore>::regStats()
 {
     BaseCache::regStats();
-    tags->regStats(name());
 }
 
 template<class TagStore>
@@ -322,8 +321,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 incMissCount(pkt);
                 return false;
             }
-            int master_id = pkt->req->masterId();
-            tags->insertBlock(pkt->getAddr(), blk, master_id);
+            tags->insertBlock(pkt, blk);
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
@@ -1219,8 +1217,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
         } else {
-            int id = pkt->req->masterId();
-            tags->insertBlock(pkt->getAddr(), blk, id);
+            tags->insertBlock(pkt, blk);
         }
 
         // we should never be overwriting a valid block

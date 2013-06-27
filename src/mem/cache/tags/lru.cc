@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,18 +50,15 @@
 #include "base/intmath.hh"
 #include "debug/Cache.hh"
 #include "debug/CacheRepl.hh"
-#include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/tags/lru.hh"
 #include "mem/cache/base.hh"
 #include "sim/core.hh"
 
 using namespace std;
 
-// create and initialize a LRU/MRU cache structure
-LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
-         unsigned _hit_latency)
-    : numSets(_numSets), blkSize(_blkSize), assoc(_assoc),
-      hitLatency(_hit_latency)
+LRU::LRU(const Params *p)
+    :BaseTags(p), assoc(p->assoc),
+     numSets(p->size / (p->block_size * p->assoc))
 {
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
@@ -85,7 +82,7 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     /** @todo Make warmup percentage a parameter. */
     warmupBound = numSets * assoc;
 
-    sets = new CacheSet[numSets];
+    sets = new SetType[numSets];
     blks = new BlkType[numSets * assoc];
     // allocate data storage in one big chunk
     numBlocks = numSets * assoc;
@@ -175,8 +172,10 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-LRU::insertBlock(Addr addr, BlkType *blk, int master_id)
+LRU::insertBlock(PacketPtr pkt, BlkType *blk)
 {
+    Addr addr = pkt->getAddr();
+    MasterID master_id = pkt->req->masterId();
     if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
@@ -239,6 +238,11 @@ LRU::clearLocks()
     }
 }
 
+LRU *
+LRUParams::create()
+{
+    return new LRU(this);
+}
 std::string
 LRU::print() const {
     std::string cache_state;

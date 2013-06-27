@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -41,54 +53,59 @@
 
 using namespace std;
 
+BaseTags::BaseTags(const Params *p)
+    : ClockedObject(p), blkSize(p->block_size), size(p->size),
+      hitLatency(p->hit_latency)
+{
+}
+
 void
 BaseTags::setCache(BaseCache *_cache)
 {
     cache = _cache;
-    objName = cache->name();
 }
 
 void
-BaseTags::regStats(const string &name)
+BaseTags::regStats()
 {
     using namespace Stats;
     replacements
         .init(maxThreadsPerCPU)
-        .name(name + ".replacements")
+        .name(name() + ".replacements")
         .desc("number of replacements")
         .flags(total)
         ;
 
     tagsInUse
-        .name(name + ".tagsinuse")
+        .name(name() + ".tagsinuse")
         .desc("Cycle average of tags in use")
         ;
 
     totalRefs
-        .name(name + ".total_refs")
+        .name(name() + ".total_refs")
         .desc("Total number of references to valid blocks.")
         ;
 
     sampledRefs
-        .name(name + ".sampled_refs")
+        .name(name() + ".sampled_refs")
         .desc("Sample count of references to valid blocks.")
         ;
 
     avgRefs
-        .name(name + ".avg_refs")
+        .name(name() + ".avg_refs")
         .desc("Average number of references to valid blocks.")
         ;
 
     avgRefs = totalRefs/sampledRefs;
 
     warmupCycle
-        .name(name + ".warmup_cycle")
+        .name(name() + ".warmup_cycle")
         .desc("Cycle when the warmup percentage was hit.")
         ;
 
     occupancies
         .init(cache->system->maxMasters())
-        .name(name + ".occ_blocks")
+        .name(name() + ".occ_blocks")
         .desc("Average occupied blocks per requestor")
         .flags(nozero | nonan)
         ;
@@ -97,7 +114,7 @@ BaseTags::regStats(const string &name)
     }
 
     avgOccs
-        .name(name + ".occ_percent")
+        .name(name() + ".occ_percent")
         .desc("Average percentage of cache occupancy")
         .flags(nozero | total)
         ;

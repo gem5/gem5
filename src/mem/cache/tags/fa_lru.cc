@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -42,8 +54,8 @@
 
 using namespace std;
 
-FALRU::FALRU(unsigned _blkSize, unsigned _size, Cycles hit_latency)
-    : blkSize(_blkSize), size(_size), hitLatency(hit_latency)
+FALRU::FALRU(const Params *p)
+    : BaseTags(p)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
@@ -107,22 +119,22 @@ FALRU::~FALRU()
 }
 
 void
-FALRU::regStats(const string &name)
+FALRU::regStats()
 {
     using namespace Stats;
-    BaseTags::regStats(name);
+    BaseTags::regStats();
     hits
         .init(numCaches+1)
-        .name(name + ".falru_hits")
+        .name(name() + ".falru_hits")
         .desc("The number of hits in each cache size.")
         ;
     misses
         .init(numCaches+1)
-        .name(name + ".falru_misses")
+        .name(name() + ".falru_misses")
         .desc("The number of misses in each cache size.")
         ;
     accesses
-        .name(name + ".falru_accesses")
+        .name(name() + ".falru_accesses")
         .desc("The number of accesses to the FA LRU cache.")
         ;
 
@@ -233,7 +245,7 @@ FALRU::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-FALRU::insertBlock(Addr addr, FALRU::BlkType *blk, int context_src)
+FALRU::insertBlock(PacketPtr pkt, FALRU::BlkType *blk)
 {
 }
 
@@ -299,3 +311,10 @@ FALRU::clearLocks()
         blks[i].clearLoadLocks();
     }
 }
+
+FALRU *
+FALRUParams::create()
+{
+    return new FALRU(this);
+}
+

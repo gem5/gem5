@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -54,6 +54,7 @@
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/packet.hh"
+#include "params/FALRU.hh"
 
 /**
  * A fully associative cache block.
@@ -92,13 +93,6 @@ class FALRU : public BaseTags
     typedef std::list<FALRUBlk*> BlkList;
 
   protected:
-    /** The block size of the cache. */
-    const unsigned blkSize;
-    /** The size of the cache. */
-    const unsigned size;
-    /** The hit latency of the cache. */
-    const Cycles hitLatency;
-
     /** Array of pointers to blocks at the cache size  boundaries. */
     FALRUBlk **cacheBoundaries;
     /** A mask for the FALRUBlk::inCache bits. */
@@ -161,20 +155,20 @@ class FALRU : public BaseTags
      */
 
 public:
+
+    typedef FALRUParams Params;
+
     /**
      * Construct and initialize this cache tagstore.
-     * @param blkSize The block size of the cache.
-     * @param size The size of the cache.
-     * @param hit_latency The hit latency of the cache.
      */
-    FALRU(unsigned blkSize, unsigned size, Cycles hit_latency);
+    FALRU(const Params *p);
     ~FALRU();
 
     /**
      * Register the stats for this object.
      * @param name The name to prepend to the stats name.
      */
-    void regStats(const std::string &name);
+    void regStats();
 
     /**
      * Invalidate a cache block.
@@ -211,7 +205,7 @@ public:
      */
     FALRUBlk* findVictim(Addr addr, PacketList & writebacks);
 
-    void insertBlock(Addr addr, BlkType *blk, int context_src);
+    void insertBlock(PacketPtr pkt, BlkType *blk);
 
     /**
      * Return the hit latency of this cache.
@@ -324,6 +318,7 @@ public:
                 return;
         }
     }
+
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__
