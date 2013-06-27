@@ -263,17 +263,17 @@ class Cache : public BaseCache
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
-     * @return The number of cycles required for the access.
+     * @return The number of ticks required for the access.
      */
-    Cycles recvAtomic(PacketPtr pkt);
+    Tick recvAtomic(PacketPtr pkt);
 
     /**
      * Snoop for the provided request in the cache and return the estimated
-     * time of completion.
+     * time taken.
      * @param pkt The memory request to snoop
-     * @return The number of cycles required for the snoop.
+     * @return The number of ticks required for the snoop.
      */
-    Cycles recvAtomicSnoop(PacketPtr pkt);
+    Tick recvAtomicSnoop(PacketPtr pkt);
 
     /**
      * Performs the access specified by the request.

@@ -644,7 +644,7 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
 
 
 template<class TagStore>
-Cycles
+Tick
 Cache<TagStore>::recvAtomic(PacketPtr pkt)
 {
     Cycles lat = hitLatency;
@@ -678,7 +678,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
                     pkt->cmdString(), pkt->getAddr());
         }
 
-        return lat;
+        return lat * clockPeriod();
     }
 
     // should assert here that there are no outstanding MSHRs or
@@ -763,7 +763,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
         pkt->makeAtomicResponse();
     }
 
-    return lat;
+    return lat * clockPeriod();
 }
 
 
@@ -1510,7 +1510,7 @@ Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 }
 
 template<class TagStore>
-Cycles
+Tick
 Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
 {
     // Snoops shouldn't happen when bypassing caches
@@ -1519,12 +1519,12 @@ Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
     if (pkt->req->isUncacheable() || pkt->cmd == MemCmd::Writeback) {
         // Can't get a hit on an uncacheable address
         // Revisit this for multi level coherence
-        return hitLatency;
+        return 0;
     }
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
     handleSnoop(pkt, blk, false, false, false);
-    return hitLatency;
+    return hitLatency * clockPeriod();
 }
 
 
@@ -1777,8 +1777,6 @@ template<class TagStore>
 Tick
 Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
-    // @todo: Note that this is currently using cycles instead of
-    // ticks and will be fixed in a future patch
     return cache->recvAtomic(pkt);
 }
 
@@ -1825,8 +1823,6 @@ template<class TagStore>
 Tick
 Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
-    // @todo: Note that this is using cycles and not ticks and will be
-    // fixed in a future patch
     return cache->recvAtomicSnoop(pkt);
 }
 
