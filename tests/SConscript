@@ -82,7 +82,7 @@ def run_test(target, source, env):
     target[0] : status
 
     Sources are:
-    source[0] : M5 binary
+    source[0] : gem5 binary
     source[1] : tests/run.py script
     source[2] : reference stats file
 
@@ -105,10 +105,14 @@ def run_test(target, source, env):
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
 
+    # Create a default value for the status string, changed as needed
+    # based on the status.
+    status_str = "passed."
+
     pre_exec_time = time.time()
     status = env.Execute(env.subst(cmd, target=target, source=source))
     if status == 0:
-        # M5 terminated normally.
+        # gem5 terminated normally.
         # Run diff on output & ref directories to find differences.
         # Exclude the stats file since we will use diff-out on that.
 
@@ -137,35 +141,34 @@ def run_test(target, source, env):
         diffcmd = '$DIFFOUT ${SOURCES[2]} %s > %s' \
                   % (os.path.join(tgt_dir, 'stats.txt'), statsdiff)
         diffcmd = env.subst(diffcmd, target=target, source=source)
-        status = env.Execute(diffcmd, strfunction=None)
+        diff_status = env.Execute(diffcmd, strfunction=None)
+        # If there is a difference, change the status string to say so
+        if diff_status != 0:
+            status_str = "CHANGED!"
         print "===== Statistics differences ====="
         print contents(statsdiff)
 
-    else: # m5 exit status != 0
-        # M5 did not terminate properly, so no need to check the output
+    else: # gem5 exit status != 0
+        # Consider it a failed test unless the exit status is 2
+        status_str = "FAILED!"
+        # gem5 did not terminate properly, so no need to check the output
         if signaled(status):
-            print 'M5 terminated with signal', signum(status)
+            print 'gem5 terminated with signal', signum(status)
             if signum(status) in retry_signals:
                 # Consider the test incomplete; don't create a 'status' output.
                 # Hand the return status to scons and let scons decide what
                 # to do about it (typically terminate unless run with -k).
                 return status
         elif status == 2:
-            # The test was skipped
-            pass
+            # The test was skipped, change the status string to say so
+            status_str = "skipped."
         else:
-            print 'M5 exited with non-zero status', status
+            print 'gem5 exited with non-zero status', status
         # complete but failed execution (call to exit() with non-zero
         # status, SIGABORT due to assertion failure, etc.)... fall through
         # and generate FAILED status as if output comparison had failed
 
-    # Generate status file contents based on exit status of m5 or diff-out
-    if status == 0:
-        status_str = "passed."
-    elif status == 2:
-        status_str = "skipped."
-    else:
-        status_str = "FAILED!"
+    # Generate status file contents based on exit status of gem5 and diff-out
     f = file(str(target[0]), 'w')
     print >>f, tgt_dir, status_str
     f.close()
@@ -191,10 +194,12 @@ def print_test(target, source, env):
     # skip the punctuation
     if status == "FAILED!":
         status = termcap.Red + status[:-1] + termcap.Normal + status[-1]
+    elif status == "CHANGED!":
+        status = termcap.Yellow + status[:-1] + termcap.Normal + status[-1]
     elif status == "passed.":
         status = termcap.Green + status[:-1] + termcap.Normal + status[-1]
     elif status == "skipped.":
-        status = termcap.Yellow + status[:-1] + termcap.Normal + status[-1]
+        status = termcap.Cyan + status[:-1] + termcap.Normal + status[-1]
 
     # put it back in the list and join with space
     words[-1] = status
