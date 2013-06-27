@@ -161,8 +161,8 @@ class BaseFSSystem(BaseSystem):
     def init_system(self, system):
         BaseSystem.init_system(self, system)
 
-        #create the iocache
-        system.iocache = IOCache(clock='1GHz', addr_ranges=system.mem_ranges)
+        # create the iocache, which by default runs at the system clock
+        system.iocache = IOCache(addr_ranges=system.mem_ranges)
         system.iocache.cpu_side = system.iobus.master
         system.iocache.mem_side = system.membus.slave
 

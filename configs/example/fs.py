@@ -134,8 +134,8 @@ if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
     test_sys.vm = KvmVM()
 
 if options.caches or options.l2cache:
-    test_sys.iocache = IOCache(clock = '1GHz',
-                               addr_ranges = test_sys.mem_ranges)
+    # By default the IOCache runs at the system clock
+    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
     test_sys.iocache.cpu_side = test_sys.iobus.master
     test_sys.iocache.mem_side = test_sys.membus.slave
 else:

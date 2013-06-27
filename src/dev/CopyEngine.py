@@ -53,8 +53,6 @@ class CopyEngine(PciDevice):
     ChanCnt = Param.UInt8(4, "Number of DMA channels that exist on device")
     XferCap = Param.MemorySize('4kB', "Number of bits of transfer size that are supported")
 
-    # Override the default clock
-    clock = '500MHz'
     latBeforeBegin = Param.Latency('20ns', "Latency after a DMA command is seen before it's proccessed")
     latAfterCompletion = Param.Latency('20ns', "Latency after a DMA command is complete before it's reported as such")
 

@@ -49,7 +49,7 @@ cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-simple-mem.cfg")
 
 # system simulated
 system = System(cpu = cpu, physmem = SimpleMemory(),
-                membus = NoncoherentBus(clock="1GHz", width = 16))
+                membus = NoncoherentBus(width = 16))
 
 # add a communication monitor, and also trace all the packets
 system.monitor = CommMonitor(trace_file = "monitor.ptrc.gz")

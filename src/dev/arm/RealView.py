@@ -118,8 +118,6 @@ class CpuLocalTimer(BasicPioDevice):
     gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
     int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
-    # Override the default clock
-    clock = '1GHz'
 
 class PL031(AmbaIntDevice):
     type = 'PL031'

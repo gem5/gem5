@@ -39,7 +39,7 @@ cpus = [ MemTest(clock = '2GHz') for i in xrange(nb_cores) ]
 system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(),
-                membus = CoherentBus(clock="1GHz", width=16))
+                membus = CoherentBus(width=16))
 
 # l2cache & bus
 system.toL2Bus = CoherentBus(clock="2GHz", width=16)
