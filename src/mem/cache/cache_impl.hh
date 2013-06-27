@@ -1655,23 +1655,22 @@ Cache<TagStore>::getTimingPacket()
             // that, and then we'll have to figure out what to do.
             assert(blk == NULL);
 
-            // We need to check the caches above us to verify that they don't have
-            // a copy of this block in the dirty state at the moment. Without this
-            // check we could get a stale copy from memory  that might get used
-            // in place of the dirty one.
-            PacketPtr snoop_pkt = new Packet(tgt_pkt, true);
-            snoop_pkt->setExpressSnoop();
-            snoop_pkt->senderState = mshr;
-            cpuSidePort->sendTimingSnoopReq(snoop_pkt);
+            // We need to check the caches above us to verify that
+            // they don't have a copy of this block in the dirty state
+            // at the moment. Without this check we could get a stale
+            // copy from memory that might get used in place of the
+            // dirty one.
+            Packet snoop_pkt(tgt_pkt, true);
+            snoop_pkt.setExpressSnoop();
+            snoop_pkt.senderState = mshr;
+            cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
-            if (snoop_pkt->memInhibitAsserted()) {
-                markInService(mshr, snoop_pkt);
+            if (snoop_pkt.memInhibitAsserted()) {
+                markInService(mshr, &snoop_pkt);
                 DPRINTF(Cache, "Upward snoop of prefetch for addr %#x hit\n",
                         tgt_pkt->getAddr());
-                delete snoop_pkt;
                 return NULL;
             }
-            delete snoop_pkt;
         }
 
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
