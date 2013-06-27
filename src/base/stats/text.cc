@@ -686,13 +686,6 @@ SparseHistPrint::operator()(ostream &stream) const
         print.value = (*it).second;
         print(stream);
     }
-
-    print.pdf = NAN;
-    print.cdf = NAN;
-
-    print.name = base + "total";
-    print.value = total;
-    print(stream);
 }
 
 void
