@@ -1244,14 +1244,6 @@ class Clock(ParamValue):
             return Latency(self)
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
-    def __mul__(self, other):
-        # Always treat the clock as a period when scaling
-        newobj = self.__class__(self)
-        newobj.value *= other
-        return newobj
-
-    __rmul__ = __mul__
-
     def getValue(self):
         return self.period.getValue()
 
