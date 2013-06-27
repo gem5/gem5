@@ -28,6 +28,6 @@
 
 require_sim_object("EioProcess")
 
-root.system.cpu.workload = EioProcess(file = binpath('anagram',
+root.system.cpu[0].workload = EioProcess(file = binpath('anagram',
                                                      'anagram-vshort.eio.gz'))
-root.system.cpu.max_insts_any_thread = 500000
+root.system.cpu[0].max_insts_any_thread = 500000

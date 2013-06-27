@@ -1,3 +1,15 @@
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -24,52 +36,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ron Dreslinski
+# Authors: Andreas Hansson
 
-import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Caches import *
+from base_config import *
 
 nb_cores = 4
-cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
-
-# system simulated
-system = System(cpu = cpus,
-                physmem = DDR3_1600_x64(),
-                membus = CoherentBus(),
-                mem_mode = "timing")
-system.clock = '1GHz'
-
-# l2cache & bus
-system.toL2Bus = CoherentBus(clock = '2GHz')
-system.l2c = L2Cache(clock = '2GHz', size='4MB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.master
-
-# connect l2c to membus
-system.l2c.mem_side = system.membus.slave
-
-# add L1 caches
-for cpu in cpus:
-    cpu.addPrivateSplitL1Caches(L1Cache(size = '32kB', assoc = 1),
-                                L1Cache(size = '32kB', assoc = 4))
-    # create the interrupt controller
-    cpu.createInterruptController()
-    # connect cpu level-1 caches to shared level-2 cache
-    cpu.connectAllPorts(system.toL2Bus, system.membus)
-    cpu.clock = '2GHz'
-
-# connect memory to membus
-system.physmem.port = system.membus.master
-
-# connect system port to membus
-system.system_port = system.membus.slave
-
-# -----------------------
-# run simulation
-# -----------------------
-
-root = Root( full_system = False, system = system )
-root.system.mem_mode = 'timing'
-#root.trace.flags="Bus Cache"
-#root.trace.flags = "BusAddrRanges"
+root = BaseSESystem(mem_mode='timing', mem_class=DDR3_1600_x64,
+                    cpu_class=DerivO3CPU, num_cpus=nb_cores).create_root()

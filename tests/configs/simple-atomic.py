@@ -1,3 +1,15 @@
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -24,20 +36,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Andreas Hansson
 
-import m5
 from m5.objects import *
+from base_config import *
 
-system = System(cpu = AtomicSimpleCPU(cpu_id=0),
-                physmem = SimpleMemory(),
-                membus = CoherentBus())
-system.clock = '1GHz'
-system.system_port = system.membus.slave
-system.physmem.port = system.membus.master
-# create the interrupt controller
-system.cpu.createInterruptController()
-system.cpu.connectAllPorts(system.membus)
-system.cpu.clock = '2GHz'
-
-root = Root(full_system = False, system = system)
+root = BaseSESystemUniprocessor(mem_mode='atomic',
+                                cpu_class=AtomicSimpleCPU).create_root()

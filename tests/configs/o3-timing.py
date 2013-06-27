@@ -1,3 +1,15 @@
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -24,31 +36,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Andreas Hansson
 
-import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Caches import *
+from base_config import *
 
-cpu = DerivO3CPU(cpu_id=0)
-cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
-                              L1Cache(size = '256kB'),
-                              L2Cache(size = '2MB'))
-# @todo Note that the L2 latency here is unmodified and 2 cycles,
-# should set hit latency and response latency to 20 cycles as for
-# other scripts
-cpu.clock = '2GHz'
-
-system = System(cpu = cpu,
-                physmem = DDR3_1600_x64(),
-                membus = CoherentBus(),
-                mem_mode = "timing")
-system.clock = '1GHz'
-system.system_port = system.membus.slave
-system.physmem.port = system.membus.master
-# create the interrupt controller
-cpu.createInterruptController()
-cpu.connectAllPorts(system.membus)
-
-root = Root(full_system = False, system = system)
+root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                cpu_class=DerivO3CPU).create_root()

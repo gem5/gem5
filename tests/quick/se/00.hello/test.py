@@ -26,7 +26,7 @@
 #
 # Authors: Steve Reinhardt
 
-root.system.cpu.workload = LiveProcess(cmd = 'hello',
-                                       executable = binpath('hello'))
-if root.system.cpu.checker != NULL:
-    root.system.cpu.checker.workload = root.system.cpu.workload
+root.system.cpu[0].workload = LiveProcess(cmd = 'hello',
+                                          executable = binpath('hello'))
+if root.system.cpu[0].checker != NULL:
+    root.system.cpu[0].checker.workload = root.system.cpu[0].workload

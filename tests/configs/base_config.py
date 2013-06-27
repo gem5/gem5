@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Sandberg
+#          Andreas Hansson
 
 from abc import ABCMeta, abstractmethod
 import m5
@@ -56,17 +57,19 @@ class BaseSystem(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, mem_mode='timing', cpu_class=TimingSimpleCPU,
-                 num_cpus=1, checker=False):
-        """Initialize a simple ARM system.
+    def __init__(self, mem_mode='timing', mem_class=SimpleMemory,
+                 cpu_class=TimingSimpleCPU, num_cpus=1, checker=False):
+        """Initialize a simple base system.
 
         Keyword Arguments:
           mem_mode -- String describing the memory mode (timing or atomic)
+          mem_class -- Memory controller class to use
           cpu_class -- CPU class to use
           num_cpus -- Number of CPUs to instantiate
           checker -- Set to True to add checker CPUs
         """
         self.mem_mode = mem_mode
+        self.mem_class = mem_class
         self.cpu_class = cpu_class
         self.num_cpus = num_cpus
         self.checker = checker
@@ -152,6 +155,50 @@ class BaseSystem(object):
         """Create and return a simulation root using the system
         defined by this class."""
         pass
+
+class BaseSESystem(BaseSystem):
+    """Basic syscall-emulation builder."""
+
+    def __init__(self, **kwargs):
+        BaseSystem.__init__(self, **kwargs)
+
+    def init_system(self, system):
+        BaseSystem.init_system(self, system)
+
+    def create_system(self):
+        system = System(physmem = self.mem_class(),
+                        membus = CoherentBus(),
+                        mem_mode = self.mem_mode)
+        system.system_port = system.membus.slave
+        system.physmem.port = system.membus.master
+        self.init_system(system)
+        return system
+
+    def create_root(self):
+        system = self.create_system()
+        m5.ticks.setGlobalFrequency('1THz')
+        return Root(full_system=False, system=system)
+
+class BaseSESystemUniprocessor(BaseSESystem):
+    """Basic syscall-emulation builder for uniprocessor systems.
+
+    Note: This class is only really needed to provide backwards
+    compatibility in existing test cases.
+    """
+
+    def __init__(self, **kwargs):
+        BaseSESystem.__init__(self, **kwargs)
+
+    def create_caches_private(self, cpu):
+        # The atomic SE configurations do not use caches
+        if self.mem_mode == "timing":
+            # @todo We might want to revisit these rather enthusiastic L1 sizes
+            cpu.addTwoLevelCacheHierarchy(L1Cache(size='128kB'),
+                                          L1Cache(size='256kB'),
+                                          L2Cache(size='2MB'))
+
+    def create_caches_shared(self, system):
+        return None
 
 class BaseFSSystem(BaseSystem):
     """Basic full system builder."""

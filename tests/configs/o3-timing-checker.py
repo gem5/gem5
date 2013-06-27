@@ -1,5 +1,5 @@
-# Copyright (c) 2011 ARM Limited
-# All rights reserved
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -33,31 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Geoffrey Blake
+# Authors: Andreas Hansson
 
-import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Caches import *
+from base_config import *
 
-cpu = DerivO3CPU(cpu_id=0)
-cpu.createInterruptController()
-cpu.addCheckerCpu()
-cpu.addTwoLevelCacheHierarchy(L1Cache(size = '128kB'),
-                              L1Cache(size = '256kB'),
-                              L2Cache(size = '2MB'))
-# @todo Note that the L2 latency here is unmodified and 2 cycles,
-# should set hit latency and response latency to 20 cycles as for
-# other scripts
-cpu.clock = '2GHz'
-
-system = System(cpu = cpu,
-                physmem = DDR3_1600_x64(),
-                membus = CoherentBus(),
-                mem_mode = "timing")
-system.clock = '1GHz'
-system.system_port = system.membus.slave
-system.physmem.port = system.membus.master
-cpu.connectAllPorts(system.membus)
-
-root = Root(full_system = False, system = system)
+root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                cpu_class=DerivO3CPU,
+                                checker=True).create_root()
