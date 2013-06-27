@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,7 +51,7 @@
 #ifndef __MEM_BRIDGE_HH__
 #define __MEM_BRIDGE_HH__
 
-#include <list>
+#include <deque>
 
 #include "base/types.hh"
 #include "mem/mem_object.hh"
@@ -84,7 +84,7 @@ class Bridge : public MemObject
 
       public:
 
-        PortID origSrc;
+        const PortID origSrc;
 
         RequestState(PortID orig_src) : origSrc(orig_src)
         { }
@@ -100,8 +100,8 @@ class Bridge : public MemObject
 
       public:
 
-        Tick tick;
-        PacketPtr pkt;
+        const Tick tick;
+        const PacketPtr pkt;
 
         DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
         { }
@@ -131,17 +131,18 @@ class Bridge : public MemObject
         BridgeMasterPort& masterPort;
 
         /** Minimum request delay though this bridge. */
-        Cycles delay;
+        const Cycles delay;
 
         /** Address ranges to pass through the bridge */
-        AddrRangeList ranges;
+        const AddrRangeList ranges;
 
         /**
          * Response packet queue. Response packets are held in this
          * queue for a specified delay to model the processing delay
-         * of the bridge.
+         * of the bridge. We use a deque as we need to iterate over
+         * the items for functional accesses.
          */
-        std::list<DeferredPacket> transmitList;
+        std::deque<DeferredPacket> transmitList;
 
         /** Counter to track the outstanding responses. */
         unsigned int outstandingResponses;
@@ -157,7 +158,7 @@ class Bridge : public MemObject
          *
          * @return true if the reserved space has reached the set limit
          */
-        bool respQueueFull();
+        bool respQueueFull() const;
 
         /**
          * Handle send event, scheduled when the packet at the head of
@@ -246,17 +247,18 @@ class Bridge : public MemObject
         BridgeSlavePort& slavePort;
 
         /** Minimum delay though this bridge. */
-        Cycles delay;
+        const Cycles delay;
 
         /**
          * Request packet queue. Request packets are held in this
          * queue for a specified delay to model the processing delay
-         * of the bridge.
+         * of the bridge.  We use a deque as we need to iterate over
+         * the items for functional accesses.
          */
-        std::list<DeferredPacket> transmitList;
+        std::deque<DeferredPacket> transmitList;
 
         /** Max queue size for request packets */
-        unsigned int reqQueueLimit;
+        const unsigned int reqQueueLimit;
 
         /**
          * Handle send event, scheduled when the packet at the head of
@@ -289,7 +291,7 @@ class Bridge : public MemObject
          *
          * @return true if the occupied space has reached the set limit
          */
-        bool reqQueueFull();
+        bool reqQueueFull() const;
 
         /**
          * Queue a request packet to be sent out later and also schedule

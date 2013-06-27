@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -120,13 +120,13 @@ Bridge::init()
 }
 
 bool
-Bridge::BridgeSlavePort::respQueueFull()
+Bridge::BridgeSlavePort::respQueueFull() const
 {
     return outstandingResponses == respQueueLimit;
 }
 
 bool
-Bridge::BridgeMasterPort::reqQueueFull()
+Bridge::BridgeMasterPort::reqQueueFull() const
 {
     return transmitList.size() == reqQueueLimit;
 }
@@ -155,26 +155,36 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
     DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
-    // ensure we do not have something waiting to retry
-    if(retryReq)
-        return false;
+    // we should not see a timing request if we are already in a retry
+    assert(!retryReq);
 
     DPRINTF(Bridge, "Response queue size: %d outresp: %d\n",
             transmitList.size(), outstandingResponses);
 
+    // if the request queue is full then there is no hope
     if (masterPort.reqQueueFull()) {
         DPRINTF(Bridge, "Request queue full\n");
         retryReq = true;
-    } else if (pkt->needsResponse()) {
-        if (respQueueFull()) {
-            DPRINTF(Bridge, "Response queue full\n");
-            retryReq = true;
-        } else {
-            DPRINTF(Bridge, "Reserving space for response\n");
-            assert(outstandingResponses != respQueueLimit);
-            ++outstandingResponses;
-            retryReq = false;
+    } else {
+        // look at the response queue if we expect to see a response
+        bool expects_response = pkt->needsResponse() &&
+            !pkt->memInhibitAsserted();
+        if (expects_response) {
+            if (respQueueFull()) {
+                DPRINTF(Bridge, "Response queue full\n");
+                retryReq = true;
+            } else {
+                // ok to send the request with space for the response
+                DPRINTF(Bridge, "Reserving space for response\n");
+                assert(outstandingResponses != respQueueLimit);
+                ++outstandingResponses;
 
+                // no need to set retryReq to false as this is already the
+                // case
+            }
+        }
+
+        if (!retryReq) {
             // @todo: We need to pay for this and not just zero it out
             pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
@@ -274,9 +284,9 @@ Bridge::BridgeMasterPort::trySendTiming()
 
         // If there are more packets to send, schedule event to try again.
         if (!transmitList.empty()) {
-            req = transmitList.front();
+            DeferredPacket next_req = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
-            bridge.schedule(sendEvent, std::max(req.tick,
+            bridge.schedule(sendEvent, std::max(next_req.tick,
                                                 bridge.clockEdge()));
         }
 
@@ -315,9 +325,9 @@ Bridge::BridgeSlavePort::trySendTiming()
 
         // If there are more packets to send, schedule event to try again.
         if (!transmitList.empty()) {
-            resp = transmitList.front();
+            DeferredPacket next_resp = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
-            bridge.schedule(sendEvent, std::max(resp.tick,
+            bridge.schedule(sendEvent, std::max(next_resp.tick,
                                                 bridge.clockEdge()));
         }
 
@@ -338,21 +348,13 @@ Bridge::BridgeSlavePort::trySendTiming()
 void
 Bridge::BridgeMasterPort::recvRetry()
 {
-    Tick nextReady = transmitList.front().tick;
-    if (nextReady <= curTick())
-        trySendTiming();
-    else
-        bridge.schedule(sendEvent, nextReady);
+    trySendTiming();
 }
 
 void
 Bridge::BridgeSlavePort::recvRetry()
 {
-    Tick nextReady = transmitList.front().tick;
-    if (nextReady <= curTick())
-        trySendTiming();
-    else
-        bridge.schedule(sendEvent, nextReady);
+    trySendTiming();
 }
 
 Tick
@@ -364,12 +366,10 @@ Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 void
 Bridge::BridgeSlavePort::recvFunctional(PacketPtr pkt)
 {
-    std::list<DeferredPacket>::iterator i;
-
     pkt->pushLabel(name());
 
     // check the response queue
-    for (i = transmitList.begin();  i != transmitList.end(); ++i) {
+    for (auto i = transmitList.begin();  i != transmitList.end(); ++i) {
         if (pkt->checkFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
@@ -391,7 +391,7 @@ bool
 Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
 {
     bool found = false;
-    std::list<DeferredPacket>::iterator i = transmitList.begin();
+    auto i = transmitList.begin();
 
     while(i != transmitList.end() && !found) {
         if (pkt->checkFunctional((*i).pkt)) {
