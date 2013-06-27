@@ -232,9 +232,6 @@ class CoherentBus : public BaseBus
         /** The port which we mirror internally. */
         SlavePort& slavePort;
 
-        /** The bus to which this port belongs. */
-        CoherentBus &bus;
-
       public:
 
         /**
@@ -242,7 +239,7 @@ class CoherentBus : public BaseBus
          */
         SnoopRespPort(SlavePort& slave_port, CoherentBus& _bus) :
             MasterPort(slave_port.name() + ".snoopRespPort", &_bus),
-            slavePort(slave_port), bus(_bus) { }
+            slavePort(slave_port) { }
 
         /**
          * Override the sending of retries and pass them on through
