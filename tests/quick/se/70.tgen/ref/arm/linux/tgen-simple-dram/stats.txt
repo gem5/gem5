@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            12296459257                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 231220                       # Number of bytes of host memory used
-host_seconds                                     8.13                       # Real time elapsed on the host
+host_tick_rate                            29067628326                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 231288                       # Number of bytes of host memory used
+host_seconds                                     3.44                       # Real time elapsed on the host
 system.physmem.bytes_read::cpu              213331136                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            213331136                       # Number of bytes read from this memory
 system.physmem.num_reads::cpu                 3333299                       # Number of read requests responded to by this memory
@@ -519,7 +519,5 @@ system.monitor.writeTransHist::17                   0      0.00%    100.00% # Hi
 system.monitor.writeTransHist::18                   0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::19                   0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::total              100                       # Histogram of read transactions per sample period
-system.monitor.readAddrDist::total                 16                       # Read address distribution
-system.monitor.writeAddrDist::total                16                       # Write address distribution
 
 ---------- End Simulation Statistics   ----------

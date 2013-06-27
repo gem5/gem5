@@ -118,15 +118,15 @@ system.cpu0.num_idle_cycles                         0                       # Nu
 system.cpu0.num_busy_cycles                    500032                       # Number of busy cycles
 system.cpu0.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu0.icache.replacements                   152                       # number of replacements
-system.cpu0.icache.tagsinuse               218.086151                       # Cycle average of tags in use
-system.cpu0.icache.total_refs                  499556                       # Total number of references to valid blocks.
-system.cpu0.icache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu0.icache.avg_refs               1078.954644                       # Average number of references to valid blocks.
-system.cpu0.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu0.icache.occ_blocks::cpu0.inst   218.086151                       # Average occupied blocks per requestor
-system.cpu0.icache.occ_percent::cpu0.inst     0.425950                       # Average percentage of cache occupancy
-system.cpu0.icache.occ_percent::total        0.425950                       # Average percentage of cache occupancy
+system.cpu0.icache.tags.replacements                   152                       # number of replacements
+system.cpu0.icache.tags.tagsinuse               218.086151                       # Cycle average of tags in use
+system.cpu0.icache.tags.total_refs                  499556                       # Total number of references to valid blocks.
+system.cpu0.icache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu0.icache.tags.avg_refs               1078.954644                       # Average number of references to valid blocks.
+system.cpu0.icache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu0.icache.tags.occ_blocks::cpu0.inst   218.086151                       # Average occupied blocks per requestor
+system.cpu0.icache.tags.occ_percent::cpu0.inst     0.425950                       # Average percentage of cache occupancy
+system.cpu0.icache.tags.occ_percent::total        0.425950                       # Average percentage of cache occupancy
 system.cpu0.icache.ReadReq_hits::cpu0.inst       499556                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::total         499556                       # number of ReadReq hits
 system.cpu0.icache.demand_hits::cpu0.inst       499556                       # number of demand (read+write) hits
@@ -160,15 +160,15 @@ system.cpu0.icache.avg_blocked_cycles::no_targets          nan                  
 system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu0.dcache.replacements                    61                       # number of replacements
-system.cpu0.dcache.tagsinuse               276.872320                       # Cycle average of tags in use
-system.cpu0.dcache.total_refs                  180312                       # Total number of references to valid blocks.
-system.cpu0.dcache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu0.dcache.avg_refs                389.442765                       # Average number of references to valid blocks.
-system.cpu0.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu0.dcache.occ_blocks::cpu0.data   276.872320                       # Average occupied blocks per requestor
-system.cpu0.dcache.occ_percent::cpu0.data     0.540766                       # Average percentage of cache occupancy
-system.cpu0.dcache.occ_percent::total        0.540766                       # Average percentage of cache occupancy
+system.cpu0.dcache.tags.replacements                    61                       # number of replacements
+system.cpu0.dcache.tags.tagsinuse               276.872320                       # Cycle average of tags in use
+system.cpu0.dcache.tags.total_refs                  180312                       # Total number of references to valid blocks.
+system.cpu0.dcache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu0.dcache.tags.avg_refs                389.442765                       # Average number of references to valid blocks.
+system.cpu0.dcache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu0.dcache.tags.occ_blocks::cpu0.data   276.872320                       # Average occupied blocks per requestor
+system.cpu0.dcache.tags.occ_percent::cpu0.data     0.540766                       # Average percentage of cache occupancy
+system.cpu0.dcache.tags.occ_percent::total        0.540766                       # Average percentage of cache occupancy
 system.cpu0.dcache.ReadReq_hits::cpu0.data       124111                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::total         124111                       # number of ReadReq hits
 system.cpu0.dcache.WriteReq_hits::cpu0.data        56201                       # number of WriteReq hits
@@ -267,15 +267,15 @@ system.cpu1.num_idle_cycles                         0                       # Nu
 system.cpu1.num_busy_cycles                    500032                       # Number of busy cycles
 system.cpu1.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu1.icache.replacements                   152                       # number of replacements
-system.cpu1.icache.tagsinuse               218.086151                       # Cycle average of tags in use
-system.cpu1.icache.total_refs                  499556                       # Total number of references to valid blocks.
-system.cpu1.icache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu1.icache.avg_refs               1078.954644                       # Average number of references to valid blocks.
-system.cpu1.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu1.icache.occ_blocks::cpu1.inst   218.086151                       # Average occupied blocks per requestor
-system.cpu1.icache.occ_percent::cpu1.inst     0.425950                       # Average percentage of cache occupancy
-system.cpu1.icache.occ_percent::total        0.425950                       # Average percentage of cache occupancy
+system.cpu1.icache.tags.replacements                   152                       # number of replacements
+system.cpu1.icache.tags.tagsinuse               218.086151                       # Cycle average of tags in use
+system.cpu1.icache.tags.total_refs                  499556                       # Total number of references to valid blocks.
+system.cpu1.icache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu1.icache.tags.avg_refs               1078.954644                       # Average number of references to valid blocks.
+system.cpu1.icache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu1.icache.tags.occ_blocks::cpu1.inst   218.086151                       # Average occupied blocks per requestor
+system.cpu1.icache.tags.occ_percent::cpu1.inst     0.425950                       # Average percentage of cache occupancy
+system.cpu1.icache.tags.occ_percent::total        0.425950                       # Average percentage of cache occupancy
 system.cpu1.icache.ReadReq_hits::cpu1.inst       499556                       # number of ReadReq hits
 system.cpu1.icache.ReadReq_hits::total         499556                       # number of ReadReq hits
 system.cpu1.icache.demand_hits::cpu1.inst       499556                       # number of demand (read+write) hits
@@ -309,15 +309,15 @@ system.cpu1.icache.avg_blocked_cycles::no_targets          nan                  
 system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu1.dcache.replacements                    61                       # number of replacements
-system.cpu1.dcache.tagsinuse               276.872320                       # Cycle average of tags in use
-system.cpu1.dcache.total_refs                  180312                       # Total number of references to valid blocks.
-system.cpu1.dcache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu1.dcache.avg_refs                389.442765                       # Average number of references to valid blocks.
-system.cpu1.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu1.dcache.occ_blocks::cpu1.data   276.872320                       # Average occupied blocks per requestor
-system.cpu1.dcache.occ_percent::cpu1.data     0.540766                       # Average percentage of cache occupancy
-system.cpu1.dcache.occ_percent::total        0.540766                       # Average percentage of cache occupancy
+system.cpu1.dcache.tags.replacements                    61                       # number of replacements
+system.cpu1.dcache.tags.tagsinuse               276.872320                       # Cycle average of tags in use
+system.cpu1.dcache.tags.total_refs                  180312                       # Total number of references to valid blocks.
+system.cpu1.dcache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu1.dcache.tags.avg_refs                389.442765                       # Average number of references to valid blocks.
+system.cpu1.dcache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu1.dcache.tags.occ_blocks::cpu1.data   276.872320                       # Average occupied blocks per requestor
+system.cpu1.dcache.tags.occ_percent::cpu1.data     0.540766                       # Average percentage of cache occupancy
+system.cpu1.dcache.tags.occ_percent::total        0.540766                       # Average percentage of cache occupancy
 system.cpu1.dcache.ReadReq_hits::cpu1.data       124111                       # number of ReadReq hits
 system.cpu1.dcache.ReadReq_hits::total         124111                       # number of ReadReq hits
 system.cpu1.dcache.WriteReq_hits::cpu1.data        56201                       # number of WriteReq hits
@@ -416,15 +416,15 @@ system.cpu2.num_idle_cycles                         0                       # Nu
 system.cpu2.num_busy_cycles                    500032                       # Number of busy cycles
 system.cpu2.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu2.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu2.icache.replacements                   152                       # number of replacements
-system.cpu2.icache.tagsinuse               218.086151                       # Cycle average of tags in use
-system.cpu2.icache.total_refs                  499556                       # Total number of references to valid blocks.
-system.cpu2.icache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu2.icache.avg_refs               1078.954644                       # Average number of references to valid blocks.
-system.cpu2.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu2.icache.occ_blocks::cpu2.inst   218.086151                       # Average occupied blocks per requestor
-system.cpu2.icache.occ_percent::cpu2.inst     0.425950                       # Average percentage of cache occupancy
-system.cpu2.icache.occ_percent::total        0.425950                       # Average percentage of cache occupancy
+system.cpu2.icache.tags.replacements                   152                       # number of replacements
+system.cpu2.icache.tags.tagsinuse               218.086151                       # Cycle average of tags in use
+system.cpu2.icache.tags.total_refs                  499556                       # Total number of references to valid blocks.
+system.cpu2.icache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu2.icache.tags.avg_refs               1078.954644                       # Average number of references to valid blocks.
+system.cpu2.icache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu2.icache.tags.occ_blocks::cpu2.inst   218.086151                       # Average occupied blocks per requestor
+system.cpu2.icache.tags.occ_percent::cpu2.inst     0.425950                       # Average percentage of cache occupancy
+system.cpu2.icache.tags.occ_percent::total        0.425950                       # Average percentage of cache occupancy
 system.cpu2.icache.ReadReq_hits::cpu2.inst       499556                       # number of ReadReq hits
 system.cpu2.icache.ReadReq_hits::total         499556                       # number of ReadReq hits
 system.cpu2.icache.demand_hits::cpu2.inst       499556                       # number of demand (read+write) hits
@@ -458,15 +458,15 @@ system.cpu2.icache.avg_blocked_cycles::no_targets          nan                  
 system.cpu2.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu2.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu2.dcache.replacements                    61                       # number of replacements
-system.cpu2.dcache.tagsinuse               276.872320                       # Cycle average of tags in use
-system.cpu2.dcache.total_refs                  180312                       # Total number of references to valid blocks.
-system.cpu2.dcache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu2.dcache.avg_refs                389.442765                       # Average number of references to valid blocks.
-system.cpu2.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu2.dcache.occ_blocks::cpu2.data   276.872320                       # Average occupied blocks per requestor
-system.cpu2.dcache.occ_percent::cpu2.data     0.540766                       # Average percentage of cache occupancy
-system.cpu2.dcache.occ_percent::total        0.540766                       # Average percentage of cache occupancy
+system.cpu2.dcache.tags.replacements                    61                       # number of replacements
+system.cpu2.dcache.tags.tagsinuse               276.872320                       # Cycle average of tags in use
+system.cpu2.dcache.tags.total_refs                  180312                       # Total number of references to valid blocks.
+system.cpu2.dcache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu2.dcache.tags.avg_refs                389.442765                       # Average number of references to valid blocks.
+system.cpu2.dcache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu2.dcache.tags.occ_blocks::cpu2.data   276.872320                       # Average occupied blocks per requestor
+system.cpu2.dcache.tags.occ_percent::cpu2.data     0.540766                       # Average percentage of cache occupancy
+system.cpu2.dcache.tags.occ_percent::total        0.540766                       # Average percentage of cache occupancy
 system.cpu2.dcache.ReadReq_hits::cpu2.data       124111                       # number of ReadReq hits
 system.cpu2.dcache.ReadReq_hits::total         124111                       # number of ReadReq hits
 system.cpu2.dcache.WriteReq_hits::cpu2.data        56201                       # number of WriteReq hits
@@ -565,15 +565,15 @@ system.cpu3.num_idle_cycles                         0                       # Nu
 system.cpu3.num_busy_cycles                    500032                       # Number of busy cycles
 system.cpu3.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu3.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu3.icache.replacements                   152                       # number of replacements
-system.cpu3.icache.tagsinuse               218.086151                       # Cycle average of tags in use
-system.cpu3.icache.total_refs                  499556                       # Total number of references to valid blocks.
-system.cpu3.icache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu3.icache.avg_refs               1078.954644                       # Average number of references to valid blocks.
-system.cpu3.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu3.icache.occ_blocks::cpu3.inst   218.086151                       # Average occupied blocks per requestor
-system.cpu3.icache.occ_percent::cpu3.inst     0.425950                       # Average percentage of cache occupancy
-system.cpu3.icache.occ_percent::total        0.425950                       # Average percentage of cache occupancy
+system.cpu3.icache.tags.replacements                   152                       # number of replacements
+system.cpu3.icache.tags.tagsinuse               218.086151                       # Cycle average of tags in use
+system.cpu3.icache.tags.total_refs                  499556                       # Total number of references to valid blocks.
+system.cpu3.icache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu3.icache.tags.avg_refs               1078.954644                       # Average number of references to valid blocks.
+system.cpu3.icache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu3.icache.tags.occ_blocks::cpu3.inst   218.086151                       # Average occupied blocks per requestor
+system.cpu3.icache.tags.occ_percent::cpu3.inst     0.425950                       # Average percentage of cache occupancy
+system.cpu3.icache.tags.occ_percent::total        0.425950                       # Average percentage of cache occupancy
 system.cpu3.icache.ReadReq_hits::cpu3.inst       499556                       # number of ReadReq hits
 system.cpu3.icache.ReadReq_hits::total         499556                       # number of ReadReq hits
 system.cpu3.icache.demand_hits::cpu3.inst       499556                       # number of demand (read+write) hits
@@ -607,15 +607,15 @@ system.cpu3.icache.avg_blocked_cycles::no_targets          nan                  
 system.cpu3.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu3.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu3.dcache.replacements                    61                       # number of replacements
-system.cpu3.dcache.tagsinuse               276.872320                       # Cycle average of tags in use
-system.cpu3.dcache.total_refs                  180312                       # Total number of references to valid blocks.
-system.cpu3.dcache.sampled_refs                   463                       # Sample count of references to valid blocks.
-system.cpu3.dcache.avg_refs                389.442765                       # Average number of references to valid blocks.
-system.cpu3.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu3.dcache.occ_blocks::cpu3.data   276.872320                       # Average occupied blocks per requestor
-system.cpu3.dcache.occ_percent::cpu3.data     0.540766                       # Average percentage of cache occupancy
-system.cpu3.dcache.occ_percent::total        0.540766                       # Average percentage of cache occupancy
+system.cpu3.dcache.tags.replacements                    61                       # number of replacements
+system.cpu3.dcache.tags.tagsinuse               276.872320                       # Cycle average of tags in use
+system.cpu3.dcache.tags.total_refs                  180312                       # Total number of references to valid blocks.
+system.cpu3.dcache.tags.sampled_refs                   463                       # Sample count of references to valid blocks.
+system.cpu3.dcache.tags.avg_refs                389.442765                       # Average number of references to valid blocks.
+system.cpu3.dcache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
+system.cpu3.dcache.tags.occ_blocks::cpu3.data   276.872320                       # Average occupied blocks per requestor
+system.cpu3.dcache.tags.occ_percent::cpu3.data     0.540766                       # Average percentage of cache occupancy
+system.cpu3.dcache.tags.occ_percent::total        0.540766                       # Average percentage of cache occupancy
 system.cpu3.dcache.ReadReq_hits::cpu3.data       124111                       # number of ReadReq hits
 system.cpu3.dcache.ReadReq_hits::total         124111                       # number of ReadReq hits
 system.cpu3.dcache.WriteReq_hits::cpu3.data        56201                       # number of WriteReq hits
@@ -659,31 +659,31 @@ system.cpu3.dcache.cache_copies                     0                       # nu
 system.cpu3.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu3.dcache.writebacks::total               29                       # number of writebacks
 system.cpu3.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.l2c.replacements                             0                       # number of replacements
-system.l2c.tagsinuse                      1962.780232                       # Cycle average of tags in use
-system.l2c.total_refs                             332                       # Total number of references to valid blocks.
-system.l2c.sampled_refs                          2932                       # Sample count of references to valid blocks.
-system.l2c.avg_refs                          0.113233                       # Average number of references to valid blocks.
-system.l2c.warmup_cycle                             0                       # Cycle when the warmup percentage was hit.
-system.l2c.occ_blocks::writebacks           17.466765                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu0.inst           267.152061                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu0.data           219.176305                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu1.inst           267.152061                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu1.data           219.176305                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu2.inst           267.152061                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu2.data           219.176305                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu3.inst           267.152061                       # Average occupied blocks per requestor
-system.l2c.occ_blocks::cpu3.data           219.176305                       # Average occupied blocks per requestor
-system.l2c.occ_percent::writebacks           0.000267                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu0.inst            0.004076                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu0.data            0.003344                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu1.inst            0.004076                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu1.data            0.003344                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu2.inst            0.004076                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu2.data            0.003344                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu3.inst            0.004076                       # Average percentage of cache occupancy
-system.l2c.occ_percent::cpu3.data            0.003344                       # Average percentage of cache occupancy
-system.l2c.occ_percent::total                0.029950                       # Average percentage of cache occupancy
+system.l2c.tags.replacements                             0                       # number of replacements
+system.l2c.tags.tagsinuse                      1962.780232                       # Cycle average of tags in use
+system.l2c.tags.total_refs                             332                       # Total number of references to valid blocks.
+system.l2c.tags.sampled_refs                          2932                       # Sample count of references to valid blocks.
+system.l2c.tags.avg_refs                          0.113233                       # Average number of references to valid blocks.
+system.l2c.tags.warmup_cycle                             0                       # Cycle when the warmup percentage was hit.
+system.l2c.tags.occ_blocks::writebacks           17.466765                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu0.inst           267.152061                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu0.data           219.176305                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu1.inst           267.152061                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu1.data           219.176305                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu2.inst           267.152061                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu2.data           219.176305                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu3.inst           267.152061                       # Average occupied blocks per requestor
+system.l2c.tags.occ_blocks::cpu3.data           219.176305                       # Average occupied blocks per requestor
+system.l2c.tags.occ_percent::writebacks           0.000267                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu0.inst            0.004076                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu0.data            0.003344                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu1.inst            0.004076                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu1.data            0.003344                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu2.inst            0.004076                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu2.data            0.003344                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu3.inst            0.004076                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::cpu3.data            0.003344                       # Average percentage of cache occupancy
+system.l2c.tags.occ_percent::total                0.029950                       # Average percentage of cache occupancy
 system.l2c.ReadReq_hits::cpu0.inst                 60                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.data                  9                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu1.inst                 60                       # number of ReadReq hits
