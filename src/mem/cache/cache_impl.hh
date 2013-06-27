@@ -929,7 +929,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = curTick() + responseLatency * clockPeriod() +
+                completion_time = clockEdge(responseLatency) +
                     (transfer_offset ? pkt->busLastWordDelay :
                      pkt->busFirstWordDelay);
 
@@ -946,14 +946,14 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = curTick() + responseLatency * clockPeriod() +
+                completion_time = clockEdge(responseLatency) +
                     pkt->busLastWordDelay;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
-                completion_time = curTick() + responseLatency * clockPeriod() +
+                completion_time = clockEdge(responseLatency) +
                     pkt->busLastWordDelay;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
@@ -1021,7 +1021,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         }
         mq = mshr->queue;
         mq->markPending(mshr);
-        requestMemSideBus((RequestCause)mq->index, curTick() +
+        requestMemSideBus((RequestCause)mq->index, clockEdge() +
                           pkt->busLastWordDelay);
     } else {
         mq->deallocate(mshr);
@@ -1257,7 +1257,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
     }
 
-    blk->whenReady = curTick() + responseLatency * clockPeriod() +
+    blk->whenReady = clockEdge() + responseLatency * clockPeriod() +
         pkt->busLastWordDelay;
 
     return blk;
