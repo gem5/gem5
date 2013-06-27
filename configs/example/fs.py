@@ -81,8 +81,8 @@ def is_kvm_cpu(cpu_class):
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
-TestCPUClass.clock = options.clock
-DriveCPUClass.clock = options.clock
+TestCPUClass.clock = options.cpu_clock
+DriveCPUClass.clock = options.cpu_clock
 
 # Match the memories with the CPUs, the driver system always simple,
 # and based on the options for the test system

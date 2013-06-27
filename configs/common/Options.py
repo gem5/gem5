@@ -78,6 +78,9 @@ def addCommonOptions(parser):
     parser.add_option("--simpoint-interval", type="int", default=10000000,
                       help="SimPoint interval in num of instructions")
     parser.add_option("--clock", action="store", type="string", default='2GHz')
+    parser.add_option("--cpu-clock", action="store", type="string",
+                      default='2GHz',
+                      help="Clock for blocks running at CPU speed")
     parser.add_option("--num-dirs", type="int", default=1)
     parser.add_option("--num-l2caches", type="int", default=1)
     parser.add_option("--num-l3caches", type="int", default=1)

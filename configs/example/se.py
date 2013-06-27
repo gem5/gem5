@@ -147,7 +147,7 @@ else:
 
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
-CPUClass.clock = options.clock
+CPUClass.clock = options.cpu_clock
 CPUClass.numThreads = numThreads
 
 MemClass = Simulation.setMemClass(options)

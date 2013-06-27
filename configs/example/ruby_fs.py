@@ -80,7 +80,7 @@ if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
     sys.exit(1)
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
-CPUClass.clock = options.clock
+CPUClass.clock = options.cpu_clock
 
 TestMemClass = Simulation.setMemClass(options)
 

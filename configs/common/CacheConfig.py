@@ -64,12 +64,12 @@ def config_cache(options, system):
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs, and set the L1-to-L2 bus width to 32
         # bytes (256 bits).
-        system.l2 = l2_cache_class(clock=options.clock,
+        system.l2 = l2_cache_class(clock=options.cpu_clock,
                                    size=options.l2_size,
                                    assoc=options.l2_assoc,
                                    block_size=options.cacheline_size)
 
-        system.tol2bus = CoherentBus(clock = options.clock, width = 32)
+        system.tol2bus = CoherentBus(clock = options.cpu_clock, width = 32)
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
 
