@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -255,12 +255,14 @@ FUPool::dump()
     }
 }
 
-void
-FUPool::drainSanityCheck() const
+bool
+FUPool::isDrained() const
 {
-    assert(unitsToBeFreed.empty());
+    bool is_drained = true;
     for (int i = 0; i < numFU; i++)
-        assert(!unitBusy[i]);
+        is_drained = is_drained && !unitBusy[i];
+
+    return is_drained;
 }
 
 //

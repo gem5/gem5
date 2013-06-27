@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -376,6 +376,14 @@ DefaultIEW<Impl>::isDrained() const
         }
     }
 
+    // Also check the FU pool as instructions are "stored" in FU
+    // completion events until they are done and not accounted for
+    // above
+    if (drained && !fuPool->isDrained()) {
+        DPRINTF(Drain, "FU pool still busy.\n");
+        drained = false;
+    }
+
     return drained;
 }
 
@@ -387,7 +395,6 @@ DefaultIEW<Impl>::drainSanityCheck() const
 
     instQueue.drainSanityCheck();
     ldstQueue.drainSanityCheck();
-    fuPool->drainSanityCheck();
 }
 
 template <class Impl>
