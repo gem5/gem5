@@ -34,12 +34,22 @@ from Benchmarks import *
 
 test_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
                                  SysConfig('netperf-stream-client.rcS'))
-test_sys.clock = '1GHz'
+
+# Create the system clock domain
+test_sys.clk_domain = SrcClockDomain(clock = '1GHz')
+
 test_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller
 test_sys.cpu.createInterruptController()
 test_sys.cpu.connectAllPorts(test_sys.membus)
-test_sys.cpu.clock = '2GHz'
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+test_sys.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
+
+# Create a separate clock domain for Ethernet
+test_sys.tsunami.ethernet.clk_domain = SrcClockDomain(clock = '500MHz')
+
 # In contrast to the other (one-system) Tsunami configurations we do
 # not have an IO cache but instead rely on an IO bridge for accesses
 # from masters on the IO bus to the memory bus
@@ -49,12 +59,20 @@ test_sys.iobridge.master = test_sys.membus.slave
 
 drive_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
                                  SysConfig('netperf-server.rcS'))
-drive_sys.clock = '1GHz'
+# Create the system clock domain
+drive_sys.clk_domain = SrcClockDomain(clock = '1GHz')
 drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 # create the interrupt controller
 drive_sys.cpu.createInterruptController()
 drive_sys.cpu.connectAllPorts(drive_sys.membus)
-drive_sys.cpu.clock = '4GHz'
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+drive_sys.cpu.clk_domain = SrcClockDomain(clock = '4GHz')
+
+# Create a separate clock domain for Ethernet
+drive_sys.tsunami.ethernet.clk_domain = SrcClockDomain(clock = '500MHz')
+
 drive_sys.iobridge = Bridge(delay='50ns', ranges = drive_sys.mem_ranges)
 drive_sys.iobridge.slave = drive_sys.iobus.master
 drive_sys.iobridge.master = drive_sys.membus.slave

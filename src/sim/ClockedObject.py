@@ -44,7 +44,6 @@ class ClockedObject(SimObject):
     abstract = True
     cxx_header = "sim/clocked_object.hh"
 
-    # Clock period of this object, with the default value being the
-    # clock period of the parent object, unproxied at instantiation
-    # time
-    clock = Param.Clock(Parent.clock, "Clock speed")
+    # The clock domain this clocked object belongs to, inheriting the
+    # parent's clock domain by default
+    clk_domain = Param.ClockDomain(Parent.clk_domain, "Clock domain")

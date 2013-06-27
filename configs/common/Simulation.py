@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved
 # 
 # The license below extends only to copyright in the software and shall
@@ -308,7 +308,7 @@ def run(options, root, testsys, cpu_class):
                 testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             switch_cpus[i].system =  testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
-            switch_cpus[i].clock = testsys.cpu[i].clock
+            switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts
@@ -335,7 +335,7 @@ def run(options, root, testsys, cpu_class):
         for i in xrange(np):
             repeat_switch_cpus[i].system = testsys
             repeat_switch_cpus[i].workload = testsys.cpu[i].workload
-            repeat_switch_cpus[i].clock = testsys.cpu[i].clock
+            repeat_switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
 
             if options.maxinsts:
                 repeat_switch_cpus[i].max_insts_any_thread = options.maxinsts
@@ -363,8 +363,8 @@ def run(options, root, testsys, cpu_class):
             switch_cpus_1[i].system =  testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus_1[i].workload = testsys.cpu[i].workload
-            switch_cpus[i].clock = testsys.cpu[i].clock
-            switch_cpus_1[i].clock = testsys.cpu[i].clock
+            switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
+            switch_cpus_1[i].clk_domain = testsys.cpu[i].clk_domain
 
             # if restoring, make atomic cpu simulate only a few instructions
             if options.checkpoint_restore != None:

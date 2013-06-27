@@ -50,7 +50,7 @@ class LinuxMipsSystem(MipsSystem):
     system_type = 34
     system_rev = 1 << 10
 
-    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clk_domain.clock.frequency,
                                          "boot processor frequency")
 
 class BareIronMipsSystem(MipsSystem):

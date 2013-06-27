@@ -1,5 +1,14 @@
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2013 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,32 +33,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Brad Beckmann
+# Authors: Vasileios Spiliopoulos
+#          Akash Bagdia
 
 from m5.params import *
 from m5.SimObject import SimObject
-from MemoryControl import MemoryControl
 
-class RubyMemoryControl(MemoryControl):
-    type = 'RubyMemoryControl'
-    cxx_class = 'RubyMemoryControl'
-    cxx_header = "mem/ruby/system/RubyMemoryControl.hh"
-    version = Param.Int("");
+# Abstract clock domain
+class ClockDomain(SimObject):
+    type = 'ClockDomain'
+    cxx_header = "sim/clock_domain.hh"
+    abstract = True
 
-    banks_per_rank = Param.Int(8, "");
-    ranks_per_dimm = Param.Int(2, "");
-    dimms_per_channel = Param.Int(2, "");
-    bank_bit_0 = Param.Int(8, "");
-    rank_bit_0 = Param.Int(11, "");
-    dimm_bit_0 = Param.Int(12, "");
-    bank_queue_size = Param.Int(12, "");
-    bank_busy_time = Param.Int(11, "");
-    rank_rank_delay = Param.Int(1, "");
-    read_write_delay = Param.Int(2, "");
-    basic_bus_busy_time = Param.Int(2, "");
-    mem_ctl_latency = Param.Cycles(12, "");
-    refresh_period = Param.Cycles(1560, "");
-    tFaw = Param.Int(0, "");
-    mem_random_arbitrate = Param.Int(0, "");
-    mem_fixed_delay = Param.Cycles(0, "");
+# Source clock domain with an actual clock
+class SrcClockDomain(ClockDomain):
+    type = 'SrcClockDomain'
+    cxx_header = "sim/clock_domain.hh"
+    clock = Param.Clock("Clock period")
+
+# Derived clock domain with a parent clock domain and a frequency
+# divider
+class DerivedClockDomain(ClockDomain):
+    type = 'DerivedClockDomain'
+    cxx_header = "sim/clock_domain.hh"
+    clk_domain = Param.ClockDomain("Parent clock domain")
+    clk_divider = Param.Unsigned(1, "Frequency divider")

@@ -104,10 +104,13 @@ cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
 
 # create the desired simulated system
 system = System(cpu = cpus,
-                physmem = SimpleMemory())
-system.clock = options.sys_clock
+                physmem = SimpleMemory(),
+                clk_domain = SrcClockDomain(clock = options.sys_clock))
 
 Ruby.create_system(options, system)
+
+# Create a seperate clock domain for Ruby
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
 i = 0
 for ruby_port in system.ruby._cpu_ruby_ports:

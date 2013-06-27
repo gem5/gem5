@@ -69,7 +69,7 @@ options.l3_assoc=2
 nb_cores = 8
 
 # ruby does not support atomic, functional, or uncacheable accesses
-cpus = [ MemTest(clock = '2GHz', atomic=False, percent_functional=50,
+cpus = [ MemTest(atomic=False, percent_functional=50,
                  percent_uncacheable=0, suppress_func_warnings=True) \
          for i in xrange(nb_cores) ]
 
@@ -80,10 +80,21 @@ options.num_cpus = nb_cores
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
                 physmem = SimpleMemory(null = True),
-                funcbus = NoncoherentBus())
-system.clock = options.sys_clock
+                funcbus = NoncoherentBus(),
+                clk_domain = SrcClockDomain(clock = options.sys_clock))
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
+
+# All cpus are associated with cpu_clk_domain
+for cpu in cpus:
+    cpu.clk_domain = system.cpu_clk_domain
 
 Ruby.create_system(options, system)
+
+# Create a separate clock domain for Ruby
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
 assert(len(cpus) == len(system.ruby._cpu_ruby_ports))
 

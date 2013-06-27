@@ -39,14 +39,19 @@ ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
 system = System(cpu = cpus, physmem = ruby_memory, membus = CoherentBus(),
-                mem_mode = "timing")
-system.clock = '1GHz'
+                mem_mode = "timing",
+                clk_domain = SrcClockDomain(clock = '1GHz'))
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
 
 for cpu in cpus:
     # create the interrupt controller
     cpu.createInterruptController()
     cpu.connectAllPorts(system.membus)
-    cpu.clock = '2GHz'
+    # All cpus are associated with cpu_clk_domain
+    cpu.clk_domain = system.cpu_clk_domain
 
 # connect memory to membus
 system.physmem.port = system.membus.master

@@ -95,8 +95,7 @@ def create_topology(controllers, options):
 
 def create_system(options, system, piobus = None, dma_ports = []):
 
-    system.ruby = RubySystem(clock = options.ruby_clock,
-                             stats_filename = options.ruby_stats,
+    system.ruby = RubySystem(stats_filename = options.ruby_stats,
                              no_mem_vec = options.use_map)
     ruby = system.ruby
 

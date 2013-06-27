@@ -36,13 +36,17 @@ import ruby_config
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", 1)
 
 cpu = DerivO3CPU(cpu_id=0)
-cpu.clock = '2GHz'
 
 system = System(cpu = cpu,
                 physmem = ruby_memory,
                 membus = CoherentBus(),
-                mem_mode = "timing")
-system.clock = '1GHz'
+                mem_mode = "timing",
+                clk_domain = SrcClockDomain(clock = '1GHz'))
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
+
 system.physmem.port = system.membus.master
 # create the interrupt controller
 cpu.createInterruptController()

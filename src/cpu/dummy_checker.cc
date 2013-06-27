@@ -54,7 +54,7 @@ DummyCheckerParams::create()
     params->max_insts_all_threads = 0;
     params->max_loads_any_thread = 0;
     params->max_loads_all_threads = 0;
-    params->clock = clock;
+    params->clk_domain = clk_domain;
     // Hack to touch all parameters.  Consider not deriving Checker
     // from BaseCPU..it's not really a CPU in the end.
     Counter temp;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@
 #include "base/misc.hh"
 #include "params/ClockedObject.hh"
 #include "sim/core.hh"
+#include "sim/clock_domain.hh"
 #include "sim/sim_object.hh"
 
 /**
@@ -88,7 +89,7 @@ class ClockedObject : public SimObject
 
         // optimise for the common case and see if the tick should be
         // advanced by a single clock period
-        tick += clock;
+        tick += clockPeriod();
         ++cycle;
 
         // see if we are done at this point
@@ -98,26 +99,25 @@ class ClockedObject : public SimObject
         // if not, we have to recalculate the cycle and tick, we
         // perform the calculations in terms of relative cycles to
         // allow changes to the clock period in the future
-        Cycles elapsedCycles(divCeil(curTick() - tick, clock));
+        Cycles elapsedCycles(divCeil(curTick() - tick, clockPeriod()));
         cycle += elapsedCycles;
-        tick += elapsedCycles * clock;
+        tick += elapsedCycles * clockPeriod();
     }
 
-    // Clock period in ticks
-    Tick clock;
+    /**
+     * The clock domain this clocked object belongs to
+     */
+    ClockDomain &clockDomain;
 
   protected:
 
     /**
-     * Create a clocked object and set the clock based on the
+     * Create a clocked object and set the clock domain based on the
      * parameters.
      */
     ClockedObject(const ClockedObjectParams* p) :
-        SimObject(p), tick(0), cycle(0), clock(p->clock)
+        SimObject(p), tick(0), cycle(0), clockDomain(*p->clk_domain)
     {
-        if (clock == 0) {
-            fatal("%s has a clock period of zero\n", name());
-        }
     }
 
     /**
@@ -132,9 +132,9 @@ class ClockedObject : public SimObject
      */
     void resetClock() const
     {
-        Cycles elapsedCycles(divCeil(curTick(), clock));
+        Cycles elapsedCycles(divCeil(curTick(), clockPeriod()));
         cycle = elapsedCycles;
-        tick = elapsedCycles * clock;
+        tick = elapsedCycles * clockPeriod();
     }
 
   public:
@@ -154,7 +154,7 @@ class ClockedObject : public SimObject
         update();
 
         // figure out when this future cycle is
-        return tick + clock * cycles;
+        return tick + clockPeriod() * cycles;
     }
 
     /**
@@ -181,12 +181,18 @@ class ClockedObject : public SimObject
     Tick nextCycle() const
     { return clockEdge(Cycles(1)); }
 
-    inline uint64_t frequency() const { return SimClock::Frequency / clock; }
+    inline uint64_t frequency() const
+    {
+        return SimClock::Frequency / clockPeriod();
+    }
 
-    inline Tick clockPeriod() const { return clock; }
+    inline Tick clockPeriod() const
+    {
+        return clockDomain.clockPeriod();
+    }
 
     inline Cycles ticksToCycles(Tick t) const
-    { return Cycles(t / clock); }
+    { return Cycles(t / clockPeriod()); }
 
 };
 

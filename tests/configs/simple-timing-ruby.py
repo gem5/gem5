@@ -67,10 +67,17 @@ options.l3_assoc=2
 options.num_cpus = 1
 
 cpu = TimingSimpleCPU(cpu_id=0)
-system = System(cpu = cpu, physmem = SimpleMemory(null = True))
-system.clock = options.sys_clock
+system = System(cpu = cpu, physmem = SimpleMemory(null = True),
+                clk_domain = SrcClockDomain(clock = '1GHz'))
+
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
 
 Ruby.create_system(options, system)
+
+# Create a separate clock for Ruby
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
 assert(len(system.ruby._cpu_ruby_ports) == 1)
 

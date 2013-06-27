@@ -80,8 +80,6 @@ if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
     sys.exit(1)
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
-CPUClass.clock = options.cpu_clock
-
 TestMemClass = Simulation.setMemClass(options)
 
 if buildEnv['TARGET_ISA'] == "alpha":
@@ -93,7 +91,7 @@ elif buildEnv['TARGET_ISA'] == "x86":
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
 
-system.clock = options.sys_clock
+system.clk_domain = SrcClockDomain(clock = options.sys_clock)
 
 if options.kernel is not None:
     system.kernel = binary(options.kernel)
@@ -102,12 +100,20 @@ if options.script is not None:
     system.readfile = options.script
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
+
+# Create a source clock for the CPUs and set the clock period
+system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+
 Ruby.create_system(options, system, system.piobus, system._dma_ports)
+
+# Create a seperate clock domain for Ruby
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
 for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the correct ruby system ports
     #
+    cpu.clk_domain = system.cpu_clk_domain
     cpu.createThreads()
     cpu.createInterruptController()
     cpu.icache_port = system.ruby._cpu_ruby_ports[i].slave

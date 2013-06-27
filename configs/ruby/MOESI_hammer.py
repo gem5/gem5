@@ -158,13 +158,22 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         else:
             pf_start_bit = block_size_bits
 
+    # Run each of the ruby memory controllers at a ratio of the frequency of
+    # the ruby system
+    # clk_divider value is a fix to pass regression.
+    ruby_system.memctrl_clk_domain = DerivedClockDomain(
+                                          clk_domain=ruby_system.clk_domain,
+                                          clk_divider=3)
+
     for i in xrange(options.num_dirs):
         #
         # Create the Ruby objects associated with the directory controller
         #
 
-        mem_cntrl = RubyMemoryControl(version = i,
-                                      ruby_system = ruby_system)
+        mem_cntrl = RubyMemoryControl(
+                              clk_domain = ruby_system.memctrl_clk_domain,
+                              version = i,
+                              ruby_system = ruby_system)
 
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size

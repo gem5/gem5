@@ -107,8 +107,8 @@ cpus = [ MemTest(atomic = False,
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
-                physmem = SimpleMemory())
-system.clock = options.sys_clock
+                physmem = SimpleMemory(),
+                clk_domain = SrcClockDomain(clock = options.sys_clock))
 
 if options.num_dmas > 0:
     dmas = [ MemTest(atomic = False,
@@ -128,6 +128,9 @@ dma_ports = []
 for (i, dma) in enumerate(dmas):
     dma_ports.append(dma.test)
 Ruby.create_system(options, system, dma_ports = dma_ports)
+
+# Create a seperate clock domain for Ruby
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
 #
 # The tester is most effective when randomization is turned on and

@@ -66,7 +66,7 @@ O3CheckerParams::create()
     params->exitOnError = exitOnError;
     params->updateOnError = updateOnError;
     params->warnOnlyOnLoadError = warnOnlyOnLoadError;
-    params->clock = clock;
+    params->clk_domain = clk_domain;
     params->tracer = tracer;
     // Hack to touch all parameters.  Consider not deriving Checker
     // from BaseCPU..it's not really a CPU in the end.

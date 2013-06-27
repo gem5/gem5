@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -147,7 +147,6 @@ else:
 
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
-CPUClass.clock = options.cpu_clock
 CPUClass.numThreads = numThreads
 
 MemClass = Simulation.setMemClass(options)
@@ -159,8 +158,16 @@ if options.smt and options.num_cpus > 1:
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = MemClass(range=AddrRange("512MB")),
-                mem_mode = test_mem_mode)
-system.clock = options.sys_clock
+                mem_mode = test_mem_mode,
+                clk_domain = SrcClockDomain(clock = options.sys_clock))
+
+# Create a separate clock domain for the CPUs
+system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+
+# All cpus belong to a common cpu_clk_domain, therefore running at a common
+# frequency.
+for cpu in system.cpu:
+    cpu.clk_domain = system.cpu_clk_domain
 
 # Sanity check
 if options.fastmem:

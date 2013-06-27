@@ -52,6 +52,7 @@ from InstTracer import InstTracer
 from ExeTracer import ExeTracer
 from MemObject import MemObject
 from BranchPredictor import BranchPredictor
+from ClockDomain import *
 
 default_tracer = ExeTracer()
 
@@ -226,7 +227,10 @@ class BaseCPU(MemObject):
         elif buildEnv['TARGET_ISA'] == 'alpha':
             self.interrupts = AlphaInterrupts()
         elif buildEnv['TARGET_ISA'] == 'x86':
-            self.interrupts = X86LocalApic(clock = Parent.clock * 16,
+            self.apic_clk_domain = DerivedClockDomain(clk_domain =
+                                                      Parent.clk_domain,
+                                                      clk_divider = 16)
+            self.interrupts = X86LocalApic(clk_domain = self.apic_clk_domain,
                                            pio_addr=0x2000000000000000)
             _localApic = self.interrupts
         elif buildEnv['TARGET_ISA'] == 'mips':

@@ -33,18 +33,21 @@ from Caches import *
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest(clock = '2GHz') for i in xrange(nb_cores) ]
+cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = SimpleMemory(in_addr_map = False),
                 funcbus = NoncoherentBus(),
                 physmem = SimpleMemory(),
-                membus = CoherentBus(width=16))
-system.clock = '1GHz'
+                membus = CoherentBus(width=16),
+                clk_domain = SrcClockDomain(clock = '1GHz'))
 
-# l2cache & bus
-system.toL2Bus = CoherentBus(clock="2GHz", width=16)
-system.l2c = L2Cache(clock = '2GHz', size='64kB', assoc=8)
+# Create a seperate clock domain for components that should run at
+# CPUs frequency
+system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
+
+system.toL2Bus = CoherentBus(clk_domain = system.cpu_clk_domain, width=16)
+system.l2c = L2Cache(clk_domain = system.cpu_clk_domain, size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 
 # connect l2c to membus
@@ -52,6 +55,8 @@ system.l2c.mem_side = system.membus.slave
 
 # add L1 caches
 for cpu in cpus:
+    # All cpus are associated with cpu_clk_domain
+    cpu.clk_domain = system.cpu_clk_domain
     cpu.l1c = L1Cache(size = '32kB', assoc = 4)
     cpu.l1c.cpu_side = cpu.test
     cpu.l1c.mem_side = system.toL2Bus.slave

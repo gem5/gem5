@@ -74,9 +74,10 @@ class BaseSystem(object):
         self.num_cpus = num_cpus
         self.checker = checker
 
-    def create_cpus(self):
+    def create_cpus(self, cpu_clk_domain):
         """Return a list of CPU objects to add to a system."""
-        cpus = [ self.cpu_class(cpu_id=i, clock='2GHz')
+        cpus = [ self.cpu_class(clk_domain = cpu_clk_domain,
+                                cpu_id=i)
                  for i in range(self.num_cpus) ]
         if self.checker:
             for c in cpus:
@@ -101,8 +102,9 @@ class BaseSystem(object):
         Returns:
           A bus that CPUs should use to connect to the shared cache.
         """
-        system.toL2Bus = CoherentBus(clock='2GHz')
-        system.l2c = L2Cache(clock='2GHz', size='4MB', assoc=8)
+        system.toL2Bus = CoherentBus(clk_domain=system.cpu_clk_domain)
+        system.l2c = L2Cache(clk_domain=system.cpu_clk_domain,
+                             size='4MB', assoc=8)
         system.l2c.cpu_side = system.toL2Bus.master
         system.l2c.mem_side = system.membus.slave
         return system.toL2Bus
@@ -134,8 +136,8 @@ class BaseSystem(object):
         Arguments:
           system -- System to initialize.
         """
-        system.clock = '1GHz'
-        system.cpu = self.create_cpus()
+        self.create_clk_src(system)
+        system.cpu = self.create_cpus(system.cpu_clk_domain)
 
         if _have_kvm_support and \
                 any([isinstance(c, BaseKvmCPU) for c in system.cpu]):
@@ -144,6 +146,16 @@ class BaseSystem(object):
         sha_bus = self.create_caches_shared(system)
         for cpu in system.cpu:
             self.init_cpu(system, cpu, sha_bus)
+
+    def create_clk_src(self,system):
+        # Create system clock domain. This provides clock value to every
+        # clocked object that lies beneath it unless explicitly overwritten
+        # by a different clock domain.
+        system.clk_domain = SrcClockDomain(clock = '1GHz')
+
+        # Create a seperate clock domain for components that should
+        # run at CPUs frequency
+        system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
 
     @abstractmethod
     def create_system(self):
@@ -244,8 +256,10 @@ class BaseFSSwitcheroo(BaseFSSystem):
         BaseFSSystem.__init__(self, **kwargs)
         self.cpu_classes = tuple(cpu_classes)
 
-    def create_cpus(self):
-        cpus = [ cclass(cpu_id=0, clock='2GHz', switched_out=True)
+    def create_cpus(self, cpu_clk_domain):
+        cpus = [ cclass(clk_domain = cpu_clk_domain,
+                        cpu_id=0,
+                        switched_out=True)
                  for cclass in self.cpu_classes ]
         cpus[0].switched_out = False
         return cpus

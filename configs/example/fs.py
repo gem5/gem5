@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 ARM Limited
+# Copyright (c) 2010-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -81,9 +81,6 @@ def is_kvm_cpu(cpu_class):
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
-TestCPUClass.clock = options.cpu_clock
-DriveCPUClass.clock = options.cpu_clock
-
 # Match the memories with the CPUs, the driver system always simple,
 # and based on the options for the test system
 DriveMemClass = SimpleMemory
@@ -120,7 +117,11 @@ elif buildEnv['TARGET_ISA'] == "arm":
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
-test_sys.clock = options.sys_clock
+# Create a source clock for the system and set the clock period
+test_sys.clk_domain = SrcClockDomain(clock =  options.sys_clock)
+
+# Create a source clock for the CPUs and set the clock period
+test_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
 
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)
@@ -130,7 +131,9 @@ if options.script is not None:
 
 test_sys.init_param = options.init_param
 
-test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
+# For now, assign all the CPUs to the same clock domain
+test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
+                for i in xrange(np)]
 
 if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
     test_sys.vm = KvmVM()
@@ -174,9 +177,14 @@ if len(bm) == 2:
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type,
                                   DriveMemClass, bm[1])
 
-    drive_sys.clock = options.sys_clock
+    # Create a source clock for the system and set the clock period
+    drive_sys.clk_domain = SrcClockDomain(clock =  options.sys_clock)
 
-    drive_sys.cpu = DriveCPUClass(cpu_id=0)
+    # Create a source clock for the CPUs and set the clock period
+    drive_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+
+    drive_sys.cpu = DriveCPUClass(clk_domain=drive_sys.cpu_clk_domain,
+                                  cpu_id=0)
     drive_sys.cpu.createThreads()
     drive_sys.cpu.createInterruptController()
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
