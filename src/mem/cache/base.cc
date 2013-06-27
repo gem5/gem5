@@ -49,7 +49,10 @@
 #include "cpu/smt.hh"
 #include "debug/Cache.hh"
 #include "debug/Drain.hh"
+#include "mem/cache/tags/fa_lru.hh"
+#include "mem/cache/tags/lru.hh"
 #include "mem/cache/base.hh"
+#include "mem/cache/cache.hh"
 #include "mem/cache/mshr.hh"
 #include "sim/full_system.hh"
 
@@ -765,4 +768,18 @@ BaseCache::drain(DrainManager *dm)
 
     setDrainState(Drainable::Drained);
     return 0;
+}
+
+BaseCache *
+BaseCacheParams::create()
+{
+    int numSets = size / (assoc * block_size);
+
+    if (numSets == 1) {
+        FALRU *tags = new FALRU(block_size, size, hit_latency);
+        return new Cache<FALRU>(this, tags);
+    } else {
+        LRU *tags = new LRU(numSets, block_size, assoc, hit_latency);
+        return new Cache<LRU>(this, tags);
+    }
 }

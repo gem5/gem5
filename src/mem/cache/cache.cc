@@ -36,28 +36,14 @@
  * Cache template instantiations.
  */
 
-#include "mem/config/cache.hh"
-
-#if defined(USE_CACHE_LRU)
-#include "mem/cache/tags/lru.hh"
-#endif
-
-#if defined(USE_CACHE_FALRU)
 #include "mem/cache/tags/fa_lru.hh"
-#endif
-
+#include "mem/cache/tags/lru.hh"
 #include "mem/cache/cache_impl.hh"
 
 // Template Instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-
-#if defined(USE_CACHE_FALRU)
 template class Cache<FALRU>;
-#endif
-
-#if defined(USE_CACHE_LRU)
 template class Cache<LRU>;
-#endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
