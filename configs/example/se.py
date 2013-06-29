@@ -157,7 +157,7 @@ if options.smt and options.num_cpus > 1:
 
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = MemClass(range=AddrRange("512MB")),
+                physmem = MemClass(range=AddrRange(options.mem_size)),
                 mem_mode = test_mem_mode,
                 clk_domain = SrcClockDomain(clock = options.sys_clock))
 

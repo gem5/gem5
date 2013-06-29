@@ -62,21 +62,8 @@ def addCommonOptions(parser):
     parser.add_option("--cpu-type", type="choice", default="atomic",
                       choices=CpuConfig.cpu_names(),
                       help = "type of cpu to run with")
-    parser.add_option("--list-mem-types",
-                      action="callback", callback=_listMemTypes,
-                      help="List available memory types")
-    parser.add_option("--mem-type", type="choice", default="simple_mem",
-                      choices=MemConfig.mem_names(),
-                      help = "type of memory to use")
     parser.add_option("--checker", action="store_true");
     parser.add_option("-n", "--num-cpus", type="int", default=1)
-    parser.add_option("--caches", action="store_true")
-    parser.add_option("--l2cache", action="store_true")
-    parser.add_option("--fastmem", action="store_true")
-    parser.add_option("--simpoint-profile", action="store_true",
-                      help="Enable basic block profiling for SimPoints")
-    parser.add_option("--simpoint-interval", type="int", default=10000000,
-                      help="SimPoint interval in num of instructions")
     parser.add_option("--sys-clock", action="store", type="string",
                       default='1GHz',
                       help = """Top-level clock for blocks running at system
@@ -84,6 +71,27 @@ def addCommonOptions(parser):
     parser.add_option("--cpu-clock", action="store", type="string",
                       default='2GHz',
                       help="Clock for blocks running at CPU speed")
+    parser.add_option("--smt", action="store_true", default=False,
+                      help = """
+                      Only used if multiple programs are specified. If true,
+                      then the number of threads per cpu is same as the
+                      number of programs.""")
+
+    # Memory Options
+    parser.add_option("--list-mem-types",
+                      action="callback", callback=_listMemTypes,
+                      help="List available memory types")
+    parser.add_option("--mem-type", type="choice", default="simple_mem",
+                      choices=MemConfig.mem_names(),
+                      help = "type of memory to use")
+    parser.add_option("--mem-size", action="store", type="string",
+                      default="512MB",
+                      help="Specify the physical memory size (single memory)")
+
+    # Cache Options
+    parser.add_option("--caches", action="store_true")
+    parser.add_option("--l2cache", action="store_true")
+    parser.add_option("--fastmem", action="store_true")
     parser.add_option("--num-dirs", type="int", default=1)
     parser.add_option("--num-l2caches", type="int", default=1)
     parser.add_option("--num-l3caches", type="int", default=1)
@@ -96,12 +104,9 @@ def addCommonOptions(parser):
     parser.add_option("--l2_assoc", type="int", default=8)
     parser.add_option("--l3_assoc", type="int", default=16)
     parser.add_option("--cacheline_size", type="int", default=64)
+
+    # Enable Ruby
     parser.add_option("--ruby", action="store_true")
-    parser.add_option("--smt", action="store_true", default=False,
-                      help = """
-                      Only used if multiple programs are specified. If true,
-                      then the number of threads per cpu is same as the
-                      number of programs.""")
 
     # Run duration options
     parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
@@ -121,6 +126,12 @@ def addCommonOptions(parser):
     parser.add_option("--init-param", action="store", type="int", default=0,
                       help="""Parameter available in simulation with m5
                               initparam""")
+
+    # Simpoint options
+    parser.add_option("--simpoint-profile", action="store_true",
+                      help="Enable basic block profiling for SimPoints")
+    parser.add_option("--simpoint-interval", type="int", default=10000000,
+                      help="SimPoint interval in num of instructions")
 
     # Checkpointing options
     ###Note that performing checkpointing via python script files will override
@@ -224,7 +235,3 @@ def addFSOptions(parser):
     # Disk Image Options
     parser.add_option("--disk-image", action="store", type="string", default=None,
                       help="Path to the disk image to use.")
-
-    # Memory Size Options
-    parser.add_option("--mem-size", action="store", type="string", default=None,
-                      help="Specify the physical memory size (single memory)")
