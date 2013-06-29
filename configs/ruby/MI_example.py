@@ -107,6 +107,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
 
     phys_mem_size = sum(map(lambda mem: mem.range.size(),
                             system.memories.unproxy(system)))
+    assert(phys_mem_size % options.num_dirs == 0)
     mem_module_size = phys_mem_size / options.num_dirs
 
     # Run each of the ruby memory controllers at a ratio of the frequency of
