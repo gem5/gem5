@@ -68,15 +68,14 @@ class Topology
              std::vector<BasicIntLink *> int_links);
 
     uint32_t numSwitches() const { return m_number_of_switches; }
-    void createLinks(Network *net, bool isReconfiguration);
+    void createLinks(Network *net);
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   protected:
     void addLink(SwitchID src, SwitchID dest, BasicLink* link,
                  LinkDirection dir);
     void makeLink(Network *net, SwitchID src, SwitchID dest,
-                  const NetDest& routing_table_entry, 
-                  bool isReconfiguration);
+                  const NetDest& routing_table_entry);
 
     NodeID m_nodes;
     uint32_t m_number_of_switches;

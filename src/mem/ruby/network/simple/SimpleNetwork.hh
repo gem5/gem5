@@ -73,16 +73,13 @@ class SimpleNetwork : public Network
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
                      LinkDirection direction, 
-                     const NetDest& routing_table_entry, 
-                     bool isReconfiguration);
-    void makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
+                     const NetDest& routing_table_entry);
+    void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
                     LinkDirection direction, 
-                    const NetDest& routing_table_entry, 
-                    bool isReconfiguration);
+                    const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                           LinkDirection direction, 
-                          const NetDest& routing_table_entry, 
-                          bool isReconfiguration);
+                          const NetDest& routing_table_entry);
 
     void print(std::ostream& out) const;
 

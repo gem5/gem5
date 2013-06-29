@@ -88,8 +88,7 @@ GarnetNetwork_d::init()
         ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
         m_ni_ptr_vector.push_back(ni);
     }
-    // false because this isn't a reconfiguration
-    m_topology_ptr->createLinks(this, false);
+    m_topology_ptr->createLinks(this);
 
     // initialize the link's network pointers
    for (vector<NetworkLink_d*>::const_iterator i = m_link_ptr_vector.begin();
@@ -150,26 +149,19 @@ GarnetNetwork_d::reset()
 void
 GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
                             LinkDirection direction,
-                            const NetDest& routing_table_entry,
-                            bool isReconfiguration)
+                            const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
 
     GarnetExtLink_d* garnet_link = safe_cast<GarnetExtLink_d*>(link);
+    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
 
-    if (!isReconfiguration) {
-        NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-        CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    m_link_ptr_vector.push_back(net_link);
+    m_creditlink_ptr_vector.push_back(credit_link);
 
-        m_link_ptr_vector.push_back(net_link);
-        m_creditlink_ptr_vector.push_back(credit_link);
-
-        m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
-        m_ni_ptr_vector[src]->addOutPort(net_link, credit_link);
-    } else {
-        panic("Fatal Error:: Reconfiguration not allowed here");
-        // do nothing
-    }
+    m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
+    m_ni_ptr_vector[src]->addOutPort(net_link, credit_link);
 }
 
 /*
@@ -181,30 +173,22 @@ GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 void
 GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              LinkDirection direction,
-                             const NetDest& routing_table_entry,
-                             bool isReconfiguration)
+                             const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
     assert(src < m_router_ptr_vector.size());
     assert(m_router_ptr_vector[src] != NULL);
 
     GarnetExtLink_d* garnet_link = safe_cast<GarnetExtLink_d*>(link);
+    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
 
-    if (!isReconfiguration) {
-        NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-        CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    m_link_ptr_vector.push_back(net_link);
+    m_creditlink_ptr_vector.push_back(credit_link);
 
-        m_link_ptr_vector.push_back(net_link);
-        m_creditlink_ptr_vector.push_back(credit_link);
-
-        m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry,
-                                             link->m_weight, 
-                                             credit_link);
-        m_ni_ptr_vector[dest]->addInPort(net_link, credit_link);
-    } else {
-        fatal("Fatal Error:: Reconfiguration not allowed here");
-        // do nothing
-    }
+    m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry,
+                                         link->m_weight, credit_link);
+    m_ni_ptr_vector[dest]->addInPort(net_link, credit_link);
 }
 
 /*
@@ -214,26 +198,18 @@ GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 void
 GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                   LinkDirection direction,
-                                  const NetDest& routing_table_entry,
-                                  bool isReconfiguration)
+                                  const NetDest& routing_table_entry)
 {
     GarnetIntLink_d* garnet_link = safe_cast<GarnetIntLink_d*>(link);
+    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
 
-    if (!isReconfiguration) {
-        NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-        CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    m_link_ptr_vector.push_back(net_link);
+    m_creditlink_ptr_vector.push_back(credit_link);
 
-        m_link_ptr_vector.push_back(net_link);
-        m_creditlink_ptr_vector.push_back(credit_link);
-
-        m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
-        m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry,
-                                             link->m_weight, 
-                                             credit_link);
-    } else {
-        fatal("Fatal Error:: Reconfiguration not allowed here");
-        // do nothing
-    }
+    m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
+    m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry,
+                                         link->m_weight, credit_link);
 }
 
 void

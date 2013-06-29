@@ -79,16 +79,13 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
                      LinkDirection direction,
-                     const NetDest& routing_table_entry,
-                     bool isReconfiguration);
+                     const NetDest& routing_table_entry);
     void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
                     LinkDirection direction,
-                    const NetDest& routing_table_entry,
-                    bool isReconfiguration);
+                    const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                           LinkDirection direction,
-                          const NetDest& routing_table_entry,
-                          bool isReconfiguration);
+                          const NetDest& routing_table_entry);
 
     //! Function for performing a functional write. The return value
     //! indicates the number of messages that were written.

@@ -96,8 +96,7 @@ SimpleNetwork::init()
     // The topology pointer should have already been initialized in
     // the parent class network constructor.
     assert(m_topology_ptr != NULL);
-    // false because this isn't a reconfiguration
-    m_topology_ptr->createLinks(this, false);
+    m_topology_ptr->createLinks(this);
 }
 
 void
@@ -130,17 +129,11 @@ SimpleNetwork::~SimpleNetwork()
 void
 SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
                            LinkDirection direction, 
-                           const NetDest& routing_table_entry, 
-                           bool isReconfiguration)
+                           const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
     assert(src < m_switch_ptr_vector.size());
     assert(m_switch_ptr_vector[src] != NULL);
-
-    if (isReconfiguration) {
-        m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
-        return;
-    }
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
 
@@ -156,15 +149,9 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 void
 SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
                           LinkDirection direction, 
-                          const NetDest& routing_table_entry, 
-                          bool isReconfiguration)
+                          const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
-    if (isReconfiguration) {
-        // do nothing
-        return;
-    }
-
     m_switch_ptr_vector[dest]->addInPort(m_toNetQueues[src]);
 }
 
@@ -172,14 +159,8 @@ SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 void
 SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link, 
                                 LinkDirection direction, 
-                                const NetDest& routing_table_entry,
-                                bool isReconfiguration)
+                                const NetDest& routing_table_entry)
 {
-    if (isReconfiguration) {
-        m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
-        return;
-    }
-
     // Create a set of new MessageBuffers
     std::vector<MessageBuffer*> queues;
     for (int i = 0; i < m_virtual_networks; i++) {
