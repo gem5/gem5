@@ -453,7 +453,12 @@ std::vector<std::vector<Stats::Vector *> >  $c_ident::transVec;
 
 // for adding information to the protocol debug trace
 stringstream ${ident}_transitionComment;
+
+#ifndef NDEBUG
 #define APPEND_TRANSITION_COMMENT(str) (${ident}_transitionComment << str)
+#else
+#define APPEND_TRANSITION_COMMENT(str) do {} while (0)
+#endif
 
 /** \\brief constructor */
 $c_ident::$c_ident(const Params *p)
