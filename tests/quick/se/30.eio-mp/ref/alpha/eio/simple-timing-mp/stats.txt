@@ -70,8 +70,8 @@ system.membus.data_through_bus                 219392                       # To
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.membus.reqLayer0.occupancy             4229968                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization               0.6                       # Layer utilization (%)
-system.membus.respLayer0.occupancy           31051500                       # Layer occupancy (ticks)
-system.membus.respLayer0.utilization              4.3                       # Layer utilization (%)
+system.membus.respLayer1.occupancy           31051500                       # Layer occupancy (ticks)
+system.membus.respLayer1.utilization              4.3                       # Layer utilization (%)
 system.toL2Bus.throughput                   335352471                       # Throughput (bytes/s)
 system.toL2Bus.trans_dist::ReadReq               3148                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadResp              3148                       # Transaction distribution
