@@ -56,10 +56,13 @@ options.num_cpus = 2
 #the system
 mdesc = SysConfig(disk = 'linux-x86.img')
 system = FSConfig.makeLinuxX86System('timing', DDR3_1600_x64, options.num_cpus,
-                                     mdesc=mdesc, Ruby=True,
+                                     mdesc=mdesc, Ruby=True)
 
 system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9.smp')
-system.cpu = [TimingSimpleCPU(cpu_id=i) for i in xrange(options.num_cpus)]
+system.clk_domain = SrcClockDomain(clock = '1GHz')
+system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
+system.cpu = [TimingSimpleCPU(cpu_id=i, clk_domain = system.cpu_clk_domain)
+              for i in xrange(options.num_cpus)]
 
 Ruby.create_system(options, system, system.piobus, system._dma_ports)
 

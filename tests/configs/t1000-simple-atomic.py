@@ -31,8 +31,10 @@ from m5.objects import *
 m5.util.addToPath('../configs/common')
 import FSConfig
 
-cpu = AtomicSimpleCPU(cpu_id=0)
 system = FSConfig.makeSparcSystem('atomic', SimpleMemory)
+system.clk_domain = SrcClockDomain(clock = '1GHz')
+system.cpu_clk_domain = SrcClockDomain(clock = '1GHz')
+cpu = AtomicSimpleCPU(cpu_id=0, clk_domain = system.cpu_clk_domain)
 system.cpu = cpu
 # create the interrupt controller
 cpu.createInterruptController()
