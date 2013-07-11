@@ -148,37 +148,6 @@ class FuncCallExprAST(ExprAST):
     }
 }
 ''')
-        elif self.proc_name == "doubleTrigger":
-            # NOTE:  Use the doubleTrigger call with extreme caution
-            # the key to double trigger is the second event triggered
-            # cannot fail becuase the first event cannot be undone
-            assert len(cvec) == 4
-            code('''
-{
-    Address addr1 = ${{cvec[1]}};
-    TransitionResult result1 =
-        doTransition(${{cvec[0]}}, ${machine}_getState(addr1), addr1);
-
-    if (result1 == TransitionResult_Valid) {
-        //this second event cannont fail because the first event
-        // already took effect
-        Address addr2 = ${{cvec[3]}};
-        TransitionResult result2 = doTransition(${{cvec[2]}}, ${machine}_getState(addr2), addr2);
-
-        // ensure the event suceeded
-        assert(result2 == TransitionResult_Valid);
-
-        counter++;
-        continue; // Check the first port again
-    }
-
-    if (result1 == TransitionResult_ResourceStall) {
-        scheduleEvent(Cycles(1));
-        // Cannot do anything with this transition, go check next
-        // doable transition (mostly likely of next port)
-    }
-}
-''')
         elif self.proc_name == "error":
             code("$0", self.exprs[0].embedError(cvec[0]))
         elif self.proc_name == "assert":
