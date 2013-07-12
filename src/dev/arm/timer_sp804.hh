@@ -49,7 +49,7 @@
 
 class BaseGic;
 
-class Sp804 : public AmbaDevice
+class Sp804 : public AmbaPioDevice
 {
   protected:
     class Timer

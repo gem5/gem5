@@ -50,13 +50,14 @@
 
 #include "base/bitfield.hh"
 #include "base/bitunion.hh"
+#include "dev/arm/amba_device.hh"
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
 #include "params/Pl011.hh"
 
 class BaseGic;
 
-class Pl011 : public Uart
+class Pl011 : public Uart, public AmbaDevice
 {
   protected:
     static const uint64_t AMBA_ID = ULL(0xb105f00d00341011);

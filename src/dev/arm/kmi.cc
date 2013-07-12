@@ -108,7 +108,7 @@ Pl050::read(PacketPtr pkt)
         DPRINTF(Pl050, "Read Interrupts: %#x\n", (uint32_t)interrupts);
         break;
       default:
-        if (AmbaDev::readId(pkt, ambaId, pioAddr)) {
+        if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable size accesses
             data = pkt->get<uint32_t>();
             break;

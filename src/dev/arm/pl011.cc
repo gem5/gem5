@@ -116,7 +116,7 @@ Pl011::read(PacketPtr pkt)
         data = maskInt;
         break;
       default:
-        if (AmbaDev::readId(pkt, AMBA_ID, pioAddr)) {
+        if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
             data = pkt->get<uint32_t>();
             break;

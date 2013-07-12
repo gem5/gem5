@@ -55,8 +55,6 @@
 // we open up the entire namespace std
 using std::vector;
 
-using namespace AmbaDev;
-
 // initialize clcd registers
 Pl111::Pl111(const Params *p)
     : AmbaDmaDevice(p), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
@@ -181,7 +179,7 @@ Pl111::read(PacketPtr pkt)
         data = clcdCrsrMis;
         break;
       default:
-        if (AmbaDev::readId(pkt, AMBA_ID, pioAddr)) {
+        if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
             data = pkt->get<uint32_t>();
             break;

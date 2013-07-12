@@ -48,8 +48,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-using namespace AmbaDev;
-
 PL031::PL031(Params *p)
     : AmbaIntDevice(p), timeVal(mkutctime(&p->time)), lastWrittenTick(0),
             loadVal(0), matchVal(0), rawInt(false), maskInt(false),
@@ -93,7 +91,7 @@ PL031::read(PacketPtr pkt)
         data = pendingInt;
         break;
       default:
-        if (AmbaDev::readId(pkt, ambaId, pioAddr)) {
+        if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable sized access
             data = pkt->get<uint32_t>();
             break;
@@ -156,7 +154,7 @@ PL031::write(PacketPtr pkt)
         }
         break;
       default:
-        if (AmbaDev::readId(pkt, ambaId, pioAddr))
+        if (readId(pkt, ambaId, pioAddr))
             break;
         panic("Tried to read PL031 at offset %#x that doesn't exist\n", daddr);
         break;

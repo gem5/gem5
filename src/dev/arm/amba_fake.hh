@@ -54,7 +54,7 @@
 #include "dev/arm/amba_device.hh"
 #include "params/AmbaFake.hh"
 
-class AmbaFake : public AmbaDevice
+class AmbaFake : public AmbaPioDevice
 {
   public:
    typedef AmbaFakeParams Params;

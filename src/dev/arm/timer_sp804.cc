@@ -46,10 +46,8 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-using namespace AmbaDev;
-
 Sp804::Sp804(Params *p)
-    : AmbaDevice(p), gic(p->gic), timer0(name() + ".timer0", this, p->int_num0, p->clock0),
+    : AmbaPioDevice(p), gic(p->gic), timer0(name() + ".timer0", this, p->int_num0, p->clock0),
       timer1(name() + ".timer1", this, p->int_num1, p->clock1)
 {
     pioSize = 0xfff;

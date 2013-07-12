@@ -54,35 +54,38 @@
 #include "dev/io_device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "params/AmbaDevice.hh"
+#include "params/AmbaPioDevice.hh"
 #include "params/AmbaDmaDevice.hh"
 #include "params/AmbaIntDevice.hh"
 
-namespace AmbaDev {
 
-const int AMBA_PER_ID0 = 0xFE0;
-const int AMBA_PER_ID1 = 0xFE4;
-const int AMBA_PER_ID2 = 0xFE8;
-const int AMBA_PER_ID3 = 0xFEC;
-const int AMBA_CEL_ID0 = 0xFF0;
-const int AMBA_CEL_ID1 = 0xFF4;
-const int AMBA_CEL_ID2 = 0xFF8;
-const int AMBA_CEL_ID3 = 0xFFC;
+class AmbaDevice
+{
+  protected:
+    static const int AMBA_PER_ID0 = 0xFE0;
+    static const int AMBA_PER_ID1 = 0xFE4;
+    static const int AMBA_PER_ID2 = 0xFE8;
+    static const int AMBA_PER_ID3 = 0xFEC;
+    static const int AMBA_CEL_ID0 = 0xFF0;
+    static const int AMBA_CEL_ID1 = 0xFF4;
+    static const int AMBA_CEL_ID2 = 0xFF8;
+    static const int AMBA_CEL_ID3 = 0xFFC;
 
-bool readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr);
-}
+    bool readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr);
+};
 
-class AmbaDevice : public BasicPioDevice
+
+class AmbaPioDevice : public BasicPioDevice, public AmbaDevice
 {
   protected:
     uint64_t ambaId;
 
   public:
-    typedef AmbaDeviceParams Params;
-    AmbaDevice(const Params *p);
+    typedef AmbaPioDeviceParams Params;
+    AmbaPioDevice(const Params *p);
 };
 
-class AmbaIntDevice : public AmbaDevice
+class AmbaIntDevice : public AmbaPioDevice
 {
   protected:
     int intNum;
@@ -94,7 +97,7 @@ class AmbaIntDevice : public AmbaDevice
     AmbaIntDevice(const Params *p);
 };
 
-class AmbaDmaDevice : public DmaDevice
+class AmbaDmaDevice : public DmaDevice, public AmbaDevice
 {
   protected:
     uint64_t ambaId;

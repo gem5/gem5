@@ -52,13 +52,13 @@ from Uart import Uart
 from SimpleMemory import SimpleMemory
 from Gic import *
 
-class AmbaDevice(BasicPioDevice):
-    type = 'AmbaDevice'
+class AmbaPioDevice(BasicPioDevice):
+    type = 'AmbaPioDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
-class AmbaIntDevice(AmbaDevice):
+class AmbaIntDevice(AmbaPioDevice):
     type = 'AmbaIntDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
@@ -88,7 +88,7 @@ class RealViewCtrl(BasicPioDevice):
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
-class AmbaFake(AmbaDevice):
+class AmbaFake(AmbaPioDevice):
     type = 'AmbaFake'
     cxx_header = "dev/arm/amba_fake.hh"
     ignore_access = Param.Bool(False, "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)")
@@ -102,7 +102,7 @@ class Pl011(Uart):
     end_on_eot = Param.Bool(False, "End the simulation when a EOT is received on the UART")
     int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
 
-class Sp804(AmbaDevice):
+class Sp804(AmbaPioDevice):
     type = 'Sp804'
     cxx_header = "dev/arm/timer_sp804.hh"
     gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
