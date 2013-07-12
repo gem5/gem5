@@ -92,8 +92,6 @@ class Interrupts : public BasicPioDevice, IntDev
     /*
      * Timing related stuff.
      */
-    Tick latency;
-
     class ApicTimerEvent : public Event
     {
       private:
@@ -233,7 +231,6 @@ class Interrupts : public BasicPioDevice, IntDev
         return entry.periodic;
     }
 
-    AddrRangeList getAddrRanges() const;
     AddrRangeList getIntAddrRange() const;
 
     BaseMasterPort &getMasterPort(const std::string &if_name,

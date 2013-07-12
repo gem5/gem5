@@ -44,7 +44,7 @@ namespace X86ISA
 class I8259;
 class Interrupts;
 
-class I82094AA : public PioDevice, public IntDev
+class I82094AA : public BasicPioDevice, public IntDev
 {
   public:
     BitUnion64(RedirTableEntry)
@@ -64,9 +64,6 @@ class I82094AA : public PioDevice, public IntDev
     EndBitUnion(RedirTableEntry)
 
   protected:
-    Tick latency;
-    Addr pioAddr;
-
     I8259 * extIntPic;
 
     uint8_t regSel;
@@ -100,33 +97,13 @@ class I82094AA : public PioDevice, public IntDev
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 
-    AddrRangeList getAddrRanges() const
-    {
-        AddrRangeList ranges;
-        ranges.push_back(RangeEx(pioAddr, pioAddr + 4));
-        ranges.push_back(RangeEx(pioAddr + 16, pioAddr + 20));
-        return ranges;
-    }
-
-    AddrRangeList getIntAddrRange() const
-    {
-        AddrRangeList ranges;
-        ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
-                                 x86InterruptAddress(initialApicId, 0) +
-                                 PhysAddrAPICRangeSize));
-        return ranges;
-    }
+    AddrRangeList getIntAddrRange() const;
 
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID)
-    {
-        if (if_name == "int_master")
-            return intMasterPort;
-        return PioDevice::getMasterPort(if_name, idx);
-    }
+                                  PortID idx = InvalidPortID);
 
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);

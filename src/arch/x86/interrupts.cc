@@ -222,7 +222,7 @@ X86ISA::Interrupts::read(PacketPtr pkt)
             reg, offset, val);
     pkt->setData(((uint8_t *)&val) + (offset & mask(3)));
     pkt->makeAtomicResponse();
-    return latency;
+    return pioDelay;
 }
 
 Tick
@@ -240,7 +240,7 @@ X86ISA::Interrupts::write(PacketPtr pkt)
             reg, offset, gtoh(val));
     setReg(reg, gtoh(val));
     pkt->makeAtomicResponse();
-    return latency;
+    return pioDelay;
 }
 void
 X86ISA::Interrupts::requestInterrupt(uint8_t vector,
@@ -347,7 +347,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
         break;
     }
     pkt->makeAtomicResponse();
-    return latency;
+    return pioDelay;
 }
 
 
@@ -364,18 +364,6 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
     }
     DPRINTF(LocalApic, "ICR is now idle.\n");
     return 0;
-}
-
-
-AddrRangeList
-X86ISA::Interrupts::getAddrRanges() const
-{
-    AddrRangeList ranges;
-    AddrRange range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
-                              x86LocalAPICAddress(initialApicId, 0) +
-                              PageBytes);
-    ranges.push_back(range);
-    return ranges;
 }
 
 
@@ -619,7 +607,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p) :
-    BasicPioDevice(p), IntDev(this, p->int_latency), latency(p->pio_latency), 
+    BasicPioDevice(p), IntDev(this, p->int_latency),
     apicTimerEvent(this),
     pendingSmi(false), smiVector(0),
     pendingNmi(false), nmiVector(0),

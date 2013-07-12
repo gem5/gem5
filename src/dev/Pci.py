@@ -31,13 +31,15 @@ from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice, DmaDevice, PioDevice
 
-class PciConfigAll(PioDevice):
+class PciConfigAll(BasicPioDevice):
     type = 'PciConfigAll'
     cxx_header = "dev/pciconfigall.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    pio_latency = Param.Latency('30ns', "Programmed IO latency")
     bus = Param.UInt8(0x00, "PCI bus to act as config space for")
     size = Param.MemorySize32('16MB', "Size of config space")
+
+    pio_latency = '30ns'
+    pio_addr = 0 # will be overridden by platform-based calculation
 
 
 class PciDevice(DmaDevice):

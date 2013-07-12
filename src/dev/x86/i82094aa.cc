@@ -38,10 +38,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
-    IntDev(this, p->int_latency),
-    latency(p->pio_latency), pioAddr(p->pio_addr),
-    extIntPic(p->external_int_pic), lowestPriorityOffset(0)
+X86ISA::I82094AA::I82094AA(Params *p)
+    : BasicPioDevice(p), IntDev(this, p->int_latency),
+      extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
     // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
@@ -57,6 +56,8 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
         redirTable[i] = entry;
         pinStates[i] = false;
     }
+
+    pioSize = 20;
 }
 
 void
@@ -66,8 +67,26 @@ X86ISA::I82094AA::init()
     // via the piodevice init() function and its int port that it inherited
     // from IntDev.  Note IntDev is not a SimObject itself.
 
-    PioDevice::init();
+    BasicPioDevice::init();
     IntDev::init();
+}
+
+BaseMasterPort &
+X86ISA::I82094AA::getMasterPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "int_master")
+        return intMasterPort;
+    return BasicPioDevice::getMasterPort(if_name, idx);
+}
+
+AddrRangeList
+X86ISA::I82094AA::getIntAddrRange() const
+{
+    AddrRangeList ranges;
+    ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
+                             x86InterruptAddress(initialApicId, 0) +
+                             PhysAddrAPICRangeSize));
+    return ranges;
 }
 
 Tick
@@ -86,7 +105,7 @@ X86ISA::I82094AA::read(PacketPtr pkt)
         panic("Illegal read from I/O APIC.\n");
     }
     pkt->makeAtomicResponse();
-    return latency;
+    return pioDelay;
 }
 
 Tick
@@ -105,7 +124,7 @@ X86ISA::I82094AA::write(PacketPtr pkt)
         panic("Illegal write to I/O APIC.\n");
     }
     pkt->makeAtomicResponse();
-    return latency;
+    return pioDelay;
 }
 
 void

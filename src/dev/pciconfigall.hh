@@ -48,7 +48,7 @@
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PciConfigAll : public PioDevice
+class PciConfigAll : public BasicPioDevice
 {
   public:
     typedef PciConfigAllParams Params;
@@ -78,12 +78,6 @@ class PciConfigAll : public PioDevice
      */
 
     virtual Tick write(PacketPtr pkt);
-
-    AddrRangeList getAddrRanges() const;
-
-  private:
-    Addr pioAddr;
-
 };
 
 #endif // __PCICONFIGALL_HH__
