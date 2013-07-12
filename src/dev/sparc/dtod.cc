@@ -50,12 +50,10 @@ using namespace std;
 using namespace TheISA;
 
 DumbTOD::DumbTOD(const Params *p)
-    : BasicPioDevice(p)
+    : BasicPioDevice(p, 0x08)
 {
     struct tm tm = p->time;
     char *tz;
-
-    pioSize = 0x08;
 
     tz = getenv("TZ");
     setenv("TZ", "", 1);

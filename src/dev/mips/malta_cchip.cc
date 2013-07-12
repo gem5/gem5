@@ -55,11 +55,10 @@ using namespace std;
 using namespace TheISA;
 
 MaltaCChip::MaltaCChip(Params *p)
-    : BasicPioDevice(p), malta(p->malta)
+    : BasicPioDevice(p, 0xfffffff), malta(p->malta)
 {
     warn("MaltaCCHIP::MaltaCChip() not implemented.");
 
-    pioSize = 0xfffffff;
     //Put back pointer in malta
     malta->cchip = this;
 

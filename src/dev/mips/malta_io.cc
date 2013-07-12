@@ -65,11 +65,9 @@ MaltaIO::RTC::RTC(const string &name, const MaltaIOParams *p)
 }
 
 MaltaIO::MaltaIO(const Params *p)
-    : BasicPioDevice(p), malta(p->malta),
+    : BasicPioDevice(p, 0x100), malta(p->malta),
       pitimer(this, p->name + "pitimer"), rtc(p->name + ".rtc", p)
 {
-    pioSize = 0x100;
-
     // set the back pointer from malta to myself
     malta->io = this;
 

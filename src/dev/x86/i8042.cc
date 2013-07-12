@@ -43,6 +43,24 @@ const uint8_t CommandAck = 0xfa;
 const uint8_t CommandNack = 0xfe;
 const uint8_t BatSuccessful = 0xaa;
 
+
+X86ISA::I8042::I8042(Params *p)
+    : BasicPioDevice(p, 0), // pioSize arg is dummy value... not used
+      latency(p->pio_latency),
+      dataPort(p->data_port), commandPort(p->command_port),
+      statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
+      mouseIntPin(p->mouse_int_pin), keyboardIntPin(p->keyboard_int_pin)
+{
+    statusReg.passedSelfTest = 1;
+    statusReg.commandLast = 1;
+    statusReg.keyboardUnlocked = 1;
+
+    commandByte.convertScanCodes = 1;
+    commandByte.passedSelfTest = 1;
+    commandByte.keyboardFullInt = 1;
+}
+
+
 AddrRangeList
 X86ISA::I8042::getAddrRanges() const
 {

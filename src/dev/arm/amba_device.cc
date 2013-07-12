@@ -49,13 +49,14 @@
 
 const uint64_t AmbaVendor = ULL(0xb105f00d00000000);
 
-AmbaPioDevice::AmbaPioDevice(const Params *p)
-    : BasicPioDevice(p), ambaId(AmbaVendor | p->amba_id)
+AmbaPioDevice::AmbaPioDevice(const Params *p, Addr pio_size)
+    : BasicPioDevice(p, pio_size), ambaId(AmbaVendor | p->amba_id)
 {
 }
 
-AmbaIntDevice::AmbaIntDevice(const Params *p)
-    : AmbaPioDevice(p), intNum(p->int_num), gic(p->gic), intDelay(p->int_delay)
+AmbaIntDevice::AmbaIntDevice(const Params *p, Addr pio_size)
+    : AmbaPioDevice(p, pio_size),
+      intNum(p->int_num), gic(p->gic), intDelay(p->int_delay)
 {
 }
 

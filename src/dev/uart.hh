@@ -54,7 +54,7 @@ class Uart : public BasicPioDevice
 
   public:
     typedef UartParams Params;
-    Uart(const Params *p);
+    Uart(const Params *p, Addr pio_size);
 
     const Params *
     params() const

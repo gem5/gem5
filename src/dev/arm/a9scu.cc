@@ -45,9 +45,8 @@
 #include "sim/system.hh"
 
 A9SCU::A9SCU(Params *p)
-    : BasicPioDevice(p)
+    : BasicPioDevice(p, 0x60)
 {
-    pioSize = 0x60;
 }
 
 Tick

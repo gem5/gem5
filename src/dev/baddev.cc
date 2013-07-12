@@ -46,9 +46,8 @@
 using namespace std;
 
 BadDevice::BadDevice(Params *p)
-    : BasicPioDevice(p), devname(p->devicename)
+    : BasicPioDevice(p, 0x10), devname(p->devicename)
 {
-    pioSize = 0x10;
 }
 
 Tick

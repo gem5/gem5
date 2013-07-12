@@ -62,12 +62,10 @@ using namespace std;
 using namespace AlphaISA;
 
 AlphaBackdoor::AlphaBackdoor(const Params *p)
-    : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
+    : BasicPioDevice(p, sizeof(struct AlphaAccess)),
+      disk(p->disk), terminal(p->terminal),
       system(p->system), cpu(p->cpu)
 {
-
-    pioSize = sizeof(struct AlphaAccess);
-
     alphaAccess = new Access();
     alphaAccess->last_offset = pioSize - 1;
 

@@ -69,11 +69,9 @@ TsunamiIO::RTC::RTC(const string &n, const TsunamiIOParams *p)
 }
 
 TsunamiIO::TsunamiIO(const Params *p)
-    : BasicPioDevice(p), tsunami(p->tsunami),
+    : BasicPioDevice(p, 0x100), tsunami(p->tsunami),
       pitimer(this, p->name + "pitimer"), rtc(p->name + ".rtc", p)
 {
-    pioSize = 0x100;
-
     // set the back pointer from tsunami to myself
     tsunami->io = this;
 

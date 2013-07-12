@@ -103,8 +103,8 @@ PioDevice::drain(DrainManager *dm)
     return count;
 }
 
-BasicPioDevice::BasicPioDevice(const Params *p)
-    : PioDevice(p), pioAddr(p->pio_addr), pioSize(0),
+BasicPioDevice::BasicPioDevice(const Params *p, Addr size)
+    : PioDevice(p), pioAddr(p->pio_addr), pioSize(size),
       pioDelay(p->pio_latency)
 {}
 

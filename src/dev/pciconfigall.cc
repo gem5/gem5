@@ -44,13 +44,11 @@
 #include "sim/system.hh"
 
 PciConfigAll::PciConfigAll(const Params *p)
-    : BasicPioDevice(p)
+    : BasicPioDevice(p, p->size)
 {
     // the pio_addr Python parameter is ignored, and overridden by
     // this caluclated value
     pioAddr = p->platform->calcPciConfigAddr(params()->bus,0,0);
-
-    pioSize = params()->size;
 }
 
 

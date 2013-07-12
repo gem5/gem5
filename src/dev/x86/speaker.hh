@@ -64,10 +64,9 @@ class Speaker : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    Speaker(Params *p) : BasicPioDevice(p),
+    Speaker(Params *p) : BasicPioDevice(p, 1),
         latency(p->pio_latency), controlVal(0), timer(p->i8254)
     {
-        pioSize = 1;
     }
 
     Tick read(PacketPtr pkt);

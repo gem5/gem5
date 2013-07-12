@@ -38,8 +38,8 @@
 
 using namespace std;
 
-Uart::Uart(const Params *p)
-    : BasicPioDevice(p), platform(p->platform), term(p->terminal)
+Uart::Uart(const Params *p, Addr pio_size)
+    : BasicPioDevice(p, pio_size), platform(p->platform), term(p->terminal)
 {
     status = 0;
 

@@ -51,10 +51,8 @@ using namespace std;
 using namespace TheISA;
 
 MaltaPChip::MaltaPChip(const Params *p)
-: BasicPioDevice(p)
+    : BasicPioDevice(p, 0x1000)
 {
-    pioSize = 0x1000;
-
     for (int i = 0; i < 4; i++) {
         wsba[i] = 0;
         wsm[i] = 0;

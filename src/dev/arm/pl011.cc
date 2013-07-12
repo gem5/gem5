@@ -52,11 +52,10 @@
 #include "sim/sim_exit.hh"
 
 Pl011::Pl011(const Params *p)
-    : Uart(p), control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12), imsc(0),
-      rawInt(0), maskInt(0), intNum(p->int_num), gic(p->gic),
+    : Uart(p, 0xfff), control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
+      imsc(0), rawInt(0), maskInt(0), intNum(p->int_num), gic(p->gic),
       endOnEOT(p->end_on_eot), intDelay(p->int_delay), intEvent(this)
 {
-    pioSize = 0xfff;
 }
 
 Tick

@@ -77,10 +77,9 @@ class I8254 : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    I8254(Params *p) : BasicPioDevice(p), latency(p->pio_latency),
+    I8254(Params *p) : BasicPioDevice(p, 4), latency(p->pio_latency),
             pit(p->name, this), intPin(p->int_pin)
     {
-        pioSize = 4;
     }
     Tick read(PacketPtr pkt);
 

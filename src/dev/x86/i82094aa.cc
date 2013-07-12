@@ -39,7 +39,7 @@
 #include "sim/system.hh"
 
 X86ISA::I82094AA::I82094AA(Params *p)
-    : BasicPioDevice(p), IntDevice(this, p->int_latency),
+    : BasicPioDevice(p, 20), IntDevice(this, p->int_latency),
       extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
@@ -56,8 +56,6 @@ X86ISA::I82094AA::I82094AA(Params *p)
         redirTable[i] = entry;
         pinStates[i] = false;
     }
-
-    pioSize = 20;
 }
 
 void

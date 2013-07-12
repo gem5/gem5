@@ -52,9 +52,8 @@ class I8237 : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    I8237(Params *p) : BasicPioDevice(p), latency(p->pio_latency), maskReg(0)
+    I8237(Params *p) : BasicPioDevice(p, 16), latency(p->pio_latency), maskReg(0)
     {
-        pioSize = 16;
     }
     Tick read(PacketPtr pkt);
 

@@ -241,19 +241,7 @@ class I8042 : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    I8042(Params *p) : BasicPioDevice(p), latency(p->pio_latency),
-            dataPort(p->data_port), commandPort(p->command_port),
-            statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
-            mouseIntPin(p->mouse_int_pin), keyboardIntPin(p->keyboard_int_pin)
-    {
-        statusReg.passedSelfTest = 1;
-        statusReg.commandLast = 1;
-        statusReg.keyboardUnlocked = 1;
-
-        commandByte.convertScanCodes = 1;
-        commandByte.passedSelfTest = 1;
-        commandByte.keyboardFullInt = 1;
-    }
+    I8042(Params *p);
 
     AddrRangeList getAddrRanges() const;
 

@@ -148,7 +148,7 @@ class BasicPioDevice : public PioDevice
 
   public:
     typedef BasicPioDeviceParams Params;
-    BasicPioDevice(const Params *p);
+    BasicPioDevice(const Params *p, Addr size);
 
     const Params *
     params() const

@@ -42,11 +42,8 @@
 using namespace std;
 
 IsaFake::IsaFake(Params *p)
-    : BasicPioDevice(p)
+    : BasicPioDevice(p, p->ret_bad_addr ? 0 : p->pio_size)
 {
-    if (!p->ret_bad_addr)
-        pioSize = p->pio_size;
-
     retData8 = p->ret_data8;
     retData16 = p->ret_data16;
     retData32 = p->ret_data32;

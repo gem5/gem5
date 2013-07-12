@@ -35,15 +35,15 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-X86ISA::I8259::I8259(Params * p) : BasicPioDevice(p), IntDevice(this),
-                    latency(p->pio_latency), output(p->output),
-                    mode(p->mode), slave(p->slave),
-                    IRR(0), ISR(0), IMR(0),
-                    readIRR(true), initControlWord(0), autoEOI(false)
+X86ISA::I8259::I8259(Params * p)
+    : BasicPioDevice(p, 2), IntDevice(this),
+      latency(p->pio_latency), output(p->output),
+      mode(p->mode), slave(p->slave),
+      IRR(0), ISR(0), IMR(0),
+      readIRR(true), initControlWord(0), autoEOI(false)
 {
     for (int i = 0; i < NumLines; i++)
         pinStates[i] = false;
-    pioSize = 2;
 }
 
 Tick

@@ -82,7 +82,7 @@ class AmbaPioDevice : public BasicPioDevice, public AmbaDevice
 
   public:
     typedef AmbaPioDeviceParams Params;
-    AmbaPioDevice(const Params *p);
+    AmbaPioDevice(const Params *p, Addr pio_size);
 };
 
 class AmbaIntDevice : public AmbaPioDevice
@@ -94,7 +94,7 @@ class AmbaIntDevice : public AmbaPioDevice
 
   public:
     typedef AmbaIntDeviceParams Params;
-    AmbaIntDevice(const Params *p);
+    AmbaIntDevice(const Params *p, Addr pio_size);
 };
 
 class AmbaDmaDevice : public DmaDevice, public AmbaDevice

@@ -47,10 +47,10 @@
 #include "mem/packet_access.hh"
 
 Sp804::Sp804(Params *p)
-    : AmbaPioDevice(p), gic(p->gic), timer0(name() + ".timer0", this, p->int_num0, p->clock0),
+    : AmbaPioDevice(p, 0xfff), gic(p->gic),
+      timer0(name() + ".timer0", this, p->int_num0, p->clock0),
       timer1(name() + ".timer1", this, p->int_num1, p->clock1)
 {
-    pioSize = 0xfff;
 }
 
 Sp804::Timer::Timer(std::string __name, Sp804 *_parent, int int_num, Tick _clock)

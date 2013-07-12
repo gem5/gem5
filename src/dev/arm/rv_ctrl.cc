@@ -43,9 +43,8 @@
 #include "mem/packet_access.hh"
 
 RealViewCtrl::RealViewCtrl(Params *p)
-    : BasicPioDevice(p), flags(0)
+    : BasicPioDevice(p, 0xD4), flags(0)
 {
-    pioSize = 0xD4;
 }
 
 Tick

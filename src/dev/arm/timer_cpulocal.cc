@@ -48,7 +48,7 @@
 #include "mem/packet_access.hh"
 
 CpuLocalTimer::CpuLocalTimer(Params *p)
-    : BasicPioDevice(p), gic(p->gic)
+    : BasicPioDevice(p, 0x38), gic(p->gic)
 {
    // Initialize the timer registers for each per cpu timer
    for (int i = 0; i < CPU_MAX; i++) {
@@ -60,7 +60,6 @@ CpuLocalTimer::CpuLocalTimer(Params *p)
         localTimer[i].intNumWatchdog = p->int_num_watchdog;
         localTimer[i].cpuNum = i;
     }
-    pioSize = 0x38;
 }
 
 CpuLocalTimer::Timer::Timer()

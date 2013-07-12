@@ -49,11 +49,10 @@
 #include "mem/packet_access.hh"
 
 PL031::PL031(Params *p)
-    : AmbaIntDevice(p), timeVal(mkutctime(&p->time)), lastWrittenTick(0),
-            loadVal(0), matchVal(0), rawInt(false), maskInt(false),
-            pendingInt(false), matchEvent(this)
+    : AmbaIntDevice(p, 0xfff), timeVal(mkutctime(&p->time)),
+      lastWrittenTick(0), loadVal(0), matchVal(0),
+      rawInt(false), maskInt(false), pendingInt(false), matchEvent(this)
 {
-    pioSize = 0xfff;
 }
 
 
