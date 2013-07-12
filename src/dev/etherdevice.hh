@@ -48,12 +48,12 @@ class EtherInt;
  * The base EtherObject class, allows for an accesor function to a
  * simobj that returns the Port.
  */
-class EtherDevice : public PciDev
+class EtherDevice : public PciDevice
 {
   public:
     typedef EtherDeviceParams Params;
     EtherDevice(const Params *params)
-        : PciDev(params)
+        : PciDevice(params)
     {}
 
     const Params *

@@ -45,7 +45,7 @@
  * PCI Config Space
  * All of PCI config space needs to return -1 on Tsunami, except
  * the devices that exist. This device maps the entire bus config
- * space and passes the requests on to TsunamiPCIDev devices as
+ * space and passes the requests on to TsunamiPCIDevice devices as
  * appropriate.
  */
 class PciConfigAll : public BasicPioDevice
@@ -62,8 +62,8 @@ class PciConfigAll : public BasicPioDevice
 
     /**
      * Read something in PCI config space. If the device does not exist
-     * -1 is returned, if the device does exist its PciDev::ReadConfig (or the
-     * virtual function that overrides) it is called.
+     * -1 is returned, if the device does exist its PciDevice::ReadConfig
+     * (or the virtual function that overrides) it is called.
      * @param pkt Contains information about the read operation
      * @return Amount of time to do the read
      */
@@ -71,8 +71,8 @@ class PciConfigAll : public BasicPioDevice
 
     /**
      * Write to PCI config spcae. If the device does not exit the simulator
-     * panics. If it does it is passed on the PciDev::WriteConfig (or the virtual
-     * function that overrides it).
+     * panics. If it does it is passed on the PciDevice::WriteConfig (or
+     * the virtual function that overrides it).
      * @param pkt Contains information about the write operation
      * @return Amount of time to do the read
      */

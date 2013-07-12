@@ -49,7 +49,7 @@ class IdeDisk;
  * Device model for an Intel PIIX4 IDE controller
  */
 
-class IdeController : public PciDev
+class IdeController : public PciDevice
 {
   private:
     // Bus master IDE status register bit fields

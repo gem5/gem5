@@ -58,7 +58,7 @@
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
 
-class CopyEngine : public PciDev
+class CopyEngine : public PciDevice
 {
     class CopyEngineChannel : public Drainable
     {

@@ -1263,8 +1263,8 @@ Device::drainResume()
 void
 Base::serialize(std::ostream &os)
 {
-    // Serialize the PciDev base class
-    PciDev::serialize(os);
+    // Serialize the PciDevice base class
+    PciDevice::serialize(os);
 
     SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(txEnable);
@@ -1284,8 +1284,8 @@ Base::serialize(std::ostream &os)
 void
 Base::unserialize(Checkpoint *cp, const std::string &section)
 {
-    // Unserialize the PciDev base class
-    PciDev::unserialize(cp, section);
+    // Unserialize the PciDevice base class
+    PciDevice::unserialize(cp, section);
 
     UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(txEnable);
@@ -1309,7 +1309,7 @@ Device::serialize(std::ostream &os)
 {
     int count;
 
-    // Serialize the PciDev base class
+    // Serialize the PciDevice base class
     Base::serialize(os);
 
     if (rxState == rxCopy)
@@ -1422,7 +1422,7 @@ Device::serialize(std::ostream &os)
 void
 Device::unserialize(Checkpoint *cp, const std::string &section)
 {
-    // Unserialize the PciDev base class
+    // Unserialize the PciDevice base class
     Base::unserialize(cp, section);
 
     /*

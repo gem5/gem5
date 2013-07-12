@@ -146,7 +146,7 @@ NSGigE::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::writeConfig(pkt);
+        PciDevice::writeConfig(pkt);
     else
         panic("Device specific PCI config space not implemented!\n");
 
@@ -2126,8 +2126,8 @@ NSGigE::drainResume()
 void
 NSGigE::serialize(ostream &os)
 {
-    // Serialize the PciDev base class
-    PciDev::serialize(os);
+    // Serialize the PciDevice base class
+    PciDevice::serialize(os);
 
     /*
      * Finalize any DMA events now.
@@ -2298,8 +2298,8 @@ NSGigE::serialize(ostream &os)
 void
 NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 {
-    // Unserialize the PciDev base class
-    PciDev::unserialize(cp, section);
+    // Unserialize the PciDevice base class
+    PciDevice::unserialize(cp, section);
 
     UNSERIALIZE_SCALAR(regs.command);
     UNSERIALIZE_SCALAR(regs.config);

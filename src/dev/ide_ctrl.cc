@@ -80,7 +80,7 @@ IdeController::Channel::~Channel()
 }
 
 IdeController::IdeController(Params *p)
-    : PciDev(p), primary(name() + ".primary", BARSize[0], BARSize[1]),
+    : PciDevice(p), primary(name() + ".primary", BARSize[0], BARSize[1]),
     secondary(name() + ".secondary", BARSize[2], BARSize[3]),
     bmiAddr(0), bmiSize(BARSize[4]),
     primaryTiming(htole(timeRegWithDecodeEn)),
@@ -132,7 +132,7 @@ void
 IdeController::intrPost()
 {
     primary.bmiRegs.status.intStatus = 1;
-    PciDev::intrPost();
+    PciDevice::intrPost();
 }
 
 void
@@ -157,7 +157,7 @@ IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC) {
-        return PciDev::readConfig(pkt);
+        return PciDevice::readConfig(pkt);
     }
 
     pkt->allocate();
@@ -232,7 +232,7 @@ IdeController::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::writeConfig(pkt);
+        PciDevice::writeConfig(pkt);
     } else {
         switch (pkt->getSize()) {
           case sizeof(uint8_t):
@@ -523,8 +523,8 @@ IdeController::write(PacketPtr pkt)
 void
 IdeController::serialize(std::ostream &os)
 {
-    // Serialize the PciDev base class
-    PciDev::serialize(os);
+    // Serialize the PciDevice base class
+    PciDevice::serialize(os);
 
     // Serialize channels
     primary.serialize("primary", os);
@@ -565,8 +565,8 @@ IdeController::Channel::serialize(const std::string &base, std::ostream &os)
 void
 IdeController::unserialize(Checkpoint *cp, const std::string &section)
 {
-    // Unserialize the PciDev base class
-    PciDev::unserialize(cp, section);
+    // Unserialize the PciDevice base class
+    PciDevice::unserialize(cp, section);
 
     // Unserialize channels
     primary.unserialize("primary", cp, section);

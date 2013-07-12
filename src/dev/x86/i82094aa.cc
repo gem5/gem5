@@ -39,7 +39,7 @@
 #include "sim/system.hh"
 
 X86ISA::I82094AA::I82094AA(Params *p)
-    : BasicPioDevice(p), IntDev(this, p->int_latency),
+    : BasicPioDevice(p), IntDevice(this, p->int_latency),
       extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
@@ -65,10 +65,10 @@ X86ISA::I82094AA::init()
 {
     // The io apic must register its address ranges on both its pio port
     // via the piodevice init() function and its int port that it inherited
-    // from IntDev.  Note IntDev is not a SimObject itself.
+    // from IntDevice.  Note IntDevice is not a SimObject itself.
 
     BasicPioDevice::init();
-    IntDev::init();
+    IntDevice::init();
 }
 
 BaseMasterPort &

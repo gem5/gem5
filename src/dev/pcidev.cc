@@ -53,7 +53,7 @@
 #include "sim/core.hh"
 
 
-PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
+PciDevice::PciConfigPort::PciConfigPort(PciDevice *dev, int busid, int devid,
         int funcid, Platform *p)
     : SimpleTimingPort(dev->name() + "-pciconf", dev), device(dev),
       platform(p), busId(busid), deviceId(devid), functionId(funcid)
@@ -63,7 +63,7 @@ PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
 
 
 Tick
-PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
+PciDevice::PciConfigPort::recvAtomic(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= configAddr &&
            pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
@@ -73,7 +73,7 @@ PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
 }
 
 AddrRangeList
-PciDev::PciConfigPort::getAddrRanges() const
+PciDevice::PciConfigPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     if (configAddr != ULL(-1))
@@ -82,7 +82,7 @@ PciDev::PciConfigPort::getAddrRanges() const
 }
 
 
-PciDev::PciDev(const Params *p)
+PciDevice::PciDevice(const Params *p)
     : DmaDevice(p), platform(p->platform), pioDelay(p->pio_latency),
       configDelay(p->config_latency),
       configPort(this, params()->pci_bus, params()->pci_dev,
@@ -150,7 +150,7 @@ PciDev::PciDev(const Params *p)
 }
 
 void
-PciDev::init()
+PciDevice::init()
 {
     if (!configPort.isConnected())
         panic("PCI config port on %s not connected to anything!\n", name());
@@ -159,7 +159,7 @@ PciDev::init()
 }
 
 unsigned int
-PciDev::drain(DrainManager *dm)
+PciDevice::drain(DrainManager *dm)
 {
     unsigned int count;
     count = pioPort.drain(dm) + dmaPort.drain(dm) + configPort.drain(dm);
@@ -171,7 +171,7 @@ PciDev::drain(DrainManager *dm)
 }
 
 Tick
-PciDev::readConfig(PacketPtr pkt)
+PciDevice::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)
@@ -210,7 +210,7 @@ PciDev::readConfig(PacketPtr pkt)
 }
 
 AddrRangeList
-PciDev::getAddrRanges() const
+PciDevice::getAddrRanges() const
 {
     AddrRangeList ranges;
     int x = 0;
@@ -221,7 +221,7 @@ PciDev::getAddrRanges() const
 }
 
 Tick
-PciDev::writeConfig(PacketPtr pkt)
+PciDevice::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)
@@ -343,7 +343,7 @@ PciDev::writeConfig(PacketPtr pkt)
 }
 
 void
-PciDev::serialize(std::ostream &os)
+PciDevice::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
     SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
@@ -351,7 +351,7 @@ PciDev::serialize(std::ostream &os)
 }
 
 void
-PciDev::unserialize(Checkpoint *cp, const std::string &section)
+PciDevice::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
     UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));

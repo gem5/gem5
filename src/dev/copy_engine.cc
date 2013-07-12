@@ -60,7 +60,7 @@
 using namespace CopyEngineReg;
 
 CopyEngine::CopyEngine(const Params *p)
-    : PciDev(p)
+    : PciDevice(p)
 {
     // All Reg regs are initialized to 0 by default
     regs.chanCount = p->ChanCnt;
@@ -115,7 +115,7 @@ CopyEngine::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "dma") {
         // pass it along to our super class
-        return PciDev::getMasterPort(if_name, idx);
+        return PciDevice::getMasterPort(if_name, idx);
     } else {
         if (idx >= static_cast<int>(chan.size())) {
             panic("CopyEngine::getMasterPort: unknown index %d\n", idx);
@@ -680,7 +680,7 @@ CopyEngine::drain(DrainManager *dm)
 void
 CopyEngine::serialize(std::ostream &os)
 {
-    PciDev::serialize(os);
+    PciDevice::serialize(os);
     regs.serialize(os);
     for (int x =0; x < chan.size(); x++) {
         nameOut(os, csprintf("%s.channel%d", name(), x));
@@ -691,7 +691,7 @@ CopyEngine::serialize(std::ostream &os)
 void
 CopyEngine::unserialize(Checkpoint *cp, const std::string &section)
 {
-    PciDev::unserialize(cp, section);
+    PciDevice::unserialize(cp, section);
     regs.unserialize(cp, section);
     for (int x = 0; x < chan.size(); x++)
         chan[x]->unserialize(cp, csprintf("%s.channel%d", section, x));

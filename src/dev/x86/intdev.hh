@@ -60,16 +60,16 @@ namespace X86ISA {
 
 typedef std::list<int> ApicList;
 
-class IntDev
+class IntDevice
 {
   protected:
     class IntSlavePort : public MessageSlavePort
     {
-        IntDev * device;
+        IntDevice * device;
 
       public:
         IntSlavePort(const std::string& _name, MemObject* _parent,
-                     IntDev* dev) :
+                     IntDevice* dev) :
             MessageSlavePort(_name, _parent), device(dev)
         {
         }
@@ -89,11 +89,11 @@ class IntDev
 
     class IntMasterPort : public MessageMasterPort
     {
-        IntDev* device;
+        IntDevice* device;
         Tick latency;
       public:
         IntMasterPort(const std::string& _name, MemObject* _parent,
-                      IntDev* dev, Tick _latency) :
+                      IntDevice* dev, Tick _latency) :
             MessageMasterPort(_name, _parent), device(dev), latency(_latency)
         {
         }
@@ -112,12 +112,12 @@ class IntDev
     IntMasterPort intMasterPort;
 
   public:
-    IntDev(MemObject * parent, Tick latency = 0) :
+    IntDevice(MemObject * parent, Tick latency = 0) :
         intMasterPort(parent->name() + ".int_master", parent, this, latency)
     {
     }
 
-    virtual ~IntDev()
+    virtual ~IntDevice()
     {}
 
     virtual void init();
@@ -163,7 +163,7 @@ class IntDev
 class IntSinkPin : public SimObject
 {
   public:
-    IntDev * device;
+    IntDevice * device;
     int number;
 
     typedef X86IntSinkPinParams Params;
@@ -175,7 +175,7 @@ class IntSinkPin : public SimObject
     }
 
     IntSinkPin(Params *p) : SimObject(p),
-            device(dynamic_cast<IntDev *>(p->device)), number(p->number)
+            device(dynamic_cast<IntDevice *>(p->device)), number(p->number)
     {
         assert(device);
     }

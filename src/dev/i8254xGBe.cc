@@ -131,7 +131,7 @@ void
 IGbE::init()
 {
     cpa = CPA::cpa();
-    PciDev::init();
+    PciDevice::init();
 }
 
 EtherInt*
@@ -151,7 +151,7 @@ IGbE::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::writeConfig(pkt);
+        PciDevice::writeConfig(pkt);
     else
         panic("Device specific PCI config space not implemented.\n");
 
@@ -2453,7 +2453,7 @@ IGbE::ethTxDone()
 void
 IGbE::serialize(std::ostream &os)
 {
-    PciDev::serialize(os);
+    PciDevice::serialize(os);
 
     regs.serialize(os);
     SERIALIZE_SCALAR(eeOpBits);
@@ -2507,7 +2507,7 @@ IGbE::serialize(std::ostream &os)
 void
 IGbE::unserialize(Checkpoint *cp, const std::string &section)
 {
-    PciDev::unserialize(cp, section);
+    PciDevice::unserialize(cp, section);
 
     regs.unserialize(cp, section);
     UNSERIALIZE_SCALAR(eeOpBits);

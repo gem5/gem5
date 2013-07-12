@@ -39,7 +39,7 @@
 namespace X86ISA
 {
 
-class I8259 : public BasicPioDevice, public IntDev
+class I8259 : public BasicPioDevice, public IntDevice
 {
   protected:
     static const int NumLines = 8;

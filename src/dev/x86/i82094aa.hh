@@ -44,7 +44,7 @@ namespace X86ISA
 class I8259;
 class Interrupts;
 
-class I82094AA : public BasicPioDevice, public IntDev
+class I82094AA : public BasicPioDevice, public IntDevice
 {
   public:
     BitUnion64(RedirTableEntry)

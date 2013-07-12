@@ -72,7 +72,7 @@ namespace X86ISA {
 
 ApicRegIndex decodeAddr(Addr paddr);
 
-class Interrupts : public BasicPioDevice, IntDev
+class Interrupts : public BasicPioDevice, IntDevice
 {
   protected:
     // Storage for the APIC registers
@@ -215,7 +215,7 @@ class Interrupts : public BasicPioDevice, IntDev
     void init();
 
     /*
-     * Functions to interact with the interrupt port from IntDev.
+     * Functions to interact with the interrupt port from IntDevice.
      */
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);

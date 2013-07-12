@@ -44,7 +44,7 @@ class PciConfigAll(BasicPioDevice):
 
 class PciDevice(DmaDevice):
     type = 'PciDevice'
-    cxx_class = 'PciDev'
+    cxx_class = 'PciDevice'
     cxx_header = "dev/pcidev.hh"
     abstract = True
     platform = Param.Platform(Parent.any, "Platform this device is part of.")

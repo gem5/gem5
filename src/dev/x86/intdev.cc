@@ -43,7 +43,7 @@
 #include "dev/x86/intdev.hh"
 
 void
-X86ISA::IntDev::IntMasterPort::sendMessage(ApicList apics,
+X86ISA::IntDevice::IntMasterPort::sendMessage(ApicList apics,
                                            TriggerIntMessage message,
                                            bool timing)
 {
@@ -66,7 +66,7 @@ X86ISA::IntDev::IntMasterPort::sendMessage(ApicList apics,
 }
 
 void
-X86ISA::IntDev::init()
+X86ISA::IntDevice::init()
 {
     if (!intMasterPort.isConnected()) {
         panic("Int port not connected to anything!");

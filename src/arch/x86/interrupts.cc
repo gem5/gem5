@@ -311,12 +311,13 @@ void
 X86ISA::Interrupts::init()
 {
     //
-    // The local apic must register its address ranges on both its pio port
-    // via the basicpiodevice(piodevice) init() function and its int port
-    // that it inherited from IntDev.  Note IntDev is not a SimObject itself.
+    // The local apic must register its address ranges on both its pio
+    // port via the basicpiodevice(piodevice) init() function and its
+    // int port that it inherited from IntDevice.  Note IntDevice is
+    // not a SimObject itself.
     //
     BasicPioDevice::init();
-    IntDev::init();
+    IntDevice::init();
 
     // the slave port has a range so inform the connected master
     intSlavePort.sendRangeChange();
@@ -606,17 +607,17 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 }
 
 
-X86ISA::Interrupts::Interrupts(Params * p) :
-    BasicPioDevice(p), IntDev(this, p->int_latency),
-    apicTimerEvent(this),
-    pendingSmi(false), smiVector(0),
-    pendingNmi(false), nmiVector(0),
-    pendingExtInt(false), extIntVector(0),
-    pendingInit(false), initVector(0),
-    pendingStartup(false), startupVector(0),
-    startedUp(false), pendingUnmaskableInt(false),
-    pendingIPIs(0), cpu(NULL),
-    intSlavePort(name() + ".int_slave", this, this)
+X86ISA::Interrupts::Interrupts(Params * p)
+    : BasicPioDevice(p), IntDevice(this, p->int_latency),
+      apicTimerEvent(this),
+      pendingSmi(false), smiVector(0),
+      pendingNmi(false), nmiVector(0),
+      pendingExtInt(false), extIntVector(0),
+      pendingInit(false), initVector(0),
+      pendingStartup(false), startupVector(0),
+      startedUp(false), pendingUnmaskableInt(false),
+      pendingIPIs(0), cpu(NULL),
+      intSlavePort(name() + ".int_slave", this, this)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));

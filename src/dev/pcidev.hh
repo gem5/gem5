@@ -56,12 +56,12 @@
 /**
  * PCI device, base implementation is only config space.
  */
-class PciDev : public DmaDevice
+class PciDevice : public DmaDevice
 {
     class PciConfigPort : public SimpleTimingPort
     {
       protected:
-        PciDev *device;
+        PciDevice *device;
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
@@ -76,7 +76,7 @@ class PciDev : public DmaDevice
         Addr configAddr;
 
       public:
-        PciConfigPort(PciDev *dev, int busid, int devid, int funcid,
+        PciConfigPort(PciDevice *dev, int busid, int devid, int funcid,
                       Platform *p);
     };
 
@@ -198,7 +198,7 @@ class PciDev : public DmaDevice
      * config file object PCIConfigData and registers the device with
      * a PciConfigAll object.
      */
-    PciDev(const Params *params);
+    PciDevice(const Params *params);
 
     virtual void init();
 
