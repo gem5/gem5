@@ -411,7 +411,9 @@ ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 bool
 ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
-    return loadSomeSymbols(symtab, STB_LOCAL, addrMask);
+    bool found_local = loadSomeSymbols(symtab, STB_LOCAL, addrMask);
+    bool found_weak = loadSomeSymbols(symtab, STB_WEAK, addrMask);
+    return found_local || found_weak;
 }
 
 bool
