@@ -159,7 +159,8 @@ np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = MemClass(range=AddrRange(options.mem_size)),
                 mem_mode = test_mem_mode,
-                clk_domain = SrcClockDomain(clock = options.sys_clock))
+                clk_domain = SrcClockDomain(clock = options.sys_clock),
+                cache_line_size = options.cacheline_size)
 
 # Create a separate clock domain for the CPUs
 system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)

@@ -149,7 +149,6 @@ class O3_ARM_v7a_3(DerivO3CPU):
 class O3_ARM_v7a_ICache(BaseCache):
     hit_latency = 1
     response_latency = 1
-    block_size = 64
     mshrs = 2
     tgts_per_mshr = 8
     size = '32kB'
@@ -160,7 +159,6 @@ class O3_ARM_v7a_ICache(BaseCache):
 class O3_ARM_v7a_DCache(BaseCache):
     hit_latency = 2
     response_latency = 2
-    block_size = 64
     mshrs = 6
     tgts_per_mshr = 8
     size = '32kB'
@@ -173,7 +171,6 @@ class O3_ARM_v7a_DCache(BaseCache):
 class O3_ARM_v7aWalkCache(BaseCache):
     hit_latency = 4
     response_latency = 4
-    block_size = 64
     mshrs = 6
     tgts_per_mshr = 8
     size = '1kB'
@@ -186,7 +183,6 @@ class O3_ARM_v7aWalkCache(BaseCache):
 class O3_ARM_v7aL2(BaseCache):
     hit_latency = 12
     response_latency = 12
-    block_size = 64
     mshrs = 16
     tgts_per_mshr = 8
     size = '1MB'

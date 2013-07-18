@@ -160,7 +160,6 @@ class Water_spatial(LiveProcess):
 
 class L1(BaseCache):
     latency = options.l1latency
-    block_size = 64
     mshrs = 12
     tgts_per_mshr = 8
 
@@ -169,7 +168,6 @@ class L1(BaseCache):
 # ----------------------
 
 class L2(BaseCache):
-    block_size = 64
     latency = options.l2latency
     mshrs = 92
     tgts_per_mshr = 16
