@@ -110,7 +110,8 @@ ThreadState::initMemProxies(ThreadContext *tc)
         // This cannot be done in the constructor as the thread state
         // itself is created in the base cpu constructor and the
         // getDataPort is a virtual function
-        physProxy = new PortProxy(baseCpu->getDataPort());
+        physProxy = new PortProxy(baseCpu->getDataPort(),
+                                  baseCpu->cacheLineSize());
 
         assert(virtProxy == NULL);
         virtProxy = new FSTranslatingPortProxy(tc);

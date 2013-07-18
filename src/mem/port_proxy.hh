@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -88,10 +88,14 @@ class PortProxy
     /** The actual physical port used by this proxy. */
     MasterPort &_port;
 
+    /** Granularity of any transactions issued through this proxy. */
+    const unsigned int _cacheLineSize;
+
     void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const;
 
   public:
-    PortProxy(MasterPort &port) : _port(port) { }
+    PortProxy(MasterPort &port, unsigned int cacheLineSize) :
+        _port(port), _cacheLineSize(cacheLineSize) { }
     virtual ~PortProxy() { }
 
     /**

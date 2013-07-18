@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011,2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,16 +50,19 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include "sim/system.hh"
 
 using namespace TheISA;
 
 FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
-    : PortProxy(tc->getCpuPtr()->getDataPort()), _tc(tc)
+    : PortProxy(tc->getCpuPtr()->getDataPort(),
+                tc->getSystemPtr()->cacheLineSize()), _tc(tc)
 {
 }
 
-FSTranslatingPortProxy::FSTranslatingPortProxy(MasterPort &port)
-    : PortProxy(port), _tc(NULL)
+FSTranslatingPortProxy::FSTranslatingPortProxy(MasterPort &port,
+                                               unsigned int cacheLineSize)
+    : PortProxy(port, cacheLineSize), _tc(NULL)
 {
 }
 

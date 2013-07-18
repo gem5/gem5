@@ -99,9 +99,6 @@ class Cache : public BaseCache
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual unsigned deviceBlockSize() const
-        { return cache->getBlockSize(); }
-
         virtual AddrRangeList getAddrRanges() const;
 
       public:
@@ -162,9 +159,6 @@ class Cache : public BaseCache
         virtual Tick recvAtomicSnoop(PacketPtr pkt);
 
         virtual void recvFunctionalSnoop(PacketPtr pkt);
-
-        virtual unsigned deviceBlockSize() const
-        { return cache->getBlockSize(); }
 
       public:
 

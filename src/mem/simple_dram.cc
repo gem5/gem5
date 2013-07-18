@@ -43,6 +43,7 @@
 #include "debug/DRAM.hh"
 #include "debug/DRAMWR.hh"
 #include "mem/simple_dram.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -94,7 +95,7 @@ SimpleDRAM::init()
 
     // get the burst size from the connected port as it is currently
     // assumed to be equal to the cache line size
-    bytesPerCacheLine = port.peerBlockSize();
+    bytesPerCacheLine = _system->cacheLineSize();
 
     // we could deal with plenty options here, but for now do a quick
     // sanity check

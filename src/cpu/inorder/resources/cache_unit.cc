@@ -112,7 +112,7 @@ CacheUnit::init()
         reqs[i] = new CacheRequest(this);
     }
 
-    cacheBlkSize = cachePort->peerBlockSize();
+    cacheBlkSize = cpu->cacheLineSize();
     cacheBlkMask = cacheBlkSize  - 1;
 
     initSlots();

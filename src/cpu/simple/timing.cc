@@ -404,7 +404,7 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->instAddr();
-    unsigned block_size = dcachePort.peerBlockSize();
+    unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Read;
 
     if (traceData) {
@@ -473,7 +473,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->instAddr();
-    unsigned block_size = dcachePort.peerBlockSize();
+    unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Write;
 
     if (traceData) {

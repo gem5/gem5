@@ -51,12 +51,6 @@ AddrMapper::init()
 {
     if (!slavePort.isConnected() || !masterPort.isConnected())
         fatal("Address mapper is not connected on both sides.\n");
-
-    if ((slavePort.peerBlockSize() != masterPort.peerBlockSize()) &&
-        slavePort.peerBlockSize() && masterPort.peerBlockSize())
-        fatal("Slave port size %d, master port size %d \n "
-              "don't have the same block size... Not supported.\n",
-              slavePort.peerBlockSize(), masterPort.peerBlockSize());
 }
 
 BaseMasterPort&
@@ -193,18 +187,6 @@ AddrMapper::isSnooping() const
     if (slavePort.isSnooping())
         fatal("AddrMapper doesn't support remapping of snooping requests\n");
     return false;
-}
-
-unsigned
-AddrMapper::deviceBlockSizeMaster()
-{
-    return slavePort.peerBlockSize();
-}
-
-unsigned
-AddrMapper::deviceBlockSizeSlave()
-{
-    return masterPort.peerBlockSize();
 }
 
 void

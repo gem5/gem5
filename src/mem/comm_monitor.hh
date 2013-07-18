@@ -171,11 +171,6 @@ class CommMonitor : public MemObject
             return mon.isSnooping();
         }
 
-        unsigned deviceBlockSize() const
-        {
-            return mon.deviceBlockSizeMaster();
-        }
-
         void recvRetry()
         {
             mon.recvRetryMaster();
@@ -227,11 +222,6 @@ class CommMonitor : public MemObject
             return mon.recvTimingSnoopResp(pkt);
         }
 
-        unsigned deviceBlockSize() const
-        {
-            return mon.deviceBlockSizeSlave();
-        }
-
         AddrRangeList getAddrRanges() const
         {
             return mon.getAddrRanges();
@@ -266,10 +256,6 @@ class CommMonitor : public MemObject
     void recvTimingSnoopReq(PacketPtr pkt);
 
     bool recvTimingSnoopResp(PacketPtr pkt);
-
-    unsigned deviceBlockSizeMaster();
-
-    unsigned deviceBlockSizeSlave();
 
     AddrRangeList getAddrRanges() const;
 

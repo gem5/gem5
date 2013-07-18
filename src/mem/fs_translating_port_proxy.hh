@@ -78,7 +78,7 @@ class FSTranslatingPortProxy : public PortProxy
 
     FSTranslatingPortProxy(ThreadContext* tc);
 
-    FSTranslatingPortProxy(MasterPort &port);
+    FSTranslatingPortProxy(MasterPort &port, unsigned int cacheLineSize);
 
     virtual ~FSTranslatingPortProxy();
 

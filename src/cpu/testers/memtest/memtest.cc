@@ -95,7 +95,7 @@ MemTest::MemTest(const Params *p)
       tickEvent(this),
       cachePort("test", this),
       funcPort("functional", this),
-      funcProxy(funcPort),
+      funcProxy(funcPort, p->sys->cacheLineSize()),
       retryPkt(NULL),
 //      mainMem(main_mem),
 //      checkMem(check_mem),
@@ -105,6 +105,7 @@ MemTest::MemTest(const Params *p)
       percentUncacheable(p->percent_uncacheable),
       issueDmas(p->issue_dmas),
       masterId(p->sys->getMasterId(name())),
+      blockSize(p->sys->cacheLineSize()),
       progressInterval(p->progress_interval),
       nextProgressMessage(p->progress_interval),
       percentSourceUnaligned(p->percent_source_unaligned),
@@ -120,6 +121,9 @@ MemTest::MemTest(const Params *p)
     baseAddr1 = 0x100000;
     baseAddr2 = 0x400000;
     uncacheAddr = 0x800000;
+
+    blockAddrMask = blockSize - 1;
+    traceBlockAddr = blockAddr(traceBlockAddr);
 
     // set up counters
     noResponseCycles = 0;
@@ -145,11 +149,6 @@ MemTest::getMasterPort(const std::string &if_name, PortID idx)
 void
 MemTest::init()
 {
-    // By the time init() is called, the ports should be hooked up.
-    blockSize = cachePort.peerBlockSize();
-    blockAddrMask = blockSize - 1;
-    traceBlockAddr = blockAddr(traceBlockAddr);
-
     // initial memory contents for both physical memory and functional
     // memory should be 0; no need to initialize them.
 }

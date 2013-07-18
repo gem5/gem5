@@ -45,7 +45,7 @@ PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const
 {
     Request req;
 
-    for (ChunkGenerator gen(addr, size, _port.peerBlockSize());
+    for (ChunkGenerator gen(addr, size, _cacheLineSize);
          !gen.done(); gen.next()) {
         req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
         Packet pkt(&req, cmd);

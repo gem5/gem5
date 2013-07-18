@@ -60,8 +60,7 @@ BaseBus::BaseBus(const BaseBusParams *p)
       gotAddrRanges(p->port_default_connection_count +
                           p->port_master_connection_count, false),
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
-      useDefaultRange(p->use_default_range),
-      blockSize(p->block_size)
+      useDefaultRange(p->use_default_range)
 {}
 
 BaseBus::~BaseBus()
@@ -80,29 +79,6 @@ BaseBus::~BaseBus()
 void
 BaseBus::init()
 {
-    // determine the maximum peer block size, look at both the
-    // connected master and slave modules
-    uint32_t peer_block_size = 0;
-
-    for (MasterPortConstIter m = masterPorts.begin(); m != masterPorts.end();
-         ++m) {
-        peer_block_size = std::max((*m)->peerBlockSize(), peer_block_size);
-    }
-
-    for (SlavePortConstIter s = slavePorts.begin(); s != slavePorts.end();
-         ++s) {
-        peer_block_size = std::max((*s)->peerBlockSize(), peer_block_size);
-    }
-
-    // if the peers do not have a block size, use the default value
-    // set through the bus parameters
-    if (peer_block_size != 0)
-        blockSize = peer_block_size;
-
-    // check if the block size is a value known to work
-    if (!(blockSize == 16 || blockSize == 32 || blockSize == 64 ||
-          blockSize == 128))
-        warn_once("Block size is neither 16, 32, 64 or 128 bytes.\n");
 }
 
 BaseMasterPort &
@@ -557,12 +533,6 @@ BaseBus::getAddrRanges() const
     DPRINTF(BusAddrRanges, "Received address range request\n");
 
     return busRanges;
-}
-
-unsigned
-BaseBus::deviceBlockSize() const
-{
-    return blockSize;
 }
 
 void

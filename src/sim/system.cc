@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -78,12 +78,13 @@ System::System(Params *p)
       _numContexts(0),
       pagePtr(0),
       init_param(p->init_param),
-      physProxy(_systemPort),
-      virtProxy(_systemPort),
+      physProxy(_systemPort, p->cache_line_size),
+      virtProxy(_systemPort, p->cache_line_size),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
       physmem(name() + ".physmem", p->memories),
       memoryMode(p->mem_mode),
+      _cacheLineSize(p->cache_line_size),
       workItemsBegin(0),
       workItemsEnd(0),
       numWorkIds(p->num_work_ids),
@@ -99,6 +100,11 @@ System::System(Params *p)
         if (!debugSymbolTable)
             debugSymbolTable = new SymbolTable;
     }
+
+    // check if the cache line size is a value known to work
+    if (!(_cacheLineSize == 16 || _cacheLineSize == 32 ||
+          _cacheLineSize == 64 || _cacheLineSize == 128))
+        warn_once("Cache line size is neither 16, 32, 64 nor 128 bytes.\n");
 
     // Get the generic system master IDs
     MasterID tmp_id M5_VAR_USED;

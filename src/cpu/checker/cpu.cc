@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011,2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -142,9 +142,8 @@ Fault
 CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
 {
     Fault fault = NoFault;
-    unsigned blockSize = dcachePort->peerBlockSize();
     int fullSize = size;
-    Addr secondAddr = roundDown(addr + size - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
     bool checked_flags = false;
     bool flags_match = true;
     Addr pAddr = 0x0;
@@ -236,10 +235,9 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
     bool flags_match = true;
     Addr pAddr = 0x0;
 
-    unsigned blockSize = dcachePort->peerBlockSize();
     int fullSize = size;
 
-    Addr secondAddr = roundDown(addr + size - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
 
     if (secondAddr > addr)
         size = secondAddr - addr;

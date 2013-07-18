@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -81,6 +81,8 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       fetchWidth(params->fetchWidth),
       retryPkt(NULL),
       retryTid(InvalidThreadID),
+      cacheBlkSize(cpu->cacheLineSize()),
+      cacheBlkMask(cacheBlkSize - 1),
       numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       finishTranslationEvent(this)
@@ -126,11 +128,17 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     instSize = sizeof(TheISA::MachInst);
 
     for (int i = 0; i < Impl::MaxThreads; i++) {
-        cacheData[i] = NULL;
         decoder[i] = new TheISA::Decoder;
     }
 
     branchPred = params->branchPred;
+
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        // Create space to store a cache line.
+        cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
+    }
 }
 
 template <class Impl>
@@ -336,34 +344,6 @@ DefaultFetch<Impl>::resetStage()
 
     wroteToTimeBuffer = false;
     _status = Inactive;
-
-    // this CPU could still be unconnected if we are restoring from a
-    // checkpoint and this CPU is to be switched in, thus we can only
-    // do this here if the instruction port is actually connected, if
-    // not we have to do it as part of takeOverFrom.
-    if (cpu->getInstPort().isConnected())
-        setIcache();
-}
-
-template<class Impl>
-void
-DefaultFetch<Impl>::setIcache()
-{
-    assert(cpu->getInstPort().isConnected());
-
-    // Size of cache block.
-    cacheBlkSize = cpu->getInstPort().peerBlockSize();
-
-    // Create mask to get rid of offset bits.
-    cacheBlkMask = (cacheBlkSize - 1);
-
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        // Create space to store a cache line.
-        if (!cacheData[tid])
-            cacheData[tid] = new uint8_t[cacheBlkSize];
-        cacheDataPC[tid] = 0;
-        cacheDataValid[tid] = false;
-    }
 }
 
 template<class Impl>

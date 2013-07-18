@@ -179,6 +179,11 @@ class System : public MemObject
     void setMemoryMode(Enums::MemoryMode mode);
     /** @} */
 
+    /**
+     * Get the cache line size of the system.
+     */
+    unsigned int cacheLineSize() const { return _cacheLineSize; }
+
     PCEventQueue pcEventQueue;
 
     std::vector<ThreadContext *> threadContexts;
@@ -263,6 +268,9 @@ class System : public MemObject
     PhysicalMemory physmem;
 
     Enums::MemoryMode memoryMode;
+
+    const unsigned int _cacheLineSize;
+
     uint64_t workItemsBegin;
     uint64_t workItemsEnd;
     uint32_t numWorkIds;

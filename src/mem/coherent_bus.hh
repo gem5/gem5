@@ -140,12 +140,6 @@ class CoherentBus : public BaseBus
         virtual AddrRangeList getAddrRanges() const
         { return bus.getAddrRanges(); }
 
-        /**
-         * Get the maximum block size as seen by the bus.
-         */
-        virtual unsigned deviceBlockSize() const
-        { return bus.deviceBlockSize(); }
-
     };
 
     /**
@@ -210,12 +204,6 @@ class CoherentBus : public BaseBus
             pass it to the bus. */
         virtual void recvRetry()
         { bus.recvRetry(id); }
-
-        // Ask the bus to ask everyone on the bus what their block size is and
-        // take the max of it. This might need to be changed a bit if we ever
-        // support multiple block sizes.
-        virtual unsigned deviceBlockSize() const
-        { return bus.deviceBlockSize(); }
 
     };
 

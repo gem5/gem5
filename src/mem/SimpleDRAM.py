@@ -170,7 +170,7 @@ class SimpleDRAM(AbstractMemory):
 
     # tRC  - assumed to be 4 * tRP
 
-    # burst length for an access derived from peerBlockSize
+    # burst length for an access derived from the cache line size
 
 # A single DDR3 x64 interface (one command and address bus), with
 # default timings based on DDR3-1600 4 Gbit parts in an 8x8

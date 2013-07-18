@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@
 #include "dev/io_device.hh"
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
+#include "sim/system.hh"
 
 class DmaPort : public MasterPort
 {
@@ -146,7 +147,6 @@ class DmaPort : public MasterPort
 
     bool dmaPending() const { return pendingCount > 0; }
 
-    unsigned cacheBlockSize() const { return peerBlockSize(); }
     unsigned int drain(DrainManager *drainManger);
 };
 
@@ -178,7 +178,7 @@ class DmaDevice : public PioDevice
 
     unsigned int drain(DrainManager *drainManger);
 
-    unsigned cacheBlockSize() const { return dmaPort.cacheBlockSize(); }
+    unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 
     virtual BaseMasterPort &getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);

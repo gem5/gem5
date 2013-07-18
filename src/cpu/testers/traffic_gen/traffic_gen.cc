@@ -268,11 +268,10 @@ TrafficGen::parseConfig()
                             max_period, read_percent);
 
 
-                    if (port.deviceBlockSize() &&
-                        blocksize > port.deviceBlockSize())
+                    if (blocksize > system->cacheLineSize())
                         fatal("TrafficGen %s block size (%d) is larger than "
-                              "port block size (%d)\n", name(),
-                              blocksize, port.deviceBlockSize());
+                              "system block size (%d)\n", name(),
+                              blocksize, system->cacheLineSize());
 
                     if (read_percent > 100)
                         fatal("%s cannot have more than 100% reads", name());

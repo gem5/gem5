@@ -110,11 +110,6 @@ Bridge::init()
     if (!slavePort.isConnected() || !masterPort.isConnected())
         fatal("Both ports of bus bridge are not connected to a bus.\n");
 
-    if (slavePort.peerBlockSize() != masterPort.peerBlockSize())
-        fatal("Slave port size %d, master port size %d \n " \
-              "Busses don't have the same block size... Not supported.\n",
-              slavePort.peerBlockSize(), masterPort.peerBlockSize());
-
     // notify the master side  of our address ranges
     slavePort.sendRangeChange();
 }

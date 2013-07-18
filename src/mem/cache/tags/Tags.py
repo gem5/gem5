@@ -46,8 +46,8 @@ class BaseTags(ClockedObject):
     # Get the size from the parent (cache)
     size = Param.MemorySize(Parent.size, "capacity in bytes")
 
-    # Get the block size from the parent (cache)
-    block_size = Param.Int(Parent.block_size, "block size in bytes")
+    # Get the block size from the parent (system)
+    block_size = Param.Int(Parent.cache_line_size, "block size in bytes")
 
     # Get the hit latency from the parent (cache)
     hit_latency = Param.Cycles(Parent.hit_latency,

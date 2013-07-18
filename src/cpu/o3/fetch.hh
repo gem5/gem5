@@ -216,9 +216,6 @@ class DefaultFetch
     /** Initialize stage. */
     void startupStage();
 
-    /** Tells the fetch stage that the Icache is set. */
-    void setIcache();
-
     /** Handles retrying the fetch access. */
     void recvRetry();
 
@@ -464,7 +461,7 @@ class DefaultFetch
     ThreadID retryTid;
 
     /** Cache block size. */
-    int cacheBlkSize;
+    unsigned int cacheBlkSize;
 
     /** Mask to get a cache block's address. */
     Addr cacheBlkMask;

@@ -73,7 +73,6 @@ class RubyPort : public MemObject
                RubySystem*_system, bool _access_phys_mem);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
-        unsigned deviceBlockSize() const;
         
         bool onRetryList() 
         { return _onRetryList; }

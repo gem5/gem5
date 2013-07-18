@@ -476,12 +476,6 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
     return ruby_port->system->isMemAddr(addr);
 }
 
-unsigned
-RubyPort::M5Port::deviceBlockSize() const
-{
-    return (unsigned) RubySystem::getBlockSizeBytes();
-}
-
 void
 RubyPort::ruby_eviction_callback(const Address& address)
 {

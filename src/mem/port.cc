@@ -155,12 +155,6 @@ MasterPort::unbind()
     _baseSlavePort = NULL;
 }
 
-unsigned
-MasterPort::peerBlockSize() const
-{
-    return _slavePort->deviceBlockSize();
-}
-
 AddrRangeList
 MasterPort::getAddrRanges() const
 {
@@ -236,12 +230,6 @@ SlavePort::bind(MasterPort& master_port)
 {
     _baseMasterPort = &master_port;
     _masterPort = &master_port;
-}
-
-unsigned
-SlavePort::peerBlockSize() const
-{
-    return _masterPort->deviceBlockSize();
 }
 
 Tick

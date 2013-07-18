@@ -287,14 +287,12 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
         traceData->setAddr(addr);
     }
 
-    //The block size of our peer.
-    unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
     int fullSize = size;
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + size - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
 
     if (secondAddr > addr)
         size = secondAddr - addr;
@@ -375,14 +373,12 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
         traceData->setAddr(addr);
     }
 
-    //The block size of our peer.
-    unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
     int fullSize = size;
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + size - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
 
     if(secondAddr > addr)
         size = secondAddr - addr;

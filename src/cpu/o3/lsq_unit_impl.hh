@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved
@@ -190,7 +191,7 @@ LSQUnit<Impl>::resetState()
     isLoadBlocked = false;
     loadBlockedHandled = false;
 
-    cacheBlockMask = 0;
+    cacheBlockMask = ~(cpu->cacheLineSize() - 1);
 }
 
 template<class Impl>
@@ -418,16 +419,6 @@ void
 LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 {
     int load_idx = loadHead;
-
-    if (!cacheBlockMask) {
-        assert(dcachePort);
-        Addr bs = dcachePort->peerBlockSize();
-
-        // Make sure we actually got a size
-        assert(bs != 0);
-
-        cacheBlockMask = ~(bs - 1);
-    }
 
     // Unlock the cpu-local monitor when the CPU sees a snoop to a locked
     // address. The CPU can speculatively execute a LL operation after a pending

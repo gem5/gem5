@@ -345,15 +345,6 @@ class BaseBus : public MemObject
     void calcPacketTiming(PacketPtr pkt);
 
     /**
-     * Ask everyone on the bus what their size is and determine the
-     * bus size as either the maximum, or if no device specifies a
-     * block size return the default.
-     *
-     * @return the max of all the sizes or the default if none is set
-     */
-    unsigned deviceBlockSize() const;
-
-    /**
      * Remember for each of the master ports of the bus if we got an
      * address range from the connected slave. For convenience, also
      * keep track of if we got ranges from all the slave modules or
@@ -380,8 +371,6 @@ class BaseBus : public MemObject
        range will cause a fatal error.  If false, just send all
        addresses not handled by another port to default device. */
     const bool useDefaultRange;
-
-    uint32_t blockSize;
 
     BaseBus(const BaseBusParams *p);
 

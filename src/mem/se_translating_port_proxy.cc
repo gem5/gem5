@@ -50,13 +50,14 @@
 #include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 using namespace TheISA;
 
 SETranslatingPortProxy::SETranslatingPortProxy(MasterPort& port, Process *p,
                                            AllocType alloc)
-    : PortProxy(port), pTable(p->pTable), process(p),
-      allocating(alloc)
+    : PortProxy(port, p->system->cacheLineSize()), pTable(p->pTable),
+      process(p), allocating(alloc)
 { }
 
 SETranslatingPortProxy::~SETranslatingPortProxy()

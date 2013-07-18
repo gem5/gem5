@@ -57,12 +57,12 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/insttracer.hh"
+#include "sim/system.hh"
 
 struct BaseCPUParams;
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
-class System;
 
 class CPUProgressEvent : public Event
 {
@@ -116,6 +116,9 @@ class BaseCPU : public MemObject
 
     /** Is the CPU switched out or active? */
     bool _switchedOut;
+
+    /** Cache the cache line size that we get from the system */
+    const unsigned int _cacheLineSize;
 
   public:
 
@@ -341,6 +344,11 @@ class BaseCPU : public MemObject
     EventQueue **comLoadEventQueue;
 
     System *system;
+
+    /**
+     * Get the cache line size of the system.
+     */
+    inline unsigned int cacheLineSize() const { return _cacheLineSize; }
 
     /**
      * Serialize this object to the given output stream.

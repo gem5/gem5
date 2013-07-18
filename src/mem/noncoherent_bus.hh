@@ -132,12 +132,6 @@ class NoncoherentBus : public BaseBus
         virtual AddrRangeList getAddrRanges() const
         { return bus.getAddrRanges(); }
 
-        /**
-         * Get the maximum block size as seen by the bus.
-         */
-        virtual unsigned deviceBlockSize() const
-        { return bus.deviceBlockSize(); }
-
     };
 
     /**
@@ -176,12 +170,6 @@ class NoncoherentBus : public BaseBus
             pass it to the bus. */
         virtual void recvRetry()
         { bus.recvRetry(id); }
-
-        /**
-         * Get the maximum block size as seen by the bus.
-         */
-        virtual unsigned deviceBlockSize() const
-        { return bus.deviceBlockSize(); }
 
     };
 

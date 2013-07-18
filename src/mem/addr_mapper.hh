@@ -143,11 +143,6 @@ class AddrMapper : public MemObject
             return mapper.isSnooping();
         }
 
-        unsigned deviceBlockSize() const
-        {
-            return mapper.deviceBlockSizeMaster();
-        }
-
         void recvRetry()
         {
             mapper.recvRetryMaster();
@@ -193,11 +188,6 @@ class AddrMapper : public MemObject
             return mapper.recvTimingSnoopResp(pkt);
         }
 
-        unsigned deviceBlockSize() const
-        {
-            return mapper.deviceBlockSizeSlave();
-        }
-
         AddrRangeList getAddrRanges() const
         {
             return mapper.getAddrRanges();
@@ -232,10 +222,6 @@ class AddrMapper : public MemObject
     void recvTimingSnoopReq(PacketPtr pkt);
 
     bool recvTimingSnoopResp(PacketPtr pkt);
-
-    unsigned deviceBlockSizeMaster();
-
-    unsigned deviceBlockSizeSlave();
 
     virtual AddrRangeList getAddrRanges() const = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -238,7 +238,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             //all caches have the same line size in gem5
             //4 byte words in ARM
             unsigned lineSizeWords =
-                tc->getCpuPtr()->getInstPort().peerBlockSize() / 4;
+                tc->getSystemPtr()->cacheLineSize() / 4;
             unsigned log2LineSizeWords = 0;
 
             while (lineSizeWords >>= 1) {

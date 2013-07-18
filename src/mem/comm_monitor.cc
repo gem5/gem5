@@ -378,18 +378,6 @@ CommMonitor::isSnooping() const
     return slavePort.isSnooping();
 }
 
-unsigned
-CommMonitor::deviceBlockSizeMaster()
-{
-    return slavePort.peerBlockSize();
-}
-
-unsigned
-CommMonitor::deviceBlockSizeSlave()
-{
-    return masterPort.peerBlockSize();
-}
-
 AddrRangeList
 CommMonitor::getAddrRanges() const
 {

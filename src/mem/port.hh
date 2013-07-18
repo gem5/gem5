@@ -265,17 +265,6 @@ class MasterPort : public BaseMasterPort
     virtual bool isSnooping() const { return false; }
 
     /**
-     * Called by a peer port in order to determine the block size of
-     * the owner of this port.
-     */
-    virtual unsigned deviceBlockSize() const { return 0; }
-
-    /** Called by the associated device if it wishes to find out the blocksize
-        of the device on attached to the peer port.
-    */
-    unsigned peerBlockSize() const;
-
-    /**
      * Get the address ranges of the connected slave port.
      */
     AddrRangeList getAddrRanges() const;
@@ -404,17 +393,6 @@ class SlavePort : public BaseSlavePort
      * failed.
      */
     void sendRetry();
-
-    /**
-     * Called by a peer port in order to determine the block size of
-     * the owner of this port.
-     */
-    virtual unsigned deviceBlockSize() const { return 0; }
-
-    /** Called by the associated device if it wishes to find out the blocksize
-        of the device on attached to the peer port.
-    */
-    unsigned peerBlockSize() const;
 
     /**
      * Find out if the peer master port is snooping or not.

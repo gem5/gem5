@@ -163,7 +163,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
             event ? event->scheduled() : -1);
-    for (ChunkGenerator gen(addr, size, peerBlockSize());
+    for (ChunkGenerator gen(addr, size, sys->cacheLineSize());
          !gen.done(); gen.next()) {
         Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
         PacketPtr pkt = new Packet(req, cmd);
