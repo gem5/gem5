@@ -106,7 +106,7 @@ def setWorkCountOptions(system, options):
     if options.work_cpus_checkpoint_count != None:
         system.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
 
-def findCptDir(options, maxtick, cptdir, testsys):
+def findCptDir(options, cptdir, testsys):
     """Figures out the directory from which the checkpointed state is read.
 
     There are two different ways in which the directories holding checkpoints
@@ -117,9 +117,6 @@ def findCptDir(options, maxtick, cptdir, testsys):
     This function parses through the options to figure out which one of the
     above should be used for selecting the checkpoint, and then figures out
     the appropriate directory.
-
-    It also sets the value of the maximum tick value till which the simulation
-    will run.
     """
 
     from os.path import isdir, exists
@@ -155,10 +152,10 @@ def findCptDir(options, maxtick, cptdir, testsys):
         if cpt_num > len(cpts):
             fatal('Checkpoint %d not found', cpt_num)
 
-        maxtick = maxtick - int(cpts[cpt_num - 1])
+        cpt_starttick = int(cpts[cpt_num - 1])
         checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
 
-    return maxtick, checkpoint_dir
+    return cpt_starttick, checkpoint_dir
 
 def scriptCheckpoints(options, maxtick, cptdir):
     if options.at_instruction or options.simpoint:
@@ -260,15 +257,6 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
             return exit_event
 
 def run(options, root, testsys, cpu_class):
-    if options.maxtick:
-        maxtick = options.maxtick
-    elif options.maxtime:
-        simtime = m5.ticks.seconds(simtime)
-        print "simulating for: ", simtime
-        maxtick = simtime
-    else:
-        maxtick = m5.MaxTick
-
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
     elif m5.options.outdir:
@@ -421,9 +409,39 @@ def run(options, root, testsys, cpu_class):
                 testsys.cpu[i].max_insts_any_thread = offset
 
     checkpoint_dir = None
-    if options.checkpoint_restore != None:
-        maxtick, checkpoint_dir = findCptDir(options, maxtick, cptdir, testsys)
+    if options.checkpoint_restore:
+        cpt_starttick, checkpoint_dir = findCptDir(options, cptdir, testsys)
     m5.instantiate(checkpoint_dir)
+
+    # Handle the max tick settings now that tick frequency was resolved
+    # during system instantiation
+    # NOTE: the maxtick variable here is in absolute ticks, so it must
+    # include any simulated ticks before a checkpoint
+    explicit_maxticks = 0
+    maxtick_from_abs = m5.MaxTick
+    maxtick_from_rel = m5.MaxTick
+    maxtick_from_maxtime = m5.MaxTick
+    if options.abs_max_tick:
+        maxtick_from_abs = options.abs_max_tick
+        explicit_maxticks += 1
+    if options.rel_max_tick:
+        maxtick_from_rel = options.rel_max_tick
+        if options.checkpoint_restore:
+            # NOTE: this may need to be updated if checkpoints ever store
+            # the ticks per simulated second
+            maxtick_from_rel += cpt_starttick
+        explicit_maxticks += 1
+    if options.maxtime:
+        maxtick_from_maxtime = m5.ticks.fromSeconds(options.maxtime)
+        explicit_maxticks += 1
+    if explicit_maxticks > 1:
+        warn("Specified multiple of --abs-max-tick, --rel-max-tick, --maxtime."\
+             " Using least")
+    maxtick = min([maxtick_from_abs, maxtick_from_rel, maxtick_from_maxtime])
+
+    if options.checkpoint_restore != None and maxtick < cpt_starttick:
+        fatal("Bad maxtick (%d) specified: " \
+              "Checkpoint starts starts from tick: %d", maxtick, cpt_starttick)
 
     if options.standard_switch or cpu_class:
         if options.standard_switch:

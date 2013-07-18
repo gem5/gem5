@@ -109,9 +109,16 @@ def addCommonOptions(parser):
     parser.add_option("--ruby", action="store_true")
 
     # Run duration options
-    parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
-                      metavar="T", help="Stop after T ticks")
-    parser.add_option("--maxtime", type="float")
+    parser.add_option("-m", "--abs-max-tick", type="int", default=None,
+                      metavar="TICKS", help="Run to absolute simulated tick " \
+                      "specified including ticks from a restored checkpoint")
+    parser.add_option("--rel-max-tick", type="int", default=None,
+                      metavar="TICKS", help="Simulate for specified number of" \
+                      " ticks relative to the simulation start tick (e.g. if " \
+                      "restoring a checkpoint)")
+    parser.add_option("--maxtime", type="float", default=None,
+                      help="Run to the specified absolute simulated time in " \
+                      "seconds")
     parser.add_option("-I", "--maxinsts", action="store", type="int",
                       default=None, help="""Total number of instructions to
                                             simulate (default: run forever)""")
