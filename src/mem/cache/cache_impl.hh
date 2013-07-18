@@ -84,6 +84,16 @@ Cache<TagStore>::Cache(const Params *p)
 }
 
 template<class TagStore>
+Cache<TagStore>::~Cache()
+{
+    delete [] tempBlock->data;
+    delete tempBlock;
+
+    delete cpuSidePort;
+    delete memSidePort;
+}
+
+template<class TagStore>
 void
 Cache<TagStore>::regStats()
 {

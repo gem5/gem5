@@ -411,6 +411,9 @@ class Cache : public BaseCache
     /** Instantiates a basic cache object. */
     Cache(const Params *p);
 
+    /** Non-default destructor is needed to deallocate memory. */
+    virtual ~Cache();
+
     void regStats();
 
     /** serialize the state of the caches
