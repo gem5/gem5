@@ -57,8 +57,8 @@ from m5.internal.stats import updateEvents as updateStatEvents
 from util import fatal
 from util import attrdict
 
-# define a MaxTick parameter
-MaxTick = 2**63 - 1
+# define a MaxTick parameter, unsigned 64 bit
+MaxTick = 2**64 - 1
 
 _memory_modes = {
     "atomic" : objects.params.atomic,
