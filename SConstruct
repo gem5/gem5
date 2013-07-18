@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2013 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2011 Advanced Micro Devices, Inc.
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # Copyright (c) 2004-2005 The Regents of The University of Michigan
@@ -81,16 +93,15 @@ For more details, see:
 """
     raise
 
-# We ensure the python version early because we have stuff that
-# requires python 2.4
+# We ensure the python version early because because python-config
+# requires python 2.5
 try:
-    EnsurePythonVersion(2, 4)
+    EnsurePythonVersion(2, 5)
 except SystemExit, e:
     print """
 You can use a non-default installation of the Python interpreter by
-either (1) rearranging your PATH so that scons finds the non-default
-'python' first or (2) explicitly invoking an alternative interpreter
-on the scons script.
+rearranging your PATH so that scons finds the non-default 'python' and
+'python-config' first.
 
 For more details, see:
     http://gem5.org/wiki/index.php/Using_a_non-default_Python_installation
@@ -827,55 +838,35 @@ if not conf:
 
     conf = NullConf(main)
 
-# Find Python include and library directories for embedding the
-# interpreter.  For consistency, we will use the same Python
-# installation used to run scons (and thus this script).  If you want
-# to link in an alternate version, see above for instructions on how
-# to invoke scons with a different copy of the Python interpreter.
-from distutils import sysconfig
-
-py_getvar = sysconfig.get_config_var
-
-py_debug = getattr(sys, 'pydebug', False)
-py_version = 'python' + py_getvar('VERSION') + (py_debug and "_d" or "")
-
-py_general_include = sysconfig.get_python_inc()
-py_platform_include = sysconfig.get_python_inc(plat_specific=True)
-py_includes = [ py_general_include ]
-if py_platform_include != py_general_include:
-    py_includes.append(py_platform_include)
-
-py_lib_path = [ py_getvar('LIBDIR') ]
-# add the prefix/lib/pythonX.Y/config dir, but only if there is no
-# shared library in prefix/lib/.
-if not py_getvar('Py_ENABLE_SHARED'):
-    py_lib_path.append(py_getvar('LIBPL'))
-    # Python requires the flags in LINKFORSHARED to be added the
-    # linker flags when linking with a statically with Python. Failing
-    # to do so can lead to errors from the Python's dynamic module
-    # loader at start up.
-    main.Append(LINKFLAGS=[py_getvar('LINKFORSHARED').split()])
-
-py_libs = []
-for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
-    if not lib.startswith('-l'):
-        # Python requires some special flags to link (e.g. -framework
-        # common on OS X systems), assume appending preserves order
-        main.Append(LINKFLAGS=[lib])
-    else:
-        lib = lib[2:]
-        if lib not in py_libs:
-            py_libs.append(lib)
-py_libs.append(py_version)
-
-main.Append(CPPPATH=py_includes)
-main.Append(LIBPATH=py_lib_path)
-
 # Cache build files in the supplied directory.
 if main['M5_BUILD_CACHE']:
     print 'Using build cache located at', main['M5_BUILD_CACHE']
     CacheDir(main['M5_BUILD_CACHE'])
 
+# Find Python include and library directories for embedding the
+# interpreter. We rely on python-config to resolve the appropriate
+# includes and linker flags. ParseConfig does not seem to understand
+# the more exotic linker flags such as -Xlinker and -export-dynamic so
+# we add them explicitly below. If you want to link in an alternate
+# version of python, see above for instructions on how to invoke
+# scons with the appropriate PATH set.
+py_includes = readCommand(['python-config', '--includes'],
+                          exception='').split()
+# Strip the -I from the include folders before adding them to the
+# CPPPATH
+main.Append(CPPPATH=map(lambda inc: inc[2:], py_includes))
+
+# Read the linker flags and split them into libraries and other link
+# flags. The libraries are added later through the call the CheckLib.
+py_ld_flags = readCommand(['python-config', '--ldflags'], exception='').split()
+py_libs = []
+for lib in py_ld_flags:
+     if not lib.startswith('-l'):
+         main.Append(LINKFLAGS=[lib])
+     else:
+         lib = lib[2:]
+         if lib not in py_libs:
+             py_libs.append(lib)
 
 # verify that this stuff works
 if not conf.CheckHeader('Python.h', '<>'):
