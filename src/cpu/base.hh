@@ -60,7 +60,6 @@
 #include "sim/system.hh"
 
 struct BaseCPUParams;
-class BranchPred;
 class CheckerCPU;
 class ThreadContext;
 
@@ -392,12 +391,6 @@ class BaseCPU : public MemObject
      */
     virtual void unserializeThread(Checkpoint *cp, const std::string &section,
                                    ThreadID tid) {};
-
-    /**
-     * Return pointer to CPU's branch predictor (NULL if none).
-     * @return Branch predictor pointer.
-     */
-    virtual BranchPred *getBranchPred() { return NULL; };
 
     virtual Counter totalInsts() const = 0;
 
