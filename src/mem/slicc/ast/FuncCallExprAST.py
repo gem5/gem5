@@ -160,10 +160,6 @@ if (!(${{cvec[0]}})) {
 #endif
 ''')
 
-        elif self.proc_name == "continueProcessing":
-            code("counter++;")
-            code("continue; // Check the first port again")
-
         elif self.proc_name == "set_cache_entry":
             code("set_cache_entry(m_cache_entry_ptr, %s);" %(cvec[0]));
         elif self.proc_name == "unset_cache_entry":
