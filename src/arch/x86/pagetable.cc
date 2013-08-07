@@ -70,25 +70,14 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(paddr);
     UNSERIALIZE_SCALAR(vaddr);
-    //
-    // The logBytes scalar variable replaced the previous size variable.
-    // The following code maintains backwards compatibility with previous
-    // checkpoints using the old size variable.
-    //
-    if (UNSERIALIZE_OPT_SCALAR(logBytes) == false) {
-        int size;
-        UNSERIALIZE_SCALAR(size);
-        logBytes = log2(size);
-    }
+    UNSERIALIZE_SCALAR(logBytes);
     UNSERIALIZE_SCALAR(writable);
     UNSERIALIZE_SCALAR(user);
     UNSERIALIZE_SCALAR(uncacheable);
     UNSERIALIZE_SCALAR(global);
     UNSERIALIZE_SCALAR(patBit);
     UNSERIALIZE_SCALAR(noExec);
-    if (UNSERIALIZE_OPT_SCALAR(lruSeq) == false) {
-        lruSeq = 0;
-    }
+    UNSERIALIZE_SCALAR(lruSeq);
 }
 
 }

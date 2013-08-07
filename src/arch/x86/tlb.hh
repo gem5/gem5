@@ -95,12 +95,11 @@ namespace X86ISA
         void demapPage(Addr va, uint64_t asn);
 
       protected:
-        int size;
+        uint32_t size;
 
         TlbEntry * tlb;
 
         EntryList freeList;
-        EntryList entryList;
 
         TlbEntryTrie trie;
         uint64_t lruSeq;

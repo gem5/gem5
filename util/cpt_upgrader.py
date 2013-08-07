@@ -193,7 +193,21 @@ def from_4(cpt):
                 del mr[137]
                 cpt.set(sec, 'miscRegs', ' '.join(str(x) for x in mr))
 
+# Version 6 of the checkpoint format adds tlb to x86 checkpoints
+def from_5(cpt):
+    if cpt.get('root','isa') == 'x86':
+        for sec in cpt.sections():
+            import re
+            # Search for all ISA sections
+            if re.search('.*sys.*\.cpu.*\.dtb$', sec):
+                cpt.set(sec, '_size', '0')
+                cpt.set(sec, 'lruSeq', '0')
 
+            if re.search('.*sys.*\.cpu.*\.itb$', sec):
+                cpt.set(sec, '_size', '0')
+                cpt.set(sec, 'lruSeq', '0')
+    else:
+        print "ISA is not x86"
 
 migrations = []
 migrations.append(from_0)
@@ -201,6 +215,7 @@ migrations.append(from_1)
 migrations.append(from_2)
 migrations.append(from_3)
 migrations.append(from_4)
+migrations.append(from_5)
 
 verbose_print = False
 
