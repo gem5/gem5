@@ -253,10 +253,7 @@ class $c_ident : public AbstractController
     static int getNumControllers();
     void init();
     MessageBuffer* getMandatoryQueue() const;
-    const int & getVersion() const;
     const std::string toString() const;
-    const std::string getName() const;
-    void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
 
     void print(std::ostream& out) const;
     void wakeup();
@@ -265,8 +262,6 @@ class $c_ident : public AbstractController
     void regStats();
     void collateStats();
 
-    void blockOnQueue(Address addr, MessageBuffer* port);
-    void unblock(Address addr);
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
     Sequencer* getSequencer() const;
 
@@ -840,38 +835,10 @@ $c_ident::getSequencer() const
     return $seq_ident;
 }
 
-const int &
-$c_ident::getVersion() const
-{
-    return m_version;
-}
-
 const string
 $c_ident::toString() const
 {
     return "$c_ident";
-}
-
-const string
-$c_ident::getName() const
-{
-    return m_name;
-}
-
-void
-$c_ident::blockOnQueue(Address addr, MessageBuffer* port)
-{
-    m_is_blocking = true;
-    m_block_map[addr] = port;
-}
-
-void
-$c_ident::unblock(Address addr)
-{
-    m_block_map.erase(addr);
-    if (m_block_map.size() == 0) {
-       m_is_blocking = false;
-    }
 }
 
 void

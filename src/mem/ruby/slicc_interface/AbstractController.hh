@@ -56,14 +56,17 @@ class AbstractController : public ClockedObject, public Consumer
     void init();
     const Params *params() const { return (const Params *)_params; }
 
+    const int & getVersion() const { return m_version; }
+    void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
+
+    // return instance name
+    const std::string getName() const { return m_name; }
+    void blockOnQueue(Address, MessageBuffer*);
+    void unblock(Address);
+
     virtual MessageBuffer* getMandatoryQueue() const = 0;
-    virtual const int & getVersion() const = 0;
     virtual const std::string toString() const = 0;  // returns text version of
                                                      // controller type
-    virtual const std::string getName() const = 0;   // return instance name
-    virtual void blockOnQueue(Address, MessageBuffer*) = 0;
-    virtual void unblock(Address) = 0;
-    virtual void initNetworkPtr(Network* net_ptr) = 0;
     virtual AccessPermission getAccessPermission(const Address& addr) = 0;
     virtual DataBlock& getDataBlock(const Address& addr) = 0;
 

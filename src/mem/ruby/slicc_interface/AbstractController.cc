@@ -182,3 +182,19 @@ AbstractController::wakeUpAllBuffers()
         m_waiting_buffers.clear();
     }
 }
+
+void
+AbstractController::blockOnQueue(Address addr, MessageBuffer* port)
+{
+    m_is_blocking = true;
+    m_block_map[addr] = port;
+}
+
+void
+AbstractController::unblock(Address addr)
+{
+    m_block_map.erase(addr);
+    if (m_block_map.size() == 0) {
+       m_is_blocking = false;
+    }
+}
