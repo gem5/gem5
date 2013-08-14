@@ -39,7 +39,7 @@
 # Authors: Nathan Binkert
 #          Ali Saidi
 
-### If we are not compiling on an arm, we must use cross tools ###    
+### If we are not compiling on an arm, we must use cross tools ###
 ifneq ($(shell uname -m), armv7l)
 CROSS_COMPILE?=arm-linux-gnueabi-
 endif
@@ -54,7 +54,7 @@ JR=jar
 ### JDK_PATH must be set to build gem5OpJni
 #JDK_PATH=/path/to/jdk/version_number
 
-CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux
+CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux -march=armv7-a
 LDFLAGS=-L. -lm5
 
 LIB_OBJS=m5op_arm.o
