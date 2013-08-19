@@ -109,7 +109,6 @@ TimingSimpleCPU::drain(DrainManager *drain_manager)
 
     if (_status == Idle ||
         (_status == BaseSimpleCPU::Running && isDrained())) {
-        assert(!fetchEvent.scheduled());
         DPRINTF(Drain, "No need to drain.\n");
         return 0;
     } else {

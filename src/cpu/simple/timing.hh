@@ -320,11 +320,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
      *     of a gem5 microcode sequence.
      *
      * <li>Stay at PC is true.
+     *
+     * <li>A fetch event is scheduled. Normally this would never be the
+           case with microPC() == 0, but right after a context is
+           activated it can happen.
      * </ul>
      */
     bool isDrained() {
-        return microPC() == 0 &&
-            !stayAtPC;
+        return microPC() == 0 && !stayAtPC && !fetchEvent.scheduled();
     }
 
     /**
