@@ -89,8 +89,7 @@ for (i, cpu) in enumerate(system.cpu):
     # Set access_phys_mem to True for ruby port
     system.ruby._cpu_ruby_ports[i].access_phys_mem = True
 
-system.physmem = [DDR3_1600_x64(range = r,
-                                conf_table_reported = True)
+system.physmem = [DDR3_1600_x64(range = r)
                   for r in system.mem_ranges]
 for i in xrange(len(system.physmem)):
     system.physmem[i].port = system.piobus.master

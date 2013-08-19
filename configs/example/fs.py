@@ -174,8 +174,7 @@ CacheConfig.config_cache(options, test_sys)
 
 # Create the appropriate memory controllers and connect them to the
 # memory bus
-test_sys.mem_ctrls = [TestMemClass(range = r, conf_table_reported = True)
-                      for r in test_sys.mem_ranges]
+test_sys.mem_ctrls = [TestMemClass(range = r) for r in test_sys.mem_ranges]
 for i in xrange(len(test_sys.mem_ctrls)):
     test_sys.mem_ctrls[i].port = test_sys.membus.master
 
@@ -225,7 +224,7 @@ if len(bm) == 2:
 
     # Create the appropriate memory controllers and connect them to the
     # memory bus
-    drive_sys.mem_ctrls = [DriveMemClass(range = r, conf_table_reported = True)
+    drive_sys.mem_ctrls = [DriveMemClass(range = r)
                            for r in drive_sys.mem_ranges]
     for i in xrange(len(drive_sys.mem_ctrls)):
         drive_sys.mem_ctrls[i].port = drive_sys.membus.master

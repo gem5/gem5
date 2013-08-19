@@ -46,7 +46,10 @@ class AbstractMemory(MemObject):
     type = 'AbstractMemory'
     abstract = True
     cxx_header = "mem/abstract_mem.hh"
-    range = Param.AddrRange(AddrRange('128MB'), "Address range")
+
+    # A default memory size of 128 MB (starting at 0) is used to
+    # simplify the regressions
+    range = Param.AddrRange('128MB', "Address range (potentially interleaved)")
     null = Param.Bool(False, "Do not store data, always return zero")
 
     # All memories are passed to the global physical memory, and
@@ -57,4 +60,4 @@ class AbstractMemory(MemObject):
     # Should the bootloader include this memory when passing
     # configuration information about the physical memory layout to
     # the kernel, e.g. using ATAG or ACPI
-    conf_table_reported = Param.Bool(False, "Report to configuration table")
+    conf_table_reported = Param.Bool(True, "Report to configuration table")

@@ -128,9 +128,7 @@ for (i, cpu) in enumerate(system.cpu):
 
 # Create the appropriate memory controllers and connect them to the
 # PIO bus
-system.mem_ctrls = [TestMemClass(range = r,
-                                 conf_table_reported = True)
-                    for r in system.mem_ranges]
+system.mem_ctrls = [TestMemClass(range = r) for r in system.mem_ranges]
 for i in xrange(len(system.physmem)):
     system.mem_ctrls[i].port = system.piobus.master
 

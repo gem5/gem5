@@ -45,8 +45,7 @@ cpu.connectAllPorts(system.membus)
 
 # create the memory controllers and connect them, stick with
 # the physmem name to avoid bumping all the reference stats
-system.physmem = [SimpleMemory(range = r,
-                               conf_table_reported = True)
+system.physmem = [SimpleMemory(range = r)
                   for r in system.mem_ranges]
 for i in xrange(len(system.physmem)):
     system.physmem[i].port = system.membus.master
