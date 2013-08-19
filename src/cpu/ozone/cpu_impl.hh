@@ -282,7 +282,7 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     assert(thread_num == 0);
 
     assert(_status == Idle);
-    notIdleFraction++;
+    notIdleFraction = 1;
     scheduleTickEvent(delay);
     _status = Running;
     if (thread.quiesceEvent && thread.quiesceEvent->scheduled())
@@ -300,7 +300,7 @@ OzoneCPU<Impl>::suspendContext(int thread_num)
     // @todo: Figure out how to initially set the status properly so
     // this is running.
 //    assert(_status == Running);
-    notIdleFraction--;
+    notIdleFraction = 0;
     unscheduleTickEvent();
     _status = Idle;
 }

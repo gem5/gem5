@@ -175,8 +175,10 @@ AtomicSimpleCPU::drainResume()
     if (thread->status() == ThreadContext::Active) {
         schedule(tickEvent, nextCycle());
         _status = BaseSimpleCPU::Running;
+        notIdleFraction = 1;
     } else {
         _status = BaseSimpleCPU::Idle;
+        notIdleFraction = 0;
     }
 
     system->totalNumInsts = 0;
@@ -244,7 +246,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
     assert(_status == Idle);
     assert(!tickEvent.scheduled());
 
-    notIdleFraction++;
+    notIdleFraction = 1;
     numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
@@ -271,7 +273,7 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
     if (tickEvent.scheduled())
         deschedule(tickEvent);
 
-    notIdleFraction--;
+    notIdleFraction = 0;
     _status = Idle;
 }
 

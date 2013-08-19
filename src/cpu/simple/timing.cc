@@ -143,8 +143,10 @@ TimingSimpleCPU::drainResume()
     if (thread->status() == ThreadContext::Active) {
         schedule(fetchEvent, nextCycle());
         _status = BaseSimpleCPU::Running;
+        notIdleFraction = 1;
     } else {
         _status = BaseSimpleCPU::Idle;
+        notIdleFraction = 0;
     }
 }
 
@@ -206,7 +208,7 @@ TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
 
     assert(_status == Idle);
 
-    notIdleFraction++;
+    notIdleFraction = 1;
     _status = BaseSimpleCPU::Running;
 
     // kick things off by initiating the fetch of the next instruction
@@ -230,7 +232,7 @@ TimingSimpleCPU::suspendContext(ThreadID thread_num)
     // just change status to Idle... if status != Running,
     // completeInst() will not initiate fetch of next instruction.
 
-    notIdleFraction--;
+    notIdleFraction = 0;
     _status = Idle;
 }
 
