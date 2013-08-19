@@ -249,6 +249,7 @@ struct VectorPrint
     int precision;
     VResult vec;
     Result total;
+    bool forceSubnames = false;
 
     void operator()(ostream &stream) const;
 };
@@ -279,6 +280,11 @@ VectorPrint::operator()(std::ostream &stream) const
     bool havesub = !subnames.empty();
 
     if (_size == 1) {
+        // If forceSubnames is set, get the first subname (or index in
+        // the case where there are no subnames) and append it to the
+        // base name.
+        if (forceSubnames)
+            print.name = base + (havesub ? subnames[0] : to_string(0));
         print.value = vec[0];
         print(stream);
         return;
@@ -550,6 +556,7 @@ Text::visit(const Vector2dInfo &info)
     print.separatorString = info.separatorString;
     print.descriptions = descriptions;
     print.precision = info.precision;
+    print.forceSubnames = true;
 
     if (!info.subnames.empty()) {
         for (off_type i = 0; i < info.x; ++i)
@@ -558,7 +565,7 @@ Text::visit(const Vector2dInfo &info)
     }
 
     VResult tot_vec(info.y);
-    Result super_total = 0.0;
+    VResult super_total(1, 0.0);
     for (off_type i = 0; i < info.x; ++i) {
         if (havesub && (i >= info.subnames.size() || info.subnames[i].empty()))
             continue;
@@ -571,7 +578,7 @@ Text::visit(const Vector2dInfo &info)
             yvec[j] = info.cvec[iy + j];
             tot_vec[j] += yvec[j];
             total += yvec[j];
-            super_total += yvec[j];
+            super_total[0] += yvec[j];
         }
 
         print.name = info.name + "_" +
@@ -582,11 +589,16 @@ Text::visit(const Vector2dInfo &info)
         print(*stream);
     }
 
+    // Create a subname for printing the total
+    vector<string> total_subname;
+    total_subname.push_back("total");
+
     if (info.flags.isSet(::Stats::total) && (info.x > 1)) {
         print.name = info.name;
+        print.subnames = total_subname;
         print.desc = info.desc;
-        print.vec = tot_vec;
-        print.total = super_total;
+        print.vec = super_total;
+        print.flags = print.flags & ~total;
         print(*stream);
     }
 }
