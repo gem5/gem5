@@ -4,11 +4,11 @@ sim_seconds                                  0.000025                       # Nu
 sim_ticks                                    24587000                       # Number of ticks simulated
 final_tick                                   24587000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  41260                       # Simulator instruction rate (inst/s)
-host_op_rate                                    41253                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              174426700                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 226212                       # Number of bytes of host memory used
-host_seconds                                     0.14                       # Real time elapsed on the host
+host_inst_rate                                  52979                       # Simulator instruction rate (inst/s)
+host_op_rate                                    52966                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              223940501                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 224928                       # Number of bytes of host memory used
+host_seconds                                     0.11                       # Real time elapsed on the host
 sim_insts                                        5814                       # Number of instructions simulated
 sim_ops                                          5814                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             20288                       # Number of bytes read from this memory
@@ -27,14 +27,15 @@ system.physmem.bw_inst_read::total          825151503                       # In
 system.physmem.bw_total::cpu.inst           825151503                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data           359214219                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total             1184365722                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                           455                       # Total number of read requests seen
-system.physmem.writeReqs                            0                       # Total number of write requests seen
-system.physmem.cpureqs                            455                       # Reqs generatd by CPU via cache - shady
+system.physmem.readReqs                           455                       # Total number of read requests accepted by DRAM controller
+system.physmem.writeReqs                            0                       # Total number of write requests accepted by DRAM controller
+system.physmem.readBursts                         455                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
+system.physmem.writeBursts                          0                       # Total number of DRAM write bursts. Each DRAM write request translates to either one or multiple DRAM write bursts
 system.physmem.bytesRead                        29120                       # Total number of bytes read from memory
 system.physmem.bytesWritten                         0                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd                  29120                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                      0                       # bytesWritten derated as per pkt->getSize()
-system.physmem.servicedByWrQ                        0                       # Number of read reqs serviced by write Q
+system.physmem.servicedByWrQ                        0                       # Number of DRAM read bursts serviced by write Q
 system.physmem.neitherReadNorWrite                  0                       # Reqs where no action is needed
 system.physmem.perBankRdReqs::0                    28                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::1                     0                       # Track reads on a per bank basis
@@ -195,10 +196,10 @@ system.membus.trans_dist::ReadReq                 404                       # Tr
 system.membus.trans_dist::ReadResp                404                       # Transaction distribution
 system.membus.trans_dist::ReadExReq                51                       # Transaction distribution
 system.membus.trans_dist::ReadExResp               51                       # Transaction distribution
-system.membus.pkt_count_system.cpu.l2cache.mem_side          910                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count                           910                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.cpu.l2cache.mem_side        29120                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size                      29120                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port          910                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                    910                       # Packet count per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.physmem.port        29120                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size::total               29120                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.data_through_bus                  29120                       # Total data (bytes)
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
 system.membus.reqLayer0.occupancy              551500                       # Layer occupancy (ticks)
@@ -293,15 +294,15 @@ system.cpu.stage3.utilization                2.517539                       # Pe
 system.cpu.stage4.idleCycles                    46285                       # Number of cycles 0 instructions are processed.
 system.cpu.stage4.runCycles                      2890                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage4.utilization                5.876970                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.icache.tags.replacements                     13                       # number of replacements
-system.cpu.icache.tags.tagsinuse                150.350232                       # Cycle average of tags in use
-system.cpu.icache.tags.total_refs                      428                       # Total number of references to valid blocks.
-system.cpu.icache.tags.sampled_refs                    319                       # Sample count of references to valid blocks.
-system.cpu.icache.tags.avg_refs                   1.341693                       # Average number of references to valid blocks.
-system.cpu.icache.tags.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
-system.cpu.icache.tags.occ_blocks::cpu.inst     150.350232                       # Average occupied blocks per requestor
-system.cpu.icache.tags.occ_percent::cpu.inst      0.073413                       # Average percentage of cache occupancy
-system.cpu.icache.tags.occ_percent::total         0.073413                       # Average percentage of cache occupancy
+system.cpu.icache.tags.replacements                13                       # number of replacements
+system.cpu.icache.tags.tagsinuse           150.350232                       # Cycle average of tags in use
+system.cpu.icache.tags.total_refs                 428                       # Total number of references to valid blocks.
+system.cpu.icache.tags.sampled_refs               319                       # Sample count of references to valid blocks.
+system.cpu.icache.tags.avg_refs              1.341693                       # Average number of references to valid blocks.
+system.cpu.icache.tags.warmup_cycle                 0                       # Cycle when the warmup percentage was hit.
+system.cpu.icache.tags.occ_blocks::cpu.inst   150.350232                       # Average occupied blocks per requestor
+system.cpu.icache.tags.occ_percent::cpu.inst     0.073413                       # Average percentage of cache occupancy
+system.cpu.icache.tags.occ_percent::total     0.073413                       # Average percentage of cache occupancy
 system.cpu.icache.ReadReq_hits::cpu.inst          428                       # number of ReadReq hits
 system.cpu.icache.ReadReq_hits::total             428                       # number of ReadReq hits
 system.cpu.icache.demand_hits::cpu.inst           428                       # number of demand (read+write) hits
@@ -382,12 +383,12 @@ system.cpu.toL2Bus.trans_dist::ReadReq            406                       # Tr
 system.cpu.toL2Bus.trans_dist::ReadResp           406                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq           51                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExResp           51                       # Transaction distribution
-system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side          638                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side          276                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count                      914                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side        20416                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side         8832                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size                 29248                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side          638                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side          276                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total               914                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        20416                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side         8832                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size::total          29248                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.data_through_bus             29248                       # Total data (bytes)
 system.cpu.toL2Bus.snoop_data_through_bus            0                       # Total snoop data (bytes)
 system.cpu.toL2Bus.reqLayer0.occupancy         228500                       # Layer occupancy (ticks)
@@ -396,17 +397,17 @@ system.cpu.toL2Bus.respLayer0.occupancy        543000                       # La
 system.cpu.toL2Bus.respLayer0.utilization          2.2                       # Layer utilization (%)
 system.cpu.toL2Bus.respLayer1.occupancy        228000                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.respLayer1.utilization          0.9                       # Layer utilization (%)
-system.cpu.l2cache.tags.replacements                     0                       # number of replacements
-system.cpu.l2cache.tags.tagsinuse               208.008874                       # Cycle average of tags in use
-system.cpu.l2cache.tags.total_refs                       2                       # Total number of references to valid blocks.
-system.cpu.l2cache.tags.sampled_refs                   404                       # Sample count of references to valid blocks.
-system.cpu.l2cache.tags.avg_refs                  0.004950                       # Average number of references to valid blocks.
-system.cpu.l2cache.tags.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
-system.cpu.l2cache.tags.occ_blocks::cpu.inst    152.043119                       # Average occupied blocks per requestor
-system.cpu.l2cache.tags.occ_blocks::cpu.data     55.965756                       # Average occupied blocks per requestor
+system.cpu.l2cache.tags.replacements                0                       # number of replacements
+system.cpu.l2cache.tags.tagsinuse          208.008874                       # Cycle average of tags in use
+system.cpu.l2cache.tags.total_refs                  2                       # Total number of references to valid blocks.
+system.cpu.l2cache.tags.sampled_refs              404                       # Sample count of references to valid blocks.
+system.cpu.l2cache.tags.avg_refs             0.004950                       # Average number of references to valid blocks.
+system.cpu.l2cache.tags.warmup_cycle                0                       # Cycle when the warmup percentage was hit.
+system.cpu.l2cache.tags.occ_blocks::cpu.inst   152.043119                       # Average occupied blocks per requestor
+system.cpu.l2cache.tags.occ_blocks::cpu.data    55.965756                       # Average occupied blocks per requestor
 system.cpu.l2cache.tags.occ_percent::cpu.inst     0.004640                       # Average percentage of cache occupancy
 system.cpu.l2cache.tags.occ_percent::cpu.data     0.001708                       # Average percentage of cache occupancy
-system.cpu.l2cache.tags.occ_percent::total        0.006348                       # Average percentage of cache occupancy
+system.cpu.l2cache.tags.occ_percent::total     0.006348                       # Average percentage of cache occupancy
 system.cpu.l2cache.ReadReq_hits::cpu.inst            2                       # number of ReadReq hits
 system.cpu.l2cache.ReadReq_hits::total              2                       # number of ReadReq hits
 system.cpu.l2cache.demand_hits::cpu.inst            2                       # number of demand (read+write) hits
@@ -521,15 +522,15 @@ system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.inst 57861.198738         
 system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.data 62804.347826                       # average overall mshr miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency::total 59360.439560                       # average overall mshr miss latency
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu.dcache.tags.replacements                      0                       # number of replacements
-system.cpu.dcache.tags.tagsinuse                 89.984709                       # Cycle average of tags in use
-system.cpu.dcache.tags.total_refs                     1638                       # Total number of references to valid blocks.
-system.cpu.dcache.tags.sampled_refs                    138                       # Sample count of references to valid blocks.
-system.cpu.dcache.tags.avg_refs                  11.869565                       # Average number of references to valid blocks.
-system.cpu.dcache.tags.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
-system.cpu.dcache.tags.occ_blocks::cpu.data      89.984709                       # Average occupied blocks per requestor
-system.cpu.dcache.tags.occ_percent::cpu.data      0.021969                       # Average percentage of cache occupancy
-system.cpu.dcache.tags.occ_percent::total         0.021969                       # Average percentage of cache occupancy
+system.cpu.dcache.tags.replacements                 0                       # number of replacements
+system.cpu.dcache.tags.tagsinuse            89.984709                       # Cycle average of tags in use
+system.cpu.dcache.tags.total_refs                1638                       # Total number of references to valid blocks.
+system.cpu.dcache.tags.sampled_refs               138                       # Sample count of references to valid blocks.
+system.cpu.dcache.tags.avg_refs             11.869565                       # Average number of references to valid blocks.
+system.cpu.dcache.tags.warmup_cycle                 0                       # Cycle when the warmup percentage was hit.
+system.cpu.dcache.tags.occ_blocks::cpu.data    89.984709                       # Average occupied blocks per requestor
+system.cpu.dcache.tags.occ_percent::cpu.data     0.021969                       # Average percentage of cache occupancy
+system.cpu.dcache.tags.occ_percent::total     0.021969                       # Average percentage of cache occupancy
 system.cpu.dcache.ReadReq_hits::cpu.data         1066                       # number of ReadReq hits
 system.cpu.dcache.ReadReq_hits::total            1066                       # number of ReadReq hits
 system.cpu.dcache.WriteReq_hits::cpu.data          572                       # number of WriteReq hits

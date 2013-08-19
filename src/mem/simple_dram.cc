@@ -520,8 +520,9 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         writeBursts++;
 
         // see if we can merge with an existing item in the write
-        // queue and keep track of whether we have merged or not, as
-        // there is only ever one item to merge with
+        // queue and keep track of whether we have merged or not so we
+        // can stop at that point and also avoid enqueueing a new
+        // request
         bool merged = false;
         auto w = writeQueue.begin();
 
@@ -529,6 +530,9 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
             // either of the two could be first, if they are the same
             // it does not matter which way we go
             if ((*w)->addr >= addr) {
+                // the existing one starts after the new one, figure
+                // out where the new one ends with respect to the
+                // existing one
                 if ((addr + size) >= ((*w)->addr + (*w)->size)) {
                     // check if the existing one is completely
                     // subsumed in the new one
@@ -550,6 +554,9 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
                     (*w)->size = (*w)->addr + (*w)->size - addr;
                 }
             } else {
+                // the new one starts after the current one, figure
+                // out where the existing one ends with respect to the
+                // new one
                 if (((*w)->addr + (*w)->size) >= (addr + size)) {
                     // check if the new one is completely subsumed in the
                     // existing one

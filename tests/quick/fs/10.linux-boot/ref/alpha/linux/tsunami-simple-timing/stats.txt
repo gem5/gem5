@@ -4,11 +4,11 @@ sim_seconds                                  1.918473                       # Nu
 sim_ticks                                1918473094000                       # Number of ticks simulated
 final_tick                               1918473094000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 813863                       # Simulator instruction rate (inst/s)
-host_op_rate                                   813863                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            27788392408                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 306196                       # Number of bytes of host memory used
-host_seconds                                    69.04                       # Real time elapsed on the host
+host_inst_rate                                 948634                       # Simulator instruction rate (inst/s)
+host_op_rate                                   948634                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            32389976926                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 304780                       # Number of bytes of host memory used
+host_seconds                                    59.23                       # Real time elapsed on the host
 sim_insts                                    56188014                       # Number of instructions simulated
 sim_ops                                      56188014                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            850688                       # Number of bytes read from this memory
@@ -38,14 +38,15 @@ system.physmem.bw_total::cpu.inst              443419                       # To
 system.physmem.bw_total::cpu.data            12951700                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::tsunami.ide          1382533                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total               18629615                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                        442977                       # Total number of read requests seen
-system.physmem.writeReqs                       115467                       # Total number of write requests seen
-system.physmem.cpureqs                         558574                       # Reqs generatd by CPU via cache - shady
+system.physmem.readReqs                        442977                       # Total number of read requests accepted by DRAM controller
+system.physmem.writeReqs                       115467                       # Total number of write requests accepted by DRAM controller
+system.physmem.readBursts                      442977                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
+system.physmem.writeBursts                     115467                       # Total number of DRAM write bursts. Each DRAM write request translates to either one or multiple DRAM write bursts
 system.physmem.bytesRead                     28350528                       # Total number of bytes read from memory
 system.physmem.bytesWritten                   7389888                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd               28350528                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                7389888                       # bytesWritten derated as per pkt->getSize()
-system.physmem.servicedByWrQ                       50                       # Number of read reqs serviced by write Q
+system.physmem.servicedByWrQ                       50                       # Number of DRAM read bursts serviced by write Q
 system.physmem.neitherReadNorWrite                130                       # Reqs where no action is needed
 system.physmem.perBankRdReqs::0                 27963                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::1                 28090                       # Track reads on a per bank basis
@@ -329,16 +330,12 @@ system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port       8
 system.membus.pkt_count_system.cpu.l2cache.mem_side::total       910714                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::system.physmem.port       124680                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::total       124680                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.bridge.slave        33158                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.physmem.port      1002236                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                1035394                       # Packet count per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.bridge.slave        44556                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.physmem.port     30431296                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::total     30475852                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.iocache.mem_side::system.physmem.port      5309120                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.iocache.mem_side::total      5309120                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.bridge.slave        44556                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.physmem.port     35740416                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size::total            35784972                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.data_through_bus               35784972                       # Total data (bytes)
 system.membus.snoop_data_through_bus            35392                       # Total snoop data (bytes)
@@ -350,15 +347,15 @@ system.membus.respLayer1.occupancy         3745756604                       # La
 system.membus.respLayer1.utilization              0.2                       # Layer utilization (%)
 system.membus.respLayer2.occupancy          376206000                       # Layer occupancy (ticks)
 system.membus.respLayer2.utilization              0.0                       # Layer utilization (%)
-system.iocache.tags.replacements                     41685                       # number of replacements
-system.iocache.tags.tagsinuse                     1.345474                       # Cycle average of tags in use
-system.iocache.tags.total_refs                           0                       # Total number of references to valid blocks.
-system.iocache.tags.sampled_refs                     41701                       # Sample count of references to valid blocks.
-system.iocache.tags.avg_refs                             0                       # Average number of references to valid blocks.
-system.iocache.tags.warmup_cycle              1752558313000                       # Cycle when the warmup percentage was hit.
-system.iocache.tags.occ_blocks::tsunami.ide       1.345474                       # Average occupied blocks per requestor
-system.iocache.tags.occ_percent::tsunami.ide      0.084092                       # Average percentage of cache occupancy
-system.iocache.tags.occ_percent::total            0.084092                       # Average percentage of cache occupancy
+system.iocache.tags.replacements                41685                       # number of replacements
+system.iocache.tags.tagsinuse                1.345474                       # Cycle average of tags in use
+system.iocache.tags.total_refs                      0                       # Total number of references to valid blocks.
+system.iocache.tags.sampled_refs                41701                       # Sample count of references to valid blocks.
+system.iocache.tags.avg_refs                        0                       # Average number of references to valid blocks.
+system.iocache.tags.warmup_cycle         1752558313000                       # Cycle when the warmup percentage was hit.
+system.iocache.tags.occ_blocks::tsunami.ide     1.345474                       # Average occupied blocks per requestor
+system.iocache.tags.occ_percent::tsunami.ide     0.084092                       # Average percentage of cache occupancy
+system.iocache.tags.occ_percent::total       0.084092                       # Average percentage of cache occupancy
 system.iocache.ReadReq_misses::tsunami.ide          173                       # number of ReadReq misses
 system.iocache.ReadReq_misses::total              173                       # number of ReadReq misses
 system.iocache.WriteReq_misses::tsunami.ide        41552                       # number of WriteReq misses
@@ -644,19 +641,6 @@ system.iobus.pkt_count_system.bridge.master::system.tsunami.pciconfig.pio       
 system.iobus.pkt_count_system.bridge.master::total        33158                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.tsunami.ide.dma::system.iocache.cpu_side        83450                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.tsunami.ide.dma::total        83450                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.cchip.pio         5154                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.pchip.pio          472                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.fake_sm_chip.pio           10                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.fake_uart4.pio           10                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.io.pio          180                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.uart.pio        18120                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.backdoor.pio         1904                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.ide.pio         6672                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.ide-pciconf          294                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.ethernet.pio          102                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.ethernet-pciconf          180                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.iocache.cpu_side        83450                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.tsunami.pciconfig.pio           60                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count::total                  116608                       # Packet count per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.bridge.master::system.tsunami.cchip.pio        20616                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.bridge.master::system.tsunami.pchip.pio         1888                       # Cumulative packet size per connected master and slave (bytes)
@@ -673,19 +657,6 @@ system.iobus.tot_pkt_size_system.bridge.master::system.tsunami.pciconfig.pio    
 system.iobus.tot_pkt_size_system.bridge.master::total        44556                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.tsunami.ide.dma::system.iocache.cpu_side      2661608                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.tsunami.ide.dma::total      2661608                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.cchip.pio        20616                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.pchip.pio         1888                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.fake_sm_chip.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.fake_uart4.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.io.pio          160                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.uart.pio         9060                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.backdoor.pio         7596                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.ide.pio         4193                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.ide-pciconf          410                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.ethernet.pio          204                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.ethernet-pciconf          299                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.iocache.cpu_side      2661608                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.tsunami.pciconfig.pio          120                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size::total              2706164                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.data_through_bus                 2706164                       # Total data (bytes)
 system.iobus.reqLayer0.occupancy              4765000                       # Layer occupancy (ticks)
@@ -718,15 +689,15 @@ system.iobus.respLayer0.occupancy            23509000                       # La
 system.iobus.respLayer0.utilization               0.0                       # Layer utilization (%)
 system.iobus.respLayer1.occupancy            43091000                       # Layer occupancy (ticks)
 system.iobus.respLayer1.utilization               0.0                       # Layer utilization (%)
-system.cpu.icache.tags.replacements                 928665                       # number of replacements
-system.cpu.icache.tags.tagsinuse                508.413691                       # Cycle average of tags in use
-system.cpu.icache.tags.total_refs                 55270512                       # Total number of references to valid blocks.
-system.cpu.icache.tags.sampled_refs                 929176                       # Sample count of references to valid blocks.
-system.cpu.icache.tags.avg_refs                  59.483362                       # Average number of references to valid blocks.
-system.cpu.icache.tags.warmup_cycle            38814414250                       # Cycle when the warmup percentage was hit.
-system.cpu.icache.tags.occ_blocks::cpu.inst     508.413691                       # Average occupied blocks per requestor
-system.cpu.icache.tags.occ_percent::cpu.inst      0.992995                       # Average percentage of cache occupancy
-system.cpu.icache.tags.occ_percent::total         0.992995                       # Average percentage of cache occupancy
+system.cpu.icache.tags.replacements            928665                       # number of replacements
+system.cpu.icache.tags.tagsinuse           508.413691                       # Cycle average of tags in use
+system.cpu.icache.tags.total_refs            55270512                       # Total number of references to valid blocks.
+system.cpu.icache.tags.sampled_refs            929176                       # Sample count of references to valid blocks.
+system.cpu.icache.tags.avg_refs             59.483362                       # Average number of references to valid blocks.
+system.cpu.icache.tags.warmup_cycle       38814414250                       # Cycle when the warmup percentage was hit.
+system.cpu.icache.tags.occ_blocks::cpu.inst   508.413691                       # Average occupied blocks per requestor
+system.cpu.icache.tags.occ_percent::cpu.inst     0.992995                       # Average percentage of cache occupancy
+system.cpu.icache.tags.occ_percent::total     0.992995                       # Average percentage of cache occupancy
 system.cpu.icache.ReadReq_hits::cpu.inst     55270512                       # number of ReadReq hits
 system.cpu.icache.ReadReq_hits::total        55270512                       # number of ReadReq hits
 system.cpu.icache.demand_hits::cpu.inst      55270512                       # number of demand (read+write) hits
@@ -796,19 +767,19 @@ system.cpu.icache.demand_avg_mshr_miss_latency::total 11998.051020              
 system.cpu.icache.overall_avg_mshr_miss_latency::cpu.inst 11998.051020                       # average overall mshr miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency::total 11998.051020                       # average overall mshr miss latency
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.l2cache.tags.replacements                336065                       # number of replacements
-system.cpu.l2cache.tags.tagsinuse             65300.870394                       # Cycle average of tags in use
-system.cpu.l2cache.tags.total_refs                 2448301                       # Total number of references to valid blocks.
-system.cpu.l2cache.tags.sampled_refs                401226                       # Sample count of references to valid blocks.
-system.cpu.l2cache.tags.avg_refs                  6.102050                       # Average number of references to valid blocks.
-system.cpu.l2cache.tags.warmup_cycle            6580892750                       # Cycle when the warmup percentage was hit.
+system.cpu.l2cache.tags.replacements           336065                       # number of replacements
+system.cpu.l2cache.tags.tagsinuse        65300.870394                       # Cycle average of tags in use
+system.cpu.l2cache.tags.total_refs            2448301                       # Total number of references to valid blocks.
+system.cpu.l2cache.tags.sampled_refs           401226                       # Sample count of references to valid blocks.
+system.cpu.l2cache.tags.avg_refs             6.102050                       # Average number of references to valid blocks.
+system.cpu.l2cache.tags.warmup_cycle       6580892750                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.tags.occ_blocks::writebacks 55613.136753                       # Average occupied blocks per requestor
-system.cpu.l2cache.tags.occ_blocks::cpu.inst   4759.199410                       # Average occupied blocks per requestor
-system.cpu.l2cache.tags.occ_blocks::cpu.data   4928.534231                       # Average occupied blocks per requestor
+system.cpu.l2cache.tags.occ_blocks::cpu.inst  4759.199410                       # Average occupied blocks per requestor
+system.cpu.l2cache.tags.occ_blocks::cpu.data  4928.534231                       # Average occupied blocks per requestor
 system.cpu.l2cache.tags.occ_percent::writebacks     0.848589                       # Average percentage of cache occupancy
 system.cpu.l2cache.tags.occ_percent::cpu.inst     0.072620                       # Average percentage of cache occupancy
 system.cpu.l2cache.tags.occ_percent::cpu.data     0.075203                       # Average percentage of cache occupancy
-system.cpu.l2cache.tags.occ_percent::total        0.996412                       # Average percentage of cache occupancy
+system.cpu.l2cache.tags.occ_percent::total     0.996412                       # Average percentage of cache occupancy
 system.cpu.l2cache.ReadReq_hits::cpu.inst       916024                       # number of ReadReq hits
 system.cpu.l2cache.ReadReq_hits::cpu.data       814969                       # number of ReadReq hits
 system.cpu.l2cache.ReadReq_hits::total        1730993                       # number of ReadReq hits
@@ -966,15 +937,15 @@ system.cpu.l2cache.WriteReq_avg_mshr_uncacheable_latency::total          inf    
 system.cpu.l2cache.overall_avg_mshr_uncacheable_latency::cpu.data          inf                       # average overall mshr uncacheable latency
 system.cpu.l2cache.overall_avg_mshr_uncacheable_latency::total          inf                       # average overall mshr uncacheable latency
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu.dcache.tags.replacements                1390866                       # number of replacements
-system.cpu.dcache.tags.tagsinuse                511.979110                       # Cycle average of tags in use
-system.cpu.dcache.tags.total_refs                 14050029                       # Total number of references to valid blocks.
-system.cpu.dcache.tags.sampled_refs                1391378                       # Sample count of references to valid blocks.
-system.cpu.dcache.tags.avg_refs                  10.097924                       # Average number of references to valid blocks.
-system.cpu.dcache.tags.warmup_cycle              105729250                       # Cycle when the warmup percentage was hit.
-system.cpu.dcache.tags.occ_blocks::cpu.data     511.979110                       # Average occupied blocks per requestor
-system.cpu.dcache.tags.occ_percent::cpu.data      0.999959                       # Average percentage of cache occupancy
-system.cpu.dcache.tags.occ_percent::total         0.999959                       # Average percentage of cache occupancy
+system.cpu.dcache.tags.replacements           1390866                       # number of replacements
+system.cpu.dcache.tags.tagsinuse           511.979110                       # Cycle average of tags in use
+system.cpu.dcache.tags.total_refs            14050029                       # Total number of references to valid blocks.
+system.cpu.dcache.tags.sampled_refs           1391378                       # Sample count of references to valid blocks.
+system.cpu.dcache.tags.avg_refs             10.097924                       # Average number of references to valid blocks.
+system.cpu.dcache.tags.warmup_cycle         105729250                       # Cycle when the warmup percentage was hit.
+system.cpu.dcache.tags.occ_blocks::cpu.data   511.979110                       # Average occupied blocks per requestor
+system.cpu.dcache.tags.occ_percent::cpu.data     0.999959                       # Average percentage of cache occupancy
+system.cpu.dcache.tags.occ_percent::total     0.999959                       # Average percentage of cache occupancy
 system.cpu.dcache.ReadReq_hits::cpu.data      7815067                       # number of ReadReq hits
 system.cpu.dcache.ReadReq_hits::total         7815067                       # number of ReadReq hits
 system.cpu.dcache.WriteReq_hits::cpu.data      5852671                       # number of WriteReq hits
@@ -1112,12 +1083,12 @@ system.cpu.toL2Bus.trans_dist::UpgradeReq           17                       # T
 system.cpu.toL2Bus.trans_dist::UpgradeResp           17                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq       346045                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExResp       304495                       # Transaction distribution
-system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side      1858652                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side      3651517                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count                  5510169                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side     59476224                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side    142569036                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size             202045260                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side      1858652                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side      3651517                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total           5510169                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side     59476224                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side    142569036                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size::total      202045260                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.data_through_bus         202035148                       # Total data (bytes)
 system.cpu.toL2Bus.snoop_data_through_bus        11392                       # Total snoop data (bytes)
 system.cpu.toL2Bus.reqLayer0.occupancy     2426591000                       # Layer occupancy (ticks)

@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            29067628326                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 231288                       # Number of bytes of host memory used
-host_seconds                                     3.44                       # Real time elapsed on the host
+host_tick_rate                            12102739985                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 228608                       # Number of bytes of host memory used
+host_seconds                                     8.26                       # Real time elapsed on the host
 system.physmem.bytes_read::cpu              213331136                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            213331136                       # Number of bytes read from this memory
 system.physmem.num_reads::cpu                 3333299                       # Number of read requests responded to by this memory
@@ -15,14 +15,15 @@ system.physmem.bw_read::cpu                2133311360                       # To
 system.physmem.bw_read::total              2133311360                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_total::cpu               2133311360                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total             2133311360                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                       3333300                       # Total number of read requests seen
-system.physmem.writeReqs                            0                       # Total number of write requests seen
-system.physmem.cpureqs                        3333300                       # Reqs generatd by CPU via cache - shady
+system.physmem.readReqs                       3333300                       # Total number of read requests accepted by DRAM controller
+system.physmem.writeReqs                            0                       # Total number of write requests accepted by DRAM controller
+system.physmem.readBursts                     3333300                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
+system.physmem.writeBursts                          0                       # Total number of DRAM write bursts. Each DRAM write request translates to either one or multiple DRAM write bursts
 system.physmem.bytesRead                    213331136                       # Total number of bytes read from memory
 system.physmem.bytesWritten                         0                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd              213331136                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                      0                       # bytesWritten derated as per pkt->getSize()
-system.physmem.servicedByWrQ                        0                       # Number of read reqs serviced by write Q
+system.physmem.servicedByWrQ                        0                       # Number of DRAM read bursts serviced by write Q
 system.physmem.neitherReadNorWrite                  0                       # Reqs where no action is needed
 system.physmem.perBankRdReqs::0                217600                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::1                217600                       # Track reads on a per bank basis
@@ -169,18 +170,15 @@ system.physmem.avgGap                        30000.29                       # Av
 system.membus.throughput                   2133311360                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq             3333300                       # Transaction distribution
 system.membus.trans_dist::ReadResp            3333299                       # Transaction distribution
-system.membus.pkt_count_system.monitor-master      6666599                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count                       6666599                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.monitor-master    213331136                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size                  213331136                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_count_system.monitor-master::system.physmem.port      6666599                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                6666599                       # Packet count per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.monitor-master::system.physmem.port    213331136                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size::total           213331136                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.data_through_bus              213331136                       # Total data (bytes)
 system.membus.reqLayer0.occupancy          6333270000                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization               6.3                       # Layer utilization (%)
 system.membus.respLayer0.occupancy        17184426300                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization             17.2                       # Layer utilization (%)
-system.cpu.numPackets                         3333300                       # Number of packets generated
-system.cpu.numRetries                               0                       # Number of retries
-system.cpu.retryTicks                               0                       # Time spent waiting due to back-pressure (ticks)
 system.monitor.readBurstLengthHist::samples      3333300                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
@@ -519,5 +517,8 @@ system.monitor.writeTransHist::17                   0      0.00%    100.00% # Hi
 system.monitor.writeTransHist::18                   0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::19                   0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::total              100                       # Histogram of read transactions per sample period
+system.cpu.numPackets                         3333300                       # Number of packets generated
+system.cpu.numRetries                               0                       # Number of retries
+system.cpu.retryTicks                               0                       # Time spent waiting due to back-pressure (ticks)
 
 ---------- End Simulation Statistics   ----------

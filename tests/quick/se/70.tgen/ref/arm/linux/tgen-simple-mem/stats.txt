@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            14083896029                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 231304                       # Number of bytes of host memory used
-host_seconds                                     7.10                       # Real time elapsed on the host
+host_tick_rate                             8032030639                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 228596                       # Number of bytes of host memory used
+host_seconds                                    12.45                       # Real time elapsed on the host
 system.physmem.bytes_read::cpu                     64                       # Number of bytes read from this memory
 system.physmem.bytes_read::total                   64                       # Number of bytes read from this memory
 system.physmem.bytes_written::cpu           213329152                       # Number of bytes written to this memory
@@ -26,18 +26,15 @@ system.membus.trans_dist::ReadReq                   1                       # Tr
 system.membus.trans_dist::ReadResp                  1                       # Transaction distribution
 system.membus.trans_dist::WriteReq            3333268                       # Transaction distribution
 system.membus.trans_dist::WriteResp           3333267                       # Transaction distribution
-system.membus.pkt_count_system.monitor-master      6666537                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count                       6666537                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.monitor-master    213329216                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size                  213329216                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_count_system.monitor-master::system.physmem.port      6666537                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                6666537                       # Packet count per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.monitor-master::system.physmem.port    213329216                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size::total           213329216                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.data_through_bus              213329216                       # Total data (bytes)
 system.membus.reqLayer0.occupancy         16666342328                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization              16.7                       # Layer utilization (%)
 system.membus.respLayer0.occupancy         3333272000                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization              3.3                       # Layer utilization (%)
-system.cpu.numPackets                         3333269                       # Number of packets generated
-system.cpu.numRetries                               1                       # Number of retries
-system.cpu.retryTicks                            1672                       # Time spent waiting due to back-pressure (ticks)
 system.monitor.readBurstLengthHist::samples            1                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
@@ -376,5 +373,8 @@ system.monitor.writeTransHist::34816-36863            0      0.00%    100.00% # 
 system.monitor.writeTransHist::36864-38911            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::38912-40959            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::total              100                       # Histogram of read transactions per sample period
+system.cpu.numPackets                         3333269                       # Number of packets generated
+system.cpu.numRetries                               1                       # Number of retries
+system.cpu.retryTicks                            1672                       # Time spent waiting due to back-pressure (ticks)
 
 ---------- End Simulation Statistics   ----------

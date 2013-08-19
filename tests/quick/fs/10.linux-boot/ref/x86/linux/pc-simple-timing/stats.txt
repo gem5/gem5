@@ -4,11 +4,11 @@ sim_seconds                                  5.196173                       # Nu
 sim_ticks                                5196173457000                       # Number of ticks simulated
 final_tick                               5196173457000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 766970                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1478526                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            31067837744                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 586132                       # Number of bytes of host memory used
-host_seconds                                   167.25                       # Real time elapsed on the host
+host_inst_rate                                 457062                       # Simulator instruction rate (inst/s)
+host_op_rate                                   881101                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            18514311716                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 585140                       # Number of bytes of host memory used
+host_seconds                                   280.66                       # Real time elapsed on the host
 sim_insts                                   128277551                       # Number of instructions simulated
 sim_ops                                     247287193                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2879808                       # Number of bytes read from this memory
@@ -46,14 +46,15 @@ system.physmem.bw_total::cpu.itb.walker            62                       # To
 system.physmem.bw_total::cpu.inst              159034                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data             1730209                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total                4005815                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                        198391                       # Total number of read requests seen
-system.physmem.writeReqs                       126842                       # Total number of write requests seen
-system.physmem.cpureqs                         326873                       # Reqs generatd by CPU via cache - shady
+system.physmem.readReqs                        198391                       # Total number of read requests accepted by DRAM controller
+system.physmem.writeReqs                       126842                       # Total number of write requests accepted by DRAM controller
+system.physmem.readBursts                      198391                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
+system.physmem.writeBursts                     126842                       # Total number of DRAM write bursts. Each DRAM write request translates to either one or multiple DRAM write bursts
 system.physmem.bytesRead                     12697024                       # Total number of bytes read from memory
 system.physmem.bytesWritten                   8117888                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd               12697024                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                8117888                       # bytesWritten derated as per pkt->getSize()
-system.physmem.servicedByWrQ                       80                       # Number of read reqs serviced by write Q
+system.physmem.servicedByWrQ                       80                       # Number of DRAM read bursts serviced by write Q
 system.physmem.neitherReadNorWrite               1638                       # Reqs where no action is needed
 system.physmem.perBankRdReqs::0                 12755                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::1                 12192                       # Track reads on a per bank basis
@@ -358,39 +359,31 @@ system.membus.trans_dist::MessageReq             1655                       # Tr
 system.membus.trans_dist::MessageResp            1655                       # Transaction distribution
 system.membus.pkt_count_system.apicbridge.master::system.cpu.interrupts.int_slave         3310                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.apicbridge.master::total         3310                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port       391390                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.cpu.l2cache.mem_side::system.bridge.slave       480072                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.cpu.l2cache.mem_side::system.cpu.interrupts.pio       710114                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port       391390                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.cpu.l2cache.mem_side::total      1581576                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::system.physmem.port       139223                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::total       139223                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.physmem.port       530613                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.bridge.slave       480072                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.cpu.interrupts.pio       710114                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::system.cpu.interrupts.int_slave         3310                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                1724109                       # Packet count per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.apicbridge.master::system.cpu.interrupts.int_slave         6620                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.apicbridge.master::total         6620                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.physmem.port     14948416                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.bridge.slave       246316                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.cpu.interrupts.pio      1420225                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.physmem.port     14948416                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::total     16614957                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.iocache.mem_side::system.physmem.port      5866496                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size_system.iocache.mem_side::total      5866496                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.physmem.port     20814912                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.bridge.slave       246316                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.cpu.interrupts.pio      1420225                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::system.cpu.interrupts.int_slave         6620                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.tot_pkt_size::total            22488073                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.data_through_bus               22488073                       # Total data (bytes)
 system.membus.snoop_data_through_bus           205568                       # Total snoop data (bytes)
-system.membus.reqLayer0.occupancy          1351024000                       # Layer occupancy (ticks)
+system.membus.reqLayer0.occupancy           256571500                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization               0.0                       # Layer utilization (%)
-system.membus.reqLayer1.occupancy           256571500                       # Layer occupancy (ticks)
+system.membus.reqLayer1.occupancy           359320500                       # Layer occupancy (ticks)
 system.membus.reqLayer1.utilization               0.0                       # Layer utilization (%)
-system.membus.reqLayer2.occupancy           359320500                       # Layer occupancy (ticks)
+system.membus.reqLayer2.occupancy             3310000                       # Layer occupancy (ticks)
 system.membus.reqLayer2.utilization               0.0                       # Layer utilization (%)
-system.membus.reqLayer3.occupancy             3310000                       # Layer occupancy (ticks)
+system.membus.reqLayer3.occupancy          1351024000                       # Layer occupancy (ticks)
 system.membus.reqLayer3.utilization               0.0                       # Layer utilization (%)
 system.membus.respLayer0.occupancy            1655000                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization              0.0                       # Layer utilization (%)
@@ -532,26 +525,6 @@ system.iobus.pkt_count_system.pc.south_bridge.ide.dma::system.iocache.cpu_side  
 system.iobus.pkt_count_system.pc.south_bridge.ide.dma::total        95118                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.apicbridge.slave         3310                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3310                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.apicbridge.slave         3310                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.cmos.pio           44                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.ide.pio        11088                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.ide-pciconf          180                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.keyboard.pio         1364                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.pic1.pio           86                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.pic2.pio           54                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.speaker.pio       436684                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.south_bridge.io_apic.pio         1210                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.i_dont_exist.pio          170                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.com_1.pio        26980                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.iocache.cpu_side        95118                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::system.pc.pciconfig.pio         2128                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count::total                  578500                       # Packet count per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.bridge.master::system.pc.south_bridge.cmos.pio           22                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.bridge.master::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
@@ -576,26 +549,6 @@ system.iobus.tot_pkt_size_system.pc.south_bridge.ide.dma::system.iocache.cpu_sid
 system.iobus.tot_pkt_size_system.pc.south_bridge.ide.dma::total      3027256                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.apicbridge.slave         6620                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::total         6620                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.apicbridge.slave         6620                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.cmos.pio           22                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.ide.pio         6686                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.ide-pciconf          221                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.keyboard.pio          682                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.pic1.pio           43                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.pic2.pio           27                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.speaker.pio       218342                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.south_bridge.io_apic.pio         2420                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.i_dont_exist.pio           85                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.com_1.pio        13490                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.iocache.cpu_side      3027256                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.tot_pkt_size::system.pc.pciconfig.pio         4256                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.tot_pkt_size::total              3280192                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.data_through_bus                 3280192                       # Total data (bytes)
 system.iobus.reqLayer0.occupancy              3949164                       # Layer occupancy (ticks)
@@ -1032,16 +985,16 @@ system.cpu.toL2Bus.trans_dist::UpgradeReq         2190                       # T
 system.cpu.toL2Bus.trans_dist::UpgradeResp         2190                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq       359066                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExResp       312361                       # Transaction distribution
-system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side      1584265                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side      5972620                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.itb_walker_cache.mem_side         8122                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dtb_walker_cache.mem_side        18187                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count                  7583194                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side     50696064                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side    203753837                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.itb_walker_cache.mem_side       242368                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.dtb_walker_cache.mem_side       606720                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size             255298989                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side      1584265                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side      5972620                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.itb_walker_cache.mem_side::system.cpu.l2cache.cpu_side         8122                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dtb_walker_cache.mem_side::system.cpu.l2cache.cpu_side        18187                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total           7583194                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side     50696064                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side    203753837                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.itb_walker_cache.mem_side::system.cpu.l2cache.cpu_side       242368                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size_system.cpu.dtb_walker_cache.mem_side::system.cpu.l2cache.cpu_side       606720                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.tot_pkt_size::total      255298989                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.data_through_bus         255278509                       # Total data (bytes)
 system.cpu.toL2Bus.snoop_data_through_bus       309568                       # Total snoop data (bytes)
 system.cpu.toL2Bus.reqLayer0.occupancy     3830199000                       # Layer occupancy (ticks)

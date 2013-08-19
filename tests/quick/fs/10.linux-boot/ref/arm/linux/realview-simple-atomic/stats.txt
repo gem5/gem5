@@ -49,14 +49,15 @@ system.physmem.bw_total::cpu.itb.walker            82                       # To
 system.physmem.bw_total::cpu.inst              302262                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data             5181496                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total               54942169                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                             0                       # Total number of read requests seen
-system.physmem.writeReqs                            0                       # Total number of write requests seen
-system.physmem.cpureqs                              0                       # Reqs generatd by CPU via cache - shady
+system.physmem.readReqs                             0                       # Total number of read requests accepted by DRAM controller
+system.physmem.writeReqs                            0                       # Total number of write requests accepted by DRAM controller
+system.physmem.readBursts                           0                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
+system.physmem.writeBursts                          0                       # Total number of DRAM write bursts. Each DRAM write request translates to either one or multiple DRAM write bursts
 system.physmem.bytesRead                            0                       # Total number of bytes read from memory
 system.physmem.bytesWritten                         0                       # Total number of bytes written to memory
 system.physmem.bytesConsumedRd                      0                       # bytesRead derated as per pkt->getSize()
 system.physmem.bytesConsumedWr                      0                       # bytesWritten derated as per pkt->getSize()
-system.physmem.servicedByWrQ                        0                       # Number of read reqs serviced by write Q
+system.physmem.servicedByWrQ                        0                       # Number of DRAM read bursts serviced by write Q
 system.physmem.neitherReadNorWrite                  0                       # Reqs where no action is needed
 system.physmem.perBankRdReqs::0                     0                       # Track reads on a per bank basis
 system.physmem.perBankRdReqs::1                     0                       # Track reads on a per bank basis
