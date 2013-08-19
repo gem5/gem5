@@ -310,8 +310,7 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
         // First check write buffer to see if the data is already at
         // the controller
         bool foundInWrQ = false;
-        list<DRAMPacket*>::const_iterator i;
-        for (i = writeQueue.begin(); i != writeQueue.end(); ++i) {
+        for (auto i = writeQueue.begin(); i != writeQueue.end(); ++i) {
             // check if the read is subsumed in the write entry we are
             // looking at
             if ((*i)->addr <= addr &&
@@ -662,19 +661,16 @@ SimpleDRAM::printParams() const
 
 void
 SimpleDRAM::printQs() const {
-
-    list<DRAMPacket*>::const_iterator i;
-
     DPRINTF(DRAM, "===READ QUEUE===\n\n");
-    for (i = readQueue.begin() ;  i != readQueue.end() ; ++i) {
+    for (auto i = readQueue.begin() ;  i != readQueue.end() ; ++i) {
         DPRINTF(DRAM, "Read %lu\n", (*i)->addr);
     }
     DPRINTF(DRAM, "\n===RESP QUEUE===\n\n");
-    for (i = respQueue.begin() ;  i != respQueue.end() ; ++i) {
+    for (auto i = respQueue.begin() ;  i != respQueue.end() ; ++i) {
         DPRINTF(DRAM, "Response %lu\n", (*i)->addr);
     }
     DPRINTF(DRAM, "\n===WRITE QUEUE===\n\n");
-    for (i = writeQueue.begin() ;  i != writeQueue.end() ; ++i) {
+    for (auto i = writeQueue.begin() ;  i != writeQueue.end() ; ++i) {
         DPRINTF(DRAM, "Write %lu\n", (*i)->addr);
     }
 }
@@ -829,7 +825,7 @@ SimpleDRAM::chooseNextWrite()
     if (memSchedPolicy == Enums::fcfs) {
         // Do nothing, since the correct request is already head
     } else if (memSchedPolicy == Enums::frfcfs) {
-        list<DRAMPacket*>::iterator i = writeQueue.begin();
+        auto i = writeQueue.begin();
         bool foundRowHit = false;
         while (!foundRowHit && i != writeQueue.end()) {
             DRAMPacket* dram_pkt = *i;
@@ -870,8 +866,7 @@ SimpleDRAM::chooseNextRead()
         // Do nothing, since the request to serve is already the first
         // one in the read queue
     } else if (memSchedPolicy == Enums::frfcfs) {
-        for (list<DRAMPacket*>::iterator i = readQueue.begin();
-             i != readQueue.end() ; ++i) {
+        for (auto i = readQueue.begin(); i != readQueue.end() ; ++i) {
             DRAMPacket* dram_pkt = *i;
             const Bank& bank = dram_pkt->bank_ref;
             // Check if it is a row hit
@@ -1153,7 +1148,7 @@ SimpleDRAM::moveToRespQ()
         schedule(respondEvent, dram_pkt->readyTime);
     } else {
         bool done = false;
-        list<DRAMPacket*>::iterator i = respQueue.begin();
+        auto i = respQueue.begin();
         while (!done && i != respQueue.end()) {
             if ((*i)->readyTime > dram_pkt->readyTime) {
                 respQueue.insert(i, dram_pkt);

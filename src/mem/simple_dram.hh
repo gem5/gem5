@@ -406,8 +406,8 @@ class SimpleDRAM : public AbstractMemory
     /**
      * The controller's main read and write queues
      */
-    std::list<DRAMPacket*> readQueue;
-    std::list<DRAMPacket*> writeQueue;
+    std::deque<DRAMPacket*> readQueue;
+    std::deque<DRAMPacket*> writeQueue;
 
     /**
      * Response queue where read packets wait after we're done working
@@ -417,7 +417,7 @@ class SimpleDRAM : public AbstractMemory
      * as sizing the read queue, this and the main read queue need to
      * be added together.
      */
-    std::list<DRAMPacket*> respQueue;
+    std::deque<DRAMPacket*> respQueue;
 
     /**
      * If we need to drain, keep the drain manager around until we're
