@@ -205,13 +205,19 @@ RandomGen::nextPacketTick(bool elastic, Tick delay) const
 TraceGen::InputStream::InputStream(const std::string& filename)
     : trace(filename)
 {
+    init();
+}
+
+void
+TraceGen::InputStream::init()
+{
     // Create a protobuf message for the header and read it from the stream
     Message::PacketHeader header_msg;
     if (!trace.read(header_msg)) {
-        panic("Failed to read packet header from %s\n", filename);
+        panic("Failed to read packet header from trace\n");
 
         if (header_msg.tick_freq() != SimClock::Frequency) {
-            panic("Trace %s was recorded with a different tick frequency %d\n",
+            panic("Trace was recorded with a different tick frequency %d\n",
                   header_msg.tick_freq());
         }
     }
@@ -221,6 +227,7 @@ void
 TraceGen::InputStream::reset()
 {
     trace.reset();
+    init();
 }
 
 bool

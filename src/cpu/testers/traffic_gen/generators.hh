@@ -380,6 +380,12 @@ class TraceGen : public BaseGen
         void reset();
 
         /**
+         * Check the trace header to make sure that it is of the right
+         * format.
+         */
+        void init();
+
+        /**
          * Attempt to read a trace element from the stream,
          * and also notify the caller if the end of the file
          * was reached.
