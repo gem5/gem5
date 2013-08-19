@@ -209,13 +209,13 @@ class SimpleDRAM : public AbstractMemory
          * reason is to keep the address offset so we can accurately check
          * incoming read packets with packets in the write queue.
          */
-        const Addr addr;
+        Addr addr;
 
         /**
          * The size of this dram packet in bytes
          * It is always equal or smaller than DRAM burst size
          */
-        const unsigned int size;
+        unsigned int size;
 
         /**
          * A pointer to the BurstHelper if this DRAMPacket is a split packet

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -312,7 +312,10 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
         bool foundInWrQ = false;
         list<DRAMPacket*>::const_iterator i;
         for (i = writeQueue.begin(); i != writeQueue.end(); ++i) {
-            if ((*i)->addr == addr && (*i)->size >= size){
+            // check if the read is subsumed in the write entry we are
+            // looking at
+            if ((*i)->addr <= addr &&
+                (addr + size) <= ((*i)->addr + (*i)->size)) {
                 foundInWrQ = true;
                 servicedByWrQ++;
                 pktsServicedByWrQ++;
@@ -394,6 +397,10 @@ SimpleDRAM::processWriteEvent()
 
         chooseNextWrite();
         DRAMPacket* dram_pkt = writeQueue.front();
+
+        // sanity check
+        assert(dram_pkt->size <= burstSize);
+
         // What's the earliest the request can be put on the bus
         Tick schedTime = std::max(curTick(), busBusyUntil);
 
@@ -513,23 +520,79 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         writePktSize[ceilLog2(size)]++;
         writeBursts++;
 
-        DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size);
+        // see if we can merge with an existing item in the write
+        // queue and keep track of whether we have merged or not, as
+        // there is only ever one item to merge with
+        bool merged = false;
+        auto w = writeQueue.begin();
 
-        assert(writeQueue.size() < writeBufferSize);
-        wrQLenPdf[writeQueue.size()]++;
+        while(!merged && w != writeQueue.end()) {
+            // either of the two could be first, if they are the same
+            // it does not matter which way we go
+            if ((*w)->addr >= addr) {
+                if ((addr + size) >= ((*w)->addr + (*w)->size)) {
+                    // check if the existing one is completely
+                    // subsumed in the new one
+                    DPRINTF(DRAM, "Merging write covering existing burst\n");
+                    merged = true;
+                    // update both the address and the size
+                    (*w)->addr = addr;
+                    (*w)->size = size;
+                } else if ((addr + size) >= (*w)->addr &&
+                           ((*w)->addr + (*w)->size - addr) <= burstSize) {
+                    // the new one is just before or partially
+                    // overlapping with the existing one, and together
+                    // they fit within a burst
+                    DPRINTF(DRAM, "Merging write before existing burst\n");
+                    merged = true;
+                    // the existing queue item needs to be adjusted with
+                    // respect to both address and size
+                    (*w)->addr = addr;
+                    (*w)->size = (*w)->addr + (*w)->size - addr;
+                }
+            } else {
+                if (((*w)->addr + (*w)->size) >= (addr + size)) {
+                    // check if the new one is completely subsumed in the
+                    // existing one
+                    DPRINTF(DRAM, "Merging write into existing burst\n");
+                    merged = true;
+                    // no adjustments necessary
+                } else if (((*w)->addr + (*w)->size) >= addr &&
+                           (addr + size - (*w)->addr) <= burstSize) {
+                    // the existing one is just before or partially
+                    // overlapping with the new one, and together
+                    // they fit within a burst
+                    DPRINTF(DRAM, "Merging write after existing burst\n");
+                    merged = true;
+                    // the address is right, and only the size has
+                    // to be adjusted
+                    (*w)->size = addr + size - (*w)->addr;
+                }
+            }
+            ++w;
+        }
 
-        DPRINTF(DRAM, "Adding to write queue\n");
+        // if the item was not merged we need to create a new write
+        // and enqueue it
+        if (!merged) {
+            DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size);
 
-        writeQueue.push_back(dram_pkt);
+            assert(writeQueue.size() < writeBufferSize);
+            wrQLenPdf[writeQueue.size()]++;
 
-        // Update stats
-        uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
-        assert(bank_id < ranksPerChannel * banksPerRank);
-        perBankWrReqs[bank_id]++;
+            DPRINTF(DRAM, "Adding to write queue\n");
 
-        avgWrQLen = writeQueue.size();
+            writeQueue.push_back(dram_pkt);
 
-        bytesConsumedWr += dram_pkt->size;
+            // Update stats
+            uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
+            assert(bank_id < ranksPerChannel * banksPerRank);
+            perBankWrReqs[bank_id]++;
+
+            avgWrQLen = writeQueue.size();
+        }
+
+        bytesConsumedWr += size;
         bytesWritten += burstSize;
 
         // Starting address of next dram pkt (aligend to burstSize boundary)
@@ -1076,6 +1139,9 @@ SimpleDRAM::moveToRespQ()
     // Remove from read queue
     DRAMPacket* dram_pkt = readQueue.front();
     readQueue.pop_front();
+
+    // sanity check
+    assert(dram_pkt->size <= burstSize);
 
     // Insert into response queue sorted by readyTime
     // It will be sent back to the requestor at its
