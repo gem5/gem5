@@ -32,8 +32,8 @@ m5.util.addToPath('../configs/common')
 from FSConfig import *
 from Benchmarks import *
 
-test_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
-                                 SysConfig('netperf-stream-client.rcS'))
+test_sys = makeLinuxAlphaSystem('atomic',
+                                SysConfig('netperf-stream-client.rcS'))
 
 # Create the system clock domain
 test_sys.clk_domain = SrcClockDomain(clock = '1GHz')
@@ -57,7 +57,10 @@ test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
 test_sys.iobridge.slave = test_sys.iobus.master
 test_sys.iobridge.master = test_sys.membus.slave
 
-drive_sys = makeLinuxAlphaSystem('atomic', SimpleMemory,
+test_sys.physmem = SimpleMemory(range = test_sys.mem_ranges[0])
+test_sys.physmem.port = test_sys.membus.master
+
+drive_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-server.rcS'))
 # Create the system clock domain
 drive_sys.clk_domain = SrcClockDomain(clock = '1GHz')
@@ -76,6 +79,9 @@ drive_sys.tsunami.ethernet.clk_domain = SrcClockDomain(clock = '500MHz')
 drive_sys.iobridge = Bridge(delay='50ns', ranges = drive_sys.mem_ranges)
 drive_sys.iobridge.slave = drive_sys.iobus.master
 drive_sys.iobridge.master = drive_sys.membus.slave
+
+drive_sys.physmem = SimpleMemory(range = drive_sys.mem_ranges[0])
+drive_sys.physmem.port = drive_sys.membus.master
 
 root = makeDualRoot(True, test_sys, drive_sys, "ethertrace")
 

@@ -58,7 +58,6 @@ class LinuxX86SystemBuilder(object):
     def create_system(self):
         mdesc = SysConfig(disk = 'linux-x86.img')
         system = FSConfig.makeLinuxX86System(self.mem_mode,
-                                             DDR3_1600_x64,
                                              numCPUs=self.num_cpus,
                                              mdesc=mdesc)
         system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')

@@ -74,6 +74,8 @@ system = System(cpu = cpu, physmem = SimpleMemory(null = True),
 # CPUs frequency
 system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
 
+system.mem_ranges = AddrRange('256MB')
+
 Ruby.create_system(options, system)
 
 # Create a separate clock for Ruby

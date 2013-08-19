@@ -80,6 +80,8 @@ tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
 system = System(tester = tester, physmem = SimpleMemory(null = True),
                 clk_domain = SrcClockDomain(clock = options.sys_clock))
 
+system.mem_ranges = AddrRange('256MB')
+
 Ruby.create_system(options, system)
 
 # Create a separate clock domain for Ruby

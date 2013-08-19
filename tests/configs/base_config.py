@@ -221,6 +221,14 @@ class BaseFSSystem(BaseSystem):
     def init_system(self, system):
         BaseSystem.init_system(self, system)
 
+        # create the memory controllers and connect them, stick with
+        # the physmem name to avoid bumping all the reference stats
+        system.physmem = [self.mem_class(range = r,
+                                         conf_table_reported = True)
+                          for r in system.mem_ranges]
+        for i in xrange(len(system.physmem)):
+            system.physmem[i].port = system.membus.master
+
         # create the iocache, which by default runs at the system clock
         system.iocache = IOCache(addr_ranges=system.mem_ranges)
         system.iocache.cpu_side = system.iobus.master

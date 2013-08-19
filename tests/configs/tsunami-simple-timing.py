@@ -39,4 +39,5 @@ from m5.objects import *
 from alpha_generic import *
 
 root = LinuxAlphaFSSystemUniprocessor(mem_mode='timing',
+                                      mem_class=DDR3_1600_x64,
                                       cpu_class=TimingSimpleCPU).create_root()

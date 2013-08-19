@@ -83,10 +83,9 @@ if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
 TestMemClass = Simulation.setMemClass(options)
 
 if buildEnv['TARGET_ISA'] == "alpha":
-    system = makeLinuxAlphaRubySystem(test_mem_mode, TestMemClass, bm[0])
+    system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
-    system = makeLinuxX86System(test_mem_mode, TestMemClass,
-                                options.num_cpus, bm[0], True)
+    system = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0], True)
     Simulation.setWorkCountOptions(system, options)
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
@@ -126,6 +125,14 @@ for (i, cpu) in enumerate(system.cpu):
         cpu.interrupts.int_slave = system.piobus.master
 
     system.ruby._cpu_ruby_ports[i].access_phys_mem = True
+
+# Create the appropriate memory controllers and connect them to the
+# PIO bus
+system.mem_ctrls = [TestMemClass(range = r,
+                                 conf_table_reported = True)
+                    for r in system.mem_ranges]
+for i in xrange(len(system.physmem)):
+    system.mem_ctrls[i].port = system.piobus.master
 
 root = Root(full_system = True, system = system)
 Simulation.run(options, root, system, FutureClass)

@@ -38,5 +38,7 @@
 from m5.objects import *
 from alpha_generic import *
 
-root = LinuxAlphaFSSystem(mem_mode='atomic', cpu_class=AtomicSimpleCPU,
+root = LinuxAlphaFSSystem(mem_mode='atomic',
+                          mem_class=DDR3_1600_x64,
+                          cpu_class=AtomicSimpleCPU,
                           num_cpus=2).create_root()

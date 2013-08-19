@@ -55,7 +55,7 @@ options.num_cpus = 2
 
 #the system
 mdesc = SysConfig(disk = 'linux-x86.img')
-system = FSConfig.makeLinuxX86System('timing', DDR3_1600_x64, options.num_cpus,
+system = FSConfig.makeLinuxX86System('timing', options.num_cpus,
                                      mdesc=mdesc, Ruby=True)
 
 system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9.smp')
@@ -83,6 +83,12 @@ for (i, cpu) in enumerate(system.cpu):
 
     # Set access_phys_mem to True for ruby port
     system.ruby._cpu_ruby_ports[i].access_phys_mem = True
+
+system.physmem = [DDR3_1600_x64(range = r,
+                                conf_table_reported = True)
+                  for r in system.mem_ranges]
+for i in xrange(len(system.physmem)):
+    system.physmem[i].port = system.piobus.master
 
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')

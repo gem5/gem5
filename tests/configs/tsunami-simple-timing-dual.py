@@ -38,5 +38,7 @@
 from m5.objects import *
 from alpha_generic import *
 
-root = LinuxAlphaFSSystem(mem_mode='timing', cpu_class=TimingSimpleCPU,
+root = LinuxAlphaFSSystem(mem_mode='timing',
+                          mem_class=DDR3_1600_x64,
+                          cpu_class=TimingSimpleCPU,
                           num_cpus=2).create_root()

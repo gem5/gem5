@@ -91,6 +91,8 @@ system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
 for cpu in cpus:
     cpu.clk_domain = system.cpu_clk_domain
 
+system.mem_ranges = AddrRange('256MB')
+
 Ruby.create_system(options, system)
 
 # Create a separate clock domain for Ruby
