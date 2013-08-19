@@ -159,11 +159,22 @@ np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = MemClass(range=AddrRange(options.mem_size)),
                 mem_mode = test_mem_mode,
-                clk_domain = SrcClockDomain(clock = options.sys_clock),
                 cache_line_size = options.cacheline_size)
 
+# Create a top-level voltage domain
+system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+
+# Create a source clock for the system and set the clock period
+system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+                                   voltage_domain = system.voltage_domain)
+
+# Create a CPU voltage domain
+system.cpu_voltage_domain = VoltageDomain()
+
 # Create a separate clock domain for the CPUs
-system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
+                                       voltage_domain =
+                                       system.cpu_voltage_domain)
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.

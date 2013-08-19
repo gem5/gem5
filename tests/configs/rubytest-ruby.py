@@ -77,15 +77,19 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
                     wakeup_frequency = 10, num_cpus = options.num_cpus)
 
-system = System(tester = tester, physmem = SimpleMemory(null = True),
-                clk_domain = SrcClockDomain(clock = options.sys_clock))
+system = System(tester = tester, physmem = SimpleMemory(null = True))
+# Dummy voltage domain for all our clock domains
+system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.clk_domain = SrcClockDomain(clock = '1GHz',
+                                   voltage_domain = system.voltage_domain)
 
 system.mem_ranges = AddrRange('256MB')
 
 Ruby.create_system(options, system)
 
 # Create a separate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = '1GHz')
+system.ruby.clk_domain = SrcClockDomain(clock = '1GHz',
+                                        voltage_domain = system.voltage_domain)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 

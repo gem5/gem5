@@ -64,6 +64,10 @@ def addCommonOptions(parser):
                       help = "type of cpu to run with")
     parser.add_option("--checker", action="store_true");
     parser.add_option("-n", "--num-cpus", type="int", default=1)
+    parser.add_option("--sys-voltage", action="store", type="string",
+                      default='1.0V',
+                      help = """Top-level voltage for blocks running at system
+                      power supply""")
     parser.add_option("--sys-clock", action="store", type="string",
                       default='1GHz',
                       help = """Top-level clock for blocks running at system

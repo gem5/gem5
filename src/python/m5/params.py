@@ -1250,6 +1250,23 @@ class Clock(ParamValue):
     def ini_str(self):
         return self.period.ini_str()
 
+class Voltage(float,ParamValue):
+    cxx_type = 'double'
+    def __new__(cls, value):
+        # convert to voltage
+        val = convert.toVoltage(value)
+        return super(cls, Voltage).__new__(cls, val)
+
+    def __str__(self):
+        return str(self.val)
+
+    def getValue(self):
+        value = float(self)
+        return value
+
+    def ini_str(self):
+        return '%f' % self.getValue()
+
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(cls, value):
@@ -1637,7 +1654,7 @@ __all__ = ['Param', 'VectorParam',
            'TcpPort', 'UdpPort', 'EthernetAddr',
            'IpAddress', 'IpNetmask', 'IpWithPort',
            'MemorySize', 'MemorySize32',
-           'Latency', 'Frequency', 'Clock',
+           'Latency', 'Frequency', 'Clock', 'Voltage',
            'NetworkBandwidth', 'MemoryBandwidth',
            'AddrRange',
            'MaxAddr', 'MaxTick', 'AllMemory',

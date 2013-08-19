@@ -151,11 +151,16 @@ class BaseSystem(object):
         # Create system clock domain. This provides clock value to every
         # clocked object that lies beneath it unless explicitly overwritten
         # by a different clock domain.
-        system.clk_domain = SrcClockDomain(clock = '1GHz')
+        system.voltage_domain = VoltageDomain()
+        system.clk_domain = SrcClockDomain(clock = '1GHz',
+                                           voltage_domain =
+                                           system.voltage_domain)
 
         # Create a seperate clock domain for components that should
         # run at CPUs frequency
-        system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
+        system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
+                                               voltage_domain =
+                                               system.voltage_domain)
 
     @abstractmethod
     def create_system(self):

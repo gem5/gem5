@@ -50,7 +50,9 @@ cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-simple-mem.cfg")
 # system simulated
 system = System(cpu = cpu, physmem = SimpleMemory(),
                 membus = NoncoherentBus(width = 16),
-                clk_domain = SrcClockDomain(clock = '1GHz'))
+                clk_domain = SrcClockDomain(clock = '1GHz',
+                                            voltage_domain =
+                                            VoltageDomain()))
 
 # add a communication monitor, and also trace all the packets
 system.monitor = CommMonitor(trace_file = "monitor.ptrc.gz")

@@ -56,10 +56,12 @@
  * Forward declaration
  */
 class DerivedClockDomain;
+class VoltageDomain;
 
 /**
  * The ClockDomain provides clock to group of clocked objects bundled
- * under the same clock domain. The clock domains provide support for
+ * under the same clock domain. The clock domains, in turn, are
+ * grouped into voltage domains. The clock domains provide support for
  * a hierarchial structure with source and derived domains.
  */
 class ClockDomain : public SimObject
@@ -74,6 +76,11 @@ class ClockDomain : public SimObject
     Tick _clockPeriod;
 
     /**
+     * Voltage domain this clock domain belongs to
+     */
+    VoltageDomain *_voltageDomain;
+
+    /**
      * Pointers to potential derived clock domains so we can propagate
      * changes.
      */
@@ -82,7 +89,10 @@ class ClockDomain : public SimObject
   public:
 
     typedef ClockDomainParams Params;
-    ClockDomain(const Params *p) : SimObject(p), _clockPeriod(0) {}
+    ClockDomain(const Params *p, VoltageDomain *voltage_domain) :
+        SimObject(p),
+        _clockPeriod(0),
+        _voltageDomain(voltage_domain) {}
 
     /**
      * Get the clock period.
@@ -90,6 +100,21 @@ class ClockDomain : public SimObject
      * @return Clock period in ticks
      */
     inline Tick clockPeriod() const { return _clockPeriod; }
+
+    /**
+     * Get the voltage domain.
+     *
+     * @return Voltage domain this clock domain belongs to
+     */
+    inline VoltageDomain *voltageDomain() const { return _voltageDomain; }
+
+
+    /**
+     * Get the current voltage this clock domain operates at.
+     *
+     * @return Voltage applied to the clock domain
+     */
+    inline double voltage() const;
 
     /**
      * Add a derived domain.

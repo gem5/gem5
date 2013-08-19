@@ -1,4 +1,4 @@
-# Copyright (c) 2013 ARM Limited
+# Copyright (c) 2012 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,29 +36,12 @@
 # Authors: Vasileios Spiliopoulos
 #          Akash Bagdia
 
-from m5.params import *
 from m5.SimObject import SimObject
-from m5.proxy import *
+from m5.params import *
 
-# Abstract clock domain
-class ClockDomain(SimObject):
-    type = 'ClockDomain'
-    cxx_header = "sim/clock_domain.hh"
-    abstract = True
-
-# Source clock domain with an actual clock
-class SrcClockDomain(ClockDomain):
-    type = 'SrcClockDomain'
-    cxx_header = "sim/clock_domain.hh"
-    clock = Param.Clock("Clock period")
-
-    # A source clock must be associated with a voltage domain
-    voltage_domain = Param.VoltageDomain("Voltage domain")
-
-# Derived clock domain with a parent clock domain and a frequency
-# divider
-class DerivedClockDomain(ClockDomain):
-    type = 'DerivedClockDomain'
-    cxx_header = "sim/clock_domain.hh"
-    clk_domain = Param.ClockDomain("Parent clock domain")
-    clk_divider = Param.Unsigned(1, "Frequency divider")
+class VoltageDomain(SimObject):
+    type = 'VoltageDomain'
+    cxx_header = "sim/voltage_domain.hh"
+    # We use a default voltage of 1V to avoid forcing users to set it
+    # even if they are not interested in using the functionality
+    voltage = Param.Voltage('1V', "Operational voltage")

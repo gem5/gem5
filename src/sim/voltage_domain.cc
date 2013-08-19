@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -36,91 +36,33 @@
  *
  * Authors: Vasileios Spiliopoulos
  *          Akash Bagdia
- *          Andreas Hansson
  */
 
-#include "debug/ClockDomain.hh"
-#include "params/ClockDomain.hh"
-#include "params/DerivedClockDomain.hh"
-#include "params/SrcClockDomain.hh"
-#include "sim/clock_domain.hh"
+#include "debug/VoltageDomain.hh"
+#include "params/VoltageDomain.hh"
+#include "sim/sim_object.hh"
 #include "sim/voltage_domain.hh"
 
-double
-ClockDomain::voltage() const
+VoltageDomain::VoltageDomain(const Params *p)
+    : SimObject(p), _voltage(0)
 {
-    return _voltageDomain->voltage();
-}
-
-SrcClockDomain::SrcClockDomain(const Params *p) :
-    ClockDomain(p, p->voltage_domain)
-{
-    clockPeriod(p->clock);
+    voltage(p->voltage);
 }
 
 void
-SrcClockDomain::clockPeriod(Tick clock_period)
+VoltageDomain::voltage(double voltage)
 {
-    if (clock_period == 0) {
-        fatal("%s has a clock period of zero\n", name());
+    if (voltage <= 0) {
+        fatal("Voltage should be greater than zero.\n");
     }
 
-    _clockPeriod = clock_period;
-
-    DPRINTF(ClockDomain,
-            "Setting clock period to %d ticks for source clock %s\n",
-            _clockPeriod, name());
-
-    // inform any derived clocks they need to updated their period
-    for (auto c = children.begin(); c != children.end(); ++c) {
-        (*c)->updateClockPeriod();
-    }
+    _voltage = voltage;
+    DPRINTF(VoltageDomain,
+            "Setting voltage to %f for domain %s\n", _voltage, name());
 }
 
-SrcClockDomain *
-SrcClockDomainParams::create()
+VoltageDomain *
+VoltageDomainParams::create()
 {
-    return new SrcClockDomain(this);
-}
-
-DerivedClockDomain::DerivedClockDomain(const Params *p) :
-    ClockDomain(p, p->clk_domain->voltageDomain()),
-    parent(*p->clk_domain),
-    clockDivider(p->clk_divider)
-{
-    // Ensure that clock divider setting works as frequency divider and never
-    // work as frequency multiplier
-    if (clockDivider < 1) {
-       fatal("Clock divider param cannot be less than 1");
-    }
-
-    // let the parent keep track of this derived domain so that it can
-    // propagate changes
-    parent.addDerivedDomain(this);
-
-    // update our clock period based on the parents clock
-    updateClockPeriod();
-}
-
-void
-DerivedClockDomain::updateClockPeriod()
-{
-    // recalculate the clock period, relying on the fact that changes
-    // propagate downwards in the tree
-    _clockPeriod = parent.clockPeriod() * clockDivider;
-
-    DPRINTF(ClockDomain,
-            "Setting clock period to %d ticks for derived clock %s\n",
-            _clockPeriod, name());
-
-    // inform any derived clocks
-    for (auto c = children.begin(); c != children.end(); ++c) {
-        (*c)->updateClockPeriod();
-    }
-}
-
-DerivedClockDomain *
-DerivedClockDomainParams::create()
-{
-    return new DerivedClockDomain(this);
+    return new VoltageDomain(this);
 }

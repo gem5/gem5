@@ -299,3 +299,15 @@ def toIpWithPort(value):
     if not 0 <= int(port) <= 0xffff:
         raise ValueError, 'invalid port %s' % port
     return (ip, int(port))
+
+def toVoltage(value):
+    if not isinstance(value, str):
+        raise TypeError, "wrong type '%s' should be str" % type(value)
+
+    if value.endswith('mV'):
+        return float(value[:-2]) * milli
+    elif value.endswith('V'):
+        return float(value[:-1])
+
+    raise ValueError, "cannot convert '%s' to voltage" % value
+

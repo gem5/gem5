@@ -116,11 +116,20 @@ elif buildEnv['TARGET_ISA'] == "arm":
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 
+# Create a top-level voltage domain
+test_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+
 # Create a source clock for the system and set the clock period
-test_sys.clk_domain = SrcClockDomain(clock =  options.sys_clock)
+test_sys.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+                                     voltage_domain = test_sys.voltage_domain)
+
+# Create a CPU voltage domain
+test_sys.cpu_voltage_domain = VoltageDomain()
 
 # Create a source clock for the CPUs and set the clock period
-test_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+test_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
+                                         voltage_domain =
+                                         test_sys.cpu_voltage_domain)
 
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)
@@ -182,11 +191,19 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
 
+    # Create a top-level voltage domain
+    drive_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+
     # Create a source clock for the system and set the clock period
     drive_sys.clk_domain = SrcClockDomain(clock =  options.sys_clock)
 
+    # Create a CPU voltage domain
+    drive_sys.cpu_voltage_domain = VoltageDomain()
+
     # Create a source clock for the CPUs and set the clock period
-    drive_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock)
+    drive_sys.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
+                                              voltage_domain =
+                                              drive_sys.cpu_voltage_domain)
 
     drive_sys.cpu = DriveCPUClass(clk_domain=drive_sys.cpu_clk_domain,
                                   cpu_id=0)
