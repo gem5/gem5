@@ -852,6 +852,10 @@ SimpleDRAM::recordActivate(Tick act_tick)
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
+    // if the activation limit is disabled then we are done
+    if (actTicks.empty())
+        return;
+
     // sanity check
     if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
         panic("Got %d activates in window %d (%d - %d) which is smaller "
