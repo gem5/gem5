@@ -344,6 +344,11 @@ DefaultFetch<Impl>::resetStage()
 
     wroteToTimeBuffer = false;
     _status = Inactive;
+
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
+    }
 }
 
 template<class Impl>
