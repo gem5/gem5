@@ -11,6 +11,9 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2013 Amin Farmahini-Farahani
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -158,6 +161,27 @@ class SimpleDRAM : public AbstractMemory
     };
 
     /**
+     * A burst helper helps organize and manage a packet that is larger than
+     * the DRAM burst size. A system packet that is larger than the burst size
+     * is split into multiple DRAM packets and all those DRAM packets point to
+     * a single burst helper such that we know when the whole packet is served.
+     */
+    class BurstHelper {
+
+      public:
+
+        /** Number of DRAM bursts requred for a system packet **/
+        const unsigned int burstCount;
+
+        /** Number of DRAM bursts serviced so far for a system packet **/
+        unsigned int burstsServiced;
+
+        BurstHelper(unsigned int _burstCount)
+            : burstCount(_burstCount), burstsServiced(0)
+            { }
+    };
+
+    /**
      * A DRAM packet stores packets along with the timestamp of when
      * the packet entered the queue, and also the decoded address.
      */
@@ -178,14 +202,34 @@ class SimpleDRAM : public AbstractMemory
         const uint8_t rank;
         const uint16_t bank;
         const uint16_t row;
+
+        /**
+         * The starting address of the DRAM packet.
+         * This address could be unaligned to burst size boundaries. The
+         * reason is to keep the address offset so we can accurately check
+         * incoming read packets with packets in the write queue.
+         */
         const Addr addr;
+
+        /**
+         * The size of this dram packet in bytes
+         * It is always equal or smaller than DRAM burst size
+         */
+        const unsigned int size;
+
+        /**
+         * A pointer to the BurstHelper if this DRAMPacket is a split packet
+         * If not a split packet (common case), this is set to NULL
+         */
+        BurstHelper* burstHelper;
         Bank& bank_ref;
 
-        DRAMPacket(PacketPtr _pkt, uint8_t _rank,
-                   uint16_t _bank, uint16_t _row, Addr _addr, Bank& _bank_ref)
+        DRAMPacket(PacketPtr _pkt, uint8_t _rank, uint16_t _bank,
+                   uint16_t _row, Addr _addr, unsigned int _size,
+                   Bank& _bank_ref)
             : entryTime(curTick()), readyTime(curTick()),
               pkt(_pkt), rank(_rank), bank(_bank), row(_row), addr(_addr),
-              bank_ref(_bank_ref)
+              size(_size), burstHelper(NULL), bank_ref(_bank_ref)
         { }
 
     };
@@ -212,28 +256,34 @@ class SimpleDRAM : public AbstractMemory
     /**
      * Check if the read queue has room for more entries
      *
+     * @param pktCount The number of entries needed in the read queue
      * @return true if read queue is full, false otherwise
      */
-    bool readQueueFull() const;
+    bool readQueueFull(unsigned int pktCount) const;
 
     /**
      * Check if the write queue has room for more entries
      *
+     * @param pktCount The number of entries needed in the write queue
      * @return true if write queue is full, false otherwise
      */
-    bool writeQueueFull() const;
+    bool writeQueueFull(unsigned int pktCount) const;
 
     /**
      * When a new read comes in, first check if the write q has a
      * pending request to the same address.\ If not, decode the
-     * address to populate rank/bank/row, create a "dram_pkt", and
-     * push it to the back of the read queue.\ If this is the only
+     * address to populate rank/bank/row, create one or mutliple
+     * "dram_pkt", and push them to the back of the read queue.\
+     * If this is the only
      * read request in the system, schedule an event to start
      * servicing it.
      *
      * @param pkt The request packet from the outside world
+     * @param pktCount The number of DRAM bursts the pkt
+     * translate to. If pkt size is larger then one full burst,
+     * then pktCount is greater than one.
      */
-    void addToReadQueue(PacketPtr pkt);
+    void addToReadQueue(PacketPtr pkt, unsigned int pktCount);
 
     /**
      * Decode the incoming pkt, create a dram_pkt and push to the
@@ -242,8 +292,11 @@ class SimpleDRAM : public AbstractMemory
      * to get full, stop reads, and start draining writes.
      *
      * @param pkt The request packet from the outside world
+     * @param pktCount The number of DRAM bursts the pkt
+     * translate to. If pkt size is larger then one full burst,
+     * then pktCount is greater than one.
      */
-    void addToWriteQueue(PacketPtr pkt);
+    void addToWriteQueue(PacketPtr pkt, unsigned int pktCount);
 
     /**
      * Actually do the DRAM access - figure out the latency it
@@ -276,12 +329,16 @@ class SimpleDRAM : public AbstractMemory
 
     /**
      * Address decoder to figure out physical mapping onto ranks,
-     * banks, and rows.
+     * banks, and rows. This function is called multiple times on the same
+     * system packet if the pakcet is larger than burst of the memory. The
+     * dramPktAddr is used for the offset within the packet.
      *
      * @param pkt The packet from the outside world
+     * @param dramPktAddr The starting address of the DRAM packet
+     * @param size The size of the DRAM packet in bytes
      * @return A DRAMPacket pointer with the decoded information
      */
-    DRAMPacket* decodeAddr(PacketPtr pkt);
+    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size);
 
     /**
      * The memory schduler/arbiter - picks which read request needs to
@@ -376,18 +433,21 @@ class SimpleDRAM : public AbstractMemory
 
     /**
      * The following are basic design parameters of the memory
-     * controller, and are initialized based on parameter values. The
-     * bytesPerCacheLine is based on the neighbouring ports cache line
-     * size and thus determined outside the constructor. Similarly,
-     * the rowsPerBank is determined based on the capacity, number of
-     * ranks and banks, the cache line size, and the row buffer size.
+     * controller, and are initialized based on parameter values.
+     * The rowsPerBank is determined based on the capacity, number of
+     * ranks and banks, the burst size, and the row buffer size.
      */
-    uint32_t bytesPerCacheLine;
-    const uint32_t linesPerRowBuffer;
+    const uint32_t deviceBusWidth;
+    const uint32_t burstLength;
+    const uint32_t deviceRowBufferSize;
+    const uint32_t devicesPerRank;
+    const uint32_t burstSize;
+    const uint32_t rowBufferSize;
     const uint32_t ranksPerChannel;
     const uint32_t banksPerRank;
     const uint32_t channels;
     uint32_t rowsPerBank;
+    uint32_t columnsPerRowBuffer;
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
     const double writeThresholdPerc;
@@ -441,7 +501,8 @@ class SimpleDRAM : public AbstractMemory
     // All statistics that the model needs to capture
     Stats::Scalar readReqs;
     Stats::Scalar writeReqs;
-    Stats::Scalar cpuReqs;
+    Stats::Scalar readBursts;
+    Stats::Scalar writeBursts;
     Stats::Scalar bytesRead;
     Stats::Scalar bytesWritten;
     Stats::Scalar bytesConsumedRd;
