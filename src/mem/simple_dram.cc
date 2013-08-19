@@ -858,9 +858,10 @@ SimpleDRAM::recordActivate(Tick act_tick)
 
     // sanity check
     if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
-        panic("Got %d activates in window %d (%d - %d) which is smaller "
-              "than %d\n", activationLimit, act_tick - actTicks.back(),
-              act_tick, actTicks.back(), tXAW);
+        // @todo For now, stick with a warning
+        warn("Got %d activates in window %d (%d - %d) which is smaller "
+             "than %d\n", activationLimit, act_tick - actTicks.back(),
+             act_tick, actTicks.back(), tXAW);
     }
 
     // shift the times used for the book keeping, the last element
