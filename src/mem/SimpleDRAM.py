@@ -64,38 +64,6 @@ class SimpleDRAM(AbstractMemory):
     type = 'SimpleDRAM'
     cxx_header = "mem/simple_dram.hh"
 
-    @classmethod
-    def makeMultiChannel(cls, nbr_mem_ctrls, mem_start_addr, mem_size,
-                         intlv_high_bit = 11):
-        """
-        Make a multi-channel configuration of this class.
-
-        Create multiple instances of the specific class and set their
-        parameters such that the address range is interleaved between
-        them.
-
-        Returns a list of controllers.
-        """
-        import math
-        from m5.util import fatal
-        intlv_bits = int(math.log(nbr_mem_ctrls, 2))
-        if 2 ** intlv_bits != nbr_mem_ctrls:
-            fatal("Number of memory channels must be a power of 2")
-        mem_ctrls = []
-        for i in xrange(nbr_mem_ctrls):
-            # The default interleaving granularity is tuned to match a
-            # row buffer size of 32 cache lines of 64 bytes (starting
-            # at bit 11 for 2048 bytes). There is unfortunately no
-            # good way of checking this at instantiation time.
-            mem_ctrls.append(cls(range = AddrRange(mem_start_addr,
-                                                   size = mem_size,
-                                                   intlvHighBit = \
-                                                       intlv_high_bit,
-                                                   intlvBits = intlv_bits,
-                                                   intlvMatch = i),
-                                 channels = nbr_mem_ctrls))
-        return mem_ctrls
-
     # single-ported on the system interface side, instantiate with a
     # bus in front of the controller for multiple ports
     port = SlavePort("Slave port")

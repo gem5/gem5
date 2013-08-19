@@ -53,6 +53,7 @@ from SysPaths import *
 from Benchmarks import *
 import Simulation
 import CacheConfig
+import MemConfig
 from Caches import *
 import Options
 
@@ -171,12 +172,7 @@ for i in xrange(np):
     test_sys.cpu[i].createThreads()
 
 CacheConfig.config_cache(options, test_sys)
-
-# Create the appropriate memory controllers and connect them to the
-# memory bus
-test_sys.mem_ctrls = [TestMemClass(range = r) for r in test_sys.mem_ranges]
-for i in xrange(len(test_sys.mem_ctrls)):
-    test_sys.mem_ctrls[i].port = test_sys.membus.master
+MemConfig.config_mem(options, test_sys)
 
 if len(bm) == 2:
     if buildEnv['TARGET_ISA'] == 'alpha':

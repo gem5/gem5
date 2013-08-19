@@ -124,3 +124,70 @@ for alias, target in _mem_aliases_all:
     elif target in _mem_classes:
         # Normal alias
         _mem_aliases[alias] = target
+
+def config_mem(options, system):
+    """
+    Create the memory controllers based on the options and attach them.
+
+    If requested, we make a multi-channel configuration of the
+    selected memory controller class by creating multiple instances of
+    the specific class. The individual controllers have their
+    parameters set such that the address range is interleaved between
+    them.
+    """
+
+    nbr_mem_ctrls = options.mem_channels
+    import math
+    from m5.util import fatal
+    intlv_bits = int(math.log(nbr_mem_ctrls, 2))
+    if 2 ** intlv_bits != nbr_mem_ctrls:
+        fatal("Number of memory channels must be a power of 2")
+    cls = get(options.mem_type)
+    mem_ctrls = []
+
+    # The default behaviour is to interleave on cache line granularity
+    cache_line_bit = int(math.log(system.cache_line_size.value, 2)) - 1
+    intlv_low_bit = cache_line_bit
+
+    # For every range (most systems will only have one), create an
+    # array of controllers and set their parameters to match their
+    # address mapping in the case of a DRAM
+    for r in system.mem_ranges:
+        for i in xrange(nbr_mem_ctrls):
+            # Create an instance so we can figure out the address
+            # mapping and row-buffer size
+            ctrl = cls()
+
+            # Only do this for DRAMs
+            if issubclass(cls, m5.objects.SimpleDRAM):
+                # Inform each controller how many channels to account
+                # for
+                ctrl.channels = nbr_mem_ctrls
+
+                # If the channel bits are appearing after the column
+                # bits, we need to add the appropriate number of bits
+                # for the row buffer size
+                if ctrl.addr_mapping.value == 'RaBaChCo':
+                    # This computation only really needs to happen
+                    # once, but as we rely on having an instance we
+                    # end up having to repeat it for each and every
+                    # one
+                    rowbuffer_size = ctrl.device_rowbuffer_size.value * \
+                        ctrl.devices_per_rank.value
+
+                    intlv_low_bit = int(math.log(rowbuffer_size, 2)) - 1
+
+            # We got all we need to configure the appropriate address
+            # range
+            ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
+                                              intlvHighBit = \
+                                                  intlv_low_bit + intlv_bits,
+                                              intlvBits = intlv_bits,
+                                              intlvMatch = i)
+            mem_ctrls.append(ctrl)
+
+    system.mem_ctrls = mem_ctrls
+
+    # Connect the controllers to the membus
+    for i in xrange(nbr_mem_ctrls):
+        system.mem_ctrls[i].port = system.membus.master

@@ -58,6 +58,7 @@ import Options
 import Ruby
 import Simulation
 import CacheConfig
+import MemConfig
 from Caches import *
 from cpu2000 import *
 
@@ -157,8 +158,8 @@ if options.smt and options.num_cpus > 1:
 
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = MemClass(range=AddrRange(options.mem_size)),
                 mem_mode = test_mem_mode,
+                mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size)
 
 # Create a top-level voltage domain
@@ -221,7 +222,8 @@ if options.ruby:
         sys.exit(1)
 
     # Set the option for physmem so that it is not allocated any space
-    system.physmem.null = True
+    system.physmem = MemClass(range=AddrRange(options.mem_size),
+                              null = True)
 
     options.use_map = True
     Ruby.create_system(options, system)
@@ -247,8 +249,8 @@ if options.ruby:
 else:
     system.membus = CoherentBus()
     system.system_port = system.membus.slave
-    system.physmem.port = system.membus.master
     CacheConfig.config_cache(options, system)
+    MemConfig.config_mem(options, system)
 
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

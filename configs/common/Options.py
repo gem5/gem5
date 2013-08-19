@@ -88,6 +88,8 @@ def addCommonOptions(parser):
     parser.add_option("--mem-type", type="choice", default="simple_mem",
                       choices=MemConfig.mem_names(),
                       help = "type of memory to use")
+    parser.add_option("--mem-channels", type="int", default=1,
+                      help = "number of memory channels")
     parser.add_option("--mem-size", action="store", type="string",
                       default="512MB",
                       help="Specify the physical memory size (single memory)")
