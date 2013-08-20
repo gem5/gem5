@@ -249,7 +249,7 @@ struct VectorPrint
     int precision;
     VResult vec;
     Result total;
-    bool forceSubnames = false;
+    bool forceSubnames;
 
     void operator()(ostream &stream) const;
 };
@@ -513,6 +513,7 @@ Text::visit(const VectorInfo &info)
     print.precision = info.precision;
     print.vec = info.result();
     print.total = info.total();
+    print.forceSubnames = false;
 
     if (!info.subnames.empty()) {
         for (off_type i = 0; i < size; ++i) {
