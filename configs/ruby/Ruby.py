@@ -52,6 +52,11 @@ def define_options(parser):
                       default='2GHz',
                       help="Clock for blocks running at Ruby system's speed")
 
+    # Options related to cache structure
+    parser.add_option("--ports", action="store", type="int", default=4,
+                      help="used of transitions per cycle which is a proxy \
+                            for the number of ports.")
+
     # ruby network options
     parser.add_option("--topology", type="string", default="Crossbar",
                  help="check src/mem/ruby/network/topologies for complete set")

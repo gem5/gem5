@@ -65,6 +65,7 @@ options.l1d_assoc=2
 options.l1i_assoc=2
 options.l2_assoc=2
 options.l3_assoc=2
+options.ports=32
 
 # Turn on flush check for the hammer protocol
 check_flush = False

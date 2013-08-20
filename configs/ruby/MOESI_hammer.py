@@ -107,6 +107,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                         options.allow_atomic_migration,
                                       send_evictions = (
                                           options.cpu_type == "detailed"),
+                                      transitions_per_cycle = options.ports,
                                       ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
@@ -196,6 +197,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                          memBuffer = mem_cntrl,
                                          probe_filter_enabled = options.pf_on,
                                          full_bit_dir_enabled = options.dir_on,
+                                         transitions_per_cycle = options.ports,
                                          ruby_system = ruby_system)
 
         if options.recycle_latency:
@@ -216,6 +218,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         dma_cntrl = DMA_Controller(version = i,
                                    cntrl_id = cntrl_count,
                                    dma_sequencer = dma_seq,
+                                   transitions_per_cycle = options.ports,
                                    ruby_system = ruby_system)
 
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)

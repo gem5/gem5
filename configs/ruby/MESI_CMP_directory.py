@@ -98,6 +98,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                           options.cpu_type == "detailed"),
                                       prefetcher = prefetcher,
                                       ruby_system = ruby_system,
+                                      transitions_per_cycle=options.ports,
                                       enable_prefetch = False)
 
         cpu_seq = RubySequencer(version = i,
@@ -133,6 +134,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         l2_cntrl = L2Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
                                       L2cache = l2_cache,
+                                      transitions_per_cycle=options.ports,
                                       ruby_system = ruby_system)
         
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
@@ -172,6 +174,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                                              use_map =
                                                            options.use_map),
                                          memBuffer = mem_cntrl,
+                                         transitions_per_cycle = options.ports,
                                          ruby_system = ruby_system)
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
@@ -189,6 +192,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         dma_cntrl = DMA_Controller(version = i,
                                    cntrl_id = cntrl_count,
                                    dma_sequencer = dma_seq,
+                                   transitions_per_cycle = options.ports,
                                    ruby_system = ruby_system)
 
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
