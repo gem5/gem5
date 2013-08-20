@@ -322,8 +322,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * <li>Stay at PC is true.
      *
      * <li>A fetch event is scheduled. Normally this would never be the
-           case with microPC() == 0, but right after a context is
-           activated it can happen.
+     *     case with microPC() == 0, but right after a context is
+     *     activated it can happen.
      * </ul>
      */
     bool isDrained() {
