@@ -155,6 +155,12 @@ if options.keep_going:
 if options.update_ref:
     scons_opts += ' --update-ref'
 
+# We generally compile gem5.fast only to make sure it compiles OK;
+# it's not very useful to run as a regression test since assertions
+# are disabled.  Thus there's not much point spending time on
+# link-time optimization.
+scons_opts += ' --no-lto'
+
 cmd = 'scons --ignore-style %s %s' % (scons_opts, ' '.join(targets))
 if options.no_exec:
     print cmd
