@@ -259,7 +259,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.mem_ranges = [AddrRange(mdesc.mem())]
+        self.mem_ranges = [AddrRange(self.realview.mem_start_addr,
+                                     size = mdesc.mem())]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
         if dtb_filename is not None:
