@@ -44,42 +44,21 @@
 #ifndef __HASHMAP_HH__
 #define __HASHMAP_HH__
 
-#if defined(__clang__)
-// check if the header is present, which requires -stdlib=libc++, and
-// that in turn causes problems with incomplete template parameters
-#if (__has_include(<unordered_map>))
-#define HAVE_STD_UNORDERED_MAP 1
-#endif
-#else
-// we only support gcc >= 4.4 as the other option
-#define HAVE_STD_UNORDERED_MAP 1
-#endif
-
-// set a default value of 0 clang with the header in the tr1 namespace
-#ifndef HAVE_STD_UNORDERED_MAP
-#define HAVE_STD_UNORDERED_MAP 0
-#endif
-
+// we stick with defines here until gcc >= 4.7 and clang >= 3.2 is
+// adopted as these are the minimum versions to support variadic
+// templates and template aliasing
 #define hash_map unordered_map
 #define hash_multimap unordered_multimap
 #define hash_set unordered_set
 #define hash_multiset unordered_multiset
 
-#if HAVE_STD_UNORDERED_MAP
-// gcc or clang with libc++
+// gcc >= 4.4 or clang with libc++ no longer rely on the transitional
+// tr1 namespace
 #include <unordered_map>
 #include <unordered_set>
 #define __hash_namespace std
 #define __hash_namespace_begin namespace std {
 #define __hash_namespace_end }
-#else
-// clang with libstdc++
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
-#define __hash_namespace std::tr1
-#define __hash_namespace_begin namespace std { namespace tr1 {
-#define __hash_namespace_end } }
-#endif
 
 namespace m5 {
     using ::__hash_namespace::hash_multimap;

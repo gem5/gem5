@@ -630,15 +630,10 @@ elif main['CLANG']:
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
     # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
-    # opposed to libstdc++ to make the transition from TR1 to
-    # C++11. See http://libcxx.llvm.org. However, clang has chosen a
-    # strict implementation of the C++11 standard, and does not allow
-    # incomplete types in template arguments (besides unique_ptr and
-    # shared_ptr), and the libc++ STL containers create problems in
-    # combination with the current gem5 code. For now, we stick with
-    # libstdc++ and use the TR1 namespace.
-    # if sys.platform == "darwin":
-    #     main.Append(CXXFLAGS=['-stdlib=libc++'])
+    # opposed to libstdc++, as the later is dated.
+    if sys.platform == "darwin":
+        main.Append(CXXFLAGS=['-stdlib=libc++'])
+        main.Append(LIBS=['c++'])
 
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
