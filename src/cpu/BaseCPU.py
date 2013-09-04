@@ -51,7 +51,6 @@ from Bus import CoherentBus
 from InstTracer import InstTracer
 from ExeTracer import ExeTracer
 from MemObject import MemObject
-from BranchPredictor import BranchPredictor
 from ClockDomain import *
 
 default_tracer = ExeTracer()
@@ -209,8 +208,6 @@ class BaseCPU(MemObject):
     icache_port = MasterPort("Instruction Port")
     dcache_port = MasterPort("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
-
-    branchPred = Param.BranchPredictor(NULL, "Branch Predictor")
 
     if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]

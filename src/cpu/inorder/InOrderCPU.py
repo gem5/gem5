@@ -68,4 +68,6 @@ class InOrderCPU(BaseCPU):
     div32Latency = Param.Cycles(1, "Latency for 32-bit Divide Operations")
     div32RepeatRate = Param.Cycles(1, "Repeat Rate for 32-bit Divide Operations")
 
-    branchPred = BranchPredictor(numThreads = Parent.numThreads)
+    branchPred = Param.BranchPredictor(BranchPredictor(numThreads =
+                                                       Parent.numThreads),
+                                       "Branch Predictor")
