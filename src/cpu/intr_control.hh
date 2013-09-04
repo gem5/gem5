@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "base/misc.hh"
-#include "cpu/base.hh"
 #include "params/IntrControl.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"

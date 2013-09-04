@@ -59,7 +59,7 @@
 #include "cpu/base.hh"
 #endif
 
-#include "sim/eventq.hh"
+#include "sim/eventq_impl.hh"
 #include "sim/stat_control.hh"
 
 using namespace std;

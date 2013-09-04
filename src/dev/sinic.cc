@@ -38,8 +38,6 @@
 #include "base/inet.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "cpu/intr_control.hh"
-#include "cpu/thread_context.hh"
 #include "debug/EthernetAll.hh"
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"

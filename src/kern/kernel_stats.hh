@@ -34,13 +34,10 @@
 
 #include <string>
 
-#include "cpu/static_inst.hh"
+#include "config/the_isa.hh"
 #include "sim/serialize.hh"
 #include "sim/stats.hh"
 
-class BaseCPU;
-class ThreadContext;
-class FnEvent;
 // What does kernel stats expect is included?
 class System;
 

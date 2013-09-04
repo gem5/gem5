@@ -46,20 +46,14 @@
 #include "sim/fault_fwd.hh"
 
 // forward declarations
-struct AlphaSimpleImpl;
-struct OzoneImpl;
-struct SimpleImpl;
-class DynInst;
 class Packet;
 
 struct O3CPUImpl;
 template <class Impl> class BaseO3DynInst;
 typedef BaseO3DynInst<O3CPUImpl> O3DynInst;
-template <class Impl> class OzoneDynInst;
 class InOrderDynInst;
 
 class CheckerCPU;
-class FastCPU;
 class AtomicSimpleCPU;
 class TimingSimpleCPU;
 class InorderCPU;
