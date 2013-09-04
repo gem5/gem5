@@ -38,6 +38,7 @@
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "params/AlphaSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
@@ -90,6 +91,11 @@ class AlphaSystem : public System
 
   protected:
     Tick intrFreq;
+
+    /**
+     * Proxy used to copy arguments directly into kernel memory.
+     */
+    FSTranslatingPortProxy virtProxy;
 
     const Params *params() const { return (const Params *)_params; }
 

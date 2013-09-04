@@ -45,7 +45,7 @@
 using namespace AlphaISA;
 
 AlphaSystem::AlphaSystem(Params *p)
-    : System(p), intrFreq(0)
+    : System(p), intrFreq(0), virtProxy(getSystemPort(), p->cache_line_size)
 {
     consoleSymtab = new SymbolTable;
     palSymtab = new SymbolTable;

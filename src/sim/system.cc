@@ -79,7 +79,6 @@ System::System(Params *p)
       pagePtr(0),
       init_param(p->init_param),
       physProxy(_systemPort, p->cache_line_size),
-      virtProxy(_systemPort, p->cache_line_size),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
       physmem(name() + ".physmem", p->memories),

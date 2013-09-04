@@ -57,9 +57,9 @@
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "kern/system_events.hh"
-#include "mem/fs_translating_port_proxy.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "mem/port_proxy.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
 
@@ -211,7 +211,6 @@ class System : public MemObject
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
     PortProxy physProxy;
-    FSTranslatingPortProxy virtProxy;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;
