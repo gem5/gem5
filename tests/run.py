@@ -192,8 +192,10 @@ def initCPUs(sys):
     def initCPU(cpu):
         # We might actually have a MemTest object or something similar
         # here that just pretends to be a CPU.
-        if isinstance(cpu, BaseCPU):
+        try:
             cpu.createThreads()
+        except:
+            pass
 
     # The CPU attribute doesn't exist in some cases, e.g. the Ruby
     # testers.
