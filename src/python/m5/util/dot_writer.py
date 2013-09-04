@@ -129,10 +129,22 @@ def dot_add_edge(simNode, callgraph, full_port_name, peerPort):
         callgraph.add_edge(pydot.Edge(full_port_name, peer_port_name))
 
 def dot_create_cluster(simNode, full_path, label):
+    # get the parameter values of the node and use them as a tooltip
+    ini_strings = []
+    for param in sorted(simNode._params.keys()):
+        value = simNode._values.get(param)
+        if value != None:
+            # parameter name = value in HTML friendly format
+            ini_strings.append(str(param) + "&#61;" +
+                               simNode._values[param].ini_str())
+    # join all the parameters with an HTML newline
+    tooltip = "&#10;".join(ini_strings)
+
     return pydot.Cluster( \
                          full_path, \
                          shape = "Mrecord", \
                          label = label, \
+                         tooltip = "\"" + tooltip + "\"", \
                          style = "\"rounded, filled\"", \
                          color = "#000000", \
                          fillcolor = dot_gen_colour(simNode), \
