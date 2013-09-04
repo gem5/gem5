@@ -33,9 +33,9 @@ Import('*')
 SimObject('BaseTLB.py')
 SimObject('ClockedObject.py')
 SimObject('Root.py')
-SimObject('InstTracer.py')
 SimObject('ClockDomain.py')
 SimObject('VoltageDomain.py')
+SimObject('System.py')
 
 Source('arguments.cc')
 Source('async.cc')
@@ -51,19 +51,17 @@ Source('sim_events.cc')
 Source('sim_object.cc')
 Source('simulate.cc')
 Source('stat_control.cc')
-Source('syscall_emul.cc')
 Source('clock_domain.cc')
 Source('voltage_domain.cc')
+Source('system.cc')
 
-if env['TARGET_ISA'] != 'no':
+if env['TARGET_ISA'] != 'null':
+    SimObject('InstTracer.py')
     SimObject('Process.py')
-    SimObject('System.py')
     Source('faults.cc')
     Source('process.cc')
     Source('pseudo_inst.cc')
-    Source('system.cc')
-
-if env['TARGET_ISA'] != 'no':
+    Source('syscall_emul.cc')
     Source('tlb.cc')
 
 DebugFlag('Checkpoint')

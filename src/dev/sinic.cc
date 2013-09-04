@@ -32,7 +32,9 @@
 #include <limits>
 #include <string>
 
+#ifdef SINIC_VTOPHYS
 #include "arch/vtophys.hh"
+#endif
 #include "base/compiler.hh"
 #include "base/debug.hh"
 #include "base/inet.hh"

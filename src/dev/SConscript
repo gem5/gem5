@@ -31,7 +31,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'no':
+if env['TARGET_ISA'] == 'null':
     Return()
 
 SimObject('BadDevice.py')

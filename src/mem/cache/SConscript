@@ -30,9 +30,6 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'no':
-    Return()
-
 SimObject('BaseCache.py')
 
 Source('base.cc')

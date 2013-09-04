@@ -52,13 +52,7 @@
 #include "base/hostinfo.hh"
 #include "base/statistics.hh"
 #include "base/time.hh"
-#include "config/the_isa.hh"
-#if THE_ISA == NO_ISA
-#include "arch/noisa/cpu_dummy.hh"
-#else
 #include "cpu/base.hh"
-#endif
-
 #include "sim/eventq_impl.hh"
 #include "sim/stat_control.hh"
 

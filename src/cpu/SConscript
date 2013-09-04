@@ -30,7 +30,9 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'no':
+if env['TARGET_ISA'] == 'null':
+    SimObject('IntrControl.py')
+    Source('intr_control_noisa.cc')
     Return()
 
 #################################################################

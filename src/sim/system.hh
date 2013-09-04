@@ -184,7 +184,9 @@ class System : public MemObject
      */
     unsigned int cacheLineSize() const { return _cacheLineSize; }
 
+#if THE_ISA != NULL_ISA
     PCEventQueue pcEventQueue;
+#endif
 
     std::vector<ThreadContext *> threadContexts;
     int _numContexts;
@@ -380,11 +382,13 @@ class System : public MemObject
     {
         Addr addr = 0; // initialize only to avoid compiler warning
 
+#if THE_ISA != NULL_ISA
         if (symtab->findAddress(lbl, addr)) {
             T *ev = new T(&pcEventQueue, desc, fixFuncEventAddr(addr),
                           std::forward<Args>(args)...);
             return ev;
         }
+#endif
 
         return NULL;
     }

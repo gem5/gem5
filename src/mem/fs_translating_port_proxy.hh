@@ -59,8 +59,9 @@
 #ifndef __MEM_FS_PORT_PROXY_HH__
 #define __MEM_FS_PORT_PROXY_HH__
 
-#include "arch/vtophys.hh"
 #include "mem/port_proxy.hh"
+
+class ThreadContext;
 
 /**
  * A TranslatingPortProxy in FS mode translates a virtual address to a

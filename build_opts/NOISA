@@ -1,2 +1,0 @@
-TARGET_ISA = 'no'
-CPU_MODELS = 'no'

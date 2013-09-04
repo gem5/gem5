@@ -30,9 +30,6 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'no':
-    Return()
-
 Source('unittest.cc')
 
 UnitTest('bitvectest', 'bitvectest.cc')

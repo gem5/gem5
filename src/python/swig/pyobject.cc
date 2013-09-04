@@ -34,16 +34,19 @@
 
 #include "base/inifile.hh"
 #include "base/output.hh"
+#include "config/the_isa.hh"
+#if THE_ISA != NULL_ISA
 #include "dev/etherdevice.hh"
 #include "dev/etherobject.hh"
+#endif
 #include "mem/mem_object.hh"
-#include "mem/port.hh"
 #include "python/swig/pyobject.hh"
 #include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 
+#if THE_ISA != NULL_ISA
 EtherInt *
 lookupEthPort(SimObject *so, const std::string &name, int i)
 {
@@ -61,6 +64,7 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
         p = ed->getEthPort(name, i);
     return p;
 }
+#endif
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
@@ -71,6 +75,7 @@ int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
              SimObject *o2, const std::string &name2, int i2)
 {
+#if THE_ISA != NULL_ISA
     if (FullSystem) {
         EtherObject *eo1, *eo2;
         EtherDevice *ed1, *ed2;
@@ -92,6 +97,7 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
             }
         }
     }
+#endif
     MemObject *mo1, *mo2;
     mo1 = dynamic_cast<MemObject*>(o1);
     mo2 = dynamic_cast<MemObject*>(o2);

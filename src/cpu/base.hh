@@ -48,11 +48,16 @@
 
 #include <vector>
 
+// Before we do anything else, check if this build is the NULL ISA,
+// and if so stop here
+#include "config/the_isa.hh"
+#if THE_ISA == NULL_ISA
+#include "arch/null/cpu_dummy.hh"
+#else
 #include "arch/interrupts.hh"
 #include "arch/isa_traits.hh"
 #include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "mem/mem_object.hh"
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
@@ -475,5 +480,7 @@ class BaseCPU : public MemObject
     Stats::Scalar numWorkItemsStarted;
     Stats::Scalar numWorkItemsCompleted;
 };
+
+#endif // THE_ISA == NULL_ISA
 
 #endif // __CPU_BASE_HH__

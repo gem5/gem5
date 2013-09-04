@@ -60,7 +60,7 @@
 #define __MEM_PORT_PROXY_HH__
 
 #include "config/the_isa.hh"
-#if THE_ISA != NO_ISA
+#if THE_ISA != NULL_ISA
     #include "arch/isa_traits.hh"
 #endif
 
@@ -127,7 +127,7 @@ class PortProxy
     template <typename T>
     void write(Addr address, T data) const;
 
-#if THE_ISA != NO_ISA
+#if THE_ISA != NULL_ISA
     /**
      * Read sizeof(T) bytes from address and return as object T.
      * Performs Guest to Host endianness transform.
@@ -161,7 +161,7 @@ PortProxy::write(Addr address, T data) const
     writeBlob(address, (uint8_t*)&data, sizeof(T));
 }
 
-#if THE_ISA != NO_ISA
+#if THE_ISA != NULL_ISA
 template <typename T>
 T
 PortProxy::readGtoH(Addr address) const

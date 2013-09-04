@@ -1,0 +1,2 @@
+TARGET_ISA = 'null'
+CPU_MODELS = ''

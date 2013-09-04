@@ -1,4 +1,0 @@
-
-Import('*')
-
-all_isa_list.append('no')

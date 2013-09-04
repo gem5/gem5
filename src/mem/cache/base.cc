@@ -45,8 +45,6 @@
  * Definition of BaseCache functions.
  */
 
-#include "cpu/base.hh"
-#include "cpu/smt.hh"
 #include "debug/Cache.hh"
 #include "debug/Drain.hh"
 #include "mem/cache/tags/fa_lru.hh"

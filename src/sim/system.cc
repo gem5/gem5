@@ -48,7 +48,6 @@
 #include "arch/isa_traits.hh"
 #include "arch/remote_gdb.hh"
 #include "arch/utility.hh"
-#include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
@@ -228,6 +227,7 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
     threadContexts[id] = tc;
     _numContexts++;
 
+#if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
     if (port) {
         RemoteGDB *rgdb = new RemoteGDB(this, tc);
@@ -243,6 +243,7 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
 
         remoteGDB[id] = rgdb;
     }
+#endif
 
     activeCpus.push_back(false);
 
