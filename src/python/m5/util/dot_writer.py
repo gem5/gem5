@@ -129,43 +129,114 @@ def dot_add_edge(simNode, callgraph, full_port_name, peerPort):
         callgraph.add_edge(pydot.Edge(full_port_name, peer_port_name))
 
 def dot_create_cluster(simNode, full_path, label):
-    # if you read this, feel free to modify colors / style
     return pydot.Cluster( \
                          full_path, \
                          shape = "Mrecord", \
                          label = label, \
                          style = "\"rounded, filled\"", \
                          color = "#000000", \
-                         fillcolor = dot_gen_color(simNode), \
+                         fillcolor = dot_gen_colour(simNode), \
                          fontname = "Arial", \
                          fontsize = "14", \
                          fontcolor = "#000000" \
                          )
 
 def dot_create_node(simNode, full_path, label):
-    # if you read this, feel free to modify colors / style.
-    # leafs may have a different style => seperate function
     return pydot.Node( \
                          full_path, \
                          shape = "Mrecord", \
                          label = label, \
                          style = "\"rounded, filled\"", \
                          color = "#000000", \
-                         fillcolor = "#808080", \
+                         fillcolor = dot_gen_colour(simNode, True), \
                          fontname = "Arial", \
                          fontsize = "14", \
                          fontcolor = "#000000" \
                          )
 
-# generate color for nodes
-def dot_gen_color(simNode):
-    # start off with white
-    base = (256, 256, 256)
-    # scale the color based on the depth
-    depth = len(simNode.path().split('.'))
-    # slightly arbitrary, but assume that the depth is less than six
-    # levels
-    r, g, b = map(lambda x: x * max(1 - depth / 6.0, 0.3), base)
+# an enumerator for different kinds of node types, at the moment we
+# discern the majority of node types, with the caches being the
+# notable exception
+class NodeType:
+    SYS = 0
+    CPU = 1
+    BUS = 2
+    MEM = 3
+    DEV = 4
+    OTHER = 5
+
+# based on the sim object, determine the node type
+def get_node_type(simNode):
+    if isinstance(simNode, m5.objects.System):
+        return NodeType.SYS
+    # NULL ISA has no BaseCPU or PioDevice, so check if these names
+    # exists before using them
+    elif 'BaseCPU' in dir(m5.objects) and \
+            isinstance(simNode, m5.objects.BaseCPU):
+        return NodeType.CPU
+    elif 'PioDevice' in dir(m5.objects) and \
+            isinstance(simNode, m5.objects.PioDevice):
+        return NodeType.DEV
+    elif isinstance(simNode, m5.objects.BaseBus):
+        return NodeType.BUS
+    elif isinstance(simNode, m5.objects.AbstractMemory):
+        return NodeType.MEM
+    else:
+        return NodeType.OTHER
+
+# based on the node type, determine the colour as an RGB tuple, the
+# palette is rather arbitrary at this point (some coherent natural
+# tones), and someone that feels artistic should probably have a look
+def get_type_colour(nodeType):
+    if nodeType == NodeType.SYS:
+        return (228, 231, 235)
+    elif nodeType == NodeType.CPU:
+        return (187, 198, 217)
+    elif nodeType == NodeType.BUS:
+        return (111, 121, 140)
+    elif nodeType == NodeType.MEM:
+        return (94, 89, 88)
+    elif nodeType == NodeType.DEV:
+        return (199, 167, 147)
+    elif nodeType == NodeType.OTHER:
+        # use a relatively gray shade
+        return (186, 182, 174)
+
+# generate colour for a node, either corresponding to a sim object or a
+# port
+def dot_gen_colour(simNode, isPort = False):
+    # determine the type of the current node, and also its parent, if
+    # the node is not the same type as the parent then we use the base
+    # colour for its type
+    node_type = get_node_type(simNode)
+    if simNode._parent:
+        parent_type = get_node_type(simNode._parent)
+    else:
+        parent_type = NodeType.OTHER
+
+    # if this node is the same type as the parent, then scale the
+    # colour based on the depth such that the deeper levels in the
+    # hierarchy get darker colours
+    if node_type == parent_type:
+        # start out with a depth of zero
+        depth = 0
+        parent = simNode._parent
+        # find the closes parent that is not the same type
+        while parent and get_node_type(parent) == parent_type:
+            depth = depth + 1
+            parent = parent._parent
+        node_colour = get_type_colour(parent_type)
+        # slightly arbitrary, but assume that the depth is less than
+        # five levels
+        r, g, b = map(lambda x: x * max(1 - depth / 7.0, 0.3), node_colour)
+    else:
+        node_colour = get_type_colour(node_type)
+        r, g, b = node_colour
+
+    # if we are colouring a port, then make it a slightly darker shade
+    # than the node that encapsulates it, once again use a magic constant
+    if isPort:
+        r, g, b = map(lambda x: 0.8 * x, (r, g, b))
 
     return dot_rgb_to_html(r, g, b)
 
@@ -190,4 +261,4 @@ def do_dot(root, outdir, dotFilename):
         callgraph.write_svg(dot_filename + ".svg")
         callgraph.write_pdf(dot_filename + ".pdf")
     except:
-        warn("failed to generate pdf output from %s", dot_filename)
+        warn("failed to generate dot output from %s", dot_filename)
