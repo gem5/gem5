@@ -380,7 +380,7 @@ class System : public MemObject
     T *addFuncEvent(const SymbolTable *symtab, const char *lbl,
                     const std::string &desc, Args... args)
     {
-        Addr addr = 0; // initialize only to avoid compiler warning
+        Addr addr M5_VAR_USED = 0; // initialize only to avoid compiler warning
 
 #if THE_ISA != NULL_ISA
         if (symtab->findAddress(lbl, addr)) {
