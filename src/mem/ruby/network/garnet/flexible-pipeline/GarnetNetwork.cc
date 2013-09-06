@@ -210,54 +210,38 @@ GarnetNetwork::functionalWrite(Packet *pkt)
 }
 
 void
-GarnetNetwork::printLinkStats(ostream& out) const
+GarnetNetwork::regStats()
 {
-    double average_link_utilization = 0;
-    vector<double> average_vc_load;
-    average_vc_load.resize(m_virtual_networks*m_vcs_per_vnet);
+    BaseGarnetNetwork::regStats();
 
-    for (int i = 0; i < m_virtual_networks*m_vcs_per_vnet; i++) {
-        average_vc_load[i] = 0;
+    m_average_link_utilization.name(name() + ".avg_link_utilization");
+
+    m_average_vc_load
+        .init(m_virtual_networks * m_vcs_per_vnet)
+        .name(name() + ".avg_vc_load")
+        .flags(Stats::pdf | Stats::total | Stats::nozero)
+        ;
+    for (int i = 0; i < m_virtual_networks * m_vcs_per_vnet; i++) {
+        m_average_vc_load
+            .subname(i, csprintf(".%i", i))
+            .flags(Stats::nozero)
+            ;
     }
-
-    out << endl;
-    for (int i = 0; i < m_links.size(); i++) {
-        average_link_utilization +=
-            (double(m_links[i]->getLinkUtilization())) /
-            (double(curCycle() - g_ruby_start));
-
-        vector<int> vc_load = m_links[i]->getVcLoad();
-        for (int j = 0; j < vc_load.size(); j++) {
-            assert(vc_load.size() == m_vcs_per_vnet*m_virtual_networks);
-            average_vc_load[j] += vc_load[j];
-        }
-    }
-    average_link_utilization =
-        average_link_utilization/m_links.size();
-    out << "Average Link Utilization :: " << average_link_utilization
-        << " flits/cycle" << endl;
-    out << "-------------" << endl;
-
-    for (int i = 0; i < m_vcs_per_vnet*m_virtual_networks; i++) {
-        if (!m_in_use[i/m_vcs_per_vnet])
-            continue;
-
-        average_vc_load[i] = double(average_vc_load[i]) /
-            (double(curCycle() - g_ruby_start));
-        out << "Average VC Load [" << i << "] = " << average_vc_load[i]
-            << " flits/cycle " << endl;
-    }
-    out << "-------------" << endl;
-    out << endl;
 }
 
 void
-GarnetNetwork::printPowerStats(ostream& out) const
+GarnetNetwork::collateStats()
 {
-    out << "Network Power" << endl;
-    out << "-------------" << endl;
-    out << "Orion does not work with flexible pipeline" << endl;
-    out << endl;
+    for (int i = 0; i < m_links.size(); i++) {
+        m_average_link_utilization +=
+            (double(m_links[i]->getLinkUtilization())) /
+            (double(curCycle() - g_ruby_start));
+
+        vector<unsigned int> vc_load = m_links[i]->getVcLoad();
+        for (int j = 0; j < vc_load.size(); j++) {
+            m_average_vc_load[j] += vc_load[j];
+        }
+    }
 }
 
 void

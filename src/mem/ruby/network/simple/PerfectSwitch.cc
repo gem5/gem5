@@ -102,34 +102,6 @@ PerfectSwitch::addOutPort(const vector<MessageBuffer*>& out,
     m_routing_table.push_back(routing_table_entry);
 }
 
-void
-PerfectSwitch::clearRoutingTables()
-{
-    m_routing_table.clear();
-}
-
-void
-PerfectSwitch::clearBuffers()
-{
-    for (int i = 0; i < m_in.size(); i++){
-        for(int vnet = 0; vnet < m_virtual_networks; vnet++) {
-            m_in[i][vnet]->clear();
-        }
-    }
-
-    for (int i = 0; i < m_out.size(); i++){
-        for(int vnet = 0; vnet < m_virtual_networks; vnet++) {
-            m_out[i][vnet]->clear();
-        }
-    }
-}
-
-void
-PerfectSwitch::reconfigureOutPort(const NetDest& routing_table_entry)
-{
-    m_routing_table.push_back(routing_table_entry);
-}
-
 PerfectSwitch::~PerfectSwitch()
 {
 }
@@ -329,15 +301,14 @@ PerfectSwitch::storeEventInfo(int info)
 }
 
 void
-PerfectSwitch::printStats(std::ostream& out) const
-{
-    out << "PerfectSwitch printStats" << endl;
-}
-
-void
 PerfectSwitch::clearStats()
 {
 }
+void
+PerfectSwitch::collateStats()
+{
+}
+
 
 void
 PerfectSwitch::print(std::ostream& out) const

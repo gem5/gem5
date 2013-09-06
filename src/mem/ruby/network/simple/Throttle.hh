@@ -63,32 +63,29 @@ class Throttle : public Consumer
     { return csprintf("Throttle-%i", m_sID); }
 
     void addLinks(const std::vector<MessageBuffer*>& in_vec,
-        const std::vector<MessageBuffer*>& out_vec);
+                  const std::vector<MessageBuffer*>& out_vec);
     void wakeup();
 
-    void printStats(std::ostream& out) const;
-    void clearStats();
-    // The average utilization (a percent) since last clearStats()
-    double getUtilization() const;
+    // The average utilization (a fraction) since last clearStats()
+    const Stats::Scalar & getUtilization() const
+    { return m_link_utilization; }
+    const Stats::Vector & getMsgCount(unsigned int type) const
+    { return m_msg_counts[type]; }
+
     int getLinkBandwidth() const
     { return m_endpoint_bandwidth * m_link_bandwidth_multiplier; }
 
     Cycles getLatency() const { return m_link_latency; }
-    const std::vector<std::vector<int> >&
-    getCounters() const
-    {
-        return m_message_counters;
-    }
 
-    void clear();
-
+    void clearStats();
+    void collateStats();
+    void regStats(std::string name);
     void print(std::ostream& out) const;
 
   private:
     void init(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
               int endpoint_bandwidth);
     void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
-    void linkUtilized(double ratio) { m_links_utilized += ratio; }
 
     // Private copy constructor and assignment operator
     Throttle(const Throttle& obj);
@@ -96,8 +93,7 @@ class Throttle : public Consumer
 
     std::vector<MessageBuffer*> m_in;
     std::vector<MessageBuffer*> m_out;
-    std::vector<std::vector<int> > m_message_counters;
-    int m_vnets;
+    unsigned int m_vnets;
     std::vector<int> m_units_remaining;
     int m_sID;
     NodeID m_node;
@@ -106,9 +102,12 @@ class Throttle : public Consumer
     int m_wakeups_wo_switch;
     int m_endpoint_bandwidth;
 
-    // For tracking utilization
-    Cycles m_ruby_start;
-    double m_links_utilized;
+    // Statistical variables
+    Stats::Scalar m_link_utilization;
+    std::vector<Stats::Vector> m_msg_counts;
+    std::vector<Stats::Formula> m_msg_bytes;
+
+    double m_link_utilization_proxy;
 };
 
 inline std::ostream&

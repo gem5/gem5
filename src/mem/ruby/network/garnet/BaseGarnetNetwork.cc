@@ -71,17 +71,9 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
 
     m_in_use.resize(m_virtual_networks);
     m_ordered.resize(m_virtual_networks);
-    m_flits_received.resize(m_virtual_networks);
-    m_flits_injected.resize(m_virtual_networks);
-    m_network_latency.resize(m_virtual_networks);
-    m_queueing_latency.resize(m_virtual_networks);
     for (int i = 0; i < m_virtual_networks; i++) {
         m_in_use[i] = false;
         m_ordered[i] = false;
-        m_flits_received[i] = 0;
-        m_flits_injected[i] = 0;
-        m_network_latency[i] = 0.0;
-        m_queueing_latency[i] = 0.0;
     }
 
     for (int node = 0; node < m_nodes; node++) {
@@ -121,60 +113,55 @@ BaseGarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
 }
 
 void
-BaseGarnetNetwork::clearStats()
+BaseGarnetNetwork::regStats()
 {
-}
+    m_flits_received
+        .init(m_virtual_networks)
+        .name(name() + ".flits_received")
+        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        ;
 
-void
-BaseGarnetNetwork::printStats(ostream& out) const
-{
-    out << endl;
-    out << "Network Stats" << endl;
-    out << "-------------" << endl;
-    out << endl;
-    printPerformanceStats(out);
-    printLinkStats(out);
-    printPowerStats(out);
-}
+    m_flits_injected
+        .init(m_virtual_networks)
+        .name(name() + ".flits_injected")
+        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        ;
 
-void
-BaseGarnetNetwork::printPerformanceStats(ostream& out) const
-{
-    int total_flits_injected = 0;
-    int total_flits_received = 0;
-    int total_network_latency = 0.0;
-    int total_queueing_latency = 0.0;
+    m_network_latency
+        .init(m_virtual_networks)
+        .name(name() + ".network_latency")
+        .flags(Stats::oneline)
+        ;
+
+    m_queueing_latency
+        .init(m_virtual_networks)
+        .name(name() + ".queueing_latency")
+        .flags(Stats::oneline)
+        ;
 
     for (int i = 0; i < m_virtual_networks; i++) {
-        if (!m_in_use[i])
-            continue;
-
-        out << "[Vnet " << i << "]: flits injected = "
-            << m_flits_injected[i] << endl;
-        out << "[Vnet " << i << "]: flits received = "
-            << m_flits_received[i] << endl;
-        out << "[Vnet " << i << "]: average network latency = "
-            << ((double) m_network_latency[i] / (double) m_flits_received[i])
-            << endl;
-        out << "[Vnet " << i << "]: average queueing (at source NI) latency = "
-            << ((double) m_queueing_latency[i] / (double) m_flits_received[i])
-            << endl;
-
-        out << endl;
-        total_flits_injected += m_flits_injected[i];
-        total_flits_received += m_flits_received[i];
-        total_network_latency += m_network_latency[i];
-        total_queueing_latency += m_queueing_latency[i];
+        m_flits_received.subname(i, csprintf("vnet-%i", i));
+        m_flits_injected.subname(i, csprintf("vnet-%i", i));
+        m_network_latency.subname(i, csprintf("vnet-%i", i));
+        m_queueing_latency.subname(i, csprintf("vnet-%i", i));
     }
-    out << "Total flits injected = " << total_flits_injected << endl;
-    out << "Total flits received = " << total_flits_received << endl;
-    out << "Average network latency = "
-        << ((double) total_network_latency/ (double) total_flits_received) << endl;
-    out << "Average queueing (at source NI) latency = "
-        << ((double) total_queueing_latency/ (double) total_flits_received) << endl;
-    out << "Average latency = "
-        << ((double)  (total_queueing_latency + total_network_latency) /
-            (double) total_flits_received)<< endl;
-    out << "-------------" << endl;
-    out << endl;
+
+    m_avg_vnet_latency
+        .name(name() + ".average_vnet_latency")
+        .flags(Stats::oneline);
+    m_avg_vnet_latency = m_network_latency / m_flits_received;
+
+    m_avg_vqueue_latency
+        .name(name() + ".average_vqueue_latency")
+        .flags(Stats::oneline);
+    m_avg_vqueue_latency = m_queueing_latency / m_flits_received;
+
+    m_avg_network_latency.name(name() + ".average_network_latency");
+    m_avg_network_latency = sum(m_network_latency) / sum(m_flits_received);
+
+    m_avg_queueing_latency.name(name() + ".average_queueing_latency");
+    m_avg_queueing_latency = sum(m_queueing_latency) / sum(m_flits_received);
+
+    m_avg_latency.name(name() + ".average_latency");
+    m_avg_latency = m_avg_network_latency + m_avg_queueing_latency;
 }

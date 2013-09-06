@@ -63,8 +63,8 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     int getBuffersPerDataVC() {return m_buffers_per_data_vc; }
     int getBuffersPerCtrlVC() {return m_buffers_per_ctrl_vc; }
 
-    void printLinkStats(std::ostream& out) const;
-    void printPowerStats(std::ostream& out) const;
+    void collateStats();
+    void regStats();
     void print(std::ostream& out) const;
 
     VNET_type
@@ -96,6 +96,11 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     GarnetNetwork_d(const GarnetNetwork_d& obj);
     GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
 
+    void collateLinkStats();
+    void collatePowerStats();
+    void regLinkStats();
+    void regPowerStats();
+
     std::vector<VNET_type > m_vnet_type;
 
     std::vector<Router_d *> m_routers;   // All Routers in Network
@@ -105,6 +110,20 @@ class GarnetNetwork_d : public BaseGarnetNetwork
 
     int m_buffers_per_data_vc;
     int m_buffers_per_ctrl_vc;
+
+    // Statistical variables for power
+    Stats::Scalar m_dynamic_link_power;
+    Stats::Scalar m_static_link_power;
+    Stats::Formula m_total_link_power;
+
+    Stats::Scalar m_dynamic_router_power;
+    Stats::Scalar m_static_router_power;
+    Stats::Scalar m_clk_power;
+    Stats::Formula m_total_router_power;
+
+    // Statistical variables for performance
+    Stats::Scalar m_average_link_utilization;
+    Stats::Vector m_average_vc_load;
 };
 
 inline std::ostream&

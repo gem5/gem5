@@ -104,9 +104,6 @@ class RubySystem : public ClockedObject
 
     void printStats(std::ostream& out);
     void resetStats();
-
-    uint64 getInstructionCount(int thread) { return 1; }
-
     void print(std::ostream& out) const;
 
     void serialize(std::ostream &os);

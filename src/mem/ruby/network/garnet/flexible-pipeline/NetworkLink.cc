@@ -40,6 +40,7 @@ NetworkLink::NetworkLink(const Params *p)
     m_link_utilized = 0;
     m_latency = p->link_latency;
     m_id = p->link_id;
+
     int num_net = p->virt_nets;
     int num_vc = p->vcs_per_vnet;
     m_vc_load.resize(num_net * num_vc);
@@ -51,12 +52,6 @@ NetworkLink::NetworkLink(const Params *p)
 NetworkLink::~NetworkLink()
 {
     delete linkBuffer;
-}
-
-int
-NetworkLink::get_id()
-{
-    return m_id;
 }
 
 void
@@ -99,18 +94,6 @@ void
 NetworkLink::release_vc_link(int vc, Cycles release_time)
 {
     link_source->release_vc(m_out_port, vc, release_time);
-}
-
-std::vector<int>
-NetworkLink::getVcLoad()
-{
-    return m_vc_load;
-}
-
-double
-NetworkLink::getLinkUtilization()
-{
-    return (double(m_link_utilized));
 }
 
 bool

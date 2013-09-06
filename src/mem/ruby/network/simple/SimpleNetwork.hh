@@ -56,8 +56,8 @@ class SimpleNetwork : public Network
     int getEndpointBandwidth() { return m_endpoint_bandwidth; }
     bool getAdaptiveRouting() {return m_adaptive_routing; }
 
-    void printStats(std::ostream& out) const;
-    void clearStats();
+    void collateStats();
+    void regStats();
 
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);
@@ -90,9 +90,7 @@ class SimpleNetwork : public Network
     void addLink(SwitchID src, SwitchID dest, int link_latency);
     void makeLink(SwitchID src, SwitchID dest,
         const NetDest& routing_table_entry, int link_latency);
-    SwitchID createSwitch();
     void makeTopology();
-    void linkTopology();
 
     // Private copy constructor and assignment operator
     SimpleNetwork(const SimpleNetwork& obj);
@@ -111,6 +109,10 @@ class SimpleNetwork : public Network
     int m_buffer_size;
     int m_endpoint_bandwidth;
     bool m_adaptive_routing;    
+
+    //Statistical variables
+    std::vector<Stats::Formula> m_msg_counts;
+    std::vector<Stats::Formula> m_msg_bytes;
 };
 
 inline std::ostream&

@@ -67,18 +67,15 @@ class PerfectSwitch : public Consumer
     void init(SimpleNetwork *);
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
-        const NetDest& routing_table_entry);
-    void clearRoutingTables();
-    void clearBuffers();
-    void reconfigureOutPort(const NetDest& routing_table_entry);
+                    const NetDest& routing_table_entry);
     int getInLinks() const { return m_in.size(); }
     int getOutLinks() const { return m_out.size(); }
 
     void wakeup();
     void storeEventInfo(int info);
 
-    void printStats(std::ostream& out) const;
     void clearStats();
+    void collateStats();
     void print(std::ostream& out) const;
 
   private:

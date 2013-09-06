@@ -206,76 +206,39 @@ SimpleNetwork::getThrottles(NodeID id) const
 }
 
 void
-SimpleNetwork::printStats(ostream& out) const
+SimpleNetwork::regStats()
 {
-    out << endl;
-    out << "Network Stats" << endl;
-    out << "-------------" << endl;
-    out << endl;
+    m_msg_counts.resize(MessageSizeType_NUM);
+    m_msg_bytes.resize(MessageSizeType_NUM);
 
-    //
-    // Determine total counts before printing out each switch's stats
-    //
-    std::vector<uint64> total_msg_counts;
-    total_msg_counts.resize(MessageSizeType_NUM);
-    for (MessageSizeType type = MessageSizeType_FIRST; 
-         type < MessageSizeType_NUM; 
-         ++type) {
-        total_msg_counts[type] = 0;
-    }
-    
-    for (int i = 0; i < m_switches.size(); i++) {
-        const std::vector<Throttle*>* throttles = 
-            m_switches[i]->getThrottles();
-        
-        for (int p = 0; p < throttles->size(); p++) {
-            
-            const std::vector<std::vector<int> >& message_counts = 
-                ((*throttles)[p])->getCounters();
-            
-            for (MessageSizeType type = MessageSizeType_FIRST; 
-                 type < MessageSizeType_NUM; 
-                 ++type) {
+    for (MessageSizeType type = MessageSizeType_FIRST;
+         type < MessageSizeType_NUM; ++type) {
+        m_msg_counts[(unsigned int) type]
+            .name(name() + ".msg_count." + MessageSizeType_to_string(type))
+            .flags(Stats::nozero)
+            ;
+        m_msg_bytes[(unsigned int) type]
+            .name(name() + ".msg_byte." + MessageSizeType_to_string(type))
+            .flags(Stats::nozero)
+            ;
 
-                const std::vector<int> &mct = message_counts[type];
-                int sum = accumulate(mct.begin(), mct.end(), 0);
-                total_msg_counts[type] += uint64(sum);
-            }
+        // Now state what the formula is.
+        for (int i = 0; i < m_switches.size(); i++) {
+            m_msg_counts[(unsigned int) type] +=
+                sum(m_switches[i]->getMsgCount(type));
         }
-    }
-    uint64 total_msgs = 0;
-    uint64 total_bytes = 0;
-    for (MessageSizeType type = MessageSizeType_FIRST; 
-         type < MessageSizeType_NUM; 
-         ++type) {
-        
-        if (total_msg_counts[type] > 0) {
-            out << "total_msg_count_" << type << ": " << total_msg_counts[type] 
-                << " " << total_msg_counts[type] *
-                uint64(MessageSizeType_to_int(type))
-                << endl;
-            
-            total_msgs += total_msg_counts[type];
-            
-            total_bytes += total_msg_counts[type] * 
-                uint64(MessageSizeType_to_int(type));
-        }
-    }
-    
-    out << "total_msgs: " << total_msgs 
-        << " total_bytes: " << total_bytes << endl;
-    
-    out << endl;
-    for (int i = 0; i < m_switches.size(); i++) {
-        m_switches[i]->printStats(out);
+
+        m_msg_bytes[(unsigned int) type] =
+            m_msg_counts[(unsigned int) type] * Stats::constant(
+                    Network::MessageSizeType_to_int(type));
     }
 }
 
 void
-SimpleNetwork::clearStats()
+SimpleNetwork::collateStats()
 {
     for (int i = 0; i < m_switches.size(); i++) {
-        m_switches[i]->clearStats();
+        m_switches[i]->collateStats();
     }
 }
 

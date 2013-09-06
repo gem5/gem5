@@ -80,27 +80,31 @@ class BaseGarnetNetwork : public Network
     virtual void checkNetworkAllocation(NodeID id, bool ordered,
         int network_num, std::string vnet_type) = 0;
 
-    void clearStats();
-    void printStats(std::ostream& out) const;
-    void printPerformanceStats(std::ostream& out) const;
-    virtual void printLinkStats(std::ostream& out) const = 0;
-    virtual void printPowerStats(std::ostream& out) const = 0;
+    virtual void regStats();
+    virtual void collateStats() {}
 
   protected:
     int m_ni_flit_size;
     int m_vcs_per_vnet;
     bool m_enable_fault_model;
 
-    std::vector<int> m_flits_received;
-    std::vector<int> m_flits_injected;
-    std::vector<double> m_network_latency;
-    std::vector<double> m_queueing_latency;
-
     std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;
 
     std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
     std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+
+    // Statistical variables
+    Stats::Vector m_flits_received;
+    Stats::Vector m_flits_injected;
+    Stats::Vector m_network_latency;
+    Stats::Vector m_queueing_latency;
+
+    Stats::Formula m_avg_vnet_latency;
+    Stats::Formula m_avg_vqueue_latency;
+    Stats::Formula m_avg_network_latency;
+    Stats::Formula m_avg_queueing_latency;
+    Stats::Formula m_avg_latency;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__

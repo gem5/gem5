@@ -79,16 +79,11 @@ Throttle::init(NodeID node, Cycles link_latency,
     m_endpoint_bandwidth = endpoint_bandwidth;
 
     m_wakeups_wo_switch = 0;
-    clearStats();
-}
 
-void
-Throttle::clear()
-{
-    for (int counter = 0; counter < m_vnets; counter++) {
-        m_in[counter]->clear();
-        m_out[counter]->clear();
-    }
+    m_msg_counts.resize(MessageSizeType_NUM);
+    m_msg_bytes.resize(MessageSizeType_NUM);
+
+    m_link_utilization_proxy = 0;
 }
 
 void
@@ -98,14 +93,6 @@ Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
     assert(in_vec.size() == out_vec.size());
     for (int i=0; i<in_vec.size(); i++) {
         addVirtualNetwork(in_vec[i], out_vec[i]);
-    }
-
-    m_message_counters.resize(MessageSizeType_NUM);
-    for (int i = 0; i < MessageSizeType_NUM; i++) {
-        m_message_counters[i].resize(in_vec.size());
-        for (int j = 0; j<m_message_counters[i].size(); j++) {
-            m_message_counters[i][j] = 0;
-        }
     }
 }
 
@@ -179,7 +166,7 @@ Throttle::wakeup()
                 m_in[vnet]->pop();
 
                 // Count the message
-                m_message_counters[net_msg_ptr->getMessageSize()][vnet]++;
+                m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;
 
                 DPRINTF(RubyNetwork, "%s\n", *m_out[vnet]);
             }
@@ -208,7 +195,7 @@ Throttle::wakeup()
     double ratio = 1.0 - (double(bw_remaining) / double(getLinkBandwidth()));
 
     // If ratio = 0, we used no bandwidth, if ratio = 1, we used all
-    linkUtilized(ratio);
+    m_link_utilization_proxy += ratio;
 
     if (bw_remaining > 0 && !schedule_wakeup) {
         // We have extra bandwidth and our output buffer was
@@ -225,29 +212,41 @@ Throttle::wakeup()
 }
 
 void
-Throttle::printStats(ostream& out) const
+Throttle::regStats(string parent)
 {
-    out << "utilized_percent: " << getUtilization() << endl;
+    m_link_utilization
+        .name(parent + csprintf(".throttle%i", m_node) + ".link_utilization");
+
+    for (MessageSizeType type = MessageSizeType_FIRST;
+         type < MessageSizeType_NUM; ++type) {
+        m_msg_counts[(unsigned int)type]
+            .init(m_vnets)
+            .name(parent + csprintf(".throttle%i", m_node) + ".msg_count." +
+                    MessageSizeType_to_string(type))
+            .flags(Stats::nozero)
+            ;
+        m_msg_bytes[(unsigned int) type]
+            .name(parent + csprintf(".throttle%i", m_node) + ".msg_bytes." +
+                    MessageSizeType_to_string(type))
+            .flags(Stats::nozero)
+            ;
+
+        m_msg_bytes[(unsigned int) type] = m_msg_counts[type] * Stats::constant(
+                Network::MessageSizeType_to_int(type));
+    }
 }
 
 void
 Throttle::clearStats()
 {
-    m_ruby_start = g_system_ptr->curCycle();
-    m_links_utilized = 0.0;
-
-    for (int i = 0; i < m_message_counters.size(); i++) {
-        for (int j = 0; j < m_message_counters[i].size(); j++) {
-            m_message_counters[i][j] = 0;
-        }
-    }
+    m_link_utilization_proxy = 0;
 }
 
-double
-Throttle::getUtilization() const
+void
+Throttle::collateStats()
 {
-    return 100.0 * double(m_links_utilized) /
-        double(g_system_ptr->curCycle()-m_ruby_start);
+    m_link_utilization = 100.0 * m_link_utilization_proxy
+        / (double(g_system_ptr->curCycle() - g_ruby_start));
 }
 
 void

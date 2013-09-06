@@ -89,12 +89,12 @@ class Router_d : public BasicRouter
     void printFaultVector(std::ostream& out);
     void printAggregateFaultProbability(std::ostream& out);
 
-    double calculate_power();
+    void calculate_power();
     void calculate_performance_numbers();
+    double get_dynamic_power() const { return m_power_dyn; }
+    double get_static_power() const { return m_power_sta; }
+    double get_clk_power() const { return m_clk_power; }
 
-    double get_dynamic_power(){return m_power_dyn;}
-    double get_static_power(){return m_power_sta;}
-    double get_clk_power(){return m_clk_power;}
     bool get_fault_vector(int temperature, float fault_vector[]){ 
         return m_network_ptr->fault_model->fault_vector(m_id, temperature, 
                                                         fault_vector); 
@@ -110,11 +110,6 @@ class Router_d : public BasicRouter
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork_d *m_network_ptr;
-
-    std::vector<double> buf_read_count;
-    std::vector<double> buf_write_count;
-    std::vector<double> vc_local_arbit_count;
-    std::vector<double> vc_global_arbit_count;
     double sw_local_arbit_count, sw_global_arbit_count;
     double crossbar_count;
 
@@ -125,9 +120,16 @@ class Router_d : public BasicRouter
     SWallocator_d *m_sw_alloc;
     Switch_d *m_switch;
 
+    // Statistical variables for power
     double m_power_dyn;
     double m_power_sta;
     double m_clk_power;
+
+    // Statistical variables for performance
+    std::vector<double> buf_read_count;
+    std::vector<double> buf_write_count;
+    std::vector<double> vc_local_arbit_count;
+    std::vector<double> vc_global_arbit_count;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__

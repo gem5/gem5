@@ -331,6 +331,12 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
   public:
     typedef InfoProxyType<Derived> Info;
 
+    DataWrapVec()
+    {}
+
+    DataWrapVec(const DataWrapVec &ref)
+    {}
+
     // The following functions are specific to vectors.  If you use them
     // in a non vector context, you will get a nice compiler error!
 

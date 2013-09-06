@@ -76,18 +76,6 @@ NetworkLink_d::wakeup()
     }
 }
 
-std::vector<int>
-NetworkLink_d::getVcLoad()
-{
-    return m_vc_load;
-}
-
-int
-NetworkLink_d::getLinkUtilization()
-{
-    return m_link_utilized;
-}
-
 NetworkLink_d *
 NetworkLink_dParams::create()
 {

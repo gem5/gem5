@@ -161,17 +161,10 @@ class InputUnit_d : public Consumer
         m_credit_link = credit_link;
     }
 
-    inline double
-    get_buf_read_count(int vnet)
-    {
-        return m_num_buffer_reads[vnet];
-    }
-
-    inline double
-    get_buf_write_count(int vnet)
-    {
-        return m_num_buffer_writes[vnet];
-    }
+    double get_buf_read_count(unsigned int vnet) const
+    { return m_num_buffer_reads[vnet]; }
+    double get_buf_write_count(unsigned int vnet) const
+    { return m_num_buffer_writes[vnet]; }
 
     uint32_t functionalWrite(Packet *pkt);
 
@@ -179,8 +172,6 @@ class InputUnit_d : public Consumer
     int m_id;
     int m_num_vcs;
     int m_vc_per_vnet;
-    std::vector<double> m_num_buffer_writes;
-    std::vector<double> m_num_buffer_reads;
 
     Router_d *m_router;
     NetworkLink_d *m_in_link;
@@ -189,6 +180,10 @@ class InputUnit_d : public Consumer
 
     // Virtual channels
     std::vector<VirtualChannel_d *> m_vcs;
+
+    // Statistical variables
+    std::vector<double> m_num_buffer_writes;
+    std::vector<double> m_num_buffer_reads;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_INPUT_UNIT_D_HH__

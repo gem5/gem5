@@ -57,25 +57,16 @@ class VCallocator_d : public Consumer
     bool is_invc_candidate(int inport_iter, int invc_iter);
     void select_outvc(int inport_iter, int invc_iter);
 
-    inline double
-    get_local_arbit_count(int vnet)
-    {
-        return m_local_arbiter_activity[vnet];
-    }
+    double get_local_arbit_count(unsigned int vnet) const
+    { return m_local_arbiter_activity[vnet]; }
 
-    inline double
-    get_global_arbit_count(int vnet)
-    {
-        return m_global_arbiter_activity[vnet];
-    }
+    double get_global_arbit_count(unsigned int vnet) const
+    { return m_global_arbiter_activity[vnet]; }
 
   private:
     int m_num_vcs, m_vc_per_vnet;
     int m_num_inports;
     int m_num_outports;
-
-    std::vector<double > m_local_arbiter_activity;
-    std::vector<double > m_global_arbiter_activity;
 
     Router_d *m_router;
 
@@ -94,6 +85,10 @@ class VCallocator_d : public Consumer
 
     std::vector<InputUnit_d *> m_input_unit;
     std::vector<OutputUnit_d *> m_output_unit;
+
+    // Statistical variables
+    std::vector<double> m_local_arbiter_activity;
+    std::vector<double> m_global_arbiter_activity;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_VC_ALLOCATOR_D_HH__

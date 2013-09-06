@@ -58,11 +58,10 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     int getBufferSize() { return m_buffer_size; }
     int getNumPipeStages() {return m_number_of_pipe_stages; }
-
     int getNumNodes(){ return m_nodes; }
 
-    void printLinkStats(std::ostream& out) const;
-    void printPowerStats(std::ostream& out) const;
+    void collateStats();
+    void regStats();
     void print(std::ostream& out) const;
 
     // Methods used by Topology to setup the network
@@ -97,6 +96,10 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     int m_buffer_size;
     int m_number_of_pipe_stages;
+
+    // Statistical variables
+    Stats::Scalar m_average_link_utilization;
+    Stats::Vector m_average_vc_load;
 };
 
 inline std::ostream&

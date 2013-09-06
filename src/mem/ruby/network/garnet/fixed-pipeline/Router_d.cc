@@ -186,7 +186,7 @@ Router_d::printFaultVector(ostream& out)
     for (int fault_type_index = 0; fault_type_index < num_fault_types;
          fault_type_index++){
         out << " - probability of (";
-        out << 
+        out <<
         m_network_ptr->fault_model->fault_type_to_string(fault_type_index);
         out << ") = ";
         out << fault_vector[fault_type_index] << endl;
@@ -198,7 +198,7 @@ Router_d::printAggregateFaultProbability(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     float aggregate_fault_prob;
-    get_aggregate_fault_probability(temperature_celcius, 
+    get_aggregate_fault_probability(temperature_celcius,
                                     &aggregate_fault_prob);
     out << "Router-" << m_id << " fault probability: ";
     out << aggregate_fault_prob << endl;

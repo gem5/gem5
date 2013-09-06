@@ -59,7 +59,7 @@ class NetworkLink : public ClockedObject, public FlexibleConsumer
 
     bool is_vc_ready(flit *t_flit);
 
-    int get_id();
+    int get_id() const { return m_id; }
     void setInPort(int port);
     void setOutPort(int port);
     void wakeup();
@@ -69,29 +69,28 @@ class NetworkLink : public ClockedObject, public FlexibleConsumer
     void request_vc_link(int vc, NetDest destination, Cycles request_time);
     bool isBufferNotFull_link(int vc);
     void setSource(FlexibleConsumer *source);
-    double getLinkUtilization();
-    std::vector<int> getVcLoad();
+    void init_net_ptr(GarnetNetwork* net_ptr) { m_net_ptr = net_ptr; }
 
-    void init_net_ptr(GarnetNetwork* net_ptr) 
-    { 
-        m_net_ptr = net_ptr; 
-    }
+    unsigned int getLinkUtilization() const { return m_link_utilized; }
+    const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
 
     bool functionalRead(Packet *);
     uint32_t functionalWrite(Packet *);
 
-  protected:
+  private:
     int m_id;
     Cycles m_latency;
     int m_in_port, m_out_port;
-    int m_link_utilized;
-    std::vector<int> m_vc_load;
     GarnetNetwork *m_net_ptr;
 
     flitBuffer *linkBuffer;
     FlexibleConsumer *link_consumer;
     FlexibleConsumer *link_source;
     flitBuffer *link_srcQueue;
+
+    // Statistical variables
+    unsigned int m_link_utilized;
+    std::vector<unsigned int> m_vc_load;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_NETWORK_LINK_HH__

@@ -221,81 +221,82 @@ GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
 }
 
 void
-GarnetNetwork_d::printLinkStats(ostream& out) const
+GarnetNetwork_d::regStats()
 {
-    double average_link_utilization = 0;
-    vector<double> average_vc_load;
-    average_vc_load.resize(m_virtual_networks*m_vcs_per_vnet);
-
-    for (int i = 0; i < m_virtual_networks*m_vcs_per_vnet; i++) {
-        average_vc_load[i] = 0;
-    }
-
-    out << endl;
-    for (int i = 0; i < m_links.size(); i++) {
-        average_link_utilization +=
-            (double(m_links[i]->getLinkUtilization())) /
-            (double(curCycle() - g_ruby_start));
-
-        vector<int> vc_load = m_links[i]->getVcLoad();
-        for (int j = 0; j < vc_load.size(); j++) {
-            assert(vc_load.size() == m_vcs_per_vnet*m_virtual_networks);
-            average_vc_load[j] += vc_load[j];
-        }
-    }
-    average_link_utilization =
-        average_link_utilization/m_links.size();
-    out << "Average Link Utilization :: " << average_link_utilization
-        << " flits/cycle" << endl;
-    out << "-------------" << endl;
-
-    for (int i = 0; i < m_vcs_per_vnet*m_virtual_networks; i++) {
-        if (!m_in_use[i/m_vcs_per_vnet])
-            continue;
-
-        average_vc_load[i] = (double(average_vc_load[i])) /
-            (double(curCycle() - g_ruby_start));
-        out << "Average VC Load [" << i << "] = " << average_vc_load[i]
-            << " flits/cycle " << endl;
-    }
-    out << "-------------" << endl;
-    out << endl;
+    BaseGarnetNetwork::regStats();
+    regLinkStats();
+    regPowerStats();
 }
 
 void
-GarnetNetwork_d::printPowerStats(ostream& out) const
+GarnetNetwork_d::regLinkStats()
 {
-    out << "Network Power" << endl;
-    out << "-------------" << endl;
-    double m_total_link_power = 0.0;
-    double m_dynamic_link_power = 0.0;
-    double m_static_link_power = 0.0;
-    double m_total_router_power = 0.0;
-    double m_dynamic_router_power = 0.0;
-    double m_static_router_power = 0.0;
-    double m_clk_power = 0.0;
+    m_average_link_utilization.name(name() + ".avg_link_utilization");
 
+    m_average_vc_load
+        .init(m_virtual_networks * m_vcs_per_vnet)
+        .name(name() + ".avg_vc_load")
+        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        ;
+}
+
+void
+GarnetNetwork_d::regPowerStats()
+{
+    m_dynamic_link_power.name(name() + ".link_dynamic_power");
+    m_static_link_power.name(name() + ".link_static_power");
+
+    m_total_link_power.name(name() + ".link_total_power");
+    m_total_link_power = m_dynamic_link_power + m_static_link_power;
+
+    m_dynamic_router_power.name(name() + ".router_dynamic_power");
+    m_static_router_power.name(name() + ".router_static_power");
+    m_clk_power.name(name() + ".clk_power");
+
+    m_total_router_power.name(name() + ".router_total_power");
+    m_total_router_power = m_dynamic_router_power +
+                           m_static_router_power +
+                           m_clk_power;
+}
+
+void
+GarnetNetwork_d::collateStats()
+{
+    collateLinkStats();
+    collatePowerStats();
+}
+
+void
+GarnetNetwork_d::collateLinkStats()
+{
     for (int i = 0; i < m_links.size(); i++) {
-        m_total_link_power += m_links[i]->calculate_power();
+        m_average_link_utilization +=
+            (double(m_links[i]->getLinkUtilization())) /
+            (double(curCycle() - g_ruby_start));
+
+        vector<unsigned int> vc_load = m_links[i]->getVcLoad();
+        for (int j = 0; j < vc_load.size(); j++) {
+            m_average_vc_load[j] +=
+                ((double)vc_load[j] / (double)(curCycle() - g_ruby_start));
+        }
+    }
+}
+
+void
+GarnetNetwork_d::collatePowerStats()
+{
+    for (int i = 0; i < m_links.size(); i++) {
+        m_links[i]->calculate_power();
         m_dynamic_link_power += m_links[i]->get_dynamic_power();
         m_static_link_power += m_links[i]->get_static_power();
     }
 
     for (int i = 0; i < m_routers.size(); i++) {
-        m_total_router_power += m_routers[i]->calculate_power();
+        m_routers[i]->calculate_power();
         m_dynamic_router_power += m_routers[i]->get_dynamic_power();
         m_static_router_power += m_routers[i]->get_static_power();
         m_clk_power += m_routers[i]->get_clk_power();
     }
-    out << "Link Dynamic Power = " << m_dynamic_link_power << " W" << endl;
-    out << "Link Static Power = " << m_static_link_power << " W" << endl;
-    out << "Total Link Power = " << m_total_link_power << " W " << endl;
-    out << "Router Dynamic Power = " << m_dynamic_router_power << " W" << endl;
-    out << "Router Clock Power = " << m_clk_power << " W" << endl;
-    out << "Router Static Power = " << m_static_router_power << " W" << endl;
-    out << "Total Router Power = " << m_total_router_power << " W " <<endl;
-    out << "-------------" << endl;
-    out << endl;
 }
 
 void

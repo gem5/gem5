@@ -59,6 +59,9 @@ Network::Network(const Params *p)
         AbstractController *abs_cntrl = ext_link->params()->ext_node;
         abs_cntrl->initNetworkPtr(this);
     }
+
+    // Register a callback function for combining the statistics
+    Stats::registerDumpCallback(new StatsCallback(this));
 }
 
 void

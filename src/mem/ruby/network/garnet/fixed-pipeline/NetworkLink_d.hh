@@ -53,14 +53,15 @@ class NetworkLink_d : public ClockedObject, public Consumer
     void setLinkConsumer(Consumer *consumer);
     void setSourceQueue(flitBuffer_d *srcQueue);
     void print(std::ostream& out) const{}
-    int getLinkUtilization();
-    std::vector<int> getVcLoad();
     int get_id(){return m_id;}
-    double get_dynamic_power(){return m_power_dyn;}
-    double get_static_power(){return m_power_sta;}
     void wakeup();
 
-    double calculate_power();
+    void calculate_power();
+    double get_dynamic_power() const { return m_power_dyn; }
+    double get_static_power()const { return m_power_sta; }
+
+    unsigned int getLinkUtilization() const { return m_link_utilized; }
+    const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
 
     inline bool isReady(Cycles curTime)
     { return linkBuffer->isReady(curTime); }
@@ -71,7 +72,7 @@ class NetworkLink_d : public ClockedObject, public Consumer
     void init_net_ptr(GarnetNetwork_d* net_ptr) { m_net_ptr = net_ptr; }
     uint32_t functionalWrite(Packet *);
 
-  protected:
+  private:
     int m_id;
     Cycles m_latency;
     int channel_width;
@@ -80,9 +81,11 @@ class NetworkLink_d : public ClockedObject, public Consumer
     flitBuffer_d *linkBuffer;
     Consumer *link_consumer;
     flitBuffer_d *link_srcQueue;
-    int m_link_utilized;
-    std::vector<int> m_vc_load;
     int m_flit_width;
+
+    // Statistical variables
+    unsigned int m_link_utilized;
+    std::vector<unsigned int> m_vc_load;
 
     double m_power_dyn;
     double m_power_sta;
