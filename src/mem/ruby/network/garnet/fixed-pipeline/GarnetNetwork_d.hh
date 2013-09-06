@@ -100,10 +100,10 @@ class GarnetNetwork_d : public BaseGarnetNetwork
 
     std::vector<VNET_type > m_vnet_type;
 
-    std::vector<Router_d *> m_router_ptr_vector;   // All Routers in Network
-    std::vector<NetworkLink_d *> m_link_ptr_vector; // All links in the network
-    std::vector<CreditLink_d *> m_creditlink_ptr_vector; // All links in net
-    std::vector<NetworkInterface_d *> m_ni_ptr_vector;   // All NI's in Network
+    std::vector<Router_d *> m_routers;   // All Routers in Network
+    std::vector<NetworkLink_d *> m_links; // All links in the network
+    std::vector<CreditLink_d *> m_creditlinks; // All links in net
+    std::vector<NetworkInterface_d *> m_nis;   // All NI's in Network
 
     int m_buffers_per_data_vc;
     int m_buffers_per_ctrl_vc;

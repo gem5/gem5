@@ -43,12 +43,12 @@ using m5::stl_helpers::operator<<;
 
 Switch::Switch(const Params *p) : BasicRouter(p)
 {
-    m_perfect_switch_ptr = new PerfectSwitch(m_id, this, p->virt_nets);
+    m_perfect_switch = new PerfectSwitch(m_id, this, p->virt_nets);
 }
 
 Switch::~Switch()
 {
-    delete m_perfect_switch_ptr;
+    delete m_perfect_switch;
 
     // Delete throttles (one per output port)
     deletePointers(m_throttles);
@@ -61,13 +61,13 @@ void
 Switch::init()
 {
     BasicRouter::init();
-    m_perfect_switch_ptr->init(m_network_ptr);
+    m_perfect_switch->init(m_network_ptr);
 }
 
 void
 Switch::addInPort(const vector<MessageBuffer*>& in)
 {
-    m_perfect_switch_ptr->addInPort(in);
+    m_perfect_switch->addInPort(in);
 
     for (int i = 0; i < in.size(); i++) {
         in[i]->setReceiver(this);
@@ -104,7 +104,7 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
     }
 
     // Hook the queues to the PerfectSwitch
-    m_perfect_switch_ptr->addOutPort(intermediateBuffers, routing_table_entry);
+    m_perfect_switch->addOutPort(intermediateBuffers, routing_table_entry);
 
     // Hook the queues to the Throttle
     throttle_ptr->addLinks(intermediateBuffers, out);
@@ -113,13 +113,13 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
 void
 Switch::clearRoutingTables()
 {
-    m_perfect_switch_ptr->clearRoutingTables();
+    m_perfect_switch->clearRoutingTables();
 }
 
 void
 Switch::clearBuffers()
 {
-    m_perfect_switch_ptr->clearBuffers();
+    m_perfect_switch->clearBuffers();
     for (int i = 0; i < m_throttles.size(); i++) {
         if (m_throttles[i] != NULL) {
             m_throttles[i]->clear();
@@ -130,7 +130,7 @@ Switch::clearBuffers()
 void
 Switch::reconfigureOutPort(const NetDest& routing_table_entry)
 {
-    m_perfect_switch_ptr->reconfigureOutPort(routing_table_entry);
+    m_perfect_switch->reconfigureOutPort(routing_table_entry);
 }
 
 const Throttle*
@@ -150,9 +150,9 @@ void
 Switch::printStats(std::ostream& out) const
 {
     ccprintf(out, "switch_%d_inlinks: %d\n", m_id,
-        m_perfect_switch_ptr->getInLinks());
+        m_perfect_switch->getInLinks());
     ccprintf(out, "switch_%d_outlinks: %d\n", m_id,
-        m_perfect_switch_ptr->getOutLinks());
+        m_perfect_switch->getOutLinks());
 
     // Average link utilizations
     double average_utilization = 0.0;
@@ -214,7 +214,7 @@ Switch::printStats(std::ostream& out) const
 void
 Switch::clearStats()
 {
-    m_perfect_switch_ptr->clearStats();
+    m_perfect_switch->clearStats();
     for (int i = 0; i < m_throttles.size(); i++) {
         if (m_throttles[i] != NULL)
             m_throttles[i]->clearStats();

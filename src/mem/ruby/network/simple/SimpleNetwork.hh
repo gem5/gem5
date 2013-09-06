@@ -105,7 +105,7 @@ class SimpleNetwork : public Network
 
     std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;
-    std::vector<Switch*> m_switch_ptr_vector;
+    std::vector<Switch*> m_switches;
     std::vector<MessageBuffer*> m_buffers_to_free;
     std::vector<Switch*> m_endpoint_switches;
 

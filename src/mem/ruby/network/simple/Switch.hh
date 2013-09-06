@@ -84,7 +84,7 @@ class Switch : public BasicRouter
     Switch(const Switch& obj);
     Switch& operator=(const Switch& obj);
 
-    PerfectSwitch* m_perfect_switch_ptr;
+    PerfectSwitch* m_perfect_switch;
     SimpleNetwork* m_network_ptr;
     std::vector<Throttle*> m_throttles;
     std::vector<MessageBuffer*> m_buffers_to_free;

@@ -93,9 +93,9 @@ class GarnetNetwork : public BaseGarnetNetwork
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);
 
-    std::vector<Router *> m_router_ptr_vector;   // All Routers in Network
-    std::vector<NetworkLink *> m_link_ptr_vector; // All links in network
-    std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
+    std::vector<Router *> m_routers;   // All Routers in Network
+    std::vector<NetworkLink *> m_links; // All links in network
+    std::vector<NetworkInterface *> m_nis; // All NI's in Network
 
     int m_buffer_size;
     int m_number_of_pipe_stages;

@@ -83,7 +83,7 @@ SimpleNetwork::SimpleNetwork(const Params *p)
     for (vector<BasicRouter*>::const_iterator i = p->routers.begin();
          i != p->routers.end(); ++i) {
         Switch* s = safe_cast<Switch*>(*i);
-        m_switch_ptr_vector.push_back(s);
+        m_switches.push_back(s);
         s->init_net_ptr(this);
     }
 }
@@ -109,8 +109,8 @@ SimpleNetwork::reset()
         }
     }
 
-    for(int i = 0; i < m_switch_ptr_vector.size(); i++){
-        m_switch_ptr_vector[i]->clearBuffers();
+    for(int i = 0; i < m_switches.size(); i++){
+        m_switches[i]->clearBuffers();
     }
 }
 
@@ -120,7 +120,7 @@ SimpleNetwork::~SimpleNetwork()
         deletePointers(m_toNetQueues[i]);
         deletePointers(m_fromNetQueues[i]);
     }
-    deletePointers(m_switch_ptr_vector);
+    deletePointers(m_switches);
     deletePointers(m_buffers_to_free);
     // delete m_topology_ptr;
 }
@@ -132,17 +132,17 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
                            const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
-    assert(src < m_switch_ptr_vector.size());
-    assert(m_switch_ptr_vector[src] != NULL);
+    assert(src < m_switches.size());
+    assert(m_switches[src] != NULL);
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
 
-    m_switch_ptr_vector[src]->addOutPort(m_fromNetQueues[dest],
+    m_switches[src]->addOutPort(m_fromNetQueues[dest],
                                          routing_table_entry,
                                          simple_link->m_latency,
                                          simple_link->m_bw_multiplier);
 
-    m_endpoint_switches[dest] = m_switch_ptr_vector[src];
+    m_endpoint_switches[dest] = m_switches[src];
 }
 
 // From an endpoint node to a switch
@@ -152,7 +152,7 @@ SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
                           const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
-    m_switch_ptr_vector[dest]->addInPort(m_toNetQueues[src]);
+    m_switches[dest]->addInPort(m_toNetQueues[src]);
 }
 
 // From a switch to a switch
@@ -177,8 +177,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     // Connect it to the two switches
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
 
-    m_switch_ptr_vector[dest]->addInPort(queues);
-    m_switch_ptr_vector[src]->addOutPort(queues, routing_table_entry,
+    m_switches[dest]->addInPort(queues);
+    m_switches[src]->addOutPort(queues, routing_table_entry,
                                          simple_link->m_latency, 
                                          simple_link->m_bw_multiplier);
 }
@@ -239,9 +239,9 @@ SimpleNetwork::printStats(ostream& out) const
         total_msg_counts[type] = 0;
     }
     
-    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
+    for (int i = 0; i < m_switches.size(); i++) {
         const std::vector<Throttle*>* throttles = 
-            m_switch_ptr_vector[i]->getThrottles();
+            m_switches[i]->getThrottles();
         
         for (int p = 0; p < throttles->size(); p++) {
             
@@ -281,16 +281,16 @@ SimpleNetwork::printStats(ostream& out) const
         << " total_bytes: " << total_bytes << endl;
     
     out << endl;
-    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
-        m_switch_ptr_vector[i]->printStats(out);
+    for (int i = 0; i < m_switches.size(); i++) {
+        m_switches[i]->printStats(out);
     }
 }
 
 void
 SimpleNetwork::clearStats()
 {
-    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
-        m_switch_ptr_vector[i]->clearStats();
+    for (int i = 0; i < m_switches.size(); i++) {
+        m_switches[i]->clearStats();
     }
 }
 
@@ -314,8 +314,8 @@ SimpleNetworkParams::create()
 bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
-    for (unsigned int i = 0; i < m_switch_ptr_vector.size(); i++) {
-        if (m_switch_ptr_vector[i]->functionalRead(pkt)) {
+    for (unsigned int i = 0; i < m_switches.size(); i++) {
+        if (m_switches[i]->functionalRead(pkt)) {
             return true;
         }
     }
@@ -334,8 +334,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (unsigned int i = 0; i < m_switch_ptr_vector.size(); i++) {
-        num_functional_writes += m_switch_ptr_vector[i]->functionalWrite(pkt);
+    for (unsigned int i = 0; i < m_switches.size(); i++) {
+        num_functional_writes += m_switches[i]->functionalWrite(pkt);
     }
 
     for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
