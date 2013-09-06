@@ -1,4 +1,4 @@
-Real time: Jun/24/2013 23:54:11
+Real time: Aug/29/2013 10:04:34
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.51
-Virtual_time_in_minutes: 0.0085
-Virtual_time_in_hours:   0.000141667
-Virtual_time_in_days:    5.90278e-06
+Virtual_time_in_seconds: 0.48
+Virtual_time_in_minutes: 0.008
+Virtual_time_in_hours:   0.000133333
+Virtual_time_in_days:    5.55556e-06
 
 Ruby_current_time: 221941
 Ruby_start_time: 0
 Ruby_cycles: 221941
 
-mbytes_resident: 51.1953
-mbytes_total: 146.023
-resident_ratio: 0.35065
+mbytes_resident: 70.1602
+mbytes_total: 164.824
+resident_ratio: 0.42569
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -70,57 +70,3 @@ Total_delay_cycles: [binsize: 1 max: 12 count: 1828 average: 0.280088 | standard
   virtual_network_7_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_8_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_9_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Resource Usage
---------------
-page_size: 4096
-user_time: 0
-system_time: 0
-page_reclaims: 9501
-page_faults: 0
-swaps: 0
-block_inputs: 0
-block_outputs: 88
-
-Network Stats
--------------
-
-total_msg_count_Control: 2748 21984
-total_msg_count_Data: 2742 197424
-total_msg_count_Response_Data: 2748 197856
-total_msg_count_Writeback_Control: 2739 21912
-total_msgs: 10977 total_bytes: 439176
-
-switch_0_inlinks: 2
-switch_0_outlinks: 2
-links_utilized_percent_switch_0: 2.06125
-  links_utilized_percent_switch_0_link_0: 2.06294 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 2.05956 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_0_link_0_Response_Data: 916 65952 [ 0 0 0 0 916 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Writeback_Control: 913 7304 [ 0 0 0 913 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Control: 916 7328 [ 0 0 916 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Data: 914 65808 [ 0 0 914 0 0 0 0 0 0 0 ] base_latency: 1
-
-switch_1_inlinks: 2
-switch_1_outlinks: 2
-links_utilized_percent_switch_1: 2.06125
-  links_utilized_percent_switch_1_link_0: 2.05956 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 2.06294 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_1_link_0_Control: 916 7328 [ 0 0 916 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Data: 914 65808 [ 0 0 914 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Data: 916 65952 [ 0 0 0 0 916 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Writeback_Control: 913 7304 [ 0 0 0 913 0 0 0 0 0 0 ] base_latency: 1
-
-switch_2_inlinks: 2
-switch_2_outlinks: 2
-links_utilized_percent_switch_2: 2.06125
-  links_utilized_percent_switch_2_link_0: 2.06294 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 2.05956 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_2_link_0_Response_Data: 916 65952 [ 0 0 0 0 916 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Writeback_Control: 913 7304 [ 0 0 0 913 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Control: 916 7328 [ 0 0 916 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Data: 914 65808 [ 0 0 914 0 0 0 0 0 0 0 ] base_latency: 1
-

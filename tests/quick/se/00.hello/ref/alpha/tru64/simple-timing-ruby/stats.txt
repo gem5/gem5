@@ -4,16 +4,25 @@ sim_seconds                                  0.000052                       # Nu
 sim_ticks                                       52498                       # Number of ticks simulated
 final_tick                                      52498                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  30872                       # Simulator instruction rate (inst/s)
-host_op_rate                                    30864                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 628609                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 144188                       # Number of bytes of host memory used
-host_seconds                                     0.08                       # Real time elapsed on the host
+host_inst_rate                                    139                       # Simulator instruction rate (inst/s)
+host_op_rate                                      139                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                   2832                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 171144                       # Number of bytes of host memory used
+host_seconds                                    18.54                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
 system.ruby.l1_cntrl0.cacheMemory.demand_hits         2668                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses          626                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses         3294                       # Number of cache demand accesses
+system.ruby.network.routers0.percent_links_utilized     5.943084                      
+system.ruby.network.routers0.msg_count.Control::2          626                      
+system.ruby.network.routers0.msg_count.Data::2          622                      
+system.ruby.network.routers0.msg_count.Response_Data::4          626                      
+system.ruby.network.routers0.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers0.msg_bytes.Control::2         5008                      
+system.ruby.network.routers0.msg_bytes.Data::2        44784                      
+system.ruby.network.routers0.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers0.msg_bytes.Writeback_Control::3         4976                      
 system.ruby.dir_cntrl0.memBuffer.memReq          1248                       # Total number of memory requests
 system.ruby.dir_cntrl0.memBuffer.memRead          626                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite          622                       # Number of memory writes
@@ -28,6 +37,24 @@ system.ruby.dir_cntrl0.memBuffer.memArbWait           40                       #
 system.ruby.dir_cntrl0.memBuffer.memBankCount |          55      4.41%      4.41% |          40      3.21%      7.61% |           0      0.00%      7.61% |         100      8.01%     15.62% |          42      3.37%     18.99% |          42      3.37%     22.36% |          88      7.05%     29.41% |          45      3.61%     33.01% |          14      1.12%     34.13% |          10      0.80%     34.94% |          14      1.12%     36.06% |          10      0.80%     36.86% |          46      3.69%     40.54% |          82      6.57%     47.12% |          38      3.04%     50.16% |           6      0.48%     50.64% |          22      1.76%     52.40% |          14      1.12%     53.53% |          14      1.12%     54.65% |          48      3.85%     58.49% |          20      1.60%     60.10% |          52      4.17%     64.26% |          26      2.08%     66.35% |          92      7.37%     73.72% |          34      2.72%     76.44% |          10      0.80%     77.24% |          12      0.96%     78.21% |          24      1.92%     80.13% |          28      2.24%     82.37% |          44      3.53%     85.90% |          38      3.04%     88.94% |         138     11.06%    100.00% # Number of accesses per bank
 system.ruby.dir_cntrl0.memBuffer.memBankCount::total         1248                       # Number of accesses per bank
 
+system.ruby.network.routers1.percent_links_utilized     5.943084                      
+system.ruby.network.routers1.msg_count.Control::2          626                      
+system.ruby.network.routers1.msg_count.Data::2          622                      
+system.ruby.network.routers1.msg_count.Response_Data::4          626                      
+system.ruby.network.routers1.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers1.msg_bytes.Control::2         5008                      
+system.ruby.network.routers1.msg_bytes.Data::2        44784                      
+system.ruby.network.routers1.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::3         4976                      
+system.ruby.network.routers2.percent_links_utilized     5.943084                      
+system.ruby.network.routers2.msg_count.Control::2          626                      
+system.ruby.network.routers2.msg_count.Data::2          622                      
+system.ruby.network.routers2.msg_count.Response_Data::4          626                      
+system.ruby.network.routers2.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers2.msg_bytes.Control::2         5008                      
+system.ruby.network.routers2.msg_bytes.Data::2        44784                      
+system.ruby.network.routers2.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers2.msg_bytes.Writeback_Control::3         4976                      
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
@@ -83,6 +110,36 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                      52498                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.ruby.network.routers0.throttle0.link_utilization     5.958322                      
+system.ruby.network.routers0.throttle0.msg_count.Response_Data::4          626                      
+system.ruby.network.routers0.throttle0.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers0.throttle0.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers0.throttle0.msg_bytes.Writeback_Control::3         4976                      
+system.ruby.network.routers0.throttle1.link_utilization     5.927845                      
+system.ruby.network.routers0.throttle1.msg_count.Control::2          626                      
+system.ruby.network.routers0.throttle1.msg_count.Data::2          622                      
+system.ruby.network.routers0.throttle1.msg_bytes.Control::2         5008                      
+system.ruby.network.routers0.throttle1.msg_bytes.Data::2        44784                      
+system.ruby.network.routers1.throttle0.link_utilization     5.927845                      
+system.ruby.network.routers1.throttle0.msg_count.Control::2          626                      
+system.ruby.network.routers1.throttle0.msg_count.Data::2          622                      
+system.ruby.network.routers1.throttle0.msg_bytes.Control::2         5008                      
+system.ruby.network.routers1.throttle0.msg_bytes.Data::2        44784                      
+system.ruby.network.routers1.throttle1.link_utilization     5.958322                      
+system.ruby.network.routers1.throttle1.msg_count.Response_Data::4          626                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers1.throttle1.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::3         4976                      
+system.ruby.network.routers2.throttle0.link_utilization     5.958322                      
+system.ruby.network.routers2.throttle0.msg_count.Response_Data::4          626                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::3          622                      
+system.ruby.network.routers2.throttle0.msg_bytes.Response_Data::4        45072                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::3         4976                      
+system.ruby.network.routers2.throttle1.link_utilization     5.927845                      
+system.ruby.network.routers2.throttle1.msg_count.Control::2          626                      
+system.ruby.network.routers2.throttle1.msg_count.Data::2          622                      
+system.ruby.network.routers2.throttle1.msg_bytes.Control::2         5008                      
+system.ruby.network.routers2.throttle1.msg_bytes.Data::2        44784                      
 system.ruby.l1_cntrl0.Load                        415      0.00%      0.00%
 system.ruby.l1_cntrl0.Ifetch                     2585      0.00%      0.00%
 system.ruby.l1_cntrl0.Store                       294      0.00%      0.00%
@@ -99,6 +156,14 @@ system.ruby.l1_cntrl0.M.Replacement               622      0.00%      0.00%
 system.ruby.l1_cntrl0.MI.Writeback_Ack            622      0.00%      0.00%
 system.ruby.l1_cntrl0.IS.Data                     542      0.00%      0.00%
 system.ruby.l1_cntrl0.IM.Data                      84      0.00%      0.00%
+system.ruby.network.msg_count.Control            1878                      
+system.ruby.network.msg_count.Data               1866                      
+system.ruby.network.msg_count.Response_Data         1878                      
+system.ruby.network.msg_count.Writeback_Control         1866                      
+system.ruby.network.msg_byte.Control            15024                      
+system.ruby.network.msg_byte.Data              134352                      
+system.ruby.network.msg_byte.Response_Data       135216                      
+system.ruby.network.msg_byte.Writeback_Control        14928                      
 system.ruby.dir_cntrl0.GETX                       626      0.00%      0.00%
 system.ruby.dir_cntrl0.PUTX                       622      0.00%      0.00%
 system.ruby.dir_cntrl0.Memory_Data                626      0.00%      0.00%

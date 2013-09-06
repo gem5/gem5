@@ -1,4 +1,4 @@
-Real time: Jun/24/2013 23:54:22
+Real time: Aug/29/2013 10:02:56
 
 Profiler Stats
 --------------
@@ -7,18 +7,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.6
-Virtual_time_in_minutes: 0.01
-Virtual_time_in_hours:   0.000166667
-Virtual_time_in_days:    6.94444e-06
+Virtual_time_in_seconds: 0.78
+Virtual_time_in_minutes: 0.013
+Virtual_time_in_hours:   0.000216667
+Virtual_time_in_days:    9.02778e-06
 
 Ruby_current_time: 172201
 Ruby_start_time: 0
 Ruby_cycles: 172201
 
-mbytes_resident: 53.2109
-mbytes_total: 147.441
-resident_ratio: 0.360948
+mbytes_resident: 72.0898
+mbytes_total: 166.262
+resident_ratio: 0.433616
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -82,64 +82,3 @@ Total_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation
   virtual_network_7_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_8_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_9_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Resource Usage
---------------
-page_size: 4096
-user_time: 0
-system_time: 0
-page_reclaims: 13998
-page_faults: 36
-swaps: 0
-block_inputs: 4432
-block_outputs: 88
-
-Network Stats
--------------
-
-total_msg_count_Request_Control: 2554 20432
-total_msg_count_Response_Data: 2550 183600
-total_msg_count_Writeback_Data: 2303 165816
-total_msg_count_Writeback_Control: 5288 42304
-total_msg_count_Unblock_Control: 2535 20280
-total_msgs: 15230 total_bytes: 432432
-
-switch_0_inlinks: 2
-switch_0_outlinks: 2
-links_utilized_percent_switch_0: 2.61656
-  links_utilized_percent_switch_0_link_0: 2.4663 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 2.76682 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_0_link_0_Response_Data: 850 61200 [ 0 0 0 0 850 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Writeback_Control: 844 6752 [ 0 0 0 844 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Request_Control: 852 6816 [ 0 0 852 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Writeback_Data: 768 55296 [ 0 0 0 0 0 768 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Writeback_Control: 920 7360 [ 0 0 845 0 0 75 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Unblock_Control: 845 6760 [ 0 0 0 0 0 845 0 0 0 0 ] base_latency: 1
-
-switch_1_inlinks: 2
-switch_1_outlinks: 2
-links_utilized_percent_switch_1: 2.61482
-  links_utilized_percent_switch_1_link_0: 2.76334 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 2.4663 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_1_link_0_Request_Control: 851 6808 [ 0 0 851 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Writeback_Data: 767 55224 [ 0 0 0 0 0 767 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Writeback_Control: 918 7344 [ 0 0 843 0 0 75 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Unblock_Control: 845 6760 [ 0 0 0 0 0 845 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Data: 850 61200 [ 0 0 0 0 850 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Writeback_Control: 844 6752 [ 0 0 0 844 0 0 0 0 0 0 ] base_latency: 1
-
-switch_2_inlinks: 2
-switch_2_outlinks: 2
-links_utilized_percent_switch_2: 2.61613
-  links_utilized_percent_switch_2_link_0: 2.4663 bw: 16000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 2.76595 bw: 16000 base_latency: 1
-
-  outgoing_messages_switch_2_link_0_Response_Data: 850 61200 [ 0 0 0 0 850 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Writeback_Control: 844 6752 [ 0 0 0 844 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Request_Control: 851 6808 [ 0 0 851 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Writeback_Data: 768 55296 [ 0 0 0 0 0 768 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Writeback_Control: 918 7344 [ 0 0 843 0 0 75 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Unblock_Control: 845 6760 [ 0 0 0 0 0 845 0 0 0 0 ] base_latency: 1
-

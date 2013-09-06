@@ -4,22 +4,54 @@ sim_seconds                                  0.000045                       # Nu
 sim_ticks                                       44968                       # Number of ticks simulated
 final_tick                                      44968                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  16391                       # Simulator instruction rate (inst/s)
-host_op_rate                                    16389                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 285944                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 146540                       # Number of bytes of host memory used
-host_seconds                                     0.16                       # Real time elapsed on the host
+host_inst_rate                                  10546                       # Simulator instruction rate (inst/s)
+host_op_rate                                    10545                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 183989                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 174912                       # Number of bytes of host memory used
+host_seconds                                     0.24                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
-system.ruby.l2_cntrl0.L2cache.demand_hits           87                       # Number of cache demand hits
-system.ruby.l2_cntrl0.L2cache.demand_misses          423                       # Number of cache demand misses
-system.ruby.l2_cntrl0.L2cache.demand_accesses          510                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.L1Dcache.demand_hits          469                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Dcache.demand_misses          240                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L1Dcache.demand_accesses          709                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.L1Icache.demand_hits         2315                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Icache.demand_misses          270                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L1Icache.demand_accesses         2585                       # Number of cache demand accesses
+system.ruby.network.routers0.percent_links_utilized     6.188845                      
+system.ruby.network.routers0.msg_count.Request_Control::0          510                      
+system.ruby.network.routers0.msg_count.Response_Data::2          423                      
+system.ruby.network.routers0.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers0.msg_count.Writeback_Data::2          502                      
+system.ruby.network.routers0.msg_count.Writeback_Control::0         1004                      
+system.ruby.network.routers0.msg_count.Unblock_Control::2          510                      
+system.ruby.network.routers0.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers0.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers0.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers0.msg_bytes.Writeback_Data::2        36144                      
+system.ruby.network.routers0.msg_bytes.Writeback_Control::0         8032                      
+system.ruby.network.routers0.msg_bytes.Unblock_Control::2         4080                      
+system.ruby.l2_cntrl0.L2cache.demand_hits           87                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses          423                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses          510                       # Number of cache demand accesses
+system.ruby.network.routers1.percent_links_utilized     9.792519                      
+system.ruby.network.routers1.msg_count.Request_Control::0          510                      
+system.ruby.network.routers1.msg_count.Request_Control::1          423                      
+system.ruby.network.routers1.msg_count.Response_Data::2          846                      
+system.ruby.network.routers1.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers1.msg_count.Writeback_Data::2          578                      
+system.ruby.network.routers1.msg_count.Writeback_Control::0         1004                      
+system.ruby.network.routers1.msg_count.Writeback_Control::1          814                      
+system.ruby.network.routers1.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers1.msg_count.Unblock_Control::2          933                      
+system.ruby.network.routers1.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers1.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers1.msg_bytes.Response_Data::2        60912                      
+system.ruby.network.routers1.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers1.msg_bytes.Writeback_Data::2        41616                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::0         8032                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::1         6512                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers1.msg_bytes.Unblock_Control::2         7464                      
 system.ruby.dir_cntrl0.memBuffer.memReq           499                       # Total number of memory requests
 system.ruby.dir_cntrl0.memBuffer.memRead          423                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite           76                       # Number of memory writes
@@ -34,6 +66,38 @@ system.ruby.dir_cntrl0.memBuffer.memArbWait            9                       #
 system.ruby.dir_cntrl0.memBuffer.memBankCount |          18      3.61%      3.61% |          10      2.00%      5.61% |           0      0.00%      5.61% |          34      6.81%     12.42% |          20      4.01%     16.43% |          19      3.81%     20.24% |          28      5.61%     25.85% |          21      4.21%     30.06% |           5      1.00%     31.06% |           3      0.60%     31.66% |           6      1.20%     32.87% |           4      0.80%     33.67% |          21      4.21%     37.88% |          40      8.02%     45.89% |          20      4.01%     49.90% |           3      0.60%     50.50% |           4      0.80%     51.30% |           5      1.00%     52.30% |           7      1.40%     53.71% |          13      2.61%     56.31% |          10      2.00%     58.32% |          16      3.21%     61.52% |          14      2.81%     64.33% |          41      8.22%     72.55% |          15      3.01%     75.55% |           5      1.00%     76.55% |           5      1.00%     77.56% |          12      2.40%     79.96% |          12      2.40%     82.36% |          18      3.61%     85.97% |          14      2.81%     88.78% |          56     11.22%    100.00% # Number of accesses per bank
 system.ruby.dir_cntrl0.memBuffer.memBankCount::total          499                       # Number of accesses per bank
 
+system.ruby.network.routers2.percent_links_utilized     3.603118                      
+system.ruby.network.routers2.msg_count.Request_Control::1          423                      
+system.ruby.network.routers2.msg_count.Response_Data::2          423                      
+system.ruby.network.routers2.msg_count.Writeback_Data::2           76                      
+system.ruby.network.routers2.msg_count.Writeback_Control::1          814                      
+system.ruby.network.routers2.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers2.msg_count.Unblock_Control::2          422                      
+system.ruby.network.routers2.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers2.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers2.msg_bytes.Writeback_Data::2         5472                      
+system.ruby.network.routers2.msg_bytes.Writeback_Control::1         6512                      
+system.ruby.network.routers2.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers2.msg_bytes.Unblock_Control::2         3376                      
+system.ruby.network.routers3.percent_links_utilized     6.528346                      
+system.ruby.network.routers3.msg_count.Request_Control::0          510                      
+system.ruby.network.routers3.msg_count.Request_Control::1          423                      
+system.ruby.network.routers3.msg_count.Response_Data::2          846                      
+system.ruby.network.routers3.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers3.msg_count.Writeback_Data::2          578                      
+system.ruby.network.routers3.msg_count.Writeback_Control::0         1004                      
+system.ruby.network.routers3.msg_count.Writeback_Control::1          814                      
+system.ruby.network.routers3.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers3.msg_count.Unblock_Control::2          933                      
+system.ruby.network.routers3.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers3.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers3.msg_bytes.Response_Data::2        60912                      
+system.ruby.network.routers3.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers3.msg_bytes.Writeback_Data::2        41616                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::0         8032                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::1         6512                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers3.msg_bytes.Unblock_Control::2         7464                      
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
@@ -89,34 +153,99 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                      44968                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
-system.ruby.l2_cntrl0.L1_GETS                     454      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_GETX                      58      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_PUTX                     502      0.00%      0.00%
-system.ruby.l2_cntrl0.All_Acks                     43      0.00%      0.00%
-system.ruby.l2_cntrl0.Data                         43      0.00%      0.00%
-system.ruby.l2_cntrl0.Data_Exclusive              380      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_WBCLEANDATA              396      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_WBDIRTYDATA              106      0.00%      0.00%
-system.ruby.l2_cntrl0.Writeback_Ack               407      0.00%      0.00%
-system.ruby.l2_cntrl0.Exclusive_Unblock           510      0.00%      0.00%
-system.ruby.l2_cntrl0.L2_Replacement              407      0.00%      0.00%
-system.ruby.l2_cntrl0.NP.L1_GETS                  380      0.00%      0.00%
-system.ruby.l2_cntrl0.NP.L1_GETX                   43      0.00%      0.00%
-system.ruby.l2_cntrl0.ILX.L1_PUTX                 502      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L1_GETS                    72      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L1_GETX                    15      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L2_Replacement            407      0.00%      0.00%
-system.ruby.l2_cntrl0.ILXW.L1_WBCLEANDATA          396      0.00%      0.00%
-system.ruby.l2_cntrl0.ILXW.L1_WBDIRTYDATA          106      0.00%      0.00%
-system.ruby.l2_cntrl0.IGS.Data_Exclusive          380      0.00%      0.00%
-system.ruby.l2_cntrl0.IGS.Exclusive_Unblock          380      0.00%      0.00%
-system.ruby.l2_cntrl0.IGM.Data                     43      0.00%      0.00%
-system.ruby.l2_cntrl0.IGMO.All_Acks                43      0.00%      0.00%
-system.ruby.l2_cntrl0.IGMO.Exclusive_Unblock           43      0.00%      0.00%
-system.ruby.l2_cntrl0.MM.Exclusive_Unblock           15      0.00%      0.00%
-system.ruby.l2_cntrl0.OO.Exclusive_Unblock           72      0.00%      0.00%
-system.ruby.l2_cntrl0.MI.L1_GETS                    2      0.00%      0.00%
-system.ruby.l2_cntrl0.MI.Writeback_Ack            407      0.00%      0.00%
+system.ruby.network.routers0.throttle0.link_utilization     5.661804                      
+system.ruby.network.routers0.throttle0.msg_count.Response_Data::2          423                      
+system.ruby.network.routers0.throttle0.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers0.throttle0.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers0.throttle0.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers0.throttle0.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers0.throttle0.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers0.throttle1.link_utilization     6.715887                      
+system.ruby.network.routers0.throttle1.msg_count.Request_Control::0          510                      
+system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::2          502                      
+system.ruby.network.routers0.throttle1.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers0.throttle1.msg_count.Unblock_Control::2          510                      
+system.ruby.network.routers0.throttle1.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::2        36144                      
+system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers0.throttle1.msg_bytes.Unblock_Control::2         4080                      
+system.ruby.network.routers1.throttle0.link_utilization    11.401441                      
+system.ruby.network.routers1.throttle0.msg_count.Request_Control::0          510                      
+system.ruby.network.routers1.throttle0.msg_count.Response_Data::2          423                      
+system.ruby.network.routers1.throttle0.msg_count.Writeback_Data::2          502                      
+system.ruby.network.routers1.throttle0.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers1.throttle0.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers1.throttle0.msg_count.Unblock_Control::2          510                      
+system.ruby.network.routers1.throttle0.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers1.throttle0.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers1.throttle0.msg_bytes.Writeback_Data::2        36144                      
+system.ruby.network.routers1.throttle0.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers1.throttle0.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers1.throttle0.msg_bytes.Unblock_Control::2         4080                      
+system.ruby.network.routers1.throttle1.link_utilization     8.183597                      
+system.ruby.network.routers1.throttle1.msg_count.Request_Control::1          423                      
+system.ruby.network.routers1.throttle1.msg_count.Response_Data::2          423                      
+system.ruby.network.routers1.throttle1.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Data::2           76                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers1.throttle1.msg_count.Unblock_Control::2          423                      
+system.ruby.network.routers1.throttle1.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers1.throttle1.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers1.throttle1.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::2         5472                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers1.throttle1.msg_bytes.Unblock_Control::2         3384                      
+system.ruby.network.routers2.throttle0.link_utilization     2.520681                      
+system.ruby.network.routers2.throttle0.msg_count.Request_Control::1          423                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::2           76                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers2.throttle0.msg_count.Unblock_Control::2          422                      
+system.ruby.network.routers2.throttle0.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::2         5472                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers2.throttle0.msg_bytes.Unblock_Control::2         3376                      
+system.ruby.network.routers2.throttle1.link_utilization     4.685554                      
+system.ruby.network.routers2.throttle1.msg_count.Response_Data::2          423                      
+system.ruby.network.routers2.throttle1.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers2.throttle1.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers2.throttle1.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers3.throttle0.link_utilization     5.661804                      
+system.ruby.network.routers3.throttle0.msg_count.Response_Data::2          423                      
+system.ruby.network.routers3.throttle0.msg_count.ResponseL2hit_Data::2           87                      
+system.ruby.network.routers3.throttle0.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers3.throttle0.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers3.throttle0.msg_bytes.ResponseL2hit_Data::2         6264                      
+system.ruby.network.routers3.throttle0.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers3.throttle1.link_utilization    11.401441                      
+system.ruby.network.routers3.throttle1.msg_count.Request_Control::0          510                      
+system.ruby.network.routers3.throttle1.msg_count.Response_Data::2          423                      
+system.ruby.network.routers3.throttle1.msg_count.Writeback_Data::2          502                      
+system.ruby.network.routers3.throttle1.msg_count.Writeback_Control::0          502                      
+system.ruby.network.routers3.throttle1.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers3.throttle1.msg_count.Unblock_Control::2          510                      
+system.ruby.network.routers3.throttle1.msg_bytes.Request_Control::0         4080                      
+system.ruby.network.routers3.throttle1.msg_bytes.Response_Data::2        30456                      
+system.ruby.network.routers3.throttle1.msg_bytes.Writeback_Data::2        36144                      
+system.ruby.network.routers3.throttle1.msg_bytes.Writeback_Control::0         4016                      
+system.ruby.network.routers3.throttle1.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers3.throttle1.msg_bytes.Unblock_Control::2         4080                      
+system.ruby.network.routers3.throttle2.link_utilization     2.521793                      
+system.ruby.network.routers3.throttle2.msg_count.Request_Control::1          423                      
+system.ruby.network.routers3.throttle2.msg_count.Writeback_Data::2           76                      
+system.ruby.network.routers3.throttle2.msg_count.Writeback_Control::1          407                      
+system.ruby.network.routers3.throttle2.msg_count.Writeback_Control::2          331                      
+system.ruby.network.routers3.throttle2.msg_count.Unblock_Control::2          423                      
+system.ruby.network.routers3.throttle2.msg_bytes.Request_Control::1         3384                      
+system.ruby.network.routers3.throttle2.msg_bytes.Writeback_Data::2         5472                      
+system.ruby.network.routers3.throttle2.msg_bytes.Writeback_Control::1         3256                      
+system.ruby.network.routers3.throttle2.msg_bytes.Writeback_Control::2         2648                      
+system.ruby.network.routers3.throttle2.msg_bytes.Unblock_Control::2         3384                      
 system.ruby.l1_cntrl0.Load                        415      0.00%      0.00%
 system.ruby.l1_cntrl0.Ifetch                     2585      0.00%      0.00%
 system.ruby.l1_cntrl0.Store                       294      0.00%      0.00%
@@ -147,6 +276,46 @@ system.ruby.l1_cntrl0.IM.Exclusive_Data            58      0.00%      0.00%
 system.ruby.l1_cntrl0.OM.All_acks                  58      0.00%      0.00%
 system.ruby.l1_cntrl0.IS.Exclusive_Data           452      0.00%      0.00%
 system.ruby.l1_cntrl0.MI.Writeback_Ack_Data          502      0.00%      0.00%
+system.ruby.network.msg_count.Request_Control         2799                      
+system.ruby.network.msg_count.Response_Data         2538                      
+system.ruby.network.msg_count.ResponseL2hit_Data          261                      
+system.ruby.network.msg_count.Writeback_Data         1734                      
+system.ruby.network.msg_count.Writeback_Control         6447                      
+system.ruby.network.msg_count.Unblock_Control         2798                      
+system.ruby.network.msg_byte.Request_Control        22392                      
+system.ruby.network.msg_byte.Response_Data       182736                      
+system.ruby.network.msg_byte.ResponseL2hit_Data        18792                      
+system.ruby.network.msg_byte.Writeback_Data       124848                      
+system.ruby.network.msg_byte.Writeback_Control        51576                      
+system.ruby.network.msg_byte.Unblock_Control        22384                      
+system.ruby.l2_cntrl0.L1_GETS                     454      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_GETX                      58      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_PUTX                     502      0.00%      0.00%
+system.ruby.l2_cntrl0.All_Acks                     43      0.00%      0.00%
+system.ruby.l2_cntrl0.Data                         43      0.00%      0.00%
+system.ruby.l2_cntrl0.Data_Exclusive              380      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_WBCLEANDATA              396      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_WBDIRTYDATA              106      0.00%      0.00%
+system.ruby.l2_cntrl0.Writeback_Ack               407      0.00%      0.00%
+system.ruby.l2_cntrl0.Exclusive_Unblock           510      0.00%      0.00%
+system.ruby.l2_cntrl0.L2_Replacement              407      0.00%      0.00%
+system.ruby.l2_cntrl0.NP.L1_GETS                  380      0.00%      0.00%
+system.ruby.l2_cntrl0.NP.L1_GETX                   43      0.00%      0.00%
+system.ruby.l2_cntrl0.ILX.L1_PUTX                 502      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L1_GETS                    72      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L1_GETX                    15      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L2_Replacement            407      0.00%      0.00%
+system.ruby.l2_cntrl0.ILXW.L1_WBCLEANDATA          396      0.00%      0.00%
+system.ruby.l2_cntrl0.ILXW.L1_WBDIRTYDATA          106      0.00%      0.00%
+system.ruby.l2_cntrl0.IGS.Data_Exclusive          380      0.00%      0.00%
+system.ruby.l2_cntrl0.IGS.Exclusive_Unblock          380      0.00%      0.00%
+system.ruby.l2_cntrl0.IGM.Data                     43      0.00%      0.00%
+system.ruby.l2_cntrl0.IGMO.All_Acks                43      0.00%      0.00%
+system.ruby.l2_cntrl0.IGMO.Exclusive_Unblock           43      0.00%      0.00%
+system.ruby.l2_cntrl0.MM.Exclusive_Unblock           15      0.00%      0.00%
+system.ruby.l2_cntrl0.OO.Exclusive_Unblock           72      0.00%      0.00%
+system.ruby.l2_cntrl0.MI.L1_GETS                    2      0.00%      0.00%
+system.ruby.l2_cntrl0.MI.Writeback_Ack            407      0.00%      0.00%
 system.ruby.dir_cntrl0.GETX                        43      0.00%      0.00%
 system.ruby.dir_cntrl0.GETS                       380      0.00%      0.00%
 system.ruby.dir_cntrl0.PUTX                       407      0.00%      0.00%
