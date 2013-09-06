@@ -98,17 +98,6 @@ GarnetNetwork::~GarnetNetwork()
 }
 
 void
-GarnetNetwork::reset()
-{
-    for (int node = 0; node < m_nodes; node++) {
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j]->clear();
-            m_fromNetQueues[node][j]->clear();
-        }
-    }
-}
-
-void
 GarnetNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
                           LinkDirection direction, 
                           const NetDest& routing_table_entry)

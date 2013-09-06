@@ -61,8 +61,6 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     int getNumNodes(){ return m_nodes; }
 
-    void reset();
-
     void printLinkStats(std::ostream& out) const;
     void printPowerStats(std::ostream& out) const;
     void print(std::ostream& out) const;

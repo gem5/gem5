@@ -74,8 +74,6 @@ class GarnetNetwork_d : public BaseGarnetNetwork
         return m_vnet_type[vnet];
     }
 
-    void reset();
-
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
                      LinkDirection direction,

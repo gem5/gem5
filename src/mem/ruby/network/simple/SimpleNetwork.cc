@@ -99,21 +99,6 @@ SimpleNetwork::init()
     m_topology_ptr->createLinks(this);
 }
 
-void
-SimpleNetwork::reset()
-{
-    for (int node = 0; node < m_nodes; node++) {
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j]->clear();
-            m_fromNetQueues[node][j]->clear();
-        }
-    }
-
-    for(int i = 0; i < m_switches.size(); i++){
-        m_switches[i]->clearBuffers();
-    }
-}
-
 SimpleNetwork::~SimpleNetwork()
 {
     for (int i = 0; i < m_nodes; i++) {

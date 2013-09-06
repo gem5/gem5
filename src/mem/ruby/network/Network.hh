@@ -88,8 +88,6 @@ class Network : public ClockedObject
                                   LinkDirection direction,
                                   const NetDest& routing_table_entry) = 0;
 
-    virtual void reset() = 0;
-
     virtual void printStats(std::ostream& out) const = 0;
     virtual void clearStats() = 0;
     virtual void print(std::ostream& out) const = 0;

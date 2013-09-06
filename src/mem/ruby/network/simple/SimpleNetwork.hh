@@ -58,7 +58,6 @@ class SimpleNetwork : public Network
 
     void printStats(std::ostream& out) const;
     void clearStats();
-    void reset();
 
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);

@@ -128,17 +128,6 @@ GarnetNetwork_d::~GarnetNetwork_d()
     delete m_topology_ptr;
 }
 
-void
-GarnetNetwork_d::reset()
-{
-    for (int node = 0; node < m_nodes; node++) {
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j]->clear();
-            m_fromNetQueues[node][j]->clear();
-        }
-    }
-}
-
 /*
  * This function creates a link from the Network Interface (NI)
  * into the Network.
