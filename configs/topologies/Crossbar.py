@@ -34,19 +34,22 @@ from BaseTopology import SimpleTopology
 class Crossbar(SimpleTopology):
     description='Crossbar'
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
-        # Create an individual router for each controller plus one more for the
-        # centralized crossbar.  The large numbers of routers are needed because
-        # external links do not model outgoing bandwidth in the simple network, but
-        # internal links do.
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
+        # Create an individual router for each controller plus one more for
+        # the centralized crossbar.  The large numbers of routers are needed
+        # because external links do not model outgoing bandwidth in the
+        # simple network, but internal links do.
 
         routers = [Router(router_id=i) for i in range(len(self.nodes)+1)]
+        xbar = routers[len(self.nodes)] # the crossbar router is the last router created
+        network.routers = routers
+
         ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
                         for (i, n) in enumerate(self.nodes)]
+        network.ext_links = ext_links
+
         link_count = len(self.nodes)
-        xbar = routers[len(self.nodes)] # the crossbar router is the last router created
         int_links = [IntLink(link_id=(link_count+i),
                              node_a=routers[i], node_b=xbar)
                         for i in range(len(self.nodes))]
-
-        return routers, int_links, ext_links
+        network.int_links = int_links

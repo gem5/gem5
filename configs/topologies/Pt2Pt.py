@@ -39,15 +39,18 @@ class Pt2Pt(SimpleTopology):
     def __init__(self, controllers):
         self.nodes = controllers
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
-        # Create an individual router for each controller, and connect all to all.
 
+        # Create an individual router for each controller, and connect all to all.
         routers = [Router(router_id=i) for i in range(len(nodes))]
+        network.routers = routers
+
         ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
                     for (i, n) in enumerate(nodes)]
-        link_count = len(nodes)
+        network.ext_links = ext_links
 
+        link_count = len(nodes)
         int_links = []
         for i in xrange(len(nodes)):
             for j in xrange(len(nodes)):
@@ -57,4 +60,4 @@ class Pt2Pt(SimpleTopology):
                                             node_a=routers[i],
                                             node_b=routers[j]))
 
-        return routers, int_links, ext_links
+        network.int_links = int_links

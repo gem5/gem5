@@ -39,7 +39,7 @@ class Mesh(SimpleTopology):
 
     # Makes a generic mesh assuming an equal number of cache and directory cntrls
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
 
         num_routers = options.num_cpus
@@ -54,6 +54,7 @@ class Mesh(SimpleTopology):
 
         # Create the routers in the mesh
         routers = [Router(router_id=i) for i in range(num_routers)]
+        network.routers = routers
 
         # link counter to set unique link ids
         link_count = 0
@@ -86,6 +87,8 @@ class Mesh(SimpleTopology):
                                     int_node=routers[0]))
             link_count += 1
 
+        network.ext_links = ext_links
+
         # Create the mesh links.  First row (east-west) links then column
         # (north-south) links
         int_links = []
@@ -111,4 +114,4 @@ class Mesh(SimpleTopology):
                                             weight=2))
                     link_count += 1
 
-        return routers, int_links, ext_links
+        network.int_links = int_links

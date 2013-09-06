@@ -42,7 +42,7 @@ class MeshDirCorners(SimpleTopology):
     # configurations.  The network specified is similar to GEMS old file
     # specified network.
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
 
         num_routers = options.num_cpus
@@ -74,6 +74,7 @@ class MeshDirCorners(SimpleTopology):
 
         # Create the routers in the mesh
         routers = [Router(router_id=i) for i in range(num_routers)]
+        network.routers = routers
 
         # link counter to set unique link ids
         link_count = 0
@@ -104,7 +105,10 @@ class MeshDirCorners(SimpleTopology):
         # Connect the dma nodes to router 0.  These should only be DMA nodes.
         for (i, node) in enumerate(dma_nodes):
             assert(node.type == 'DMA_Controller')
-            ext_links.append(ExtLink(link_id=link_count, ext_node=node, int_node=routers[0]))
+            ext_links.append(ExtLink(link_id=link_count, ext_node=node,
+                                     int_node=routers[0]))
+
+        network.ext_links = ext_links
 
         # Create the mesh links.  First row (east-west) links then column
         # (north-south) links
@@ -131,4 +135,4 @@ class MeshDirCorners(SimpleTopology):
                                             weight=2))
                     link_count += 1
 
-        return routers, int_links, ext_links
+        network.int_links = int_links

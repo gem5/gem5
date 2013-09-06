@@ -44,7 +44,7 @@ class Torus(SimpleTopology):
     # All links (including the wrap-around ones) are of equal length, double that
     # of a mesh. Thus, each link is assigned a latency of 2 cycles.
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
 
         num_routers = options.num_cpus
@@ -59,6 +59,7 @@ class Torus(SimpleTopology):
 
         # Create the routers in the torus
         routers = [Router(router_id=i) for i in range(num_routers)]
+        network.routers = routers
 
         # link counter to set unique link ids
         link_count = 0
@@ -90,6 +91,8 @@ class Torus(SimpleTopology):
             ext_links.append(ExtLink(link_id=link_count, ext_node=node,
                                     int_node=routers[0]))
             link_count += 1
+
+        network.ext_links = ext_links
 
         # Create the torus links.  First row (east-west) links then column
         # (north-south) links
@@ -123,4 +126,4 @@ class Torus(SimpleTopology):
                                         weight=2))
                 link_count += 1
 
-        return routers, int_links, ext_links
+        network.int_links = int_links

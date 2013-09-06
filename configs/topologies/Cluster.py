@@ -73,22 +73,17 @@ class Cluster(BaseTopology):
     def add(self, node):
         self.nodes.append(node)
 
-    def makeTopology(self, options, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router):
         """ Recursively make all of the links and routers
         """
-        routers = []
-        int_links = []
-        ext_links = []
 
         # make a router to connect all of the nodes
         self.router = Router(router_id=self.num_routers())
-        routers.append(self.router)
+        network.routers.append(self.router)
+
         for node in self.nodes:
             if type(node) == Cluster:
-                subRouters, subIntLinks, subExtLinks = node.makeTopology(options, IntLink, ExtLink, Router)
-                routers += subRouters
-                int_links += subIntLinks
-                ext_links += subExtLinks
+                node.makeTopology(options, network, IntLink, ExtLink, Router)
 
                 # connect this cluster to the router
                 link = IntLink(link_id=self.num_int_links(), node_a=self.router, node_b=node.router)
@@ -102,7 +97,7 @@ class Cluster(BaseTopology):
                 elif self.intLatency:
                     link.latency = self.intLatency
 
-                int_links.append(link)
+                network.int_links.append(link)
             else:
                 # node is just a controller connect it to the router via a ext_link
                 link = ExtLink(link_id=self.num_ext_links(), ext_node=node, int_node=self.router)
@@ -111,9 +106,7 @@ class Cluster(BaseTopology):
                 if self.intLatency:
                     link.latency = self.intLatency
 
-                ext_links.append(link)
-
-        return routers, int_links, ext_links
+                network.ext_links.append(link)
 
     def __len__(self):
         return len([i for i in self.nodes if type(i) != Cluster]) + \

@@ -145,17 +145,12 @@ def create_system(options, system, piobus = None, dma_ports = []):
         class ExtLinkClass(SimpleExtLink): pass
         class RouterClass(Switch): pass
 
-    #
-    # Important: the topology must be instantiated before the network and after
-    # the controllers. Hence the separation between topology definition and
-    # instantiation.
-    #
 
-    routers, int_links, ext_links = topology.makeTopology(options,
-                                    IntLinkClass, ExtLinkClass, RouterClass)
-    network = NetworkClass(ruby_system = ruby, routers = routers,
-                           int_links = int_links, ext_links = ext_links,
-                           topology = topology.description)
+    # Create the network topology
+    network = NetworkClass(ruby_system = ruby, topology = topology.description,
+                           routers = [], ext_links = [], int_links = [])
+    topology.makeTopology(options, network, IntLinkClass, ExtLinkClass,
+                          RouterClass)
 
     if options.network_fault_model:
         assert(options.garnet_network == "fixed")
