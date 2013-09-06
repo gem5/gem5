@@ -63,7 +63,7 @@ class DirectoryMemory : public SimObject
     void invalidateBlock(PhysAddress address);
 
     void print(std::ostream& out) const;
-    void printStats(std::ostream& out) const;
+    void regStats();
 
     void recordRequestType(DirectoryRequestType requestType);
 

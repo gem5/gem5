@@ -192,10 +192,10 @@ DirectoryMemory::print(ostream& out) const
 }
 
 void
-DirectoryMemory::printStats(ostream& out) const
+DirectoryMemory::regStats()
 {
     if (m_use_map) {
-        m_sparseMemory->printStats(out);
+        m_sparseMemory->regStats(name());
     }
 }
 

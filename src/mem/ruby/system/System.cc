@@ -145,15 +145,6 @@ RubySystem::printStats(ostream& out)
 
     m_profiler_ptr->printStats(out);
     m_network_ptr->printStats(out);
-
-    for (uint32_t i = 0;i < g_abs_controls.size(); ++i) {
-        for (map<uint32_t, AbstractController *>::iterator it =
-                g_abs_controls[i].begin();
-             it != g_abs_controls[i].end(); ++it) {
-
-            ((*it).second)->printStats(out);
-        }
-    }
 }
 
 void

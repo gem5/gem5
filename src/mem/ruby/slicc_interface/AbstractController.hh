@@ -71,7 +71,6 @@ class AbstractController : public ClockedObject, public Consumer
     virtual DataBlock& getDataBlock(const Address& addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
-    virtual void printStats(std::ostream & out) const = 0;
     virtual void wakeup() = 0;
     virtual void clearStats() = 0;
     virtual void regStats() = 0;

@@ -31,8 +31,10 @@
 #define __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
 
 #include <iostream>
+#include <string>
 
 #include "base/hashmap.hh"
+#include "base/statistics.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
@@ -67,14 +69,9 @@ class SparseMemory
     void recordBlocks(int cntrl_id, CacheRecorder *) const;
 
     AbstractEntry* lookup(const Address& address);
-
-    // Print cache contents
-    void print(std::ostream& out) const;
-    void printStats(std::ostream& out) const;
+    void regStats(const std::string &name);
 
   private:
-    // Private Methods
-
     // Private copy constructor and assignment operator
     SparseMemory(const SparseMemory& obj);
     SparseMemory& operator=(const SparseMemory& obj);
@@ -92,10 +89,10 @@ class SparseMemory
     int m_number_of_levels;
     int* m_number_of_bits_per_level;
 
-    uint64_t m_total_adds;
-    uint64_t m_total_removes;
-    uint64_t* m_adds_per_level;
-    uint64_t* m_removes_per_level;
+    Stats::Scalar m_total_adds;
+    Stats::Vector m_adds_per_level;
+    Stats::Scalar m_total_removes;
+    Stats::Vector m_removes_per_level;
 };
 
 #endif // __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__

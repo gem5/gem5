@@ -57,15 +57,6 @@ SparseMemory::SparseMemory(int number_of_levels)
             m_number_of_bits_per_level[level] = even_level_bits;
     }
     m_map_head = new SparseMapType;
-
-    m_total_adds = 0;
-    m_total_removes = 0;
-    m_adds_per_level = new uint64_t[m_number_of_levels];
-    m_removes_per_level = new uint64_t[m_number_of_levels];
-    for (int level = 0; level < m_number_of_levels; level++) {
-        m_adds_per_level[level] = 0;
-        m_removes_per_level[level] = 0;
-    }
 }
 
 SparseMemory::~SparseMemory()
@@ -73,8 +64,6 @@ SparseMemory::~SparseMemory()
     recursivelyRemoveTables(m_map_head, 0);
     delete m_map_head;
     delete [] m_number_of_bits_per_level;
-    delete [] m_adds_per_level;
-    delete [] m_removes_per_level;
 }
 
 // Recursively search table hierarchy for the lowest level table.
@@ -409,21 +398,20 @@ SparseMemory::recordBlocks(int cntrl_id, CacheRecorder* tr) const
 }
 
 void
-SparseMemory::print(ostream& out) const
+SparseMemory::regStats(const string &name)
 {
-}
+    m_total_adds.name(name + ".total_adds");
 
-void
-SparseMemory::printStats(ostream& out) const
-{
-    out << "total_adds: " << m_total_adds << " [";
-    for (int level = 0; level < m_number_of_levels; level++) {
-        out << m_adds_per_level[level] << " ";
-    }
-    out << "]" << endl;
-    out << "total_removes: " << m_total_removes << " [";
-    for (int level = 0; level < m_number_of_levels; level++) {
-        out << m_removes_per_level[level] << " ";
-    }
-    out << "]" << endl;
+    m_adds_per_level
+        .init(m_number_of_levels)
+        .name(name + ".adds_per_level")
+        .flags(Stats::pdf | Stats::total)
+        ;
+
+    m_total_removes.name(name + ".total_removes");
+    m_removes_per_level
+        .init(m_number_of_levels)
+        .name(name + ".removes_per_level")
+        .flags(Stats::pdf | Stats::total)
+        ;
 }

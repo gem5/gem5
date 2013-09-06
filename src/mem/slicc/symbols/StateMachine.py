@@ -257,7 +257,6 @@ class $c_ident : public AbstractController
 
     void print(std::ostream& out) const;
     void wakeup();
-    void printStats(std::ostream& out) const;
     void clearStats();
     void regStats();
     void collateStats();
@@ -845,22 +844,6 @@ void
 $c_ident::print(ostream& out) const
 {
     out << "[$c_ident " << m_version << "]";
-}
-
-void
-$c_ident::printStats(ostream& out) const
-{
-''')
-        #
-        # Cache and Memory Controllers have specific profilers associated with
-        # them.  Print out these stats before dumping state transition stats.
-        #
-        for param in self.config_parameters:
-            if param.type_ast.type.ident == "DirectoryMemory":
-                assert(param.pointer)
-                code('    m_${{param.ident}}_ptr->printStats(out);')
-
-        code('''
 }
 
 void $c_ident::clearStats()
