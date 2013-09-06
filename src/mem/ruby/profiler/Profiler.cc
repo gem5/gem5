@@ -503,30 +503,7 @@ Profiler::printStats(ostream& out, bool short_stats)
 
         out << endl;
         printDelayProfile(out);
-        printResourceUsage(out);
     }
-}
-
-void
-Profiler::printResourceUsage(ostream& out) const
-{
-    out << endl;
-    out << "Resource Usage" << endl;
-    out << "--------------" << endl;
-
-    int64_t pagesize = getpagesize(); // page size in bytes
-    out << "page_size: " << pagesize << endl;
-
-    rusage usage;
-    getrusage (RUSAGE_SELF, &usage);
-
-    out << "user_time: " << usage.ru_utime.tv_sec << endl;
-    out << "system_time: " << usage.ru_stime.tv_sec << endl;
-    out << "page_reclaims: " << usage.ru_minflt << endl;
-    out << "page_faults: " << usage.ru_majflt << endl;
-    out << "swaps: " << usage.ru_nswap << endl;
-    out << "block_inputs: " << usage.ru_inblock << endl;
-    out << "block_outputs: " << usage.ru_oublock << endl;
 }
 
 void
