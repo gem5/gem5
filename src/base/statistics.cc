@@ -387,6 +387,16 @@ Formula::operator+=(Temp r)
     return *this;
 }
 
+const Formula &
+Formula::operator/=(Temp r)
+{
+    assert (root);
+    root = NodePtr(new BinaryNode<std::divides<Result> >(root, r));
+
+    assert(size());
+    return *this;
+}
+
 void
 Formula::result(VResult &vec) const
 {

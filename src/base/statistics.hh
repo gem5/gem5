@@ -2856,6 +2856,14 @@ class Formula : public DataWrapVec<Formula, FormulaInfoProxy>
      * @return a reference to this formula.
      */
     const Formula &operator+=(Temp r);
+
+    /**
+     * Divide the existing tree by the given one.
+     * @param r The root of the expression tree.
+     * @return a reference to this formula.
+     */
+    const Formula &operator/=(Temp r);
+
     /**
      * Return the result of the Fomula in a vector.  If there were no Vector
      * components to the Formula, then the vector is size 1.  If there were,
