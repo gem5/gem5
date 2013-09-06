@@ -169,8 +169,7 @@ enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestT
 }
 
 // MessageSizeType
-enumeration(MessageSizeType, default="MessageSizeType_Undefined", desc="...") {
-  Undefined,  desc="Undefined";
+enumeration(MessageSizeType, desc="...") {
   Control,    desc="Control Message";
   Data,       desc="Data Message";
   Request_Control, desc="Request";
