@@ -337,6 +337,9 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
     DataWrapVec(const DataWrapVec &ref)
     {}
 
+    void operator=(const DataWrapVec &)
+    {}
+
     // The following functions are specific to vectors.  If you use them
     // in a non vector context, you will get a nice compiler error!
 
