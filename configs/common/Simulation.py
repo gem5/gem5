@@ -126,6 +126,7 @@ def findCptDir(options, cptdir, testsys):
     if not isdir(cptdir):
         fatal("checkpoint dir %s does not exist!", cptdir)
 
+    cpt_starttick = 0
     if options.at_instruction or options.simpoint:
         inst = options.checkpoint_restore
         if options.simpoint:
@@ -430,6 +431,11 @@ def run(options, root, testsys, cpu_class):
             # NOTE: this may need to be updated if checkpoints ever store
             # the ticks per simulated second
             maxtick_from_rel += cpt_starttick
+            if options.at_instruction or options.simpoint:
+                warn("Relative max tick specified with --at-instruction or" \
+                     " --simpoint\n      These options don't specify the " \
+                     "checkpoint start tick, so assuming\n      you mean " \
+                     "absolute max tick")
         explicit_maxticks += 1
     if options.maxtime:
         maxtick_from_maxtime = m5.ticks.fromSeconds(options.maxtime)
