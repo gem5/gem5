@@ -70,6 +70,9 @@ class LSQ {
 
     /** Constructs an LSQ with the given parameters. */
     LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
+    ~LSQ() {
+        if (thread) delete [] thread;
+    }
 
     /** Returns the name of the LSQ. */
     std::string name() const;
@@ -316,7 +319,7 @@ class LSQ {
     LSQPolicy lsqPolicy;
 
     /** The LSQ units for individual threads. */
-    LSQUnit thread[Impl::MaxThreads];
+    LSQUnit *thread;
 
     /** List of Active Threads in System. */
     std::list<ThreadID> *activeThreads;

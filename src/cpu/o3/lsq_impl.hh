@@ -61,6 +61,8 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
       numThreads(params->numThreads),
       retryTid(-1)
 {
+    assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
+
     //**********************************************/
     //************ Handle SMT Parameters ***********/
     //**********************************************/
@@ -109,6 +111,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     }
 
     //Initialize LSQs
+    thread = new LSQUnit[numThreads];
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         thread[tid].init(cpu, iew_ptr, params, this,
                          maxLQEntries, maxSQEntries, tid);
