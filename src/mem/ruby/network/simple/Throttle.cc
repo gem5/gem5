@@ -80,9 +80,6 @@ Throttle::init(NodeID node, Cycles link_latency,
 
     m_wakeups_wo_switch = 0;
 
-    m_msg_counts.resize(MessageSizeType_NUM);
-    m_msg_bytes.resize(MessageSizeType_NUM);
-
     m_link_utilization_proxy = 0;
 }
 

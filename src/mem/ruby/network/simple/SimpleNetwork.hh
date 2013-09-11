@@ -111,8 +111,8 @@ class SimpleNetwork : public Network
     bool m_adaptive_routing;    
 
     //Statistical variables
-    std::vector<Stats::Formula> m_msg_counts;
-    std::vector<Stats::Formula> m_msg_bytes;
+    Stats::Formula m_msg_counts[MessageSizeType_NUM];
+    Stats::Formula m_msg_bytes[MessageSizeType_NUM];
 };
 
 inline std::ostream&

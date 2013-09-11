@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "mem/packet.hh"
+#include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicRouter.hh"
 #include "params/Switch.hh"
@@ -92,8 +93,8 @@ class Switch : public BasicRouter
 
     // Statistical variables
     Stats::Formula m_avg_utilization;
-    std::vector<Stats::Formula> m_msg_counts;
-    std::vector<Stats::Formula> m_msg_bytes;
+    Stats::Formula m_msg_counts[MessageSizeType_NUM];
+    Stats::Formula m_msg_bytes[MessageSizeType_NUM];
 };
 
 inline std::ostream&

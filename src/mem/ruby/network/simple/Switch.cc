@@ -30,7 +30,6 @@
 
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
-#include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
@@ -44,8 +43,6 @@ using m5::stl_helpers::operator<<;
 Switch::Switch(const Params *p) : BasicRouter(p)
 {
     m_perfect_switch = new PerfectSwitch(m_id, this, p->virt_nets);
-    m_msg_counts.resize(MessageSizeType_NUM);
-    m_msg_bytes.resize(MessageSizeType_NUM);
 }
 
 Switch::~Switch()

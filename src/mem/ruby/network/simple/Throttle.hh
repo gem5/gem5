@@ -104,8 +104,8 @@ class Throttle : public Consumer
 
     // Statistical variables
     Stats::Scalar m_link_utilization;
-    std::vector<Stats::Vector> m_msg_counts;
-    std::vector<Stats::Formula> m_msg_bytes;
+    Stats::Vector m_msg_counts[MessageSizeType_NUM];
+    Stats::Formula m_msg_bytes[MessageSizeType_NUM];
 
     double m_link_utilization_proxy;
 };

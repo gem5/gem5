@@ -208,9 +208,6 @@ SimpleNetwork::getThrottles(NodeID id) const
 void
 SimpleNetwork::regStats()
 {
-    m_msg_counts.resize(MessageSizeType_NUM);
-    m_msg_bytes.resize(MessageSizeType_NUM);
-
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         m_msg_counts[(unsigned int) type]
