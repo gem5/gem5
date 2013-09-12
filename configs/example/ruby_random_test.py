@@ -97,13 +97,19 @@ tester = RubyTester(check_flush = check_flush,
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(tester = tester, physmem = SimpleMemory(),
-                clk_domain = SrcClockDomain(clock = options.sys_clock))
+system = System(tester = tester, physmem = SimpleMemory())
+
+# Create a top-level voltage domain and clock domain
+system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+
+system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+                                   voltage_domain = system.voltage_domain)
 
 Ruby.create_system(options, system)
 
 # Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+                                        voltage_domain = system.voltage_domain)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 

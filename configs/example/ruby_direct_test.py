@@ -92,8 +92,14 @@ else:
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(physmem = SimpleMemory(),
-                clk_domain = SrcClockDomain(clock =  options.sys_clock))
+system = System(physmem = SimpleMemory())
+
+
+# Create a top-level voltage domain and clock domain
+system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+
+system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+                                   voltage_domain = system.voltage_domain)
 
 #
 # Create the ruby random tester
@@ -105,7 +111,8 @@ system.tester = RubyDirectedTester(requests_to_complete = \
 Ruby.create_system(options, system)
 
 # Since Ruby runs at an independent frequency, create a seperate clock
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
+system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+                                        voltage_domain = system.voltage_domain)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
