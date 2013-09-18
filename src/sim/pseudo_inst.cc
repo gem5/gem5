@@ -98,8 +98,10 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
     // used the Argument class, but due to the possible side effects
     // from getArgument, it'd most likely break.
     int arg_num(0);
-    for (int i = 0; i < sizeof(args) / sizeof(*args); ++i)
-        args[arg_num++] = getArgument(tc, arg_num, sizeof(uint64_t), false);
+    for (int i = 0; i < sizeof(args) / sizeof(*args); ++i) {
+        args[arg_num] = getArgument(tc, arg_num, sizeof(uint64_t), false);
+        ++arg_num;
+    }
 
     switch (func) {
       case 0x00: // arm_func
