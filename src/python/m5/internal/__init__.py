@@ -25,10 +25,3 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
-
-import core
-import debug
-import event
-import stats
-import trace
-from drain import DrainManager, Drainable
