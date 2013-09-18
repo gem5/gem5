@@ -730,14 +730,16 @@ if compareVersions(swig_version[2], min_swig_version) < 0:
     print '       Installed version:', swig_version[2]
     Exit(1)
 
-if swig_version[2] in ["2.0.9", "2.0.10"]:
+# Older versions of swig do not play well with more recent versions of
+# gcc due to assumptions on implicit includes (cstddef) and use of
+# namespaces
+if main['GCC'] and compareVersions(gcc_version, '4.6') > 0 and \
+        compareVersions(swig_version[2], '2') < 0:
     print '\n' + termcap.Yellow + termcap.Bold + \
-        'Warning: SWIG version 2.0.9/10 sometimes generates broken code.\n' + \
+        'Warning: SWIG 1.x cause issues with gcc 4.6 and later.\n' + \
         termcap.Normal + \
-        'This problem only affects some platforms and some Python\n' + \
-        'versions. See the following SWIG bug report for details:\n' + \
-        'http://sourceforge.net/p/swig/bugs/1297/\n'
-
+        'Use SWIG 2.x to avoid assumptions on implicit includes\n' + \
+        'and use of namespaces\n'
 
 # Set up SWIG flags & scanner
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
