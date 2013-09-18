@@ -29,12 +29,9 @@
  */
 
 #include "arch/x86/regs/msr.hh"
-#include "base/hashmap.hh"
 
 namespace X86ISA
 {
-
-typedef m5::hash_map<Addr, MiscRegIndex> MsrMap;
 
 typedef MsrMap::value_type MsrVal;
 
@@ -146,12 +143,12 @@ const MsrMap::value_type msrMapData[] = {
 
 static const unsigned msrMapSize = sizeof(msrMapData) / sizeof(msrMapData[0]);
 
-static MsrMap msrMap(msrMapData, msrMapData + msrMapSize);
+const MsrMap msrMap(msrMapData, msrMapData + msrMapSize);
 
 bool
 msrAddrToIndex(MiscRegIndex &regNum, Addr addr)
 {
-    MsrMap::iterator it = msrMap.find(addr);
+    MsrMap::const_iterator it(msrMap.find(addr));
     if (it == msrMap.end()) {
         return false;
     } else {

@@ -32,11 +32,34 @@
 #define __ARCH_X86_REG_MSR_HH__
 
 #include "arch/x86/regs/misc.hh"
+#include "base/hashmap.hh"
 #include "base/types.hh"
 
 namespace X86ISA
 {
 
+typedef m5::hash_map<Addr, MiscRegIndex> MsrMap;
+
+/**
+ * Map between MSR addresses and their corresponding misc registers.
+ *
+ * @note This map is usually only used when enumeration of supported
+ * MSRs is needed (e.g., in virtualized CPUs). Code that needs to
+ * look-up specific MSRs should use msrAddrToIndex().
+ */
+extern const MsrMap msrMap;
+
+/**
+ * Find and return the misc reg corresponding to an MSR address.
+ *
+ * Look for an MSR (addr) in #msrMap and return the
+ * corresponding misc reg in regNum. The value of regNum is undefined
+ * if the MSR was not found.
+ *
+ * @param regNum misc reg index (out).
+ * @param addr MSR address
+ * @return True if the MSR was found, false otherwise.
+ */
 bool msrAddrToIndex(MiscRegIndex &regNum, Addr addr);
 
 } // namespace X86ISA
