@@ -649,6 +649,14 @@ X86ISA::Interrupts::checkInterrupts(ThreadContext *tc) const
     return false;
 }
 
+bool
+X86ISA::Interrupts::checkInterruptsRaw() const
+{
+    return pendingUnmaskableInt || pendingExtInt ||
+        (IRRV > ISRV && bits(IRRV, 7, 4) >
+         bits(regs[APIC_TASK_PRIORITY], 7, 4));
+}
+
 Fault
 X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
 {

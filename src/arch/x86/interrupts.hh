@@ -274,6 +274,13 @@ class Interrupts : public BasicPioDevice, IntDevice
      */
 
     bool checkInterrupts(ThreadContext *tc) const;
+    /**
+     * Check if there are pending interrupts without ignoring the
+     * interrupts disabled flag.
+     *
+     * @return true if there are interrupts pending.
+     */
+    bool checkInterruptsRaw() const;
     Fault getInterrupt(ThreadContext *tc);
     void updateIntrInfo(ThreadContext *tc);
 
