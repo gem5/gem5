@@ -89,6 +89,7 @@ elif buildEnv['TARGET_ISA'] == "x86":
     Simulation.setWorkCountOptions(system, options)
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
+system.cache_line_size = options.cacheline_size
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
