@@ -155,7 +155,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         // the end even if the latency suggests it should be sent
         // before the packet(s) before it
         packetQueue.push_back(DeferredPacket(pkt, curTick() + getLatency()));
-        if (!dequeueEvent.scheduled())
+        if (!retryResp && !dequeueEvent.scheduled())
             schedule(dequeueEvent, packetQueue.back().tick);
     } else {
         pendingDelete.push_back(pkt);
