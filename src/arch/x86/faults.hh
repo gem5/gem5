@@ -89,6 +89,14 @@ namespace X86ISA
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
         virtual std::string describe() const;
+
+      public:
+        /**
+         * Get the vector of an interrupt.
+         *
+         * @return interrupt vector number.
+         */
+        virtual uint8_t getVector() const { return vector; }
     };
 
     // Base class for x86 faults which behave as if the underlying instruction
