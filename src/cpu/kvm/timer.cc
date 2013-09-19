@@ -37,6 +37,7 @@
  * Authors: Andreas Sandberg
  */
 
+#include <algorithm>
 #include <csignal>
 #include <ctime>
 
@@ -45,6 +46,14 @@
 #include "cpu/kvm/timer.hh"
 #include "debug/KvmTimer.hh"
 
+/**
+ * Minimum number of cycles that a host can spend in a KVM call (used
+ * to calculate the resolution of some timers).
+ *
+ * The value of this constant is a bit arbitrary, but in practice, we
+ * can't really do anything useful in less than ~1000 cycles.
+ */
+static const uint64_t MIN_HOST_CYCLES = 1000;
 
 PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
                              float hostFactor, Tick hostFreq)
@@ -82,6 +91,8 @@ PosixKvmTimer::arm(Tick ticks)
     ts.it_value.tv_sec = hostNs(ticks) / 1000000000ULL;
     ts.it_value.tv_nsec = hostNs(ticks) % 1000000000ULL;
 
+    assert(ts.it_value.tv_nsec > 0 || ts.it_value.tv_sec > 0);
+
     DPRINTF(KvmTimer, "Arming POSIX timer: %i ticks (%is%ins)\n",
             ticks, ts.it_value.tv_sec, ts.it_value.tv_nsec);
 
@@ -109,9 +120,23 @@ PosixKvmTimer::calcResolution()
     if (clock_getres(clockID, &ts) == -1)
         panic("PosixKvmTimer: Failed to get timer resolution\n");
 
-    Tick resolution(ticksFromHostNs(ts.tv_sec * 1000000000ULL + ts.tv_nsec));
+    const uint64_t res_ns(ts.tv_sec * 1000000000ULL + ts.tv_nsec);
+    // We preferrably want ticksFromHostNs() to calculate the the
+    // ceiling rather than truncating the value. However, there are
+    // other cases where truncating is fine, so we just add 1 here to
+    // make sure that the actual resolution is strictly less than what
+    // we return. We could get all kinds of nasty behavior if
+    // arm(resolution) is called and the resulting time is 0 (which
+    // could happen if we truncate the results and the resolution is
+    // 1ns).
+    const Tick resolution(ticksFromHostNs(res_ns) + 1);
+    // It might not make sense to enter into KVM for less than a
+    // certain number of host cycles. In some systems (e.g., Linux)
+    // the resolution of the timer we use is 1ns (a few cycles on most
+    // CPUs), which isn't very useful.
+    const Tick min_cycles(ticksFromHostCycles(MIN_HOST_CYCLES));
 
-    return resolution;
+    return std::max(resolution, min_cycles);
 }
 
 
@@ -143,7 +168,5 @@ PerfKvmTimer::disarm()
 Tick
 PerfKvmTimer::calcResolution()
 {
-    // This is a bit arbitrary, but in practice, we can't really do
-    // anything useful in less than ~1000 anyway.
-    return ticksFromHostCycles(1000);
+    return ticksFromHostCycles(MIN_HOST_CYCLES);
 }
