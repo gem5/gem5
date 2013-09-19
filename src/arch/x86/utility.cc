@@ -268,6 +268,52 @@ setRFlags(ThreadContext *tc, uint64_t val)
     tc->setMiscReg(MISCREG_RFLAGS, val & ~(ccFlagMask | cfofMask | DFBit));
 }
 
+uint8_t
+convX87TagsToXTags(uint16_t ftw)
+{
+    uint8_t ftwx(0);
+    for (int i = 0; i < 8; ++i) {
+        // Extract the tag for the current element on the FP stack
+        const unsigned tag((ftw >> (2 * i)) & 0x3);
+
+        /*
+         * Check the type of the current FP element. Valid values are:
+         * 0 == Valid
+         * 1 == Zero
+         * 2 == Special (Nan, unsupported, infinity, denormal)
+         * 3 == Empty
+         */
+        // The xsave version of the tag word only keeps track of
+        // whether the element is empty or not. Set the corresponding
+        // bit in the ftwx if it's not empty,
+        if (tag != 0x3)
+            ftwx |= 1 << i;
+    }
+
+    return ftwx;
+}
+
+uint16_t
+convX87XTagsToTags(uint8_t ftwx)
+{
+    uint16_t ftw(0);
+    for (int i = 0; i < 8; ++i) {
+        const unsigned xtag(((ftwx >> i) & 0x1));
+
+        // The xtag for an x87 stack position is 0 for empty stack positions.
+        if (!xtag) {
+            // Set the tag word to 3 (empty) for the current element.
+            ftw |= 0x3 << (2 * i);
+        } else {
+            // TODO: We currently assume that non-empty elements are
+            // valid (0x0), but we should ideally reconstruct the full
+            // state (valid/zero/special).
+        }
+    }
+
+    return ftw;
+}
+
 uint16_t
 genX87Tags(uint16_t ftw, uint8_t top, int8_t spm)
 {

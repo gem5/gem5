@@ -143,6 +143,37 @@ namespace X86ISA
     }
 
     /**
+     * Convert an x87 tag word to abridged tag format.
+     *
+     * Convert from the x87 tag representation to the tag abridged
+     * representation used in the FXSAVE area. The classic format uses
+     * 2 bits per stack position to indicate if a position is valid,
+     * zero, special, or empty. The abridged format only stores
+     * whether a position is empty or not.
+     *
+     * @param ftw Tag word in classic x87 format.
+     * @return Tag word in the abridged format.
+     */
+    uint8_t convX87TagsToXTags(uint16_t ftw);
+
+    /**
+     * Convert an x87 xtag word to normal tags format.
+     *
+     * Convert from the abridged x87 tag representation used in the
+     * FXSAVE area to a full x87 tag. The classic format uses 2 bits
+     * per stack position to indicate if a position is valid, zero,
+     * special, or empty. The abridged format only stores whether a
+     * position is empty or not.
+     *
+     * @todo Reconstruct the correct state of stack positions instead
+     * of just valid/invalid.
+     *
+     * @param ftwx Tag word in the abridged format.
+     * @return Tag word in classic x87 format.
+     */
+    uint16_t convX87XTagsToTags(uint8_t ftwx);
+
+    /**
      * Generate and updated x87 tag register after a push/pop
      * operation.
      *
