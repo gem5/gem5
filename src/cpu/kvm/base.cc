@@ -969,10 +969,10 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     pkt.dataStatic(data);
 
     if (mmio_req.isMmappedIpr()) {
-        if (write)
-            return TheISA::handleIprWrite(tc, &pkt);
-        else
-            return TheISA::handleIprRead(tc, &pkt);
+        const Cycles ipr_delay(write ?
+                             TheISA::handleIprWrite(tc, &pkt) :
+                             TheISA::handleIprRead(tc, &pkt));
+        return clockEdge(ipr_delay);
     } else {
         return dataPort.sendAtomic(&pkt);
     }
