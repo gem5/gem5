@@ -275,6 +275,156 @@ dumpKvm(const struct kvm_vcpu_events &events)
     inform("\tFlags: 0x%x\n", events.flags);
 }
 
+static bool
+isCanonicalAddress(uint64_t addr)
+{
+    // x86-64 doesn't currently use the full 64-bit virtual address
+    // space, instead it uses signed 48 bit addresses that are
+    // sign-extended to 64 bits.  Such addresses are known as
+    // "canonical".
+    uint64_t upper_half(addr & 0xffff800000000000ULL);
+    return upper_half == 0 || upper_half == 0xffff800000000000;
+}
+
+static void
+checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
+         struct kvm_sregs sregs)
+{
+    // Check the register base
+    switch (idx) {
+      case MISCREG_TSL:
+      case MISCREG_TR:
+      case MISCREG_FS:
+      case MISCREG_GS:
+        if (!isCanonicalAddress(seg.base))
+            warn("Illegal %s base: 0x%x\n", name, seg.base);
+        break;
+
+      case MISCREG_SS:
+      case MISCREG_DS:
+      case MISCREG_ES:
+        if (seg.unusable)
+            break;
+      case MISCREG_CS:
+        if (seg.base & 0xffffffff00000000ULL)
+            warn("Illegal %s base: 0x%x\n", name, seg.base);
+        break;
+    }
+
+    // Check the type
+    switch (idx) {
+      case MISCREG_CS:
+        switch (seg.type) {
+          case 3:
+            if (seg.dpl != 0)
+                warn("CS type is 3 but dpl != 0.\n");
+            break;
+          case 9:
+          case 11:
+            if (seg.dpl != sregs.ss.dpl)
+                warn("CS type is %i but CS DPL != SS DPL\n", seg.type);
+            break;
+          case 13:
+          case 15:
+            if (seg.dpl > sregs.ss.dpl)
+                warn("CS type is %i but CS DPL > SS DPL\n", seg.type);
+            break;
+          default:
+            warn("Illegal CS type: %i\n", seg.type);
+            break;
+        }
+        break;
+
+      case MISCREG_SS:
+        if (seg.unusable)
+            break;
+        switch (seg.type) {
+          case 3:
+            if (sregs.cs.type == 3 && seg.dpl != 0)
+                warn("CS type is 3, but SS DPL is != 0.\n");
+            /* FALLTHROUGH */
+          case 7:
+            if (!(sregs.cr0 & 1) && seg.dpl != 0)
+                warn("SS DPL is %i, but CR0 PE is 0\n", seg.dpl);
+            break;
+          default:
+            warn("Illegal SS type: %i\n", seg.type);
+            break;
+        }
+        break;
+
+      case MISCREG_DS:
+      case MISCREG_ES:
+      case MISCREG_FS:
+      case MISCREG_GS:
+        if (seg.unusable)
+            break;
+        if (!(seg.type & 0x1) ||
+            ((seg.type & 0x8) && !(seg.type & 0x2)))
+            warn("%s has an illegal type field: %i\n", name, seg.type);
+        break;
+
+      case MISCREG_TR:
+        // TODO: We should check the CPU mode
+        if (seg.type != 3 && seg.type != 11)
+            warn("%s: Illegal segment type (%i)\n", name, seg.type);
+        break;
+
+      case MISCREG_TSL:
+        if (seg.unusable)
+            break;
+        if (seg.type != 2)
+            warn("%s: Illegal segment type (%i)\n", name, seg.type);
+        break;
+    }
+
+    switch (idx) {
+      case MISCREG_SS:
+      case MISCREG_DS:
+      case MISCREG_ES:
+      case MISCREG_FS:
+      case MISCREG_GS:
+        if (seg.unusable)
+            break;
+      case MISCREG_CS:
+        if (!seg.s)
+            warn("%s: S flag not set\n", name);
+        break;
+
+      case MISCREG_TSL:
+        if (seg.unusable)
+            break;
+      case MISCREG_TR:
+        if (seg.s)
+            warn("%s: S flag is set\n", name);
+        break;
+    }
+
+    switch (idx) {
+      case MISCREG_SS:
+      case MISCREG_DS:
+      case MISCREG_ES:
+      case MISCREG_FS:
+      case MISCREG_GS:
+      case MISCREG_TSL:
+        if (seg.unusable)
+            break;
+      case MISCREG_TR:
+      case MISCREG_CS:
+        if (!seg.present)
+            warn("%s: P flag not set\n", name);
+
+        if (((seg.limit & 0xFFF) == 0 && seg.g) ||
+            ((seg.limit & 0xFFF00000) != 0 && !seg.g)) {
+            warn("%s limit (0x%x) and g (%i) combination is illegal.\n",
+                 name, seg.limit, seg.g);
+        }
+        break;
+    }
+
+    // TODO: Check CS DB
+}
+
 X86KvmCPU::X86KvmCPU(X86KvmCPUParams *params)
     : BaseKvmCPU(params)
 {
@@ -505,6 +655,18 @@ X86KvmCPU::updateKvmStateSRegs()
     // Clear the interrupt bitmap
     memset(&sregs.interrupt_bitmap, 0, sizeof(sregs.interrupt_bitmap));
 
+    RFLAGS rflags_nocc(tc->readMiscReg(MISCREG_RFLAGS));
+    if (!rflags_nocc.vm) {
+        // Do segment verification if the CPU isn't entering virtual
+        // 8086 mode.  We currently assume that unrestricted guest
+        // mode is available.
+
+#define APPLY_SEGMENT(kreg, idx) \
+        checkSeg(# kreg, idx + MISCREG_SEG_SEL_BASE, sregs.kreg, sregs)
+
+        FOREACH_SEGMENT();
+#undef APPLY_SEGMENT
+    }
     setSpecialRegisters(sregs);
 }
 void
