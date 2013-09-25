@@ -45,6 +45,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <memory>
 
 #include "cpu/kvm/vm.hh"
 #include "debug/Kvm.hh"
@@ -140,6 +141,46 @@ Kvm::capIRQChip() const
 }
 
 bool
+Kvm::capVCPUEvents() const
+{
+#ifdef KVM_CAP_VCPU_EVENTS
+    return checkExtension(KVM_CAP_VCPU_EVENTS) != 0;
+#else
+    return false;
+#endif
+}
+
+bool
+Kvm::capDebugRegs() const
+{
+#ifdef KVM_CAP_DEBUGREGS
+    return checkExtension(KVM_CAP_DEBUGREGS) != 0;
+#else
+    return false;
+#endif
+}
+
+bool
+Kvm::capXCRs() const
+{
+#ifdef KVM_CAP_XCRS
+    return checkExtension(KVM_CAP_XCRS) != 0;
+#else
+    return false;
+#endif
+}
+
+bool
+Kvm::capXSave() const
+{
+#ifdef KVM_CAP_XSAVE
+    return checkExtension(KVM_CAP_XSAVE) != 0;
+#else
+    return false;
+#endif
+}
+
+bool
 Kvm::getSupportedCPUID(struct kvm_cpuid2 &cpuid) const
 {
 #if defined(__i386__) || defined(__x86_64__)
@@ -153,6 +194,61 @@ Kvm::getSupportedCPUID(struct kvm_cpuid2 &cpuid) const
 #else
     panic("KVM: getSupportedCPUID is unsupported on this platform.\n");
 #endif
+}
+
+const Kvm::CPUIDVector &
+Kvm::getSupportedCPUID() const
+{
+    if (supportedCPUIDCache.empty()) {
+        std::unique_ptr<struct kvm_cpuid2> cpuid;
+        int i(1);
+        do {
+            cpuid.reset((struct kvm_cpuid2 *)operator new(
+                            sizeof(kvm_cpuid2) + i * sizeof(kvm_cpuid_entry2)));
+
+            cpuid->nent = i;
+            ++i;
+        } while (!getSupportedCPUID(*cpuid));
+        supportedCPUIDCache.assign(cpuid->entries,
+                                   cpuid->entries + cpuid->nent);
+    }
+
+    return supportedCPUIDCache;
+}
+
+bool
+Kvm::getSupportedMSRs(struct kvm_msr_list &msrs) const
+{
+#if defined(__i386__) || defined(__x86_64__)
+    if (ioctl(KVM_GET_MSR_INDEX_LIST, (void *)&msrs) == -1) {
+        if (errno == E2BIG)
+            return false;
+        else
+            panic("KVM: Failed to get supported CPUID (errno: %i)\n", errno);
+    } else
+        return true;
+#else
+    panic("KVM: getSupportedCPUID is unsupported on this platform.\n");
+#endif
+}
+
+const Kvm::MSRIndexVector &
+Kvm::getSupportedMSRs() const
+{
+    if (supportedMSRCache.empty()) {
+        std::unique_ptr<struct kvm_msr_list> msrs;
+        int i(0);
+        do {
+            msrs.reset((struct kvm_msr_list *)operator new(
+                           sizeof(kvm_msr_list) + i * sizeof(uint32_t)));
+
+            msrs->nmsrs = i;
+            ++i;
+        } while (!getSupportedMSRs(*msrs));
+        supportedMSRCache.assign(msrs->indices, msrs->indices + msrs->nmsrs);
+    }
+
+    return supportedMSRCache;
 }
 
 int

@@ -942,6 +942,7 @@ if not have_kvm:
 def is_isa_kvm_compatible(isa):
     isa_comp_table = {
         "arm" : ( "armv7l" ),
+        "x86" : ( "x86_64" ),
         }
     try:
         import platform

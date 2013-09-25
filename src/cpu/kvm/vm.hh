@@ -40,6 +40,8 @@
 #ifndef __CPU_KVM_KVMVM_HH__
 #define __CPU_KVM_KVMVM_HH__
 
+#include <vector>
+
 #include "base/addr_range.hh"
 #include "sim/sim_object.hh"
 
@@ -72,6 +74,9 @@ class Kvm
     friend class KvmVM;
 
   public:
+    typedef std::vector<struct kvm_cpuid_entry2> CPUIDVector;
+    typedef std::vector<uint32_t> MSRIndexVector;
+
     virtual ~Kvm();
 
     Kvm *create();
@@ -117,6 +122,18 @@ class Kvm
      * @see KvmVM::createIRQChip()
      */
     bool capIRQChip() const;
+
+    /** Support for getting and setting the kvm_vcpu_events structure. */
+    bool capVCPUEvents() const;
+
+    /** Support for getting and setting the kvm_debugregs structure. */
+    bool capDebugRegs() const;
+
+    /** Support for getting and setting the x86 XCRs. */
+    bool capXCRs() const;
+
+    /** Support for getting and setting the kvm_xsave structure. */
+    bool capXSave() const;
     /** @} */
 
     /**
@@ -127,6 +144,35 @@ class Kvm
      * @return False if the allocation is too small, true on success.
      */
     bool getSupportedCPUID(struct kvm_cpuid2 &cpuid) const;
+
+    /**
+     * Get the CPUID features supported by the hardware and Kvm.
+     *
+     * @note Requires capExtendedCPUID().
+     *
+     * @note This method uses an internal cache to minimize the number
+     * of calls into the kernel.
+     *
+     * @return Reference to cached MSR index list.
+     */
+    const CPUIDVector &getSupportedCPUID() const;
+
+    /**
+     * Get the MSRs supported by the hardware and Kvm.
+     *
+     * @return False if the allocation is too small, true on success.
+     */
+    bool getSupportedMSRs(struct kvm_msr_list &msrs) const;
+
+    /**
+     * Get the MSRs supported by the hardware and Kvm.
+     *
+     * @note This method uses an internal cache to minimize the number
+     * of calls into the kernel.
+     *
+     * @return Reference to cached MSR index list.
+     */
+    const MSRIndexVector &getSupportedMSRs() const;
 
   protected:
     /**
@@ -185,6 +231,12 @@ class Kvm
     int apiVersion;
     /** Size of the MMAPed vCPU parameter area. */
     int vcpuMMapSize;
+
+    /** Cached vector of supported CPUID entries. */
+    mutable CPUIDVector supportedCPUIDCache;
+
+    /** Cached vector of supported MSRs. */
+    mutable MSRIndexVector supportedMSRCache;
 
     /** Singleton instance */
     static Kvm *instance;
