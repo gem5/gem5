@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA_MOESI_hammer/tests/opt/quick/se/50.memtest/alp
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr  9 2013 01:58:20
-gem5 started Apr  9 2013 01:59:05
-gem5 executing on vein
+gem5 compiled Sep 22 2013 05:17:28
+gem5 started Sep 22 2013 05:17:37
+gem5 executing on zizzer
 command line: build/ALPHA_MOESI_hammer/gem5.opt -d build/ALPHA_MOESI_hammer/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_MOESI_hammer/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

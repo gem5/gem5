@@ -4,74 +4,74 @@ sim_seconds                                  5.304405                       # Nu
 sim_ticks                                5304405061000                       # Number of ticks simulated
 final_tick                               5304405061000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 140464                       # Simulator instruction rate (inst/s)
-host_op_rate                                   269516                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6884731594                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 879628                       # Number of bytes of host memory used
-host_seconds                                   770.46                       # Real time elapsed on the host
-sim_insts                                   108221986                       # Number of instructions simulated
-sim_ops                                     207651285                       # Number of ops (including micro ops) simulated
+host_inst_rate                                 157121                       # Simulator instruction rate (inst/s)
+host_op_rate                                   301476                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7701146515                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 829712                       # Number of bytes of host memory used
+host_seconds                                   688.78                       # Real time elapsed on the host
+sim_insts                                   108221987                       # Number of instructions simulated
+sim_ops                                     207651289                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide        35104                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker       136528                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker        67168                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.inst        857531504                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.data         68407513                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.inst        857531520                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.data         68407514                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.dtb.walker        89360                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.itb.walker        41152                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.inst        170488232                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.data         28476928                       # Number of bytes read from this memory
-system.physmem.bytes_read::total           1125273489                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read::cpu0.inst    857531504                       # Number of instructions bytes read from this memory
+system.physmem.bytes_read::total           1125273506                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu0.inst    857531520                       # Number of instructions bytes read from this memory
 system.physmem.bytes_inst_read::cpu1.inst    170488232                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::total      1028019736                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total      1028019752                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written::pc.south_bridge.ide      2991104                       # Number of bytes written to this memory
 system.physmem.bytes_written::cpu0.itb.walker           16                       # Number of bytes written to this memory
-system.physmem.bytes_written::cpu0.data      47712171                       # Number of bytes written to this memory
+system.physmem.bytes_written::cpu0.data      47712172                       # Number of bytes written to this memory
 system.physmem.bytes_written::cpu1.data      22210158                       # Number of bytes written to this memory
-system.physmem.bytes_written::total          72913449                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          72913450                       # Number of bytes written to this memory
 system.physmem.num_reads::pc.south_bridge.ide          804                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu0.dtb.walker        17066                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu0.itb.walker         8396                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.inst         107191438                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.data          11941415                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.inst         107191440                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.data          11941416                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.dtb.walker        11170                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.itb.walker         5144                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.inst          21311029                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.data           4242568                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total             144729030                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total             144729033                       # Number of read requests responded to by this memory
 system.physmem.num_writes::pc.south_bridge.ide        46736                       # Number of write requests responded to by this memory
 system.physmem.num_writes::cpu0.itb.walker            2                       # Number of write requests responded to by this memory
-system.physmem.num_writes::cpu0.data          7031339                       # Number of write requests responded to by this memory
+system.physmem.num_writes::cpu0.data          7031340                       # Number of write requests responded to by this memory
 system.physmem.num_writes::cpu1.data          3067118                       # Number of write requests responded to by this memory
-system.physmem.num_writes::total             10145195                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total             10145196                       # Number of write requests responded to by this memory
 system.physmem.bw_read::pc.south_bridge.ide         6618                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.dtb.walker         25739                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.itb.walker         12663                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.inst           161664031                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.inst           161664034                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.data            12896359                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.dtb.walker         16846                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.itb.walker          7758                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.inst            32140877                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.data             5368543                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total               212139434                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu0.inst      161664031                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total               212139438                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu0.inst      161664034                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_inst_read::cpu1.inst       32140877                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total          193804908                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total          193804911                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_write::pc.south_bridge.ide       563891                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_write::cpu0.itb.walker            3                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu0.data            8994820                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu0.data            8994821                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_write::cpu1.data            4187116                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_write::total               13745830                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_total::pc.south_bridge.ide       570508                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.dtb.walker        25739                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.itb.walker        12666                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.inst          161664031                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.inst          161664034                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.data           21891180                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.dtb.walker        16846                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.itb.walker         7758                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.inst           32140877                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.data            9555659                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total              225885264                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total              225885267                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.readReqs                           804                       # Total number of read requests accepted by DRAM controller
 system.physmem.writeReqs                        46736                       # Total number of write requests accepted by DRAM controller
 system.physmem.readBursts                         804                       # Total number of DRAM read bursts. Each DRAM read request translates to either one or multiple DRAM read bursts
@@ -409,12 +409,12 @@ system.piobus.respLayer4.occupancy             644500                       # La
 system.piobus.respLayer4.utilization              0.0                       # Layer utilization (%)
 system.piobus.respLayer5.occupancy             632500                       # Layer occupancy (ticks)
 system.piobus.respLayer5.utilization              0.0                       # Layer utilization (%)
-system.ruby.l1_cntrl0.L1Dcache.demand_hits     17394866                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_hits     17394868                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Dcache.demand_misses      1603352                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Dcache.demand_accesses     18998218                       # Number of cache demand accesses
-system.ruby.l1_cntrl0.L1Icache.demand_hits    106683217                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses     18998220                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits    106683219                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Icache.demand_misses       508221                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Icache.demand_accesses    107191438                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses    107191440                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -497,16 +497,16 @@ system.ruby.dir_cntrl0.memBuffer.memReq        266936                       # To
 system.ruby.dir_cntrl0.memBuffer.memRead       172650                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite        94286                       # Number of memory writes
 system.ruby.dir_cntrl0.memBuffer.memRefresh       684164                       # Number of memory refreshes
-system.ruby.dir_cntrl0.memBuffer.memWaitCycles       919467                       # Delay stalled at the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.memWaitCycles       919462                       # Delay stalled at the head of the bank queue
 system.ruby.dir_cntrl0.memBuffer.memInputQ           20                       # Delay in the input queue
-system.ruby.dir_cntrl0.memBuffer.memBankQ         5913                       # Delay behind the head of the bank queue
-system.ruby.dir_cntrl0.memBuffer.totalStalls       925400                       # Total number of stall cycles
-system.ruby.dir_cntrl0.memBuffer.stallsPerReq     3.466749                       # Expected number of stall cycles per request
-system.ruby.dir_cntrl0.memBuffer.memBankBusy       908855                       # memory stalls due to busy bank
-system.ruby.dir_cntrl0.memBuffer.memBusBusy         7819                       # memory stalls due to busy bus
+system.ruby.dir_cntrl0.memBuffer.memBankQ         5908                       # Delay behind the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.totalStalls       925390                       # Total number of stall cycles
+system.ruby.dir_cntrl0.memBuffer.stallsPerReq     3.466711                       # Expected number of stall cycles per request
+system.ruby.dir_cntrl0.memBuffer.memBankBusy       908852                       # memory stalls due to busy bank
+system.ruby.dir_cntrl0.memBuffer.memBusBusy         7818                       # memory stalls due to busy bus
 system.ruby.dir_cntrl0.memBuffer.memReadWriteBusy            5                       # memory stalls due to read write turnaround
 system.ruby.dir_cntrl0.memBuffer.memDataBusBusy            3                       # memory stalls due to read read turnaround
-system.ruby.dir_cntrl0.memBuffer.memArbWait         2785                       # memory stalls due to arbitration
+system.ruby.dir_cntrl0.memBuffer.memArbWait         2784                       # memory stalls due to arbitration
 system.ruby.dir_cntrl0.memBuffer.memBankCount |        8698      3.26%      3.26% |        8135      3.05%      6.31% |        8180      3.06%      9.37% |        8226      3.08%     12.45% |        8503      3.19%     15.64% |        8270      3.10%     18.74% |        8180      3.06%     21.80% |        8201      3.07%     24.87% |        8428      3.16%     28.03% |        8229      3.08%     31.11% |        8315      3.11%     34.23% |        8269      3.10%     37.33% |        8279      3.10%     40.43% |        8033      3.01%     43.44% |        8160      3.06%     46.49% |        7316      2.74%     49.23% |        8186      3.07%     52.30% |        8370      3.14%     55.44% |        8196      3.07%     58.51% |        8109      3.04%     61.54% |        8870      3.32%     64.87% |        8313      3.11%     67.98% |        8266      3.10%     71.08% |        8194      3.07%     74.15% |        8414      3.15%     77.30% |        8231      3.08%     80.38% |        8474      3.17%     83.56% |        9055      3.39%     86.95% |        8979      3.36%     90.31% |        8905      3.34%     93.65% |        8853      3.32%     96.97% |        8099      3.03%    100.00% # Number of accesses per bank
 system.ruby.dir_cntrl0.memBuffer.memBankCount::total       266936                       # Number of accesses per bank
 
@@ -535,6 +535,18 @@ system.ruby.network.routers5.msg_bytes.Response_Control::2     14631224
 system.ruby.network.routers5.msg_bytes.Writeback_Data::0    116862408                      
 system.ruby.network.routers5.msg_bytes.Writeback_Data::1        23472                      
 system.ruby.network.routers5.msg_bytes.Writeback_Control::0       657680                      
+system.ruby.network.msg_count.Control         8613696                      
+system.ruby.network.msg_count.Request_Control       388888                      
+system.ruby.network.msg_count.Response_Data      8909307                      
+system.ruby.network.msg_count.Response_Control     11246253                      
+system.ruby.network.msg_count.Writeback_Data      4870245                      
+system.ruby.network.msg_count.Writeback_Control       246630                      
+system.ruby.network.msg_byte.Control         68909568                      
+system.ruby.network.msg_byte.Request_Control      3111104                      
+system.ruby.network.msg_byte.Response_Data    641470104                      
+system.ruby.network.msg_byte.Response_Control     89970024                      
+system.ruby.network.msg_byte.Writeback_Data    350657640                      
+system.ruby.network.msg_byte.Writeback_Control      1973040                      
 system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_bytes        32768                       # Number of bytes transfered via DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_txs           30                       # Number of DMA read transactions (not PRD).
@@ -550,21 +562,21 @@ system.pc.south_bridge.ide.disks1.dma_write_txs            1                    
 system.cpu0.numCycles                     10606609404                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu0.committedInsts                   91816947                       # Number of instructions committed
-system.cpu0.committedOps                    177194839                       # Number of ops (including micro ops) committed
-system.cpu0.num_int_alu_accesses            167195942                       # Number of integer alu accesses
+system.cpu0.committedInsts                   91816948                       # Number of instructions committed
+system.cpu0.committedOps                    177194843                       # Number of ops (including micro ops) committed
+system.cpu0.num_int_alu_accesses            167195946                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                     0                       # Number of float alu accesses
 system.cpu0.num_func_calls                    2105705                       # number of times a function call or return occured
 system.cpu0.num_conditional_control_insts     16302138                       # number of instructions that are conditional controls
-system.cpu0.num_int_insts                   167195942                       # number of integer instructions
+system.cpu0.num_int_insts                   167195946                       # number of integer instructions
 system.cpu0.num_fp_insts                            0                       # number of float instructions
-system.cpu0.num_int_register_reads          412764336                       # number of times the integer registers were read
-system.cpu0.num_int_register_writes         208844309                       # number of times the integer registers were written
+system.cpu0.num_int_register_reads          412764349                       # number of times the integer registers were read
+system.cpu0.num_int_register_writes         208844314                       # number of times the integer registers were written
 system.cpu0.num_fp_register_reads                   0                       # number of times the floating registers were read
 system.cpu0.num_fp_register_writes                  0                       # number of times the floating registers were written
-system.cpu0.num_mem_refs                     19832606                       # number of memory refs
-system.cpu0.num_load_insts                   12787611                       # Number of load instructions
-system.cpu0.num_store_insts                   7044995                       # Number of store instructions
+system.cpu0.num_mem_refs                     19832608                       # number of memory refs
+system.cpu0.num_load_insts                   12787612                       # Number of load instructions
+system.cpu0.num_store_insts                   7044996                       # Number of store instructions
 system.cpu0.num_idle_cycles              9879410853.538599                       # Number of idle cycles
 system.cpu0.num_busy_cycles              727198550.461401                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.068561                       # Percentage of non-idle cycles
@@ -717,11 +729,11 @@ system.ruby.network.routers5.throttle4.link_utilization            0
 system.ruby.l1_cntrl0.Load               |    11418758     74.36%     74.36% |     3936572     25.64%    100.00%
 system.ruby.l1_cntrl0.Load::total            15355330                      
 
-system.ruby.l1_cntrl0.Ifetch             |   107191441     83.42%     83.42% |    21311032     16.58%    100.00%
-system.ruby.l1_cntrl0.Ifetch::total         128502473                      
+system.ruby.l1_cntrl0.Ifetch             |   107191443     83.42%     83.42% |    21311032     16.58%    100.00%
+system.ruby.l1_cntrl0.Ifetch::total         128502475                      
 
-system.ruby.l1_cntrl0.Store              |     7579460     69.10%     69.10% |     3389428     30.90%    100.00%
-system.ruby.l1_cntrl0.Store::total           10968888                      
+system.ruby.l1_cntrl0.Store              |     7579462     69.10%     69.10% |     3389428     30.90%    100.00%
+system.ruby.l1_cntrl0.Store::total           10968890                      
 
 system.ruby.l1_cntrl0.Inv                |       28983     54.10%     54.10% |       24594     45.90%    100.00%
 system.ruby.l1_cntrl0.Inv::total                53577                      
@@ -786,8 +798,8 @@ system.ruby.l1_cntrl0.I.L1_Replacement::total        26006
 system.ruby.l1_cntrl0.S.Load             |      738269     59.20%     59.20% |      508761     40.80%    100.00%
 system.ruby.l1_cntrl0.S.Load::total           1247030                      
 
-system.ruby.l1_cntrl0.S.Ifetch           |   106683217     83.54%     83.54% |    21021679     16.46%    100.00%
-system.ruby.l1_cntrl0.S.Ifetch::total       127704896                      
+system.ruby.l1_cntrl0.S.Ifetch           |   106683219     83.54%     83.54% |    21021679     16.46%    100.00%
+system.ruby.l1_cntrl0.S.Ifetch::total       127704898                      
 
 system.ruby.l1_cntrl0.S.Store            |       19704     47.71%     47.71% |       21592     52.29%    100.00%
 system.ruby.l1_cntrl0.S.Store::total            41296                      
@@ -819,8 +831,8 @@ system.ruby.l1_cntrl0.E.Fwd_GETS::total          2430
 system.ruby.l1_cntrl0.M.Load             |     6351147     70.61%     70.61% |     2643736     29.39%    100.00%
 system.ruby.l1_cntrl0.M.Load::total           8994883                      
 
-system.ruby.l1_cntrl0.M.Store            |     7142229     69.03%     69.03% |     3204343     30.97%    100.00%
-system.ruby.l1_cntrl0.M.Store::total         10346572                      
+system.ruby.l1_cntrl0.M.Store            |     7142231     69.03%     69.03% |     3204343     30.97%    100.00%
+system.ruby.l1_cntrl0.M.Store::total         10346574                      
 
 system.ruby.l1_cntrl0.M.Inv              |          52     15.95%     15.95% |         274     84.05%    100.00%
 system.ruby.l1_cntrl0.M.Inv::total                326                      
@@ -922,18 +934,6 @@ system.ruby.l2_cntrl0.MT_IIB.WB_Data_clean          561      0.00%      0.00%
 system.ruby.l2_cntrl0.MT_IIB.Unblock               98      0.00%      0.00%
 system.ruby.l2_cntrl0.MT_IB.WB_Data                98      0.00%      0.00%
 system.ruby.l2_cntrl0.MT_SB.Unblock             45449      0.00%      0.00%
-system.ruby.network.msg_count.Control         8613696                      
-system.ruby.network.msg_count.Request_Control       388888                      
-system.ruby.network.msg_count.Response_Data      8909307                      
-system.ruby.network.msg_count.Response_Control     11246253                      
-system.ruby.network.msg_count.Writeback_Data      4870245                      
-system.ruby.network.msg_count.Writeback_Control       246630                      
-system.ruby.network.msg_byte.Control         68909568                      
-system.ruby.network.msg_byte.Request_Control      3111104                      
-system.ruby.network.msg_byte.Response_Data    641470104                      
-system.ruby.network.msg_byte.Response_Control     89970024                      
-system.ruby.network.msg_byte.Writeback_Data    350657640                      
-system.ruby.network.msg_byte.Writeback_Control      1973040                      
 system.ruby.dir_cntrl0.Fetch                   172650      0.00%      0.00%
 system.ruby.dir_cntrl0.Data                     94286      0.00%      0.00%
 system.ruby.dir_cntrl0.Memory_Data             172650      0.00%      0.00%

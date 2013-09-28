@@ -3,10 +3,10 @@ Redirecting stderr to build/SPARC/tests/opt/quick/se/00.hello/sparc/linux/inorde
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 26 2013 15:04:14
-gem5 started Mar 26 2013 15:04:37
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Sep 22 2013 06:07:13
+gem5 started Sep 22 2013 06:10:26
+gem5 executing on zizzer
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/00.hello/sparc/linux/inorder-timing -re tests/run.py build/SPARC/tests/opt/quick/se/00.hello/sparc/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Hello World!Exiting @ tick 16783500 because target called exit()
+Hello World!Exiting @ tick 20802500 because target called exit()

@@ -1,12 +1,12 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest/simerr
+Redirecting stdout to build/NULL/tests/opt/quick/se/50.memtest/null/none/memtest/simout
+Redirecting stderr to build/NULL/tests/opt/quick/se/50.memtest/null/none/memtest/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 26 2013 14:38:52
-gem5 started Mar 26 2013 14:39:12
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest -re tests/run.py build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest
+gem5 compiled Sep 22 2013 05:53:51
+gem5 started Sep 22 2013 05:53:54
+gem5 executing on zizzer
+command line: build/NULL/gem5.opt -d build/NULL/tests/opt/quick/se/50.memtest/null/none/memtest -re tests/run.py build/NULL/tests/opt/quick/se/50.memtest/null/none/memtest
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 761435500 because maximum number of loads reached
+Exiting @ tick 652606500 because maximum number of loads reached

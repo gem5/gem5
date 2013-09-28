@@ -4,9 +4,9 @@ sim_seconds                                  0.008665                       # Nu
 sim_ticks                                     8664886                       # Number of ticks simulated
 final_tick                                    8664886                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 183404                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 303056                       # Number of bytes of host memory used
-host_seconds                                    47.25                       # Real time elapsed on the host
+host_tick_rate                                 239244                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 256152                       # Number of bytes of host memory used
+host_seconds                                    36.22                       # Real time elapsed on the host
 system.ruby.l1_cntrl4.cacheMemory.demand_hits            0                       # Number of cache demand hits
 system.ruby.l1_cntrl4.cacheMemory.demand_misses        77331                       # Number of cache demand misses
 system.ruby.l1_cntrl4.cacheMemory.demand_accesses        77331                       # Number of cache demand accesses
@@ -139,6 +139,14 @@ system.ruby.network.routers9.msg_bytes.Control::2      4940496
 system.ruby.network.routers9.msg_bytes.Data::2     44060256                      
 system.ruby.network.routers9.msg_bytes.Response_Data::4     44463816                      
 system.ruby.network.routers9.msg_bytes.Writeback_Control::3      4961080                      
+system.ruby.network.msg_count.Control         1852692                      
+system.ruby.network.msg_count.Data            1835849                      
+system.ruby.network.msg_count.Response_Data      1852658                      
+system.ruby.network.msg_count.Writeback_Control      1860405                      
+system.ruby.network.msg_byte.Control         14821536                      
+system.ruby.network.msg_byte.Data           132181128                      
+system.ruby.network.msg_byte.Response_Data    133391376                      
+system.ruby.network.msg_byte.Writeback_Control     14883240                      
 system.funcbus.throughput                           0                       # Throughput (bytes/s)
 system.funcbus.data_through_bus                     0                       # Total data (bytes)
 system.cpu0.num_reads                           99885                       # number of read accesses completed
@@ -367,14 +375,6 @@ system.ruby.l1_cntrl0.IS.Data::total           401489
 system.ruby.l1_cntrl0.IM.Data            |       27005     12.50%     12.50% |       26934     12.47%     24.96% |       26786     12.40%     37.36% |       27152     12.57%     49.93% |       27327     12.65%     62.58% |       27084     12.54%     75.11% |       27074     12.53%     87.64% |       26701     12.36%    100.00%
 system.ruby.l1_cntrl0.IM.Data::total           216063                      
 
-system.ruby.network.msg_count.Control         1852692                      
-system.ruby.network.msg_count.Data            1835849                      
-system.ruby.network.msg_count.Response_Data      1852658                      
-system.ruby.network.msg_count.Writeback_Control      1860405                      
-system.ruby.network.msg_byte.Control         14821536                      
-system.ruby.network.msg_byte.Data           132181128                      
-system.ruby.network.msg_byte.Response_Data    133391376                      
-system.ruby.network.msg_byte.Writeback_Control     14883240                      
 system.ruby.dir_cntrl0.GETX                    791175      0.00%      0.00%
 system.ruby.dir_cntrl0.PUTX                    609324      0.00%      0.00%
 system.ruby.dir_cntrl0.PUTX_NotOwner             2623      0.00%      0.00%

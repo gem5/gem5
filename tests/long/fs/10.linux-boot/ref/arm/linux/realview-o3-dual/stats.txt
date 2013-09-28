@@ -4,13 +4,31 @@ sim_seconds                                  1.104038                       # Nu
 sim_ticks                                1104038330000                       # Number of ticks simulated
 final_tick                               1104038330000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  80920                       # Simulator instruction rate (inst/s)
-host_op_rate                                   104171                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1450259542                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 402880                       # Number of bytes of host memory used
-host_seconds                                   761.27                       # Real time elapsed on the host
+host_inst_rate                                  67767                       # Simulator instruction rate (inst/s)
+host_op_rate                                    87238                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1214516577                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 404472                       # Number of bytes of host memory used
+host_seconds                                   909.04                       # Real time elapsed on the host
 sim_insts                                    61602211                       # Number of instructions simulated
 sim_ops                                      79302243                       # Number of ops (including micro ops) simulated
+system.realview.nvmem.bytes_read::cpu0.inst           64                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::cpu1.inst          384                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total           448                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu0.inst           64                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu1.inst          384                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total          448                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu0.inst            1                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::cpu1.inst            6                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              7                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu0.inst           58                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::cpu1.inst          348                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total              406                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu0.inst           58                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu1.inst          348                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total          406                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu0.inst           58                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu1.inst          348                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total             406                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd     48758784                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker          768                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          192                       # Number of bytes read from this memory
@@ -467,24 +485,6 @@ system.physmem.writeRowHits                     98940                       # Nu
 system.physmem.readRowHitRate                   99.71                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                  12.01                       # Row buffer hit rate for writes
 system.physmem.avgGap                       155904.23                       # Average gap between requests
-system.realview.nvmem.bytes_read::cpu0.inst           64                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::cpu1.inst          384                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total           448                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu0.inst           64                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu1.inst          384                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total          448                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu0.inst            1                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::cpu1.inst            6                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              7                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu0.inst           58                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::cpu1.inst          348                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total              406                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu0.inst           58                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu1.inst          348                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total          406                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu0.inst           58                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu1.inst          348                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total             406                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                     62410733                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq             7306749                       # Transaction distribution
 system.membus.trans_dist::ReadResp            7306749                       # Transaction distribution

@@ -3,8 +3,6 @@ warn: Sockets disabled, not accepting terminal connections
 warn: Reading current count from inactive timer.
 warn: Sockets disabled, not accepting gdb connections
 warn: Don't know what interrupt to clear for console.
-warn: x86 cpuid: unknown family 0xbacc
-warn: x86 cpuid: unknown family 0xbacc
 warn: instruction 'fxsave' unimplemented
 warn: x86 cpuid: unknown family 0x8086
 warn: x86 cpuid: unknown family 0x8086

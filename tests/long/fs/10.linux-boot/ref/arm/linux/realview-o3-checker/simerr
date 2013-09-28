@@ -11,23 +11,22 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-warn: 5695245000: Instruction results do not match! (Values may not actually be integers) Inst: 0x3744, checker: 0x3748
-warn: 5701912500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
-warn: 5710381500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
-warn: 5745167500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
-warn: 5760086500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
-warn: 6281852500: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
+warn: 6117297500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3704, checker: 0x3708
+warn: 6125706500: Instruction results do not match! (Values may not actually be integers) Inst: 0x36c4, checker: 0x36c8
+warn: 6160975500: Instruction results do not match! (Values may not actually be integers) Inst: 0x3604, checker: 0x3608
+warn: 6176055500: Instruction results do not match! (Values may not actually be integers) Inst: 0x35c4, checker: 0x35c8
+warn: 6715294500: Instruction results do not match! (Values may not actually be integers) Inst: 0x34f0, checker: 0x34f8
 warn: LCD dual screen mode not supported
-warn: 52533955500: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
-warn: 2291148077500: Instruction results do not match! (Values may not actually be integers) Inst: 0x2, checker: 0
+warn: 51807478000: Instruction results do not match! (Values may not actually be integers) Inst: 0x19dc, checker: 0x1a04
 warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr bpiallis' unimplemented
-warn: 2483713797000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
-warn: 2498675085000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2a4, checker: 0
-warn: 2519713161000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2520226805000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
-warn: 2525908166000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
-warn: 2526415429500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d954, checker: 0
-warn: 2526974192500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
-warn: 2526975291500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
+warn: 2474714862500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9debc, checker: 0
+warn: 2488540668500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2489750451500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2a4, checker: 0
+warn: 2510845218000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2511359133500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d2b4, checker: 0
+warn: 2517064152000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d974, checker: 0
+warn: 2517573704500: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d954, checker: 0
+warn: 2518135055000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9d9fc, checker: 0
+warn: 2518136146000: Instruction results do not match! (Values may not actually be integers) Inst: 0x9da34, checker: 0
 hack: be nice to actually delete the event here

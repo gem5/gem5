@@ -4,7 +4,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 First free page after ROM 0xFFFFFC0000018000
 HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
 kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000855898, kentry = 0xFFFFFC0000310000, numCPUs = 0x1
-CPU Clock at 1000000 MHz IntrClockFrequency=1024 
+CPU Clock at 4000 MHz IntrClockFrequency=1024 
 Booting with 1 processor(s) 
 KSP: 0x20043FE8 PTBR 0x20
 Console Callback at 0x0, fixup at 0x0, crb offset: 0x510
@@ -36,7 +36,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 Mount-cache hash table entries: 512
 SMP mode deactivated.
 Brought up 1 CPUs
-SMP: Total of 1 processors activated (1998756.81 BogoMIPS).
+SMP: Total of 1 processors activated (8000.15 BogoMIPS).
 NET: Registered protocol family 16
 EISA bus registered
 pci: enabling save/restore of SRM state

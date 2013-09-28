@@ -4,9 +4,9 @@ sim_seconds                                  0.005796                       # Nu
 sim_ticks                                     5795833                       # Number of ticks simulated
 final_tick                                    5795833                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  44085                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 305548                       # Number of bytes of host memory used
-host_seconds                                   131.47                       # Real time elapsed on the host
+host_tick_rate                                  58777                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 258656                       # Number of bytes of host memory used
+host_seconds                                    98.61                       # Real time elapsed on the host
 system.ruby.l1_cntrl4.L1Dcache.demand_hits           14                       # Number of cache demand hits
 system.ruby.l1_cntrl4.L1Dcache.demand_misses        77212                       # Number of cache demand misses
 system.ruby.l1_cntrl4.L1Dcache.demand_accesses        77226                       # Number of cache demand accesses
@@ -308,6 +308,20 @@ system.ruby.network.routers9.msg_bytes.Writeback_Control::3      4658336
 system.ruby.network.routers9.msg_bytes.Writeback_Control::5      2944376                      
 system.ruby.network.routers9.msg_bytes.Broadcast_Control::3     34549816                      
 system.ruby.network.routers9.msg_bytes.Unblock_Control::5      4940768                      
+system.ruby.network.msg_count.Request_Control      1853520                      
+system.ruby.network.msg_count.Response_Data      1852131                      
+system.ruby.network.msg_count.Response_Control     12897795                      
+system.ruby.network.msg_count.Writeback_Data       642069                      
+system.ruby.network.msg_count.Writeback_Control      4597894                      
+system.ruby.network.msg_count.Broadcast_Control      9254415                      
+system.ruby.network.msg_count.Unblock_Control      1852789                      
+system.ruby.network.msg_byte.Request_Control     14828160                      
+system.ruby.network.msg_byte.Response_Data    133353432                      
+system.ruby.network.msg_byte.Response_Control    103182360                      
+system.ruby.network.msg_byte.Writeback_Data     46228968                      
+system.ruby.network.msg_byte.Writeback_Control     36783152                      
+system.ruby.network.msg_byte.Broadcast_Control     74035320                      
+system.ruby.network.msg_byte.Unblock_Control     14822312                      
 system.funcbus.throughput                           0                       # Throughput (bytes/s)
 system.funcbus.data_through_bus                     0                       # Total data (bytes)
 system.cpu0.num_reads                           99395                       # number of read accesses completed
@@ -1054,20 +1068,6 @@ system.ruby.l1_cntrl0.MMT.L1_to_L2::total          758
 system.ruby.l1_cntrl0.MMT.Complete_L2_to_L1 |          21     10.29%     10.29% |          25     12.25%     22.55% |          34     16.67%     39.22% |          24     11.76%     50.98% |          25     12.25%     63.24% |          27     13.24%     76.47% |          27     13.24%     89.71% |          21     10.29%    100.00%
 system.ruby.l1_cntrl0.MMT.Complete_L2_to_L1::total          204                      
 
-system.ruby.network.msg_count.Request_Control      1853520                      
-system.ruby.network.msg_count.Response_Data      1852131                      
-system.ruby.network.msg_count.Response_Control     12897795                      
-system.ruby.network.msg_count.Writeback_Data       642069                      
-system.ruby.network.msg_count.Writeback_Control      4597894                      
-system.ruby.network.msg_count.Broadcast_Control      9254415                      
-system.ruby.network.msg_count.Unblock_Control      1852789                      
-system.ruby.network.msg_byte.Request_Control     14828160                      
-system.ruby.network.msg_byte.Response_Data    133353432                      
-system.ruby.network.msg_byte.Response_Control    103182360                      
-system.ruby.network.msg_byte.Writeback_Data     46228968                      
-system.ruby.network.msg_byte.Writeback_Control     36783152                      
-system.ruby.network.msg_byte.Broadcast_Control     74035320                      
-system.ruby.network.msg_byte.Unblock_Control     14822312                      
 system.ruby.dir_cntrl0.GETX                    220023      0.00%      0.00%
 system.ruby.dir_cntrl0.GETS                    406995      0.00%      0.00%
 system.ruby.dir_cntrl0.PUT                     585083      0.00%      0.00%

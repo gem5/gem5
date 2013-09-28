@@ -3,12 +3,12 @@ Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/inorder-
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 26 2013 14:56:08
-gem5 started Mar 26 2013 14:56:29
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Sep 22 2013 05:51:54
+gem5 started Sep 22 2013 05:52:06
+gem5 executing on zizzer
 command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 19339000 because target called exit()
+Exiting @ tick 24587000 because target called exit()

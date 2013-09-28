@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/50.memte
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr  9 2013 02:02:21
-gem5 started Apr  9 2013 02:03:11
-gem5 executing on vein
+gem5 compiled Sep 22 2013 05:27:02
+gem5 started Sep 22 2013 05:27:23
+gem5 executing on zizzer
 command line: build/ALPHA_MESI_CMP_directory/gem5.opt -d build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

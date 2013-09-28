@@ -3,9 +3,9 @@ Redirecting stderr to build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2013 15:49:24
-gem5 started Jan 23 2013 15:49:57
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Sep 22 2013 06:07:13
+gem5 started Sep 22 2013 06:10:38
+gem5 executing on zizzer
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-atomic -re tests/run.py build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-atomic
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-atomic/smred.sav
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-atomic/smred.sv2
