@@ -187,6 +187,22 @@ namespace X86ISA
      * @return New value of the FTW register.
      */
     uint16_t genX87Tags(uint16_t ftw, uint8_t top, int8_t spm);
+
+    /**
+     * Load an 80-bit float from memory and convert it to double.
+     *
+     * @param mem Pointer to an 80-bit float.
+     * @return double representation of the 80-bit float.
+     */
+    double loadFloat80(const void *mem);
+
+    /**
+     * Convert and store a double as an 80-bit float.
+     *
+     * @param mem Pointer to destination for the 80-bit float.
+     * @param value Double precision float to store.
+     */
+    void storeFloat80(void *mem, double value);
 }
 
 #endif // __ARCH_X86_UTILITY_HH__

@@ -44,6 +44,7 @@
 #include "arch/x86/utility.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"
+#include "fputils/fp80.h"
 #include "sim/system.hh"
 
 namespace X86ISA {
@@ -349,6 +350,22 @@ genX87Tags(uint16_t ftw, uint8_t top, int8_t spm)
     }
 
     return ftw;
+}
+
+double
+loadFloat80(const void *_mem)
+{
+    const fp80_t *fp80((const fp80_t *)_mem);
+
+    return fp80_cvtd(*fp80);
+}
+
+void
+storeFloat80(void *_mem, double value)
+{
+    fp80_t *fp80((fp80_t *)_mem);
+
+    *fp80 = fp80_cvfd(value);
 }
 
 } // namespace X86_ISA
