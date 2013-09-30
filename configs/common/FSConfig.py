@@ -509,7 +509,10 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None,
         # Mark the rest as available
         X86E820Entry(addr = 0x100000,
                 size = '%dB' % (phys_mem_size - 0x100000),
-                range_type = 1)
+                range_type = 1),
+        # Reserve the last 16kB of the 32-bit address space for the
+        # m5op interface
+        X86E820Entry(addr=0xFFFF0000, size='64kB', range_type=2),
         ]
 
     # Command line

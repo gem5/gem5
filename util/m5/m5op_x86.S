@@ -32,6 +32,24 @@
 
 #include "m5ops.h"
 
+#ifdef M5OP_ADDR
+/* Use the memory mapped m5op interface */
+#define TWO_BYTE_OP(name, number)         \
+        .globl name;                      \
+        .func name;                       \
+name:                                     \
+        mov m5_mem, %r11;                 \
+        mov $number, %rax;                \
+        shl $8, %rax;                     \
+        mov 0(%r11, %rax, 1), %rax;       \
+        ret;                              \
+        .endfunc;
+
+#else
+/* Use the magic instruction based m5op interface. This does not work
+ * in virtualized environments.
+ */
+
 #define TWO_BYTE_OP(name, number)         \
         .globl name;                      \
         .func name;                       \
@@ -40,6 +58,8 @@ name:                                     \
         .word number;                     \
         ret;                              \
         .endfunc;
+
+#endif
 
 TWO_BYTE_OP(arm, arm_func)
 TWO_BYTE_OP(quiesce, quiesce_func)

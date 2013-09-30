@@ -39,6 +39,7 @@
 
 #include <cstring>
 
+#include "arch/generic/mmapped_ipr.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/msr.hh"
@@ -237,6 +238,8 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
         AddrRange apicRange(localApicBase.base * PageBytes,
                             (localApicBase.base + 1) * PageBytes - 1);
 
+        AddrRange m5opRange(0xFFFF0000, 0xFFFFFFFF);
+
         if (apicRange.contains(paddr)) {
             // The Intel developer's manuals say the below restrictions apply,
             // but the linux kernel, because of a compiler optimization, breaks
@@ -253,6 +256,11 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
             req->setFlags(Request::UNCACHEABLE);
             req->setPaddr(x86LocalAPICAddress(tc->contextId(),
                                               paddr - apicRange.start()));
+        } else if (m5opRange.contains(paddr)) {
+            req->setFlags(Request::MMAPPED_IPR);
+            req->setPaddr(GenericISA::iprAddressPseudoInst(
+                              (paddr >> 8) & 0xFF,
+                              paddr & 0xFF));
         }
     }
 
