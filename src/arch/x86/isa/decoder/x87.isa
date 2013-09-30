@@ -81,7 +81,7 @@ format WarnUnimpl {
                     0x5: fxam();
                     default: Inst::UD2();
                 }
-                default: fldenv();
+                default: Inst::FLDENV(M);
             }
             0x5: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
@@ -106,7 +106,7 @@ format WarnUnimpl {
                     0x6: fdecstp();
                     0x7: fincstp();
                 }
-                default: fnstenv();
+                default: Inst::FNSTENV(M);
             }
             0x7: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
