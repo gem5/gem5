@@ -51,8 +51,25 @@ namespace X86ISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    panic("getArgument() not implemented for x86!\n");
-    M5_DUMMY_RETURN
+    if (!FullSystem) {
+        panic("getArgument() only implemented for full system mode.\n");
+    } else if (fp) {
+        panic("getArgument(): Floating point arguments not implemented\n");
+    } else if (size != 8) {
+        panic("getArgument(): Can only handle 64-bit arguments.\n");
+    }
+
+    // The first 6 integer arguments are passed in registers, the rest
+    // are passed on the stack.
+    const int int_reg_map[] = {
+        INTREG_RDI, INTREG_RSI, INTREG_RDX,
+        INTREG_RCX, INTREG_R8, INTREG_R9
+    };
+    if (number < sizeof(int_reg_map) / sizeof(*int_reg_map)) {
+        return tc->readIntReg(int_reg_map[number]);
+    } else {
+        panic("getArgument(): Don't know how to handle stack arguments.\n");
+    }
 }
 
 void initCPU(ThreadContext *tc, int cpuId)
