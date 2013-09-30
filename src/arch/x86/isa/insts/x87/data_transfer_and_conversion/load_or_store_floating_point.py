@@ -69,13 +69,15 @@ def macroop FSTP_R {
 };
 
 def macroop FSTP_M {
-    movfp ufp1, st(0), spm=1
+    movfp ufp1, st(0)
     stfp ufp1, seg, sib, disp
+    pop87
 };
 
 def macroop FSTP_P {
-    movfp ufp1, st(0), spm=1
+    movfp ufp1, st(0)
     rdip t7
     stfp ufp1, seg, riprel, disp
+    pop87
 };
 '''

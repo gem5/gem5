@@ -411,4 +411,13 @@ let {{
     class chsfp(FpUnaryOp):
         code = 'FpDestReg = (-1) * (FpSrcReg1);'
         flag_code = 'FSW = FSW & (~CC1Bit);'
+
+    class Pop87(FpUnaryOp):
+        def __init__(self, spm=1, UpdateFTW=True):
+            super(Pop87, self).__init__(               \
+                    "InstRegIndex(FLOATREG_MICROFP0)", \
+                    "InstRegIndex(FLOATREG_MICROFP0)", \
+                    spm=spm, SetStatus=False, UpdateFTW=UpdateFTW)
+
+        code = ''
 }};
