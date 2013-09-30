@@ -53,6 +53,21 @@ using namespace X86ISA;
 #define IO_PCI_CONF_ADDR 0xCF8
 #define IO_PCI_CONF_DATA_BASE 0xCFC
 
+// Task segment type of an inactive 32-bit or 64-bit task
+#define SEG_SYS_TYPE_TSS_AVAILABLE 9
+// Task segment type of an active 32-bit or 64-bit task
+#define SEG_SYS_TYPE_TSS_BUSY 11
+
+// Non-conforming accessed code segment
+#define SEG_CS_TYPE_ACCESSED 9
+// Non-conforming accessed code segment that can be read
+#define SEG_CS_TYPE_READ_ACCESSED 11
+
+// The lowest bit of the type field for normal segments (code and
+// data) is used to indicate that a segment has been accessed.
+#define SEG_TYPE_BIT_ACCESSED 1
+
+
 #define FOREACH_IREG()                          \
     do {                                        \
         APPLY_IREG(rax, INTREG_RAX);            \
@@ -635,6 +650,18 @@ setKvmDTableReg(ThreadContext *tc, struct kvm_dtable &kvm_dtable,
     kvm_dtable.limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(index));
 }
 
+static void
+forceSegAccessed(struct kvm_segment &seg)
+{
+    // Intel's VMX requires that (some) usable segments are flagged as
+    // 'accessed' (i.e., the lowest bit in the segment type is set)
+    // when entering VMX. This wouldn't necessary be the case even if
+    // gem5 did set the access bits correctly, so we force it to one
+    // in that case.
+    if (!seg.unusable)
+        seg.type |= SEG_TYPE_BIT_ACCESSED;
+}
+
 void
 X86KvmCPU::updateKvmStateSRegs()
 {
@@ -655,6 +682,38 @@ X86KvmCPU::updateKvmStateSRegs()
     // Clear the interrupt bitmap
     memset(&sregs.interrupt_bitmap, 0, sizeof(sregs.interrupt_bitmap));
 
+    // VMX requires CS, SS, DS, ES, FS, and GS to have the accessed
+    // bit in the type field set.
+    forceSegAccessed(sregs.cs);
+    forceSegAccessed(sregs.ss);
+    forceSegAccessed(sregs.ds);
+    forceSegAccessed(sregs.es);
+    forceSegAccessed(sregs.fs);
+    forceSegAccessed(sregs.gs);
+
+    // There are currently some cases where the active task isn't
+    // marked as busy. This is illegal in VMX, so we force it to busy.
+    if (sregs.tr.type == SEG_SYS_TYPE_TSS_AVAILABLE) {
+        hack("tr.type (%i) is not busy. Forcing the busy bit.\n",
+             sregs.tr.type);
+        sregs.tr.type = SEG_SYS_TYPE_TSS_BUSY;
+    }
+
+    // VMX requires the DPL of SS and CS to be the same for
+    // non-conforming code segments. It seems like m5 doesn't set the
+    // DPL of SS correctly when taking interrupts, so we need to fix
+    // that here.
+    if ((sregs.cs.type == SEG_CS_TYPE_ACCESSED ||
+         sregs.cs.type == SEG_CS_TYPE_READ_ACCESSED) &&
+        sregs.cs.dpl != sregs.ss.dpl) {
+
+        hack("CS.DPL (%i) != SS.DPL (%i): Forcing SS.DPL to %i\n",
+             sregs.cs.dpl, sregs.ss.dpl, sregs.cs.dpl);
+        sregs.ss.dpl = sregs.cs.dpl;
+    }
+
+    // Do checks after fixing up the state to avoid getting excessive
+    // amounts of warnings.
     RFLAGS rflags_nocc(tc->readMiscReg(MISCREG_RFLAGS));
     if (!rflags_nocc.vm) {
         // Do segment verification if the CPU isn't entering virtual
@@ -667,6 +726,7 @@ X86KvmCPU::updateKvmStateSRegs()
         FOREACH_SEGMENT();
 #undef APPLY_SEGMENT
     }
+
     setSpecialRegisters(sregs);
 }
 void
