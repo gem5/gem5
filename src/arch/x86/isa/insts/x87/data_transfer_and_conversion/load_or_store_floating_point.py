@@ -37,13 +37,13 @@
 
 microcode = '''
 def macroop FLD_M {
-    ldfp ufp1, seg, sib, disp
+    ldfp87 ufp1, seg, sib, disp
     movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLD_P {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
+    ldfp87 ufp1, seg, riprel, disp
     movfp st(-1), ufp1, spm=-1
 };
 
@@ -51,17 +51,30 @@ def macroop FLD_R {
     movfp st(-1), sti, spm=-1
 };
 
+def macroop FLD80_M {
+    ld t1, seg, sib, "DISPLACEMENT", dataSize=8
+    ld t2, seg, sib, "DISPLACEMENT + 8", dataSize=2
+    cvtint_fp80 st(-1), t1, t2, spm=-1
+};
+
+def macroop FLD80_P {
+    rdip t7
+    ld t1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ld t2, seg, riprel, "DISPLACEMENT + 8", dataSize=2
+    cvtint_fp80 st(-1), t1, t2, spm=-1
+};
+
 def macroop FST_R {
     movfp sti, st(0)
 };
 
 def macroop FST_M {
-    stfp st(0), seg, sib, disp
+    stfp87 st(0), seg, sib, disp
 };
 
 def macroop FST_P {
     rdip t7
-    stfp st(0), seg, riprel, disp
+    stfp87 st(0), seg, riprel, disp
 };
 
 def macroop FSTP_R {
@@ -70,14 +83,32 @@ def macroop FSTP_R {
 
 def macroop FSTP_M {
     movfp ufp1, st(0)
-    stfp ufp1, seg, sib, disp
+    stfp87 ufp1, seg, sib, disp
     pop87
 };
 
 def macroop FSTP_P {
     movfp ufp1, st(0)
     rdip t7
-    stfp ufp1, seg, riprel, disp
+    stfp87 ufp1, seg, riprel, disp
     pop87
 };
+
+def macroop FST80P_M  {
+    cvtfp80h_int t1, st(0)
+    cvtfp80l_int t2, st(0)
+    st t1, seg, sib, "DISPLACEMENT + 0", dataSize=8
+    st t2, seg, sib, "DISPLACEMENT + 8", dataSize=2
+    pop87
+};
+
+def macroop FST80P_P  {
+    rdip t7
+    cvtfp80h_int t1, st(0)
+    cvtfp80l_int t2, st(0)
+    st t1, seg, riprel, "DISPLACEMENT + 0", dataSize=8
+    st t2, seg, riprel, "DISPLACEMENT + 8", dataSize=2
+    pop87
+};
+
 '''

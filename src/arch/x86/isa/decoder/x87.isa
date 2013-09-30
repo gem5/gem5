@@ -67,11 +67,11 @@ format WarnUnimpl {
                     0x0: fnop();
                     default: Inst::UD2();
                 }
-                default: fst();
+                default: Inst::FST(Ed);
             }
             0x3: decode MODRM_MOD {
                 0x3: Inst::UD2();
-                default: fstp();
+                default: Inst::FSTP(Ed);
             }
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
@@ -189,7 +189,7 @@ format WarnUnimpl {
             0x5: decode MODRM_MOD {
                 0x3: fucomi();
                 // 80-bit load
-                default: fld();
+                default: Inst::FLD80(M);
             }
             0x6: decode MODRM_MOD {
                 0x3: fcomi();
@@ -197,7 +197,7 @@ format WarnUnimpl {
             }
             0x7: decode MODRM_MOD {
                 0x3: Inst::UD2();
-                default: fstp();
+                default: Inst::FST80P(M);
             }
         }
         //0x4: esc4();

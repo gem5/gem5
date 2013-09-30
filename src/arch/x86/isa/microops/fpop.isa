@@ -295,9 +295,10 @@ let {{
     class ConvOp(FpBinaryOp):
         abstract = True
         op_class = 'FloatCvtOp'
-        def __init__(self, dest, src1):
+        def __init__(self, dest, src1, **kwargs):
             super(ConvOp, self).__init__(dest, src1, \
-                    "InstRegIndex(FLOATREG_MICROFP0)")
+                    "InstRegIndex(FLOATREG_MICROFP0)", \
+                    **kwargs)
 
     # These probably shouldn't look at the ExtMachInst directly to figure
     # out what size to use and should instead delegate that to the macroop's
@@ -322,6 +323,34 @@ let {{
                 SDestReg = intSrcReg1;
             else
                 SDestReg = merge(SDestReg, intSrcReg1, 4);
+            '''
+
+    # Convert two integers registers representing an 80-bit floating
+    # point number to an x87 register.
+    class cvtint_fp80(FpBinaryOp):
+        code = '''
+            uint8_t bits[10];
+            *(uint64_t *)(bits + 0) = SSrcReg1;
+            *(uint16_t *)(bits + 8) = (uint16_t)SSrcReg2;
+            FpDestReg = loadFloat80(bits);
+            '''
+
+    # Convert an x87 register (double) into extended precision and
+    # extract the highest 64 bits.
+    class cvtfp80h_int(ConvOp):
+        code = '''
+            char bits[10];
+            storeFloat80(bits, FpSrcReg1);
+            SDestReg = *(uint64_t *)(bits + 0);
+            '''
+
+    # Convert an x87 register (double) into extended precision and
+    # extract the lowest 16 bits.
+    class cvtfp80l_int(ConvOp):
+        code = '''
+            char bits[10];
+            storeFloat80(bits, FpSrcReg1);
+            SDestReg = *(uint16_t *)(bits + 8);
             '''
 
     # These need to consider size at some point. They'll always use doubles

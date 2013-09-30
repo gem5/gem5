@@ -410,7 +410,22 @@ let {{
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
                                'Data = Mem & mask(dataSize * 8);',
                       '(StoreCheck << FlagShift) | Request::LOCKED')
-    defineMicroLoadOp('Ldfp', 'FpData_uqw = Mem;', big = False)
+
+    defineMicroLoadOp('Ldfp', code='FpData_uqw = Mem', big = False)
+
+    defineMicroLoadOp('Ldfp87', code='''
+        switch (dataSize)
+        {
+          case 4:
+            FpData_df = *(float *)&Mem;
+            break;
+          case 8:
+            FpData_df = *(double *)&Mem;
+            break;
+          default:
+            panic("Unhandled data size in LdFp87.\\n");
+        }
+    ''', big = False)
 
     def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
         global header_output
@@ -447,7 +462,24 @@ let {{
     defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
     defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
             mem_flags="Request::LOCKED")
-    defineMicroStoreOp('Stfp', 'Mem = FpData_uqw;')
+
+    defineMicroStoreOp('Stfp', code='Mem = FpData_uqw;')
+
+    defineMicroStoreOp('Stfp87', code='''
+        switch (dataSize)
+        {
+          case 4: {
+            float single(FpData_df);
+            Mem = *(uint32_t *)&single;
+          } break;
+          case 8:
+            Mem = *(uint64_t *)&FpData_df;
+            break;
+          default:
+            panic("Unhandled data size in StFp87.\\n");
+        }
+    ''')
+
     defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
