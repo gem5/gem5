@@ -171,8 +171,33 @@ class X86KvmCPU : public BaseKvmCPU
     void updateKvmStateRegs();
     /** Update control registers (CRx, segments, etc.) */
     void updateKvmStateSRegs();
-    /** Update FPU and SIMD registers */
+    /**
+     * Update FPU and SIMD registers
+     *
+     * This method uses the appropriate (depending on availability and
+     * user configuration) kernel API by calling
+     * updateKvmStateFPULegacy() or updateKvmStateFPUXSave().
+     *
+     * @see updateKvmStateFPULegacy()
+     * @see updateKvmStateFPUXSave()
+     */
     void updateKvmStateFPU();
+    /**
+     * Update FPU and SIMD registers using the legacy API
+     *
+     * @note This method should normally only be called by
+     * updateKvmStateFPU() which automatically chooses between
+     * available APIs.
+     */
+    void updateKvmStateFPULegacy();
+    /**
+     * Update FPU and SIMD registers using the XSave API
+     *
+     * @note This method should normally only be called by
+     * updateKvmStateFPU() which automatically chooses between
+     * available APIs.
+     */
+    void updateKvmStateFPUXSave();
     /** Update MSR registers */
     void updateKvmStateMSRs();
     /** @} */
@@ -187,8 +212,10 @@ class X86KvmCPU : public BaseKvmCPU
     void updateThreadContextRegs();
     /** Update control registers (CRx, segments, etc.) */
     void updateThreadContextSRegs();
-    /** Update FPU and SIMD registers */
+    /** Update FPU and SIMD registers using the legacy API */
     void updateThreadContextFPU();
+    /** Update FPU and SIMD registers using the XSave API */
+    void updateThreadContextXSave();
     /** Update MSR registers */
     void updateThreadContextMSRs();
     /** @} */
@@ -217,6 +244,11 @@ class X86KvmCPU : public BaseKvmCPU
     bool haveDebugRegs;
     /** Kvm::capXSave() available? */
     bool haveXSave;
+    /**
+     * Should the XSave interface be used to sync the FPU and SIMD
+     * registers?
+     */
+    bool useXSave;
     /** Kvm::capXCRs() available? */
     bool haveXCRs;
     /** @} */

@@ -43,3 +43,5 @@ class X86KvmCPU(BaseKvmCPU):
       void dumpXSave();
       void dumpVCpuEvents();
 ''')
+
+    useXSave = Param.Bool(True, "Use XSave to synchronize FPU/SIMD registers")

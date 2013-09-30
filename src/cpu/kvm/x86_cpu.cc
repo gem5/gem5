@@ -67,6 +67,38 @@ using namespace X86ISA;
 // data) is used to indicate that a segment has been accessed.
 #define SEG_TYPE_BIT_ACCESSED 1
 
+struct FXSave
+{
+    uint16_t fcw;
+    uint16_t fsw;
+    uint8_t ftwx;
+    uint8_t pad0;
+    uint16_t last_opcode;
+    union {
+        struct {
+            uint32_t fpu_ip;
+            uint16_t fpu_cs;
+            uint16_t pad1;
+            uint32_t fpu_dp;
+            uint16_t fpu_ds;
+            uint16_t pad2;
+        } ctrl32;
+
+        struct {
+            uint64_t fpu_ip;
+            uint64_t fpu_dp;
+        } ctrl64;
+    };
+    uint32_t mxcsr;
+    uint32_t mxcsr_mask;
+
+    uint8_t fpr[8][16];
+    uint8_t xmm[16][16];
+
+    uint64_t reserved[12];
+} M5_ATTR_PACKED;
+
+static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
 
 #define FOREACH_IREG()                          \
     do {                                        \
@@ -208,23 +240,61 @@ dumpKvm(const struct kvm_debugregs &regs)
 #endif
 
 static void
-dumpKvm(const struct kvm_fpu &fpu)
+dumpFpuSpec(const struct FXSave &xs)
 {
-    inform("FPU registers:\n");
-    inform("\tfcw: 0x%x\n", fpu.fcw);
-    inform("\tfsw: 0x%x\n", fpu.fsw);
-    inform("\tftwx: 0x%x\n", fpu.ftwx);
-    inform("\tlast_opcode: 0x%x\n", fpu.last_opcode);
+    inform("\tlast_ip: 0x%x\n", xs.ctrl64.fpu_ip);
+    inform("\tlast_dp: 0x%x\n", xs.ctrl64.fpu_dp);
+    inform("\tmxcsr_mask: 0x%x\n", xs.mxcsr_mask);
+}
+
+static void
+dumpFpuSpec(const struct kvm_fpu &fpu)
+{
     inform("\tlast_ip: 0x%x\n", fpu.last_ip);
     inform("\tlast_dp: 0x%x\n", fpu.last_dp);
+}
+
+template<typename T>
+static void
+dumpFpuCommon(const T &fpu)
+{
+    const unsigned top((fpu.fsw >> 11) & 0x7);
+    inform("\tfcw: 0x%x\n", fpu.fcw);
+
+    inform("\tfsw: 0x%x (top: %i, "
+           "conditions: %s%s%s%s, exceptions: %s%s%s%s%s%s %s%s%s)\n",
+           fpu.fsw, top,
+
+           (fpu.fsw & CC0Bit) ? "C0" : "",
+           (fpu.fsw & CC1Bit) ? "C1" : "",
+           (fpu.fsw & CC2Bit) ? "C2" : "",
+           (fpu.fsw & CC3Bit) ? "C3" : "",
+
+           (fpu.fsw & IEBit) ? "I" : "",
+           (fpu.fsw & DEBit) ? "D" : "",
+           (fpu.fsw & ZEBit) ? "Z" : "",
+           (fpu.fsw & OEBit) ? "O" : "",
+           (fpu.fsw & UEBit) ? "U" : "",
+           (fpu.fsw & PEBit) ? "P" : "",
+
+           (fpu.fsw & StackFaultBit) ? "SF " : "",
+           (fpu.fsw & ErrSummaryBit) ? "ES " : "",
+           (fpu.fsw & BusyBit) ? "BUSY " : ""
+        );
+    inform("\tftwx: 0x%x\n", fpu.ftwx);
+    inform("\tlast_opcode: 0x%x\n", fpu.last_opcode);
+    dumpFpuSpec(fpu);
     inform("\tmxcsr: 0x%x\n", fpu.mxcsr);
     inform("\tFP Stack:\n");
     for (int i = 0; i < 8; ++i) {
-        const bool empty(!((fpu.ftwx >> i) & 0x1));
+        const unsigned reg_idx((i + top) & 0x7);
+        const bool empty(!((fpu.ftwx >> reg_idx) & 0x1));
+        const double value(X86ISA::loadFloat80(fpu.fpr[i]));
         char hex[33];
-        for (int j = 0; j < 16; ++j)
+        for (int j = 0; j < 10; ++j)
             snprintf(&hex[j*2], 3, "%.2x", fpu.fpr[i][j]);
-        inform("\t\t%i: 0x%s%s\n", i, hex, empty ? " (e)" : "");
+        inform("\t\tST%i/%i: 0x%s (%f)%s\n", i, reg_idx,
+               hex, value, empty ? " (e)" : "");
     }
     inform("\tXMM registers:\n");
     for (int i = 0; i < 16; ++i) {
@@ -233,6 +303,20 @@ dumpKvm(const struct kvm_fpu &fpu)
             snprintf(&hex[j*2], 3, "%.2x", fpu.xmm[i][j]);
         inform("\t\t%i: 0x%s\n", i, hex);
     }
+}
+
+static void
+dumpKvm(const struct kvm_fpu &fpu)
+{
+    inform("FPU registers:\n");
+    dumpFpuCommon(fpu);
+}
+
+static void
+dumpKvm(const struct kvm_xsave &xsave)
+{
+    inform("FPU registers (XSave):\n");
+    dumpFpuCommon(*(FXSave *)xsave.region);
 }
 
 static void
@@ -258,15 +342,6 @@ dumpKvm(const struct kvm_xcrs &regs)
                regs.xcrs[i].xcr,
                regs.xcrs[i].value);
     }
-}
-
-static void
-dumpKvm(const struct kvm_xsave &xsave)
-{
-    inform("KVM XSAVE:\n");
-
-    Trace::dump((Tick)-1, "xsave.region",
-                xsave.region, sizeof(xsave.region));
 }
 
 static void
@@ -441,7 +516,8 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
 }
 
 X86KvmCPU::X86KvmCPU(X86KvmCPUParams *params)
-    : BaseKvmCPU(params)
+    : BaseKvmCPU(params),
+      useXSave(params->useXSave)
 {
     Kvm &kvm(vm.kvm);
 
@@ -457,6 +533,14 @@ X86KvmCPU::X86KvmCPU(X86KvmCPUParams *params)
     haveDebugRegs = kvm.capDebugRegs();
     haveXSave = kvm.capXSave();
     haveXCRs = kvm.capXCRs();
+
+    if (useXSave && !haveXSave) {
+        warn("KVM: XSAVE not supported by host. MXCSR synchronization might be "
+             "unreliable due to kernel bugs.\n");
+        useXSave = false;
+    } else if (!useXSave) {
+        warn("KVM: XSave FPU/SIMD synchronization disabled by user.\n");
+    }
 }
 
 X86KvmCPU::~X86KvmCPU()
@@ -483,13 +567,15 @@ void
 X86KvmCPU::dump()
 {
     dumpIntRegs();
-    dumpFpuRegs();
+    if (useXSave)
+        dumpXSave();
+    else
+        dumpFpuRegs();
     dumpSpecRegs();
     dumpDebugRegs();
     dumpXCRs();
     dumpVCpuEvents();
     dumpMSRs();
-    dumpXSave();
 }
 
 void
@@ -729,10 +815,100 @@ X86KvmCPU::updateKvmStateSRegs()
 
     setSpecialRegisters(sregs);
 }
+
+template <typename T>
+static void
+updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
+{
+    static_assert(sizeof(X86ISA::FloatRegBits) == 8,
+                  "Unexpected size of X86ISA::FloatRegBits");
+
+    fpu.mxcsr = tc->readMiscRegNoEffect(MISCREG_MXCSR);
+    fpu.fcw = tc->readMiscRegNoEffect(MISCREG_FCW);
+    // No need to rebuild from MISCREG_FSW and MISCREG_TOP if we read
+    // with effects.
+    fpu.fsw = tc->readMiscReg(MISCREG_FSW);
+
+    uint64_t ftw(tc->readMiscRegNoEffect(MISCREG_FTW));
+    fpu.ftwx = X86ISA::convX87TagsToXTags(ftw);
+
+    fpu.last_opcode = tc->readMiscRegNoEffect(MISCREG_FOP);
+
+    const unsigned top((fpu.fsw >> 11) & 0x7);
+    for (int i = 0; i < 8; ++i) {
+        const unsigned reg_idx((i + top) & 0x7);
+        const double value(tc->readFloatReg(FLOATREG_FPR(reg_idx)));
+        DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n",
+                reg_idx, i, value);
+        X86ISA::storeFloat80(fpu.fpr[i], value);
+    }
+
+    // TODO: We should update the MMX state
+
+    for (int i = 0; i < 16; ++i) {
+        *(X86ISA::FloatRegBits *)&fpu.xmm[i][0] =
+            tc->readFloatRegBits(FLOATREG_XMM_LOW(i));
+        *(X86ISA::FloatRegBits *)&fpu.xmm[i][8] =
+            tc->readFloatRegBits(FLOATREG_XMM_HIGH(i));
+    }
+}
+
+void
+X86KvmCPU::updateKvmStateFPULegacy()
+{
+    struct kvm_fpu fpu;
+
+    // There is some padding in the FP registers, so we'd better zero
+    // the whole struct.
+    memset(&fpu, 0, sizeof(fpu));
+
+    updateKvmStateFPUCommon(tc, fpu);
+
+    if (tc->readMiscRegNoEffect(MISCREG_FISEG))
+        warn_once("MISCREG_FISEG is non-zero.\n");
+
+    fpu.last_ip = tc->readMiscRegNoEffect(MISCREG_FIOFF);
+
+    if (tc->readMiscRegNoEffect(MISCREG_FOSEG))
+        warn_once("MISCREG_FOSEG is non-zero.\n");
+
+    fpu.last_dp = tc->readMiscRegNoEffect(MISCREG_FOOFF);
+
+    setFPUState(fpu);
+}
+
+void
+X86KvmCPU::updateKvmStateFPUXSave()
+{
+    struct kvm_xsave kxsave;
+    FXSave &xsave(*(FXSave *)kxsave.region);
+
+    // There is some padding and reserved fields in the structure, so
+    // we'd better zero the whole thing.
+    memset(&kxsave, 0, sizeof(kxsave));
+
+    updateKvmStateFPUCommon(tc, xsave);
+
+    if (tc->readMiscRegNoEffect(MISCREG_FISEG))
+        warn_once("MISCREG_FISEG is non-zero.\n");
+
+    xsave.ctrl64.fpu_ip = tc->readMiscRegNoEffect(MISCREG_FIOFF);
+
+    if (tc->readMiscRegNoEffect(MISCREG_FOSEG))
+        warn_once("MISCREG_FOSEG is non-zero.\n");
+
+    xsave.ctrl64.fpu_dp = tc->readMiscRegNoEffect(MISCREG_FOOFF);
+
+    setXSave(kxsave);
+}
+
 void
 X86KvmCPU::updateKvmStateFPU()
 {
-    warn_once("X86KvmCPU::updateKvmStateFPU not implemented\n");
+    if (useXSave)
+        updateKvmStateFPUXSave();
+    else
+        updateKvmStateFPULegacy();
 }
 
 void
@@ -766,7 +942,10 @@ X86KvmCPU::updateThreadContext()
 
     updateThreadContextRegs();
     updateThreadContextSRegs();
-    updateThreadContextFPU();
+    if (useXSave)
+        updateThreadContextXSave();
+    else
+        updateThreadContextFPU();
     updateThreadContextMSRs();
 
     // The M5 misc reg caches some values from other
@@ -851,10 +1030,72 @@ X86KvmCPU::updateThreadContextSRegs()
 #undef APPLY_DTABLE
 }
 
+template<typename T>
+static void
+updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
+{
+    const unsigned top((fpu.fsw >> 11) & 0x7);
+
+    static_assert(sizeof(X86ISA::FloatRegBits) == 8,
+                  "Unexpected size of X86ISA::FloatRegBits");
+
+    for (int i = 0; i < 8; ++i) {
+        const unsigned reg_idx((i + top) & 0x7);
+        const double value(X86ISA::loadFloat80(fpu.fpr[i]));
+        DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n",
+                reg_idx, i, value);
+        tc->setFloatReg(FLOATREG_FPR(reg_idx), value);
+    }
+
+    // TODO: We should update the MMX state
+
+    tc->setMiscRegNoEffect(MISCREG_X87_TOP, top);
+    tc->setMiscRegNoEffect(MISCREG_MXCSR, fpu.mxcsr);
+    tc->setMiscRegNoEffect(MISCREG_FCW, fpu.fcw);
+    tc->setMiscRegNoEffect(MISCREG_FSW, fpu.fsw);
+
+    uint64_t ftw(convX87XTagsToTags(fpu.ftwx));
+    // TODO: Are these registers really the same?
+    tc->setMiscRegNoEffect(MISCREG_FTW, ftw);
+    tc->setMiscRegNoEffect(MISCREG_FTAG, ftw);
+
+    tc->setMiscRegNoEffect(MISCREG_FOP, fpu.last_opcode);
+
+    for (int i = 0; i < 16; ++i) {
+        tc->setFloatRegBits(FLOATREG_XMM_LOW(i),
+                            *(X86ISA::FloatRegBits *)&fpu.xmm[i][0]);
+        tc->setFloatRegBits(FLOATREG_XMM_HIGH(i),
+                            *(X86ISA::FloatRegBits *)&fpu.xmm[i][8]);
+    }
+}
+
 void
 X86KvmCPU::updateThreadContextFPU()
 {
-    warn_once("X86KvmCPU::updateThreadContextFPU not implemented\n");
+    struct kvm_fpu fpu;
+    getFPUState(fpu);
+
+    updateThreadContextFPUCommon(tc, fpu);
+
+    tc->setMiscRegNoEffect(MISCREG_FISEG, 0);
+    tc->setMiscRegNoEffect(MISCREG_FIOFF, fpu.last_ip);
+    tc->setMiscRegNoEffect(MISCREG_FOSEG, 0);
+    tc->setMiscRegNoEffect(MISCREG_FOOFF, fpu.last_dp);
+}
+
+void
+X86KvmCPU::updateThreadContextXSave()
+{
+    struct kvm_xsave kxsave;
+    FXSave &xsave(*(FXSave *)kxsave.region);
+    getXSave(kxsave);
+
+    updateThreadContextFPUCommon(tc, xsave);
+
+    tc->setMiscRegNoEffect(MISCREG_FISEG, 0);
+    tc->setMiscRegNoEffect(MISCREG_FIOFF, xsave.ctrl64.fpu_ip);
+    tc->setMiscRegNoEffect(MISCREG_FOSEG, 0);
+    tc->setMiscRegNoEffect(MISCREG_FOOFF, xsave.ctrl64.fpu_dp);
 }
 
 void
