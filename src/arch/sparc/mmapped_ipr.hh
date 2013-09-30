@@ -37,6 +37,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/generic/mmapped_ipr.hh"
 #include "arch/sparc/tlb.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
@@ -47,13 +48,19 @@ namespace SparcISA
 inline Cycles
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
-    return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
+    if (GenericISA::isGenericIprAccess(pkt))
+        return GenericISA::handleGenericIprRead(xc, pkt);
+    else
+        return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
 }
 
 inline Cycles
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
-    return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
+    if (GenericISA::isGenericIprAccess(pkt))
+        return GenericISA::handleGenericIprWrite(xc, pkt);
+    else
+        return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Andreas Sandberg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,60 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- */
-
-#ifndef __ARCH_MIPS_MMAPPED_IPR_HH__
-#define __ARCH_MIPS_MMAPPED_IPR_HH__
-
-/**
- * @file
- *
- * ISA-specific helper functions for memory mapped IPR accesses.
+ * Authors: Andreas Sandberg
  */
 
 #include "arch/generic/mmapped_ipr.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
+#include "sim/pseudo_inst.hh"
 
-class ThreadContext;
+using namespace GenericISA;
 
-namespace MipsISA
+static void
+handlePseudoInst(ThreadContext *xc, Packet *pkt)
 {
-    using GenericISA::handleIprRead;
-    using GenericISA::handleIprWrite;
-} // namespace MipsISA
+    const Addr offset(pkt->getAddr() & IPR_IN_CLASS_MASK);
+    const uint8_t func((offset >> 8) & 0xFF);
+    const uint8_t subfunc(offset & 0xFF);
+    uint64_t ret;
 
-#endif
+    assert((offset >> 16) == 0);
+    ret = PseudoInst::pseudoInst(xc, func, subfunc);
+    if (pkt->isRead())
+        pkt->set(ret);
+}
+
+Cycles
+GenericISA::handleGenericIprRead(ThreadContext *xc, Packet *pkt)
+{
+    Addr va(pkt->getAddr());
+    Addr cls((va & IPR_CLASS_MASK) >> IPR_CLASS_SHIFT);
+
+    switch (cls) {
+    case IPR_CLASS_PSEUDO_INST:
+        handlePseudoInst(xc, pkt);
+        break;
+    default:
+        panic("Unhandled generic IPR read: 0x%x\n", va);
+    }
+
+    return Cycles(1);
+}
+
+Cycles
+GenericISA::handleGenericIprWrite(ThreadContext *xc, Packet *pkt)
+{
+    Addr va(pkt->getAddr());
+    Addr cls((va & IPR_CLASS_MASK) >> IPR_CLASS_SHIFT);
+
+    switch (cls) {
+    case IPR_CLASS_PSEUDO_INST:
+        handlePseudoInst(xc, pkt);
+        break;
+    default:
+        panic("Unhandled generic IPR write: 0x%x\n", va);
+    }
+
+    return Cycles(1);
+}

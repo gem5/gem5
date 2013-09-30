@@ -39,26 +39,14 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "base/misc.hh"
-#include "mem/packet.hh"
+#include "arch/generic/mmapped_ipr.hh"
 
 class ThreadContext;
 
 namespace ArmISA
 {
-inline Cycles
-handleIprRead(ThreadContext *xc, Packet *pkt)
-{
-    panic("No implementation for handleIprRead in ARM\n");
-}
-
-inline Cycles
-handleIprWrite(ThreadContext *xc, Packet *pkt)
-{
-    panic("No implementation for handleIprWrite in ARM\n");
-}
-
-
+    using GenericISA::handleIprRead;
+    using GenericISA::handleIprWrite;
 } // namespace ArmISA
 
 #endif

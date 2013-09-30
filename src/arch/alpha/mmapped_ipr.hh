@@ -37,27 +37,11 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "base/types.hh"
-#include "mem/packet.hh"
-
-class ThreadContext;
+#include "arch/generic/mmapped_ipr.hh"
 
 namespace AlphaISA {
-
-inline Cycles
-handleIprRead(ThreadContext *xc, Packet *pkt)
-{
-    panic("No handleIprRead implementation in Alpha\n");
-}
-
-
-inline Cycles
-handleIprWrite(ThreadContext *xc, Packet *pkt)
-{
-    panic("No handleIprWrite implementation in Alpha\n");
-}
-
-
+    using GenericISA::handleIprRead;
+    using GenericISA::handleIprWrite;
 } // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_MMAPPED_IPR_HH__

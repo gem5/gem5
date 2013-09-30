@@ -46,6 +46,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/generic/mmapped_ipr.hh"
 #include "arch/x86/regs/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -56,27 +57,37 @@ namespace X86ISA
     inline Cycles
     handleIprRead(ThreadContext *xc, Packet *pkt)
     {
-        Addr offset = pkt->getAddr() & mask(3);
-        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
-        MiscReg data = htog(xc->readMiscReg(index));
-        // Make sure we don't trot off the end of data.
-        assert(offset + pkt->getSize() <= sizeof(MiscReg));
-        pkt->setData(((uint8_t *)&data) + offset);
-        return Cycles(1);
+        if (GenericISA::isGenericIprAccess(pkt)) {
+            return GenericISA::handleGenericIprRead(xc, pkt);
+        } else {
+            Addr offset = pkt->getAddr() & mask(3);
+            MiscRegIndex index = (MiscRegIndex)(
+                pkt->getAddr() / sizeof(MiscReg));
+            MiscReg data = htog(xc->readMiscReg(index));
+            // Make sure we don't trot off the end of data.
+            assert(offset + pkt->getSize() <= sizeof(MiscReg));
+            pkt->setData(((uint8_t *)&data) + offset);
+            return Cycles(1);
+        }
     }
 
     inline Cycles
     handleIprWrite(ThreadContext *xc, Packet *pkt)
     {
-        Addr offset = pkt->getAddr() & mask(3);
-        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
-        MiscReg data;
-        data = htog(xc->readMiscRegNoEffect(index));
-        // Make sure we don't trot off the end of data.
-        assert(offset + pkt->getSize() <= sizeof(MiscReg));
-        pkt->writeData(((uint8_t *)&data) + offset);
-        xc->setMiscReg(index, gtoh(data));
-        return Cycles(1);
+        if (GenericISA::isGenericIprAccess(pkt)) {
+            return GenericISA::handleGenericIprWrite(xc, pkt);
+        } else {
+            Addr offset = pkt->getAddr() & mask(3);
+            MiscRegIndex index = (MiscRegIndex)(
+                pkt->getAddr() / sizeof(MiscReg));
+            MiscReg data;
+            data = htog(xc->readMiscRegNoEffect(index));
+            // Make sure we don't trot off the end of data.
+            assert(offset + pkt->getSize() <= sizeof(MiscReg));
+            pkt->writeData(((uint8_t *)&data) + offset);
+            xc->setMiscReg(index, gtoh(data));
+            return Cycles(1);
+        }
     }
 }
 
