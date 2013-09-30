@@ -1679,4 +1679,18 @@ let {{
                 break;
             }
         '''
+
+    class Wrxftw(WrRegOp):
+        def __init__(self, src1, **kwargs):
+            super(Wrxftw, self).__init__(src1, "InstRegIndex(NUM_INTREGS)", \
+                                         **kwargs)
+
+        code = '''
+            FTW = X86ISA::convX87XTagsToTags(SrcReg1);
+        '''
+
+    class Rdxftw(RdRegOp):
+        code = '''
+            DestReg = X86ISA::convX87TagsToXTags(FTW);
+        '''
 }};

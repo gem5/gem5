@@ -762,8 +762,16 @@
                         default: Inst::UD2();
                     }
                     default: decode MODRM_REG {
-                        0x0: fxsave();
-                        0x1: fxrstor();
+                        0x0: decode OPSIZE {
+                            4: Inst::FXSAVE(M);
+                            8: Inst::FXSAVE64(M);
+                            default: fxsave();
+                        }
+                        0x1: decode OPSIZE {
+                            4: Inst::FXRSTOR(M);
+                            8: Inst::FXRSTOR64(M);
+                            default: fxrstor();
+                        }
                         0x2: Inst::LDMXCSR(Md);
                         0x3: Inst::STMXCSR(Md);
                         0x4: xsave();
