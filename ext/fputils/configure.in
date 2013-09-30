@@ -1,0 +1,32 @@
+AC_INIT(libfputils, 1.0, andreas@sandberg.pp.se)
+
+AC_CONFIG_MACRO_DIR([m4])
+
+AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_INIT_DOXYGEN([libfputils])
+
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
+AC_PROG_CC
+AM_PROG_CC_C_O
+AC_PROG_LIBTOOL
+AC_PROG_AWK
+
+AM_CFLAGS="-Wall -Werror"
+AM_CPPFLAGS="-I\$(abs_top_srcdir)/include"
+
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CPPFLAGS)
+
+AC_CONFIG_HEADERS([config.h])
+
+AC_CONFIG_FILES([ \
+        Doxyfile \
+	Makefile \
+        tests/Makefile \
+])
+AC_OUTPUT
