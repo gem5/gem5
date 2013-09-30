@@ -53,6 +53,9 @@
 /** Signal to use to trigger time-based exits from KVM */
 #define KVM_TIMER_SIGNAL SIGRTMIN
 
+/** Signal to use to trigger instruction-based exits from KVM */
+#define KVM_INST_SIGNAL (SIGRTMIN+1)
+
 // forward declarations
 class ThreadContext;
 struct BaseKvmCPUParams;
@@ -615,9 +618,6 @@ class BaseKvmCPU : public BaseCPU
      */
     bool discardPendingSignal(int signum) const;
 
-    /** Setup hardware performance counters */
-    void setupCounters();
-
     /** Try to drain the CPU if a drain is pending */
     bool tryDrain();
 
@@ -647,11 +647,59 @@ class BaseKvmCPU : public BaseCPU
 
     TickEvent tickEvent;
 
+    /**
+     * Setup an instruction break if there is one pending.
+     *
+     * Check if there are pending instruction breaks in the CPU's
+     * instruction event queue and schedule an instruction break using
+     * PerfEvent.
+     *
+     * @note This method doesn't currently handle the main system
+     * instruction event queue.
+     */
+    void setupInstStop();
+
     /** @{ */
-    /** Guest performance counters */
+    /** Setup hardware performance counters */
+    void setupCounters();
+
+    /**
+     * Setup the guest instruction counter.
+     *
+     * Setup the guest instruction counter and optionally request a
+     * signal every N instructions executed by the guest. This method
+     * will re-attach the counter if the counter has already been
+     * attached and its sampling settings have changed.
+     *
+     * @param period Signal period, set to 0 to disable signaling.
+     */
+    void setupInstCounter(uint64_t period = 0);
+
+    /** Currently active instruction count breakpoint */
+    uint64_t activeInstPeriod;
+
+    /**
+     * Guest cycle counter.
+     *
+     * This is the group leader of all performance counters measuring
+     * the guest system. It can be used in conjunction with the
+     * PerfKvmTimer (see perfControlledByTimer) to trigger exits from
+     * KVM.
+     */
     PerfKvmCounter hwCycles;
+
+    /**
+     * Guest instruction counter.
+     *
+     * This counter is typically only used to measure the number of
+     * instructions executed by the guest. However, it can also be
+     * used to trigger exits from KVM if the configuration script
+     * requests an exit after a certain number of instructions.
+     *
+     * @see setupInstBreak
+     * @see scheduleInstStop
+     */
     PerfKvmCounter hwInstructions;
-    /** @} */
 
     /**
      * Does the runTimer control the performance counters?
@@ -661,6 +709,7 @@ class BaseKvmCPU : public BaseCPU
      * exits.
      */
     bool perfControlledByTimer;
+    /** @} */
 
     /**
      * Timer used to force execution into the monitor after a

@@ -65,12 +65,6 @@
 
 volatile bool timerOverflowed = false;
 
-static void
-onTimerOverflow(int signo, siginfo_t *si, void *data)
-{
-    timerOverflowed = true;
-}
-
 BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
     : BaseCPU(params),
       vm(*params->kvmVM),
@@ -83,6 +77,7 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       _kvmRun(NULL), mmioRing(NULL),
       pageSize(sysconf(_SC_PAGE_SIZE)),
       tickEvent(*this),
+      activeInstPeriod(0),
       perfControlledByTimer(params->usePerfOverflow),
       hostFreq(params->hostFreq),
       hostFactor(params->hostFactor),
@@ -516,6 +511,10 @@ BaseKvmCPU::tick()
           // We might need to update the KVM state.
           syncKvmState();
 
+          // Setup any pending instruction count breakpoints using
+          // PerfEvent.
+          setupInstStop();
+
           DPRINTF(KvmRun, "Entering KVM...\n");
           if (drainManager) {
               // Force an immediate exit from KVM after completing
@@ -637,6 +636,7 @@ BaseKvmCPU::kvmRun(Tick ticks)
         // sure we don't deliver it immediately next time we try to
         // enter into KVM.
         discardPendingSignal(KVM_TIMER_SIGNAL);
+        discardPendingSignal(KVM_INST_SIGNAL);
 
         const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
         const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
@@ -1035,6 +1035,26 @@ BaseKvmCPU::flushCoalescedMMIO()
     return ticks;
 }
 
+/**
+ * Cycle timer overflow when running in KVM. Forces the KVM syscall to
+ * exit with EINTR and allows us to run the event queue.
+ */
+static void
+onTimerOverflow(int signo, siginfo_t *si, void *data)
+{
+    timerOverflowed = true;
+}
+
+/**
+ * Instruction counter overflow when running in KVM. Forces the KVM
+ * syscall to exit with EINTR and allows us to handle instruction
+ * count events.
+ */
+static void
+onInstEvent(int signo, siginfo_t *si, void *data)
+{
+}
+
 void
 BaseKvmCPU::setupSignalHandler()
 {
@@ -1044,7 +1064,13 @@ BaseKvmCPU::setupSignalHandler()
     sa.sa_sigaction = onTimerOverflow;
     sa.sa_flags = SA_SIGINFO | SA_RESTART;
     if (sigaction(KVM_TIMER_SIGNAL, &sa, NULL) == -1)
-        panic("KVM: Failed to setup vCPU signal handler\n");
+        panic("KVM: Failed to setup vCPU timer signal handler\n");
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = onInstEvent;
+    sa.sa_flags = SA_SIGINFO | SA_RESTART;
+    if (sigaction(KVM_INST_SIGNAL, &sa, NULL) == -1)
+        panic("KVM: Failed to setup vCPU instruction signal handler\n");
 
     sigset_t sigset;
     if (sigprocmask(SIG_BLOCK, NULL, &sigset) == -1)
@@ -1056,11 +1082,12 @@ BaseKvmCPU::setupSignalHandler()
     // requests. See kvmRun().
     setSignalMask(&sigset);
 
-    // Mask the KVM_TIMER_SIGNAL so it isn't delivered unless we're
+    // Mask our control signals so they aren't delivered unless we're
     // actually executing inside KVM.
     sigaddset(&sigset, KVM_TIMER_SIGNAL);
+    sigaddset(&sigset, KVM_INST_SIGNAL);
     if (sigprocmask(SIG_SETMASK, &sigset, NULL) == -1)
-        panic("KVM: Failed mask the KVM timer signal\n");
+        panic("KVM: Failed mask the KVM control signals\n");
 }
 
 bool
@@ -1113,12 +1140,7 @@ BaseKvmCPU::setupCounters()
     hwCycles.attach(cfgCycles,
                     0); // TID (0 => currentThread)
 
-    DPRINTF(Kvm, "Attaching instruction counter...\n");
-    PerfKvmCounterConfig cfgInstructions(PERF_TYPE_HARDWARE,
-                                      PERF_COUNT_HW_INSTRUCTIONS);
-    hwInstructions.attach(cfgInstructions,
-                          0, // TID (0 => currentThread)
-                          hwCycles);
+    setupInstCounter();
 }
 
 bool
@@ -1152,4 +1174,50 @@ BaseKvmCPU::ioctlRun()
             panic("KVM: Failed to start virtual CPU (errno: %i)\n",
                   errno);
     }
+}
+
+void
+BaseKvmCPU::setupInstStop()
+{
+
+    if (comInstEventQueue[0]->empty()) {
+        setupInstCounter(0);
+    } else {
+        const uint64_t next(comInstEventQueue[0]->nextTick());
+
+        assert(next > ctrInsts);
+        setupInstCounter(next - ctrInsts);
+    }
+}
+
+void
+BaseKvmCPU::setupInstCounter(uint64_t period)
+{
+    // No need to do anything if we aren't attaching for the first
+    // time or the period isn't changing.
+    if (period == activeInstPeriod && hwInstructions.attached())
+        return;
+
+    PerfKvmCounterConfig cfgInstructions(PERF_TYPE_HARDWARE,
+                                         PERF_COUNT_HW_INSTRUCTIONS);
+
+    if (period) {
+        // Setup a sampling counter if that has been requested.
+        cfgInstructions.wakeupEvents(1)
+            .samplePeriod(period);
+    }
+
+    // We need to detach and re-attach the counter to reliably change
+    // sampling settings. See PerfKvmCounter::period() for details.
+    if (hwInstructions.attached())
+        hwInstructions.detach();
+    assert(hwCycles.attached());
+    hwInstructions.attach(cfgInstructions,
+                          0, // TID (0 => currentThread)
+                          hwCycles);
+
+    if (period)
+        hwInstructions.enableSignals(KVM_INST_SIGNAL);
+
+    activeInstPeriod = period;
 }
