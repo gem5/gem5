@@ -913,6 +913,10 @@ have_posix_clock = \
     conf.CheckLibWithHeader('rt', 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
 
+have_posix_timers = \
+    conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ], 'C',
+                            'timer_create(CLOCK_MONOTONIC, NULL, NULL);')
+
 if conf.CheckLib('tcmalloc'):
     main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
 elif conf.CheckLib('tcmalloc_minimal'):
@@ -1223,6 +1227,10 @@ for variant_path in variant_paths:
     if env['USE_KVM']:
         if not have_kvm:
             print "Warning: Can not enable KVM, host seems to lack KVM support"
+            env['USE_KVM'] = False
+        elif not have_posix_timers:
+            print "Warning: Can not enable KVM, host seems to lack support " \
+                "for POSIX timers"
             env['USE_KVM'] = False
         elif not is_isa_kvm_compatible(env['TARGET_ISA']):
             print "Info: KVM support disabled due to unsupported host and " \
