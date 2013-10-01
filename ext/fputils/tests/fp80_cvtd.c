@@ -35,6 +35,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* We provide our own version of isinf_sgn since the C99 standard
+ * doesn't guarantee that isinf() returns the sign of the infinity
+ * (most implementations do). */
+static inline int
+isinf_sgn(double x)
+{
+    return isinf(x) ? (signbit(x) ? -1 : 1) : 0;
+}
+
 static void
 test_fp80_cvtd_class(const char *name, fp80_t fin, int class)
 {
@@ -48,10 +57,10 @@ test_fp80_cvtd_class(const char *name, fp80_t fin, int class)
 }
 
 static void
-test_fp80_cvtd_inf(const char *name, fp80_t fin, int inf_class)
+test_fp80_cvtd_inf(const char *name, fp80_t fin, int expected_inf_class)
 {
     double d = fp80_cvtd(fin);
-    if (isinf(d) != inf_class) {
+    if (isinf_sgn(d) != expected_inf_class) {
         test_diag("wrong infinity type");
         test_fail(name);
     } else {

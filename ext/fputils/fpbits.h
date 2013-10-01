@@ -76,15 +76,15 @@
 
 #define BUILD_FP80(sign, frac, exp)                             \
     {                                                           \
-        .u.repr.se = BUILD_FP80_SE(sign, exp),                  \
-        .u.repr.fi = BUILD_FP80_FI(frac, exp)                   \
+        .repr.se = BUILD_FP80_SE(sign, exp),                    \
+        .repr.fi = BUILD_FP80_FI(frac, exp)                     \
     }
 
 #define FP80_FRAC(fp80)                                         \
-    (fp80.u.repr.fi & FP80_FRAC_MASK)
+    (fp80.repr.fi & FP80_FRAC_MASK)
 
 #define FP80_EXP(fp80)                                          \
-    (fp80.u.repr.se & FP80_EXP_MASK)
+    (fp80.repr.se & FP80_EXP_MASK)
 
 #define FP64_FRAC(fp64)                                         \
     (fp64.bits & FP64_FRAC_MASK)

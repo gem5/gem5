@@ -46,14 +46,12 @@ extern "C" {
  */
 
 /** Internal representation of an 80-bit float. */
-typedef struct  {
-    union {
-        char bits[10];
-        struct {
-            uint64_t fi;
-            uint16_t se;
-        } repr;
-    } u;
+typedef union  {
+    char bits[10];
+    struct {
+        uint64_t fi;
+        uint16_t se;
+    } repr;
 } fp80_t;
 
 /** Constant representing +inf */

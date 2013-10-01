@@ -36,10 +36,8 @@
 #include <stdio.h>
 
 typedef union {
-    union {
-        uint64_t bits;
-        double value;
-    };
+    uint64_t bits;
+    double value;
 } fp64_t;
 
 
@@ -74,7 +72,7 @@ build_fp64(int sign, uint64_t frac, int exp)
 int
 fp80_sgn(fp80_t fp80)
 {
-    return (fp80.u.repr.se & FP80_SIGN_BIT) ? -1 : 1;
+    return (fp80.repr.se & FP80_SIGN_BIT) ? -1 : 1;
 }
 
 int
@@ -105,9 +103,9 @@ fp80_isqnan(fp80_t fp80)
 int
 fp80_isqnani(fp80_t fp80)
 {
-    const uint64_t frac_low = fp80.u.repr.fi & (FP80_FRAC_MASK >> 1);
+    const uint64_t frac_low = fp80.repr.fi & (FP80_FRAC_MASK >> 1);
 
-    return fp80_isqnan(fp80) && (fp80.u.repr.se & FP80_SIGN_BIT) && !frac_low;
+    return fp80_isqnan(fp80) && (fp80.repr.se & FP80_SIGN_BIT) && !frac_low;
 }
 
 int
@@ -133,7 +131,7 @@ fp80_isnan(fp80_t fp80)
 int
 fp80_iszero(fp80_t fp80)
 {
-    return fp80.u.repr.fi == 0 && FP80_EXP(fp80) == 0 ? fp80_sgn(fp80) : 0;
+    return fp80.repr.fi == 0 && FP80_EXP(fp80) == 0 ? fp80_sgn(fp80) : 0;
 }
 
 int
@@ -169,10 +167,10 @@ fp80_classify(fp80_t fp80)
 double
 fp80_cvtd(fp80_t fp80)
 {
-    const int sign = fp80.u.repr.se & FP80_SIGN_BIT;
+    const int sign = fp80.repr.se & FP80_SIGN_BIT;
 
     if (!fp80_isspecial(fp80)) {
-        const uint64_t frac = fp80.u.repr.fi;
+        const uint64_t frac = fp80.repr.fi;
         const int unb_exp = FP80_EXP(fp80) - FP80_EXP_BIAS;
         const int fp64_exp = unb_exp + FP64_EXP_BIAS;
         const uint64_t fp64_frac = frac >> (FP80_FRAC_BITS - FP64_FRAC_BITS);
@@ -242,6 +240,6 @@ void
 fp80_debug_dump(FILE *fout, fp80_t fp80)
 {
     fprintf(fout, "sgn: %i, int: %i, frac: 0x%llx, exp: 0x%x (%i)\n",
-            fp80_sgn(fp80), !!(fp80.u.repr.fi & FP80_INT_BIT), FP80_FRAC(fp80),
+            fp80_sgn(fp80), !!(fp80.repr.fi & FP80_INT_BIT), FP80_FRAC(fp80),
             FP80_EXP(fp80), FP80_EXP(fp80) - FP80_EXP_BIAS);
 }
