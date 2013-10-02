@@ -30,11 +30,19 @@
 
 Import('main')
 
-main.Library('fputils', [
-        main.SharedObject('fp80.c'),
+main.Prepend(CPPPATH=Dir('./include'))
+
+fpenv = main.Clone()
+
+# By default gcc uses c89 and clang uses c99. For fputils to compile
+# we need to use c99.
+if fpenv['GCC']:
+    fpenv.Append(CCFLAGS=['-std=c99'])
+
+fpenv.Library('fputils', [
+        fpenv.SharedObject('fp80.c'),
     ])
 
-main.Prepend(CPPPATH=Dir('./include'))
 main.Append(LIBS=['fputils'])
 main.Prepend(LIBPATH=[Dir('.')])
 
