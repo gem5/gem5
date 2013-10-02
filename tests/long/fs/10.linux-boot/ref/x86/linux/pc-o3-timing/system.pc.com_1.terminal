@@ -4,8 +4,9 @@ BIOS-provided physical RAM map:
  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
  BIOS-e820: 000000000009fc00 - 0000000000100000 (reserved)
  BIOS-e820: 0000000000100000 - 0000000008000000 (usable)
-end_pfn_map = 32768
-kernel direct mapping tables up to 8000000 @ 8000-a000
+ BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
+end_pfn_map = 1048576
+kernel direct mapping tables up to 100000000 @ 8000-d000
 DMI 2.5 present.
 Zone PFN ranges:
   DMA             0 ->     4096
@@ -22,8 +23,8 @@ Setting APIC routing to flat
 Processors: 1
 swsusp: Registered nosave memory region: 000000000009f000 - 00000000000a0000
 swsusp: Registered nosave memory region: 00000000000a0000 - 0000000000100000
-Allocating PCI resources starting at 10000000 (gap: 8000000:f8000000)
-Built 1 zonelists.  Total pages: 30613
+Allocating PCI resources starting at 10000000 (gap: 8000000:f7ff0000)
+Built 1 zonelists.  Total pages: 30612
 Kernel command line: earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1
 Initializing CPU#0
 PID hash table entries: 512 (order: 9, 4096 bytes)
@@ -33,7 +34,7 @@ console handover: boot [earlyser0] -> real [ttyS0]
 Dentry cache hash table entries: 16384 (order: 5, 131072 bytes)
 Inode-cache hash table entries: 8192 (order: 4, 65536 bytes)
 Checking aperture...
-Memory: 122188k/131072k available (3742k kernel code, 8460k reserved, 1874k data, 232k init)
+Memory: 122184k/131072k available (3742k kernel code, 8464k reserved, 1874k data, 232k init)
 Calibrating delay loop (skipped)... 3999.96 BogoMIPS preset
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
