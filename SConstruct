@@ -936,10 +936,14 @@ if not have_fenv:
     print "Warning: Header file <fenv.h> not found."
     print "         This host has no IEEE FP rounding mode control."
 
-# Check if we should enable KVM-based hardware virtualization
-have_kvm = conf.CheckHeader('linux/kvm.h', '<>')
+# Check if we should enable KVM-based hardware virtualization. The API
+# we rely on exists since version 2.6.36 of the kernel, but somehow
+# the KVM_API_VERSION does not reflect the change. We test for one of
+# the types as a fall back.
+have_kvm = conf.CheckHeader('linux/kvm.h', '<>') and \
+    conf.CheckTypeSize('struct kvm_xsave', '#include <linux/kvm.h>') != 0
 if not have_kvm:
-    print "Info: Header file <linux/kvm.h> not found, " \
+    print "Info: Compatible header file <linux/kvm.h> not found, " \
         "disabling KVM support."
 
 # Check if the requested target ISA is compatible with the host
