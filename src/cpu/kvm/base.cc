@@ -540,6 +540,12 @@ BaseKvmCPU::tick()
               _status = Running;
           }
 
+          // Service any pending instruction events. The vCPU should
+          // have exited in time for the event using the instruction
+          // counter configured by setupInstStop().
+          comInstEventQueue[0]->serviceEvents(ctrInsts);
+          system->instEventQueue.serviceEvents(system->totalNumInsts);
+
           if (tryDrain())
               _status = Idle;
       } break;
@@ -1179,7 +1185,6 @@ BaseKvmCPU::ioctlRun()
 void
 BaseKvmCPU::setupInstStop()
 {
-
     if (comInstEventQueue[0]->empty()) {
         setupInstCounter(0);
     } else {
