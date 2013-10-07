@@ -44,6 +44,7 @@
 
 import optparse
 import sys
+import os
 
 import m5
 from m5.defines import buildEnv
@@ -85,6 +86,7 @@ def get_processes(options):
     for wrkld in workloads:
         process = LiveProcess()
         process.executable = wrkld
+        process.cwd = os.getcwd()
 
         if len(pargs) > idx:
             process.cmd = [wrkld] + pargs[idx].split()
