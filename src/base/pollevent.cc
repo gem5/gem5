@@ -213,13 +213,13 @@ PollQueue::setupAsyncIO(int fd, bool set)
     else
         flags &= ~(FASYNC);
 
-    if (fcntl(fd, F_SETFL, flags) == -1)
-        panic("Could not set up async IO");
-
     if (set) {
       if (fcntl(fd, F_SETOWN, getpid()) == -1)
         panic("Could not set up async IO");
     }
+
+    if (fcntl(fd, F_SETFL, flags) == -1)
+        panic("Could not set up async IO");
 }
 
 void
