@@ -97,7 +97,8 @@ tester = RubyTester(check_flush = check_flush,
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(tester = tester, physmem = SimpleMemory())
+system = System(tester = tester, physmem = SimpleMemory(),
+                mem_ranges = [AddrRange(options.mem_size)])
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
@@ -156,6 +157,6 @@ m5.ticks.setGlobalFrequency('1ns')
 m5.instantiate()
 
 # simulate until program terminates
-exit_event = m5.simulate(options.maxtick)
+exit_event = m5.simulate(options.abs_max_tick)
 
 print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()

@@ -115,7 +115,7 @@ def addCommonOptions(parser):
     parser.add_option("--ruby", action="store_true")
 
     # Run duration options
-    parser.add_option("-m", "--abs-max-tick", type="int", default=None,
+    parser.add_option("-m", "--abs-max-tick", type="int", default=m5.MaxTick,
                       metavar="TICKS", help="Run to absolute simulated tick " \
                       "specified including ticks from a restored checkpoint")
     parser.add_option("--rel-max-tick", type="int", default=None,
