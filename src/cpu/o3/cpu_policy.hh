@@ -62,7 +62,7 @@ struct SimpleCPUPolicy
     /** Typedef for the register file.  Most classes assume a unified
      * physical register file.
      */
-    typedef PhysRegFile<Impl> RegFile;
+    typedef PhysRegFile RegFile;
     /** Typedef for the freelist of registers. */
     typedef SimpleFreeList FreeList;
     /** Typedef for the rename map. */

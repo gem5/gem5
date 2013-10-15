@@ -223,7 +223,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       iew(this, params),
       commit(this, params),
 
-      regFile(this, params->numPhysIntRegs,
+      regFile(params->numPhysIntRegs,
               params->numPhysFloatRegs),
 
       freeList(params->numThreads,
