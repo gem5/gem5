@@ -49,23 +49,12 @@ namespace GenericISA
      * Memory requests with the MMAPPED_IPR flag are generally mapped
      * to registers. There is a class of these registers that are
      * internal to gem5, for example gem5 pseudo-ops in virtualized
-     * mode.
-     *
-     * In order to make the IPR space manageable we always set bit 63
-     * (IPR_GENERIC) for accesses that should be handled by the
-     * generic ISA code. Architectures may use the rest of the IPR
-     * space internally.
+     * mode. Such IPRs always have the flag GENERIC_IPR set and are
+     * handled by this code.
      */
 
-    /** Is this a generic IPR access? */
-    const Addr IPR_GENERIC = ULL(0x8000000000000000);
-
-    /** @{ */
-    /** Mask when extracting the class of a generic IPR */
-    const Addr IPR_CLASS_MASK = ULL(0x7FFF000000000000);
     /** Shift amount when extracting the class of a generic IPR */
     const int IPR_CLASS_SHIFT = 48;
-    /** @} */
 
     /** Mask to extract the offset in within a generic IPR class */
     const Addr IPR_IN_CLASS_MASK = ULL(0x0000FFFFFFFFFFFF);
@@ -94,7 +83,7 @@ namespace GenericISA
     inline Addr
     iprAddressPseudoInst(uint8_t func, uint8_t subfunc)
     {
-        return IPR_GENERIC | (IPR_CLASS_PSEUDO_INST << IPR_CLASS_SHIFT)  |
+        return (IPR_CLASS_PSEUDO_INST << IPR_CLASS_SHIFT)  |
             (func << 8) | subfunc;
     }
 
@@ -113,7 +102,9 @@ namespace GenericISA
     inline bool
     isGenericIprAccess(const Packet *pkt)
     {
-        return pkt->getAddr() & IPR_GENERIC;
+        Request::Flags flags(pkt->req->getFlags());
+        return (flags & Request::MMAPPED_IPR) &&
+            (flags & Request::GENERIC_IPR);
     }
 
     /**

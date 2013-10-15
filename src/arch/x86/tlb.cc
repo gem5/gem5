@@ -257,7 +257,7 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
             req->setPaddr(x86LocalAPICAddress(tc->contextId(),
                                               paddr - apicRange.start()));
         } else if (m5opRange.contains(paddr)) {
-            req->setFlags(Request::MMAPPED_IPR);
+            req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR);
             req->setPaddr(GenericISA::iprAddressPseudoInst(
                               (paddr >> 8) & 0xFF,
                               paddr & 0xFF));

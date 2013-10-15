@@ -127,6 +127,10 @@ class Request
     /** The request should be marked as LRU. */
     static const FlagsType EVICT_NEXT                  = 0x04000000;
 
+    /** The request should be handled by the generic IPR code (only
+     * valid together with MMAPPED_IPR) */
+    static const FlagsType GENERIC_IPR                 = 0x08000000;
+
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
     static const FlagsType STICKY_FLAGS = INST_FETCH;

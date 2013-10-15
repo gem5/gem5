@@ -53,7 +53,7 @@ Cycles
 GenericISA::handleGenericIprRead(ThreadContext *xc, Packet *pkt)
 {
     Addr va(pkt->getAddr());
-    Addr cls((va & IPR_CLASS_MASK) >> IPR_CLASS_SHIFT);
+    Addr cls(va >> IPR_CLASS_SHIFT);
 
     switch (cls) {
     case IPR_CLASS_PSEUDO_INST:
@@ -70,7 +70,7 @@ Cycles
 GenericISA::handleGenericIprWrite(ThreadContext *xc, Packet *pkt)
 {
     Addr va(pkt->getAddr());
-    Addr cls((va & IPR_CLASS_MASK) >> IPR_CLASS_SHIFT);
+    Addr cls(va >> IPR_CLASS_SHIFT);
 
     switch (cls) {
     case IPR_CLASS_PSEUDO_INST:
