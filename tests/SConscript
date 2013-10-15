@@ -282,7 +282,7 @@ def test_builder(env, ref_dir):
     new_stats = tgt('stats.txt')
     status_file = tgt('status')
 
-    env.Command([status_file],
+    env.Command([status_file, new_stats],
                 [env.M5Binary, 'run.py', ref_stats],
                 testAction)
 
