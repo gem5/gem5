@@ -57,13 +57,6 @@ typedef union
 
 typedef uint16_t RegIndex;
 
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    FP_Base_DepTag = 32*3+9,
-    Ctrl_Base_DepTag = FP_Base_DepTag + 64,
-    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
-};
-
 // semantically meaningful register indices
 const int ZeroReg = 0;      // architecturally meaningful
 // the rest of these depend on the ABI
@@ -79,6 +72,13 @@ const int NumIntArchRegs = 32;
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
+
+// These enumerate all the registers for dependence tracking.
+enum DependenceTags {
+    FP_Base_DepTag = NumIntRegs,
+    Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs,
+    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
+};
 
 } // namespace SparcISA
 

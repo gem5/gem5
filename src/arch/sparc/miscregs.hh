@@ -155,7 +155,6 @@ struct STS
 };
 
 
-const int NumMiscArchRegs = MISCREG_NUMMISCREGS;
 const int NumMiscRegs = MISCREG_NUMMISCREGS;
 
 }

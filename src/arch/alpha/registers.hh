@@ -88,23 +88,20 @@ const RegIndex SyscallSuccessReg = 19;
 const int NumIntArchRegs = 32;
 const int NumPALShadowRegs = 8;
 const int NumFloatArchRegs = 32;
-const int NumMiscArchRegs = NUM_MISCREGS;
 
 const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
 const int NumFloatRegs = NumFloatArchRegs;
-const int NumMiscRegs = NumMiscArchRegs;
+const int NumMiscRegs = NUM_MISCREGS;
 
 const int TotalNumRegs =
     NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
 // These enumerate all the registers for dependence tracking.
 enum DependenceTags {
     // 0..31 are the integer regs 0..31
     // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-    FP_Base_DepTag = 40,
-    Ctrl_Base_DepTag = 72,
+    FP_Base_DepTag = NumIntRegs,
+    Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs,
     Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs + NumInternalProcRegs
 };
 

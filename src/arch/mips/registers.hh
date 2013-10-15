@@ -115,15 +115,6 @@ const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
 
-//@TODO: Implementing ShadowSets needs to
-//edit this value such that:
-//TotalArchRegs = NumIntArchRegs * ShadowSets
-const int TotalArchRegs = NumIntArchRegs;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Base_DepTag = NumIntRegs;
-const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
-
 // Enumerate names for 'Control' Registers in the CPU
 // Reference MIPS32 Arch. for Programmers, Vol. III, Ch.8
 // (Register Number-Register Select) Summary of Register
@@ -281,9 +272,11 @@ enum MiscRegIndex{
     MISCREG_NUMREGS
 };
 
-const int TotalDataRegs = NumIntRegs + NumFloatRegs;
-
 const int NumMiscRegs = MISCREG_NUMREGS;
+
+// These help enumerate all the registers for dependence tracking.
+const int FP_Base_DepTag = NumIntRegs;
+const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 const int Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;

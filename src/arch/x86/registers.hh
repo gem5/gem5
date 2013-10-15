@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,7 +51,6 @@ namespace X86ISA
 using X86ISAInst::MaxInstSrcRegs;
 using X86ISAInst::MaxInstDestRegs;
 using X86ISAInst::MaxMiscDestRegs;
-const int NumMiscArchRegs = NUM_MISCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
 
 const int NumIntArchRegs = NUM_INTREGS;
@@ -58,26 +58,18 @@ const int NumIntRegs =
     NumIntArchRegs + NumMicroIntRegs +
     NumPseudoIntRegs + NumImplicitIntRegs;
 
-//Each 128 bit xmm register is broken into two effective 64 bit registers.
+// Each 128 bit xmm register is broken into two effective 64 bit registers.
+// Add 8 for the indices that are mapped over the fp stack
 const int NumFloatRegs =
-    NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs;
-const int NumFloatArchRegs = NumFloatRegs + 8;
+    NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
 
 // These enumerate all the registers for dependence tracking.
 enum DependenceTags {
-    //There are 16 microcode registers at the moment. This is an
-    //unusually large constant to make sure there isn't overflow.
+    // FP_Base_DepTag must be large enough to be bigger than any integer
+    // register index which has the IntFoldBit (1 << 6) set.  To be safe
+    // we just start at (1 << 7) == 128.
     FP_Base_DepTag = 128,
-    Ctrl_Base_DepTag =
-        FP_Base_DepTag +
-        //mmx/x87 registers
-        8 +
-        //xmm registers
-        16 * 2 +
-        //The microcode fp registers
-        8 +
-        //The indices that are mapped over the fp stack
-        8,
+    Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs,
     Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
 };
 
