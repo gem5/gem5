@@ -239,6 +239,8 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
         assert(rel_reg < NUM_MISCREGS);
         ccprintf(os, "%s", ArmISA::miscRegName[rel_reg]);
         break;
+      case CCRegClass:
+        panic("printReg: CCRegClass but ARM has no CC regs\n");
     }
 }
 

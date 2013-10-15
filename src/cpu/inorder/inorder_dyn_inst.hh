@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,6 +88,8 @@ class InOrderDynInst : public RefCounted
     typedef TheISA::FloatReg FloatReg;
     // Floating point register type.
     typedef TheISA::FloatRegBits FloatRegBits;
+    // Condition code register type.
+    typedef TheISA::CCReg CCReg;
     // Floating point register type.
     typedef TheISA::MiscReg MiscReg;
 
@@ -880,6 +883,11 @@ class InOrderDynInst : public RefCounted
        return instResult[idx].res.fpVal.i;
     }
 
+    CCReg readCCResult(int idx)
+    {
+       return instResult[idx].res.intVal;
+    }
+
     Tick readResultTime(int idx) { return instResult[idx].tick; }
 
     IntReg* getIntResultPtr(int idx) { return &instResult[idx].res.intVal; }
@@ -891,6 +899,7 @@ class InOrderDynInst : public RefCounted
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
     void setFloatRegOperandBits(const StaticInst *si, int idx,
             TheISA::FloatRegBits val);
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val);
     void setMiscReg(int misc_reg, const MiscReg &val);
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
     void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val);

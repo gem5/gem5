@@ -112,6 +112,7 @@ class DerivO3CPU(BaseCPU):
     numPhysIntRegs = Param.Unsigned(256, "Number of physical integer registers")
     numPhysFloatRegs = Param.Unsigned(256, "Number of physical floating point "
                                       "registers")
+    numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 

@@ -177,6 +177,13 @@ namespace MipsISA
         {
             return reg;
         }
+
+        // dummy
+        int
+        flattenCCIndex(int reg)
+        {
+            return reg;
+        }
     };
 }
 

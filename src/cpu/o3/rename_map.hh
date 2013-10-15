@@ -163,6 +163,9 @@ class UnifiedRenameMap
      */
     PhysRegFile *regFile;
 
+    /** The condition-code register rename map */
+    SimpleRenameMap ccMap;
+
   public:
     typedef TheISA::RegIndex RegIndex;
 
@@ -214,6 +217,17 @@ class UnifiedRenameMap
     }
 
     /**
+     * Perform rename() on a condition-code register, given a relative
+     * condition-code register index.
+     */
+    RenameInfo renameCC(RegIndex rel_arch_reg)
+    {
+        RenameInfo info = ccMap.rename(rel_arch_reg);
+        assert(regFile->isCCPhysReg(info.first));
+        return info;
+    }
+
+    /**
      * Perform rename() on a misc register, given a relative
      * misc register index.
      */
@@ -260,6 +274,17 @@ class UnifiedRenameMap
     }
 
     /**
+     * Perform lookup() on a condition-code register, given a relative
+     * condition-code register index.
+     */
+    PhysRegIndex lookupCC(RegIndex rel_arch_reg) const
+    {
+        PhysRegIndex phys_reg = ccMap.lookup(rel_arch_reg);
+        assert(regFile->isCCPhysReg(phys_reg));
+        return phys_reg;
+    }
+
+    /**
      * Perform lookup() on a misc register, given a relative
      * misc register index.
      */
@@ -299,6 +324,16 @@ class UnifiedRenameMap
     {
         assert(regFile->isFloatPhysReg(phys_reg));
         floatMap.setEntry(arch_reg, phys_reg);
+    }
+
+    /**
+     * Perform setEntry() on a condition-code register, given a relative
+     * condition-code register index.
+     */
+    void setCCEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
+    {
+        assert(regFile->isCCPhysReg(phys_reg));
+        ccMap.setEntry(arch_reg, phys_reg);
     }
 
     /**

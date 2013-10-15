@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -87,16 +88,15 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
       fuPool(params->fuPool),
       numEntries(params->numIQEntries),
       totalWidth(params->issueWidth),
-      numPhysIntRegs(params->numPhysIntRegs),
-      numPhysFloatRegs(params->numPhysFloatRegs),
       commitToIEWDelay(params->commitToIEWDelay)
 {
     assert(fuPool);
 
     numThreads = params->numThreads;
 
-    // Set the number of physical registers as the number of int + float
-    numPhysRegs = numPhysIntRegs + numPhysFloatRegs;
+    // Set the number of total physical registers
+    numPhysRegs = params->numPhysIntRegs + params->numPhysFloatRegs +
+        params->numPhysCCRegs;
 
     //Create an entry for each physical register within the
     //dependency graph.

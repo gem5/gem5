@@ -562,6 +562,10 @@ InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
         this->cpu->setFloatRegBits(rel_idx, val, tid);
         break;
 
+      case CCRegClass:
+        this->cpu->setCCReg(rel_idx, val, tid);
+        break;
+
       case MiscRegClass:
         this->cpu->setMiscReg(rel_idx, val, tid); // Misc. Register File
         break;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,6 +111,7 @@ class StaticInst : public RefCounted
 
         IsInteger,      ///< References integer regs.
         IsFloating,     ///< References FP regs.
+        IsCC,           ///< References CC regs.
 
         IsMemRef,       ///< References memory (load, store, or prefetch).
         IsLoad,         ///< Reads from memory (load or prefetch).
@@ -181,6 +183,7 @@ class StaticInst : public RefCounted
     //@{
     int8_t _numFPDestRegs;
     int8_t _numIntDestRegs;
+    int8_t _numCCDestRegs;
     //@}
 
   public:
@@ -220,6 +223,7 @@ class StaticInst : public RefCounted
 
     bool isInteger()      const { return flags[IsInteger]; }
     bool isFloating()     const { return flags[IsFloating]; }
+    bool isCC()           const { return flags[IsCC]; }
 
     bool isControl()      const { return flags[IsControl]; }
     bool isCall()         const { return flags[IsCall]; }

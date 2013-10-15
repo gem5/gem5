@@ -98,6 +98,13 @@ class ISA : public SimObject
         return reg;
     }
 
+    // dummy
+    int
+    flattenCCIndex(int reg)
+    {
+        return reg;
+    }
+
     void startup(ThreadContext *tc) {}
 
     /// Explicitly import the otherwise hidden startup

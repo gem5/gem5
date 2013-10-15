@@ -106,6 +106,9 @@ class UnifiedFreeList
     /** The list of free floating point registers. */
     SimpleFreeList floatList;
 
+    /** The list of free condition-code registers. */
+    SimpleFreeList ccList;
+
     /**
      * The register file object is used only to distinguish integer
      * from floating-point physical register indices.
@@ -133,11 +136,17 @@ class UnifiedFreeList
     /** Gives the name of the freelist. */
     std::string name() const { return _name; };
 
+    /** Returns a pointer to the condition-code free list */
+    SimpleFreeList *getCCList() { return &ccList; }
+
     /** Gets a free integer register. */
     PhysRegIndex getIntReg() { return intList.getReg(); }
 
     /** Gets a free fp register. */
     PhysRegIndex getFloatReg() { return floatList.getReg(); }
+
+    /** Gets a free cc register. */
+    PhysRegIndex getCCReg() { return ccList.getReg(); }
 
     /** Adds a register back to the free list. */
     void addReg(PhysRegIndex freed_reg);
@@ -148,17 +157,26 @@ class UnifiedFreeList
     /** Adds a fp register back to the free list. */
     void addFloatReg(PhysRegIndex freed_reg) { floatList.addReg(freed_reg); }
 
+    /** Adds a cc register back to the free list. */
+    void addCCReg(PhysRegIndex freed_reg) { ccList.addReg(freed_reg); }
+
     /** Checks if there are any free integer registers. */
     bool hasFreeIntRegs() const { return intList.hasFreeRegs(); }
 
     /** Checks if there are any free fp registers. */
     bool hasFreeFloatRegs() const { return floatList.hasFreeRegs(); }
 
+    /** Checks if there are any free cc registers. */
+    bool hasFreeCCRegs() const { return ccList.hasFreeRegs(); }
+
     /** Returns the number of free integer registers. */
     unsigned numFreeIntRegs() const { return intList.numFreeRegs(); }
 
     /** Returns the number of free fp registers. */
     unsigned numFreeFloatRegs() const { return floatList.numFreeRegs(); }
+
+    /** Returns the number of free cc registers. */
+    unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
 };
 
 inline void
@@ -169,9 +187,11 @@ UnifiedFreeList::addReg(PhysRegIndex freed_reg)
     //already in there.  A bit vector or something similar would be useful.
     if (regFile->isIntPhysReg(freed_reg)) {
         intList.addReg(freed_reg);
-    } else {
-        assert(regFile->isFloatPhysReg(freed_reg));
+    } else if (regFile->isFloatPhysReg(freed_reg)) {
         floatList.addReg(freed_reg);
+    } else {
+        assert(regFile->isCCPhysReg(freed_reg));
+        ccList.addReg(freed_reg);
     }
 
     // These assert conditions ensure that the number of free

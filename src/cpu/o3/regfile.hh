@@ -55,6 +55,7 @@ class PhysRegFile
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
+    typedef TheISA::CCReg CCReg;
 
     typedef union {
         FloatReg d;
@@ -66,6 +67,9 @@ class PhysRegFile
 
     /** Floating point register file. */
     std::vector<PhysFloatReg> floatRegFile;
+
+    /** Condition-code register file. */
+    std::vector<CCReg> ccRegFile;
 
     /**
      * The first floating-point physical register index.  The physical
@@ -83,6 +87,12 @@ class PhysRegFile
      */
     unsigned baseFloatRegIndex;
 
+    /**
+     * The first condition-code physical register index.  The
+     * condition-code registers follow the floating-point registers.
+     */
+    unsigned baseCCRegIndex;
+
     /** Total number of physical registers. */
     unsigned totalNumRegs;
 
@@ -92,7 +102,8 @@ class PhysRegFile
      * integer and floating point registers.
      */
     PhysRegFile(unsigned _numPhysicalIntRegs,
-                unsigned _numPhysicalFloatRegs);
+                unsigned _numPhysicalFloatRegs,
+                unsigned _numPhysicalCCRegs);
 
     /**
      * Destructor to free resources
@@ -107,7 +118,11 @@ class PhysRegFile
 
     /** @return the number of floating-point physical registers. */
     unsigned numFloatPhysRegs() const
-    { return totalNumRegs - baseFloatRegIndex; }
+    { return baseCCRegIndex - baseFloatRegIndex; }
+
+    /** @return the number of condition-code physical registers. */
+    unsigned numCCPhysRegs() const
+    { return totalNumRegs - baseCCRegIndex; }
 
     /** @return the total number of physical registers. */
     unsigned totalNumPhysRegs() const { return totalNumRegs; }
@@ -127,7 +142,16 @@ class PhysRegFile
      */
     bool isFloatPhysReg(PhysRegIndex reg_idx) const
     {
-        return (baseFloatRegIndex <= reg_idx && reg_idx < totalNumRegs);
+        return (baseFloatRegIndex <= reg_idx && reg_idx < baseCCRegIndex);
+    }
+
+    /**
+     * Return true if the specified physical register index
+     * corresponds to a condition-code physical register.
+     */
+    bool isCCPhysReg(PhysRegIndex reg_idx)
+    {
+        return (baseCCRegIndex <= reg_idx && reg_idx < totalNumRegs);
     }
 
     /** Reads an integer register. */
@@ -167,6 +191,20 @@ class PhysRegFile
                 "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
 
         return floatRegBits;
+    }
+
+    /** Reads a condition-code register. */
+    CCReg readCCReg(PhysRegIndex reg_idx)
+    {
+        assert(isCCPhysReg(reg_idx));
+
+        // Remove the base CC reg dependency.
+        PhysRegIndex reg_offset = reg_idx - baseCCRegIndex;
+
+        DPRINTF(IEW, "RegFile: Access to cc register %i, has "
+                "data %#x\n", int(reg_idx), ccRegFile[reg_offset]);
+
+        return ccRegFile[reg_offset];
     }
 
     /** Sets an integer register to the given value. */
@@ -211,6 +249,19 @@ class PhysRegFile
         floatRegFile[reg_offset].q = val;
     }
 
+    /** Sets a condition-code register to the given value. */
+    void setCCReg(PhysRegIndex reg_idx, CCReg val)
+    {
+        assert(isCCPhysReg(reg_idx));
+
+        // Remove the base CC reg dependency.
+        PhysRegIndex reg_offset = reg_idx - baseCCRegIndex;
+
+        DPRINTF(IEW, "RegFile: Setting cc register %i to %#x\n",
+                int(reg_idx), (uint64_t)val);
+
+        ccRegFile[reg_offset] = val;
+    }
 };
 
 

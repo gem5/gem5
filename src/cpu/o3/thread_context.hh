@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -182,6 +183,10 @@ class O3ThreadContext : public ThreadContext
         return readFloatRegBitsFlat(flattenFloatIndex(reg_idx));
     }
 
+    virtual CCReg readCCReg(int reg_idx) {
+        return readCCRegFlat(flattenCCIndex(reg_idx));
+    }
+
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val) {
         setIntRegFlat(flattenIntIndex(reg_idx), val);
@@ -193,6 +198,10 @@ class O3ThreadContext : public ThreadContext
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) {
         setFloatRegBitsFlat(flattenFloatIndex(reg_idx), val);
+    }
+
+    virtual void setCCReg(int reg_idx, CCReg val) {
+        setCCRegFlat(flattenCCIndex(reg_idx), val);
     }
 
     /** Reads this thread's PC state. */
@@ -234,6 +243,7 @@ class O3ThreadContext : public ThreadContext
 
     virtual int flattenIntIndex(int reg);
     virtual int flattenFloatIndex(int reg);
+    virtual int flattenCCIndex(int reg);
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
@@ -283,6 +293,9 @@ class O3ThreadContext : public ThreadContext
 
     virtual FloatRegBits readFloatRegBitsFlat(int idx);
     virtual void setFloatRegBitsFlat(int idx, FloatRegBits val);
+
+    virtual CCReg readCCRegFlat(int idx);
+    virtual void setCCRegFlat(int idx, CCReg val);
 };
 
 #endif

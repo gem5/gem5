@@ -85,6 +85,12 @@ namespace X86ISA
             return reg;
         }
 
+        int
+        flattenCCIndex(int reg)
+        {
+            return reg;
+        }
+
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
         void startup(ThreadContext *tc);

@@ -57,6 +57,7 @@ const int NumIntArchRegs = NUM_INTREGS;
 const int NumIntRegs =
     NumIntArchRegs + NumMicroIntRegs +
     NumPseudoIntRegs + NumImplicitIntRegs;
+const int NumCCRegs = 0;
 
 // Each 128 bit xmm register is broken into two effective 64 bit registers.
 // Add 8 for the indices that are mapped over the fp stack
@@ -69,7 +70,8 @@ enum DependenceTags {
     // register index which has the IntFoldBit (1 << 6) set.  To be safe
     // we just start at (1 << 7) == 128.
     FP_Reg_Base = 128,
-    Misc_Reg_Base = FP_Reg_Base + NumFloatRegs,
+    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
+    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
     Max_Reg_Index = Misc_Reg_Base + NumMiscRegs
 };
 
@@ -87,6 +89,7 @@ const int FramePointerReg = INTREG_RBP;
 const int SyscallPseudoReturnReg = INTREG_RDX;
 
 typedef uint64_t IntReg;
+typedef uint64_t CCReg;
 //XXX Should this be a 128 bit structure for XMM memory ops?
 typedef uint64_t LargestRead;
 typedef uint64_t MiscReg;

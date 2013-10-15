@@ -135,5 +135,6 @@ env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
 
 DebugFlag('IntRegs')
 DebugFlag('FloatRegs')
+DebugFlag('CCRegs')
 DebugFlag('MiscRegs')
-CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'MiscRegs' ])
+CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'CCRegs', 'MiscRegs' ])

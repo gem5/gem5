@@ -48,6 +48,9 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumFloatRegs; ++i)
         dest->setFloatRegBits(i, src->readFloatRegBits(i));
 
+    // Would need to add condition-code regs if implemented
+    assert(NumCCRegs == 0);
+
     // Copy misc. registers
     copyMiscRegs(src, dest);
 

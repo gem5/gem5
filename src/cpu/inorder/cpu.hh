@@ -93,6 +93,7 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
+    typedef TheISA::CCReg CCReg;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::RegIndex RegIndex;
 
@@ -327,6 +328,9 @@ class InOrderCPU : public BaseCPU
         FloatRegBits i[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
     } floatRegs;
     TheISA::IntReg intRegs[ThePipeline::MaxThreads][TheISA::NumIntRegs];
+#ifdef ISA_HAS_CC_REGS
+    TheISA::CCReg ccRegs[ThePipeline::MaxThreads][TheISA::NumCCRegs];
+#endif
 
     /** ISA state */
     std::vector<TheISA::ISA *> isa;
@@ -590,11 +594,15 @@ class InOrderCPU : public BaseCPU
 
     FloatRegBits readFloatRegBits(RegIndex reg_idx, ThreadID tid);
 
+    CCReg readCCReg(RegIndex reg_idx, ThreadID tid);
+
     void setIntReg(RegIndex reg_idx, uint64_t val, ThreadID tid);
 
     void setFloatReg(RegIndex reg_idx, FloatReg val, ThreadID tid);
 
     void setFloatRegBits(RegIndex reg_idx, FloatRegBits val,  ThreadID tid);
+
+    void setCCReg(RegIndex reg_idx, CCReg val, ThreadID tid);
 
     RegIndex flattenRegIdx(RegIndex reg_idx, RegClass &reg_type, ThreadID tid);
 

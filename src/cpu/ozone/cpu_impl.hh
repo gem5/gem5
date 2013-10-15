@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -769,6 +770,13 @@ OzoneCPU<Impl>::OzoneTC::readFloatRegBits(int reg_idx)
 }
 
 template <class Impl>
+CCReg
+OzoneCPU<Impl>::OzoneTC::readCCReg(int reg_idx)
+{
+    return thread->renameTable[reg_idx]->readCCResult();
+}
+
+template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::setIntReg(int reg_idx, uint64_t val)
 {
@@ -797,6 +805,17 @@ void
 OzoneCPU<Impl>::OzoneTC::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     panic("Unimplemented!");
+}
+
+template <class Impl>
+void
+OzoneCPU<Impl>::OzoneTC::setCCReg(int reg_idx, CCReg val)
+{
+    thread->renameTable[reg_idx]->setCCResult(val);
+
+    if (!thread->noSquashFromTC) {
+        cpu->squashFromTC();
+    }
 }
 
 template <class Impl>

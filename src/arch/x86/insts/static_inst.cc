@@ -221,6 +221,10 @@ namespace X86ISA
             break;
           }
 
+          case CCRegClass:
+            ccprintf(os, "%%cc%d", rel_reg);
+            break;
+
           case MiscRegClass:
             switch (rel_reg) {
               default:

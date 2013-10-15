@@ -65,7 +65,8 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numThreads),
-      maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
+      maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs
+                      + params->numPhysCCRegs)
 {
     // @todo: Make into a parameter.
     skidBufferMax = (2 * (decodeToRenameDelay * params->decodeWidth)) + renameWidth;
@@ -974,6 +975,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             fpRenameLookups++;
             break;
 
+          case CCRegClass:
+            flat_rel_src_reg = tc->flattenCCIndex(rel_src_reg);
+            renamed_reg = map->lookupCC(flat_rel_src_reg);
+            break;
+
           case MiscRegClass:
             // misc regs don't get flattened
             flat_rel_src_reg = rel_src_reg;
@@ -1032,6 +1038,12 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
             flat_rel_dest_reg = tc->flattenFloatIndex(rel_dest_reg);
             rename_result = map->renameFloat(flat_rel_dest_reg);
             flat_uni_dest_reg = flat_rel_dest_reg + TheISA::FP_Reg_Base;
+            break;
+
+          case CCRegClass:
+            flat_rel_dest_reg = tc->flattenCCIndex(rel_dest_reg);
+            rename_result = map->renameCC(flat_rel_dest_reg);
+            flat_uni_dest_reg = flat_rel_dest_reg + TheISA::CC_Reg_Base;
             break;
 
           case MiscRegClass:

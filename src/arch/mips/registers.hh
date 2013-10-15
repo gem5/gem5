@@ -54,6 +54,7 @@ const int NumFloatSpecialRegs = 5;
 const int MaxShadowRegSets = 16; // Maximum number of shadow register sets
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;        //HI & LO Regs
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
+const int NumCCRegs = 0;
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
 const uint64_t MIPS64_QNAN = ULL(0x7ff7ffffffffffff);
@@ -276,7 +277,8 @@ const int NumMiscRegs = MISCREG_NUMREGS;
 
 // These help enumerate all the registers for dependence tracking.
 const int FP_Reg_Base = NumIntRegs;
-const int Misc_Reg_Base = FP_Reg_Base + NumFloatRegs;
+const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
+const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs; // NumCCRegs == 0
 const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
@@ -291,6 +293,9 @@ typedef float FloatReg;
 
 // cop-0/cop-1 system control register
 typedef uint64_t MiscReg;
+
+// dummy typedef since we don't have CC regs
+typedef uint8_t CCReg;
 
 typedef union {
     IntReg   intreg;

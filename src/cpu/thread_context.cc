@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,6 +80,14 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
                   i, t1, t2);
     }
 
+    // loop through the Condition Code registers.
+    for (int i = 0; i < TheISA::NumCCRegs; ++i) {
+        TheISA::CCReg t1 = one->readCCReg(i);
+        TheISA::CCReg t2 = two->readCCReg(i);
+        if (t1 != t2)
+            panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
+                  i, t1, t2);
+    }
     if (!(one->pcState() == two->pcState()))
         panic("PC state doesn't match.");
     int id1 = one->cpuId();
@@ -111,6 +120,13 @@ serialize(ThreadContext &tc, std::ostream &os)
         intRegs[i] = tc.readIntRegFlat(i);
     SERIALIZE_ARRAY(intRegs, NumIntRegs);
 
+#ifdef ISA_HAS_CC_REGS
+    CCReg ccRegs[NumCCRegs];
+    for (int i = 0; i < NumCCRegs; ++i)
+        ccRegs[i] = tc.readCCRegFlat(i);
+    SERIALIZE_ARRAY(ccRegs, NumCCRegs);
+#endif
+
     tc.pcState().serialize(os);
 
     // thread_num and cpu_id are deterministic from the config
@@ -132,6 +148,13 @@ unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(intRegs, NumIntRegs);
     for (int i = 0; i < NumIntRegs; ++i)
         tc.setIntRegFlat(i, intRegs[i]);
+
+#ifdef ISA_HAS_CC_REGS
+    CCReg ccRegs[NumCCRegs];
+    UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
+    for (int i = 0; i < NumCCRegs; ++i)
+        tc.setCCRegFlat(i, ccRegs[i]);
+#endif
 
     PCState pcState;
     pcState.unserialize(cp, section);

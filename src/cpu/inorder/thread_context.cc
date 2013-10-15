@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -190,6 +191,14 @@ InOrderThreadContext::readFloatRegBits(int reg_idx)
     return cpu->readFloatRegBits(reg_idx, tid);
 }
 
+CCReg
+InOrderThreadContext::readCCReg(int reg_idx)
+{
+    ThreadID tid = thread->threadId();
+    reg_idx = cpu->isa[tid]->flattenCCIndex(reg_idx);
+    return cpu->readCCReg(reg_idx, tid);
+}
+
 uint64_t
 InOrderThreadContext::readRegOtherThread(int reg_idx, ThreadID tid)
 {
@@ -218,6 +227,14 @@ InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val)
     ThreadID tid = thread->threadId();
     reg_idx = cpu->isa[tid]->flattenFloatIndex(reg_idx);
     cpu->setFloatRegBits(reg_idx, val, tid);
+}
+
+void
+InOrderThreadContext::setCCReg(int reg_idx, CCReg val)
+{
+    ThreadID tid = thread->threadId();
+    reg_idx = cpu->isa[tid]->flattenCCIndex(reg_idx);
+    cpu->setCCReg(reg_idx, val, tid);
 }
 
 void
@@ -280,4 +297,18 @@ InOrderThreadContext::setFloatRegBitsFlat(int idx, FloatRegBits val)
 {
     const ThreadID tid = thread->threadId();
     cpu->setFloatRegBits(idx, val, tid);
+}
+
+CCReg
+InOrderThreadContext::readCCRegFlat(int idx)
+{
+    const ThreadID tid = thread->threadId();
+    return cpu->readCCReg(idx, tid);
+}
+
+void
+InOrderThreadContext::setCCRegFlat(int idx, CCReg val)
+{
+    const ThreadID tid = thread->threadId();
+    cpu->setCCReg(idx, val, tid);
 }

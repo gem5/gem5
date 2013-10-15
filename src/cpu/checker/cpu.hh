@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -223,6 +224,12 @@ class CheckerCPU : public BaseCPU
         return thread->readFloatRegBits(reg_idx);
     }
 
+    uint64_t readCCRegOperand(const StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
+        return thread->readCCReg(reg_idx);
+    }
+
     template <class T>
     void setResult(T t)
     {
@@ -249,6 +256,13 @@ class CheckerCPU : public BaseCPU
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
         thread->setFloatRegBits(reg_idx, val);
+        setResult<uint64_t>(val);
+    }
+
+    void setCCRegOperand(const StaticInst *si, int idx, uint64_t val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
+        thread->setCCReg(reg_idx, val);
         setResult<uint64_t>(val);
     }
 

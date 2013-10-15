@@ -36,12 +36,23 @@
 
 
 PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
-                         unsigned _numPhysicalFloatRegs)
+                         unsigned _numPhysicalFloatRegs,
+                         unsigned _numPhysicalCCRegs)
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
+      ccRegFile(_numPhysicalCCRegs),
       baseFloatRegIndex(_numPhysicalIntRegs),
-      totalNumRegs(_numPhysicalIntRegs + _numPhysicalFloatRegs)
+      baseCCRegIndex(_numPhysicalIntRegs + _numPhysicalFloatRegs),
+      totalNumRegs(_numPhysicalIntRegs
+                   + _numPhysicalFloatRegs
+                   + _numPhysicalCCRegs)
 {
+    if (TheISA::NumCCRegs == 0 && _numPhysicalCCRegs != 0) {
+        // Just make this a warning and go ahead and allocate them
+        // anyway, to keep from having to add checks everywhere
+        warn("Non-zero number of physical CC regs specified, even though\n"
+             "    ISA does not use them.\n");
+    }
 }
 
 
@@ -56,9 +67,15 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
         freeList->addIntReg(reg_idx++);
     }
 
-    // The rest of the registers are the floating-point physical
+    // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
-    while (reg_idx < totalNumRegs) {
+    while (reg_idx < baseCCRegIndex) {
         freeList->addFloatReg(reg_idx++);
+    }
+
+    // The rest of the registers are the condition-code physical
+    // registers; put them onto the condition-code free list.
+    while (reg_idx < totalNumRegs) {
+        freeList->addCCReg(reg_idx++);
     }
 }

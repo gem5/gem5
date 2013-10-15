@@ -361,6 +361,9 @@ InOrderCPU::InOrderCPU(Params *params)
 
         memset(intRegs[tid], 0, sizeof(intRegs[tid]));
         memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
+#ifdef ISA_HAS_CC_REGS
+        memset(ccRegs[tid], 0, sizeof(ccRegs[tid]));
+#endif
         isa[tid]->clear();
 
         // Define dummy instructions and resource requests to be used.
@@ -1305,6 +1308,19 @@ InOrderCPU::readFloatRegBits(RegIndex reg_idx, ThreadID tid)
     return floatRegs.i[tid][reg_idx];
 }
 
+CCReg
+InOrderCPU::readCCReg(RegIndex reg_idx, ThreadID tid)
+{
+#ifdef ISA_HAS_CC_REGS
+    DPRINTF(CCRegs, "[tid:%i]: Reading CC. Reg %i as %x\n",
+            tid, reg_idx, ccRegs[tid][reg_idx]);
+
+    return ccRegs[tid][reg_idx];
+#else
+    panic("readCCReg: ISA does not have CC regs\n");
+#endif
+}
+
 void
 InOrderCPU::setIntReg(RegIndex reg_idx, uint64_t val, ThreadID tid)
 {
@@ -1342,6 +1358,18 @@ InOrderCPU::setFloatRegBits(RegIndex reg_idx, FloatRegBits val, ThreadID tid)
             tid, reg_idx,
             floatRegs.i[tid][reg_idx],
             floatRegs.f[tid][reg_idx]);
+}
+
+void
+InOrderCPU::setCCReg(RegIndex reg_idx, CCReg val, ThreadID tid)
+{
+#ifdef ISA_HAS_CC_REGS
+    DPRINTF(CCRegs, "[tid:%i]: Setting CC. Reg %i to %x\n",
+            tid, reg_idx, val);
+    ccRegs[tid][reg_idx] = val;
+#else
+    panic("readCCReg: ISA does not have CC regs\n");
+#endif
 }
 
 uint64_t
@@ -1389,6 +1417,10 @@ InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
 
       case FloatRegClass:
         setFloatRegBits(rel_idx, val, tid);
+        break;
+
+      case CCRegClass:
+        setCCReg(rel_idx, val, tid);
         break;
 
       case MiscRegClass:

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -209,6 +210,18 @@ BaseSimpleCPU::regStats()
     numFpRegWrites
         .name(name() + ".num_fp_register_writes")
         .desc("number of times the floating registers were written")
+        ;
+
+    numCCRegReads
+        .name(name() + ".num_cc_register_reads")
+        .desc("number of times the CC registers were read")
+        .flags(nozero)
+        ;
+
+    numCCRegWrites
+        .name(name() + ".num_cc_register_writes")
+        .desc("number of times the CC registers were written")
+        .flags(nozero)
         ;
 
     numMemRefs

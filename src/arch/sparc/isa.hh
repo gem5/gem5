@@ -206,6 +206,13 @@ class ISA : public SimObject
         return reg;
     }
 
+    // dummy
+    int
+    flattenCCIndex(int reg)
+    {
+        return reg;
+    }
+
     typedef SparcISAParams Params;
     const Params *params() const;
 

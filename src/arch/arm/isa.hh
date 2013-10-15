@@ -140,6 +140,13 @@ namespace ArmISA
             return reg;
         }
 
+        // dummy
+        int
+        flattenCCIndex(int reg)
+        {
+            return reg;
+        }
+
         int
         flattenMiscIndex(int reg)
         {

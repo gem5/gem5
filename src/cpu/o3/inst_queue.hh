@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -413,12 +414,6 @@ class InstructionQueue
 
     /** The number of physical registers in the CPU. */
     unsigned numPhysRegs;
-
-    /** The number of physical integer registers in the CPU. */
-    unsigned numPhysIntRegs;
-
-    /** The number of floating point registers in the CPU. */
-    unsigned numPhysFloatRegs;
 
     /** Delay between commit stage and the IQ.
      *  @todo: Make there be a distinction between the delays within IEW.

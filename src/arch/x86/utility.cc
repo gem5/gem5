@@ -244,6 +244,8 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     //copy float regs
     for (int i = 0; i < NumFloatRegs; ++i)
          dest->setFloatRegBits(i, src->readFloatRegBits(i));
+    // Will need to add condition-code regs when implemented
+    assert(NumCCRegs == 0);
     copyMiscRegs(src, dest);
     dest->pcState(src->pcState());
 }

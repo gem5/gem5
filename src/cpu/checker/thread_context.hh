@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -216,6 +217,9 @@ class CheckerThreadContext : public ThreadContext
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
 
+    CCReg readCCReg(int reg_idx)
+    { return actualTC->readCCReg(reg_idx); }
+
     void setIntReg(int reg_idx, uint64_t val)
     {
         actualTC->setIntReg(reg_idx, val);
@@ -232,6 +236,12 @@ class CheckerThreadContext : public ThreadContext
     {
         actualTC->setFloatRegBits(reg_idx, val);
         checkerTC->setFloatRegBits(reg_idx, val);
+    }
+
+    void setCCReg(int reg_idx, CCReg val)
+    {
+        actualTC->setCCReg(reg_idx, val);
+        checkerTC->setCCReg(reg_idx, val);
     }
 
     /** Reads this thread's PC state. */
@@ -289,6 +299,7 @@ class CheckerThreadContext : public ThreadContext
 
     int flattenIntIndex(int reg) { return actualTC->flattenIntIndex(reg); }
     int flattenFloatIndex(int reg) { return actualTC->flattenFloatIndex(reg); }
+    int flattenCCIndex(int reg) { return actualTC->flattenCCIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }
@@ -320,6 +331,12 @@ class CheckerThreadContext : public ThreadContext
 
     void setFloatRegBitsFlat(int idx, FloatRegBits val)
     { actualTC->setFloatRegBitsFlat(idx, val); }
+
+    CCReg readCCRegFlat(int idx)
+    { return actualTC->readCCRegFlat(idx); }
+
+    void setCCRegFlat(int idx, CCReg val)
+    { actualTC->setCCRegFlat(idx, val); }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

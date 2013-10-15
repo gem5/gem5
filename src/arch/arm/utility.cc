@@ -113,7 +113,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 void
 skipFunction(ThreadContext *tc)
 {
-    TheISA::PCState newPC = tc->pcState();
+    PCState newPC = tc->pcState();
     newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
@@ -127,13 +127,16 @@ skipFunction(ThreadContext *tc)
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    for (int i = 0; i < TheISA::NumIntRegs; i++)
+    for (int i = 0; i < NumIntRegs; i++)
         dest->setIntRegFlat(i, src->readIntRegFlat(i));
 
-    for (int i = 0; i < TheISA::NumFloatRegs; i++)
+    for (int i = 0; i < NumFloatRegs; i++)
         dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
 
-    for (int i = 0; i < TheISA::NumMiscRegs; i++)
+    // Would need to add condition-code regs if implemented
+    assert(NumCCRegs == 0);
+
+    for (int i = 0; i < NumMiscRegs; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     // setMiscReg "with effect" will set the misc register mapping correctly.

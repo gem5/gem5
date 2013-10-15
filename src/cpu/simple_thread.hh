@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,6 +55,7 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "debug/CCRegs.hh"
 #include "debug/FloatRegs.hh"
 #include "debug/IntRegs.hh"
 #include "mem/page_table.hh"
@@ -99,6 +101,7 @@ class SimpleThread : public ThreadState
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
+    typedef TheISA::CCReg CCReg;
   public:
     typedef ThreadContext::Status Status;
 
@@ -108,6 +111,9 @@ class SimpleThread : public ThreadState
         FloatRegBits i[TheISA::NumFloatRegs];
     } floatRegs;
     TheISA::IntReg intRegs[TheISA::NumIntRegs];
+#ifdef ISA_HAS_CC_REGS
+    TheISA::CCReg ccRegs[TheISA::NumCCRegs];
+#endif
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
     TheISA::PCState _pcState;
@@ -224,6 +230,9 @@ class SimpleThread : public ThreadState
         _pcState = 0;
         memset(intRegs, 0, sizeof(intRegs));
         memset(floatRegs.i, 0, sizeof(floatRegs.i));
+#ifdef ISA_HAS_CC_REGS
+        memset(ccRegs, 0, sizeof(ccRegs));
+#endif
         isa->clear();
     }
 
@@ -260,6 +269,21 @@ class SimpleThread : public ThreadState
         return regVal;
     }
 
+    CCReg readCCReg(int reg_idx)
+    {
+#ifdef ISA_HAS_CC_REGS
+        int flatIndex = isa->flattenCCIndex(reg_idx);
+        assert(flatIndex < TheISA::NumCCRegs);
+        uint64_t regVal(readCCRegFlat(flatIndex));
+        DPRINTF(CCRegs, "Reading CC reg %d (%d) as %#x.\n",
+                reg_idx, flatIndex, regVal);
+        return regVal;
+#else
+        panic("Tried to read a CC register.");
+        return 0;
+#endif
+    }
+
     void setIntReg(int reg_idx, uint64_t val)
     {
         int flatIndex = isa->flattenIntIndex(reg_idx);
@@ -288,6 +312,19 @@ class SimpleThread : public ThreadState
             setFloatRegBitsFlat(flatIndex, val);
         DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x, %#f.\n",
                 reg_idx, flatIndex, val, floatRegs.f[flatIndex]);
+    }
+
+    void setCCReg(int reg_idx, CCReg val)
+    {
+#ifdef ISA_HAS_CC_REGS
+        int flatIndex = isa->flattenCCIndex(reg_idx);
+        assert(flatIndex < TheISA::NumCCRegs);
+        DPRINTF(CCRegs, "Setting CC reg %d (%d) to %#x.\n",
+                reg_idx, flatIndex, val);
+        setCCRegFlat(flatIndex, val);
+#else
+        panic("Tried to set a CC register.");
+#endif
     }
 
     TheISA::PCState
@@ -372,6 +409,12 @@ class SimpleThread : public ThreadState
         return isa->flattenFloatIndex(reg);
     }
 
+    int
+    flattenCCIndex(int reg)
+    {
+        return isa->flattenCCIndex(reg);
+    }
+
     unsigned readStCondFailures() { return storeCondFailures; }
 
     void setStCondFailures(unsigned sc_failures)
@@ -393,6 +436,16 @@ class SimpleThread : public ThreadState
         floatRegs.i[idx] = val;
     }
 
+#ifdef ISA_HAS_CC_REGS
+    CCReg readCCRegFlat(int idx) { return ccRegs[idx]; }
+    void setCCRegFlat(int idx, CCReg val) { ccRegs[idx] = val; }
+#else
+    CCReg readCCRegFlat(int idx)
+    { panic("readCCRegFlat w/no CC regs!\n"); }
+
+    void setCCRegFlat(int idx, CCReg val)
+    { panic("setCCRegFlat w/no CC regs!\n"); }
+#endif
 };
 
 

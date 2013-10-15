@@ -103,6 +103,13 @@ namespace AlphaISA
             return reg;
         }
 
+        // dummy
+        int
+        flattenCCIndex(int reg)
+        {
+            return reg;
+        }
+
         const Params *params() const;
 
         ISA(Params *p);

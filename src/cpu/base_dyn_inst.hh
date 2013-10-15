@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011,2013 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -629,6 +630,12 @@ class BaseDynInst : public RefCounted
 
     /** Records an integer register being set to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
+    {
+        setResult<uint64_t>(val);
+    }
+
+    /** Records a CC register being set to a value. */
+    void setCCRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         setResult<uint64_t>(val);
     }

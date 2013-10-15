@@ -55,6 +55,8 @@ PowerStaticInst::printReg(std::ostream &os, int reg) const
           default: ccprintf(os, "unknown_reg");
             break;
         }
+      case CCRegClass:
+        panic("printReg: POWER does not implement CCRegClass\n");
     }
 }
 

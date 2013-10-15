@@ -1,4 +1,5 @@
 # Copyright (c) 2003-2005 The Regents of The University of Michigan
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -497,6 +498,9 @@ class Operand(object):
     def isIntReg(self):
         return 0
 
+    def isCCReg(self):
+        return 0
+
     def isControlReg(self):
         return 0
 
@@ -660,6 +664,79 @@ class FloatRegOperand(Operand):
         }''' % (self.ctype, self.base_name, wp)
         return wb
 
+class CCRegOperand(Operand):
+    def isReg(self):
+        return 1
+
+    def isCCReg(self):
+        return 1
+
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
+
+        if self.is_src:
+            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + CC_Reg_Base;' % \
+                     (self.reg_spec)
+            if self.hasReadPred():
+                c_src = '\n\tif (%s) {%s\n\t}' % \
+                        (self.read_predicate, c_src)
+
+        if self.is_dest:
+            c_dest = \
+              '\n\t_destRegIdx[_numDestRegs++] = %s + CC_Reg_Base;' % \
+              (self.reg_spec)
+            c_dest += '\n\t_numCCDestRegs++;'
+            if self.hasWritePred():
+                c_dest = '\n\tif (%s) {%s\n\t}' % \
+                         (self.write_predicate, c_dest)
+
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error('Attempt to read condition-code register as FP')
+        if self.read_code != None:
+            return self.buildReadCode('readCCRegOperand')
+
+        int_reg_val = ''
+        if predRead:
+            int_reg_val = 'xc->readCCRegOperand(this, _sourceIndex++)'
+            if self.hasReadPred():
+                int_reg_val = '(%s) ? %s : 0' % \
+                              (self.read_predicate, int_reg_val)
+        else:
+            int_reg_val = 'xc->readCCRegOperand(this, %d)' % self.src_reg_idx
+
+        return '%s = %s;\n' % (self.base_name, int_reg_val)
+
+    def makeWrite(self, predWrite):
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error('Attempt to write condition-code register as FP')
+        if self.write_code != None:
+            return self.buildWriteCode('setCCRegOperand')
+
+        if predWrite:
+            wp = 'true'
+            if self.hasWritePred():
+                wp = self.write_predicate
+
+            wcond = 'if (%s)' % (wp)
+            windex = '_destIndex++'
+        else:
+            wcond = ''
+            windex = '%d' % self.dest_reg_idx
+
+        wb = '''
+        %s
+        {
+            %s final_val = %s;
+            xc->setCCRegOperand(this, %s, final_val);\n
+            if (traceData) { traceData->setData(final_val); }
+        }''' % (wcond, self.ctype, self.base_name, windex)
+
+        return wb
+
 class ControlRegOperand(Operand):
     def isReg(self):
         return 1
@@ -815,6 +892,7 @@ class OperandList(object):
         self.numDestRegs = 0
         self.numFPDestRegs = 0
         self.numIntDestRegs = 0
+        self.numCCDestRegs = 0
         self.numMiscDestRegs = 0
         self.memOperand = None
 
@@ -835,6 +913,8 @@ class OperandList(object):
                         self.numFPDestRegs += 1
                     elif op_desc.isIntReg():
                         self.numIntDestRegs += 1
+                    elif op_desc.isCCReg():
+                        self.numCCDestRegs += 1
                     elif op_desc.isControlReg():
                         self.numMiscDestRegs += 1
             elif op_desc.isMem():
@@ -1030,6 +1110,7 @@ class InstObjParams(object):
         header += '\n\t_numDestRegs = 0;'
         header += '\n\t_numFPDestRegs = 0;'
         header += '\n\t_numIntDestRegs = 0;'
+        header += '\n\t_numCCDestRegs = 0;'
 
         self.constructor = header + \
                            self.operands.concatAttrStrings('constructor')
