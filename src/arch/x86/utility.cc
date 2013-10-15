@@ -244,8 +244,9 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     //copy float regs
     for (int i = 0; i < NumFloatRegs; ++i)
          dest->setFloatRegBits(i, src->readFloatRegBits(i));
-    // Will need to add condition-code regs when implemented
-    assert(NumCCRegs == 0);
+    //copy condition-code regs
+    for (int i = 0; i < NumCCRegs; ++i)
+         dest->setCCReg(i, src->readCCReg(i));
     copyMiscRegs(src, dest);
     dest->pcState(src->pcState());
 }
@@ -260,9 +261,9 @@ uint64_t
 getRFlags(ThreadContext *tc)
 {
     const uint64_t ncc_flags(tc->readMiscRegNoEffect(MISCREG_RFLAGS));
-    const uint64_t cc_flags(tc->readIntReg(X86ISA::INTREG_PSEUDO(0)));
-    const uint64_t cfof_bits(tc->readIntReg(X86ISA::INTREG_PSEUDO(1)));
-    const uint64_t df_bit(tc->readIntReg(X86ISA::INTREG_PSEUDO(2)));
+    const uint64_t cc_flags(tc->readIntReg(X86ISA::CCREG_ZAPS));
+    const uint64_t cfof_bits(tc->readIntReg(X86ISA::CCREG_CFOF));
+    const uint64_t df_bit(tc->readIntReg(X86ISA::CCREG_DF));
     // ecf (PSEUDO(3)) & ezf (PSEUDO(4)) are only visible to
     // microcode, so we can safely ignore them.
 
@@ -275,13 +276,13 @@ getRFlags(ThreadContext *tc)
 void
 setRFlags(ThreadContext *tc, uint64_t val)
 {
-    tc->setIntReg(X86ISA::INTREG_PSEUDO(0), val & ccFlagMask);
-    tc->setIntReg(X86ISA::INTREG_PSEUDO(1), val & cfofMask);
-    tc->setIntReg(X86ISA::INTREG_PSEUDO(2), val & DFBit);
+    tc->setIntReg(X86ISA::CCREG_ZAPS, val & ccFlagMask);
+    tc->setIntReg(X86ISA::CCREG_CFOF, val & cfofMask);
+    tc->setIntReg(X86ISA::CCREG_DF, val & DFBit);
 
     // Internal microcode registers (ECF & EZF)
-    tc->setIntReg(X86ISA::INTREG_PSEUDO(3), 0);
-    tc->setIntReg(X86ISA::INTREG_PSEUDO(4), 0);
+    tc->setIntReg(X86ISA::CCREG_ECF, 0);
+    tc->setIntReg(X86ISA::CCREG_EZF, 0);
 
     // Update the RFLAGS misc reg with whatever didn't go into the
     // magic registers.

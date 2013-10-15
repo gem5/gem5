@@ -159,16 +159,9 @@ namespace X86ISA
     }
 
     inline static IntRegIndex
-    INTREG_PSEUDO(int index)
-    {
-        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs + index);
-    }
-
-    inline static IntRegIndex
     INTREG_IMPLICIT(int index)
     {
-        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs +
-                             NumPseudoIntRegs + index);
+        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs + index);
     }
 
     inline static IntRegIndex

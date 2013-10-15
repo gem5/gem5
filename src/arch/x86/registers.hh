@@ -43,6 +43,7 @@
 
 #include "arch/x86/generated/max_inst_regs.hh"
 #include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/x86_traits.hh"
 
@@ -54,10 +55,10 @@ using X86ISAInst::MaxMiscDestRegs;
 const int NumMiscRegs = NUM_MISCREGS;
 
 const int NumIntArchRegs = NUM_INTREGS;
-const int NumIntRegs =
-    NumIntArchRegs + NumMicroIntRegs +
-    NumPseudoIntRegs + NumImplicitIntRegs;
-const int NumCCRegs = 0;
+const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs + NumImplicitIntRegs;
+const int NumCCRegs = NUM_CCREGS;
+
+#define ISA_HAS_CC_REGS
 
 // Each 128 bit xmm register is broken into two effective 64 bit registers.
 // Add 8 for the indices that are mapped over the fp stack
@@ -71,7 +72,7 @@ enum DependenceTags {
     // we just start at (1 << 7) == 128.
     FP_Reg_Base = 128,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
+    Misc_Reg_Base = CC_Reg_Base + NumCCRegs,
     Max_Reg_Index = Misc_Reg_Base + NumMiscRegs
 };
 
@@ -102,6 +103,7 @@ typedef union
 {
     IntReg intReg;
     FloatReg fpReg;
+    CCReg ccReg;
     MiscReg ctrlReg;
 } AnyReg;
 

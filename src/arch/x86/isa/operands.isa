@@ -11,6 +11,8 @@
 // modified or unmodified, in source code or in binary form.
 //
 // Copyright (c) 2007 The Regents of The University of Michigan
+// Copyright (c) 2012 Mark D. Hill and David A. Wood
+// Copyright (c) 2012-2013 Advanced Micro Devices, Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -61,6 +63,8 @@ let {{
         return ('IntReg', 'uqw', 'INTREG_IMPLICIT(%s)' % idx, 'IsInteger', id)
     def floatReg(idx, id):
         return ('FloatReg', 'df', idx, 'IsFloating', id)
+    def ccReg(idx, id):
+        return ('CCReg', 'uqw', idx, 'IsCC', id)
     def controlReg(idx, id, ctype = 'uqw'):
         return ('ControlReg', ctype, idx,
                 (None, None, ['IsSerializeAfter',
@@ -118,11 +122,11 @@ def operands {{
                           (None, None, 'IsControl'), 50),
         # These registers hold the condition code portion of the flag
         # register. The nccFlagBits version holds the rest.
-        'ccFlagBits':    intReg('INTREG_PSEUDO(0)', 60),
-        'cfofBits':      intReg('INTREG_PSEUDO(1)', 61),
-        'dfBit':         intReg('INTREG_PSEUDO(2)', 62),
-        'ecfBit':        intReg('INTREG_PSEUDO(3)', 63),
-        'ezfBit':        intReg('INTREG_PSEUDO(4)', 64),
+        'ccFlagBits':    ccReg('(CCREG_ZAPS)', 60),
+        'cfofBits':      ccReg('(CCREG_CFOF)', 61),
+        'dfBit':         ccReg('(CCREG_DF)', 62),
+        'ecfBit':        ccReg('(CCREG_ECF)', 63),
+        'ezfBit':        ccReg('(CCREG_EZF)', 64),
 
         # These Pred registers are to be used where reading the portions of
         # condition code registers is possibly optional, depending on how the
@@ -139,20 +143,20 @@ def operands {{
         # would be retained, the write predicate checks if any of the bits
         # are being written.
 
-        'PredccFlagBits': ('IntReg', 'uqw', 'INTREG_PSEUDO(0)', 'IsInteger',
+        'PredccFlagBits': ('CCReg', 'uqw', '(CCREG_ZAPS)', 'IsCC',
                 60, None, None, '''(((ext & (PFBit | AFBit | ZFBit | SFBit
                 )) != (PFBit | AFBit | ZFBit | SFBit )) &&
                 ((ext & (PFBit | AFBit | ZFBit | SFBit )) != 0))''',
                 '((ext & (PFBit | AFBit | ZFBit | SFBit )) != 0)'),
-        'PredcfofBits':   ('IntReg', 'uqw', 'INTREG_PSEUDO(1)', 'IsInteger',
+        'PredcfofBits':   ('CCReg', 'uqw', '(CCREG_CFOF)', 'IsCC',
                 61, None, None, '''(((ext & CFBit) == 0 ||
                 (ext & OFBit) == 0) && ((ext & (CFBit | OFBit)) != 0))''',
                 '((ext & (CFBit | OFBit)) != 0)'),
-        'PreddfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(2)', 'IsInteger',
+        'PreddfBit':   ('CCReg', 'uqw', '(CCREG_DF)', 'IsCC',
                 62, None, None, '(false)', '((ext & DFBit) != 0)'),
-        'PredecfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(3)', 'IsInteger',
+        'PredecfBit':   ('CCReg', 'uqw', '(CCREG_ECF)', 'IsCC',
                 63, None, None, '(false)', '((ext & ECFBit) != 0)'),
-        'PredezfBit':   ('IntReg', 'uqw', 'INTREG_PSEUDO(4)', 'IsInteger',
+        'PredezfBit':   ('CCReg', 'uqw', '(CCREG_EZF)', 'IsCC',
                 64, None, None, '(false)', '((ext & EZFBit) != 0)'),
 
         # These register should needs to be more protected so that later

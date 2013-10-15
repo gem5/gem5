@@ -112,7 +112,18 @@ class DerivO3CPU(BaseCPU):
     numPhysIntRegs = Param.Unsigned(256, "Number of physical integer registers")
     numPhysFloatRegs = Param.Unsigned(256, "Number of physical floating point "
                                       "registers")
-    numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
+    # most ISAs don't use condition-code regs, so default is 0
+    _defaultNumPhysCCRegs = 0
+    if buildEnv['TARGET_ISA'] == 'x86':
+        # For x86, each CC reg is used to hold only a subset of the
+        # flags, so we need 4-5 times the number of CC regs as
+        # physical integer regs to be sure we don't run out.  In
+        # typical real machines, CC regs are not explicitly renamed
+        # (it's a side effect of int reg renaming), so they should
+        # never be the bottleneck here.
+        _defaultNumPhysCCRegs = Self.numPhysIntRegs * 5
+    numPhysCCRegs = Param.Unsigned(_defaultNumPhysCCRegs,
+                                   "Number of physical cc registers")
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
