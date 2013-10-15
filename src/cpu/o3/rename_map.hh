@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Steve Reinhardt
  */
 
 // Todo:  Create destructor.
@@ -42,18 +44,54 @@
 #include "arch/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/free_list.hh"
+#include "cpu/o3/regfile.hh"
+#include "cpu/reg_class.hh"
 
+/**
+ * Register rename map for a single class of registers (e.g., integer
+ * or floating point).  Because the register class is implicitly
+ * determined by the rename map instance being accessed, all
+ * architectural register index parameters and values in this class
+ * are relative (e.g., %fp2 is just index 2).
+ */
 class SimpleRenameMap
 {
-  protected:
-    typedef TheISA::RegIndex RegIndex;
   public:
+
+    typedef TheISA::RegIndex RegIndex;
+
+  private:
+
+    /** The acutal arch-to-phys register map */
+    std::vector<PhysRegIndex> map;
+
     /**
-     * Pair of a logical register and a physical register.  Tells the
-     * previous mapping of a logical register to a physical register.
-     * Used to roll back the rename map to a previous state.
+     * Pointer to the free list from which new physical registers
+     * should be allocated in rename()
      */
-    typedef std::pair<RegIndex, PhysRegIndex> UnmapInfo;
+    SimpleFreeList *freeList;
+
+    /**
+     * The architectural index of the zero register. This register is
+     * mapped but read-only, so we ignore attempts to rename it via
+     * the rename() method.  If there is no such register for this map
+     * table, it should be set to an invalid index so that it never
+     * matches.
+     */
+    RegIndex zeroReg;
+
+  public:
+
+    SimpleRenameMap();
+
+    ~SimpleRenameMap() {};
+
+    /**
+     * Because we have an array of rename maps (one per thread) in the CPU,
+     * it's awkward to initialize this object via the constructor.
+     * Instead, this method is used for initialization.
+     */
+    void init(unsigned size, SimpleFreeList *_freeList, RegIndex _zeroReg);
 
     /**
      * Pair of a physical register and a physical register.  Used to
@@ -63,106 +101,216 @@ class SimpleRenameMap
      */
     typedef std::pair<PhysRegIndex, PhysRegIndex> RenameInfo;
 
-  public:
-    /** Default constructor.  init() must be called prior to use. */
-    SimpleRenameMap() {};
-
-    /** Destructor. */
-    ~SimpleRenameMap();
-
-    /** Initializes rename map with given parameters. */
-    void init(unsigned _numLogicalIntRegs,
-              unsigned _numPhysicalIntRegs,
-              PhysRegIndex &_int_reg_start,
-
-              unsigned _numLogicalFloatRegs,
-              unsigned _numPhysicalFloatRegs,
-              PhysRegIndex &_float_reg_start,
-
-              unsigned _numMiscRegs,
-
-              RegIndex _intZeroReg,
-              RegIndex _floatZeroReg,
-
-              int id,
-              bool bindRegs);
-
-    /** Sets the free list used with this rename map. */
-    void setFreeList(SimpleFreeList *fl_ptr);
-
-    //Tell rename map to get a free physical register for a given
-    //architected register.  Not sure it should have a return value,
-    //but perhaps it should have some sort of fault in case there are
-    //no free registers.
+    /**
+     * Tell rename map to get a new free physical register to remap
+     * the specified architectural register.
+     * @param arch_reg The architectural register to remap.
+     * @return A RenameInfo pair indicating both the new and previous
+     * physical registers.
+     */
     RenameInfo rename(RegIndex arch_reg);
 
-    PhysRegIndex lookup(RegIndex phys_reg);
+    /**
+     * Look up the physical register mapped to an architectural register.
+     * @param arch_reg The architectural register to look up.
+     * @return The physical register it is currently mapped to.
+     */
+    PhysRegIndex lookup(RegIndex arch_reg) const
+    {
+        assert(arch_reg < map.size());
+        return map[arch_reg];
+    }
 
     /**
-     * Marks the given register as ready, meaning that its value has been
-     * calculated and written to the register file.
-     * @param ready_reg The index of the physical register that is now ready.
+     * Update rename map with a specific mapping.  Generally used to
+     * roll back to old mappings on a squash.
+     * @param arch_reg The architectural register to remap.
+     * @param phys_reg The physical register to remap it to.
      */
-    void setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg);
-
-    int numFreeEntries();
-
-  private:
-    /** Rename Map ID  */
-    int id;
-
-    /** Number of logical integer registers. */
-    int numLogicalIntRegs;
-
-    /** Number of physical integer registers. */
-    int numPhysicalIntRegs;
-
-    /** Number of logical floating point registers. */
-    int numLogicalFloatRegs;
-
-    /** Number of physical floating point registers. */
-    int numPhysicalFloatRegs;
-
-    /** Number of miscellaneous registers. */
-    int numMiscRegs;
-
-    /** Number of logical integer + float registers. */
-    int numLogicalRegs;
-
-    /** Number of physical integer + float registers. */
-    int numPhysicalRegs;
-
-    /** The integer zero register.  This implementation assumes it is always
-     *  zero and never can be anything else.
-     */
-    RegIndex intZeroReg;
-
-    /** The floating point zero register.  This implementation assumes it is
-     *  always zero and never can be anything else.
-     */
-    RegIndex floatZeroReg;
-
-    class RenameEntry
+    void setEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
     {
-      public:
-        PhysRegIndex physical_reg;
-        bool valid;
+        map[arch_reg] = phys_reg;
+    }
 
-        RenameEntry()
-            : physical_reg(0), valid(false)
-        { }
-    };
+    /** Return the number of free entries on the associated free list. */
+    unsigned numFreeEntries() const { return freeList->numFreeRegs(); }
+};
 
+
+/**
+ * Unified register rename map for all classes of registers.  Wraps a
+ * set of class-specific rename maps.  Methods that do not specify a
+ * register class (e.g., rename()) take unified register indices,
+ * while methods that do specify a register class (e.g., renameInt())
+ * take relative register indices.  See http://gem5.org/Register_Indexing.
+ */
+class UnifiedRenameMap
+{
   private:
-    /** Integer rename map. */
-    std::vector<RenameEntry> intRenameMap;
 
-    /** Floating point rename map. */
-    std::vector<RenameEntry> floatRenameMap;
+    /** The integer register rename map */
+    SimpleRenameMap intMap;
 
-  private:
-    /** Free list interface. */
-    SimpleFreeList *freeList;
+    /** The floating-point register rename map */
+    SimpleRenameMap floatMap;
+
+    /**
+     * The register file object is used only to distinguish integer
+     * from floating-point physical register indices, which in turn is
+     * used only for assert statements that make sure the physical
+     * register indices that get passed in and handed out are of the
+     * proper class.
+     */
+    PhysRegFile *regFile;
+
+  public:
+    typedef TheISA::RegIndex RegIndex;
+
+    typedef SimpleRenameMap::RenameInfo RenameInfo;
+
+    /** Default constructor.  init() must be called prior to use. */
+    UnifiedRenameMap() {};
+
+    /** Destructor. */
+    ~UnifiedRenameMap() {};
+
+    /** Initializes rename map with given parameters. */
+    void init(PhysRegFile *_regFile,
+              RegIndex _intZeroReg,
+              RegIndex _floatZeroReg,
+              UnifiedFreeList *freeList);
+
+    /**
+     * Tell rename map to get a new free physical register to remap
+     * the specified architectural register.  This version takes a
+     * unified flattened architectural register index and calls the
+     * appropriate class-specific rename table.
+     * @param arch_reg The unified architectural register index to remap.
+     * @return A RenameInfo pair indicating both the new and previous
+     * physical registers.
+     */
+    RenameInfo rename(RegIndex arch_reg);
+
+    /**
+     * Perform rename() on an integer register, given a relative
+     * integer register index.
+     */
+    RenameInfo renameInt(RegIndex rel_arch_reg)
+    {
+        RenameInfo info = intMap.rename(rel_arch_reg);
+        assert(regFile->isIntPhysReg(info.first));
+        return info;
+    }
+
+    /**
+     * Perform rename() on a floating-point register, given a relative
+     * floating-point register index.
+     */
+    RenameInfo renameFloat(RegIndex rel_arch_reg)
+    {
+        RenameInfo info = floatMap.rename(rel_arch_reg);
+        assert(regFile->isFloatPhysReg(info.first));
+        return info;
+    }
+
+    /**
+     * Perform rename() on a misc register, given a relative
+     * misc register index.
+     */
+    RenameInfo renameMisc(RegIndex rel_arch_reg)
+    {
+        // misc regs aren't really renamed, just remapped
+        PhysRegIndex phys_reg = lookupMisc(rel_arch_reg);
+        // Set the previous register to the same register; mainly it must be
+        // known that the prev reg was outside the range of normal registers
+        // so the free list can avoid adding it.
+        return RenameInfo(phys_reg, phys_reg);
+    }
+
+
+    /**
+     * Look up the physical register mapped to an architectural register.
+     * This version takes a unified flattened architectural register index
+     * and calls the appropriate class-specific rename table.
+     * @param arch_reg The unified architectural register to look up.
+     * @return The physical register it is currently mapped to.
+     */
+    PhysRegIndex lookup(RegIndex arch_reg) const;
+
+    /**
+     * Perform lookup() on an integer register, given a relative
+     * integer register index.
+     */
+    PhysRegIndex lookupInt(RegIndex rel_arch_reg) const
+    {
+        PhysRegIndex phys_reg = intMap.lookup(rel_arch_reg);
+        assert(regFile->isIntPhysReg(phys_reg));
+        return phys_reg;
+    }
+
+    /**
+     * Perform lookup() on a floating-point register, given a relative
+     * floating-point register index.
+     */
+    PhysRegIndex lookupFloat(RegIndex rel_arch_reg) const
+    {
+        PhysRegIndex phys_reg = floatMap.lookup(rel_arch_reg);
+        assert(regFile->isFloatPhysReg(phys_reg));
+        return phys_reg;
+    }
+
+    /**
+     * Perform lookup() on a misc register, given a relative
+     * misc register index.
+     */
+    PhysRegIndex lookupMisc(RegIndex rel_arch_reg) const
+    {
+        // misc regs aren't really renamed, just given an index
+        // beyond the range of actual physical registers
+        PhysRegIndex phys_reg = rel_arch_reg + regFile->totalNumPhysRegs();
+        return phys_reg;
+    }
+
+    /**
+     * Update rename map with a specific mapping.  Generally used to
+     * roll back to old mappings on a squash.  This version takes a
+     * unified flattened architectural register index and calls the
+     * appropriate class-specific rename table.
+     * @param arch_reg The unified architectural register to remap.
+     * @param phys_reg The physical register to remap it to.
+     */
+    void setEntry(RegIndex arch_reg, PhysRegIndex phys_reg);
+
+    /**
+     * Perform setEntry() on an integer register, given a relative
+     * integer register index.
+     */
+    void setIntEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
+    {
+        assert(regFile->isIntPhysReg(phys_reg));
+        intMap.setEntry(arch_reg, phys_reg);
+    }
+
+    /**
+     * Perform setEntry() on a floating-point register, given a relative
+     * floating-point register index.
+     */
+    void setFloatEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
+    {
+        assert(regFile->isFloatPhysReg(phys_reg));
+        floatMap.setEntry(arch_reg, phys_reg);
+    }
+
+    /**
+     * Return the minimum number of free entries across all of the
+     * register classes.  The minimum is used so we guarantee that
+     * this number of entries is available regardless of which class
+     * of registers is requested.
+     */
+    unsigned numFreeEntries() const
+    {
+        return std::min(intMap.numFreeEntries(), floatMap.numFreeEntries());
+    }
 };
 
 #endif //__CPU_O3_RENAME_MAP_HH__

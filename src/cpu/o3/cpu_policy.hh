@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,14 +60,10 @@
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    /** Typedef for the register file.  Most classes assume a unified
-     * physical register file.
-     */
-    typedef PhysRegFile RegFile;
     /** Typedef for the freelist of registers. */
-    typedef SimpleFreeList FreeList;
+    typedef UnifiedFreeList FreeList;
     /** Typedef for the rename map. */
-    typedef SimpleRenameMap RenameMap;
+    typedef UnifiedRenameMap RenameMap;
     /** Typedef for the ROB. */
     typedef ::ROB<Impl> ROB;
     /** Typedef for the instruction queue/scheduler. */

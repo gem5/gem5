@@ -43,6 +43,8 @@
 #include "cpu/o3/comm.hh"
 #include "debug/IEW.hh"
 
+class UnifiedFreeList;
+
 /**
  * Simple physical register file class.
  */
@@ -60,10 +62,10 @@ class PhysRegFile
     } PhysFloatReg;
 
     /** Integer register file. */
-    IntReg *intRegFile;
+    std::vector<IntReg> intRegFile;
 
     /** Floating point register file. */
-    PhysFloatReg *floatRegFile;
+    std::vector<PhysFloatReg> floatRegFile;
 
     /**
      * The first floating-point physical register index.  The physical
@@ -72,6 +74,12 @@ class PhysRegFile
      * immediately by the floating-point registers.  Thus the first
      * floating-point index is equal to the number of integer
      * registers.
+     *
+     * Note that this internal organizational detail on how physical
+     * register file indices are ordered should *NOT* be exposed
+     * outside of this class.  Other classes can use the is*PhysReg()
+     * methods to map from a physical register index to a class
+     * without knowing the internal structure of the index map.
      */
     unsigned baseFloatRegIndex;
 
@@ -89,7 +97,10 @@ class PhysRegFile
     /**
      * Destructor to free resources
      */
-    ~PhysRegFile();
+    ~PhysRegFile() {}
+
+    /** Initialize the free list */
+    void initFreeList(UnifiedFreeList *freeList);
 
     /** @return the number of integer physical registers. */
     unsigned numIntPhysRegs() const { return baseFloatRegIndex; }
@@ -202,26 +213,5 @@ class PhysRegFile
 
 };
 
-
-inline
-PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
-                         unsigned _numPhysicalFloatRegs)
-    : baseFloatRegIndex(_numPhysicalIntRegs),
-      totalNumRegs(_numPhysicalIntRegs + _numPhysicalFloatRegs)
-{
-    intRegFile = new IntReg[_numPhysicalIntRegs];
-    floatRegFile = new PhysFloatReg[_numPhysicalFloatRegs];
-
-    memset(intRegFile, 0, sizeof(IntReg) * _numPhysicalIntRegs);
-    memset(floatRegFile, 0, sizeof(PhysFloatReg) * _numPhysicalFloatRegs);
-}
-
-
-inline
-PhysRegFile::~PhysRegFile()
-{
-    delete intRegFile;
-    delete floatRegFile;
-}
 
 #endif //__CPU_O3_REGFILE_HH__

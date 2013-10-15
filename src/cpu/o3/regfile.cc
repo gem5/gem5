@@ -27,19 +27,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Gabe Black
+ *          Steve Reinhardt
  */
 
-#include "base/trace.hh"
 #include "cpu/o3/free_list.hh"
-#include "debug/FreeList.hh"
+#include "cpu/o3/regfile.hh"
 
-UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,
-                                 PhysRegFile *_regFile)
-    : _name(_my_name), regFile(_regFile)
+
+PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
+                         unsigned _numPhysicalFloatRegs)
+    : intRegFile(_numPhysicalIntRegs),
+      floatRegFile(_numPhysicalFloatRegs),
+      baseFloatRegIndex(_numPhysicalIntRegs),
+      totalNumRegs(_numPhysicalIntRegs + _numPhysicalFloatRegs)
 {
-    DPRINTF(FreeList, "Creating new free list object.\n");
+}
 
-    // Have the register file initialize the free list since it knows
-    // about its internal organization
-    regFile->initFreeList(this);
+
+void
+PhysRegFile::initFreeList(UnifiedFreeList *freeList)
+{
+    // Initialize the free lists.
+    PhysRegIndex reg_idx = 0;
+
+    // The initial batch of registers are the integer ones
+    while (reg_idx < baseFloatRegIndex) {
+        freeList->addIntReg(reg_idx++);
+    }
+
+    // The rest of the registers are the floating-point physical
+    // registers; put them onto the floating-point free list.
+    while (reg_idx < totalNumRegs) {
+        freeList->addFloatReg(reg_idx++);
+    }
 }

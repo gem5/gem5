@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,169 +36,45 @@
 
 using namespace std;
 
-// @todo: Consider making inline bool functions that determine if the
-// register is a logical int, logical fp, physical int, physical fp,
-// etc.
+/**** SimpleRenameMap methods ****/
 
-SimpleRenameMap::~SimpleRenameMap()
+SimpleRenameMap::SimpleRenameMap()
+    : freeList(NULL)
 {
 }
+
 
 void
-SimpleRenameMap::init(unsigned _numLogicalIntRegs,
-                      unsigned _numPhysicalIntRegs,
-                      PhysRegIndex &ireg_idx,
-
-                      unsigned _numLogicalFloatRegs,
-                      unsigned _numPhysicalFloatRegs,
-                      PhysRegIndex &freg_idx,
-
-                      unsigned _numMiscRegs,
-
-                      RegIndex _intZeroReg,
-                      RegIndex _floatZeroReg,
-
-                      int map_id,
-                      bool bindRegs)
+SimpleRenameMap::init(unsigned size, SimpleFreeList *_freeList,
+                      RegIndex _zeroReg)
 {
-    id = map_id;
+    assert(freeList == NULL);
+    assert(map.empty());
 
-    numLogicalIntRegs = _numLogicalIntRegs;
-
-    numLogicalFloatRegs = _numLogicalFloatRegs;
-
-    numPhysicalIntRegs = _numPhysicalIntRegs;
-
-    numPhysicalFloatRegs = _numPhysicalFloatRegs;
-
-    numMiscRegs = _numMiscRegs;
-
-    intZeroReg = _intZeroReg;
-    floatZeroReg = _floatZeroReg;
-
-    DPRINTF(Rename, "Creating rename map %i.  Phys: %i / %i, Float: "
-            "%i / %i.\n", id, numLogicalIntRegs, numPhysicalIntRegs,
-            numLogicalFloatRegs, numPhysicalFloatRegs);
-
-    numLogicalRegs = numLogicalIntRegs + numLogicalFloatRegs;
-
-    numPhysicalRegs = numPhysicalIntRegs + numPhysicalFloatRegs;
-
-    //Create the rename maps
-    intRenameMap.resize(numLogicalIntRegs);
-    floatRenameMap.resize(numLogicalRegs);
-
-    if (bindRegs) {
-        DPRINTF(Rename, "Binding registers into rename map %i\n",id);
-
-        // Initialize the entries in the integer rename map to point to the
-        // physical registers of the same index
-        for (RegIndex index = 0; index < numLogicalIntRegs; ++index)
-        {
-            intRenameMap[index].physical_reg = ireg_idx++;
-        }
-
-        // Initialize the entries in the floating point rename map to point to
-        // the physical registers of the same index
-        // Although the index refers purely to architected registers, because
-        // the floating reg indices come after the integer reg indices, they
-        // may exceed the size of a normal RegIndex (short).
-        for (PhysRegIndex index = numLogicalIntRegs;
-             index < numLogicalRegs; ++index)
-        {
-            floatRenameMap[index].physical_reg = freg_idx++;
-        }
-    } else {
-        DPRINTF(Rename, "Binding registers into rename map %i\n",id);
-
-        PhysRegIndex temp_ireg = ireg_idx;
-
-        for (RegIndex index = 0; index < numLogicalIntRegs; ++index)
-        {
-            intRenameMap[index].physical_reg = temp_ireg++;
-        }
-
-        PhysRegIndex temp_freg = freg_idx;
-
-        for (PhysRegIndex index = numLogicalIntRegs;
-             index < numLogicalRegs; ++index)
-        {
-            floatRenameMap[index].physical_reg = temp_freg++;
-        }
-    }
+    map.resize(size);
+    freeList = _freeList;
+    zeroReg = _zeroReg;
 }
-
-void
-SimpleRenameMap::setFreeList(SimpleFreeList *fl_ptr)
-{
-    freeList = fl_ptr;
-}
-
 
 SimpleRenameMap::RenameInfo
 SimpleRenameMap::rename(RegIndex arch_reg)
 {
     PhysRegIndex renamed_reg;
-    PhysRegIndex prev_reg;
 
-    if (arch_reg < numLogicalIntRegs) {
+    // Record the current physical register that is renamed to the
+    // requested architected register.
+    PhysRegIndex prev_reg = map[arch_reg];
 
-        // Record the current physical register that is renamed to the
-        // requested architected register.
-        prev_reg = intRenameMap[arch_reg].physical_reg;
+    // If it's not referencing the zero register, then rename the
+    // register.
+    if (arch_reg != zeroReg) {
+        renamed_reg = freeList->getReg();
 
-        // If it's not referencing the zero register, then rename the
-        // register.
-        if (arch_reg != intZeroReg) {
-            renamed_reg = freeList->getIntReg();
-
-            intRenameMap[arch_reg].physical_reg = renamed_reg;
-
-            assert(renamed_reg >= 0 && renamed_reg < numPhysicalIntRegs);
-
-        } else {
-            // Otherwise return the zero register so nothing bad happens.
-            renamed_reg = intZeroReg;
-            prev_reg = intZeroReg;
-        }
-    } else if (arch_reg < numLogicalRegs) {
-        // Record the current physical register that is renamed to the
-        // requested architected register.
-        prev_reg = floatRenameMap[arch_reg].physical_reg;
-
-        // If it's not referencing the zero register, then rename the
-        // register.
-#if THE_ISA == ALPHA_ISA
-        if (arch_reg != floatZeroReg) {
-#endif
-            renamed_reg = freeList->getFloatReg();
-
-            floatRenameMap[arch_reg].physical_reg = renamed_reg;
-
-            assert(renamed_reg < numPhysicalRegs &&
-                   renamed_reg >= numPhysicalIntRegs);
-#if THE_ISA == ALPHA_ISA
-        } else {
-            // Otherwise return the zero register so nothing bad happens.
-            renamed_reg = floatZeroReg;
-        }
-#endif
+        map[arch_reg] = renamed_reg;
     } else {
-        // Subtract off the base offset for miscellaneous registers.
-        arch_reg = arch_reg - numLogicalRegs;
-
-        DPRINTF(Rename, "Renamed misc reg %d\n", arch_reg);
-
-        // No renaming happens to the misc. registers.  They are
-        // simply the registers that come after all the physical
-        // registers; thus take the base architected register and add
-        // the physical registers to it.
-        renamed_reg = arch_reg + numPhysicalRegs;
-
-        // Set the previous register to the same register; mainly it must be
-        // known that the prev reg was outside the range of normal registers
-        // so the free list can avoid adding it.
-        prev_reg = renamed_reg;
+        // Otherwise return the zero register so nothing bad happens.
+        assert(prev_reg == zeroReg);
+        renamed_reg = zeroReg;
     }
 
     DPRINTF(Rename, "Renamed reg %d to physical reg %d old mapping was %d\n",
@@ -206,51 +83,88 @@ SimpleRenameMap::rename(RegIndex arch_reg)
     return RenameInfo(renamed_reg, prev_reg);
 }
 
-PhysRegIndex
-SimpleRenameMap::lookup(RegIndex arch_reg)
-{
-    if (arch_reg < numLogicalIntRegs) {
-        return intRenameMap[arch_reg].physical_reg;
-    } else if (arch_reg < numLogicalRegs) {
-        return floatRenameMap[arch_reg].physical_reg;
-    } else {
-        // Subtract off the misc registers offset.
-        arch_reg = arch_reg - numLogicalRegs;
 
-        // Misc. regs don't rename, so simply add the base arch reg to
-        // the number of physical registers.
-        return numPhysicalRegs + arch_reg;
+/**** UnifiedRenameMap methods ****/
+
+void
+UnifiedRenameMap::init(PhysRegFile *_regFile,
+                       RegIndex _intZeroReg,
+                       RegIndex _floatZeroReg,
+                       UnifiedFreeList *freeList)
+{
+    regFile = _regFile;
+
+    intMap.init(TheISA::NumIntRegs, &(freeList->intList), _intZeroReg);
+
+    floatMap.init(TheISA::NumFloatRegs, &(freeList->floatList), _floatZeroReg);
+}
+
+
+UnifiedRenameMap::RenameInfo
+UnifiedRenameMap::rename(RegIndex arch_reg)
+{
+    RegIndex rel_arch_reg;
+
+    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+      case IntRegClass:
+        return renameInt(rel_arch_reg);
+
+      case FloatRegClass:
+        return renameFloat(rel_arch_reg);
+
+      case MiscRegClass:
+        return renameMisc(rel_arch_reg);
+
+      default:
+        panic("rename rename(): unknown reg class %s\n",
+              RegClassStrings[regIdxToClass(arch_reg)]);
+    }
+}
+
+
+PhysRegIndex
+UnifiedRenameMap::lookup(RegIndex arch_reg) const
+{
+    RegIndex rel_arch_reg;
+
+    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+      case IntRegClass:
+        return lookupInt(rel_arch_reg);
+
+      case FloatRegClass:
+        return lookupFloat(rel_arch_reg);
+
+      case MiscRegClass:
+        return lookupMisc(rel_arch_reg);
+
+      default:
+        panic("rename lookup(): unknown reg class %s\n",
+              RegClassStrings[regIdxToClass(arch_reg)]);
     }
 }
 
 void
-SimpleRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg)
+UnifiedRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
 {
-    // In this implementation the miscellaneous registers do not
-    // actually rename, so this function does not allow you to try to
-    // change their mappings.
-    if (arch_reg < numLogicalIntRegs) {
-        DPRINTF(Rename, "Rename Map: Integer register %i being set to %i.\n",
-                (int)arch_reg, renamed_reg);
+    RegIndex rel_arch_reg;
 
-        intRenameMap[arch_reg].physical_reg = renamed_reg;
-    } else if (arch_reg < numLogicalIntRegs + numLogicalFloatRegs) {
-        DPRINTF(Rename, "Rename Map: Float register %i being set to %i.\n",
-                (int)arch_reg - numLogicalIntRegs, renamed_reg);
+    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+      case IntRegClass:
+        return setIntEntry(rel_arch_reg, phys_reg);
 
-        floatRenameMap[arch_reg].physical_reg = renamed_reg;
-    }
-}
+      case FloatRegClass:
+        return setFloatEntry(rel_arch_reg, phys_reg);
 
-int
-SimpleRenameMap::numFreeEntries()
-{
-    int free_int_regs = freeList->numFreeIntRegs();
-    int free_float_regs = freeList->numFreeFloatRegs();
+      case MiscRegClass:
+        // Misc registers do not actually rename, so don't change
+        // their mappings.  We end up here when a commit or squash
+        // tries to update or undo a hardwired misc reg nmapping,
+        // which should always be setting it to what it already is.
+        assert(phys_reg == lookupMisc(rel_arch_reg));
+        return;
 
-    if (free_int_regs < free_float_regs) {
-        return free_int_regs;
-    } else {
-        return free_float_regs;
+      default:
+        panic("rename setEntry(): unknown reg class %s\n",
+              RegClassStrings[regIdxToClass(arch_reg)]);
     }
 }

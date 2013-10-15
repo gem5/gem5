@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -655,7 +656,7 @@ class FullO3CPU : public BaseO3CPU
     typename CPUPolicy::Commit commit;
 
     /** The register file. */
-    typename CPUPolicy::RegFile regFile;
+    PhysRegFile regFile;
 
     /** The free list. */
     typename CPUPolicy::FreeList freeList;

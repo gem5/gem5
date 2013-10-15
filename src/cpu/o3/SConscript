@@ -56,6 +56,7 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('lsq.cc')
     Source('lsq_unit.cc')
     Source('mem_dep_unit.cc')
+    Source('regfile.cc')
     Source('rename.cc')
     Source('rename_map.cc')
     Source('rob.cc')
