@@ -1133,6 +1133,12 @@ BaseKvmCPU::setupCounters()
     cfgCycles.disabled(true)
         .pinned(true);
 
+    // Try to exclude the host. We set both exclude_hv and
+    // exclude_host since different architectures use slightly
+    // different APIs in the kernel.
+    cfgCycles.exclude_hv(true)
+        .exclude_host(true);
+
     if (perfControlledByTimer) {
         // We need to configure the cycles counter to send overflows
         // since we are going to use it to trigger timer signals that
@@ -1205,6 +1211,12 @@ BaseKvmCPU::setupInstCounter(uint64_t period)
 
     PerfKvmCounterConfig cfgInstructions(PERF_TYPE_HARDWARE,
                                          PERF_COUNT_HW_INSTRUCTIONS);
+
+    // Try to exclude the host. We set both exclude_hv and
+    // exclude_host since different architectures use slightly
+    // different APIs in the kernel.
+    cfgInstructions.exclude_hv(true)
+        .exclude_host(true);
 
     if (period) {
         // Setup a sampling counter if that has been requested.

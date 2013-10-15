@@ -45,6 +45,8 @@
 
 #include <inttypes.h>
 
+#include "config/have_perf_attr_exclude_host.hh"
+
 /**
  * PerfEvent counter configuration.
  */
@@ -122,6 +124,39 @@ class PerfKvmCounterConfig
      */
     PerfKvmCounterConfig &pinned(bool val) {
         attr.pinned = val;
+        return *this;
+    }
+
+    /**
+     * Exclude the events from the host (i.e., only include events
+     * from the guest system).
+     *
+     * Intel CPUs seem to support this attribute from Linux 3.2 and
+     * onwards. Non-x86 architectures currently ignore this attribute
+     * (Linux 3.12-rc5).
+     *
+     * @warn This attribute is ignored if it isn't present in the
+     * kernel headers or if the kernel doesn't support it.
+     *
+     * @param val true to exclude host events
+     */
+    PerfKvmCounterConfig &exclude_host(bool val) {
+#if HAVE_PERF_ATTR_EXCLUDE_HOST == 1
+        attr.exclude_host = val;
+#endif
+        return *this;
+    }
+
+    /**
+     * Exclude the hyper visor (i.e., only include events from the
+     * guest system).
+     *
+     * @warn This is attribute only seems to be ignored on Intel.
+     *
+     * @param val true to exclude host events
+     */
+    PerfKvmCounterConfig &exclude_hv(bool val) {
+        attr.exclude_hv = val;
         return *this;
     }
 

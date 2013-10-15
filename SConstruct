@@ -794,12 +794,35 @@ def CheckLeading(context):
     context.Result(ret)
     return ret
 
+# Add a custom Check function to test for structure members.
+def CheckMember(context, include, decl, member, include_quotes="<>"):
+    context.Message("Checking for member %s in %s..." %
+                    (member, decl))
+    text = """
+#include %(header)s
+int main(){
+  %(decl)s test;
+  (void)test.%(member)s;
+  return 0;
+};
+""" % { "header" : include_quotes[0] + include + include_quotes[1],
+        "decl" : decl,
+        "member" : member,
+        }
+
+    ret = context.TryCompile(text, extension=".cc")
+    context.Result(ret)
+    return ret
+
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(main,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'),
-                 custom_tests = { 'CheckLeading' : CheckLeading })
+                 custom_tests = {
+        'CheckLeading' : CheckLeading,
+        'CheckMember' : CheckMember,
+        })
 
 # Check for leading underscores.  Don't really need to worry either
 # way so don't need to check the return code.
@@ -964,6 +987,12 @@ def is_isa_kvm_compatible(isa):
     return host_isa in isa_comp_table.get(isa, [])
 
 
+# Check if the exclude_host attribute is available. We want this to
+# get accurate instruction counts in KVM.
+main['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
+    'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
+
+
 ######################################################################
 #
 # Finish the configuration
@@ -1065,7 +1094,8 @@ sticky_vars.AddVariables(
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'CP_ANNOTATE',
-                'USE_POSIX_CLOCK', 'PROTOCOL', 'HAVE_PROTOBUF']
+                'USE_POSIX_CLOCK', 'PROTOCOL', 'HAVE_PROTOBUF',
+                'HAVE_PERF_ATTR_EXCLUDE_HOST']
 
 ###################################################
 #
@@ -1242,6 +1272,13 @@ for variant_path in variant_paths:
             print "Info: KVM support disabled due to unsupported host and " \
                 "target ISA combination"
             env['USE_KVM'] = False
+
+    # Warn about missing optional functionality
+    if env['USE_KVM']:
+        if not main['HAVE_PERF_ATTR_EXCLUDE_HOST']:
+            print "Warning: perf_event headers lack support for the " \
+                "exclude_host attribute. KVM instruction counts will " \
+                "be inaccurate."
 
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
