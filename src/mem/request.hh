@@ -86,10 +86,17 @@ class Request
 {
   public:
     typedef uint32_t FlagsType;
+    typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;
 
-    /** ASI information for this request if it exists. */
-    static const FlagsType ASI_BITS                    = 0x000000FF;
+    /**
+     * Architecture specific flags.
+     *
+     * These bits int the flag field are reserved for
+     * architecture-specific code. For example, SPARC uses them to
+     * represent ASIs.
+     */
+    static const FlagsType ARCH_BITS                   = 0x000000FF;
     /** The request was an instruction fetch. */
     static const FlagsType INST_FETCH                  = 0x00000100;
     /** The virtual address is also the physical address. */
@@ -422,6 +429,13 @@ class Request
         _flags.set(flags);
     }
 
+    void
+    setArchFlags(Flags flags)
+    {
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        _flags.set(flags & ARCH_BITS);
+    }
+
     /** Accessor function for vaddr.*/
     Addr
     getVaddr()
@@ -452,12 +466,12 @@ class Request
         _asid = asid;
     }
 
-    /** Accessor function for asi.*/
-    uint8_t
-    getAsi()
+    /** Accessor function for architecture-specific flags.*/
+    ArchFlagsType
+    getArchFlags()
     {
-        assert(privateFlags.isSet(VALID_VADDR));
-        return _flags & ASI_BITS;
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        return _flags & ARCH_BITS;
     }
 
     /** Accessor function to check if sc result is valid. */

@@ -420,7 +420,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     Addr vaddr = req->getVaddr();
     TlbEntry *e;
 
-    assert(req->getAsi() == ASI_IMPLICIT);
+    assert(req->getArchFlags() == ASI_IMPLICIT);
 
     DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
             vaddr, req->getSize());
@@ -536,7 +536,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     Addr vaddr = req->getVaddr();
     Addr size = req->getSize();
     ASI asi;
-    asi = (ASI)req->getAsi();
+    asi = (ASI)req->getArchFlags();
     bool implicit = false;
     bool hpriv = bits(tlbdata,0,0);
     bool unaligned = vaddr & (size - 1);
@@ -858,11 +858,11 @@ Cycles
 TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     Addr va = pkt->getAddr();
-    ASI asi = (ASI)pkt->req->getAsi();
+    ASI asi = (ASI)pkt->req->getArchFlags();
     uint64_t temp;
 
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
-         (uint32_t)pkt->req->getAsi(), pkt->getAddr());
+         (uint32_t)pkt->req->getArchFlags(), pkt->getAddr());
 
     TLB *itb = tc->getITBPtr();
 
@@ -1044,7 +1044,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
     uint64_t data = pkt->get<uint64_t>();
     Addr va = pkt->getAddr();
-    ASI asi = (ASI)pkt->req->getAsi();
+    ASI asi = (ASI)pkt->req->getArchFlags();
 
     Addr ta_insert;
     Addr va_insert;
@@ -1286,7 +1286,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       default:
 doMmuWriteError:
         panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
-            (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
+            (uint32_t)pkt->req->getArchFlags(), pkt->getAddr(), data);
     }
     pkt->makeAtomicResponse();
     return Cycles(1);
