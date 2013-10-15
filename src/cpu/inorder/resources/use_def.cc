@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -205,12 +206,12 @@ UseDefUnit::execute(int slot_idx)
     {
       case ReadSrcReg:
         {
-            InOrderCPU::RegType reg_type;
+            RegClass reg_type;
             RegIndex reg_idx = inst->_srcRegIdx[ud_idx];
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
             inst->flattenSrcReg(ud_idx, flat_idx);
             
-            if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
+            if (flat_idx == TheISA::ZeroReg && reg_type == IntRegClass) {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Ignoring Reading of ISA-ZeroReg "
                         "(Int. Reg %i).\n", tid, inst->seqNum, flat_idx);
                 ud_req->done();
@@ -224,7 +225,7 @@ UseDefUnit::execute(int slot_idx)
             if (regDepMap[tid]->canRead(reg_type, flat_idx, inst)) {
                 switch (reg_type)
                 {
-                  case InOrderCPU::IntType:
+                  case IntRegClass:
                     {
                         uniqueIntRegMap[flat_idx] = true;
 
@@ -240,7 +241,7 @@ UseDefUnit::execute(int slot_idx)
                     }
                     break;
 
-                  case InOrderCPU::FloatType:
+                  case FloatRegClass:
                     {
                         uniqueFloatRegMap[flat_idx] = true;
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Float Reg %i"
@@ -262,7 +263,7 @@ UseDefUnit::execute(int slot_idx)
                     }
                     break;
 
-                  case InOrderCPU::MiscType:
+                  case MiscRegClass:
                     {
                         uniqueMiscRegMap[flat_idx] = true;
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Misc Reg %i "
@@ -294,7 +295,7 @@ UseDefUnit::execute(int slot_idx)
 
                     switch (reg_type)
                     {
-                      case InOrderCPU::IntType:
+                      case IntRegClass:
                         {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i), value 0x%x from "
@@ -309,7 +310,7 @@ UseDefUnit::execute(int slot_idx)
                         }
                         break;
 
-                      case InOrderCPU::FloatType:
+                      case FloatRegClass:
                         {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
@@ -323,7 +324,7 @@ UseDefUnit::execute(int slot_idx)
                         }
                         break;
 
-                      case InOrderCPU::MiscType:
+                      case MiscRegClass:
                         {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
@@ -359,11 +360,11 @@ UseDefUnit::execute(int slot_idx)
 
       case WriteDestReg:
         {
-            InOrderCPU::RegType reg_type;
+            RegClass reg_type;
             RegIndex reg_idx = inst->_destRegIdx[ud_idx];
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
 
-            if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
+            if (flat_idx == TheISA::ZeroReg && reg_type == IntRegClass) {
                 DPRINTF(IntRegs, "[tid:%i]: Ignoring Writing of ISA-ZeroReg "
                         "(Int. Reg %i)\n", tid, flat_idx);
                 ud_req->done();
@@ -377,7 +378,7 @@ UseDefUnit::execute(int slot_idx)
 
                 switch (reg_type)
                 {
-                  case InOrderCPU::IntType:
+                  case IntRegClass:
                     {
                         uniqueIntRegMap[flat_idx] = true;
 
@@ -396,7 +397,7 @@ UseDefUnit::execute(int slot_idx)
                     }
                     break;
 
-                  case InOrderCPU::FloatType:
+                  case FloatRegClass:
                     {
                         uniqueFloatRegMap[flat_idx] = true;
 
@@ -451,7 +452,7 @@ UseDefUnit::execute(int slot_idx)
                     }
                     break;
 
-                  case InOrderCPU::MiscType:
+                  case MiscRegClass:
                     {
                         uniqueMiscRegMap[flat_idx] = true;
 

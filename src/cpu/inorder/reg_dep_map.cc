@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +44,10 @@ using namespace ThePipeline;
 
 RegDepMap::RegDepMap(int size)
 {
-    regMap.resize(InOrderCPU::NumRegTypes);
-    regMap[InOrderCPU::IntType].resize(NumIntRegs);
-    regMap[InOrderCPU::FloatType].resize(NumFloatRegs);
-    regMap[InOrderCPU::MiscType].resize(NumMiscRegs);
+    regMap.resize(NumRegClasses);
+    regMap[IntRegClass].resize(NumIntRegs);
+    regMap[FloatRegClass].resize(NumFloatRegs);
+    regMap[MiscRegClass].resize(NumMiscRegs);
 }
 
 RegDepMap::~RegDepMap()
@@ -59,9 +60,6 @@ RegDepMap::name()
 {
     return cpu->name() + ".RegDepMap";
 }
-
-std::string RegDepMap::mapNames[InOrderCPU::NumRegTypes] =
-{"IntReg", "FloatReg", "MiscReg"};
 
 void
 RegDepMap::setCPU(InOrderCPU *_cpu)
@@ -93,7 +91,7 @@ RegDepMap::insert(DynInstPtr inst)
             dest_regs);
 
     for (int i = 0; i < dest_regs; i++) {
-        InOrderCPU::RegType reg_type;
+        RegClass reg_type;
         TheISA::RegIndex raw_idx = inst->destRegIdx(i);
         TheISA::RegIndex flat_idx = cpu->flattenRegIdx(raw_idx,
                                                        reg_type,
@@ -104,7 +102,7 @@ RegDepMap::insert(DynInstPtr inst)
 
         inst->flattenDestReg(i, flat_idx);
 
-        if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
+        if (flat_idx == TheISA::ZeroReg && reg_type == IntRegClass) {
             DPRINTF(RegDepMap, "[sn:%i]: Ignoring Insert-Dependency tracking for "
                     "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                     flat_idx);
@@ -120,7 +118,7 @@ void
 RegDepMap::insert(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
     DPRINTF(RegDepMap, "Inserting [sn:%i] onto %s dep. list for "
-            "reg. idx %i.\n", inst->seqNum, mapNames[reg_type],
+            "reg. idx %i.\n", inst->seqNum, RegClassStrings[reg_type],
             idx);
 
     regMap[reg_type][idx].push_back(inst);
@@ -143,11 +141,11 @@ RegDepMap::remove(DynInstPtr inst)
 
         for (int i = 0; i < dest_regs; i++) {
             RegIndex flat_idx = inst->flattenedDestRegIdx(i);
-            InOrderCPU::RegType reg_type = cpu->getRegType(inst->destRegIdx(i));
+            RegClass reg_type = regIdxToClass(inst->destRegIdx(i));
 
             // Merge Dyn Inst & CPU Result Types
             if (flat_idx == TheISA::ZeroReg &&
-                reg_type == InOrderCPU::IntType) {
+                reg_type == IntRegClass) {
                 DPRINTF(RegDepMap, "[sn:%i]: Ignoring Remove-Dependency tracking for "
                         "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                         flat_idx);
@@ -172,7 +170,7 @@ RegDepMap::remove(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
     while (list_it != list_end) {
         if((*list_it) == inst) {
             DPRINTF(RegDepMap, "Removing [sn:%i] from %s dep. list for "
-                    "reg. idx %i.\n", inst->seqNum, mapNames[reg_type],
+                    "reg. idx %i.\n", inst->seqNum, RegClassStrings[reg_type],
                     idx);
             regMap[reg_type][idx].erase(list_it);
             return;
@@ -285,7 +283,7 @@ RegDepMap::canWrite(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 void
 RegDepMap::dump()
 {
-    for (int reg_type = 0; reg_type < InOrderCPU::NumRegTypes; reg_type++) {
+    for (int reg_type = 0; reg_type < NumRegClasses; reg_type++) {
         for (int idx=0; idx < regMap.size(); idx++) {
             if (regMap[idx].size() > 0) {
                 cprintf("Reg #%i (size:%i): ", idx, regMap[reg_type][idx].size());

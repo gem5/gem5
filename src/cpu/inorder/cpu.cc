@@ -1257,21 +1257,20 @@ InOrderCPU::getPipeStage(int stage_num)
 
 
 RegIndex
-InOrderCPU::flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid)
+InOrderCPU::flattenRegIdx(RegIndex reg_idx, RegClass &reg_type, ThreadID tid)
 {
     RegIndex rel_idx;
 
-    switch (regIdxToClass(reg_idx, &rel_idx)) {
+    reg_type = regIdxToClass(reg_idx, &rel_idx);
+
+    switch (reg_type) {
       case IntRegClass:
-        reg_type = IntType;
         return isa[tid]->flattenIntIndex(rel_idx);
 
       case FloatRegClass:
-        reg_type = FloatType;
         return isa[tid]->flattenFloatIndex(rel_idx);
 
       case MiscRegClass:
-        reg_type = MiscType;
         return rel_idx;
 
       default:

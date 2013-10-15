@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,12 +46,9 @@ class RegDepMap
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
     typedef TheISA::RegIndex RegIndex;
-    typedef uint8_t RegType;
 
     RegDepMap(int size = TheISA::TotalNumRegs);
     ~RegDepMap();
-
-    static std::string mapNames[];
 
     std::string name();
 
