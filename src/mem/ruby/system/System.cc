@@ -136,12 +136,6 @@ RubySystem::~RubySystem()
 void
 RubySystem::printStats(ostream& out)
 {
-    const time_t T = time(NULL);
-    tm *localTime = localtime(&T);
-    char buf[100];
-    strftime(buf, 100, "%b/%d/%Y %H:%M:%S", localTime);
-    out << "Real time: " << buf << endl;
-
     m_profiler_ptr->printStats(out);
 }
 

@@ -42,9 +42,6 @@
    ----------------------------------------------------------------------
 */
 
-// Allows use of times() library call, which determines virtual runtime
-#include <sys/resource.h>
-#include <sys/times.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -63,9 +60,6 @@
 
 using namespace std;
 using m5::stl_helpers::operator<<;
-
-static double process_memory_total();
-static double process_memory_resident();
 
 Profiler::Profiler(const Params *p)
     : SimObject(p)
@@ -385,48 +379,12 @@ Profiler::printStats(ostream& out, bool short_stats)
     out << "Profiler Stats" << endl;
     out << "--------------" << endl;
 
-    time_t real_time_current = time(NULL);
-    double seconds = difftime(real_time_current, m_real_time_start_time);
-    double minutes = seconds / 60.0;
-    double hours = minutes / 60.0;
-    double days = hours / 24.0;
     Cycles ruby_cycles = g_system_ptr->curCycle()-m_ruby_start;
-
-    if (!short_stats) {
-        out << "Elapsed_time_in_seconds: " << seconds << endl;
-        out << "Elapsed_time_in_minutes: " << minutes << endl;
-        out << "Elapsed_time_in_hours: " << hours << endl;
-        out << "Elapsed_time_in_days: " << days << endl;
-        out << endl;
-    }
-
-    // print the virtual runtimes as well
-    struct tms vtime;
-    times(&vtime);
-    seconds = (vtime.tms_utime + vtime.tms_stime) / 100.0;
-    minutes = seconds / 60.0;
-    hours = minutes / 60.0;
-    days = hours / 24.0;
-    out << "Virtual_time_in_seconds: " << seconds << endl;
-    out << "Virtual_time_in_minutes: " << minutes << endl;
-    out << "Virtual_time_in_hours:   " << hours << endl;
-    out << "Virtual_time_in_days:    " << days << endl;
-    out << endl;
 
     out << "Ruby_current_time: " << g_system_ptr->curCycle() << endl;
     out << "Ruby_start_time: " << m_ruby_start << endl;
     out << "Ruby_cycles: " << ruby_cycles << endl;
     out << endl;
-
-    if (!short_stats) {
-        out << "mbytes_resident: " << process_memory_resident() << endl;
-        out << "mbytes_total: " << process_memory_total() << endl;
-        if (process_memory_total() > 0) {
-            out << "resident_ratio: "
-                << process_memory_resident()/process_memory_total() << endl;
-        }
-        out << endl;
-    }
 
     if (!short_stats) {
         out << "Busy Controller Counts:" << endl;
@@ -569,35 +527,6 @@ void
 Profiler::bankBusy()
 {
     m_busyBankCount++;
-}
-
-// Helper function
-static double
-process_memory_total()
-{
-    // 4kB page size, 1024*1024 bytes per MB,
-    const double MULTIPLIER = 4096.0 / (1024.0 * 1024.0);
-    ifstream proc_file;
-    proc_file.open("/proc/self/statm");
-    int total_size_in_pages = 0;
-    int res_size_in_pages = 0;
-    proc_file >> total_size_in_pages;
-    proc_file >> res_size_in_pages;
-    return double(total_size_in_pages) * MULTIPLIER; // size in megabytes
-}
-
-static double
-process_memory_resident()
-{
-    // 4kB page size, 1024*1024 bytes per MB,
-    const double MULTIPLIER = 4096.0 / (1024.0 * 1024.0);
-    ifstream proc_file;
-    proc_file.open("/proc/self/statm");
-    int total_size_in_pages = 0;
-    int res_size_in_pages = 0;
-    proc_file >> total_size_in_pages;
-    proc_file >> res_size_in_pages;
-    return double(res_size_in_pages) * MULTIPLIER; // size in megabytes
 }
 
 void
