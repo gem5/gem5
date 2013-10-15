@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2009 The University of Edinburgh
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,45 +25,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Timothy M. Jones
+ * Authors: Steve Reinhardt
  */
 
-#include "arch/power/insts/static_inst.hh"
 #include "cpu/reg_class.hh"
 
-using namespace PowerISA;
-
-void
-PowerStaticInst::printReg(std::ostream &os, int reg) const
-{
-    RegIndex rel_reg;
-
-    switch (regIdxToClass(reg, &rel_reg)) {
-      case IntRegClass:
-        ccprintf(os, "r%d", rel_reg);
-        break;
-      case FloatRegClass:
-        ccprintf(os, "f%d", rel_reg);
-        break;
-      case MiscRegClass:
-        switch (rel_reg) {
-          case 0: ccprintf(os, "cr"); break;
-          case 1: ccprintf(os, "xer"); break;
-          case 2: ccprintf(os, "lr"); break;
-          case 3: ccprintf(os, "ctr"); break;
-          default: ccprintf(os, "unknown_reg");
-            break;
-        }
-    }
-}
-
-std::string
-PowerStaticInst::generateDisassembly(Addr pc,
-                                       const SymbolTable *symtab) const
-{
-    std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
-    return ss.str();
-}
+const char *RegClassStrings[] = {
+    "IntRegClass",
+    "FloatRegClass",
+    "MiscRegClass"
+};

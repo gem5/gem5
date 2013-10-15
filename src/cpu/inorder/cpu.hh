@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,6 +66,7 @@
 #include "cpu/o3/rename_map.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
 #include "mem/packet.hh"
@@ -599,12 +601,19 @@ class InOrderCPU : public BaseCPU
 
     RegType inline getRegType(RegIndex reg_idx)
     {
-        if (reg_idx < TheISA::FP_Base_DepTag)
+        switch (regIdxToClass(reg_idx)) {
+          case IntRegClass:
             return IntType;
-        else if (reg_idx < TheISA::Ctrl_Base_DepTag)
+
+          case FloatRegClass:
             return FloatType;
-        else
+
+          case MiscRegClass:
             return MiscType;
+
+          default:
+            panic("register %d out of range\n", reg_idx);
+        }
     }
 
     RegIndex flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid);

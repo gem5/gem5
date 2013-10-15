@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +48,7 @@
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/rename.hh"
+#include "cpu/reg_class.hh"
 #include "debug/Activity.hh"
 #include "debug/Rename.hh"
 #include "debug/O3PipeView.hh"
@@ -948,22 +950,29 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
     for (int src_idx = 0; src_idx < num_src_regs; src_idx++) {
         RegIndex src_reg = inst->srcRegIdx(src_idx);
         RegIndex flat_src_reg = src_reg;
-        if (src_reg < TheISA::FP_Base_DepTag) {
+        switch (regIdxToClass(src_reg)) {
+          case IntRegClass:
             flat_src_reg = inst->tcBase()->flattenIntIndex(src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)src_reg, (int)flat_src_reg);
-        } else if (src_reg < TheISA::Ctrl_Base_DepTag) {
+            break;
+
+          case FloatRegClass:
             src_reg = src_reg - TheISA::FP_Base_DepTag;
             flat_src_reg = inst->tcBase()->flattenFloatIndex(src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)src_reg, (int)flat_src_reg);
             flat_src_reg += TheISA::NumIntRegs;
-        } else if (src_reg < TheISA::Max_DepTag) {
+            break;
+
+          case MiscRegClass:
             flat_src_reg = src_reg - TheISA::Ctrl_Base_DepTag +
                            TheISA::NumFloatRegs + TheISA::NumIntRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
                     src_reg, flat_src_reg);
-        } else {
+            break;
+
+          default:
             panic("Reg index is out of bound: %d.", src_reg);
         }
 
@@ -1005,25 +1014,32 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
     for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++) {
         RegIndex dest_reg = inst->destRegIdx(dest_idx);
         RegIndex flat_dest_reg = dest_reg;
-        if (dest_reg < TheISA::FP_Base_DepTag) {
+        switch (regIdxToClass(dest_reg)) {
+          case IntRegClass:
             // Integer registers are flattened.
             flat_dest_reg = inst->tcBase()->flattenIntIndex(dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)dest_reg, (int)flat_dest_reg);
-        } else if (dest_reg < TheISA::Ctrl_Base_DepTag) {
+            break;
+
+          case FloatRegClass:
             dest_reg = dest_reg - TheISA::FP_Base_DepTag;
             flat_dest_reg = inst->tcBase()->flattenFloatIndex(dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)dest_reg, (int)flat_dest_reg);
             flat_dest_reg += TheISA::NumIntRegs;
-        } else if (dest_reg < TheISA::Max_DepTag) {
+            break;
+
+          case MiscRegClass:
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_dest_reg = dest_reg - TheISA::Ctrl_Base_DepTag +
                             TheISA::NumIntRegs + TheISA::NumFloatRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
                     dest_reg, flat_dest_reg);
-        } else {
+            break;
+
+          default:
             panic("Reg index is out of bound: %d.", dest_reg);
         }
 
@@ -1034,7 +1050,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
         rename_result = renameMap[tid]->rename(flat_dest_reg);
 
         //Mark Scoreboard entry as not ready
-        if (dest_reg < TheISA::Ctrl_Base_DepTag)
+        if (regIdxToClass(dest_reg) != MiscRegClass)
             scoreboard->unsetReg(rename_result.first);
 
         DPRINTF(Rename, "[tid:%u]: Renaming arch reg %i to physical "

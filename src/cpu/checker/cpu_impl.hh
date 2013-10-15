@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,6 +51,7 @@
 #include "config/the_isa.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
@@ -597,13 +599,17 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
         RegIndex idx = inst->destRegIdx(start_idx);
-        if (idx < TheISA::FP_Base_DepTag) {
+        switch (regIdxToClass(idx)) {
+          case IntRegClass:
             thread->setIntReg(idx, mismatch_val);
-        } else if (idx < TheISA::Ctrl_Base_DepTag) {
+            break;
+          case FloatRegClass:
             thread->setFloatRegBits(idx, mismatch_val);
-        } else if (idx < TheISA::Max_DepTag) {
+            break;
+          case MiscRegClass:
             thread->setMiscReg(idx - TheISA::Ctrl_Base_DepTag,
                                mismatch_val);
+            break;
         }
     }
     start_idx++;
@@ -611,14 +617,19 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
         RegIndex idx = inst->destRegIdx(i);
         inst->template popResult<uint64_t>(res);
-        if (idx < TheISA::FP_Base_DepTag) {
+        switch (regIdxToClass(idx)) {
+          case IntRegClass:
             thread->setIntReg(idx, res);
-        } else if (idx < TheISA::Ctrl_Base_DepTag) {
+            break;
+          case FloatRegClass:
             thread->setFloatRegBits(idx, res);
-        } else if (idx < TheISA::Max_DepTag) {
+            break;
+          case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
             thread->setMiscReg(idx - TheISA::Ctrl_Base_DepTag, res);
-        } // else Register is out of range...
+            break;
+            // else Register is out of range...
+        }
     }
 }
 

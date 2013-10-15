@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +40,7 @@
 
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/regs/segment.hh"
+#include "cpu/reg_class.hh"
 
 namespace X86ISA
 {
@@ -129,17 +131,20 @@ namespace X86ISA
         static const char * microFormats[9] =
             {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
 
-        if (reg < FP_Base_DepTag) {
+        RegIndex rel_reg;
+
+        switch (regIdxToClass(reg, &rel_reg)) {
+          case IntRegClass: {
             const char * suffix = "";
-            bool fold = reg & IntFoldBit;
-            reg &= ~IntFoldBit;
+            bool fold = rel_reg & IntFoldBit;
+            rel_reg &= ~IntFoldBit;
 
             if(fold)
                 suffix = "h";
-            else if(reg < 8 && size == 1)
+            else if(rel_reg < 8 && size == 1)
                 suffix = "l";
 
-            switch (reg) {
+            switch (rel_reg) {
               case INTREG_RAX:
                 ccprintf(os, abcdFormats[size], "a");
                 break;
@@ -189,33 +194,39 @@ namespace X86ISA
                 ccprintf(os, longFormats[size], "15");
                 break;
               default:
-                ccprintf(os, microFormats[size], reg - NUM_INTREGS);
+                ccprintf(os, microFormats[size], rel_reg - NUM_INTREGS);
             }
             ccprintf(os, suffix);
-        } else if (reg < Ctrl_Base_DepTag) {
-            int fpindex = reg - FP_Base_DepTag;
-            if(fpindex < NumMMXRegs) {
-                ccprintf(os, "%%mmx%d", reg - FP_Base_DepTag);
+            break;
+          }
+
+          case FloatRegClass: {
+            if (rel_reg < NumMMXRegs) {
+                ccprintf(os, "%%mmx%d", rel_reg);
                 return;
             }
-            fpindex -= NumMMXRegs;
-            if(fpindex < NumXMMRegs * 2) {
-                ccprintf(os, "%%xmm%d_%s", fpindex / 2,
-                        (fpindex % 2) ? "high": "low");
+            rel_reg -= NumMMXRegs;
+            if (rel_reg < NumXMMRegs * 2) {
+                ccprintf(os, "%%xmm%d_%s", rel_reg / 2,
+                        (rel_reg % 2) ? "high": "low");
                 return;
             }
-            fpindex -= NumXMMRegs * 2;
-            if(fpindex < NumMicroFpRegs) {
-                ccprintf(os, "%%ufp%d", fpindex);
+            rel_reg -= NumXMMRegs * 2;
+            if (rel_reg < NumMicroFpRegs) {
+                ccprintf(os, "%%ufp%d", rel_reg);
                 return;
             }
-            fpindex -= NumMicroFpRegs;
-            ccprintf(os, "%%st(%d)", fpindex);
-        } else {
-            switch (reg - Ctrl_Base_DepTag) {
+            rel_reg -= NumMicroFpRegs;
+            ccprintf(os, "%%st(%d)", rel_reg);
+            break;
+          }
+
+          case MiscRegClass:
+            switch (rel_reg) {
               default:
-                ccprintf(os, "%%ctrl%d", reg - Ctrl_Base_DepTag);
+                ccprintf(os, "%%ctrl%d", rel_reg);
             }
+            break;
         }
     }
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +43,7 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/reg_class.hh"
 #include "debug/InOrderDynInst.hh"
 #include "mem/request.hh"
 #include "sim/fault_fwd.hh"
@@ -473,14 +475,21 @@ InOrderDynInst::readRegOtherThread(unsigned reg_idx, ThreadID tid)
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
     }
 
-    if (reg_idx < FP_Base_DepTag) {                   // Integer Register File
-        return this->cpu->readIntReg(reg_idx, tid);
-    } else if (reg_idx < Ctrl_Base_DepTag) {          // Float Register File
-        reg_idx -= FP_Base_DepTag;
-        return this->cpu->readFloatRegBits(reg_idx, tid);
-    } else {
-        reg_idx -= Ctrl_Base_DepTag;
-        return this->cpu->readMiscReg(reg_idx, tid);  // Misc. Register File
+    RegIndex rel_idx;
+
+    switch (regIdxToClass(reg_idx, &rel_idx)) {
+      case IntRegClass:
+        return this->cpu->readIntReg(rel_idx, tid);
+
+      case FloatRegClass:
+        return this->cpu->readFloatRegBits(rel_idx, tid);
+
+      case MiscRegClass:
+        return this->cpu->readMiscReg(rel_idx, tid);  // Misc. Register File
+
+      default:
+        panic("register %d out of range\n", reg_idx);
+
     }
 }
 
@@ -542,14 +551,20 @@ InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
     }
 
-    if (reg_idx < FP_Base_DepTag) {            // Integer Register File
-        this->cpu->setIntReg(reg_idx, val, tid);
-    } else if (reg_idx < Ctrl_Base_DepTag) {   // Float Register File
-        reg_idx -= FP_Base_DepTag;
-        this->cpu->setFloatRegBits(reg_idx, val, tid);
-    } else {
-        reg_idx -= Ctrl_Base_DepTag;
-        this->cpu->setMiscReg(reg_idx, val, tid); // Misc. Register File
+    RegIndex rel_idx;
+
+    switch (regIdxToClass(reg_idx, &rel_idx)) {
+      case IntRegClass:
+        this->cpu->setIntReg(rel_idx, val, tid);
+        break;
+
+      case FloatRegClass:
+        this->cpu->setFloatRegBits(rel_idx, val, tid);
+        break;
+
+      case MiscRegClass:
+        this->cpu->setMiscReg(rel_idx, val, tid); // Misc. Register File
+        break;
     }
 }
 

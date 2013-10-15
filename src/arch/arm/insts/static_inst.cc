@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +46,7 @@
 #include "base/loader/symtab.hh"
 #include "base/condcodes.hh"
 #include "base/cprintf.hh"
+#include "cpu/reg_class.hh"
 
 namespace ArmISA
 {
@@ -208,8 +210,11 @@ ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
 void
 ArmStaticInst::printReg(std::ostream &os, int reg) const
 {
-    if (reg < FP_Base_DepTag) {
-        switch (reg) {
+    RegIndex rel_reg;
+
+    switch (regIdxToClass(reg, &rel_reg)) {
+      case IntRegClass:
+        switch (rel_reg) {
           case PCReg:
             ccprintf(os, "pc");
             break;
@@ -226,12 +231,14 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
             ccprintf(os, "r%d", reg);
             break;
         }
-    } else if (reg < Ctrl_Base_DepTag) {
-        ccprintf(os, "f%d", reg - FP_Base_DepTag);
-    } else {
-        reg -= Ctrl_Base_DepTag;
-        assert(reg < NUM_MISCREGS);
-        ccprintf(os, "%s", ArmISA::miscRegName[reg]);
+        break;
+      case FloatRegClass:
+        ccprintf(os, "f%d", rel_reg);
+        break;
+      case MiscRegClass:
+        assert(rel_reg < NUM_MISCREGS);
+        ccprintf(os, "%s", ArmISA::miscRegName[rel_reg]);
+        break;
     }
 }
 

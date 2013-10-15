@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +39,7 @@
  */
 
 #include "arch/arm/insts/misc.hh"
+#include "cpu/reg_class.hh"
 
 std::string
 MrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
@@ -48,17 +50,17 @@ MrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     ss << ", ";
     bool foundPsr = false;
     for (unsigned i = 0; i < numSrcRegs(); i++) {
-        int idx = srcRegIdx(i);
-        if (idx < Ctrl_Base_DepTag) {
+        RegIndex idx = srcRegIdx(i);
+        RegIndex rel_idx;
+        if (regIdxToClass(idx, &rel_idx) != MiscRegClass) {
             continue;
         }
-        idx -= Ctrl_Base_DepTag;
-        if (idx == MISCREG_CPSR) {
+        if (rel_idx == MISCREG_CPSR) {
             ss << "cpsr";
             foundPsr = true;
             break;
         }
-        if (idx == MISCREG_SPSR) {
+        if (rel_idx == MISCREG_SPSR) {
             ss << "spsr";
             foundPsr = true;
             break;
