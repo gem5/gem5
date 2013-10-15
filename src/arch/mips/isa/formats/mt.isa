@@ -102,7 +102,7 @@ output exec {{
             MVPConf0Reg &mvp_conf0)
     {
         vpe_conf0 = xc->readMiscReg(MISCREG_VPE_CONF0);
-        tc_bind_mt = xc->readRegOtherThread(MISCREG_TC_BIND + Ctrl_Base_DepTag);
+        tc_bind_mt = xc->readRegOtherThread(MISCREG_TC_BIND + Misc_Reg_Base);
         tc_bind = xc->readMiscReg(MISCREG_TC_BIND);
         vpe_control = xc->readMiscReg(MISCREG_VPE_CONTROL);
         mvp_conf0 = xc->readMiscReg(MISCREG_MVP_CONF0);

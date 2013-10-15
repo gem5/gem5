@@ -72,11 +72,11 @@ output decoder {{
 
     void MipsStaticInst::printReg(std::ostream &os, int reg) const
     {
-        if (reg < FP_Base_DepTag) {
+        if (reg < FP_Reg_Base) {
             ccprintf(os, "r%d", reg);
         }
         else {
-            ccprintf(os, "f%d", reg - FP_Base_DepTag);
+            ccprintf(os, "f%d", reg - FP_Reg_Base);
         }
     }
 

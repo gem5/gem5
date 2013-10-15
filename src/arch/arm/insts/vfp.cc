@@ -50,9 +50,9 @@ FpRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Base_DepTag);
+    printReg(ss, dest + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op1 + FP_Base_DepTag);
+    printReg(ss, op1 + FP_Reg_Base);
     return ss.str();
 }
 
@@ -61,7 +61,7 @@ FpRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Base_DepTag);
+    printReg(ss, dest + FP_Reg_Base);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -71,9 +71,9 @@ FpRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Base_DepTag);
+    printReg(ss, dest + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op1 + FP_Base_DepTag);
+    printReg(ss, op1 + FP_Reg_Base);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
@@ -83,11 +83,11 @@ FpRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Base_DepTag);
+    printReg(ss, dest + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op1 + FP_Base_DepTag);
+    printReg(ss, op1 + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op2 + FP_Base_DepTag);
+    printReg(ss, op2 + FP_Reg_Base);
     return ss.str();
 }
 
@@ -96,11 +96,11 @@ FpRegRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest + FP_Base_DepTag);
+    printReg(ss, dest + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op1 + FP_Base_DepTag);
+    printReg(ss, op1 + FP_Reg_Base);
     ss << ", ";
-    printReg(ss, op2 + FP_Base_DepTag);
+    printReg(ss, op2 + FP_Reg_Base);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }

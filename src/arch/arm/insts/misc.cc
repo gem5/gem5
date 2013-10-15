@@ -80,10 +80,10 @@ MsrBase::printMsrBase(std::ostream &os) const
     bool foundPsr = false;
     for (unsigned i = 0; i < numDestRegs(); i++) {
         int idx = destRegIdx(i);
-        if (idx < Ctrl_Base_DepTag) {
+        if (idx < Misc_Reg_Base) {
             continue;
         }
-        idx -= Ctrl_Base_DepTag;
+        idx -= Misc_Reg_Base;
         if (idx == MISCREG_CPSR) {
             os << "cpsr_";
             foundPsr = true;

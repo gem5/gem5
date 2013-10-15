@@ -247,7 +247,7 @@ UseDefUnit::execute(int slot_idx)
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Float Reg %i"
                                 " (%i) from Register File:%x (%08f).\n",
                                 tid, seq_num,
-                                reg_idx - FP_Base_DepTag, flat_idx,
+                                reg_idx - FP_Reg_Base, flat_idx,
                                 cpu->readFloatRegBits(flat_idx,
                                                       inst->readTid()),
                                 cpu->readFloatReg(flat_idx,
@@ -269,7 +269,7 @@ UseDefUnit::execute(int slot_idx)
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Misc Reg %i "
                                 " (%i) from Register File:0x%x.\n",
                                 tid, seq_num,
-                                reg_idx - Ctrl_Base_DepTag, flat_idx,
+                                reg_idx - Misc_Reg_Base, flat_idx,
                                 cpu->readMiscReg(flat_idx,
                                 inst->readTid()));
                         inst->setIntSrc(ud_idx,
@@ -315,7 +315,7 @@ UseDefUnit::execute(int slot_idx)
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
-                                    tid, reg_idx - FP_Base_DepTag, flat_idx,
+                                    tid, reg_idx - FP_Reg_Base, flat_idx,
                                     forward_inst->readFloatResult(dest_reg_idx),
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setFloatSrc(ud_idx,
@@ -329,7 +329,7 @@ UseDefUnit::execute(int slot_idx)
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
-                                    tid, reg_idx - Ctrl_Base_DepTag, flat_idx,
+                                    tid, reg_idx - Misc_Reg_Base, flat_idx,
                                     forward_inst->readIntResult(dest_reg_idx),
                                     forward_inst->seqNum, 
                                     inst->seqNum, ud_idx);
@@ -412,7 +412,7 @@ UseDefUnit::execute(int slot_idx)
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
                                     inst->readFloatBitsResult(ud_idx),
-                                    reg_idx - FP_Base_DepTag, flat_idx);
+                                    reg_idx - FP_Reg_Base, flat_idx);
 
                             // Check for FloatRegBits Here
                             cpu->setFloatRegBits(flat_idx,
@@ -425,7 +425,7 @@ UseDefUnit::execute(int slot_idx)
                                     "idx %i (%i).\n",
                                     tid, seq_num, inst->readFloatResult(ud_idx),
                                     inst->readIntResult(ud_idx), 
-                                    reg_idx - FP_Base_DepTag, flat_idx);
+                                    reg_idx - FP_Reg_Base, flat_idx);
 
                             cpu->setFloatReg(flat_idx,
                                              inst->readFloatResult(ud_idx),
@@ -438,7 +438,7 @@ UseDefUnit::execute(int slot_idx)
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
                                     inst->readIntResult(ud_idx), 
-                                    reg_idx - FP_Base_DepTag, flat_idx);
+                                    reg_idx - FP_Reg_Base, flat_idx);
 
                             cpu->setFloatReg(flat_idx,
                                              inst->readFloatResult(ud_idx),
@@ -458,7 +458,7 @@ UseDefUnit::execute(int slot_idx)
 
                         DPRINTF(InOrderUseDef, "[tid:%i]: Writing Misc. 0x%x "
                                 "to register idx %i.\n",
-                                tid, inst->readIntResult(ud_idx), reg_idx - Ctrl_Base_DepTag);
+                                tid, inst->readIntResult(ud_idx), reg_idx - Misc_Reg_Base);
 
                         // Remove Dependencies
                         regDepMap[tid]->removeFront(reg_type, flat_idx, inst);

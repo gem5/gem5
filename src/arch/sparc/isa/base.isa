@@ -290,7 +290,7 @@ output decoder {{
             const int MaxLocal = 24;
             const int MaxInput = 32;
             const int MaxMicroReg = 40;
-            if (reg < FP_Base_DepTag) {
+            if (reg < FP_Reg_Base) {
                 // If we used a register from the next or previous window,
                 // take out the offset.
                 while (reg >= MaxMicroReg)
@@ -335,10 +335,10 @@ output decoder {{
                         break;
                     }
                 }
-            } else if (reg < Ctrl_Base_DepTag) {
-                ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
+            } else if (reg < Misc_Reg_Base) {
+                ccprintf(os, "%%f%d", reg - FP_Reg_Base);
             } else {
-                switch (reg - Ctrl_Base_DepTag) {
+                switch (reg - Misc_Reg_Base) {
                   case MISCREG_ASI:
                     ccprintf(os, "%%asi");
                     break;
@@ -430,7 +430,7 @@ output decoder {{
                     ccprintf(os, "%%fsr");
                     break;
                   default:
-                    ccprintf(os, "%%ctrl%d", reg - Ctrl_Base_DepTag);
+                    ccprintf(os, "%%ctrl%d", reg - Misc_Reg_Base);
                 }
             }
         }

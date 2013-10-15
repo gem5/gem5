@@ -610,12 +610,12 @@ class FloatRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + FP_Base_DepTag;' % \
+            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + FP_Reg_Base;' % \
                     (self.reg_spec)
 
         if self.is_dest:
             c_dest = \
-              '\n\t_destRegIdx[_numDestRegs++] = %s + FP_Base_DepTag;' % \
+              '\n\t_destRegIdx[_numDestRegs++] = %s + FP_Reg_Base;' % \
               (self.reg_spec)
             c_dest += '\n\t_numFPDestRegs++;'
 
@@ -673,12 +673,12 @@ class ControlRegOperand(Operand):
 
         if self.is_src:
             c_src = \
-              '\n\t_srcRegIdx[_numSrcRegs++] = %s + Ctrl_Base_DepTag;' % \
+              '\n\t_srcRegIdx[_numSrcRegs++] = %s + Misc_Reg_Base;' % \
               (self.reg_spec)
 
         if self.is_dest:
             c_dest = \
-              '\n\t_destRegIdx[_numDestRegs++] = %s + Ctrl_Base_DepTag;' % \
+              '\n\t_destRegIdx[_numDestRegs++] = %s + Misc_Reg_Base;' % \
               (self.reg_spec)
 
         return c_src + c_dest

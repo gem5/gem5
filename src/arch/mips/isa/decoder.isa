@@ -385,7 +385,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x8: decode MT_U {
                         0x0: mftc0({{
                             data = xc->readRegOtherThread((RT << 3 | SEL) +
-                                                          Ctrl_Base_DepTag);
+                                                          Misc_Reg_Base);
                         }});
                         0x1: decode SEL {
                             0x0: mftgpr({{
@@ -409,19 +409,19 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                             0x2: decode MT_H {
                                 0x0: mftc1({{ data = xc->readRegOtherThread(RT +
-                                                                            FP_Base_DepTag);
+                                                                            FP_Reg_Base);
                                 }});
                                 0x1: mfthc1({{ data = xc->readRegOtherThread(RT +
-                                                                             FP_Base_DepTag);
+                                                                             FP_Reg_Base);
                                 }});
                             }
                             0x3: cftc1({{
                                 uint32_t fcsr_val = xc->readRegOtherThread(FLOATREG_FCSR +
-                                                                            FP_Base_DepTag);
+                                                                            FP_Reg_Base);
                                 switch (RT) {
                                   case 0:
                                     data = xc->readRegOtherThread(FLOATREG_FIR +
-                                                                  Ctrl_Base_DepTag);
+                                                                  Misc_Reg_Base);
                                     break;
                                   case 25:
                                     data = (fcsr_val & 0xFE000000 >> 24) |
@@ -450,7 +450,7 @@ decode OPCODE_HI default Unknown::unknown() {
                 format MT_MTTR {
                     // Decode MIPS MT MTTR instruction into sub-instructions
                     0xC: decode MT_U {
-                        0x0: mttc0({{ xc->setRegOtherThread((RD << 3 | SEL) + Ctrl_Base_DepTag,
+                        0x0: mttc0({{ xc->setRegOtherThread((RD << 3 | SEL) + Misc_Reg_Base,
                                                             Rt);
                                    }});
                         0x1: decode SEL {
@@ -496,10 +496,10 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                             0x2: mttc1({{
                                 uint64_t data = xc->readRegOtherThread(RD +
-                                                                       FP_Base_DepTag);
+                                                                       FP_Reg_Base);
                                 data = insertBits(data, MT_H ? 63 : 31,
                                                   MT_H ? 32 : 0, Rt);
-                                xc->setRegOtherThread(RD + FP_Base_DepTag,
+                                xc->setRegOtherThread(RD + FP_Reg_Base,
                                                       data);
                             }});
                             0x3: cttc1({{
@@ -534,7 +534,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                             "Access to Floating Control "
                                             "S""tatus Register", FS);
                                 }
-                                xc->setRegOtherThread(FLOATREG_FCSR + FP_Base_DepTag, data);
+                                xc->setRegOtherThread(FLOATREG_FCSR + FP_Reg_Base, data);
                             }});
                             default: CP0Unimpl::unknown();
                         }

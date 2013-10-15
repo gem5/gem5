@@ -458,7 +458,7 @@ OzoneCPU<Impl>::tick()
 
     _status = Running;
     thread.renameTable[ZeroReg]->setIntResult(0);
-    thread.renameTable[ZeroReg+TheISA::FP_Base_DepTag]->
+    thread.renameTable[ZeroReg+TheISA::FP_Reg_Base]->
         setDoubleResult(0.0);
 
     comm.advance();
@@ -727,7 +727,7 @@ OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        int fp_idx = i + TheISA::FP_Base_DepTag;
+        int fp_idx = i + TheISA::FP_Reg_Base;
         thread->renameTable[fp_idx]->setIntResult(tc->readFloatRegBits(i));
     }
 
@@ -756,7 +756,7 @@ template <class Impl>
 double
 OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::FP_Reg_Base;
     return thread->renameTable[idx]->readFloatResult();
 }
 
@@ -764,7 +764,7 @@ template <class Impl>
 uint64_t
 OzoneCPU<Impl>::OzoneTC::readFloatRegBits(int reg_idx)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::FP_Reg_Base;
     return thread->renameTable[idx]->readIntResult();
 }
 
@@ -783,7 +783,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::FP_Reg_Base;
 
     thread->renameTable[idx]->setDoubleResult(val);
 

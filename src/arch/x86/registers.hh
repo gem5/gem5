@@ -65,12 +65,12 @@ const int NumFloatRegs =
 
 // These enumerate all the registers for dependence tracking.
 enum DependenceTags {
-    // FP_Base_DepTag must be large enough to be bigger than any integer
+    // FP_Reg_Base must be large enough to be bigger than any integer
     // register index which has the IntFoldBit (1 << 6) set.  To be safe
     // we just start at (1 << 7) == 128.
-    FP_Base_DepTag = 128,
-    Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs,
-    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
+    FP_Reg_Base = 128,
+    Misc_Reg_Base = FP_Reg_Base + NumFloatRegs,
+    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs
 };
 
 // semantically meaningful register indices

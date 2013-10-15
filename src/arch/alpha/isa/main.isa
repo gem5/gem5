@@ -224,7 +224,7 @@ output header {{
         /// this class and derived classes.  Maybe these should really
         /// live here and not in the AlphaISA namespace.
         enum DependenceTags {
-            FP_Base_DepTag = AlphaISA::FP_Base_DepTag
+            FP_Reg_Base = AlphaISA::FP_Reg_Base
         };
 
         /// Constructor.
@@ -253,11 +253,11 @@ output decoder {{
     void
     AlphaStaticInst::printReg(std::ostream &os, int reg) const
     {
-        if (reg < FP_Base_DepTag) {
+        if (reg < FP_Reg_Base) {
             ccprintf(os, "r%d", reg);
         }
         else {
-            ccprintf(os, "f%d", reg - FP_Base_DepTag);
+            ccprintf(os, "f%d", reg - FP_Reg_Base);
         }
     }
 

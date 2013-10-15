@@ -175,7 +175,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readMiscReg(
-                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                si->srcRegIdx(idx) - TheISA::Misc_Reg_Base,
                 this->threadNumber);
     }
 
@@ -185,7 +185,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void setMiscRegOperand(const StaticInst *si, int idx,
                                      const MiscReg &val)
     {
-        int misc_reg = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+        int misc_reg = si->destRegIdx(idx) - TheISA::Misc_Reg_Base;
         setMiscReg(misc_reg, val);
     }
 

@@ -99,10 +99,10 @@ const int TotalNumRegs =
 // These enumerate all the registers for dependence tracking.
 enum DependenceTags {
     // 0..31 are the integer regs 0..31
-    // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-    FP_Base_DepTag = NumIntRegs,
-    Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs,
-    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs + NumInternalProcRegs
+    // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Reg_Base)
+    FP_Reg_Base = NumIntRegs,
+    Misc_Reg_Base = FP_Reg_Base + NumFloatRegs,
+    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs + NumInternalProcRegs
 };
 
 } // namespace AlphaISA

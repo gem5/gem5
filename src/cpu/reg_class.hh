@@ -65,19 +65,19 @@ inline
 RegClass regIdxToClass(TheISA::RegIndex reg_idx,
                        TheISA::RegIndex *rel_reg_idx = NULL)
 {
-    assert(reg_idx < TheISA::Max_DepTag);
+    assert(reg_idx < TheISA::Max_Reg_Index);
     RegClass cl;
     int offset;
 
-    if (reg_idx < TheISA::FP_Base_DepTag) {
+    if (reg_idx < TheISA::FP_Reg_Base) {
         cl = IntRegClass;
         offset = 0;
-    } else if (reg_idx < TheISA::Ctrl_Base_DepTag) {
+    } else if (reg_idx < TheISA::Misc_Reg_Base) {
         cl = FloatRegClass;
-        offset = TheISA::FP_Base_DepTag;
+        offset = TheISA::FP_Reg_Base;
     } else {
         cl = MiscRegClass;
-        offset = TheISA::Ctrl_Base_DepTag;
+        offset = TheISA::Misc_Reg_Base;
     }
 
     if (rel_reg_idx)

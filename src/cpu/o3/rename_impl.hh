@@ -953,7 +953,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             break;
 
           case FloatRegClass:
-            src_reg = src_reg - TheISA::FP_Base_DepTag;
+            src_reg = src_reg - TheISA::FP_Reg_Base;
             flat_src_reg = inst->tcBase()->flattenFloatIndex(src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)src_reg, (int)flat_src_reg);
@@ -961,7 +961,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             break;
 
           case MiscRegClass:
-            flat_src_reg = src_reg - TheISA::Ctrl_Base_DepTag +
+            flat_src_reg = src_reg - TheISA::Misc_Reg_Base +
                            TheISA::NumFloatRegs + TheISA::NumIntRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
                     src_reg, flat_src_reg);
@@ -1018,7 +1018,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
             break;
 
           case FloatRegClass:
-            dest_reg = dest_reg - TheISA::FP_Base_DepTag;
+            dest_reg = dest_reg - TheISA::FP_Reg_Base;
             flat_dest_reg = inst->tcBase()->flattenFloatIndex(dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n",
                     (int)dest_reg, (int)flat_dest_reg);
@@ -1028,7 +1028,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
           case MiscRegClass:
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
-            flat_dest_reg = dest_reg - TheISA::Ctrl_Base_DepTag +
+            flat_dest_reg = dest_reg - TheISA::Misc_Reg_Base +
                             TheISA::NumIntRegs + TheISA::NumFloatRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
                     dest_reg, flat_dest_reg);

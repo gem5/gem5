@@ -101,9 +101,9 @@ const int SyscallPseudoReturnReg = ReturnValueReg;
 const int SyscallSuccessReg = ReturnValueReg;
 
 // These help enumerate all the registers for dependence tracking.
-const int FP_Base_DepTag = NumIntRegs * (MODE_MAXMODE + 1);
-const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
-const int Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs;
+const int FP_Reg_Base = NumIntRegs * (MODE_MAXMODE + 1);
+const int Misc_Reg_Base = FP_Reg_Base + NumFloatRegs;
+const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;

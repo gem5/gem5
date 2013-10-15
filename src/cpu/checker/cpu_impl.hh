@@ -607,7 +607,7 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
             thread->setFloatRegBits(idx, mismatch_val);
             break;
           case MiscRegClass:
-            thread->setMiscReg(idx - TheISA::Ctrl_Base_DepTag,
+            thread->setMiscReg(idx - TheISA::Misc_Reg_Base,
                                mismatch_val);
             break;
         }
@@ -626,7 +626,7 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
             break;
           case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
-            thread->setMiscReg(idx - TheISA::Ctrl_Base_DepTag, res);
+            thread->setMiscReg(idx - TheISA::Misc_Reg_Base, res);
             break;
             // else Register is out of range...
         }
