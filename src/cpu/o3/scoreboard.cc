@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2005-2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,99 +34,13 @@
 #include "cpu/o3/scoreboard.hh"
 #include "debug/Scoreboard.hh"
 
-Scoreboard::Scoreboard(unsigned activeThreads,
-                       unsigned _numLogicalIntRegs,
-                       unsigned _numPhysicalIntRegs,
-                       unsigned _numLogicalFloatRegs,
-                       unsigned _numPhysicalFloatRegs,
-                       unsigned _numMiscRegs,
-                       unsigned _zeroRegIdx)
-    : numLogicalIntRegs(_numLogicalIntRegs),
-      numPhysicalIntRegs(_numPhysicalIntRegs),
-      numLogicalFloatRegs(_numLogicalFloatRegs),
-      numPhysicalFloatRegs(_numPhysicalFloatRegs),
-      numMiscRegs(_numMiscRegs),
-      zeroRegIdx(_zeroRegIdx)
+Scoreboard::Scoreboard(const std::string &_my_name,
+                       unsigned _numPhysicalRegs, unsigned _numMiscRegs,
+                       PhysRegIndex _zeroRegIdx, PhysRegIndex _fpZeroRegIdx)
+    : _name(_my_name),
+      regScoreBoard(_numPhysicalRegs, true),
+      numPhysRegs(_numPhysicalRegs),
+      numTotalRegs(_numPhysicalRegs + _numMiscRegs),
+      zeroRegIdx(_zeroRegIdx), fpZeroRegIdx(_fpZeroRegIdx)
 {
-    //Get Register Sizes
-    numLogicalRegs = numLogicalIntRegs  + numLogicalFloatRegs;
-    numPhysicalRegs = numPhysicalIntRegs  + numPhysicalFloatRegs;
-
-    //Resize scoreboard appropriately
-    resize(numPhysicalRegs + (numMiscRegs * activeThreads));
-
-    //Initialize values
-    for (int i=0; i < numLogicalIntRegs * activeThreads; i++) {
-        assert(indexInBounds(i));
-        regScoreBoard[i] = 1;
-    }
-
-    for (int i= numPhysicalIntRegs;
-         i < numPhysicalIntRegs + (numLogicalFloatRegs * activeThreads);
-         i++) {
-        assert(indexInBounds(i));
-        regScoreBoard[i] = 1;
-    }
-
-    for (int i = numPhysicalRegs;
-         i < numPhysicalRegs + (numMiscRegs * activeThreads);
-         i++) {
-        assert(indexInBounds(i));
-        regScoreBoard[i] = 1;
-    }
-}
-
-std::string
-Scoreboard::name() const
-{
-    return "cpu.scoreboard";
-}
-
-bool
-Scoreboard::getReg(PhysRegIndex phys_reg)
-{
-#if THE_ISA == ALPHA_ISA
-    // Always ready if int or fp zero reg.
-    if (phys_reg == zeroRegIdx ||
-        phys_reg == (zeroRegIdx + numPhysicalIntRegs)) {
-        return 1;
-    }
-#else
-    // Always ready if int zero reg.
-    if (phys_reg == zeroRegIdx) {
-        return 1;
-    }
-#endif
-
-    assert(indexInBounds(phys_reg));
-    return regScoreBoard[phys_reg];
-}
-
-void
-Scoreboard::setReg(PhysRegIndex phys_reg)
-{
-    DPRINTF(Scoreboard, "Setting reg %i as ready\n", phys_reg);
-
-    assert(indexInBounds(phys_reg));
-    regScoreBoard[phys_reg] = 1;
-}
-
-void
-Scoreboard::unsetReg(PhysRegIndex ready_reg)
-{
-#if THE_ISA == ALPHA_ISA
-    if (ready_reg == zeroRegIdx ||
-        ready_reg == (zeroRegIdx + numPhysicalIntRegs)) {
-        // Don't do anything if int or fp zero reg.
-        return;
-    }
-#else
-    if (ready_reg == zeroRegIdx) {
-        // Don't do anything if int zero reg.
-        return;
-    }
-#endif
-
-    assert(indexInBounds(ready_reg));
-    regScoreBoard[ready_reg] = 0;
 }

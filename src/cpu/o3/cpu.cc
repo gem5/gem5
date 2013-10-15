@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -235,11 +236,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
           params->smtROBPolicy, params->smtROBThreshold,
           params->numThreads),
 
-      scoreboard(params->numThreads,
-                 TheISA::NumIntRegs, params->numPhysIntRegs,
-                 TheISA::NumFloatRegs, params->numPhysFloatRegs,
-                 TheISA::NumMiscRegs * numThreads,
-                 TheISA::ZeroReg),
+      scoreboard(name() + ".scoreboard",
+                 regFile.totalNumPhysRegs(), TheISA::NumMiscRegs,
+                 TheISA::ZeroReg, TheISA::ZeroReg),
 
       isa(numThreads, NULL),
 
