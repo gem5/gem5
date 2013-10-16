@@ -1,8 +1,10 @@
+Redirecting stdout to build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timing/simout
+Redirecting stderr to build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 24 2013 03:08:53
-gem5 started Sep 28 2013 10:05:25
+gem5 compiled Oct 15 2013 18:24:51
+gem5 started Oct 15 2013 19:07:40
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timing -re tests/run.py build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second

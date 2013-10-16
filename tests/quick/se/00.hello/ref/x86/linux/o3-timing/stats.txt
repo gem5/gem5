@@ -4,11 +4,11 @@ sim_seconds                                  0.000020                       # Nu
 sim_ticks                                    19639500                       # Number of ticks simulated
 final_tick                                   19639500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  30549                       # Simulator instruction rate (inst/s)
-host_op_rate                                    55338                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              111488682                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 243516                       # Number of bytes of host memory used
-host_seconds                                     0.18                       # Real time elapsed on the host
+host_inst_rate                                  27608                       # Simulator instruction rate (inst/s)
+host_op_rate                                    50013                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              100764572                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 247304                       # Number of bytes of host memory used
+host_seconds                                     0.20                       # Real time elapsed on the host
 sim_insts                                        5380                       # Number of instructions simulated
 sim_ops                                          9747                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             17536                       # Number of bytes read from this memory
@@ -267,8 +267,8 @@ system.cpu.rename.IQFullEvents                     35                       # Nu
 system.cpu.rename.LSQFullEvents                   666                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.RenamedOperands               25267                       # Number of destination operands rename has renamed
 system.cpu.rename.RenameLookups                 55251                       # Number of register rename lookups that rename has made
-system.cpu.rename.int_rename_lookups            55235                       # Number of integer rename lookups
-system.cpu.rename.fp_rename_lookups                16                       # Number of floating rename lookups
+system.cpu.rename.int_rename_lookups            31469                       # Number of integer rename lookups
+system.cpu.rename.fp_rename_lookups                 4                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps                 11063                       # Number of HB maps that are committed
 system.cpu.rename.UndoneMaps                    14204                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.serializingInsts                 30                       # count of serializing insts renamed
@@ -452,7 +452,7 @@ system.cpu.commit.loads                          1053                       # Nu
 system.cpu.commit.membars                           0                       # Number of memory barriers committed
 system.cpu.commit.branches                       1208                       # Number of branches committed
 system.cpu.commit.fp_insts                          0                       # Number of committed floating point instructions.
-system.cpu.commit.int_insts                      9654                       # Number of committed integer instructions.
+system.cpu.commit.int_insts                      9653                       # Number of committed integer instructions.
 system.cpu.commit.function_calls                  106                       # Number of function calls committed.
 system.cpu.commit.bw_lim_events                   212                       # number cycles where commit BW limit reached
 system.cpu.commit.bw_limited                        0                       # number of insts not committed due to BW limits
@@ -467,9 +467,11 @@ system.cpu.cpi                               7.301115                       # CP
 system.cpu.cpi_total                         7.301115                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               0.136965                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.136965                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                    28824                       # number of integer regfile reads
-system.cpu.int_regfile_writes                   17237                       # number of integer regfile writes
+system.cpu.int_regfile_reads                    20780                       # number of integer regfile reads
+system.cpu.int_regfile_writes                   12385                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                         4                       # number of floating regfile reads
+system.cpu.cc_regfile_reads                      8044                       # number of cc regfile reads
+system.cpu.cc_regfile_writes                     4852                       # number of cc regfile writes
 system.cpu.misc_regfile_reads                    7122                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                      1                       # number of misc regfile writes
 system.cpu.toL2Bus.throughput              1362152804                       # Throughput (bytes/s)

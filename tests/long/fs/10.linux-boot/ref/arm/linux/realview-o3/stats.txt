@@ -4,25 +4,13 @@ sim_seconds                                  2.524310                       # Nu
 sim_ticks                                2524309551500                       # Number of ticks simulated
 final_tick                               2524309551500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  66090                       # Simulator instruction rate (inst/s)
-host_op_rate                                    85039                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2766442256                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 401396                       # Number of bytes of host memory used
-host_seconds                                   912.48                       # Real time elapsed on the host
+host_inst_rate                                  65403                       # Simulator instruction rate (inst/s)
+host_op_rate                                    84155                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2737677908                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 401408                       # Number of bytes of host memory used
+host_seconds                                   922.06                       # Real time elapsed on the host
 sim_insts                                    60305560                       # Number of instructions simulated
 sim_ops                                      77596391                       # Number of ops (including micro ops) simulated
-system.realview.nvmem.bytes_read::cpu.inst           64                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            64                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu.inst           64                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           64                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu.inst            1                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              1                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu.inst            25                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total               25                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu.inst           25                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total           25                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu.inst           25                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total              25                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd    119537664                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.dtb.walker         3264                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.itb.walker          128                       # Number of bytes read from this memory
@@ -440,6 +428,18 @@ system.physmem.writeRowHits                     94229                       # Nu
 system.physmem.readRowHitRate                   99.83                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                  11.59                       # Row buffer hit rate for writes
 system.physmem.avgGap                       158662.04                       # Average gap between requests
+system.realview.nvmem.bytes_read::cpu.inst           64                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            64                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu.inst           64                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           64                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu.inst            1                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              1                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu.inst            25                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total               25                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu.inst           25                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total           25                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu.inst           25                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total              25                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                     54917647                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq            16149440                       # Transaction distribution
 system.membus.trans_dist::ReadResp           16149440                       # Transaction distribution
@@ -713,8 +713,8 @@ system.cpu.rename.LSQFullEvents               4066422                       # Nu
 system.cpu.rename.FullRegisterEvents              675                       # Number of times there has been no free registers
 system.cpu.rename.RenamedOperands           106031051                       # Number of destination operands rename has renamed
 system.cpu.rename.RenameLookups             466975975                       # Number of register rename lookups that rename has made
-system.cpu.rename.int_rename_lookups        466885287                       # Number of integer rename lookups
-system.cpu.rename.fp_rename_lookups             90688                       # Number of floating rename lookups
+system.cpu.rename.int_rename_lookups        432104229                       # Number of integer rename lookups
+system.cpu.rename.fp_rename_lookups             10389                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps              78387144                       # Number of HB maps that are committed
 system.cpu.rename.UndoneMaps                 27643906                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.serializingInsts             830126                       # count of serializing insts renamed

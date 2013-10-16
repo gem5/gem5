@@ -4,11 +4,11 @@ sim_seconds                                  0.631883                       # Nu
 sim_ticks                                631883288500                       # Number of ticks simulated
 final_tick                               631883288500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 177291                       # Simulator instruction rate (inst/s)
-host_op_rate                                   177291                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               61450789                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 236780                       # Number of bytes of host memory used
-host_seconds                                 10282.75                       # Real time elapsed on the host
+host_inst_rate                                 151695                       # Simulator instruction rate (inst/s)
+host_op_rate                                   151695                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               52578725                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 240040                       # Number of bytes of host memory used
+host_seconds                                 12017.85                       # Real time elapsed on the host
 sim_insts                                  1823043370                       # Number of instructions simulated
 sim_ops                                    1823043370                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst            176064                       # Number of bytes read from this memory
@@ -370,8 +370,8 @@ system.cpu.rename.IQFullEvents                  15191                       # Nu
 system.cpu.rename.LSQFullEvents              28875434                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.RenamedOperands          2054257390                       # Number of destination operands rename has renamed
 system.cpu.rename.RenameLookups            3579193509                       # Number of register rename lookups that rename has made
-system.cpu.rename.int_rename_lookups       3458491340                       # Number of integer rename lookups
-system.cpu.rename.fp_rename_lookups         120702169                       # Number of floating rename lookups
+system.cpu.rename.int_rename_lookups       3493818421                       # Number of integer rename lookups
+system.cpu.rename.fp_rename_lookups          85375087                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps            1384969070                       # Number of HB maps that are committed
 system.cpu.rename.UndoneMaps                669288320                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.serializingInsts               4234                       # count of serializing insts renamed

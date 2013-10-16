@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 24 2013 03:08:53
-gem5 started Sep 28 2013 10:33:13
+gem5 compiled Oct 15 2013 18:24:51
+gem5 started Oct 16 2013 01:34:33
 gem5 executing on zizzer
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-o3-dual -re tests/run.py build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-o3-dual
 Global frequency set at 1000000000000 ticks per second
