@@ -190,9 +190,11 @@ termcap = get_termcap(GetOption('use_colors'))
 # Set up the main build environment.
 #
 ########################################################################
+
+# export TERM so that clang reports errors in color
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                  'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PYTHONPATH',
-                 'RANLIB', 'SWIG' ])
+                 'RANLIB', 'SWIG', 'TERM' ])
 
 use_prefixes = [
     "M5",           # M5 configuration (e.g., path to kernels)
