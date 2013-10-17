@@ -246,8 +246,8 @@ class ProtoBuf(SourceFile):
 
         # Currently, we stick to generating the C++ headers, so we
         # only need to track the source and header.
-        self.cc_file = File(joinpath(self.dirname, modname + '.pb.cc'))
-        self.hh_file = File(joinpath(self.dirname, modname + '.pb.h'))
+        self.cc_file = File(modname + '.pb.cc')
+        self.hh_file = File(modname + '.pb.h')
 
 class UnitTest(object):
     '''Create a UnitTest'''
@@ -335,6 +335,11 @@ for root, dirs, files in os.walk(base_dir, topdown=True):
 
 for extra_dir in extras_dir_list:
     prefix_len = len(dirname(extra_dir)) + 1
+
+    # Also add the corresponding build directory to pick up generated
+    # include files.
+    env.Append(CPPPATH=Dir(joinpath(env['BUILDDIR'], extra_dir[prefix_len:])))
+
     for root, dirs, files in os.walk(extra_dir, topdown=True):
         # if build lives in the extras directory, don't walk down it
         if 'build' in dirs:
