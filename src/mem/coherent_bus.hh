@@ -272,19 +272,19 @@ class CoherentBus : public BaseBus
 
     /** Function called by the port when the bus is recieving a Timing
       request packet.*/
-    virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
+    bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
 
     /** Function called by the port when the bus is recieving a Timing
       response packet.*/
-    virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
+    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a timing
         snoop request.*/
-    virtual void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
+    void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
 
     /** Function called by the port when the bus is recieving a timing
         snoop response.*/
-    virtual bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
+    bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
