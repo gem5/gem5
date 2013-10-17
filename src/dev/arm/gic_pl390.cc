@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -232,7 +232,12 @@ Pl390::readDistributor(PacketPtr pkt)
             }
         } else {
             assert(ctx_id < sys->numRunningContexts());
-            pkt->set<uint32_t>(ctx_id);
+            // convert the CPU id number into a bit mask
+            uint32_t ctx_mask = power(2, ctx_id);
+            // replicate the 8-bit mask 4 times in a 32-bit word
+            ctx_mask |= ctx_mask << 8;
+            ctx_mask |= ctx_mask << 16;
+            pkt->set<uint32_t>(ctx_mask);
         }
         goto done;
     }
