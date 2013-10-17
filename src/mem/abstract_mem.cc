@@ -273,10 +273,12 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
 
 #if TRACING_ON
 
-#define CASE(A, T)                                                      \
-  case sizeof(T):                                                       \
-    DPRINTF(MemoryAccess,"%s of size %i on address 0x%x data 0x%x\n",   \
-            A, pkt->getSize(), pkt->getAddr(), pkt->get<T>());          \
+#define CASE(A, T)                                                        \
+  case sizeof(T):                                                         \
+    DPRINTF(MemoryAccess,"%s from %s of size %i on address 0x%x data " \
+            "0x%x %c\n", A, system()->getMasterName(pkt->req->masterId()),\
+            pkt->getSize(), pkt->getAddr(), pkt->get<T>(),                \
+            pkt->req->isUncacheable() ? 'U' : 'C');                       \
   break
 
 
@@ -288,10 +290,12 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
           CASE(A, uint16_t);                                            \
           CASE(A, uint8_t);                                             \
           default:                                                      \
-            DPRINTF(MemoryAccess, "%s of size %i on address 0x%x\n",    \
-                    A, pkt->getSize(), pkt->getAddr());                 \
-            DDUMP(MemoryAccess, pkt->getPtr<uint8_t>(), pkt->getSize());\
-        }                                                               \
+            DPRINTF(MemoryAccess, "%s from %s of size %i on address 0x%x %c\n",\
+                    A, system()->getMasterName(pkt->req->masterId()),          \
+                    pkt->getSize(), pkt->getAddr(),                            \
+                    pkt->req->isUncacheable() ? 'U' : 'C');                    \
+            DDUMP(MemoryAccess, pkt->getPtr<uint8_t>(), pkt->getSize());       \
+        }                                                                      \
     } while (0)
 
 #else
