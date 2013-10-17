@@ -114,6 +114,8 @@ elif buildEnv['TARGET_ISA'] == "arm":
     test_sys = makeArmSystem(test_mem_mode, options.machine_type, bm[0],
                              options.dtb_filename,
                              bare_metal=options.bare_metal)
+    if options.enable_context_switch_stats_dump:
+        test_sys.enable_context_switch_stats_dump = True
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
 

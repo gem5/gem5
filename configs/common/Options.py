@@ -232,6 +232,10 @@ def addFSOptions(parser):
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
               "enabled kernels")
+        parser.add_option("--enable-context-switch-stats-dump", \
+                action="store_true", help="Enable stats dump at context "\
+                "switches and dump tasks file (required for Streamline)")
+
     # Benchmark options
     parser.add_option("--dual", action="store_true",
                       help="Simulate two systems attached with an ethernet link")
