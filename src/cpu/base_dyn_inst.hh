@@ -1009,8 +1009,16 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
         // One translation if the request isn't split.
         DataTranslation<BaseDynInstPtr> *trans =
             new DataTranslation<BaseDynInstPtr>(this, state);
+
         cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
+
         if (!translationCompleted()) {
+            // The translation isn't yet complete, so we can't possibly have a
+            // fault. Overwrite any existing fault we might have from a previous
+            // execution of this instruction (e.g. an uncachable load that
+            // couldn't execute because it wasn't at the head of the ROB).
+            fault = NoFault;
+
             // Save memory requests.
             savedReq = state->mainReq;
             savedSreqLow = state->sreqLow;
@@ -1028,7 +1036,14 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
 
         cpu->dtb->translateTiming(sreqLow, thread->getTC(), stransLow, mode);
         cpu->dtb->translateTiming(sreqHigh, thread->getTC(), stransHigh, mode);
+
         if (!translationCompleted()) {
+            // The translation isn't yet complete, so we can't possibly have a
+            // fault. Overwrite any existing fault we might have from a previous
+            // execution of this instruction (e.g. an uncachable load that
+            // couldn't execute because it wasn't at the head of the ROB).
+            fault = NoFault;
+
             // Save memory requests.
             savedReq = state->mainReq;
             savedSreqLow = state->sreqLow;
