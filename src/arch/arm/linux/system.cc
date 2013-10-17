@@ -80,13 +80,20 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     }
 
     // With ARM udelay() is #defined to __udelay
-    uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
-        "__udelay", "__udelay", 1000, 0);
+    // newer kernels use __loop_udelay and __loop_const_udelay symbols
+    uDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
+        "__loop_udelay", "__udelay", 1000, 0);
+    if(!uDelaySkipEvent)
+        uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+         "__udelay", "__udelay", 1000, 0);
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
-        "__const_udelay", "__const_udelay", 1000, 107374);
+    constUDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
+        "__loop_const_udelay", "__const_udelay", 1000, 107374);
+    if(!constUDelaySkipEvent)
+        constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
+         "__const_udelay", "__const_udelay", 1000, 107374);
 
     secDataPtrAddr = 0;
     secDataAddr = 0;
