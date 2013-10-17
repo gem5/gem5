@@ -158,6 +158,10 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     LQEntries = maxLQEntries + 1;
     SQEntries = maxSQEntries + 1;
 
+    //Due to uint8_t index in LSQSenderState
+    assert(LQEntries <= 256);
+    assert(SQEntries <= 256);
+
     loadQueue.resize(LQEntries);
     storeQueue.resize(SQEntries);
 
@@ -306,6 +310,7 @@ LSQUnit<Impl>::resizeLQ(unsigned size)
         LQEntries = size_plus_sentinel;
     }
 
+    assert(LQEntries <= 256);
 }
 
 template<class Impl>
@@ -322,6 +327,8 @@ LSQUnit<Impl>::resizeSQ(unsigned size)
     } else {
         SQEntries = size_plus_sentinel;
     }
+
+    assert(SQEntries <= 256);
 }
 
 template <class Impl>
