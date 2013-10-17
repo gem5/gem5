@@ -263,8 +263,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
                                      size = mdesc.mem())]
     else:
         self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
-        if dtb_filename is not None:
-            self.dtb_filename = dtb_filename
+        if dtb_filename:
+            self.dtb_filename = binary(dtb_filename)
         self.machine_type = machine_type
         if convert.toMemorySize(mdesc.mem()) > int(self.realview.max_mem_size):
             print "The currently selected ARM platforms doesn't support"
