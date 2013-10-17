@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -287,6 +287,9 @@ class Pl390 : public BaseGic
      * Depending on the configuration, the gic may de-assert it's cpu line
      * @param number number of interrupt to send */
     void clearInt(uint32_t number);
+
+    /** Clear a (level-sensitive) PPI */
+    void clearPPInt(uint32_t num, uint32_t cpu);
     /** @} */
 
     /** @{ */

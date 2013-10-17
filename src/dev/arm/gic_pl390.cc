@@ -692,7 +692,7 @@ Pl390::sendInt(uint32_t num)
 void
 Pl390::sendPPInt(uint32_t num, uint32_t cpu)
 {
-    DPRINTF(Interrupt, "Received Interrupt number %d, cpuTarget %#x: \n",
+    DPRINTF(Interrupt, "Received PPI %d, cpuTarget %#x: \n",
             num, cpu);
     cpuPpiPending[cpu] |= 1 << (num - SGI_MAX);
     updateIntState(intNumToWord(num));
@@ -702,6 +702,15 @@ void
 Pl390::clearInt(uint32_t number)
 {
     /* @todo assume edge triggered only at the moment. Nothing to do. */
+}
+
+void
+Pl390::clearPPInt(uint32_t num, uint32_t cpu)
+{
+    DPRINTF(Interrupt, "Clearing PPI %d, cpuTarget %#x: \n",
+            num, cpu);
+    cpuPpiPending[cpu] &= ~(1 << (num - SGI_MAX));
+    updateIntState(intNumToWord(num));
 }
 
 void

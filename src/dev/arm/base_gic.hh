@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -75,6 +75,7 @@ class BaseGic :  public PioDevice
      * @param cpu CPU to forward interrupt to
      */
     virtual void sendPPInt(uint32_t num, uint32_t cpu) = 0;
+    virtual void clearPPInt(uint32_t num, uint32_t cpu) = 0;
 
     /**
      * Clear an interrupt from a device that is connected to the GIC.
