@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_OZONE_DYN_INST_IMPL_HH__
+#define __CPU_OZONE_DYN_INST_IMPL_HH__
+
 #include "config/the_isa.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "kern/kernel_stats.hh"
@@ -270,3 +273,5 @@ OzoneDynInst<Impl>::syscall(uint64_t &callnum)
 {
     this->cpu->syscall(callnum);
 }
+
+#endif//__CPU_OZONE_DYN_INST_IMPL_HH__

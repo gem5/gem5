@@ -27,6 +27,8 @@
  *
  * Authors: Kevin Lim
  */
+#ifndef __CPU_OZONE_LW_BACK_END_IMPL_HH__
+#define __CPU_OZONE_LW_BACK_END_IMPL_HH__
 
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -1672,3 +1674,4 @@ LWBackEnd<Impl>::dumpInsts()
     }
     cprintf("\n");
 }
+#endif//__CPU_OZONE_LW_BACK_END_IMPL_HH__

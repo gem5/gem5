@@ -42,6 +42,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_PRED_BPRED_UNIT_IMPL_HH__
+#define __CPU_PRED_BPRED_UNIT_IMPL_HH__
+
 #include <algorithm>
 
 #include "arch/isa_traits.hh"
@@ -534,3 +537,5 @@ BPredUnit::dump()
         }
     }
 }
+
+#endif//__CPU_PRED_BPRED_UNIT_IMPL_HH__

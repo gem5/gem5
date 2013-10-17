@@ -42,6 +42,9 @@
  *          Geoffrey Blake
  */
 
+#ifndef __CPU_CHECKER_CPU_IMPL_HH__
+#define __CPU_CHECKER_CPU_IMPL_HH__
+
 #include <list>
 #include <string>
 
@@ -684,3 +687,5 @@ Checker<Impl>::dumpInsts()
     }
 
 }
+
+#endif//__CPU_CHECKER_CPU_IMPL_HH__

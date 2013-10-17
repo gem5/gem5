@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_OZONE_BACK_END_IMPL_HH__
+#define __CPU_OZONE_BACK_END_IMPL_HH__
+
 #include "cpu/ozone/back_end.hh"
 #include "encumbered/cpu/full/op_class.hh"
 
@@ -1912,3 +1915,5 @@ BackEnd<Impl>::dumpInsts()
         ++num;
     }
 }
+
+#endif//__CPU_OZONE_BACK_END_IMPL_HH__

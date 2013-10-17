@@ -42,6 +42,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_INST_QUEUE_IMPL_HH__
+#define __CPU_O3_INST_QUEUE_IMPL_HH__
+
 #include <limits>
 #include <vector>
 
@@ -1508,3 +1511,5 @@ InstructionQueue<Impl>::dumpInsts()
         ++num;
     }
 }
+
+#endif//__CPU_O3_INST_QUEUE_IMPL_HH__

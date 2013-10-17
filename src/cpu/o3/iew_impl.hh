@@ -40,6 +40,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_O3_IEW_IMPL_IMPL_HH__
+#define __CPU_O3_IEW_IMPL_IMPL_HH__
+
 // @todo: Fix the instantaneous communication among all the stages within
 // iew.  There's a clear delay between issue and execute, yet backwards
 // communication happens simultaneously.
@@ -1671,3 +1674,5 @@ DefaultIEW<Impl>::checkMisprediction(DynInstPtr &inst)
         }
     }
 }
+
+#endif//__CPU_O3_IEW_IMPL_IMPL_HH__

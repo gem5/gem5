@@ -41,6 +41,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_FETCH_IMPL_HH__
+#define __CPU_O3_FETCH_IMPL_HH__
+
 #include <algorithm>
 #include <cstring>
 #include <list>
@@ -1631,3 +1634,5 @@ DefaultFetch<Impl>::profileStall(ThreadID tid) {
              tid, fetchStatus[tid]);
     }
 }
+
+#endif//__CPU_O3_FETCH_IMPL_HH__

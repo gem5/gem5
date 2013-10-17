@@ -40,6 +40,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_O3_DYN_INST_IMPL_HH__
+#define __CPU_O3_DYN_INST_IMPL_HH__
+
 #include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "sim/full_system.hh"
@@ -255,3 +258,4 @@ BaseO3DynInst<Impl>::syscall(int64_t callnum)
     }
 }
 
+#endif//__CPU_O3_DYN_INST_IMPL_HH__

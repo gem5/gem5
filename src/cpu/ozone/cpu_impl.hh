@@ -30,6 +30,9 @@
  *          Nathan Binkert
  */
 
+#ifndef __CPU_OZONE_CPU_IMPL_HH__
+#define __CPU_OZONE_CPU_IMPL_HH__
+
 #include "arch/alpha/osfpal.hh"
 #include "arch/isa_traits.hh" // For MachInst
 #include "arch/kernel_stats.hh"
@@ -867,6 +870,8 @@ OzoneCPU<Impl>::OzoneTC::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
         cpu->squashFromTC();
     }
 }
+
+#endif//__CPU_OZONE_CPU_IMPL_HH__
 
 template <class Impl>
 void

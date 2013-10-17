@@ -40,6 +40,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_O3_MEM_DEP_UNIT_IMPL_HH__
+#define __CPU_O3_MEM_DEP_UNIT_IMPL_HH__
+
 #include <map>
 
 #include "cpu/o3/inst_queue.hh"
@@ -594,3 +597,5 @@ MemDepUnit<MemDepPred, Impl>::dumpLists()
     cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
 #endif
 }
+
+#endif//__CPU_O3_MEM_DEP_UNIT_IMPL_HH__

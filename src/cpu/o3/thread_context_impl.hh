@@ -42,6 +42,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_THREAD_CONTEXT_IMPL_HH__
+#define __CPU_O3_THREAD_CONTEXT_IMPL_HH__
+
 #include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
@@ -297,6 +300,7 @@ O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     conditionalSquash();
 }
 
+#endif//__CPU_O3_THREAD_CONTEXT_IMPL_HH__
 template <class Impl>
 void
 O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)

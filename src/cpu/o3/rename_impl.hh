@@ -42,6 +42,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_RENAME_IMPL_HH__
+#define __CPU_O3_RENAME_IMPL_HH__
+
 #include <list>
 
 #include "arch/isa_traits.hh"
@@ -1383,3 +1386,5 @@ DefaultRename<Impl>::dumpHistory()
         }
     }
 }
+
+#endif//__CPU_O3_RENAME_IMPL_HH__

@@ -40,6 +40,9 @@
  * Authors: Korey Sewell
  */
 
+#ifndef __CPU_O3_LSQ_IMPL_HH__
+#define __CPU_O3_LSQ_IMPL_HH__
+
 #include <algorithm>
 #include <list>
 #include <string>
@@ -658,3 +661,5 @@ LSQ<Impl>::dumpInsts() const
         thread[tid].dumpInsts();
     }
 }
+
+#endif//__CPU_O3_LSQ_IMPL_HH__

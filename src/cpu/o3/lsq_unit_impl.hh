@@ -42,6 +42,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_LSQ_UNIT_IMPL_HH__
+#define __CPU_O3_LSQ_UNIT_IMPL_HH__
+
 #include "arch/generic/debugfaults.hh"
 #include "arch/locked_mem.hh"
 #include "base/str.hh"
@@ -1289,3 +1292,5 @@ LSQUnit<Impl>::dumpInsts() const
 
     cprintf("\n");
 }
+
+#endif//__CPU_O3_LSQ_UNIT_IMPL_HH__

@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_OZONE_INORDER_BACK_END_IMPL_HH__
+#define __CPU_OZONE_INORDER_BACK_END_IMPL_HH__
+
 #include "arch/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/inorder_back_end.hh"
@@ -521,3 +524,4 @@ InorderBackEnd<Impl>::DCacheCompletionEvent::description() const
 {
     return "DCache completion";
 }
+#endif//__CPU_OZONE_INORDER_BACK_END_IMPL_HH__

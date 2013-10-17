@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_OZONE_INST_QUEUE_IMPL_HH__
+#define __CPU_OZONE_INST_QUEUE_IMPL_HH__
+
 // Todo:
 // Current ordering allows for 0 cycle added-to-scheduled.  Could maybe fake
 // it; either do in reverse order, or have added instructions put into a
@@ -1342,3 +1345,5 @@ InstQueue<Impl>::dumpInsts()
 */
     }
 }
+
+#define//__CPU_OZONE_INST_QUEUE_IMPL_HH__

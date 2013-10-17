@@ -27,6 +27,8 @@
  *
  * Authors: Kevin Lim
  */
+#ifndef __CPU_OZONE_LSQ_UNIT_IMPL_HH__
+#define __CPU_OZONE_LSQ_UNIT_IMPL_HH__
 
 #include "base/str.hh"
 #include "config/the_isa.hh"
@@ -839,3 +841,4 @@ OzoneLSQ<Impl>::decrLdIdx(int &load_idx)
     if (--load_idx < 0)
         load_idx += LQEntries;
 }
+#endif//__CPU_OZONE_LSQ_UNIT_IMPL_HH__

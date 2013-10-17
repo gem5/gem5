@@ -40,6 +40,8 @@
  * Authors: Kevin Lim
  *          Korey Sewell
  */
+#ifndef __CPU_O3_COMMIT_IMPL_HH__
+#define __CPU_O3_COMMIT_IMPL_HH__
 
 #include <algorithm>
 #include <set>
@@ -1540,3 +1542,5 @@ DefaultCommit<Impl>::oldestReady()
         return InvalidThreadID;
     }
 }
+
+#endif//__CPU_O3_COMMIT_IMPL_HH__

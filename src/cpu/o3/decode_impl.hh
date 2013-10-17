@@ -40,6 +40,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_O3_DECODE_IMPL_HH__
+#define __CPU_O3_DECODE_IMPL_HH__
+
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -767,3 +770,5 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         wroteToTimeBuffer = true;
     }
 }
+
+#endif//__CPU_O3_DECODE_IMPL_HH__

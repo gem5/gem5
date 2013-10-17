@@ -41,6 +41,9 @@
  *          Korey Sewell
  */
 
+#ifndef __CPU_O3_ROB_IMPL_HH__
+#define __CPU_O3_ROB_IMPL_HH__
+
 #include <list>
 
 #include "cpu/o3/rob.hh"
@@ -560,3 +563,5 @@ ROB<Impl>::findInst(ThreadID tid, InstSeqNum squash_inst)
     }
     return NULL;
 }
+
+#endif//__CPU_O3_ROB_IMPL_HH__

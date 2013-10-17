@@ -27,6 +27,8 @@
  *
  * Authors: Kevin Lim
  */
+#ifndef __CPU_OZONE_RENAME_TABLE_IMPL_HH__
+#define __CPU_OZONE_RENAME_TABLE_IMPL_HH__
 
 #include <cstdlib>  // Not really sure what to include to get NULL
 
@@ -52,3 +54,5 @@ RenameTable<Impl>::copyFrom(const RenameTable<Impl> &table_to_copy)
         table[i] = table_to_copy.table[i];
     }
 }
+
+#endif//__CPU_OZONE_RENAME_TABLE_IMPL_HH__

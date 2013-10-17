@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_OZONE_LW_LSQ_IMPL_HH__
+#define __CPU_OZONE_LW_LSQ_IMPL_HH__
+
 #include "base/str.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -961,3 +964,5 @@ OzoneLWLSQ<Impl>::takeOverFrom(ThreadContext *old_tc)
 
     blockedLoadSeqNum = 0;
 }
+
+#endif//__CPU_OZONE_LW_LSQ_IMPL_HH__

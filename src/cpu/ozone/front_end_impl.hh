@@ -27,6 +27,8 @@
  *
  * Authors: Kevin Lim
  */
+#ifndef __CPU_OZONE_BACK_END_IMPL_HH__
+#define __CPU_OZONE_BACK_END_IMPL_HH__
 
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
@@ -989,3 +991,5 @@ FrontEnd<Impl>::dumpInsts()
         buff_it++;
     }
 }
+
+#endif//__CPU_OZONE_BACK_END_IMPL_HH__

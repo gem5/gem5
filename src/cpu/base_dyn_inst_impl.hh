@@ -40,6 +40,9 @@
  * Authors: Kevin Lim
  */
 
+#ifndef __CPU_BASE_DYN_INST_IMPL_HH__
+#define __CPU_BASE_DYN_INST_IMPL_HH__
+
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -228,3 +231,5 @@ BaseDynInst<Impl>::eaSrcsReady()
 
     return true;
 }
+
+#endif//__CPU_BASE_DYN_INST_IMPL_HH__

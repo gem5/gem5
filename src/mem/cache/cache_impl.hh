@@ -46,6 +46,9 @@
  *          Andreas Sandberg
  */
 
+#ifndef __MEM_CACHE_CACHE_IMPL_HH__
+#define __MEM_CACHE_CACHE_IMPL_HH__
+
 /**
  * @file
  * Cache definitions.
@@ -1899,3 +1902,5 @@ MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
       _queue(*_cache, *this, _label), cache(_cache)
 {
 }
+
+#endif//__MEM_CACHE_CACHE_IMPL_HH__
