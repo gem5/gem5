@@ -53,7 +53,6 @@
 #include "cpu/o3/iew.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
-#include "debug/Decode.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
 #include "debug/O3PipeView.hh"
@@ -645,7 +644,7 @@ DefaultIEW<Impl>::skidInsert(ThreadID tid)
 
         insts[tid].pop();
 
-        DPRINTF(Decode,"[tid:%i]: Inserting [sn:%lli] PC:%s into "
+        DPRINTF(IEW,"[tid:%i]: Inserting [sn:%lli] PC:%s into "
                 "dispatch skidBuffer %i\n",tid, inst->seqNum,
                 inst->pcState(),tid);
 
