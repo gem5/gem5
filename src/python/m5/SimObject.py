@@ -698,7 +698,7 @@ class SimObject(object):
         # via __setattr__.  There is only ever one reference
         # object per port, but we create them lazily here.
         ref = self._port_refs.get(attr)
-        if not ref:
+        if ref == None:
             ref = self._ports[attr].makeRef(self)
             self._port_refs[attr] = ref
         return ref
