@@ -348,6 +348,8 @@ class Pl111: public AmbaDmaDevice
     /** Wrapper to create an event out of the interrupt */
     EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;
 
+    bool enableCapture;
+
   public:
     typedef Pl111Params Params;
 

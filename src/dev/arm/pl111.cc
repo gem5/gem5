@@ -69,7 +69,7 @@ Pl111::Pl111(const Params *p)
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
       dmaDoneEventAll(maxOutstandingDma, this),
       dmaDoneEventFree(maxOutstandingDma),
-      intEvent(this)
+      intEvent(this), enableCapture(p->enable_capture)
 {
     pioSize = 0xFFFF;
 
@@ -497,15 +497,17 @@ Pl111::dmaDone()
         if (vnc)
             vnc->setDirty();
 
-        DPRINTF(PL111, "-- write out frame buffer into bmp\n");
+        if (enableCapture) {
+            DPRINTF(PL111, "-- write out frame buffer into bmp\n");
 
-        if (!pic)
-            pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
+            if (!pic)
+                pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-        assert(bmp);
-        assert(pic);
-        pic->seekp(0);
-        bmp->write(pic);
+            assert(bmp);
+            assert(pic);
+            pic->seekp(0);
+            bmp->write(pic);
+        }
 
         // schedule the next read based on when the last frame started
         // and the desired fps (i.e. maxFrameTime), we turn the

@@ -139,6 +139,8 @@ class Pl111(AmbaDmaDevice):
     pixel_clock = Param.Clock('24MHz', "Pixel clock")
     vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
+    enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
+
 
 class HDLcd(AmbaDmaDevice):
     type = 'HDLcd'
@@ -149,6 +151,7 @@ class HDLcd(AmbaDmaDevice):
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
+    enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
 
 class RealView(Platform):
     type = 'RealView'

@@ -72,7 +72,8 @@ HDLcd::HDLcd(const Params *p)
       startFrameEvent(this), endFrameEvent(this), renderPixelEvent(this),
       fillPixelBufferEvent(this), intEvent(this),
       dmaDoneEventAll(MAX_OUTSTANDING_DMA_REQ_CAPACITY, this),
-      dmaDoneEventFree(MAX_OUTSTANDING_DMA_REQ_CAPACITY)
+      dmaDoneEventFree(MAX_OUTSTANDING_DMA_REQ_CAPACITY),
+      enableCapture(p->enable_capture)
 {
     pioSize = 0xFFFF;
 
@@ -560,13 +561,15 @@ HDLcd::endFrame() {
     if (vnc)
         vnc->setDirty();
 
-    if (!pic)
-        pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
+    if (enableCapture) {
+        if (!pic)
+            pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-    assert(bmp);
-    assert(pic);
-    pic->seekp(0);
-    bmp->write(pic);
+        assert(bmp);
+        assert(pic);
+        pic->seekp(0);
+        bmp->write(pic);
+    }
 
     // start the next frame
     frameUnderway = false;

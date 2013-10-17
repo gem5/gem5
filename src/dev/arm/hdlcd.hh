@@ -474,6 +474,8 @@ class HDLcd: public AmbaDmaDevice
     std::vector<DmaDoneEvent *> dmaDoneEventFree;
     /**@}*/
 
+    bool enableCapture;
+
   public:
     typedef HDLcdParams Params;
 
