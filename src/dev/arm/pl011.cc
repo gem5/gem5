@@ -211,9 +211,13 @@ Pl011::write(PacketPtr pkt)
       case UART_IMSC:
         imsc = data;
 
-        if (imsc.rimim || imsc.ctsmim || imsc.dcdmim || imsc.dsrmim
-             || imsc.feim || imsc.peim || imsc.beim || imsc.oeim || imsc.rsvd)
+        if (imsc.feim || imsc.peim || imsc.beim || imsc.oeim || imsc.rsvd)
             panic("Unknown interrupt enabled\n");
+
+        // rimim, ctsmim, dcdmim, dsrmim can be enabled but are ignored
+        // they are supposed to interrupt on a change of status in the line
+        // which we should never have since our terminal is happy to always
+        // receive bytes.
 
         if (imsc.txim) {
             DPRINTF(Uart, "Writing to IMSC: TX int enabled, scheduling interruptt\n");
