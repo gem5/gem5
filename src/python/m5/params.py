@@ -697,7 +697,7 @@ class EthernetAddr(ParamValue):
             raise TypeError, 'invalid ethernet address %s' % value
 
         for byte in bytes:
-            if not 0 <= int(byte) <= 0xff:
+            if not 0 <= int(byte, base=16) <= 0xff:
                 raise TypeError, 'invalid ethernet address %s' % value
 
         self.value = value
