@@ -122,8 +122,8 @@ class QueuedMasterPort : public MasterPort
      * QueuePort constructor.
      */
     QueuedMasterPort(const std::string& name, MemObject* owner,
-                     MasterPacketQueue &queue) :
-        MasterPort(name, owner), queue(queue)
+                     MasterPacketQueue &queue, PortID id = InvalidPortID) :
+        MasterPort(name, owner, id), queue(queue)
     { }
 
     virtual ~QueuedMasterPort() { }
