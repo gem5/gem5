@@ -747,6 +747,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.Destination.addNetDest(tbe.L1_GetS_IDs);
       out_msg.DataBlk := tbe.DataBlk;
       // out_msg.Dirty := tbe.Dirty;
@@ -811,6 +812,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := tbe.DataBlk;
         // out_msg.Dirty := tbe.Dirty;
@@ -830,6 +832,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.Destination.addNetDest(tbe.Fwd_GetS_IDs);
       out_msg.DataBlk := tbe.DataBlk;
       // out_msg.Dirty := tbe.Dirty;
@@ -866,6 +869,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
         // out_msg.Dirty := cache_entry.Dirty;
@@ -925,6 +929,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
         // out_msg.Dirty := cache_entry.Dirty;
@@ -944,6 +949,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
         out_msg.Dirty := cache_entry.Dirty;
