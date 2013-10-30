@@ -133,7 +133,7 @@ bool
 SWallocator_d::is_candidate_inport(int inport, int invc)
 {
     int outport = m_input_unit[inport]->get_route(invc);
-    int t_enqueue_time = m_input_unit[inport]->get_enqueue_time(invc);
+    Cycles t_enqueue_time = m_input_unit[inport]->get_enqueue_time(invc);
     int t_vnet = get_vnet(invc);
     int vc_base = t_vnet*m_vc_per_vnet;
     if ((m_router->get_net_ptr())->isVNetOrdered(t_vnet)) {
