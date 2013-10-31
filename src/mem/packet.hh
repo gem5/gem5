@@ -506,19 +506,19 @@ class Packet : public Printable
     bool isFlush() const        { return cmd.isFlush(); }
 
     // Snoop flags
-    void assertMemInhibit()     { flags.set(MEM_INHIBIT); }
-    bool memInhibitAsserted()   { return flags.isSet(MEM_INHIBIT); }
-    void assertShared()         { flags.set(SHARED); }
-    bool sharedAsserted()       { return flags.isSet(SHARED); }
+    void assertMemInhibit()         { flags.set(MEM_INHIBIT); }
+    bool memInhibitAsserted() const { return flags.isSet(MEM_INHIBIT); }
+    void assertShared()             { flags.set(SHARED); }
+    bool sharedAsserted() const     { return flags.isSet(SHARED); }
 
     // Special control flags
-    void setExpressSnoop()      { flags.set(EXPRESS_SNOOP); }
-    bool isExpressSnoop()       { return flags.isSet(EXPRESS_SNOOP); }
-    void setSupplyExclusive()   { flags.set(SUPPLY_EXCLUSIVE); }
-    void clearSupplyExclusive() { flags.clear(SUPPLY_EXCLUSIVE); }
-    bool isSupplyExclusive()    { return flags.isSet(SUPPLY_EXCLUSIVE); }
-    void setSuppressFuncError() { flags.set(SUPPRESS_FUNC_ERROR); }
-    bool suppressFuncError()    { return flags.isSet(SUPPRESS_FUNC_ERROR); }
+    void setExpressSnoop()          { flags.set(EXPRESS_SNOOP); }
+    bool isExpressSnoop() const     { return flags.isSet(EXPRESS_SNOOP); }
+    void setSupplyExclusive()       { flags.set(SUPPLY_EXCLUSIVE); }
+    void clearSupplyExclusive()     { flags.clear(SUPPLY_EXCLUSIVE); }
+    bool isSupplyExclusive() const  { return flags.isSet(SUPPLY_EXCLUSIVE); }
+    void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
+    bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
