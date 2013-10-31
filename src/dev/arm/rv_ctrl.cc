@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,12 +38,13 @@
  */
 
 #include "base/trace.hh"
+#include "debug/RVCTRL.hh"
 #include "dev/arm/rv_ctrl.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
 RealViewCtrl::RealViewCtrl(Params *p)
-    : BasicPioDevice(p, 0xD4), flags(0)
+    : BasicPioDevice(p, 0xD4), flags(0), scData(0)
 {
 }
 
@@ -105,9 +106,18 @@ RealViewCtrl::read(PacketPtr pkt)
       case CfgStat:
         pkt->set<uint32_t>(1);
         break;
+      case CfgData:
+        pkt->set<uint32_t>(scData);
+        DPRINTF(RVCTRL, "Read %#x from SCReg\n", scData);
+        break;
+      case CfgCtrl:
+        pkt->set<uint32_t>(0); // not busy
+        DPRINTF(RVCTRL, "Read 0 from CfgCtrl\n");
+        break;
       default:
         warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
              daddr);
+        pkt->set<uint32_t>(0);
         break;
     }
     pkt->makeAtomicResponse();
@@ -139,9 +149,99 @@ RealViewCtrl::write(PacketPtr pkt)
       case FlagsClr:
         flags = 0;
         break;
+      case CfgData:
+        scData = pkt->get<uint32_t>();
+        break;
+      case CfgCtrl: {
+          // A request is being submitted to read/write the system control
+          // registers.  See
+          // http://infocenter.arm.com/help/topic/com.arm.doc.dui0447h/CACDEFGH.html
+          // For now, model as much of the OSC regs (can't find docs) as Linux
+          // seems to require (can't find docs); some clocks are deemed to be 0,
+          // giving all kinds of /0 problems booting Linux 3.9.  Return a
+          // vaguely plausible number within the range the device trees state:
+          uint32_t data = pkt->get<uint32_t>();
+          uint16_t dev = bits(data, 11, 0);
+          uint8_t pos = bits(data, 15, 12);
+          uint8_t site = bits(data, 17, 16);
+          uint8_t func = bits(data, 25, 20);
+          uint8_t dcc = bits(data, 29, 26);
+          bool wr = bits(data, 30);
+          bool start = bits(data, 31);
+
+          if (start) {
+              if (wr) {
+                  warn_once("SCReg: Writing %#x to dcc%d:site%d:pos%d:fn%d:dev%d\n",
+                          scData, dcc, site, pos, func, dev);
+                  // Only really support reading, for now!
+              } else {
+                  // Only deal with function 1 (oscillators) so far!
+                  if (dcc != 0 || pos != 0 || func != 1) {
+                      warn("SCReg: read from unknown area "
+                           "(dcc %d:site%d:pos%d:fn%d:dev%d)\n",
+                           dcc, site, pos, func, dev);
+                  } else {
+                      switch (site) {
+                        case 0: { // Motherboard regs
+                            switch(dev) {
+                              case 0: // MCC clk
+                                scData = 25000000;
+                                break;
+                              case 1: // CLCD clk
+                                scData = 25000000;
+                                break;
+                              case 2: // PeriphClk 24MHz
+                                scData = 24000000;
+                                break;
+                              default:
+                                scData = 0;
+                                warn("SCReg: read from unknown dev %d "
+                                     "(site%d:pos%d:fn%d)\n",
+                                     dev, site, pos, func);
+                            }
+                        } break;
+                        case 1: { // Coretile 1 regs
+                            switch(dev) {
+                              case 0: // CPU PLL ref
+                                scData = 50000000;
+                                break;
+                              case 4: // Muxed AXI master clock
+                                scData = 40000000;
+                                break;
+                              case 5: // HDLCD clk
+                                scData = 50000000;
+                                break;
+                              case 6: // SMB clock
+                                scData = 35000000;
+                                break;
+                              case 7: // SYS PLL (also used for pl011 UART!)
+                                scData = 40000000;
+                                break;
+                              case 8: // DDR PLL 40MHz fixed
+                                scData = 40000000;
+                                break;
+                              default:
+                                scData = 0;
+                                warn("SCReg: read from unknown dev %d "
+                                     "(site%d:pos%d:fn%d)\n",
+                                     dev, site, pos, func);
+                            }
+                        } break;
+                        default:
+                          warn("SCReg: Read from unknown site %d (pos%d:fn%d:dev%d)\n",
+                               site, pos, func, dev);
+                      }
+                      DPRINTF(RVCTRL, "SCReg: Will read %#x (ctrlWr %#x)\n", scData, data);
+                  }
+              }
+          } else {
+              DPRINTF(RVCTRL, "SCReg: write %#x to ctrl but not starting\n", data);
+          }
+      } break;
+      case CfgStat:     // Weird to write this
       default:
-        warn("Tried to write RVIO at offset %#x that doesn't exist\n",
-             daddr);
+        warn("Tried to write RVIO at offset %#x (data %#x) that doesn't exist\n",
+             daddr, pkt->get<uint32_t>());
         break;
     }
     pkt->makeAtomicResponse();

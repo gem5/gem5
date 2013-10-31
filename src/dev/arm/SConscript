@@ -63,3 +63,4 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('PL111')
     DebugFlag('Pl050')
     DebugFlag('GIC')
+    DebugFlag('RVCTRL')

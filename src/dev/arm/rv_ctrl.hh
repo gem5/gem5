@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -80,8 +80,8 @@ class RealViewCtrl : public BasicPioDevice
         IoSel      = 0x70,
         ProcId0    = 0x84,
         ProcId1    = 0x88,
-        CfgCtrl    = 0xA0,
-        CfgData    = 0xA4,
+        CfgData    = 0xA0,
+        CfgCtrl    = 0xA4,
         CfgStat    = 0xA8,
         TestOsc0   = 0xC0,
         TestOsc1   = 0xC4,
@@ -104,6 +104,10 @@ class RealViewCtrl : public BasicPioDevice
      * it's non-zero it jumps to the address
      */
     uint32_t flags;
+
+    /** This register contains the result from a system control reg access
+     */
+    uint32_t scData;
 
   public:
     typedef RealViewCtrlParams Params;
