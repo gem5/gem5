@@ -121,6 +121,7 @@ namespace ArmISA
         MISCREG_DBGDEVID2,
         MISCREG_DBGDEVID1,
         MISCREG_DBGDEVID,
+        MISCREG_TEEHBR,
 
         // CP15 registers
         MISCREG_CP15_START,
@@ -288,6 +289,7 @@ namespace ArmISA
         "DBGDEVID2",
         "DBGDEVID1",
         "DBGDEVID",
+        "TEEHBR",
         "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
         "cp15isb", "cp15dsb", "cp15dmb", "cpacr",

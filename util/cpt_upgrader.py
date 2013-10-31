@@ -217,6 +217,18 @@ def from_6(cpt):
         if cpt.has_option(sec, "curSector"):
             cpt.set(sec, "dmaAborted", "false")
 
+# Version 8 of the checkpoint adds an ARM MISCREG
+def from_7(cpt):
+    if cpt.get('root','isa') == 'arm':
+        for sec in cpt.sections():
+            import re
+            # Search for all ISA sections
+            if re.search('.*sys.*\.cpu.*\.isa', sec):
+                mr = cpt.get(sec, 'miscRegs').split()
+                # Add dummy value for MISCREG_TEEHBR
+                mr.insert(51,0);
+                cpt.set(sec, 'miscRegs', ' '.join(str(x) for x in mr))
+
 
 migrations = []
 migrations.append(from_0)
@@ -226,6 +238,7 @@ migrations.append(from_3)
 migrations.append(from_4)
 migrations.append(from_5)
 migrations.append(from_6)
+migrations.append(from_7)
 
 verbose_print = False
 

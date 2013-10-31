@@ -63,9 +63,32 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                 return NUM_MISCREGS;
             }
           default:
+            warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+                 crn, opc1, crm, opc2);
+            return NUM_MISCREGS;
+        }
+      case 1:
+        switch (opc1) {
+          case 6:
+            switch (crm) {
+              case 0:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_TEEHBR;
+                  default:
+                    warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+                         crn, opc1, crm, opc2);
+                    return NUM_MISCREGS;
+                }
+              default:
                 warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
                      crn, opc1, crm, opc2);
                 return NUM_MISCREGS;
+            }
+          default:
+            warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+                 crn, opc1, crm, opc2);
+            return NUM_MISCREGS;
         }
       default:
         warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
