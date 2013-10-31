@@ -55,29 +55,13 @@
         .align 2
         .globl \name
 \name:
-        /* First, try to trap into m5 using the m5-kvm hypercall
-         * hack. The bxj will become a branch to the fallback code
-         * if it is executed in the normal m5 environment.
-         */
-        push {lr}
-#ifdef __thumb__
-        adr lr, 1f+1
-#else
-        adr lr, 1f
-#endif
-        ldr ip, =((((\func) & 0xFF) << 8) | ((\subfunc) & 0xFF))
-        bxj lr
-        pop {pc}
-
-        /* Old-style m5 pseudo instruction using CP1 accesses */
-1:
 #ifdef __thumb__
         .short 0xEE00 | \func
         .short 0x0110 | (\subfunc << 12)
 #else
-        .long (0xEE000110 | (\func << 16) | (\subfunc << 12))
+        .long 0xEE000110 | (\func << 16) | (\subfunc << 12)
 #endif
-        pop {pc}
+        mov pc,lr
 .endm
 
 #define SIMPLE_OP(name, func, subfunc) simple_op name, func, subfunc

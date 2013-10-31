@@ -145,7 +145,9 @@ do_fail(int argc, char *argv[])
     if (argc < 1 || argc > 2)
         usage();
 
-    m5_fail((argc > 1) ? strtoul(argv[1], NULL, 0) : 0, strtoul(argv[0], NULL, 0));
+    uint64_t ints[2] = {0,0};
+    parse_int_args(argc, argv, ints, argc);
+    m5_fail(ints[1], ints[0]);
 }
 
 void
