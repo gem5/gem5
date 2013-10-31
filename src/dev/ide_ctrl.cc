@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -111,11 +123,11 @@ IdeController::IdeController(Params *p)
 
     if ((BARAddrs[0] & ~BAR_IO_MASK) && (!legacyIO[0] || ioShift)) {
         primary.cmdAddr = BARAddrs[0];  primary.cmdSize = BARSize[0];
-        primary.ctrlAddr = BARAddrs[1]; primary.ctrlSize = BARAddrs[1];
+        primary.ctrlAddr = BARAddrs[1]; primary.ctrlSize = BARSize[1];
     }
     if ((BARAddrs[2] & ~BAR_IO_MASK) && (!legacyIO[2] || ioShift)) {
         secondary.cmdAddr = BARAddrs[2];  secondary.cmdSize = BARSize[2];
-        secondary.ctrlAddr = BARAddrs[3]; secondary.ctrlSize = BARAddrs[3];
+        secondary.ctrlAddr = BARAddrs[3]; secondary.ctrlSize = BARSize[3];
     }
 
     ioEnabled = (config.command & htole(PCI_CMD_IOSE));
@@ -414,14 +426,21 @@ IdeController::Channel::accessBMI(Addr offset,
                 newVal.active = oldVal.active;
 
                 // to reset (set 0) IDEINTS and IDEDMAE, write 1 to each
-                if (oldVal.intStatus && newVal.intStatus)
+                if ((oldVal.intStatus == 1) && (newVal.intStatus == 1)) {
                     newVal.intStatus = 0; // clear the interrupt?
-                else
-                    newVal.intStatus = oldVal.intStatus;
-                if (oldVal.dmaError && newVal.dmaError)
+                } else {
+                    // Assigning two bitunion fields to each other does not
+                    // work as intended, so we need to use this temporary variable
+                    // to get around the bug.
+                    uint8_t tmp = oldVal.intStatus;
+                    newVal.intStatus = tmp;
+                }
+                if ((oldVal.dmaError == 1) && (newVal.dmaError == 1)) {
                     newVal.dmaError = 0;
-                else
-                    newVal.dmaError = oldVal.dmaError;
+                } else {
+                    uint8_t tmp = oldVal.dmaError;
+                    newVal.dmaError = tmp;
+                }
 
                 bmiRegs.status = newVal;
             }

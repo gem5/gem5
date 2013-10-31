@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -143,6 +155,7 @@ IdeDisk::reset(int id)
     drqBytesLeft = 0;
     dmaRead = false;
     intrPending = false;
+    dmaAborted = false;
 
     // set the device state to idle
     dmaState = Dma_Idle;
@@ -319,6 +332,12 @@ IdeDisk::writeControl(const Addr offset, int size, const uint8_t *data)
 void
 IdeDisk::doDmaTransfer()
 {
+    if (dmaAborted) {
+        DPRINTF(IdeDisk, "DMA Aborted before reading PRD entry\n");
+        updateState(ACT_CMD_ERROR);
+        return;
+    }
+
     if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma)
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
               dmaState, devState);
@@ -334,6 +353,11 @@ IdeDisk::doDmaTransfer()
 void
 IdeDisk::dmaPrdReadDone()
 {
+    if (dmaAborted) {
+        DPRINTF(IdeDisk, "DMA Aborted while reading PRD entry\n");
+        updateState(ACT_CMD_ERROR);
+        return;
+    }
 
     DPRINTF(IdeDisk,
             "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
@@ -396,6 +420,14 @@ IdeDisk::regStats()
 void
 IdeDisk::doDmaRead()
 {
+    if (dmaAborted) {
+        DPRINTF(IdeDisk, "DMA Aborted in middle of Dma Read\n");
+        if (dmaReadCG)
+            delete dmaReadCG;
+        dmaReadCG = NULL;
+        updateState(ACT_CMD_ERROR);
+        return;
+    }
 
     if (!dmaReadCG) {
         // clear out the data buffer
@@ -427,9 +459,7 @@ IdeDisk::doDmaRead()
 void
 IdeDisk::dmaReadDone()
 {
-
     uint32_t bytesWritten = 0;
-
 
     // write the data to the disk image
     for (bytesWritten = 0; bytesWritten < curPrd.getByteCount();
@@ -475,7 +505,14 @@ IdeDisk::doDmaDataWrite()
 void
 IdeDisk::doDmaWrite()
 {
-    DPRINTF(IdeDisk, "doDmaWrite: rescheduling\n");
+    if (dmaAborted) {
+        DPRINTF(IdeDisk, "DMA Aborted while doing DMA Write\n");
+        if (dmaWriteCG)
+            delete dmaWriteCG;
+        dmaWriteCG = NULL;
+        updateState(ACT_CMD_ERROR);
+        return;
+    }
     if (!dmaWriteCG) {
         // clear out the data buffer
         dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
@@ -980,7 +1017,10 @@ IdeDisk::updateState(DevAction_t action)
         break;
 
       case Transfer_Data_Dma:
-        if (action == ACT_CMD_ERROR || action == ACT_DMA_DONE) {
+        if (action == ACT_CMD_ERROR) {
+            dmaAborted = true;
+            devState = Device_Dma_Abort;
+        } else if (action == ACT_DMA_DONE) {
             // clear the BSY bit
             setComplete();
             // set the seek bit
@@ -994,6 +1034,25 @@ IdeDisk::updateState(DevAction_t action)
             } else {
                 devState = Device_Idle_S;
             }
+        }
+        break;
+
+      case Device_Dma_Abort:
+        if (action == ACT_CMD_ERROR) {
+            setComplete();
+            status |= STATUS_SEEK_BIT;
+            ctrl->setDmaComplete(this);
+            dmaAborted = false;
+            dmaState = Dma_Idle;
+
+            if (!isIENSet()) {
+                devState = Device_Idle_SI;
+                intrPost();
+            } else {
+                devState = Device_Idle_S;
+            }
+        } else {
+            DPRINTF(IdeDisk, "Disk still busy aborting previous DMA command\n");
         }
         break;
 
@@ -1074,6 +1133,7 @@ IdeDisk::serialize(ostream &os)
     SERIALIZE_SCALAR(curSector);
     SERIALIZE_SCALAR(dmaRead);
     SERIALIZE_SCALAR(intrPending);
+    SERIALIZE_SCALAR(dmaAborted);
     SERIALIZE_ENUM(devState);
     SERIALIZE_ENUM(dmaState);
     SERIALIZE_ARRAY(dataBuffer, MAX_DMA_SIZE);
@@ -1126,6 +1186,7 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(curSector);
     UNSERIALIZE_SCALAR(dmaRead);
     UNSERIALIZE_SCALAR(intrPending);
+    UNSERIALIZE_SCALAR(dmaAborted);
     UNSERIALIZE_ENUM(devState);
     UNSERIALIZE_ENUM(dmaState);
     UNSERIALIZE_ARRAY(dataBuffer, MAX_DMA_SIZE);

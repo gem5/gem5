@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -209,6 +209,15 @@ def from_5(cpt):
     else:
         print "ISA is not x86"
 
+# Version 7 of the checkpoint adds support for the IDE dmaAbort flag
+def from_6(cpt):
+    # Update IDE disk devices with dmaAborted
+    for sec in cpt.sections():
+        # curSector only exists in IDE devices, so key on that attribute
+        if cpt.has_option(sec, "curSector"):
+            cpt.set(sec, "dmaAborted", "false")
+
+
 migrations = []
 migrations.append(from_0)
 migrations.append(from_1)
@@ -216,6 +225,7 @@ migrations.append(from_2)
 migrations.append(from_3)
 migrations.append(from_4)
 migrations.append(from_5)
+migrations.append(from_6)
 
 verbose_print = False
 
@@ -273,7 +283,6 @@ def process_file(path, **kwargs):
     # Write the old data back
     verboseprint("\t...completed")
     cpt.write(file(path, 'w'))
-
 
 if __name__ == '__main__':
     from optparse import OptionParser
