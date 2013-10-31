@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -38,6 +50,7 @@
 #define __DEV_PCIDEV_HH__
 
 #include <cstring>
+#include <vector>
 
 #include "dev/dma_device.hh"
 #include "dev/pcireg.h"
@@ -91,6 +104,25 @@ class PciDevice : public DmaDevice
   protected:
     /** The current config space.  */
     PCIConfig config;
+    /** The capability list structures and base addresses
+     * @{
+     */
+    const int PMCAP_BASE;
+    PMCAP pmcap;
+
+    const int MSICAP_BASE;
+    MSICAP msicap;
+
+    const int MSIXCAP_BASE;
+    MSIXCAP msixcap;
+
+    const int PXCAP_BASE;
+    PXCAP pxcap;
+    /** @} */
+
+    /** MSIX Table and PBA Structures */
+    std::vector<MSIXTable> msix_table;
+    std::vector<MSIXPbaEntry> msix_pba;
 
     /** The size of the BARs */
     uint32_t BARSize[6];

@@ -1,3 +1,15 @@
+# Copyright (c) 2013 ARM Limited
+#  All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -91,9 +103,60 @@ class PciDevice(DmaDevice):
     SubsystemID = Param.UInt16(0x00, "Subsystem ID")
     SubsystemVendorID = Param.UInt16(0x00, "Subsystem Vendor ID")
     ExpansionROM = Param.UInt32(0x00, "Expansion ROM Base Address")
+    CapabilityPtr = Param.UInt8(0x00, "Capability List Pointer offset")
     InterruptLine = Param.UInt8(0x00, "Interrupt Line")
     InterruptPin = Param.UInt8(0x00, "Interrupt Pin")
     MaximumLatency = Param.UInt8(0x00, "Maximum Latency")
     MinimumGrant = Param.UInt8(0x00, "Minimum Grant")
 
+    # Capabilities List structures for PCIe devices
+    # PMCAP - PCI Power Management Capability
+    PMCAPBaseOffset = \
+        Param.UInt8(0x00, "Base offset of PMCAP in PCI Config space")
+    PMCAPNextCapability = \
+        Param.UInt8(0x00, "Pointer to next capability block")
+    PMCAPCapId = \
+        Param.UInt8(0x00, "Specifies this is the Power Management capability")
+    PMCAPCapabilities = \
+        Param.UInt16(0x0000, "PCI Power Management Capabilities Register")
+    PMCAPCtrlStatus = \
+        Param.UInt16(0x0000, "PCI Power Management Control and Status")
 
+    # MSICAP - Message Signaled Interrupt Capability
+    MSICAPBaseOffset = \
+        Param.UInt8(0x00, "Base offset of MSICAP in PCI Config space")
+    MSICAPNextCapability = \
+        Param.UInt8(0x00, "Pointer to next capability block")
+    MSICAPCapId = Param.UInt8(0x00, "Specifies this is the MSI Capability")
+    MSICAPMsgCtrl = Param.UInt16(0x0000, "MSI Message Control")
+    MSICAPMsgAddr = Param.UInt32(0x00000000, "MSI Message Address")
+    MSICAPMsgUpperAddr = Param.UInt32(0x00000000, "MSI Message Upper Address")
+    MSICAPMsgData = Param.UInt16(0x0000, "MSI Message Data")
+    MSICAPMaskBits = Param.UInt32(0x00000000, "MSI Interrupt Mask Bits")
+    MSICAPPendingBits = Param.UInt32(0x00000000, "MSI Pending Bits")
+
+    # MSIXCAP - MSI-X Capability
+    MSIXCAPBaseOffset = \
+        Param.UInt8(0x00, "Base offset of MSIXCAP in PCI Config space")
+    MSIXCAPNextCapability = \
+        Param.UInt8(0x00, "Pointer to next capability block")
+    MSIXCAPCapId = Param.UInt8(0x00, "Specifices this the MSI-X Capability")
+    MSIXMsgCtrl = Param.UInt16(0x0000, "MSI-X Message Control")
+    MSIXTableOffset = \
+        Param.UInt32(0x00000000, "MSI-X Table Offset and Table BIR")
+    MSIXPbaOffset = Param.UInt32(0x00000000, "MSI-X PBA Offset and PBA BIR")
+
+    # PXCAP - PCI Express Capability
+    PXCAPBaseOffset = \
+        Param.UInt8(0x00, "Base offset of PXCAP in PCI Config space")
+    PXCAPNextCapability = Param.UInt8(0x00, "Pointer to next capability block")
+    PXCAPCapId = Param.UInt8(0x00, "Specifies this is the PCIe Capability")
+    PXCAPCapabilities = Param.UInt16(0x0000, "PCIe Capabilities")
+    PXCAPDevCapabilities = Param.UInt32(0x00000000, "PCIe Device Capabilities")
+    PXCAPDevCtrl = Param.UInt16(0x0000, "PCIe Device Control")
+    PXCAPDevStatus = Param.UInt16(0x0000, "PCIe Device Status")
+    PXCAPLinkCap = Param.UInt32(0x00000000, "PCIe Link Capabilities")
+    PXCAPLinkCtrl = Param.UInt16(0x0000, "PCIe Link Control")
+    PXCAPLinkStatus = Param.UInt16(0x0000, "PCIe Link Status")
+    PXCAPDevCap2 = Param.UInt32(0x00000000, "PCIe Device Capabilities 2")
+    PXCAPDevCtrl2 = Param.UInt32(0x00000000, "PCIe Device Control 2")
