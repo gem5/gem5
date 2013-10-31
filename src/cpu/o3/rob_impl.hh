@@ -49,20 +49,19 @@
 #include "cpu/o3/rob.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"
+#include "params/DerivO3CPU.hh"
 
 using namespace std;
 
 template <class Impl>
-ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
-               std::string _smtROBPolicy, unsigned _smtROBThreshold,
-               ThreadID _numThreads)
+ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
-      numEntries(_numEntries),
-      squashWidth(_squashWidth),
+      numEntries(params->numROBEntries),
+      squashWidth(params->squashWidth),
       numInstsInROB(0),
-      numThreads(_numThreads)
+      numThreads(params->numThreads)
 {
-    std::string policy = _smtROBPolicy;
+    std::string policy = params->smtROBPolicy;
 
     //Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -93,7 +92,7 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
         robPolicy = Threshold;
         DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
-        int threshold =  _smtROBThreshold;;
+        int threshold =  params->smtROBThreshold;;
 
         //Divide up by threshold amount
         for (ThreadID tid = 0; tid < numThreads; tid++) {

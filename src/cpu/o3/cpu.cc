@@ -230,10 +230,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       freeList(name() + ".freelist", &regFile),
 
-      rob(this,
-          params->numROBEntries, params->squashWidth,
-          params->smtROBPolicy, params->smtROBThreshold,
-          params->numThreads),
+      rob(this, params),
 
       scoreboard(name() + ".scoreboard",
                  regFile.totalNumPhysRegs(), TheISA::NumMiscRegs,

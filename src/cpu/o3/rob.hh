@@ -52,6 +52,8 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 
+struct DerivO3CPUParams;
+
 /**
  * ROB class.  The ROB is largely what drives squashing.
  */
@@ -91,16 +93,10 @@ class ROB
 
   public:
     /** ROB constructor.
-     *  @param _numEntries      Number of entries in ROB.
-     *  @param _squashWidth     Number of instructions that can be squashed in a
-     *                          single cycle.
-     *  @param _smtROBPolicy    ROB Partitioning Scheme for SMT.
-     *  @param _smtROBThreshold Max Resources(by %) a thread can have in the ROB.
-     *  @param _numThreads      The number of active threads.
+     *  @param _cpu   The cpu object pointer.
+     *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
-        std::string smtROBPolicy, unsigned _smtROBThreshold,
-        ThreadID _numThreads);
+    ROB(O3CPU *_cpu, DerivO3CPUParams *params);
 
     std::string name() const;
 
