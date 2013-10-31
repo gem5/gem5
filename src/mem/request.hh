@@ -111,6 +111,8 @@ class Request
     static const FlagsType MMAPPED_IPR                  = 0x00002000;
     /** This request is a clear exclusive. */
     static const FlagsType CLEAR_LL                    = 0x00004000;
+    /** This request is made in privileged mode. */
+    static const FlagsType PRIVILEGED                   = 0x00008000;
 
     /** The request should not cause a memory access. */
     static const FlagsType NO_ACCESS                   = 0x00080000;
@@ -539,6 +541,7 @@ class Request
     bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
     bool isPrefetch() const { return _flags.isSet(PREFETCH); }
     bool isLLSC() const { return _flags.isSet(LLSC); }
+    bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLocked() const { return _flags.isSet(LOCKED); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
