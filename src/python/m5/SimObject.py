@@ -784,6 +784,11 @@ class SimObject(object):
         self._parent = parent
         self._name = name
 
+    # Return parent object of this SimObject, not implemented by SimObjectVector
+    # because the elements in a SimObjectVector may not share the same parent
+    def get_parent(self):
+        return self._parent
+
     # Also implemented by SimObjectVector
     def get_name(self):
         return self._name

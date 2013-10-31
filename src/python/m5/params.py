@@ -247,6 +247,19 @@ class SimObjectVector(VectorParamValue):
             a.append(v.get_config_as_dict())
         return a
 
+    # If we are replacing an item in the vector, make sure to set the
+    # parent reference of the new SimObject to be the same as the parent
+    # of the SimObject being replaced. Useful to have if we created
+    # a SimObjectVector of temporary objects that will be modified later in
+    # configuration scripts.
+    def __setitem__(self, key, value):
+        val = self[key]
+        if value.has_parent():
+            warn("SimObject %s already has a parent" % value.get_name() +\
+                 " that is being overwritten by a SimObjectVector")
+        value.set_parent(val.get_parent(), val._name)
+        super(SimObjectVector, self).__setitem__(key, value)
+
 class VectorParamDesc(ParamDesc):
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
