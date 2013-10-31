@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -29,6 +41,7 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Gabe Black
+ *          Geoffrey Blake
  */
 
 #ifndef __BASE_INET_HH__
@@ -104,11 +117,31 @@ bool operator==(const EthAddr &left, const EthAddr &right);
 
 struct EthHdr : public eth_hdr
 {
-    uint16_t type() const { return ntohs(eth_type); }
+    bool isVlan() const { return (ntohs(eth_type) == ETH_TYPE_8021Q); }
+    uint16_t type() const {
+        if (!isVlan())
+            return ntohs(eth_type);
+        else
+            // L3 type is now 16 bytes into the hdr with 802.1Q
+            // instead of 12.  dnet/eth.h only supports 802.1
+            return ntohs(*((uint16_t*)(((uint8_t *)this) + 16)));
+    }
+    uint16_t vlanId() const {
+        if (isVlan())
+            return ntohs(*((uint16_t*)(((uint8_t *)this) + 14)));
+        else
+            return 0x0000;
+    }
+
     const EthAddr &src() const { return *(EthAddr *)&eth_src; }
     const EthAddr &dst() const { return *(EthAddr *)&eth_dst; }
 
-    int size() const { return sizeof(eth_hdr); }
+    int size() const {
+        if (!isVlan())
+            return sizeof(eth_hdr);
+        else
+            return (sizeof(eth_hdr)+4);
+    }
 
     const uint8_t *bytes() const { return (const uint8_t *)this; }
     const uint8_t *payload() const { return bytes() + size(); }
@@ -120,6 +153,7 @@ class EthPtr
 {
   protected:
     friend class IpPtr;
+    friend class Ip6Ptr;
     EthPacketPtr p;
 
   public:
@@ -226,7 +260,6 @@ struct IpHdr : public ip_hdr
     void id(uint16_t _id) { ip_id = htons(_id); }
     void len(uint16_t _len) { ip_len = htons(_len); }
 
-
     bool options(std::vector<const IpOpt *> &vec) const;
 
     int size() const { return hlen(); }
@@ -242,30 +275,36 @@ class IpPtr
     friend class TcpPtr;
     friend class UdpPtr;
     EthPacketPtr p;
+    bool eth_hdr_vlan;
 
     void set(const EthPacketPtr &ptr)
     {
         p = 0;
+        eth_hdr_vlan = false;
 
         if (ptr) {
             EthHdr *eth = (EthHdr *)ptr->data;
             if (eth->type() == ETH_TYPE_IP)
                 p = ptr;
+            if (eth->isVlan())
+                eth_hdr_vlan = true;
         }
     }
 
   public:
-    IpPtr() : p(0) {}
-    IpPtr(const EthPacketPtr &ptr) : p(0) { set(ptr); }
-    IpPtr(const EthPtr &ptr) : p(0) { set(ptr.p); }
-    IpPtr(const IpPtr &ptr) : p(ptr.p) { }
+    IpPtr() : p(0), eth_hdr_vlan(false) {}
+    IpPtr(const EthPacketPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr); }
+    IpPtr(const EthPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr.p); }
+    IpPtr(const IpPtr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) { }
 
-    IpHdr *get() { return (IpHdr *)(p->data + sizeof(eth_hdr)); }
+    IpHdr *get() { return (IpHdr *)(p->data + sizeof(eth_hdr) +
+                                   ((eth_hdr_vlan) ? 4 : 0)); }
     IpHdr *operator->() { return get(); }
     IpHdr &operator*() { return *get(); }
 
     const IpHdr *get() const
-    { return (const IpHdr *)(p->data + sizeof(eth_hdr)); }
+    { return (const IpHdr *)(p->data + sizeof(eth_hdr) +
+                            ((eth_hdr_vlan) ? 4 : 0)); }
     const IpHdr *operator->() const { return get(); }
     const IpHdr &operator*() const { return *get(); }
 
@@ -277,8 +316,8 @@ class IpPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
-    int off() const { return sizeof(eth_hdr); }
-    int pstart() const { return off() + get()->size(); }
+    int off() const { return (sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0)); }
+    int pstart() const { return (off() + get()->size()); }
 };
 
 uint16_t cksum(const IpPtr &ptr);
@@ -310,6 +349,152 @@ struct IpOpt : public ip_opt
 };
 
 /*
+ * Ip6 Classes
+ */
+struct Ip6Opt;
+struct Ip6Hdr : public ip6_hdr
+{
+    uint8_t version() const { return ip6_vfc; }
+    uint32_t flow() const { return ntohl(ip6_flow); }
+    uint16_t plen() const { return ntohs(ip6_plen); }
+    uint16_t hlen() const { return IP6_HDR_LEN; }
+    uint8_t nxt() const { return ip6_nxt; }
+    uint8_t hlim() const { return ip6_hlim; }
+
+    const uint8_t* src() const { return ip6_src.data; }
+    const uint8_t* dst() const { return ip6_dst.data; }
+
+    int extensionLength() const;
+    const Ip6Opt* getExt(uint8_t ext) const;
+    const Ip6Opt* fragmentExt() const { return getExt(IP_PROTO_FRAGMENT); }
+    const Ip6Opt* rtTypeExt() const { return getExt(IP_PROTO_ROUTING); }
+    const Ip6Opt* dstOptExt() const { return getExt(IP_PROTO_DSTOPTS); }
+    uint8_t proto() const;
+
+    void plen(uint16_t _plen) { ip6_plen = htons(_plen); }
+
+    int size() const { return IP6_HDR_LEN + extensionLength(); }
+    const uint8_t *bytes() const { return (const uint8_t *)this; }
+    const uint8_t *payload() const { return bytes() + IP6_HDR_LEN
+                                            + extensionLength(); }
+    uint8_t *bytes() { return (uint8_t *)this; }
+    uint8_t *payload() { return bytes() + IP6_HDR_LEN
+                                + extensionLength(); }
+};
+
+class Ip6Ptr
+{
+  protected:
+    friend class TcpPtr;
+    friend class UdpPtr;
+    EthPacketPtr p;
+    bool eth_hdr_vlan;
+
+    void set(const EthPacketPtr &ptr)
+    {
+        p = 0;
+        eth_hdr_vlan = false;
+
+        if (ptr) {
+            EthHdr *eth = (EthHdr *)ptr->data;
+            if (eth->type() == ETH_TYPE_IPV6)
+                p = ptr;
+            if (eth->isVlan())
+                eth_hdr_vlan = true;
+        }
+    }
+
+  public:
+    Ip6Ptr() : p(0), eth_hdr_vlan(false) {}
+    Ip6Ptr(const EthPacketPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr); }
+    Ip6Ptr(const EthPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr.p); }
+    Ip6Ptr(const Ip6Ptr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) { }
+
+    Ip6Hdr *get() { return (Ip6Hdr *)(p->data + sizeof(eth_hdr)
+                                      + ((eth_hdr_vlan) ? 4 : 0)); }
+    Ip6Hdr *operator->() { return get(); }
+    Ip6Hdr &operator*() { return *get(); }
+
+    const Ip6Hdr *get() const
+    { return (const Ip6Hdr *)(p->data + sizeof(eth_hdr)
+                              + ((eth_hdr_vlan) ? 4 : 0)); }
+    const Ip6Hdr *operator->() const { return get(); }
+    const Ip6Hdr &operator*() const { return *get(); }
+
+    const Ip6Ptr &operator=(const EthPacketPtr &ptr)
+    { set(ptr); return *this; }
+    const Ip6Ptr &operator=(const EthPtr &ptr)
+    { set(ptr.p); return *this; }
+    const Ip6Ptr &operator=(const Ip6Ptr &ptr)
+    { p = ptr.p; return *this; }
+
+    const EthPacketPtr packet() const { return p; }
+    EthPacketPtr packet() { return p; }
+    bool operator!() const { return !p; }
+    operator bool() const { return p; }
+    int off() const { return sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0); }
+    int pstart() const { return off() + get()->size(); }
+};
+
+// Dnet supplied ipv6 opt header is incomplete and
+// newer NIC card filters expect a more robust
+// ipv6 header option declaration.
+struct ip6_opt_fragment {
+    uint16_t offlg;
+    uint32_t ident;
+};
+
+struct ip6_opt_routing_type2 {
+    uint8_t type;
+    uint8_t segleft;
+    uint32_t reserved;
+    ip6_addr_t addr;
+};
+
+#define HOME_ADDRESS_OPTION 0xC9
+struct ip6_opt_dstopts {
+    uint8_t type;
+    uint8_t length;
+    ip6_addr_t addr;
+} __attribute__((packed));
+
+struct ip6_opt_hdr
+{
+    uint8_t ext_nxt;
+    uint8_t ext_len;
+    union {
+        struct ip6_opt_fragment fragment;
+        struct ip6_opt_routing_type2 rtType2;
+        struct ip6_opt_dstopts dstOpts;
+    } ext_data;
+} __attribute__((packed));
+
+struct Ip6Opt : public ip6_opt_hdr
+{
+    uint8_t nxt() const { return ext_nxt; }
+    uint8_t extlen() const { return ext_len; }
+    uint8_t len() const { return extlen() + 8; }
+
+    // Supporting the types of header extensions likely to be encountered:
+    // fragment, routing type 2 and dstopts.
+
+    // Routing type 2
+    uint8_t  rtType2Type() const { return ext_data.rtType2.type; }
+    uint8_t  rtType2SegLft() const { return ext_data.rtType2.segleft; }
+    const uint8_t* rtType2Addr() const { return ext_data.rtType2.addr.data; }
+
+    // Fragment
+    uint16_t fragmentOfflg() const { return ntohs(ext_data.fragment.offlg); }
+    uint32_t fragmentIdent() const { return ntohl(ext_data.fragment.ident); }
+
+    // Dst Options/Home Address Option
+    uint8_t dstOptType() const { return ext_data.dstOpts.type; }
+    uint8_t dstOptLength() const { return ext_data.dstOpts.length; }
+    const uint8_t* dstOptAddr() const { return ext_data.dstOpts.addr.data; }
+};
+
+
+/*
  * TCP Stuff
  */
 struct TcpOpt;
@@ -319,7 +504,7 @@ struct TcpHdr : public tcp_hdr
     uint16_t dport() const { return ntohs(th_dport); }
     uint32_t seq() const { return ntohl(th_seq); }
     uint32_t ack() const { return ntohl(th_ack); }
-    uint8_t  off() const { return th_off; }
+    uint8_t  off() const { return th_off*4; }
     uint8_t  flags() const { return th_flags & 0x3f; }
     uint16_t win() const { return ntohs(th_win); }
     uint16_t sum() const { return th_sum; }
@@ -348,7 +533,14 @@ class TcpPtr
     void set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_TCP)
-            set(ptr.p, sizeof(eth_hdr) + ptr->hlen());
+            set(ptr.p, ptr.pstart());
+        else
+            set(0, 0);
+    }
+    void set(const Ip6Ptr &ptr)
+    {
+        if (ptr && ptr->proto() == IP_PROTO_TCP)
+            set(ptr.p, ptr.pstart());
         else
             set(0, 0);
     }
@@ -356,6 +548,7 @@ class TcpPtr
   public:
     TcpPtr() : p(0), _off(0) {}
     TcpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+    TcpPtr(const Ip6Ptr &ptr) : p(0), _off(0) { set(ptr); }
     TcpPtr(const TcpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
 
     TcpHdr *get() { return (TcpHdr *)(p->data + _off); }
@@ -366,8 +559,10 @@ class TcpPtr
     const TcpHdr *operator->() const { return get(); }
     const TcpHdr &operator*() const { return *get(); }
 
-    const TcpPtr &operator=(const IpPtr &i) { set(i); return *this; }
-    const TcpPtr &operator=(const TcpPtr &t) { set(t.p, t._off); return *this; }
+    const TcpPtr &operator=(const IpPtr &i)
+    { set(i); return *this; }
+    const TcpPtr &operator=(const TcpPtr &t)
+    { set(t.p, t._off); return *this; }
 
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
@@ -434,7 +629,14 @@ class UdpPtr
     void set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_UDP)
-            set(ptr.p, sizeof(eth_hdr) + ptr->hlen());
+            set(ptr.p, ptr.pstart());
+        else
+            set(0, 0);
+    }
+    void set(const Ip6Ptr &ptr)
+    {
+        if (ptr && ptr->proto() == IP_PROTO_UDP)
+            set(ptr.p, ptr.pstart());
         else
             set(0, 0);
     }
@@ -442,6 +644,7 @@ class UdpPtr
   public:
     UdpPtr() : p(0), _off(0) {}
     UdpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+    UdpPtr(const Ip6Ptr &ptr) : p(0), _off(0) { set(ptr); }
     UdpPtr(const UdpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
 
     UdpHdr *get() { return (UdpHdr *)(p->data + _off); }
@@ -453,7 +656,8 @@ class UdpPtr
     const UdpHdr &operator*() const { return *get(); }
 
     const UdpPtr &operator=(const IpPtr &i) { set(i); return *this; }
-    const UdpPtr &operator=(const UdpPtr &t) { set(t.p, t._off); return *this; }
+    const UdpPtr &operator=(const UdpPtr &t)
+    { set(t.p, t._off); return *this; }
 
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
@@ -463,6 +667,7 @@ class UdpPtr
     int pstart() const { return off() + get()->size(); }
 };
 
+uint16_t __tu_cksum6(const Ip6Ptr &ip6);
 uint16_t __tu_cksum(const IpPtr &ip);
 uint16_t cksum(const UdpPtr &ptr);
 

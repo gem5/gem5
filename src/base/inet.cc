@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -28,6 +40,7 @@
  *
  * Authors: Nathan Binkert
  *          Gabe Black
+ *          Geoffrey Blake
  */
 
 #include <cstddef>
@@ -205,12 +218,41 @@ __tu_cksum(const IpPtr &ip)
 }
 
 uint16_t
+__tu_cksum6(const Ip6Ptr &ip6)
+{
+   int tcplen = ip6->plen() - ip6->extensionLength();
+   int sum = ip_cksum_add(ip6->payload(), tcplen, 0);
+   sum = ip_cksum_add(ip6->src(), 32, sum);
+   sum += htons(ip6->proto() + tcplen);
+   return ip_cksum_carry(sum);
+}
+
+uint16_t
 cksum(const TcpPtr &tcp)
-{ return __tu_cksum(IpPtr(tcp.packet())); }
+{
+    if (IpPtr(tcp.packet())) {
+        return __tu_cksum(IpPtr(tcp.packet()));
+    } else if (Ip6Ptr(tcp.packet())) {
+        return __tu_cksum6(Ip6Ptr(tcp.packet()));
+    } else {
+        assert(0);
+    }
+    // Should never reach here
+    return 0;
+}
 
 uint16_t
 cksum(const UdpPtr &udp)
-{ return __tu_cksum(IpPtr(udp.packet())); }
+{
+    if (IpPtr(udp.packet())) {
+        return __tu_cksum(IpPtr(udp.packet()));
+    } else if (Ip6Ptr(udp.packet())) {
+        return __tu_cksum6(Ip6Ptr(udp.packet()));
+    } else {
+        assert(0);
+    }
+    return 0;
+}
 
 bool
 IpHdr::options(vector<const IpOpt *> &vec) const
@@ -231,6 +273,82 @@ IpHdr::options(vector<const IpOpt *> &vec) const
     }
 
     return true;
+}
+
+#define IP6_EXTENSION(nxt) (nxt == IP_PROTO_HOPOPTS) ? true : \
+                           (nxt == IP_PROTO_ROUTING) ? true : \
+                           (nxt == IP_PROTO_FRAGMENT) ? true : \
+                           (nxt == IP_PROTO_AH) ? true : \
+                           (nxt == IP_PROTO_ESP) ? true: \
+                           (nxt == IP_PROTO_DSTOPTS) ? true : false
+
+/* Scan the IP6 header for all header extensions
+ * and return the number of headers found
+ */
+int
+Ip6Hdr::extensionLength() const
+{
+    const uint8_t *data = bytes() + IP6_HDR_LEN;
+    uint8_t nxt = ip6_nxt;
+    int len = 0;
+    int all = plen();
+
+    while (IP6_EXTENSION(nxt)) {
+        const Ip6Opt *ext = (const Ip6Opt *)data;
+        nxt = ext->nxt();
+        len += ext->len();
+        data += ext->len();
+        all -= ext->len();
+        assert(all >= 0);
+    }
+    return len;
+}
+
+/* Scan the IP6 header for a particular extension
+ * header type and return a pointer to it if it
+ * exists, otherwise return NULL
+ */
+const Ip6Opt*
+Ip6Hdr::getExt(uint8_t ext_type) const
+{
+    const uint8_t *data = bytes() + IP6_HDR_LEN;
+    uint8_t nxt = ip6_nxt;
+    Ip6Opt* opt = NULL;
+    int all = plen();
+
+    while (IP6_EXTENSION(nxt)) {
+        opt = (Ip6Opt *)data;
+        if (nxt == ext_type) {
+            break;
+        }
+        nxt = opt->nxt();
+        data += opt->len();
+        all -= opt->len();
+        opt = NULL;
+        assert(all >= 0);
+    }
+    return (const Ip6Opt*)opt;
+}
+
+/* Scan the IP6 header and any extension headers
+ * to find what type of Layer 4 header exists
+ * after this header
+ */
+uint8_t
+Ip6Hdr::proto() const
+{
+    const uint8_t *data = bytes() + IP6_HDR_LEN;
+    uint8_t nxt = ip6_nxt;
+    int all = plen();
+
+    while (IP6_EXTENSION(nxt)) {
+        const Ip6Opt *ext = (const Ip6Opt *)data;
+        nxt = ext->nxt();
+        data += ext->len();
+        all -= ext->len();
+        assert(all >= 0);
+    }
+    return nxt;
 }
 
 bool
@@ -260,6 +378,7 @@ hsplit(const EthPacketPtr &ptr)
     int split_point = 0;
 
     IpPtr ip(ptr);
+    Ip6Ptr ip6(ptr);
     if (ip) {
         split_point = ip.pstart();
 
@@ -268,6 +387,15 @@ hsplit(const EthPacketPtr &ptr)
             split_point = tcp.pstart();
 
         UdpPtr udp(ip);
+        if (udp)
+            split_point = udp.pstart();
+    } else if (ip6) {
+        split_point = ip6.pstart();
+
+        TcpPtr tcp(ip6);
+        if (tcp)
+            split_point = tcp.pstart();
+        UdpPtr udp(ip6);
         if (udp)
             split_point = udp.pstart();
     }
