@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -39,8 +51,16 @@
 
 using namespace std;
 
-SimLoopExitEvent::SimLoopExitEvent(const std::string &_cause, int c, Tick r)
-    : Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(r)
+SimLoopExitEvent::SimLoopExitEvent()
+    : Event(Sim_Exit_Pri, IsExitEvent | AutoSerialize),
+      cause(""), code(0), repeat(0)
+{
+}
+
+SimLoopExitEvent::SimLoopExitEvent(const std::string &_cause, int c, Tick r,
+                                   bool serialize)
+    : Event(Sim_Exit_Pri, IsExitEvent | (serialize ? AutoSerialize : 0)),
+      cause(_cause), code(c), repeat(r)
 {
 }
 
@@ -77,9 +97,39 @@ SimLoopExitEvent::description() const
 }
 
 void
-exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
+SimLoopExitEvent::serialize(ostream &os)
 {
-    Event *event = new SimLoopExitEvent(message, exit_code, repeat);
+    paramOut(os, "type", string("SimLoopExitEvent"));
+    Event::serialize(os);
+
+    SERIALIZE_SCALAR(cause);
+    SERIALIZE_SCALAR(code);
+    SERIALIZE_SCALAR(repeat);
+}
+
+void
+SimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
+{
+    Event::unserialize(cp, section);
+
+    UNSERIALIZE_SCALAR(cause);
+    UNSERIALIZE_SCALAR(code);
+    UNSERIALIZE_SCALAR(repeat);
+}
+
+Serializable *
+SimLoopExitEvent::createForUnserialize(Checkpoint *cp, const string &section)
+{
+    return new SimLoopExitEvent();
+}
+
+REGISTER_SERIALIZEABLE("SimLoopExitEvent", SimLoopExitEvent)
+
+void
+exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
+            bool serialize)
+{
+    Event *event = new SimLoopExitEvent(message, exit_code, repeat, serialize);
     mainEventQueue.schedule(event, when);
 }
 

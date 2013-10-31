@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -32,6 +44,7 @@
 #define __SIM_SIM_EVENTS_HH__
 
 #include "sim/eventq.hh"
+#include "sim/serialize.hh"
 
 //
 // Event to terminate simulation at a particular cycle/instruction
@@ -45,7 +58,10 @@ class SimLoopExitEvent : public Event
     Tick repeat;
 
   public:
-    SimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
+    // non-scheduling version for createForUnserialize()
+    SimLoopExitEvent();
+    SimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0,
+                     bool serialize = false);
 
     std::string getCause() { return cause; }
     int getCode() { return code; }
@@ -53,6 +69,11 @@ class SimLoopExitEvent : public Event
     void process();     // process event
 
     virtual const char *description() const;
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    static Serializable *createForUnserialize(Checkpoint *cp,
+                                              const std::string &section);
 };
 
 class CountedDrainEvent : public Event

@@ -347,7 +347,7 @@ m5exit(ThreadContext *tc, Tick delay)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5exit(%i)\n", delay);
     Tick when = curTick() + delay * SimClock::Int::ns;
-    exitSimLoop("m5_exit instruction encountered", 0, when);
+    exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
 }
 
 void
@@ -355,7 +355,7 @@ m5fail(ThreadContext *tc, Tick delay, uint64_t code)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5fail(%i, %i)\n", delay, code);
     Tick when = curTick() + delay * SimClock::Int::ns;
-    exitSimLoop("m5_fail instruction encountered", code, when);
+    exitSimLoop("m5_fail instruction encountered", code, when, 0, true);
 }
 
 void
