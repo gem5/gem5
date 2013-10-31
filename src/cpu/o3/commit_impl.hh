@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1111,52 +1111,37 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // and committed this instruction.
         thread[tid]->funcExeInst--;
 
-        if (head_inst->isNonSpeculative() ||
-            head_inst->isStoreConditional() ||
-            head_inst->isMemBarrier() ||
-            head_inst->isWriteBarrier()) {
+        // Make sure we are only trying to commit un-executed instructions we
+        // think are possible.
+        assert(head_inst->isNonSpeculative() || head_inst->isStoreConditional()
+               || head_inst->isMemBarrier() || head_inst->isWriteBarrier() ||
+               (head_inst->isLoad() && head_inst->uncacheable()));
 
-            DPRINTF(Commit, "Encountered a barrier or non-speculative "
-                    "instruction [sn:%lli] at the head of the ROB, PC %s.\n",
-                    head_inst->seqNum, head_inst->pcState());
+        DPRINTF(Commit, "Encountered a barrier or non-speculative "
+                "instruction [sn:%lli] at the head of the ROB, PC %s.\n",
+                head_inst->seqNum, head_inst->pcState());
 
-            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
-                DPRINTF(Commit, "Waiting for all stores to writeback.\n");
-                return false;
-            }
-
-            toIEW->commitInfo[tid].nonSpecSeqNum = head_inst->seqNum;
-
-            // Change the instruction so it won't try to commit again until
-            // it is executed.
-            head_inst->clearCanCommit();
-
-            ++commitNonSpecStalls;
-
+        if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
+            DPRINTF(Commit, "Waiting for all stores to writeback.\n");
             return false;
-        } else if (head_inst->isLoad()) {
-            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
-                DPRINTF(Commit, "Waiting for all stores to writeback.\n");
-                return false;
-            }
+        }
 
-            assert(head_inst->uncacheable());
+        toIEW->commitInfo[tid].nonSpecSeqNum = head_inst->seqNum;
+
+        // Change the instruction so it won't try to commit again until
+        // it is executed.
+        head_inst->clearCanCommit();
+
+        if (head_inst->isLoad() && head_inst->uncacheable()) {
             DPRINTF(Commit, "[sn:%lli]: Uncached load, PC %s.\n",
                     head_inst->seqNum, head_inst->pcState());
-
-            // Send back the non-speculative instruction's sequence
-            // number.  Tell the lsq to re-execute the load.
-            toIEW->commitInfo[tid].nonSpecSeqNum = head_inst->seqNum;
             toIEW->commitInfo[tid].uncached = true;
             toIEW->commitInfo[tid].uncachedLoad = head_inst;
-
-            head_inst->clearCanCommit();
-
-            return false;
         } else {
-            panic("Trying to commit un-executed instruction "
-                  "of unknown type!\n");
+            ++commitNonSpecStalls;
         }
+
+        return false;
     }
 
     if (head_inst->isThreadSync()) {
