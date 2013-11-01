@@ -135,6 +135,9 @@ class SimpleDRAM(AbstractMemory):
     # write-to-read turn around penalty, assumed same as read-to-write
     tWTR = Param.Latency("Write to read switching time")
 
+    # minimum row activate to row activate delay time
+    tRRD = Param.Latency("ACT to ACT delay")
+
     # time window in which a maximum number of activates are allowed
     # to take place, set to 0 to disable
     tXAW = Param.Latency("X activation window")
@@ -186,6 +189,9 @@ class DDR3_1600_x64(SimpleDRAM):
 
     # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
     tWTR = '7.5ns'
+
+    # Assume 5 CK for activate to activate for different banks
+    tRRD = '6.25ns'
 
     # With a 2kbyte page size, DDR3-1600 lands around 40 ns
     tXAW = '40ns'
@@ -239,6 +245,9 @@ class LPDDR2_S4_1066_x32(SimpleDRAM):
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
 
+    # Activate to activate irrespective of density and speed grade
+    tRRD = '10.0ns'
+
     # Irrespective of density, tFAW is 50 ns
     tXAW = '50ns'
     activation_limit = 4
@@ -283,6 +292,9 @@ class WideIO_200_x128(SimpleDRAM):
 
     # Greater of 2 CK or 15 ns, 2 CK @ 200 MHz = 10 ns
     tWTR = '15ns'
+
+    # Activate to activate irrespective of density and speed grade
+    tRRD = '10.0ns'
 
     # Two instead of four activation window
     tXAW = '50ns'
@@ -334,6 +346,9 @@ class LPDDR3_1600_x32(SimpleDRAM):
 
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
+
+    # Activate to activate irrespective of density and speed grade
+    tRRD = '10.0ns'
 
     # Irrespective of size, tFAW is 50 ns
     tXAW = '50ns'

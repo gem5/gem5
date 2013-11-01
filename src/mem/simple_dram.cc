@@ -70,7 +70,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     writeThresholdPerc(p->write_thresh_perc),
     tWTR(p->tWTR), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
-    tRFC(p->tRFC), tREFI(p->tREFI),
+    tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
@@ -988,14 +988,25 @@ SimpleDRAM::processNextReqEvent()
 }
 
 void
-SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank)
+SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
 {
     assert(0 <= rank && rank < ranksPerChannel);
     assert(actTicks[rank].size() == activationLimit);
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
-    // if the activation limit is disabled then we are done
+    // start by enforcing tRRD
+    for(int i = 0; i < banksPerRank; i++) {
+        // next activate must not happen before tRRD
+        banks[rank][i].actAllowedAt = act_tick + tRRD;
+    }
+    // tRC should be added to activation tick of the bank currently accessed,
+    // where tRC = tRAS + tRP, this is just for a check as actAllowedAt for same
+    // bank is already captured by bank.freeAt and bank.tRASDoneAt
+    banks[rank][bank].actAllowedAt = act_tick + tRAS + tRP;
+
+    // next, we deal with tXAW, if the activation limit is disabled
+    // then we are done
     if (actTicks[rank].empty())
         return;
 
@@ -1061,24 +1072,24 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             // any waiting for banks account for in freeAt
             actTick = bank.freeAt - tCL - tRCD;
             bank.tRASDoneAt = actTick + tRAS;
-            recordActivate(actTick, dram_pkt->rank);
+            recordActivate(actTick, dram_pkt->rank, dram_pkt->bank);
 
             // sample the number of bytes accessed and reset it as
             // we are now closing this row
             bytesPerActivate.sample(bank.bytesAccessed);
             bank.bytesAccessed = 0;
         }
+        DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
     } else if (pageMgmt == Enums::close) {
         actTick = curTick() + addDelay + accessLat - tRCD - tCL;
-        recordActivate(actTick, dram_pkt->rank);
+        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank);
 
         // If the DRAM has a very quick tRAS, bank can be made free
         // after consecutive tCL,tRCD,tRP times. In general, however,
         // an additional wait is required to respect tRAS.
         bank.freeAt = std::max(actTick + tRAS + tRP,
                 actTick + tRCD + tCL + tRP);
-
-        DPRINTF(DRAM,"doDRAMAccess::bank.freeAt is %lld\n",bank.freeAt);
+        DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
         bytesPerActivate.sample(burstSize);
     } else
         panic("No page management policy chosen\n");

@@ -420,7 +420,7 @@ class SimpleDRAM : public AbstractMemory
      * method updates the time that the banks become available based
      * on the current limits.
      */
-    void recordActivate(Tick act_tick, uint8_t rank);
+    void recordActivate(Tick act_tick, uint8_t rank, uint8_t bank);
 
     void printParams() const;
     void printQs() const;
@@ -487,6 +487,7 @@ class SimpleDRAM : public AbstractMemory
     const Tick tRAS;
     const Tick tRFC;
     const Tick tREFI;
+    const Tick tRRD;
     const Tick tXAW;
     const uint32_t activationLimit;
 
