@@ -398,6 +398,12 @@ class SimpleDRAM : public AbstractMemory
     void chooseNextWrite();
 
     /**
+     * For FR-FCFS policy reorder the read/write queue depending on row buffer
+     * hits and earliest banks available in DRAM
+     */
+    void reorderQueue(std::deque<DRAMPacket*>& queue);
+
+    /**
      * Looking at all banks, determine the moment in time when they
      * are all free.
      *

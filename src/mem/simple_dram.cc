@@ -791,34 +791,7 @@ SimpleDRAM::chooseNextWrite()
     if (memSchedPolicy == Enums::fcfs) {
         // Do nothing, since the correct request is already head
     } else if (memSchedPolicy == Enums::frfcfs) {
-        // Only determine bank availability when needed
-        uint64_t earliest_banks = 0;
-
-        auto i = writeQueue.begin();
-        bool foundRowHit = false;
-        while (!foundRowHit && i != writeQueue.end()) {
-            DRAMPacket* dram_pkt = *i;
-            const Bank& bank = dram_pkt->bankRef;
-            if (bank.openRow == dram_pkt->row) {
-                DPRINTF(DRAM, "Write row buffer hit\n");
-                writeQueue.erase(i);
-                writeQueue.push_front(dram_pkt);
-                foundRowHit = true;
-            } else {
-                // No row hit, go for first ready
-                if (earliest_banks == 0)
-                    earliest_banks = minBankFreeAt(writeQueue);
-
-                // Bank is ready or is one of the first available bank
-                if (bank.freeAt <= curTick() ||
-                    bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
-                    writeQueue.erase(i);
-                    writeQueue.push_front(dram_pkt);
-                    break;
-                }
-            }
-            ++i;
-        }
+        reorderQueue(writeQueue);
     } else
         panic("No scheduling policy chosen\n");
 
@@ -845,37 +818,52 @@ SimpleDRAM::chooseNextRead()
         // Do nothing, since the request to serve is already the first
         // one in the read queue
     } else if (memSchedPolicy == Enums::frfcfs) {
-        // Only determine this when needed
-        uint64_t earliest_banks = 0;
-
-        for (auto i = readQueue.begin(); i != readQueue.end() ; ++i) {
-            DRAMPacket* dram_pkt = *i;
-            const Bank& bank = dram_pkt->bankRef;
-            // Check if it is a row hit
-            if (bank.openRow == dram_pkt->row) {
-                DPRINTF(DRAM, "Row buffer hit\n");
-                readQueue.erase(i);
-                readQueue.push_front(dram_pkt);
-                break;
-            } else {
-                // No row hit, go for first ready
-                if (earliest_banks == 0)
-                    earliest_banks = minBankFreeAt(readQueue);
-
-                // Bank is ready or is the first available bank
-                if (bank.freeAt <= curTick() ||
-                    bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
-                    readQueue.erase(i);
-                    readQueue.push_front(dram_pkt);
-                    break;
-                }
-            }
-        }
+        reorderQueue(readQueue);
     } else
         panic("No scheduling policy chosen!\n");
 
     DPRINTF(DRAM, "Selected next read request\n");
     return true;
+}
+
+void
+SimpleDRAM::reorderQueue(std::deque<DRAMPacket*>& queue)
+{
+    // Only determine this when needed
+    uint64_t earliest_banks = 0;
+
+    // Search for row hits first, if no row hit is found then schedule the
+    // packet to one of the earliest banks available
+    bool found_earliest_pkt = false;
+    auto selected_pkt_it = queue.begin();
+
+    for (auto i = queue.begin(); i != queue.end() ; ++i) {
+        DRAMPacket* dram_pkt = *i;
+        const Bank& bank = dram_pkt->bankRef;
+        // Check if it is a row hit
+        if (bank.openRow == dram_pkt->row) {
+            DPRINTF(DRAM, "Row buffer hit\n");
+            selected_pkt_it = i;
+            break;
+        } else if (!found_earliest_pkt) {
+            // No row hit, go for first ready
+            if (earliest_banks == 0)
+                earliest_banks = minBankFreeAt(queue);
+
+            // Bank is ready or is the first available bank
+            if (bank.freeAt <= curTick() ||
+                bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
+                // Remember the packet to be scheduled to one of the earliest
+                // banks available
+                selected_pkt_it = i;
+                found_earliest_pkt = true;
+            }
+        }
+    }
+
+    DRAMPacket* selected_pkt = *selected_pkt_it;
+    queue.erase(selected_pkt_it);
+    queue.push_front(selected_pkt);
 }
 
 void
