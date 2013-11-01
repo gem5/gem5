@@ -53,8 +53,8 @@ class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 # open row. For a closed-page policy, CoRaBaCh maximises parallelism.
 class AddrMap(Enum): vals = ['RaBaChCo', 'RaBaCoCh', 'CoRaBaCh']
 
-# Enum for the page policy, either open or close.
-class PageManage(Enum): vals = ['open', 'close']
+# Enum for the page policy, either open, open_adaptive or close.
+class PageManage(Enum): vals = ['open', 'open_adaptive', 'close']
 
 # SimpleDRAM is a single-channel single-ported DRAM controller model
 # that aims to model the most important system-level performance

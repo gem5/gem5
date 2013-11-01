@@ -598,7 +598,8 @@ SimpleDRAM::printParams() const
     string scheduler =  memSchedPolicy == Enums::fcfs ? "FCFS" : "FR-FCFS";
     string address_mapping = addrMapping == Enums::RaBaChCo ? "RaBaChCo" :
         (addrMapping == Enums::RaBaCoCh ? "RaBaCoCh" : "CoRaBaCh");
-    string page_policy = pageMgmt == Enums::open ? "OPEN" : "CLOSE";
+    string page_policy = pageMgmt == Enums::open ? "OPEN" :
+        (pageMgmt == Enums::open_adaptive ? "OPEN (adaptive)" : "CLOSE");
 
     DPRINTF(DRAM,
             "Memory controller %s characteristics\n"    \
@@ -924,7 +925,8 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick potentialActTick;
 
     const Bank& bank = dram_pkt->bankRef;
-    if (pageMgmt == Enums::open) { // open-page policy
+     // open-page policy
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
         if (bank.openRow == dram_pkt->row) {
             // When we have a row-buffer hit,
             // we don't care about tRAS having expired or not,
@@ -955,13 +957,17 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             if (freeTime > inTime)
                accLat += freeTime - inTime;
 
+            // If the there is no open row (open adaptive), then there
+            // is no precharge delay, otherwise go with tRP
+            Tick precharge_delay = bank.openRow == -1 ? 0 : tRP;
+
             //The bank is free, and you may be able to activate
-            potentialActTick = inTime + accLat + tRP;
+            potentialActTick = inTime + accLat + precharge_delay;
             if (potentialActTick < bank.actAllowedAt)
                 accLat += bank.actAllowedAt - potentialActTick;
 
-            accLat += tRP + tRCD + tCL;
-            bankLat += tRP + tRCD + tCL;
+            accLat += precharge_delay + tRCD + tCL;
+            bankLat += precharge_delay + tRCD + tCL;
         }
     } else if (pageMgmt == Enums::close) {
         // With a close page policy, no notion of
@@ -1067,7 +1073,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     Bank& bank = dram_pkt->bankRef;
 
     // Update bank state
-    if (pageMgmt == Enums::open) {
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
         bank.openRow = dram_pkt->row;
         bank.freeAt = curTick() + addDelay + accessLat;
         bank.bytesAccessed += burstSize;
@@ -1085,6 +1091,41 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             bytesPerActivate.sample(bank.bytesAccessed);
             bank.bytesAccessed = 0;
         }
+
+        if (pageMgmt == Enums::open_adaptive) {
+            // a twist on the open page policy is to not blindly keep the
+            // page open, but close it if there are no row hits, and there
+            // are bank conflicts in the queue
+            bool got_more_hits = false;
+            bool got_bank_conflict = false;
+
+            // either look at the read queue or write queue
+            const deque<DRAMPacket*>& queue = dram_pkt->isRead ? readQueue :
+                writeQueue;
+            auto p = queue.begin();
+            // make sure we are not considering the packet that we are
+            // currently dealing with (which is the head of the queue)
+            ++p;
+
+            // keep on looking until we have found both or reached
+            // the end
+            while (!(got_more_hits && got_bank_conflict) &&
+                   p != queue.end()) {
+                bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
+                    (dram_pkt->bank == (*p)->bank);
+                bool same_row = dram_pkt->row == (*p)->row;
+                got_more_hits |= same_rank_bank && same_row;
+                got_bank_conflict |= same_rank_bank && !same_row;
+                ++p;
+            }
+
+            // auto pre-charge
+            if (!got_more_hits && got_bank_conflict) {
+                bank.openRow = -1;
+                bank.freeAt = std::max(bank.freeAt, bank.tRASDoneAt) + tRP;
+            }
+        }
+
         DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
     } else if (pageMgmt == Enums::close) {
         actTick = curTick() + addDelay + accessLat - tRCD - tCL;
