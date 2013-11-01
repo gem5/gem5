@@ -563,7 +563,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
     accessAndRespond(pkt, frontendLatency);
 
     // If your write buffer is starting to fill up, drain it!
-    if (writeQueue.size() > writeThreshold && !stopReads){
+    if (writeQueue.size() >= writeThreshold && !stopReads){
         triggerWrites();
     }
 }
