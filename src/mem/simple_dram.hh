@@ -134,7 +134,7 @@ class SimpleDRAM : public AbstractMemory
     bool stopReads;
 
     /** List to keep track of activate ticks */
-    std::deque<Tick> actTicks;
+    std::vector<std::deque<Tick>> actTicks;
 
     /**
      * A basic class to track the bank state indirectly via times
@@ -153,11 +153,13 @@ class SimpleDRAM : public AbstractMemory
 
         Tick freeAt;
         Tick tRASDoneAt;
+        Tick actAllowedAt;
 
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0), bytesAccessed(0)
+            openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0), actAllowedAt(0),
+            bytesAccessed(0)
         { }
     };
 
@@ -418,7 +420,7 @@ class SimpleDRAM : public AbstractMemory
      * method updates the time that the banks become available based
      * on the current limits.
      */
-    void recordActivate(Tick act_tick);
+    void recordActivate(Tick act_tick, uint8_t rank);
 
     void printParams() const;
     void printQs() const;

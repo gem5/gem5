@@ -55,7 +55,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
-    rowHitFlag(false), stopReads(false), actTicks(p->activation_limit, 0),
+    rowHitFlag(false), stopReads(false),
     writeEvent(this), respondEvent(this),
     refreshEvent(this), nextReqEvent(this), drainManager(NULL),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
@@ -82,8 +82,10 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     // create the bank states based on the dimensions of the ranks and
     // banks
     banks.resize(ranksPerChannel);
+    actTicks.resize(ranksPerChannel);
     for (size_t c = 0; c < ranksPerChannel; ++c) {
         banks[c].resize(banksPerRank);
+        actTicks[c].resize(activationLimit, 0);
     }
 
     // round the write threshold percent to a whole number of entries
@@ -913,6 +915,7 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick accLat = 0;
     Tick bankLat = 0;
     rowHitFlag = false;
+    Tick potentialActTick;
 
     const Bank& bank = dram_pkt->bankRef;
     if (pageMgmt == Enums::open) { // open-page policy
@@ -946,6 +949,11 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             if (freeTime > inTime)
                accLat += freeTime - inTime;
 
+            //The bank is free, and you may be able to activate
+            potentialActTick = inTime + accLat + tRP;
+            if (potentialActTick < bank.actAllowedAt)
+                accLat += bank.actAllowedAt - potentialActTick;
+
             accLat += tRP + tRCD + tCL;
             bankLat += tRP + tRCD + tCL;
         }
@@ -954,6 +962,11 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
         // bank.tRASDoneAt
         if (bank.freeAt > inTime)
             accLat += bank.freeAt - inTime;
+
+        //The bank is free, and you may be able to activate
+        potentialActTick = inTime + accLat;
+        if (potentialActTick < bank.actAllowedAt)
+            accLat += bank.actAllowedAt - potentialActTick;
 
         // page already closed, simply open the row, and
         // add cas latency
@@ -975,42 +988,41 @@ SimpleDRAM::processNextReqEvent()
 }
 
 void
-SimpleDRAM::recordActivate(Tick act_tick)
+SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank)
 {
-    assert(actTicks.size() == activationLimit);
+    assert(0 <= rank && rank < ranksPerChannel);
+    assert(actTicks[rank].size() == activationLimit);
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
     // if the activation limit is disabled then we are done
-    if (actTicks.empty())
+    if (actTicks[rank].empty())
         return;
 
     // sanity check
-    if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
+    if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
         // @todo For now, stick with a warning
         warn("Got %d activates in window %d (%d - %d) which is smaller "
-             "than %d\n", activationLimit, act_tick - actTicks.back(),
-             act_tick, actTicks.back(), tXAW);
+             "than %d\n", activationLimit, act_tick - actTicks[rank].back(),
+             act_tick, actTicks[rank].back(), tXAW);
     }
 
     // shift the times used for the book keeping, the last element
     // (highest index) is the oldest one and hence the lowest value
-    actTicks.pop_back();
+    actTicks[rank].pop_back();
 
     // record an new activation (in the future)
-    actTicks.push_front(act_tick);
+    actTicks[rank].push_front(act_tick);
 
     // cannot activate more than X times in time window tXAW, push the
     // next one (the X + 1'st activate) to be tXAW away from the
     // oldest in our window of X
-    if (actTicks.back() && (act_tick - actTicks.back()) < tXAW) {
+    if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
         DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate no earlier "
-                "than %d\n", activationLimit, actTicks.back() + tXAW);
-        for(int i = 0; i < ranksPerChannel; i++)
+                "than %d\n", activationLimit, actTicks[rank].back() + tXAW);
             for(int j = 0; j < banksPerRank; j++)
                 // next activate must not happen before end of window
-                banks[i][j].freeAt = std::max(banks[i][j].freeAt,
-                                              actTicks.back() + tXAW);
+                banks[rank][j].actAllowedAt = actTicks[rank].back() + tXAW;
     }
 }
 
@@ -1049,7 +1061,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             // any waiting for banks account for in freeAt
             actTick = bank.freeAt - tCL - tRCD;
             bank.tRASDoneAt = actTick + tRAS;
-            recordActivate(actTick);
+            recordActivate(actTick, dram_pkt->rank);
 
             // sample the number of bytes accessed and reset it as
             // we are now closing this row
@@ -1058,7 +1070,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
         }
     } else if (pageMgmt == Enums::close) {
         actTick = curTick() + addDelay + accessLat - tRCD - tCL;
-        recordActivate(actTick);
+        recordActivate(actTick, dram_pkt->rank);
 
         // If the DRAM has a very quick tRAS, bank can be made free
         // after consecutive tCL,tRCD,tRP times. In general, however,
