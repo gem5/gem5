@@ -44,7 +44,6 @@
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/DRAM.hh"
-#include "debug/DRAMWR.hh"
 #include "mem/simple_dram.hh"
 #include "sim/system.hh"
 
@@ -186,7 +185,7 @@ SimpleDRAM::writeQueueFull(unsigned int neededEntries) const
 }
 
 SimpleDRAM::DRAMPacket*
-SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size)
+SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRead)
 {
     // decode the address based on the address mapping scheme, with
     // Ra, Co, Ba and Ch denoting rank, column, bank and channel,
@@ -279,7 +278,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size)
     // create the corresponding DRAM packet with the entry time and
     // ready time set to the current tick, the latter will be updated
     // later
-    return new DRAMPacket(pkt, rank, bank, row, dramPktAddr, size,
+    return new DRAMPacket(pkt, isRead, rank, bank, row, dramPktAddr, size,
                           banks[rank][bank]);
 }
 
@@ -337,7 +336,7 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
                 burst_helper = new BurstHelper(pktCount);
             }
 
-            DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size);
+            DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size, true);
             dram_pkt->burstHelper = burst_helper;
 
             assert(!readQueueFull(1));
@@ -382,92 +381,30 @@ SimpleDRAM::processWriteEvent()
 {
     assert(!writeQueue.empty());
     uint32_t numWritesThisTime = 0;
-    Tick actTick;
 
-    DPRINTF(DRAMWR, "Beginning DRAM Writes\n");
+    DPRINTF(DRAM, "Beginning DRAM Writes\n");
     Tick temp1 M5_VAR_USED = std::max(curTick(), busBusyUntil);
     Tick temp2 M5_VAR_USED = std::max(curTick(), maxBankFreeAt());
 
     // @todo: are there any dangers with the untimed while loop?
     while (!writeQueue.empty()) {
-        if (numWritesThisTime > writeThreshold) {
-            DPRINTF(DRAMWR, "Hit write threshold %d\n", writeThreshold);
+        if (numWritesThisTime >= writeThreshold) {
+            DPRINTF(DRAM, "Hit write threshold %d\n", writeThreshold);
             break;
         }
 
         chooseNextWrite();
         DRAMPacket* dram_pkt = writeQueue.front();
-
         // sanity check
         assert(dram_pkt->size <= burstSize);
-
-        // What's the earliest the request can be put on the bus
-        Tick schedTime = std::max(curTick(), busBusyUntil);
-
-        DPRINTF(DRAMWR, "Asking for latency estimate at %lld\n",
-                schedTime + tBURST);
-
-        pair<Tick, Tick> lat = estimateLatency(dram_pkt, schedTime + tBURST);
-        Tick accessLat = lat.second;
-
-        // look at the rowHitFlag set by estimateLatency
-        if (rowHitFlag)
-            writeRowHits++;
-
-        Bank& bank = dram_pkt->bank_ref;
-
-        if (pageMgmt == Enums::open) {
-            bank.openRow = dram_pkt->row;
-            bank.freeAt = schedTime + tBURST + std::max(accessLat, tCL);
-            busBusyUntil = bank.freeAt - tCL;
-            bank.bytesAccessed += burstSize;
-
-            if (!rowHitFlag) {
-                actTick = bank.freeAt - tCL - tRCD;//new row opened
-                bank.tRASDoneAt = actTick + tRAS;
-                recordActivate(actTick);
-                busBusyUntil = actTick;
-
-                // sample the number of bytes accessed and reset it as
-                // we are now closing this row
-                bytesPerActivate.sample(bank.bytesAccessed);
-                bank.bytesAccessed = 0;
-            }
-        } else if (pageMgmt == Enums::close) {
-            // All ticks waiting for a bank (if required) are included
-            // in accessLat
-            actTick = schedTime + tBURST + accessLat - tCL - tRCD;
-            recordActivate(actTick);
-
-            // If the DRAM has a very quick tRAS, bank can be made free
-            // after consecutive tCL,tRCD,tRP times. In general, however,
-            // an additional wait is required to respect tRAS.
-            bank.freeAt = std::max(actTick + tRAS + tRP,
-                                   actTick + tCL + tRCD + tRP);
-
-            //assuming that DRAM first gets write data, then activates
-            busBusyUntil = actTick;
-            DPRINTF(DRAMWR, "processWriteEvent::bank.freeAt for "
-                    "banks_id %d is %lld\n",
-                    dram_pkt->rank * banksPerRank + dram_pkt->bank,
-                    bank.freeAt);
-            bytesPerActivate.sample(burstSize);
-        } else
-            panic("Unknown page management policy chosen\n");
-
-        DPRINTF(DRAMWR, "Done writing to address %lld\n", dram_pkt->addr);
-
-        DPRINTF(DRAMWR, "schedtime is %lld, tBURST is %lld, "
-                "busbusyuntil is %lld\n",
-                schedTime, tBURST, busBusyUntil);
+        doDRAMAccess(dram_pkt);
 
         writeQueue.pop_front();
         delete dram_pkt;
-
         numWritesThisTime++;
     }
 
-    DPRINTF(DRAMWR, "Completed %d writes, bus busy for %lld ticks,"\
+    DPRINTF(DRAM, "Completed %d writes, bus busy for %lld ticks,"\
             "banks busy for %lld ticks\n", numWritesThisTime,
             busBusyUntil - temp1, maxBankFreeAt() - temp2);
 
@@ -497,6 +434,7 @@ SimpleDRAM::processWriteEvent()
     if (!nextReqEvent.scheduled())
         schedule(nextReqEvent, busBusyUntil);
 }
+
 
 void
 SimpleDRAM::triggerWrites()
@@ -592,7 +530,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         // if the item was not merged we need to create a new write
         // and enqueue it
         if (!merged) {
-            DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size);
+            DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size, false);
 
             assert(writeQueue.size() < writeBufferSize);
             wrQLenPdf[writeQueue.size()]++;
@@ -836,7 +774,7 @@ SimpleDRAM::chooseNextWrite()
     assert(!writeQueue.empty());
 
     if (writeQueue.size() == 1) {
-        DPRINTF(DRAMWR, "Single write request, nothing to do\n");
+        DPRINTF(DRAM, "Single write request, nothing to do\n");
         return;
     }
 
@@ -849,7 +787,7 @@ SimpleDRAM::chooseNextWrite()
             DRAMPacket* dram_pkt = *i;
             const Bank& bank = dram_pkt->bank_ref;
             if (bank.openRow == dram_pkt->row) { //FR part
-                DPRINTF(DRAMWR, "Write row buffer hit\n");
+                DPRINTF(DRAM, "Write row buffer hit\n");
                 writeQueue.erase(i);
                 writeQueue.push_front(dram_pkt);
                 foundRowHit = true;
@@ -861,7 +799,7 @@ SimpleDRAM::chooseNextWrite()
     } else
         panic("No scheduling policy chosen\n");
 
-    DPRINTF(DRAMWR, "Selected next write request\n");
+    DPRINTF(DRAM, "Selected next write request\n");
 }
 
 bool
@@ -965,7 +903,7 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             // penalty beyond waiting for the existing read to complete.
             if (bank.freeAt > inTime) {
                 accLat += bank.freeAt - inTime;
-                bankLat += tBURST;
+                bankLat += 0;
             } else {
                // CAS latency only
                accLat += tCL;
@@ -1124,14 +1062,29 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     DPRINTF(DRAM,"Access time is %lld\n",
             dram_pkt->readyTime - dram_pkt->entryTime);
 
+    if (rowHitFlag) {
+        if(dram_pkt->isRead)
+            readRowHits++;
+         else
+            writeRowHits++;
+    }
+
+    // At this point, commonality between reads and writes ends.
+    // For writes, we are done since we long ago responded to the
+    // requestor. We also don't care about stats for writes. For
+    // reads, we still need to figure out respoding to the requestor,
+    // and capture stats.
+
+    if (!dram_pkt->isRead) {
+        return;
+    }
+
     // Update stats
     totMemAccLat += dram_pkt->readyTime - dram_pkt->entryTime;
     totBankLat += bankLat;
     totBusLat += tBURST;
     totQLat += dram_pkt->readyTime - dram_pkt->entryTime - bankLat - tBURST;
 
-    if (rowHitFlag)
-        readRowHits++;
 
     // At this point we're done dealing with the request
     // It will be moved to a separate response queue with a

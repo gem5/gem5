@@ -198,6 +198,8 @@ class SimpleDRAM : public AbstractMemory
         /** This comes from the outside world */
         const PacketPtr pkt;
 
+        const bool isRead;
+
         /** Will be populated by address decoder */
         const uint8_t rank;
         const uint16_t bank;
@@ -224,12 +226,12 @@ class SimpleDRAM : public AbstractMemory
         BurstHelper* burstHelper;
         Bank& bank_ref;
 
-        DRAMPacket(PacketPtr _pkt, uint8_t _rank, uint16_t _bank,
+        DRAMPacket(PacketPtr _pkt, bool _isRead, uint8_t _rank, uint16_t _bank,
                    uint16_t _row, Addr _addr, unsigned int _size,
                    Bank& _bank_ref)
             : entryTime(curTick()), readyTime(curTick()),
-              pkt(_pkt), rank(_rank), bank(_bank), row(_row), addr(_addr),
-              size(_size), burstHelper(NULL), bank_ref(_bank_ref)
+              pkt(_pkt), isRead(_isRead), rank(_rank), bank(_bank), row(_row),
+              addr(_addr), size(_size), burstHelper(NULL), bank_ref(_bank_ref)
         { }
 
     };
@@ -336,9 +338,10 @@ class SimpleDRAM : public AbstractMemory
      * @param pkt The packet from the outside world
      * @param dramPktAddr The starting address of the DRAM packet
      * @param size The size of the DRAM packet in bytes
+     * @param isRead Is the request for a read or a write to DRAM
      * @return A DRAMPacket pointer with the decoded information
      */
-    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size);
+    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size, bool isRead);
 
     /**
      * The memory schduler/arbiter - picks which read request needs to
