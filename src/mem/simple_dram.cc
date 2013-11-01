@@ -957,13 +957,19 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             // but do care about bank being free for access
             rowHitFlag = true;
 
-            if (bank.freeAt < inTime) {
+            // When a series of requests arrive to the same row,
+            // DDR systems are capable of streaming data continuously
+            // at maximum bandwidth (subject to tCCD). Here, we approximate
+            // this condition, and assume that if whenever a bank is already
+            // busy and a new request comes in, it can be completed with no
+            // penalty beyond waiting for the existing read to complete.
+            if (bank.freeAt > inTime) {
+                accLat += bank.freeAt - inTime;
+                bankLat += tBURST;
+            } else {
                // CAS latency only
                accLat += tCL;
                bankLat += tCL;
-            } else {
-                accLat += 0;
-                bankLat += 0;
             }
 
         } else {
