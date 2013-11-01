@@ -39,9 +39,11 @@
  *
  * Authors: Andreas Hansson
  *          Ani Udipi
+ *          Neha Agarwal
  */
 
 #include "base/trace.hh"
+#include "base/bitfield.hh"
 #include "debug/Drain.hh"
 #include "debug/DRAM.hh"
 #include "mem/simple_dram.hh"
@@ -191,7 +193,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRe
     // Ra, Co, Ba and Ch denoting rank, column, bank and channel,
     // respectively
     uint8_t rank;
-    uint16_t bank;
+    uint8_t bank;
     uint16_t row;
 
     // truncate the address to the access granularity
@@ -278,8 +280,9 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRe
     // create the corresponding DRAM packet with the entry time and
     // ready time set to the current tick, the latter will be updated
     // later
-    return new DRAMPacket(pkt, isRead, rank, bank, row, dramPktAddr, size,
-                          banks[rank][bank]);
+    uint16_t bank_id = banksPerRank * rank + bank;
+    return new DRAMPacket(pkt, isRead, rank, bank, row, bank_id, dramPktAddr,
+                          size, banks[rank][bank]);
 }
 
 void
@@ -347,9 +350,8 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
             readQueue.push_back(dram_pkt);
 
             // Update stats
-            uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
-            assert(bank_id < ranksPerChannel * banksPerRank);
-            perBankRdReqs[bank_id]++;
+            assert(dram_pkt->bankId < ranksPerChannel * banksPerRank);
+            perBankRdReqs[dram_pkt->bankId]++;
 
             avgRdQLen = readQueue.size() + respQueue.size();
         }
@@ -540,9 +542,8 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
             writeQueue.push_back(dram_pkt);
 
             // Update stats
-            uint32_t bank_id = banksPerRank * dram_pkt->rank + dram_pkt->bank;
-            assert(bank_id < ranksPerChannel * banksPerRank);
-            perBankWrReqs[bank_id]++;
+            assert(dram_pkt->bankId < ranksPerChannel * banksPerRank);
+            perBankWrReqs[dram_pkt->bankId]++;
 
             avgWrQLen = writeQueue.size();
         }
@@ -781,18 +782,31 @@ SimpleDRAM::chooseNextWrite()
     if (memSchedPolicy == Enums::fcfs) {
         // Do nothing, since the correct request is already head
     } else if (memSchedPolicy == Enums::frfcfs) {
+        // Only determine bank availability when needed
+        uint64_t earliest_banks = 0;
+
         auto i = writeQueue.begin();
         bool foundRowHit = false;
         while (!foundRowHit && i != writeQueue.end()) {
             DRAMPacket* dram_pkt = *i;
-            const Bank& bank = dram_pkt->bank_ref;
-            if (bank.openRow == dram_pkt->row) { //FR part
+            const Bank& bank = dram_pkt->bankRef;
+            if (bank.openRow == dram_pkt->row) {
                 DPRINTF(DRAM, "Write row buffer hit\n");
                 writeQueue.erase(i);
                 writeQueue.push_front(dram_pkt);
                 foundRowHit = true;
-            } else { //FCFS part
-                ;
+            } else {
+                // No row hit, go for first ready
+                if (earliest_banks == 0)
+                    earliest_banks = minBankFreeAt(writeQueue);
+
+                // Bank is ready or is one of the first available bank
+                if (bank.freeAt <= curTick() ||
+                    bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
+                    writeQueue.erase(i);
+                    writeQueue.push_front(dram_pkt);
+                    break;
+                }
             }
             ++i;
         }
@@ -822,17 +836,30 @@ SimpleDRAM::chooseNextRead()
         // Do nothing, since the request to serve is already the first
         // one in the read queue
     } else if (memSchedPolicy == Enums::frfcfs) {
+        // Only determine this when needed
+        uint64_t earliest_banks = 0;
+
         for (auto i = readQueue.begin(); i != readQueue.end() ; ++i) {
             DRAMPacket* dram_pkt = *i;
-            const Bank& bank = dram_pkt->bank_ref;
+            const Bank& bank = dram_pkt->bankRef;
             // Check if it is a row hit
-            if (bank.openRow == dram_pkt->row) { //FR part
+            if (bank.openRow == dram_pkt->row) {
                 DPRINTF(DRAM, "Row buffer hit\n");
                 readQueue.erase(i);
                 readQueue.push_front(dram_pkt);
                 break;
-            } else { //FCFS part
-                ;
+            } else {
+                // No row hit, go for first ready
+                if (earliest_banks == 0)
+                    earliest_banks = minBankFreeAt(readQueue);
+
+                // Bank is ready or is the first available bank
+                if (bank.freeAt <= curTick() ||
+                    bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
+                    readQueue.erase(i);
+                    readQueue.push_front(dram_pkt);
+                    break;
+                }
             }
         }
     } else
@@ -887,7 +914,7 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick bankLat = 0;
     rowHitFlag = false;
 
-    const Bank& bank = dram_pkt->bank_ref;
+    const Bank& bank = dram_pkt->bankRef;
     if (pageMgmt == Enums::open) { // open-page policy
         if (bank.openRow == dram_pkt->row) {
             // When we have a row-buffer hit,
@@ -1008,7 +1035,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     Tick addDelay = (curTick() + accessLat < busBusyUntil) ?
         busBusyUntil - (curTick() + accessLat) : 0;
 
-    Bank& bank = dram_pkt->bank_ref;
+    Bank& bank = dram_pkt->bankRef;
 
     // Update bank state
     if (pageMgmt == Enums::open) {
@@ -1181,6 +1208,38 @@ SimpleDRAM::maxBankFreeAt() const
             banksFree = std::max(banks[i][j].freeAt, banksFree);
 
     return banksFree;
+}
+
+uint64_t
+SimpleDRAM::minBankFreeAt(const deque<DRAMPacket*>& queue) const
+{
+    uint64_t bank_mask = 0;
+    Tick freeAt = MaxTick;
+
+    // detemrine if we have queued transactions targetting the
+    // bank in question
+    vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
+    for (auto p = queue.begin(); p != queue.end(); ++p) {
+        got_waiting[(*p)->bankId] = true;
+    }
+
+    for (int i = 0; i < ranksPerChannel; i++) {
+        for (int j = 0; j < banksPerRank; j++) {
+            // if we have waiting requests for the bank, and it is
+            // amongst the first available, update the mask
+            if (got_waiting[i * banksPerRank + j] &&
+                banks[i][j].freeAt <= freeAt) {
+                // reset bank mask if new minimum is found
+                if (banks[i][j].freeAt < freeAt)
+                    bank_mask = 0;
+                // set the bit corresponding to the available bank
+                uint8_t bit_index = i * ranksPerChannel + j;
+                replaceBits(bank_mask, bit_index, bit_index, 1);
+                freeAt = banks[i][j].freeAt;
+            }
+        }
+    }
+    return bank_mask;
 }
 
 void

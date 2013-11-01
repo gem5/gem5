@@ -39,6 +39,7 @@
  *
  * Authors: Andreas Hansson
  *          Ani Udipi
+ *          Neha Agarwal
  */
 
 /**
@@ -202,8 +203,15 @@ class SimpleDRAM : public AbstractMemory
 
         /** Will be populated by address decoder */
         const uint8_t rank;
-        const uint16_t bank;
+        const uint8_t bank;
         const uint16_t row;
+
+        /**
+         * Bank id is calculated considering banks in all the ranks
+         * eg: 2 ranks each with 8 banks, then bankId = 0 --> rank0, bank0 and
+         * bankId = 8 --> rank1, bank0
+         */
+        const uint16_t bankId;
 
         /**
          * The starting address of the DRAM packet.
@@ -224,14 +232,15 @@ class SimpleDRAM : public AbstractMemory
          * If not a split packet (common case), this is set to NULL
          */
         BurstHelper* burstHelper;
-        Bank& bank_ref;
+        Bank& bankRef;
 
-        DRAMPacket(PacketPtr _pkt, bool _isRead, uint8_t _rank, uint16_t _bank,
-                   uint16_t _row, Addr _addr, unsigned int _size,
-                   Bank& _bank_ref)
+        DRAMPacket(PacketPtr _pkt, bool is_read, uint8_t _rank, uint8_t _bank,
+                   uint16_t _row, uint16_t bank_id, Addr _addr,
+                   unsigned int _size, Bank& bank_ref)
             : entryTime(curTick()), readyTime(curTick()),
-              pkt(_pkt), isRead(_isRead), rank(_rank), bank(_bank), row(_row),
-              addr(_addr), size(_size), burstHelper(NULL), bank_ref(_bank_ref)
+              pkt(_pkt), isRead(is_read), rank(_rank), bank(_bank), row(_row),
+              bankId(bank_id), addr(_addr), size(_size), burstHelper(NULL),
+              bankRef(bank_ref)
         { }
 
     };
@@ -394,6 +403,14 @@ class SimpleDRAM : public AbstractMemory
      */
     Tick maxBankFreeAt() const;
 
+    /**
+     * Find which are the earliest available banks for the enqueued
+     * requests. Assumes maximum of 64 banks per DIMM
+     *
+     * @param Queued requests to consider
+     * @return One-hot encoded mask of bank indices
+     */
+    uint64_t minBankFreeAt(const std::deque<DRAMPacket*>& queue) const;
 
     /**
      * Keep track of when row activations happen, in order to enforce
