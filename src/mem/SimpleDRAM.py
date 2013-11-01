@@ -316,9 +316,8 @@ class LPDDR3_1600_x32(SimpleDRAM):
     # LPDDR3 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1KB
-    # (this depends on the memory density)
-    device_rowbuffer_size = '1kB'
+    # Each device has a page (row buffer) size of 4KB
+    device_rowbuffer_size = '4kB'
 
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
