@@ -79,7 +79,8 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), writeStartTime(0),
     prevArrival(0), numReqs(0),
-    numWritesThisTime(0), newTime(0)
+    numWritesThisTime(0), newTime(0),
+    startTickPrechargeAll(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -327,7 +328,7 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
                 pktsServicedByWrQ++;
                 DPRINTF(DRAM, "Read to addr %lld with size %d serviced by "
                         "write queue\n", addr, size);
-                bytesRead += burstSize;
+                bytesReadWrQ += burstSize;
                 bytesConsumedRd += size;
                 break;
             }
@@ -728,7 +729,7 @@ SimpleDRAM::processRespondEvent()
 
     // Actually responds to the requestor
     bytesConsumedRd += dram_pkt->size;
-    bytesRead += burstSize;
+    bytesReadDRAM += burstSize;
     if (dram_pkt->burstHelper) {
         // it is a split packet
         dram_pkt->burstHelper->burstsServiced++;
@@ -995,6 +996,21 @@ SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
+    // Tracking accesses after all banks are precharged.
+    // startTickPrechargeAll: is the tick when all the banks were again
+    // precharged. The difference between act_tick and startTickPrechargeAll
+    // gives the time for which DRAM doesn't get any accesses after refreshing
+    // or after a page is closed in closed-page or open-adaptive-page policy.
+    if ((numBanksActive == 0) && (act_tick > startTickPrechargeAll)) {
+        prechargeAllTime += act_tick - startTickPrechargeAll;
+    }
+
+    // No need to update number of active banks for closed-page policy as only 1
+    // bank will be activated at any given point, which will be instatntly
+    // precharged
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive)
+        ++numBanksActive;
+
     // start by enforcing tRRD
     for(int i = 0; i < banksPerRank; i++) {
         // next activate must not happen before tRRD
@@ -1111,6 +1127,14 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             if (!got_more_hits && got_bank_conflict) {
                 bank.openRow = -1;
                 bank.freeAt = std::max(bank.freeAt, bank.tRASDoneAt) + tRP;
+                --numBanksActive;
+                if (numBanksActive == 0) {
+                    startTickPrechargeAll = std::max(startTickPrechargeAll,
+                                                     bank.freeAt);
+                    DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
+                            startTickPrechargeAll);
+                }
+                DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
             }
         }
 
@@ -1126,6 +1150,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
                 actTick + tRCD + tCL + tRP);
         DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
         bytesPerActivate.sample(burstSize);
+        startTickPrechargeAll = std::max(startTickPrechargeAll, bank.freeAt);
     } else
         panic("No page management policy chosen\n");
 
@@ -1302,8 +1327,14 @@ SimpleDRAM::processRefreshEvent()
     Tick banksFree = std::max(curTick(), maxBankFreeAt()) + tRFC;
 
     for(int i = 0; i < ranksPerChannel; i++)
-        for(int j = 0; j < banksPerRank; j++)
+        for(int j = 0; j < banksPerRank; j++) {
             banks[i][j].freeAt = banksFree;
+            banks[i][j].openRow = -1;
+        }
+
+    // updating startTickPrechargeAll, isprechargeAll
+    numBanksActive = 0;
+    startTickPrechargeAll = banksFree;
 
     schedule(refreshEvent, curTick() + tREFI);
 }
@@ -1463,9 +1494,13 @@ SimpleDRAM::regStats()
          .desc("Bytes accessed per row activation")
          .flags(nozero);
 
-    bytesRead
-        .name(name() + ".bytesRead")
-        .desc("Total number of bytes read from memory");
+    bytesReadDRAM
+        .name(name() + ".bytesReadDRAM")
+        .desc("Total number of bytes read from DRAM");
+
+    bytesReadWrQ
+        .name(name() + ".bytesReadWrQ")
+        .desc("Total number of bytes read from write queue");
 
     bytesWritten
         .name(name() + ".bytesWritten")
@@ -1484,7 +1519,7 @@ SimpleDRAM::regStats()
         .desc("Average achieved read bandwidth in MB/s")
         .precision(2);
 
-    avgRdBW = (bytesRead / 1000000) / simSeconds;
+    avgRdBW = ((bytesReadDRAM + bytesReadWrQ) / 1000000) / simSeconds;
 
     avgWrBW
         .name(name() + ".avgWrBW")
@@ -1531,6 +1566,37 @@ SimpleDRAM::regStats()
         .precision(2);
 
     avgGap = totGap / (readReqs + writeReqs);
+
+    // Stats for DRAM Power calculation based on Micron datasheet
+    busUtilRead
+        .name(name() + ".busUtilRead")
+        .desc("Data bus utilization in percentage for reads")
+        .precision(2);
+
+    busUtilRead = avgRdBW / peakBW * 100;
+
+    busUtilWrite
+        .name(name() + ".busUtilWrite")
+        .desc("Data bus utilization in percentage for writes")
+        .precision(2);
+
+    busUtilWrite = avgWrBW / peakBW * 100;
+
+    pageHitRate
+        .name(name() + ".pageHitRate")
+        .desc("Row buffer hit rate, read and write combined")
+        .precision(2);
+
+    pageHitRate = (writeRowHits + readRowHits) / (writeReqs + readReqs -
+                   servicedByWrQ) * 100;
+
+    prechargeAllPercent
+        .name(name() + ".prechargeAllPercent")
+        .desc("Percentage of time for which DRAM has all the banks in "
+              "precharge state")
+        .precision(2);
+
+    prechargeAllPercent = prechargeAllTime / simTicks * 100;
 }
 
 void

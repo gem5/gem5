@@ -544,7 +544,8 @@ class SimpleDRAM : public AbstractMemory
     Stats::Scalar writeReqs;
     Stats::Scalar readBursts;
     Stats::Scalar writeBursts;
-    Stats::Scalar bytesRead;
+    Stats::Scalar bytesReadDRAM;
+    Stats::Scalar bytesReadWrQ;
     Stats::Scalar bytesWritten;
     Stats::Scalar bytesConsumedRd;
     Stats::Scalar bytesConsumedWr;
@@ -580,6 +581,8 @@ class SimpleDRAM : public AbstractMemory
     Stats::Formula avgConsumedWrBW;
     Stats::Formula peakBW;
     Stats::Formula busUtil;
+    Stats::Formula busUtilRead;
+    Stats::Formula busUtilWrite;
 
     // Average queue lengths
     Stats::Average avgRdQLen;
@@ -591,6 +594,16 @@ class SimpleDRAM : public AbstractMemory
     Stats::Formula readRowHitRate;
     Stats::Formula writeRowHitRate;
     Stats::Formula avgGap;
+
+    // DRAM Power Calculation
+    Stats::Formula pageHitRate;
+    Stats::Formula prechargeAllPercent;
+    Stats::Scalar prechargeAllTime;
+
+    // To track number of cycles all the banks are precharged
+    Tick startTickPrechargeAll;
+    // To track number of banks which are currently active
+    unsigned int numBanksActive;
 
     /** @todo this is a temporary workaround until the 4-phase code is
      * committed. upstream caches needs this packet until true is returned, so
