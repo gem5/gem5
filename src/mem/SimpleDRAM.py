@@ -69,12 +69,18 @@ class SimpleDRAM(AbstractMemory):
     port = SlavePort("Slave port")
 
     # the basic configuration of the controller architecture
-    write_buffer_size = Param.Unsigned(32, "Number of read queue entries")
-    read_buffer_size = Param.Unsigned(32, "Number of write queue entries")
+    write_buffer_size = Param.Unsigned(32, "Number of write queue entries")
+    read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
 
     # threshold in percent for when to trigger writes and start
     # emptying the write buffer as it starts to get full
-    write_thresh_perc = Param.Percent(70, "Threshold to trigger writes")
+    write_high_thresh_perc = Param.Percent(70, "Threshold to trigger writes")
+
+    # threshold in percentage for when to stop writes if the read
+    # queue has an entry. An optimisaton to give reads priority if
+    # sufficient number of writes are scheduled and write queue has
+    # sufficient number of free entries
+    write_low_thresh_perc = Param.Percent(0, "Threshold to stop writes")
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")

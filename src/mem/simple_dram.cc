@@ -67,7 +67,8 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size),
-    writeThresholdPerc(p->write_thresh_perc),
+    writeHighThresholdPerc(p->write_high_thresh_perc),
+    writeLowThresholdPerc(p->write_low_thresh_perc),
     tWTR(p->tWTR), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
@@ -77,7 +78,8 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), writeStartTime(0),
-    prevArrival(0), numReqs(0)
+    prevArrival(0), numReqs(0),
+    numWritesThisTime(0), newTime(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -88,9 +90,10 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
         actTicks[c].resize(activationLimit, 0);
     }
 
-    // round the write threshold percent to a whole number of entries
-    // in the buffer
-    writeThreshold = writeBufferSize * writeThresholdPerc / 100.0;
+    // round the write thresholds percent to a whole number of entries
+    // in the buffer.
+    writeHighThreshold = writeBufferSize * writeHighThresholdPerc / 100.0;
+    writeLowThreshold = writeBufferSize * writeLowThresholdPerc / 100.0;
 }
 
 void
@@ -384,29 +387,20 @@ void
 SimpleDRAM::processWriteEvent()
 {
     assert(!writeQueue.empty());
-    uint32_t numWritesThisTime = 0;
 
-    DPRINTF(DRAM, "Beginning DRAM Writes\n");
+    DPRINTF(DRAM, "Beginning DRAM Write\n");
     Tick temp1 M5_VAR_USED = std::max(curTick(), busBusyUntil);
     Tick temp2 M5_VAR_USED = std::max(curTick(), maxBankFreeAt());
 
-    // @todo: are there any dangers with the untimed while loop?
-    while (!writeQueue.empty()) {
-        if (numWritesThisTime >= writeThreshold) {
-            DPRINTF(DRAM, "Hit write threshold %d\n", writeThreshold);
-            break;
-        }
+    chooseNextWrite();
+    DRAMPacket* dram_pkt = writeQueue.front();
+    // sanity check
+    assert(dram_pkt->size <= burstSize);
+    doDRAMAccess(dram_pkt);
 
-        chooseNextWrite();
-        DRAMPacket* dram_pkt = writeQueue.front();
-        // sanity check
-        assert(dram_pkt->size <= burstSize);
-        doDRAMAccess(dram_pkt);
-
-        writeQueue.pop_front();
-        delete dram_pkt;
-        numWritesThisTime++;
-    }
+    writeQueue.pop_front();
+    delete dram_pkt;
+    numWritesThisTime++;
 
     DPRINTF(DRAM, "Completed %d writes, bus busy for %lld ticks,"\
             "banks busy for %lld ticks\n", numWritesThisTime,
@@ -415,9 +409,28 @@ SimpleDRAM::processWriteEvent()
     // Update stats
     avgWrQLen = writeQueue.size();
 
-    // turn the bus back around for reads again
-    busBusyUntil += tWTR;
-    stopReads = false;
+    if (numWritesThisTime >= writeHighThreshold) {
+        DPRINTF(DRAM, "Hit write threshold %d\n", writeHighThreshold);
+    }
+
+    // If number of writes in the queue fall below the low thresholds and
+    // read queue is not empty then schedule a request event else continue
+    // with writes. The retry above could already have caused it to be
+    // scheduled, so first check
+    if (((writeQueue.size() <= writeLowThreshold) && !readQueue.empty()) ||
+        writeQueue.empty()) {
+        numWritesThisTime = 0;
+        // turn the bus back around for reads again
+        busBusyUntil += tWTR;
+        stopReads = false;
+
+        if (!nextReqEvent.scheduled())
+            schedule(nextReqEvent, busBusyUntil);
+    } else {
+        assert(!writeEvent.scheduled());
+        DPRINTF(DRAM, "Next write scheduled at %lld\n", newTime);
+        schedule(writeEvent, newTime);
+    }
 
     if (retryWrReq) {
         retryWrReq = false;
@@ -430,13 +443,6 @@ SimpleDRAM::processWriteEvent()
         drainManager->signalDrainDone();
         drainManager = NULL;
     }
-
-    // Once you're done emptying the write queue, check if there's
-    // anything in the read queue, and call schedule if required. The
-    // retry above could already have caused it to be scheduled, so
-    // first check
-    if (!nextReqEvent.scheduled())
-        schedule(nextReqEvent, busBusyUntil);
 }
 
 
@@ -565,7 +571,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
     accessAndRespond(pkt, frontendLatency);
 
     // If your write buffer is starting to fill up, drain it!
-    if (writeQueue.size() >= writeThreshold && !stopReads){
+    if (writeQueue.size() >= writeHighThreshold && !stopReads){
         triggerWrites();
     }
 }
@@ -602,7 +608,7 @@ SimpleDRAM::printParams() const
             "Scheduler            %s\n"                 \
             "Address mapping      %s\n"                 \
             "Page policy          %s\n",
-            name(), readBufferSize, writeBufferSize, writeThreshold,
+            name(), readBufferSize, writeBufferSize, writeHighThreshold,
             scheduler, address_mapping, page_policy);
 
     DPRINTF(DRAM, "Memory controller %s timing specs\n" \
@@ -1119,6 +1125,10 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             writeRowHits++;
     }
 
+    // Update the minimum timing between the requests
+    newTime = (busBusyUntil > tRP + tRCD + tCL) ?
+        std::max(busBusyUntil - (tRP + tRCD + tCL), curTick()) : curTick();
+
     // At this point, commonality between reads and writes ends.
     // For writes, we are done since we long ago responded to the
     // requestor. We also don't care about stats for writes. For
@@ -1142,23 +1152,13 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     //time
     moveToRespQ();
 
-    // The absolute soonest you have to start thinking about the
-    // next request is the longest access time that can occur before
-    // busBusyUntil. Assuming you need to precharge,
-    // open a new row, and access, it is tRP + tRCD + tCL
-
-    Tick newTime = (busBusyUntil > tRP + tRCD + tCL ) ?
-                   std::max(busBusyUntil - (tRP + tRCD + tCL) , curTick()) :
-                   curTick();
-
+    // Schedule the next read event
     if (!nextReqEvent.scheduled() && !stopReads){
         schedule(nextReqEvent, newTime);
     } else {
         if (newTime < nextReqEvent.when())
             reschedule(nextReqEvent, newTime);
     }
-
-
 }
 
 void

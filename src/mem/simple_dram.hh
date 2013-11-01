@@ -472,8 +472,10 @@ class SimpleDRAM : public AbstractMemory
     uint32_t columnsPerRowBuffer;
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
-    const double writeThresholdPerc;
-    uint32_t writeThreshold;
+    const double writeHighThresholdPerc;
+    uint32_t writeHighThreshold;
+    const double writeLowThresholdPerc;
+    uint32_t writeLowThreshold;
 
     /**
      * Basic memory timing parameters initialized based on parameter
@@ -521,6 +523,15 @@ class SimpleDRAM : public AbstractMemory
     Tick writeStartTime;
     Tick prevArrival;
     int numReqs;
+
+    // Tracks number of writes done to meet the write threshold
+    uint32_t numWritesThisTime;
+
+    // The absolute soonest you have to start thinking about the
+    // next request is the longest access time that can occur before
+    // busBusyUntil. Assuming you need to precharge,
+    // open a new row, and access, it is tRP + tRCD + tCL
+    Tick newTime;
 
     // All statistics that the model needs to capture
     Stats::Scalar readReqs;
