@@ -31,7 +31,7 @@ from UserDict import DictMixin
 import internal
 
 from internal.debug import SimpleFlag, CompoundFlag
-from internal.debug import schedBreakCycle, setRemoteGDBPort
+from internal.debug import schedBreak, setRemoteGDBPort
 from m5.util import printList
 
 def help():

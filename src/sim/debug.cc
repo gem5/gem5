@@ -82,7 +82,7 @@ DebugBreakEvent::description() const
 // (callable from debugger)
 //
 void
-schedBreakCycle(Tick when)
+schedBreak(Tick when)
 {
     mainEventQueue.schedule(new DebugBreakEvent, when);
     warn("need to stop all queues");

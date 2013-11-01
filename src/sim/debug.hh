@@ -40,9 +40,9 @@
 
 
 /** Cause the simulator to execute a breakpoint
- * @param when the cycle to break
+ * @param when the tick to break
  */
-void schedBreakCycle(Tick when);
+void schedBreak(Tick when);
 
 /** Cause the simulator to return to python to create a checkpoint
  * @param when the cycle to break

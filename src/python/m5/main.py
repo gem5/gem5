@@ -95,22 +95,19 @@ def parse_options():
     # Debugging options
     group("Debugging Options")
     option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
-        help="Cycle to create a breakpoint")
+        help="Tick to create a breakpoint")
     option("--debug-help", action='store_true',
-        help="Print help on trace flags")
+        help="Print help on debug flags")
     option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-        help="Sets the flags for tracing (-FLAG disables a flag)")
+        help="Sets the flags for debug output (-FLAG disables a flag)")
+    option("--debug-start", metavar="TIME", type='int',
+        help="Start debug output at TIME (must be in ticks)")
+    option("--debug-file", metavar="FILE", default="cout",
+        help="Sets the output file for debug [Default: %default]")
+    option("--debug-ignore", metavar="EXPR", action='append', split=':',
+        help="Ignore EXPR sim objects")
     option("--remote-gdb-port", type='int', default=7000,
         help="Remote gdb base port (set to 0 to disable listening)")
-
-    # Tracing options
-    group("Trace Options")
-    option("--trace-start", metavar="TIME", type='int',
-        help="Start tracing at TIME (must be in ticks)")
-    option("--trace-file", metavar="FILE", default="cout",
-        help="Sets the output file for tracing [Default: %default]")
-    option("--trace-ignore", metavar="EXPR", action='append', split=':',
-        help="Ignore EXPR sim objects")
 
     # Help options
     group("Help Options")
@@ -316,7 +313,7 @@ def main(*args):
     # set debugging options
     debug.setRemoteGDBPort(options.remote_gdb_port)
     for when in options.debug_break:
-        debug.schedBreakCycle(int(when))
+        debug.schedBreak(int(when))
 
     if options.debug_flags:
         check_tracing()
@@ -338,16 +335,16 @@ def main(*args):
             else:
                 debug.flags[flag].enable()
 
-    if options.trace_start:
+    if options.debug_start:
         check_tracing()
-        e = event.create(trace.enable, event.Event.Trace_Enable_Pri)
-        event.mainq.schedule(e, options.trace_start)
+        e = event.create(trace.enable, event.Event.Debug_Enable_Pri)
+        event.mainq.schedule(e, options.debug_start)
     else:
         trace.enable()
 
-    trace.output(options.trace_file)
+    trace.output(options.debug_file)
 
-    for ignore in options.trace_ignore:
+    for ignore in options.debug_ignore:
         check_tracing()
         trace.ignore(ignore)
 
