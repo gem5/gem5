@@ -114,6 +114,9 @@ class SimpleDRAM(AbstractMemory):
     # minimum time between a precharge and subsequent activate
     tRP = Param.Latency("Row precharge time")
 
+    # minimum time between an activate and a precharge to the same row
+    tRAS = Param.Latency("ACT to PRE delay")
+
     # time to complete a burst transfer, typically the burst length
     # divided by two due to the DDR bus, but by making it a parameter
     # it is easier to also evaluate SDR memories like WideIO.
@@ -140,11 +143,7 @@ class SimpleDRAM(AbstractMemory):
     # Currently rolled into other params
     ######################################################################
 
-    # the minimum amount of time between a row being activated, and
-    # precharged (de-activated)
-    # tRAS - assumed to be 3 * tRP
-
-    # tRC  - assumed to be 4 * tRP
+    # tRC  - assumed to be tRAS + tRP
 
 # A single DDR3 x64 interface (one command and address bus), with
 # default timings based on DDR3-1600 4 Gbit parts in an 8x8
@@ -173,6 +172,7 @@ class DDR3_1600_x64(SimpleDRAM):
     tRCD = '13.75ns'
     tCL = '13.75ns'
     tRP = '13.75ns'
+    tRAS = '41.25ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
@@ -224,6 +224,8 @@ class LPDDR2_S4_1066_x32(SimpleDRAM):
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'
 
+    tRAS = '45ns'
+
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
@@ -267,6 +269,7 @@ class WideIO_200_x128(SimpleDRAM):
     tRCD = '18ns'
     tCL = '18ns'
     tRP = '18ns'
+    tRAS = '54ns'
 
     # 4 beats across an x128 SDR interface translates to 4 clocks @ 200 MHz.
     # Note this is a BL4 SDR device.
@@ -313,6 +316,8 @@ class LPDDR3_1600_x32(SimpleDRAM):
 
     # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
     tCL = '15ns'
+
+    tRAS = '45ns'
 
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'

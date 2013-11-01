@@ -462,6 +462,7 @@ class SimpleDRAM : public AbstractMemory
     const Tick tRCD;
     const Tick tCL;
     const Tick tRP;
+    const Tick tRAS;
     const Tick tRFC;
     const Tick tREFI;
     const Tick tXAW;

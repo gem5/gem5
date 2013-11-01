@@ -68,7 +68,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     writeBufferSize(p->write_buffer_size),
     writeThresholdPerc(p->write_thresh_perc),
     tWTR(p->tWTR), tBURST(p->tBURST),
-    tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP),
+    tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tRFC(p->tRFC), tREFI(p->tREFI),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
@@ -382,6 +382,7 @@ SimpleDRAM::processWriteEvent()
 {
     assert(!writeQueue.empty());
     uint32_t numWritesThisTime = 0;
+    Tick actTick;
 
     DPRINTF(DRAMWR, "Beginning DRAM Writes\n");
     Tick temp1 M5_VAR_USED = std::max(curTick(), busBusyUntil);
@@ -422,9 +423,10 @@ SimpleDRAM::processWriteEvent()
             bank.bytesAccessed += burstSize;
 
             if (!rowHitFlag) {
-                bank.tRASDoneAt = bank.freeAt + tRP;
-                recordActivate(bank.freeAt - tCL - tRCD);
-                busBusyUntil = bank.freeAt - tCL - tRCD;
+                actTick = bank.freeAt - tCL - tRCD;//new row opened
+                bank.tRASDoneAt = actTick + tRAS;
+                recordActivate(actTick);
+                busBusyUntil = actTick;
 
                 // sample the number of bytes accessed and reset it as
                 // we are now closing this row
@@ -432,10 +434,19 @@ SimpleDRAM::processWriteEvent()
                 bank.bytesAccessed = 0;
             }
         } else if (pageMgmt == Enums::close) {
-            bank.freeAt = schedTime + tBURST + accessLat + tRP + tRP;
-            // Work backwards from bank.freeAt to determine activate time
-            recordActivate(bank.freeAt - tRP - tRP - tCL - tRCD);
-            busBusyUntil = bank.freeAt - tRP - tRP - tCL - tRCD;
+            // All ticks waiting for a bank (if required) are included
+            // in accessLat
+            actTick = schedTime + tBURST + accessLat - tCL - tRCD;
+            recordActivate(actTick);
+
+            // If the DRAM has a very quick tRAS, bank can be made free
+            // after consecutive tCL,tRCD,tRP times. In general, however,
+            // an additional wait is required to respect tRAS.
+            bank.freeAt = std::max(actTick + tRAS + tRP,
+                                   actTick + tCL + tRCD + tRP);
+
+            //assuming that DRAM first gets write data, then activates
+            busBusyUntil = actTick;
             DPRINTF(DRAMWR, "processWriteEvent::bank.freeAt for "
                     "banks_id %d is %lld\n",
                     dram_pkt->rank * banksPerRank + dram_pkt->bank,
@@ -1043,6 +1054,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     pair<Tick, Tick> lat = estimateLatency(dram_pkt, curTick());
     Tick bankLat = lat.first;
     Tick accessLat = lat.second;
+    Tick actTick;
 
     // This request was woken up at this time based on a prior call
     // to estimateLatency(). However, between then and now, both the
@@ -1061,22 +1073,28 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
         bank.bytesAccessed += burstSize;
 
         // If you activated a new row do to this access, the next access
-        // will have to respect tRAS for this bank. Assume tRAS ~= 3 * tRP.
-        // Also need to account for t_XAW
+        // will have to respect tRAS for this bank.
         if (!rowHitFlag) {
-            bank.tRASDoneAt = bank.freeAt + tRP;
-            recordActivate(bank.freeAt - tCL - tRCD); //since this is open page,
-                                                      //no tRP by default
+            // any waiting for banks account for in freeAt
+            actTick = bank.freeAt - tCL - tRCD;
+            bank.tRASDoneAt = actTick + tRAS;
+            recordActivate(actTick);
+
             // sample the number of bytes accessed and reset it as
             // we are now closing this row
             bytesPerActivate.sample(bank.bytesAccessed);
             bank.bytesAccessed = 0;
         }
-    } else if (pageMgmt == Enums::close) { // accounting for tRAS also
-        // assuming that tRAS ~= 3 * tRP, and tRC ~= 4 * tRP, as is common
-        // (refer Jacob/Ng/Wang and Micron datasheets)
-        bank.freeAt = curTick() + addDelay + accessLat + tRP + tRP;
-        recordActivate(bank.freeAt - tRP - tRP - tCL - tRCD); //essentially (freeAt - tRC)
+    } else if (pageMgmt == Enums::close) {
+        actTick = curTick() + addDelay + accessLat - tRCD - tCL;
+        recordActivate(actTick);
+
+        // If the DRAM has a very quick tRAS, bank can be made free
+        // after consecutive tCL,tRCD,tRP times. In general, however,
+        // an additional wait is required to respect tRAS.
+        bank.freeAt = std::max(actTick + tRAS + tRP,
+                actTick + tRCD + tCL + tRP);
+
         DPRINTF(DRAM,"doDRAMAccess::bank.freeAt is %lld\n",bank.freeAt);
         bytesPerActivate.sample(burstSize);
     } else
