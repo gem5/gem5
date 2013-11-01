@@ -547,12 +547,13 @@ class SimpleDRAM : public AbstractMemory
     Stats::Scalar bytesReadDRAM;
     Stats::Scalar bytesReadWrQ;
     Stats::Scalar bytesWritten;
-    Stats::Scalar bytesConsumedRd;
-    Stats::Scalar bytesConsumedWr;
+    Stats::Scalar bytesReadSys;
+    Stats::Scalar bytesWrittenSys;
     Stats::Scalar servicedByWrQ;
+    Stats::Scalar mergedWrBursts;
     Stats::Scalar neitherReadNorWrite;
-    Stats::Vector perBankRdReqs;
-    Stats::Vector perBankWrReqs;
+    Stats::Vector perBankRdBursts;
+    Stats::Vector perBankWrBursts;
     Stats::Scalar numRdRetry;
     Stats::Scalar numWrRetry;
     Stats::Scalar totGap;
@@ -577,8 +578,8 @@ class SimpleDRAM : public AbstractMemory
     // Average bandwidth
     Stats::Formula avgRdBW;
     Stats::Formula avgWrBW;
-    Stats::Formula avgConsumedRdBW;
-    Stats::Formula avgConsumedWrBW;
+    Stats::Formula avgRdBWSys;
+    Stats::Formula avgWrBWSys;
     Stats::Formula peakBW;
     Stats::Formula busUtil;
     Stats::Formula busUtilRead;

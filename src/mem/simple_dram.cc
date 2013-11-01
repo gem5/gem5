@@ -329,7 +329,6 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
                 DPRINTF(DRAM, "Read to addr %lld with size %d serviced by "
                         "write queue\n", addr, size);
                 bytesReadWrQ += burstSize;
-                bytesConsumedRd += size;
                 break;
             }
         }
@@ -356,9 +355,6 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
             readQueue.push_back(dram_pkt);
 
             // Update stats
-            assert(dram_pkt->bankId < ranksPerChannel * banksPerRank);
-            perBankRdReqs[dram_pkt->bankId]++;
-
             avgRdQLen = readQueue.size() + respQueue.size();
         }
 
@@ -551,14 +547,12 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
             writeQueue.push_back(dram_pkt);
 
             // Update stats
-            assert(dram_pkt->bankId < ranksPerChannel * banksPerRank);
-            perBankWrReqs[dram_pkt->bankId]++;
-
             avgWrQLen = writeQueue.size();
+        } else {
+            // keep track of the fact that this burst effectively
+            // disappeared as it was merged with an existing one
+            mergedWrBursts++;
         }
-
-        bytesConsumedWr += size;
-        bytesWritten += burstSize;
 
         // Starting address of next dram pkt (aligend to burstSize boundary)
         addr = (addr | (burstSize - 1)) + 1;
@@ -694,6 +688,7 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
             addToReadQueue(pkt, dram_pkt_count);
             readReqs++;
             numReqs++;
+            bytesReadSys += size;
         }
     } else if (pkt->isWrite()) {
         assert(size != 0);
@@ -707,6 +702,7 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
             addToWriteQueue(pkt, dram_pkt_count);
             writeReqs++;
             numReqs++;
+            bytesWrittenSys += size;
         }
     } else {
         DPRINTF(DRAM,"Neither read nor write, ignore timing\n");
@@ -727,9 +723,6 @@ SimpleDRAM::processRespondEvent()
 
     DRAMPacket* dram_pkt = respQueue.front();
 
-    // Actually responds to the requestor
-    bytesConsumedRd += dram_pkt->size;
-    bytesReadDRAM += burstSize;
     if (dram_pkt->burstHelper) {
         // it is a split packet
         dram_pkt->burstHelper->burstsServiced++;
@@ -1172,28 +1165,29 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     DPRINTF(DRAM,"Access time is %lld\n",
             dram_pkt->readyTime - dram_pkt->entryTime);
 
-    if (rowHitFlag) {
-        if(dram_pkt->isRead)
-            readRowHits++;
-         else
-            writeRowHits++;
-    }
-
     // Update the minimum timing between the requests
     newTime = (busBusyUntil > tRP + tRCD + tCL) ?
         std::max(busBusyUntil - (tRP + tRCD + tCL), curTick()) : curTick();
 
-    // At this point, commonality between reads and writes ends.
-    // For writes, we are done since we long ago responded to the
-    // requestor. We also don't care about stats for writes. For
-    // reads, we still need to figure out respoding to the requestor,
-    // and capture stats.
+    // Update the access related stats
+    if (dram_pkt->isRead) {
+        if (rowHitFlag)
+            readRowHits++;
+        bytesReadDRAM += burstSize;
+        perBankRdBursts[dram_pkt->bankId]++;
+    } else {
+        if (rowHitFlag)
+            writeRowHits++;
+        bytesWritten += burstSize;
+        perBankWrBursts[dram_pkt->bankId]++;
 
-    if (!dram_pkt->isRead) {
+        // At this point, commonality between reads and writes ends.
+        // For writes, we are done since we long ago responded to the
+        // requestor.
         return;
     }
 
-    // Update stats
+    // Update latency stats
     totMemAccLat += dram_pkt->readyTime - dram_pkt->entryTime;
     totBankLat += bankLat;
     totBusLat += tBURST;
@@ -1348,103 +1342,106 @@ SimpleDRAM::regStats()
 
     readReqs
         .name(name() + ".readReqs")
-        .desc("Total number of read requests accepted by DRAM controller");
+        .desc("Number of read requests accepted");
 
     writeReqs
         .name(name() + ".writeReqs")
-        .desc("Total number of write requests accepted by DRAM controller");
+        .desc("Number of write requests accepted");
 
     readBursts
         .name(name() + ".readBursts")
-        .desc("Total number of DRAM read bursts. "
-              "Each DRAM read request translates to either one or multiple "
-              "DRAM read bursts");
+        .desc("Number of DRAM read bursts, "
+              "including those serviced by the write queue");
 
     writeBursts
         .name(name() + ".writeBursts")
-        .desc("Total number of DRAM write bursts. "
-              "Each DRAM write request translates to either one or multiple "
-              "DRAM write bursts");
+        .desc("Number of DRAM write bursts, "
+              "including those merged in the write queue");
 
     servicedByWrQ
         .name(name() + ".servicedByWrQ")
-        .desc("Number of DRAM read bursts serviced by write Q");
+        .desc("Number of DRAM read bursts serviced by the write queue");
+
+    mergedWrBursts
+        .name(name() + ".mergedWrBursts")
+        .desc("Number of DRAM write bursts merged with an existing one");
 
     neitherReadNorWrite
-        .name(name() + ".neitherReadNorWrite")
-        .desc("Reqs where no action is needed");
+        .name(name() + ".neitherReadNorWriteReqs")
+        .desc("Number of requests that are neither read nor write");
 
-    perBankRdReqs
+    perBankRdBursts
         .init(banksPerRank * ranksPerChannel)
-        .name(name() + ".perBankRdReqs")
-        .desc("Track reads on a per bank basis");
+        .name(name() + ".perBankRdBursts")
+        .desc("Per bank write bursts");
 
-    perBankWrReqs
+    perBankWrBursts
         .init(banksPerRank * ranksPerChannel)
-        .name(name() + ".perBankWrReqs")
-        .desc("Track writes on a per bank basis");
+        .name(name() + ".perBankWrBursts")
+        .desc("Per bank write bursts");
 
     avgRdQLen
         .name(name() + ".avgRdQLen")
-        .desc("Average read queue length over time")
+        .desc("Average read queue length when enqueuing")
         .precision(2);
 
     avgWrQLen
         .name(name() + ".avgWrQLen")
-        .desc("Average write queue length over time")
+        .desc("Average write queue length when enqueuing")
         .precision(2);
 
     totQLat
         .name(name() + ".totQLat")
-        .desc("Total cycles spent in queuing delays");
+        .desc("Total ticks spent queuing");
 
     totBankLat
         .name(name() + ".totBankLat")
-        .desc("Total cycles spent in bank access");
+        .desc("Total ticks spent accessing banks");
 
     totBusLat
         .name(name() + ".totBusLat")
-        .desc("Total cycles spent in databus access");
+        .desc("Total ticks spent in databus transfers");
 
     totMemAccLat
         .name(name() + ".totMemAccLat")
-        .desc("Sum of mem lat for all requests");
+        .desc("Total ticks spent from burst creation until serviced "
+              "by the DRAM");
 
     avgQLat
         .name(name() + ".avgQLat")
-        .desc("Average queueing delay per request")
+        .desc("Average queueing delay per DRAM burst")
         .precision(2);
 
     avgQLat = totQLat / (readBursts - servicedByWrQ);
 
     avgBankLat
         .name(name() + ".avgBankLat")
-        .desc("Average bank access latency per request")
+        .desc("Average bank access latency per DRAM burst")
         .precision(2);
 
     avgBankLat = totBankLat / (readBursts - servicedByWrQ);
 
     avgBusLat
         .name(name() + ".avgBusLat")
-        .desc("Average bus latency per request")
+        .desc("Average bus latency per DRAM burst")
         .precision(2);
 
     avgBusLat = totBusLat / (readBursts - servicedByWrQ);
 
     avgMemAccLat
         .name(name() + ".avgMemAccLat")
-        .desc("Average memory access latency")
+        .desc("Average memory access latency per DRAM burst")
         .precision(2);
 
     avgMemAccLat = totMemAccLat / (readBursts - servicedByWrQ);
 
     numRdRetry
         .name(name() + ".numRdRetry")
-        .desc("Number of times rd buffer was full causing retry");
+        .desc("Number of times read queue was full causing retry");
 
     numWrRetry
         .name(name() + ".numWrRetry")
-        .desc("Number of times wr buffer was full causing retry");
+        .desc("Number of times write queue was full causing retry");
 
     readRowHits
         .name(name() + ".readRowHits")
@@ -1466,17 +1463,17 @@ SimpleDRAM::regStats()
         .desc("Row buffer hit rate for writes")
         .precision(2);
 
-    writeRowHitRate = (writeRowHits / writeBursts) * 100;
+    writeRowHitRate = (writeRowHits / (writeBursts - mergedWrBursts)) * 100;
 
     readPktSize
         .init(ceilLog2(burstSize) + 1)
         .name(name() + ".readPktSize")
-        .desc("Categorize read packet sizes");
+        .desc("Read request sizes (log2)");
 
      writePktSize
         .init(ceilLog2(burstSize) + 1)
         .name(name() + ".writePktSize")
-        .desc("Categorize write packet sizes");
+        .desc("Write request sizes (log2)");
 
      rdQLenPdf
         .init(readBufferSize)
@@ -1504,47 +1501,47 @@ SimpleDRAM::regStats()
 
     bytesWritten
         .name(name() + ".bytesWritten")
-        .desc("Total number of bytes written to memory");
+        .desc("Total number of bytes written to DRAM");
 
-    bytesConsumedRd
-        .name(name() + ".bytesConsumedRd")
-        .desc("bytesRead derated as per pkt->getSize()");
+    bytesReadSys
+        .name(name() + ".bytesReadSys")
+        .desc("Total read bytes from the system interface side");
 
-    bytesConsumedWr
-        .name(name() + ".bytesConsumedWr")
-        .desc("bytesWritten derated as per pkt->getSize()");
+    bytesWrittenSys
+        .name(name() + ".bytesWrittenSys")
+        .desc("Total written bytes from the system interface side");
 
     avgRdBW
         .name(name() + ".avgRdBW")
-        .desc("Average achieved read bandwidth in MB/s")
+        .desc("Average DRAM read bandwidth in MiByte/s")
         .precision(2);
 
-    avgRdBW = ((bytesReadDRAM + bytesReadWrQ) / 1000000) / simSeconds;
+    avgRdBW = (bytesReadDRAM / 1000000) / simSeconds;
 
     avgWrBW
         .name(name() + ".avgWrBW")
-        .desc("Average achieved write bandwidth in MB/s")
+        .desc("Average achieved write bandwidth in MiByte/s")
         .precision(2);
 
     avgWrBW = (bytesWritten / 1000000) / simSeconds;
 
-    avgConsumedRdBW
-        .name(name() + ".avgConsumedRdBW")
-        .desc("Average consumed read bandwidth in MB/s")
+    avgRdBWSys
+        .name(name() + ".avgRdBWSys")
+        .desc("Average system read bandwidth in MiByte/s")
         .precision(2);
 
-    avgConsumedRdBW = (bytesConsumedRd / 1000000) / simSeconds;
+    avgRdBWSys = (bytesReadSys / 1000000) / simSeconds;
 
-    avgConsumedWrBW
-        .name(name() + ".avgConsumedWrBW")
-        .desc("Average consumed write bandwidth in MB/s")
+    avgWrBWSys
+        .name(name() + ".avgWrBWSys")
+        .desc("Average system write bandwidth in MiByte/s")
         .precision(2);
 
-    avgConsumedWrBW = (bytesConsumedWr / 1000000) / simSeconds;
+    avgWrBWSys = (bytesWrittenSys / 1000000) / simSeconds;
 
     peakBW
         .name(name() + ".peakBW")
-        .desc("Theoretical peak bandwidth in MB/s")
+        .desc("Theoretical peak bandwidth in MiByte/s")
         .precision(2);
 
     peakBW = (SimClock::Frequency / tBURST) * burstSize / 1000000;
@@ -1587,8 +1584,8 @@ SimpleDRAM::regStats()
         .desc("Row buffer hit rate, read and write combined")
         .precision(2);
 
-    pageHitRate = (writeRowHits + readRowHits) / (writeReqs + readReqs -
-                   servicedByWrQ) * 100;
+    pageHitRate = (writeRowHits + readRowHits) /
+        (writeBursts - mergedWrBursts + readBursts - servicedByWrQ) * 100;
 
     prechargeAllPercent
         .name(name() + ".prechargeAllPercent")
