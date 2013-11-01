@@ -168,11 +168,11 @@ class DDR3_1600_x64(SimpleDRAM):
     # DDR3 has 8 banks in all configurations
     banks_per_rank = 8
 
-    # DDR3-1600 11-11-11
+    # DDR3-1600 11-11-11-28
     tRCD = '13.75ns'
     tCL = '13.75ns'
     tRP = '13.75ns'
-    tRAS = '41.25ns'
+    tRAS = '35ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
@@ -224,7 +224,7 @@ class LPDDR2_S4_1066_x32(SimpleDRAM):
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'
 
-    tRAS = '45ns'
+    tRAS = '42ns'
 
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
@@ -269,7 +269,7 @@ class WideIO_200_x128(SimpleDRAM):
     tRCD = '18ns'
     tCL = '18ns'
     tRP = '18ns'
-    tRAS = '54ns'
+    tRAS = '42ns'
 
     # 4 beats across an x128 SDR interface translates to 4 clocks @ 200 MHz.
     # Note this is a BL4 SDR device.
@@ -317,7 +317,7 @@ class LPDDR3_1600_x32(SimpleDRAM):
     # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
     tCL = '15ns'
 
-    tRAS = '45ns'
+    tRAS = '42ns'
 
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'
