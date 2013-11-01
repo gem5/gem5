@@ -39,5 +39,5 @@ from m5.objects import *
 from alpha_generic import *
 
 root = LinuxAlphaFSSystemUniprocessor(mem_mode='atomic',
-                                      mem_class=DDR3_1600_x64,
+                                      mem_class=SimpleMemory,
                                       cpu_class=AtomicSimpleCPU).create_root()

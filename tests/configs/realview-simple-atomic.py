@@ -39,6 +39,6 @@ from m5.objects import *
 from arm_generic import *
 
 root = LinuxArmFSSystemUniprocessor(mem_mode='atomic',
-                                    mem_class=DDR3_1600_x64,
+                                    mem_class=SimpleMemory,
                                     cpu_class=AtomicSimpleCPU).create_root()
 

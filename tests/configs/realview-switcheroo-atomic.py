@@ -40,7 +40,7 @@ from arm_generic import *
 import switcheroo
 
 root = LinuxArmFSSwitcheroo(
-    mem_class=DDR3_1600_x64,
+    mem_class=SimpleMemory,
     cpu_classes=(AtomicSimpleCPU, AtomicSimpleCPU)
     ).create_root()
 
