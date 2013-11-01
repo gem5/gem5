@@ -1135,12 +1135,11 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 
     // The absolute soonest you have to start thinking about the
     // next request is the longest access time that can occur before
-    // busBusyUntil. Assuming you need to meet tRAS, then precharge,
-    // open a new row, and access, it is ~4*tRCD.
+    // busBusyUntil. Assuming you need to precharge,
+    // open a new row, and access, it is tRP + tRCD + tCL
 
-
-    Tick newTime = (busBusyUntil > 4 * tRCD) ?
-                   std::max(busBusyUntil - 4 * tRCD, curTick()) :
+    Tick newTime = (busBusyUntil > tRP + tRCD + tCL ) ?
+                   std::max(busBusyUntil - (tRP + tRCD + tCL) , curTick()) :
                    curTick();
 
     if (!nextReqEvent.scheduled() && !stopReads){
