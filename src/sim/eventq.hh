@@ -190,7 +190,7 @@ class Event : public Serializable
     /// If we enable tracing on a particular cycle, do that as the
     /// very first thing so we don't miss any of the events on
     /// that cycle (even if we enter the debugger).
-    static const Priority Trace_Enable_Pri =          -101;
+    static const Priority Debug_Enable_Pri =          -101;
 
     /// Breakpoints should happen before anything else (except
     /// enabling trace output), so we don't miss any action when
