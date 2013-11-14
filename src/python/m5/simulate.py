@@ -218,7 +218,7 @@ def _changeMemoryMode(system, mode):
     else:
         print "System already in target mode. Memory mode unchanged."
 
-def switchCpus(system, cpuList, do_drain=True):
+def switchCpus(system, cpuList, do_drain=True, verbose=True):
     """Switch CPUs in a system.
 
     By default, this method drains and resumes the system. This
@@ -238,7 +238,10 @@ def switchCpus(system, cpuList, do_drain=True):
     Keyword Arguments:
       do_drain -- Perform a drain/resume of the system when switching.
     """
-    print "switching cpus"
+
+    if verbose:
+        print "switching cpus"
+
     if not isinstance(cpuList, list):
         raise RuntimeError, "Must pass a list to this function"
     for item in cpuList:

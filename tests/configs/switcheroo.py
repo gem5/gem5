@@ -70,7 +70,7 @@ class Sequential:
     def first(self):
         return self.cpus[self.first_cpu]
 
-def run_test(root, switcher=None, freq=1000):
+def run_test(root, switcher=None, freq=1000, verbose=False):
     """Test runner for CPU switcheroo tests.
 
     The switcheroo test runner is used to switch CPUs in a system that
@@ -91,6 +91,7 @@ def run_test(root, switcher=None, freq=1000):
       switcher -- CPU switcher implementation. See Sequential for
                   an example implementation.
       period -- Switching frequency in Hz.
+      verbose -- Enable output at each switch (suppressed by default).
     """
 
     if switcher == None:
@@ -99,6 +100,11 @@ def run_test(root, switcher=None, freq=1000):
     current_cpu = switcher.first()
     system = root.system
     system.mem_mode = type(current_cpu).memory_mode()
+
+    # Suppress "Entering event queue" messages since we get tons of them.
+    # Worse yet, they include the timestamp, which makes them highly
+    # variable and unsuitable for comparing as test outputs.
+    m5.internal.core.cvar.want_info = verbose
 
     # instantiate configuration
     m5.instantiate()
@@ -113,12 +119,13 @@ def run_test(root, switcher=None, freq=1000):
         if exit_cause == "simulate() limit reached":
             next_cpu = switcher.next()
 
-            print "Switching CPUs..."
-            print "Next CPU: %s" % type(next_cpu)
+            if verbose:
+                print "Switching CPUs..."
+                print "Next CPU: %s" % type(next_cpu)
             m5.drain(system)
             if current_cpu != next_cpu:
                 m5.switchCpus(system, [ (current_cpu, next_cpu) ],
-                              do_drain=False)
+                              do_drain=False, verbose=verbose)
             else:
                 print "Source CPU and destination CPU are the same, skipping..."
             m5.resume(system)
