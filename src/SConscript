@@ -148,7 +148,7 @@ class SourceFile(object):
     def __ge__(self, other): return self.filename >= other.filename
     def __eq__(self, other): return self.filename == other.filename
     def __ne__(self, other): return self.filename != other.filename
-        
+
 class Source(SourceFile):
     '''Add a c/c++ source file to the build'''
     def __init__(self, source, Werror=True, swig=False, **guards):
@@ -164,7 +164,7 @@ class PySource(SourceFile):
     modules = {}
     tnodes = {}
     symnames = {}
-    
+
     def __init__(self, package, source, **guards):
         '''specify the python package, the source file, and any guards'''
         super(PySource, self).__init__(source, **guards)

@@ -60,6 +60,7 @@ class DerivO3CPU(BaseCPU):
                                    "delay")
     commitToFetchDelay = Param.Cycles(1, "Commit to fetch delay")
     fetchWidth = Param.Unsigned(8, "Fetch width")
+    fetchBufferSize = Param.Unsigned(64, "Fetch buffer size in bytes")
 
     renameToDecodeDelay = Param.Cycles(1, "Rename to decode delay")
     iewToDecodeDelay = Param.Cycles(1, "Issue/Execute/Writeback to decode "

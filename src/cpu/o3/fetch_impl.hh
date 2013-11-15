@@ -85,7 +85,8 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       retryPkt(NULL),
       retryTid(InvalidThreadID),
       cacheBlkSize(cpu->cacheLineSize()),
-      cacheBlkMask(cacheBlkSize - 1),
+      fetchBufferSize(params->fetchBufferSize),
+      fetchBufferMask(fetchBufferSize - 1),
       numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       finishTranslationEvent(this)
@@ -98,6 +99,12 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         fatal("fetchWidth (%d) is larger than compiled limit (%d),\n"
              "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
              fetchWidth, static_cast<int>(Impl::MaxWidth));
+    if (fetchBufferSize > cacheBlkSize)
+        fatal("fetch buffer size (%u bytes) is greater than the cache "
+              "block size (%u bytes)\n", fetchBufferSize, cacheBlkSize);
+    if (cacheBlkSize % fetchBufferSize)
+        fatal("cache block (%u bytes) is not a multiple of the "
+              "fetch buffer (%u bytes)\n", cacheBlkSize, fetchBufferSize);
 
     std::string policy = params->smtFetchPolicy;
 
@@ -131,16 +138,19 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     instSize = sizeof(TheISA::MachInst);
 
     for (int i = 0; i < Impl::MaxThreads; i++) {
-        decoder[i] = new TheISA::Decoder;
+        decoder[i] = NULL;
+        fetchBuffer[i] = NULL;
+        fetchBufferPC[i] = 0;
+        fetchBufferValid[i] = false;
     }
 
     branchPred = params->branchPred;
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        // Create space to store a cache line.
-        cacheData[tid] = new uint8_t[cacheBlkSize];
-        cacheDataPC[tid] = 0;
-        cacheDataValid[tid] = false;
+        decoder[tid] = new TheISA::Decoder;
+        // Create space to buffer the cache line data,
+        // which may not hold the entire cache line.
+        fetchBuffer[tid] = new uint8_t[fetchBufferSize];
     }
 }
 
@@ -327,7 +337,7 @@ DefaultFetch<Impl>::resetStage()
     priorityList.clear();
 
     // Setup PC and nextPC with initial state.
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
         fetchStatus[tid] = Running;
         pc[tid] = cpu->pcState(tid);
         fetchOffset[tid] = 0;
@@ -342,16 +352,14 @@ DefaultFetch<Impl>::resetStage()
         stalls[tid].commit = false;
         stalls[tid].drain = false;
 
+        fetchBufferPC[tid] = 0;
+        fetchBufferValid[tid] = false;
+
         priorityList.push_back(tid);
     }
 
     wroteToTimeBuffer = false;
     _status = Inactive;
-
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        cacheDataPC[tid] = 0;
-        cacheDataValid[tid] = false;
-    }
 }
 
 template<class Impl>
@@ -373,8 +381,8 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
-    memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
-    cacheDataValid[tid] = true;
+    memcpy(fetchBuffer[tid], pkt->getPtr<uint8_t>(), fetchBufferSize);
+    fetchBufferValid[tid] = true;
 
     // Wake up the CPU (if it went to sleep and was waiting on
     // this completion event).
@@ -573,18 +581,19 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         return false;
     }
 
-    // Align the fetch address so it's at the start of a cache block.
-    Addr block_PC = icacheBlockAlignPC(vaddr);
+    // Align the fetch address to the start of a fetch buffer segment.
+    Addr fetchBufferBlockPC = fetchBufferAlignPC(vaddr);
 
     DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",
-            tid, block_PC, vaddr);
+            tid, fetchBufferBlockPC, vaddr);
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
     RequestPtr mem_req =
-        new Request(tid, block_PC, cacheBlkSize, Request::INST_FETCH,
-                    cpu->instMasterId(), pc, cpu->thread[tid]->contextId(), tid);
+        new Request(tid, fetchBufferBlockPC, fetchBufferSize,
+                    Request::INST_FETCH, cpu->instMasterId(), pc,
+                    cpu->thread[tid]->contextId(), tid);
 
     memReq[tid] = mem_req;
 
@@ -601,7 +610,7 @@ void
 DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 {
     ThreadID tid = mem_req->threadId();
-    Addr block_PC = mem_req->getVaddr();
+    Addr fetchBufferBlockPC = mem_req->getVaddr();
 
     assert(!cpu->switchedOut());
 
@@ -634,10 +643,10 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req, MemCmd::ReadReq);
-        data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
+        data_pkt->dataDynamicArray(new uint8_t[fetchBufferSize]);
 
-        cacheDataPC[tid] = block_PC;
-        cacheDataValid[tid] = false;
+        fetchBufferPC[tid] = fetchBufferBlockPC;
+        fetchBufferValid[tid] = false;
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
         fetchedCacheLines++;
@@ -1154,13 +1163,13 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = Running;
         status_change = true;
     } else if (fetchStatus[tid] == Running) {
-        // Align the fetch PC so its at the start of a cache block.
-        Addr block_PC = icacheBlockAlignPC(fetchAddr);
+        // Align the fetch PC so its at the start of a fetch buffer segment.
+        Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
 
         // If buffer is no longer valid or fetchAddr has moved to point
         // to the next cache block, AND we have no remaining ucode
         // from a macro-op, then start fetch from icache.
-        if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid])
+        if (!(fetchBufferValid[tid] && fetchBufferBlockPC == fetchBufferPC[tid])
             && !inRom && !macroop[tid]) {
             DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
                     "instruction, starting at PC %s.\n", tid, thisPC);
@@ -1211,10 +1220,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     bool predictedBranch = false;
 
     TheISA::MachInst *cacheInsts =
-        reinterpret_cast<TheISA::MachInst *>(cacheData[tid]);
+        reinterpret_cast<TheISA::MachInst *>(fetchBuffer[tid]);
 
-    const unsigned numInsts = cacheBlkSize / instSize;
-    unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
+    const unsigned numInsts = fetchBufferSize / instSize;
+    unsigned blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
 
     // Loop through instruction memory from the cache.
     // Keep issuing while fetchWidth is available and branch is not
@@ -1227,12 +1236,13 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         bool needMem = !inRom && !curMacroop &&
             !decoder[tid]->instReady();
         fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
-        Addr block_PC = icacheBlockAlignPC(fetchAddr);
+        Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
 
         if (needMem) {
             // If buffer is no longer valid or fetchAddr has moved to point
             // to the next cache block then start fetch from icache.
-            if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid])
+            if (!fetchBufferValid[tid] ||
+                fetchBufferBlockPC != fetchBufferPC[tid])
                 break;
 
             if (blkOffset >= numInsts) {
@@ -1328,7 +1338,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             if (newMacro) {
                 fetchAddr = thisPC.instAddr() & BaseCPU::PCMask;
-                blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
+                blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
                 pcOffset = 0;
                 curMacroop = NULL;
             }
@@ -1350,9 +1360,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     } else if (numInst >= fetchWidth) {
         DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
                 "for this cycle.\n", tid);
-    } else if (blkOffset >= cacheBlkSize) {
-        DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
-                "block.\n", tid);
+    } else if (blkOffset >= fetchBufferSize) {
+        DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of the"
+                "fetch buffer.\n", tid);
     }
 
     macroop[tid] = curMacroop;
@@ -1364,11 +1374,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     pc[tid] = thisPC;
 
-    // pipeline a fetch if we're crossing a cache boundary and not in
+    // pipeline a fetch if we're crossing a fetch buffer boundary and not in
     // a state that would preclude fetching
     fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
-    Addr block_PC = icacheBlockAlignPC(fetchAddr);
-    issuePipelinedIfetch[tid] = block_PC != cacheDataPC[tid] &&
+    Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
+    issuePipelinedIfetch[tid] = fetchBufferBlockPC != fetchBufferPC[tid] &&
         fetchStatus[tid] != IcacheWaitResponse &&
         fetchStatus[tid] != ItlbWait &&
         fetchStatus[tid] != IcacheWaitRetry &&
@@ -1575,11 +1585,11 @@ DefaultFetch<Impl>::pipelineIcacheAccesses(ThreadID tid)
     Addr pcOffset = fetchOffset[tid];
     Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
 
-    // Align the fetch PC so its at the start of a cache block.
-    Addr block_PC = icacheBlockAlignPC(fetchAddr);
+    // Align the fetch PC so its at the start of a fetch buffer segment.
+    Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
 
     // Unless buffer already got the block, fetch it from icache.
-    if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid])) {
+    if (!(fetchBufferValid[tid] && fetchBufferBlockPC == fetchBufferPC[tid])) {
         DPRINTF(Fetch, "[tid:%i]: Issuing a pipelined I-cache access, "
                 "starting at PC %s.\n", tid, thisPC);
 

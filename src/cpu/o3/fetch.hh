@@ -274,9 +274,9 @@ class DefaultFetch
     bool lookupAndUpdateNextPC(DynInstPtr &inst, TheISA::PCState &pc);
 
     /**
-     * Fetches the cache line that contains fetch_PC.  Returns any
+     * Fetches the cache line that contains the fetch PC.  Returns any
      * fault that happened.  Puts the data into the class variable
-     * cacheData.
+     * fetchBuffer, which may not hold the entire fetched cache line.
      * @param vaddr The memory address that is being fetched from.
      * @param ret_fault The fault reference that will be set to the result of
      * the icache access.
@@ -339,10 +339,10 @@ class DefaultFetch
      */
     void fetch(bool &status_change);
 
-    /** Align a PC to the start of an I-cache block. */
-    Addr icacheBlockAlignPC(Addr addr)
+    /** Align a PC to the start of a fetch buffer block. */
+    Addr fetchBufferAlignPC(Addr addr)
     {
-        return (addr & ~(cacheBlkMask));
+        return (addr & ~(fetchBufferMask));
     }
 
     /** The decoder. */
@@ -463,17 +463,22 @@ class DefaultFetch
     /** Cache block size. */
     unsigned int cacheBlkSize;
 
-    /** Mask to get a cache block's address. */
-    Addr cacheBlkMask;
+    /** The size of the fetch buffer in bytes. The fetch buffer
+     *  itself may be smaller than a cache line.
+     */
+    unsigned fetchBufferSize;
 
-    /** The cache line being fetched. */
-    uint8_t *cacheData[Impl::MaxThreads];
+    /** Mask to align a fetch address to a fetch buffer boundary. */
+    Addr fetchBufferMask;
 
-    /** The PC of the cacheline that has been loaded. */
-    Addr cacheDataPC[Impl::MaxThreads];
+    /** The fetch data that is being fetched and buffered. */
+    uint8_t *fetchBuffer[Impl::MaxThreads];
 
-    /** Whether or not the cache data is valid. */
-    bool cacheDataValid[Impl::MaxThreads];
+    /** The PC of the first instruction loaded into the fetch buffer. */
+    Addr fetchBufferPC[Impl::MaxThreads];
+
+    /** Whether or not the fetch buffer data is valid. */
+    bool fetchBufferValid[Impl::MaxThreads];
 
     /** Size of instructions. */
     int instSize;
