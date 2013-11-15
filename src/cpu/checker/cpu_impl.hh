@@ -607,10 +607,10 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
             thread->setIntReg(idx, mismatch_val);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx, mismatch_val);
+            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, mismatch_val);
             break;
           case CCRegClass:
-            thread->setCCReg(idx, mismatch_val);
+            thread->setCCReg(idx - TheISA::CC_Reg_Base, mismatch_val);
             break;
           case MiscRegClass:
             thread->setMiscReg(idx - TheISA::Misc_Reg_Base,
@@ -628,10 +628,10 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
             thread->setIntReg(idx, res);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx, res);
+            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, res);
             break;
           case CCRegClass:
-            thread->setCCReg(idx, res);
+            thread->setCCReg(idx - TheISA::CC_Reg_Base, res);
             break;
           case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
