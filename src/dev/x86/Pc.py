@@ -57,10 +57,9 @@ class Pc(Platform):
     behind_pci = IsaFake(pio_addr=x86IOAddress(0xcf8), pio_size=8)
 
     # Serial port and terminal
-    terminal = Terminal()
     com_1 = Uart8250()
     com_1.pio_addr = x86IOAddress(0x3f8)
-    com_1.terminal = terminal
+    com_1.terminal = Terminal()
 
     # Devices to catch access to non-existant serial ports.
     fake_com_2 = IsaFake(pio_addr=x86IOAddress(0x2f8), pio_size=8)

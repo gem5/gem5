@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,12 +84,13 @@
 %include "python/swig/pyevent.hh"
 
 // minimal definition of SimExitEvent interface to wrap
-class SimLoopExitEvent : public Event
+class GlobalSimLoopExitEvent
 {
   public:
     std::string getCause();
     int getCode();
-    SimLoopExitEvent(const std::string &_cause, int c, Tick _repeat = 0);
+    GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
+                           Tick _repeat = 0);
 };
 
 %exception simulate {
@@ -96,5 +99,8 @@ class SimLoopExitEvent : public Event
         return NULL;
     }
 }
-SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
+
+GlobalSimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
 void exitSimLoop(const std::string &message, int exit_code);
+void curEventQueue( EventQueue *);
+EventQueue *getEventQueue(uint32_t index);

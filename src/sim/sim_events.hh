@@ -12,6 +12,8 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,13 +45,13 @@
 #ifndef __SIM_SIM_EVENTS_HH__
 #define __SIM_SIM_EVENTS_HH__
 
-#include "sim/eventq.hh"
+#include "sim/global_event.hh"
 #include "sim/serialize.hh"
 
 //
 // Event to terminate simulation at a particular cycle/instruction
 //
-class SimLoopExitEvent : public Event
+class GlobalSimLoopExitEvent : public GlobalEvent
 {
   protected:
     // string explaining why we're terminating
@@ -59,12 +61,33 @@ class SimLoopExitEvent : public Event
 
   public:
     // non-scheduling version for createForUnserialize()
-    SimLoopExitEvent();
-    SimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0,
-                     bool serialize = false);
+    GlobalSimLoopExitEvent();
+    GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
+                           Tick repeat = 0, bool serialize = false);
 
-    std::string getCause() { return cause; }
-    int getCode() { return code; }
+    const std::string getCause() const { return cause; }
+    const int getCode() const { return code; }
+
+    void process();     // process event
+
+    virtual const char *description() const;
+};
+
+class LocalSimLoopExitEvent : public Event
+{
+  protected:
+    // string explaining why we're terminating
+    std::string cause;
+    int code;
+    Tick repeat;
+
+  public:
+    LocalSimLoopExitEvent();
+    LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0,
+                          bool serialize = false);
+
+    const std::string getCause() const { return cause; }
+    const int getCode() const { return code; }
 
     void process();     // process event
 
@@ -72,6 +95,8 @@ class SimLoopExitEvent : public Event
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void unserialize(Checkpoint *cp, const std::string &section,
+                             EventQueue *eventq);
     static Serializable *createForUnserialize(Checkpoint *cp,
                                               const std::string &section);
 };
@@ -89,7 +114,7 @@ class CountedDrainEvent : public Event
 
     void setCount(int _count) { count = _count; }
 
-    int getCount() { return count; }
+    const int getCount() const { return count; }
 };
 
 //

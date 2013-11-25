@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2000-2005 The Regents of The University of Michigan
  * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,13 +47,30 @@
 
 using namespace std;
 
+Tick simQuantum = 0;
+
 //
-// Main Event Queue
+// Main Event Queues
 //
-// Events on this queue are processed at the *beginning* of each
+// Events on these queues are processed at the *beginning* of each
 // cycle, before the pipeline simulation is performed.
 //
-EventQueue mainEventQueue("Main Event Queue");
+uint32_t numMainEventQueues = 0;
+vector<EventQueue *> mainEventQueue;
+__thread EventQueue *_curEventQueue = NULL;
+bool inParallelMode = false;
+
+EventQueue *
+getEventQueue(uint32_t index)
+{
+    while (numMainEventQueues <= index) {
+        numMainEventQueues++;
+        mainEventQueue.push_back(
+            new EventQueue(csprintf("MainEventQueue-%d", index)));
+    }
+
+    return mainEventQueue[index];
+}
 
 #ifndef NDEBUG
 Counter Event::instanceCounter = 0;
@@ -156,6 +174,8 @@ EventQueue::remove(Event *event)
     if (head == NULL)
         panic("event not found!");
 
+    assert(event->queue == this);
+
     // deal with an event on the head's 'in bin' list (event has the same
     // time as the head)
     if (*head == *event) {
@@ -232,8 +252,13 @@ Event::serialize(std::ostream &os)
 void
 Event::unserialize(Checkpoint *cp, const string &section)
 {
+}
+
+void
+Event::unserialize(Checkpoint *cp, const string &section, EventQueue *eventq)
+{
     if (scheduled())
-        mainEventQueue.deschedule(this);
+        eventq->deschedule(this);
 
     UNSERIALIZE_SCALAR(_when);
     UNSERIALIZE_SCALAR(_priority);
@@ -259,7 +284,7 @@ Event::unserialize(Checkpoint *cp, const string &section)
 
     if (wasScheduled) {
         DPRINTF(Config, "rescheduling at %d\n", _when);
-        mainEventQueue.schedule(this, _when);
+        eventq->schedule(this, _when);
     }
 }
 
@@ -388,7 +413,9 @@ EventQueue::replaceHead(Event* s)
 void
 dumpMainQueue()
 {
-    mainEventQueue.dump();
+    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
+        mainEventQueue[i]->dump();
+    }
 }
 
 
@@ -432,5 +459,29 @@ Event::dump() const
 }
 
 EventQueue::EventQueue(const string &n)
-    : objName(n), head(NULL), _curTick(0)
-{}
+    : objName(n), head(NULL), _curTick(0),
+    async_queue_mutex(new std::mutex())
+{
+}
+
+void
+EventQueue::asyncInsert(Event *event)
+{
+    async_queue_mutex->lock();
+    async_queue.push_back(event);
+    async_queue_mutex->unlock();
+}
+
+void
+EventQueue::handleAsyncInsertions()
+{
+    assert(this == curEventQueue());
+    async_queue_mutex->lock();
+
+    while (!async_queue.empty()) {
+        insert(async_queue.front());
+        async_queue.pop_front();
+    }
+
+    async_queue_mutex->unlock();
+}

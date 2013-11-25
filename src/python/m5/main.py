@@ -190,6 +190,10 @@ def main(*args):
 
         fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
+    # Set the main event queue for the main thread.
+    event.mainq = event.getEventQueue(0)
+    event.setEventQueue(event.mainq)
+
     if not os.path.isdir(options.outdir):
         os.makedirs(options.outdir)
 

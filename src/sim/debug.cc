@@ -37,6 +37,7 @@
 #include "base/debug.hh"
 #include "sim/debug.hh"
 #include "sim/eventq_impl.hh"
+#include "sim/global_event.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 
@@ -46,9 +47,9 @@ using namespace std;
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle
 //
-struct DebugBreakEvent : public Event
+struct DebugBreakEvent : public GlobalEvent
 {
-    DebugBreakEvent();
+    DebugBreakEvent(Tick when);
     void process();     // process event
     virtual const char *description() const;
 };
@@ -56,8 +57,8 @@ struct DebugBreakEvent : public Event
 //
 // constructor: schedule at specified time
 //
-DebugBreakEvent::DebugBreakEvent()
-    : Event(Debug_Break_Pri, AutoDelete)
+DebugBreakEvent::DebugBreakEvent(Tick when)
+    : GlobalEvent(when, Debug_Break_Pri, AutoDelete)
 {
 }
 
@@ -84,7 +85,7 @@ DebugBreakEvent::description() const
 void
 schedBreak(Tick when)
 {
-    mainEventQueue.schedule(new DebugBreakEvent, when);
+    new DebugBreakEvent(when);
     warn("need to stop all queues");
 }
 
@@ -102,8 +103,9 @@ takeCheckpoint(Tick when)
 void
 eventqDump()
 {
-    mainEventQueue.dump();
-    warn("need to dump all queues");
+    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
+        mainEventQueue[i]->dump();
+    }
 }
 
 void

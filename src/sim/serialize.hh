@@ -49,6 +49,7 @@ class IniFile;
 class Serializable;
 class Checkpoint;
 class SimObject;
+class EventQueue;
 
 /** The current version of the checkpoint format.
  * This should be incremented by 1 and only 1 for every new version, where a new

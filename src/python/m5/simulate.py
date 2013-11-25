@@ -147,6 +147,13 @@ def simulate(*args, **kwargs):
         for obj in root.descendants(): obj.startup()
         need_startup = False
 
+        # Python exit handlers happen in reverse order.
+        # We want to dump stats last.
+        atexit.register(stats.dump)
+
+        # register our C++ exit callback function with Python
+        atexit.register(internal.core.doExitCleanup)
+
     for root in need_resume:
         resume(root)
     need_resume = []
@@ -156,12 +163,6 @@ def simulate(*args, **kwargs):
 # Export curTick to user script.
 def curTick():
     return internal.core.curTick()
-
-# Python exit handlers happen in reverse order.  We want to dump stats last.
-atexit.register(stats.dump)
-
-# register our C++ exit callback function with Python
-atexit.register(internal.core.doExitCleanup)
 
 # Drain the system in preparation of a checkpoint or memory mode
 # switch.

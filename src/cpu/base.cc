@@ -13,6 +13,8 @@
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -569,7 +571,7 @@ void
 BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
 {
     const Tick now(comInstEventQueue[tid]->getCurTick());
-    Event *event(new SimLoopExitEvent(cause, 0));
+    Event *event(new LocalSimLoopExitEvent(cause, 0));
 
     comInstEventQueue[tid]->schedule(event, now + insts);
 }
@@ -578,7 +580,7 @@ void
 BaseCPU::scheduleLoadStop(ThreadID tid, Counter loads, const char *cause)
 {
     const Tick now(comLoadEventQueue[tid]->getCurTick());
-    Event *event(new SimLoopExitEvent(cause, 0));
+    Event *event(new LocalSimLoopExitEvent(cause, 0));
 
     comLoadEventQueue[tid]->schedule(event, now + loads);
 }

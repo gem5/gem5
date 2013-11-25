@@ -12,6 +12,8 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,53 +53,71 @@
 
 using namespace std;
 
-SimLoopExitEvent::SimLoopExitEvent()
-    : Event(Sim_Exit_Pri, IsExitEvent | AutoSerialize),
-      cause(""), code(0), repeat(0)
-{
-}
-
-SimLoopExitEvent::SimLoopExitEvent(const std::string &_cause, int c, Tick r,
-                                   bool serialize)
-    : Event(Sim_Exit_Pri, IsExitEvent | (serialize ? AutoSerialize : 0)),
+GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
+                                               const std::string &_cause,
+                                               int c, Tick r, bool serialize)
+    : GlobalEvent(when, Sim_Exit_Pri,
+                  IsExitEvent | (serialize ? AutoSerialize : 0)),
       cause(_cause), code(c), repeat(r)
 {
 }
 
+const char *
+GlobalSimLoopExitEvent::description() const
+{
+    return "global simulation loop exit";
+}
 
 //
 // handle termination event
 //
 void
-SimLoopExitEvent::process()
+GlobalSimLoopExitEvent::process()
 {
-    // if this got scheduled on a different queue (e.g. the committed
-    // instruction queue) then make a corresponding event on the main
-    // queue.
-    if (!isFlagSet(IsMainQueue)) {
-        exitSimLoop(cause, code);
-        setFlags(AutoDelete);
-    }
-
-    // otherwise do nothing... the IsExitEvent flag takes care of
-    // exiting the simulation loop and returning this object to Python
-
-    // but if you are doing this on intervals, don't forget to make another
     if (repeat) {
-        assert(isFlagSet(IsMainQueue));
-        mainEventQueue.schedule(this, curTick() + repeat);
+        schedule(curTick() + repeat);
     }
+}
+
+void
+exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
+            bool serialize)
+{
+    new GlobalSimLoopExitEvent(when + simQuantum, message, exit_code, repeat,
+                               serialize);
+}
+
+LocalSimLoopExitEvent::LocalSimLoopExitEvent()
+    : Event(Sim_Exit_Pri, IsExitEvent | AutoSerialize),
+      cause(""), code(0), repeat(0)
+{
+}
+
+LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
+                                   Tick r, bool serialize)
+    : Event(Sim_Exit_Pri, IsExitEvent | (serialize ? AutoSerialize : 0)),
+      cause(_cause), code(c), repeat(r)
+{
+}
+
+//
+// handle termination event
+//
+void
+LocalSimLoopExitEvent::process()
+{
+    exitSimLoop(cause, 0);
 }
 
 
 const char *
-SimLoopExitEvent::description() const
+LocalSimLoopExitEvent::description() const
 {
     return "simulation loop exit";
 }
 
 void
-SimLoopExitEvent::serialize(ostream &os)
+LocalSimLoopExitEvent::serialize(ostream &os)
 {
     paramOut(os, "type", string("SimLoopExitEvent"));
     Event::serialize(os);
@@ -108,7 +128,7 @@ SimLoopExitEvent::serialize(ostream &os)
 }
 
 void
-SimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
+LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
 
@@ -117,21 +137,25 @@ SimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(repeat);
 }
 
-Serializable *
-SimLoopExitEvent::createForUnserialize(Checkpoint *cp, const string &section)
-{
-    return new SimLoopExitEvent();
-}
-
-REGISTER_SERIALIZEABLE("SimLoopExitEvent", SimLoopExitEvent)
-
 void
-exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
-            bool serialize)
+LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section,
+                                   EventQueue *eventq)
 {
-    Event *event = new SimLoopExitEvent(message, exit_code, repeat, serialize);
-    mainEventQueue.schedule(event, when);
+    Event::unserialize(cp, section, eventq);
+
+    UNSERIALIZE_SCALAR(cause);
+    UNSERIALIZE_SCALAR(code);
+    UNSERIALIZE_SCALAR(repeat);
 }
+
+Serializable *
+LocalSimLoopExitEvent::createForUnserialize(Checkpoint *cp,
+                                            const string &section)
+{
+    return new LocalSimLoopExitEvent();
+}
+
+REGISTER_SERIALIZEABLE("LocalSimLoopExitEvent", LocalSimLoopExitEvent)
 
 //
 // constructor: automatically schedules at specified time

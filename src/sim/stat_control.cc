@@ -12,6 +12,8 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +55,7 @@
 #include "base/statistics.hh"
 #include "base/time.hh"
 #include "cpu/base.hh"
-#include "sim/eventq_impl.hh"
+#include "sim/global_event.hh"
 #include "sim/stat_control.hh"
 
 using namespace std;
@@ -68,7 +70,7 @@ namespace Stats {
 Time statTime(true);
 Tick startTick;
 
-Event *dumpEvent;
+GlobalEvent *dumpEvent;
 
 struct SimTicksReset : public Callback
 {
@@ -210,7 +212,7 @@ initSimStats()
 /**
  * Event to dump and/or reset the statistics.
  */
-class StatEvent : public Event
+class StatEvent : public GlobalEvent
 {
   private:
     bool dump;
@@ -218,8 +220,8 @@ class StatEvent : public Event
     Tick repeat;
 
   public:
-    StatEvent(bool _dump, bool _reset, Tick _repeat)
-        : Event(Stat_Event_Pri, AutoDelete),
+    StatEvent(Tick _when, bool _dump, bool _reset, Tick _repeat)
+        : GlobalEvent(_when, Stat_Event_Pri, 0),
           dump(_dump), reset(_reset), repeat(_repeat)
     {
     }
@@ -237,13 +239,18 @@ class StatEvent : public Event
             Stats::schedStatEvent(dump, reset, curTick() + repeat, repeat);
         }
     }
+
+    const char *description() const { return "GlobalStatEvent"; }
 };
 
 void
 schedStatEvent(bool dump, bool reset, Tick when, Tick repeat)
 {
-    dumpEvent = new StatEvent(dump, reset, repeat);
-    mainEventQueue.schedule(dumpEvent, when);
+    // simQuantum is being added to the time when the stats would be
+    // dumped so as to ensure that this event happens only after the next
+    // sync amongst the event queues.  Asingle event queue simulation
+    // should remain unaffected.
+    dumpEvent = new StatEvent(when + simQuantum, dump, reset, repeat);
 }
 
 void
@@ -258,7 +265,7 @@ periodicStatDump(Tick period)
      */
     if (dumpEvent != NULL && (period == 0 || dumpEvent->scheduled())) {
         // Event should AutoDelete, so we do not need to free it.
-        mainEventQueue.deschedule(dumpEvent);
+        dumpEvent->deschedule();
     }
 
     /*
@@ -288,7 +295,7 @@ updateEvents()
         (dumpEvent->scheduled() && dumpEvent->when() < curTick())) {
         // shift by curTick() and reschedule
         Tick _when = dumpEvent->when();
-        mainEventQueue.reschedule(dumpEvent, _when + curTick());
+        dumpEvent->reschedule(_when + curTick());
     }
 }
 

@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -456,8 +458,12 @@ Globals::serialize(ostream &os)
     nameOut(os);
     paramOut(os, "curTick", curTick());
 
-    nameOut(os, "MainEventQueue");
-    mainEventQueue.serialize(os);
+    paramOut(os, "numMainEventQueues", numMainEventQueues);
+
+    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
+        nameOut(os, "MainEventQueue");
+        mainEventQueue[i]->serialize(os);
+    }
 }
 
 void
@@ -465,9 +471,12 @@ Globals::unserialize(Checkpoint *cp, const std::string &section)
 {
     Tick tick;
     paramIn(cp, section, "curTick", tick);
-    mainEventQueue.setCurTick(tick);
+    paramIn(cp, section, "numMainEventQueues", numMainEventQueues);
 
-    mainEventQueue.unserialize(cp, "MainEventQueue");
+    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
+        mainEventQueue[i]->setCurTick(tick);
+        mainEventQueue[i]->unserialize(cp, "MainEventQueue");
+    }
 }
 
 Serializable::Serializable()

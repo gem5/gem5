@@ -1,4 +1,6 @@
 # Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
+# Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,9 +31,9 @@
 import m5
 import internal.event
 
-from internal.event import PythonEvent, SimLoopExitEvent as SimExit
+from internal.event import PythonEvent, GlobalSimLoopExitEvent as SimExit
 
-mainq = internal.event.cvar.mainEventQueue
+mainq = None
 
 def create(obj, priority=None):
     if priority is None:
@@ -57,5 +59,11 @@ class ProgressEvent(Event):
     def __call__(self):
         print "Progress! Time now %fs" % (m5.curTick()/1e12)
         self.eventq.schedule(self, m5.curTick() + self.period)
+
+def getEventQueue(index):
+    return internal.event.getEventQueue(index)
+
+def setEventQueue(eventq):
+    internal.event.curEventQueue(eventq)
 
 __all__ = [ 'create', 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]

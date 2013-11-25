@@ -112,6 +112,8 @@ Root::Root(RootParams *p) : SimObject(p), _enabled(false),
     assert(_root == NULL);
     _root = this;
     lastTime.setTimer();
+
+    simQuantum = p->sim_quantum;
 }
 
 void

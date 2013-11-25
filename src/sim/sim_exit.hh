@@ -39,8 +39,6 @@
 
 // forward declaration
 class Callback;
-class EventQueue;
-class SimLoopExitEvent;
 
 /// Register a callback to be called when Python exits.  Defined in
 /// sim/main.cc.

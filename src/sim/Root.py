@@ -1,5 +1,6 @@
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
-# Copyright (c) 2010 Advanced Micro Devices, Inc.
+# Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
+# Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -59,6 +60,14 @@ class Root(SimObject):
 
     type = 'Root'
     cxx_header = "sim/root.hh"
+
+    # By default, root sim object and hence all other sim objects schedule
+    # event on the eventq with index 0.
+    eventq_index = 0
+
+    # Simulation Quantum for multiple main event queue simulation.
+    # Needs to be set explicitly for a multi-eventq simulation.
+    sim_quantum = Param.Tick(0, "simulation quantum")
 
     full_system = Param.Bool("if this is a full system simulation")
 

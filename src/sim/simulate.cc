@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +31,9 @@
  *          Steve Reinhardt
  */
 
+#include <mutex>
+#include <thread>
+
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "base/types.hh"
@@ -39,14 +44,60 @@
 #include "sim/simulate.hh"
 #include "sim/stat_control.hh"
 
+//! Mutex for handling async events.
+std::mutex asyncEventMutex;
+
+//! Global barrier for synchronizing threads entering/exiting the
+//! simulation loop.
+Barrier *threadBarrier;
+
+//! forward declaration
+Event *doSimLoop(EventQueue *);
+
+/**
+ * The main function for all subordinate threads (i.e., all threads
+ * other than the main thread).  These threads start by waiting on
+ * threadBarrier.  Once all threads have arrived at threadBarrier,
+ * they enter the simulation loop concurrently.  When they exit the
+ * loop, they return to waiting on threadBarrier.  This process is
+ * repeated until the simulation terminates.
+ */
+static void
+thread_loop(EventQueue *queue)
+{
+    while (true) {
+        threadBarrier->wait();
+        doSimLoop(queue);
+    }
+}
+
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
  * (the default), do not limit simulation; some other event must
  * terminate the loop.  Exported to Python via SWIG.
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
-SimLoopExitEvent *
+GlobalSimLoopExitEvent *
 simulate(Tick num_cycles)
 {
+    // The first time simulate() is called from the Python code, we need to
+    // create a thread for each of event queues referenced by the
+    // instantiated sim objects.
+    static bool threads_initialized = false;
+    static std::vector<std::thread *> threads;
+
+    if (!threads_initialized) {
+        threadBarrier = new Barrier(numMainEventQueues);
+
+        // the main thread (the one we're currently running on)
+        // handles queue 0, so we only need to allocate new threads
+        // for queues 1..N-1.  We'll call these the "subordinate" threads.
+        for (uint32_t i = 1; i < numMainEventQueues; i++) {
+            threads.push_back(new std::thread(thread_loop, mainEventQueue[i]));
+        }
+
+        threads_initialized = true;
+    }
+
     inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
 
     if (num_cycles < MaxTick - curTick())
@@ -54,38 +105,99 @@ simulate(Tick num_cycles)
     else // counter would roll over or be set to MaxTick anyhow
         num_cycles = MaxTick;
 
-    Event *limit_event =
-        new SimLoopExitEvent("simulate() limit reached", 0);
-    mainEventQueue.schedule(limit_event, num_cycles);
+    GlobalEvent *limit_event = new GlobalSimLoopExitEvent(num_cycles,
+                                "simulate() limit reached", 0, 0);
+
+    GlobalSyncEvent *quantum_event = NULL;
+    if (numMainEventQueues > 1) {
+        if (simQuantum == 0) {
+            fatal("Quantum for multi-eventq simulation not specified");
+        }
+
+        quantum_event = new GlobalSyncEvent(simQuantum, simQuantum,
+                            EventBase::Progress_Event_Pri, 0);
+
+        inParallelMode = true;
+    }
+
+    // all subordinate (created) threads should be waiting on the
+    // barrier; the arrival of the main thread here will satisfy the
+    // barrier, and all threads will enter doSimLoop in parallel
+    threadBarrier->wait();
+    Event *local_event = doSimLoop(mainEventQueue[0]);
+    assert(local_event != NULL);
+
+    inParallelMode = false;
+
+    // locate the global exit event and return it to Python
+    BaseGlobalEvent *global_event = local_event->globalEvent();
+    assert(global_event != NULL);
+
+    GlobalSimLoopExitEvent *global_exit_event =
+        dynamic_cast<GlobalSimLoopExitEvent *>(global_event);
+    assert(global_exit_event != NULL);
+
+    // if we didn't hit limit_event, delete it.
+    if (global_exit_event != limit_event) {
+        assert(limit_event->scheduled());
+        limit_event->deschedule();
+        delete limit_event;
+    }
+
+    //! Delete the simulation quantum event.
+    if (quantum_event != NULL) {
+        quantum_event->deschedule();
+        delete quantum_event;
+    }
+
+    return global_exit_event;
+}
+
+/**
+ * Test and clear the global async_event flag, such that each time the
+ * flag is cleared, only one thread returns true (and thus is assigned
+ * to handle the corresponding async event(s)).
+ */
+static bool
+testAndClearAsyncEvent()
+{
+    bool was_set = false;
+    asyncEventMutex.lock();
+
+    if (async_event) {
+        was_set = true;
+        async_event = false;
+    }
+
+    asyncEventMutex.unlock();
+    return was_set;
+}
+
+/**
+ * The main per-thread simulation loop. This loop is executed by all
+ * simulation threads (the main thread and the subordinate threads) in
+ * parallel.
+ */
+Event *
+doSimLoop(EventQueue *eventq)
+{
+    // set the per thread current eventq pointer
+    curEventQueue(eventq);
+    eventq->handleAsyncInsertions();
 
     while (1) {
         // there should always be at least one event (the SimLoopExitEvent
         // we just scheduled) in the queue
-        assert(!mainEventQueue.empty());
-        assert(curTick() <= mainEventQueue.nextTick() &&
+        assert(!eventq->empty());
+        assert(curTick() <= eventq->nextTick() &&
                "event scheduled in the past");
 
-        Event *exit_event = mainEventQueue.serviceOne();
+        Event *exit_event = eventq->serviceOne();
         if (exit_event != NULL) {
-            // hit some kind of exit event; return to Python
-            // event must be subclass of SimLoopExitEvent...
-            SimLoopExitEvent *se_event;
-            se_event = dynamic_cast<SimLoopExitEvent *>(exit_event);
-
-            if (se_event == NULL)
-                panic("Bogus exit event class!");
-
-            // if we didn't hit limit_event, delete it
-            if (se_event != limit_event) {
-                assert(limit_event->scheduled());
-                limit_event->squash();
-                hack_once("be nice to actually delete the event here");
-            }
-
-            return se_event;
+            return exit_event;
         }
 
-        if (async_event) {
+        if (async_event && testAndClearAsyncEvent()) {
             async_event = false;
             if (async_statdump || async_statreset) {
                 Stats::schedStatEvent(async_statdump, async_statreset);
@@ -113,4 +225,3 @@ simulate(Tick num_cycles)
 
     // not reached... only exit is return on SimLoopExitEvent
 }
-

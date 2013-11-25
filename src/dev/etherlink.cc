@@ -142,7 +142,9 @@ class LinkDelayEvent : public Event
     void process();
 
     virtual void serialize(ostream &os);
-    virtual void unserialize(Checkpoint *cp, const string &section);
+    void unserialize(Checkpoint *cp, const string &section) {}
+    void unserialize(Checkpoint *cp, const string &section,
+                     EventQueue *eventq);
     static Serializable *createForUnserialize(Checkpoint *cp,
                                               const string &section);
 };
@@ -259,9 +261,10 @@ LinkDelayEvent::serialize(ostream &os)
 
 
 void
-LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
+LinkDelayEvent::unserialize(Checkpoint *cp, const string &section,
+                            EventQueue *eventq)
 {
-    Event::unserialize(cp, section);
+    Event::unserialize(cp, section, eventq);
 
     EtherLink *parent;
     bool number;

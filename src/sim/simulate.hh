@@ -32,4 +32,4 @@
 #include "base/types.hh"
 #include "sim/sim_events.hh"
 
-SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
+GlobalSimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
