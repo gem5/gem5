@@ -393,8 +393,8 @@
                     0x3, 0x4: ret_far_real();
                     default: Inst::RET_FAR();
                 }
-                0x4: int3();
-                0x5: decode FullSystemInt default int_Ib() {
+                0x4: Inst::INT3();
+                0x5: decode FullSystemInt default inst_ib() {
                     0: decode IMMEDIATE {
                         // Really only the LSB matters, but the decoder
                         // will sign extend it, and there's no easy way to
@@ -403,6 +403,8 @@
                             SyscallInst::int80('xc->syscall(Rax)',
                                  IsSyscall, IsNonSpeculative, IsSerializeAfter);
                     }
+
+                    default: Inst::INT(Ib);
                 }
                 0x6: decode MODE_SUBMODE {
                     0x0: Inst::UD2();

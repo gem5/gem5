@@ -221,6 +221,34 @@ skipSegmentSquashing:
 def macroop IRET_VIRT {
     panic "Virtual mode iret isn't implemented!"
 };
+
+def macroop INT3 {
+
+    limm t1, 0x03, dataSize=8
+
+    rdip t7
+
+    # Are we in long mode?
+    rdm5reg t5
+    andi t0, t5, 0x1, flags=(EZF,)
+    br rom_label("longModeSoftInterrupt"), flags=(CEZF,)
+    br rom_label("legacyModeInterrupt")
+};
+
+def macroop INT_I {
+
+    #load the byte-sized interrupt vector specified in the instruction
+    .adjust_imm trimImm(8)
+    limm t1, imm, dataSize=8
+
+    rdip t7
+
+    # Are we in long mode?
+    rdm5reg t5
+    andi t0, t5, 0x1, flags=(EZF,)
+    br rom_label("longModeSoftInterrupt"), flags=(CEZF,)
+    br rom_label("legacyModeInterrupt")
+};
 '''
 #let {{
 #    class INT(Inst):
