@@ -4,11 +4,11 @@ sim_seconds                                  5.112126                       # Nu
 sim_ticks                                5112126264500                       # Number of ticks simulated
 final_tick                               5112126264500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1904189                       # Simulator instruction rate (inst/s)
-host_op_rate                                  3898708                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            48689346278                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 587596                       # Number of bytes of host memory used
-host_seconds                                   104.99                       # Real time elapsed on the host
+host_inst_rate                                1049292                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2148359                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            26829969216                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 634884                       # Number of bytes of host memory used
+host_seconds                                   190.54                       # Real time elapsed on the host
 sim_insts                                   199929810                       # Number of instructions simulated
 sim_ops                                     409343850                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::pc.south_bridge.ide      2421184                       # Number of bytes read from this memory
@@ -107,7 +107,7 @@ system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                  
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
 system.iobus.throughput                       2555207                       # Throughput (bytes/s)
 system.iobus.data_through_bus                13062542                       # Total data (bytes)
-system.cpu.numCycles                      10224252551                       # number of cpu cycles simulated
+system.cpu.numCycles                      10224253904                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                   199929810                       # Number of instructions committed
@@ -127,8 +127,8 @@ system.cpu.num_cc_register_writes           157233555                       # nu
 system.cpu.num_mem_refs                      35660913                       # number of memory refs
 system.cpu.num_load_insts                    27238816                       # Number of load instructions
 system.cpu.num_store_insts                    8422097                       # Number of store instructions
-system.cpu.num_idle_cycles               9770516920.735764                       # Number of idle cycles
-system.cpu.num_busy_cycles               453735630.264235                       # Number of busy cycles
+system.cpu.num_idle_cycles               9770518213.691833                       # Number of idle cycles
+system.cpu.num_busy_cycles               453735690.308166                       # Number of busy cycles
 system.cpu.not_idle_fraction                 0.044378                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                     0.955622                       # Percentage of idle cycles
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed

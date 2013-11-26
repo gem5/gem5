@@ -4,11 +4,11 @@ sim_seconds                                  0.912097                       # Nu
 sim_ticks                                912096763500                       # Number of ticks simulated
 final_tick                               912096763500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1640213                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2111770                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            24275992963                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 394600                       # Number of bytes of host memory used
-host_seconds                                    37.57                       # Real time elapsed on the host
+host_inst_rate                                1031681                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1328287                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            15269405009                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 443324                       # Number of bytes of host memory used
+host_seconds                                    59.73                       # Real time elapsed on the host
 sim_insts                                    61625970                       # Number of instructions simulated
 sim_ops                                      79343340                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::realview.clcd     39321600                       # Number of bytes read from this memory
@@ -316,7 +316,7 @@ system.cpu0.itb.inst_accesses                30240979                       # IT
 system.cpu0.itb.hits                         30238804                       # DTB hits
 system.cpu0.itb.misses                           2175                       # DTB misses
 system.cpu0.itb.accesses                     30240979                       # DTB accesses
-system.cpu0.numCycles                      1823633059                       # number of cpu cycles simulated
+system.cpu0.numCycles                      1823671407                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu0.committedInsts                   29750005                       # Number of instructions committed
@@ -334,8 +334,8 @@ system.cpu0.num_fp_register_writes                916                       # nu
 system.cpu0.num_mem_refs                     14626951                       # number of memory refs
 system.cpu0.num_load_insts                    8357226                       # Number of load instructions
 system.cpu0.num_store_insts                   6269725                       # Number of store instructions
-system.cpu0.num_idle_cycles              1783968822.941743                       # Number of idle cycles
-system.cpu0.num_busy_cycles              39664236.058257                       # Number of busy cycles
+system.cpu0.num_idle_cycles              1784006336.868180                       # Number of idle cycles
+system.cpu0.num_busy_cycles              39665070.131821                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.021750                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.978250                       # Percentage of idle cycles
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
@@ -492,7 +492,7 @@ system.cpu1.itb.inst_accesses                32414506                       # IT
 system.cpu1.itb.hits                         32412306                       # DTB hits
 system.cpu1.itb.misses                           2200                       # DTB misses
 system.cpu1.itb.accesses                     32414506                       # DTB accesses
-system.cpu1.numCycles                      1824154149                       # number of cpu cycles simulated
+system.cpu1.numCycles                      1824193528                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu1.committedInsts                   31875965                       # Number of instructions committed
@@ -510,8 +510,8 @@ system.cpu1.num_fp_register_writes               1416                       # nu
 system.cpu1.num_mem_refs                     13370713                       # number of memory refs
 system.cpu1.num_load_insts                    7642673                       # Number of load instructions
 system.cpu1.num_store_insts                   5728040                       # Number of store instructions
-system.cpu1.num_idle_cycles              1783362859.317266                       # Number of idle cycles
-system.cpu1.num_busy_cycles              40791289.682734                       # Number of busy cycles
+system.cpu1.num_idle_cycles              1783401357.733683                       # Number of idle cycles
+system.cpu1.num_busy_cycles              40792170.266317                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.022362                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.977638                       # Percentage of idle cycles
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed

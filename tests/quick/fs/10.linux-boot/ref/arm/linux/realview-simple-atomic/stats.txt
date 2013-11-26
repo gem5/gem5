@@ -4,11 +4,11 @@ sim_seconds                                  2.332810                       # Nu
 sim_ticks                                2332810264000                       # Number of ticks simulated
 final_tick                               2332810264000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1754227                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2255827                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            67743178392                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 394608                       # Number of bytes of host memory used
-host_seconds                                    34.44                       # Real time elapsed on the host
+host_inst_rate                                 993135                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1277110                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            38352024586                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 443324                       # Number of bytes of host memory used
+host_seconds                                    60.83                       # Real time elapsed on the host
 sim_insts                                    60408639                       # Number of instructions simulated
 sim_ops                                      77681819                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::realview.clcd    111673344                       # Number of bytes read from this memory
@@ -114,7 +114,7 @@ system.cpu.itb.inst_accesses                 61436311                       # IT
 system.cpu.itb.hits                          61431840                       # DTB hits
 system.cpu.itb.misses                            4471                       # DTB misses
 system.cpu.itb.accesses                      61436311                       # DTB accesses
-system.cpu.numCycles                       4665543516                       # number of cpu cycles simulated
+system.cpu.numCycles                       4665620529                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                    60408639                       # Number of instructions committed
@@ -132,8 +132,8 @@ system.cpu.num_fp_register_writes                2780                       # nu
 system.cpu.num_mem_refs                      27361637                       # number of memory refs
 system.cpu.num_load_insts                    15639527                       # Number of load instructions
 system.cpu.num_store_insts                   11722110                       # Number of store instructions
-system.cpu.num_idle_cycles               4586746360.692756                       # Number of idle cycles
-system.cpu.num_busy_cycles               78797155.307244                       # Number of busy cycles
+system.cpu.num_idle_cycles               4586822073.007144                       # Number of idle cycles
+system.cpu.num_busy_cycles               78798455.992855                       # Number of busy cycles
 system.cpu.not_idle_fraction                 0.016889                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                     0.983111                       # Percentage of idle cycles
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed

@@ -4,11 +4,11 @@ sim_seconds                                  0.000021                       # Nu
 sim_ticks                                    21065000                       # Number of ticks simulated
 final_tick                                   21065000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  31290                       # Simulator instruction rate (inst/s)
-host_op_rate                                    31288                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              103426086                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 226120                       # Number of bytes of host memory used
-host_seconds                                     0.20                       # Real time elapsed on the host
+host_inst_rate                                  36663                       # Simulator instruction rate (inst/s)
+host_op_rate                                    36659                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              121177991                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 273132                       # Number of bytes of host memory used
+host_seconds                                     0.17                       # Real time elapsed on the host
 sim_insts                                        6372                       # Number of instructions simulated
 sim_ops                                          6372                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read::cpu.inst             20032                       # Number of bytes read from this memory
@@ -214,8 +214,8 @@ system.membus.reqLayer0.occupancy              619000                       # La
 system.membus.reqLayer0.utilization               2.9                       # Layer utilization (%)
 system.membus.respLayer1.occupancy            4556000                       # Layer occupancy (ticks)
 system.membus.respLayer1.utilization             21.6                       # Layer utilization (%)
-system.cpu.branchPred.lookups                    2884                       # Number of BP lookups
-system.cpu.branchPred.condPredicted              1698                       # Number of conditional branches predicted
+system.cpu.branchPred.lookups                    2883                       # Number of BP lookups
+system.cpu.branchPred.condPredicted              1697                       # Number of conditional branches predicted
 system.cpu.branchPred.condIncorrect               511                       # Number of conditional branches incorrect
 system.cpu.branchPred.BTBLookups                 2200                       # Number of BTB lookups
 system.cpu.branchPred.BTBHits                     756                       # Number of BTB hits
@@ -259,11 +259,11 @@ system.cpu.workload.num_syscalls                   17                       # Nu
 system.cpu.numCycles                            42131                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.fetch.icacheStallCycles               8530                       # Number of cycles fetch is stalled on an Icache miss
-system.cpu.fetch.Insts                          16561                       # Number of instructions fetch has processed
-system.cpu.fetch.Branches                        2884                       # Number of branches that fetch encountered
+system.cpu.fetch.icacheStallCycles               8531                       # Number of cycles fetch is stalled on an Icache miss
+system.cpu.fetch.Insts                          16553                       # Number of instructions fetch has processed
+system.cpu.fetch.Branches                        2883                       # Number of branches that fetch encountered
 system.cpu.fetch.predictedBranches               1172                       # Number of branches that fetch has predicted taken
-system.cpu.fetch.Cycles                          2964                       # Number of cycles fetch has run and was not squashing or blocked
+system.cpu.fetch.Cycles                          2963                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.SquashCycles                    1902                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.BlockedCycles                   1547                       # Number of cycles fetch has spent blocked
 system.cpu.fetch.MiscStallCycles                   25                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
@@ -271,24 +271,24 @@ system.cpu.fetch.PendingTrapStallCycles           747                       # Nu
 system.cpu.fetch.CacheLines                      2382                       # Number of cache lines fetched
 system.cpu.fetch.IcacheSquashes                   383                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.rateDist::samples              15113                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::mean              1.095812                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::stdev             2.493603                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::mean              1.095282                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::stdev             2.492986                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::underflows               0      0.00%      0.00% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::0                    12149     80.39%     80.39% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::1                      318      2.10%     82.49% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::2                      234      1.55%     84.04% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::0                    12150     80.39%     80.39% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::1                      318      2.10%     82.50% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::2                      234      1.55%     84.05% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::3                      214      1.42%     85.46% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::4                      255      1.69%     87.14% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::5                      240      1.59%     88.73% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::6                      264      1.75%     90.48% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::7                      183      1.21%     91.69% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::8                     1256      8.31%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::4                      255      1.69%     87.15% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::5                      240      1.59%     88.74% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::6                      264      1.75%     90.49% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::7                      183      1.21%     91.70% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::8                     1255      8.30%    100.00% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::overflows                0      0.00%    100.00% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::max_value                8                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::total                15113                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.branchRate                  0.068453                       # Number of branch fetches per cycle
-system.cpu.fetch.rate                        0.393083                       # Number of inst fetches per cycle
+system.cpu.fetch.branchRate                  0.068429                       # Number of branch fetches per cycle
+system.cpu.fetch.rate                        0.392894                       # Number of inst fetches per cycle
 system.cpu.decode.IdleCycles                     9345                       # Number of cycles decode is idle
 system.cpu.decode.BlockedCycles                  1711                       # Number of cycles decode is blocked
 system.cpu.decode.RunCycles                      2764                       # Number of cycles decode is running
