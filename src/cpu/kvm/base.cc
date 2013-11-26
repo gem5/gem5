@@ -79,7 +79,6 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       tickEvent(*this),
       activeInstPeriod(0),
       perfControlledByTimer(params->usePerfOverflow),
-      hostFreq(params->hostFreq),
       hostFactor(params->hostFactor),
       drainManager(NULL),
       ctrInsts(0)

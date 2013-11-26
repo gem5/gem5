@@ -719,9 +719,6 @@ class BaseKvmCPU : public BaseCPU
      */
     std::unique_ptr<BaseKvmTimer> runTimer;
 
-    /** Host frequency */
-    Tick hostFreq;
-
     /** Host factor as specified in the configuration */
     float hostFactor;
 
