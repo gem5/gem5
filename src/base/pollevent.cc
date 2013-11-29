@@ -109,7 +109,6 @@ PollQueue::PollQueue()
 
 PollQueue::~PollQueue()
 {
-    removeHandler();
     for (int i = 0; i < num_fds; i++)
         setupAsyncIO(poll_fds[0].fd, false);
 
@@ -170,7 +169,6 @@ PollQueue::schedule(PollEvent *event)
             max_size *= 2;
         } else {
             max_size = 16;
-            setupHandler();
         }
 
         poll_fds = new pollfd[max_size];
@@ -197,10 +195,6 @@ PollQueue::service()
     }
 }
 
-struct sigaction PollQueue::oldio;
-struct sigaction PollQueue::oldalrm;
-bool PollQueue::handler = false;
-
 void
 PollQueue::setupAsyncIO(int fd, bool set)
 {
@@ -221,59 +215,3 @@ PollQueue::setupAsyncIO(int fd, bool set)
     if (fcntl(fd, F_SETFL, flags) == -1)
         panic("Could not set up async IO");
 }
-
-void
-PollQueue::setupHandler()
-{
-    struct sigaction act;
-
-    act.sa_handler = handleIO;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = SA_RESTART;
-
-    if (sigaction(SIGIO, &act, &oldio) == -1)
-        panic("could not do sigaction");
-
-    act.sa_handler = handleALRM;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = SA_RESTART;
-
-    if (sigaction(SIGALRM, &act, &oldalrm) == -1)
-        panic("could not do sigaction");
-
-    alarm(1);
-
-    handler = true;
-}
-
-void
-PollQueue::removeHandler()
-{
-    if (sigaction(SIGIO, &oldio, NULL) == -1)
-        panic("could not remove handler");
-
-    if (sigaction(SIGIO, &oldalrm, NULL) == -1)
-        panic("could not remove handler");
-}
-
-void
-PollQueue::handleIO(int sig)
-{
-    if (sig != SIGIO)
-        panic("Wrong Handler");
-
-    async_event = true;
-    async_io = true;
-}
-
-void
-PollQueue::handleALRM(int sig)
-{
-    if (sig != SIGALRM)
-        panic("Wrong Handler");
-
-    async_event = true;
-    async_alarm = true;
-    alarm(1);
-}
-

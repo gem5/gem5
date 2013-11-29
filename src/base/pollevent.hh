@@ -83,17 +83,8 @@ class PollQueue
     void schedule(PollEvent *event);
     void service();
 
-  protected:
-    static bool handler;
-    static struct sigaction oldio;
-    static struct sigaction oldalrm;
-
   public:
     static void setupAsyncIO(int fd, bool set);
-    static void handleIO(int);
-    static void handleALRM(int);
-    static void removeHandler();
-    static void setupHandler();
 };
 
 extern PollQueue pollQueue;
