@@ -210,9 +210,8 @@ doSimLoop(EventQueue *eventq)
                 exitSimLoop("user interrupt received");
             }
 
-            if (async_io || async_alarm) {
+            if (async_io) {
                 async_io = false;
-                async_alarm = false;
                 pollQueue.service();
             }
 

@@ -40,14 +40,12 @@
 /// @name Asynchronous event flags.
 /// To avoid races, signal handlers simply set these flags, which are
 /// then checked in the main event loop.  Defined in main.cc.
-/// @note See the PollQueue object (in pollevent.hh) for the use of async_io and async_alarm.
 //@{
 extern volatile bool async_event;       ///< Some asynchronous event has happened.
 extern volatile bool async_statdump;    ///< Async request to dump stats.
 extern volatile bool async_statreset;   ///< Async request to reset stats.
 extern volatile bool async_exit;        ///< Async request to exit simulator.
 extern volatile bool async_io;          ///< Async I/O request (SIGIO).
-extern volatile bool async_alarm;       ///< Async alarm event (SIGALRM).
 extern volatile bool async_exception;   ///< Python exception.
 //@}
 

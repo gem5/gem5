@@ -104,15 +104,6 @@ ioHandler(int sigtype)
     async_io = true;
 }
 
-// Handle SIGALRM
-static void
-alrmHandler(int sigtype)
-{
-    async_event = true;
-    async_alarm = true;
-    alarm(1);
-}
-
 static void
 installSignalHandler(int signal, void (*handler)(int sigtype))
 {
@@ -156,15 +147,6 @@ initSignals()
     // Install a SIGIO handler to handle asynchronous file IO. See the
     // PollQueue class.
     installSignalHandler(SIGIO, ioHandler);
-
-    // Setup an alarm handler that triggers every second. This
-    // triggers a PollQueue service just like a SIGIO. It is
-    // /probably/ used to work around a bug in the poll queue (likely
-    // a race between setting up a asynchronous IO and data becoming
-    // available), but its use isn't documented anywhere.
-    // TODO: Find out why this is needed and fix the original bug.
-    installSignalHandler(SIGALRM, alrmHandler);
-    alarm(1);
 }
 
 // The python library is totally messed up with respect to constness,

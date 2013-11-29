@@ -214,4 +214,14 @@ PollQueue::setupAsyncIO(int fd, bool set)
 
     if (fcntl(fd, F_SETFL, flags) == -1)
         panic("Could not set up async IO");
+
+    // The file descriptor might already have events pending. We won't
+    // see them if they occurred before we set the FASYNC
+    // flag. Simulate a SIGIO to ensure that the FD will be polled in
+    // next iteration of the simulation loop. We could just poll it,
+    // but this is much simpler.
+    if (set) {
+        async_event = true;
+        async_io = true;
+    }
 }
