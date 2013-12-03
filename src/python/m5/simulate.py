@@ -134,9 +134,6 @@ def instantiate(ckpt_dir=None):
     # a checkpoint, If so, this call will shift them to be at a valid time.
     updateStatEvents()
 
-    # Reset to put the stats in a consistent state.
-    stats.reset()
-
 need_resume = []
 need_startup = True
 def simulate(*args, **kwargs):
@@ -153,6 +150,9 @@ def simulate(*args, **kwargs):
 
         # register our C++ exit callback function with Python
         atexit.register(internal.core.doExitCleanup)
+
+        # Reset to put the stats in a consistent state.
+        stats.reset()
 
     for root in need_resume:
         resume(root)
