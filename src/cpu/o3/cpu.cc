@@ -674,6 +674,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::startup()
 {
+    BaseCPU::startup();
     for (int tid = 0; tid < numThreads; ++tid)
         isa[tid]->startup(threadContexts[tid]);
 
