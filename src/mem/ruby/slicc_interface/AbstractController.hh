@@ -145,8 +145,8 @@ class AbstractController : public ClockedObject, public Consumer
     typedef std::vector<MessageBuffer*> MsgVecType;
     typedef std::map< Address, MsgVecType* > WaitingBufType;
     WaitingBufType m_waiting_buffers;
-    int m_max_in_port_rank;
-    int m_cur_in_port_rank;
+    unsigned int m_in_ports;
+    unsigned int m_cur_in_port;
     int m_number_of_TBEs;
 
     //! Map from physical network number to the Message Buffer.

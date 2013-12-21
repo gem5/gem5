@@ -30,8 +30,6 @@ from slicc.ast.TypeAST import TypeAST
 from slicc.symbols import Func, Type, Var
 
 class InPortDeclAST(DeclAST):
-    max_port_rank = 0
-    
     def __init__(self, slicc, ident, msg_type, var_expr, pairs, statements):
         super(InPortDeclAST, self).__init__(slicc, pairs)
 
@@ -40,9 +38,6 @@ class InPortDeclAST(DeclAST):
         self.var_expr = var_expr
         self.statements = statements
         self.queue_type = TypeAST(slicc, "InPort")
-        if self.pairs.has_key("rank"):
-            InPortDeclAST.max_port_rank = max(self.pairs["rank"],
-                                              InPortDeclAST.max_port_rank)
 
     def __repr__(self):
         return "[InPortDecl: %s]" % self.ident
@@ -120,6 +115,3 @@ class InPortDeclAST(DeclAST):
 
         # Add port to state machine
         machine.addInPort(in_port)
-
-        # Include max_rank to be used by StateMachine.py
-        in_port["max_port_rank"] = InPortDeclAST.max_port_rank

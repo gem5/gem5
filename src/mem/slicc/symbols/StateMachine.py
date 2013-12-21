@@ -460,12 +460,8 @@ $c_ident::$c_ident(const Params *p)
 {
     m_name = "${ident}";
 ''')
-        #
-        # max_port_rank is used to size vectors and thus should be one plus the
-        # largest port rank
-        #
-        max_port_rank = self.in_ports[0].pairs["max_port_rank"] + 1
-        code('    m_max_in_port_rank = $max_port_rank;')
+        num_in_ports = len(self.in_ports)
+        code('    m_in_ports = $num_in_ports;')
         code.indent()
 
         #
@@ -1104,9 +1100,9 @@ ${ident}_Controller::wakeup()
             code.indent()
             code('// ${ident}InPort $port')
             if port.pairs.has_key("rank"):
-                code('m_cur_in_port_rank = ${{port.pairs["rank"]}};')
+                code('m_cur_in_port = ${{port.pairs["rank"]}};')
             else:
-                code('m_cur_in_port_rank = 0;')
+                code('m_cur_in_port = 0;')
             code('${{port["c_code_in_port"]}}')
             code.dedent()
 
