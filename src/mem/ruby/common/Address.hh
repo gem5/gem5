@@ -60,11 +60,11 @@ class Address
     void setAddress(physical_address_t address) { m_address = address; }
     physical_address_t getAddress() const {return m_address;}
     // selects bits inclusive
-    physical_address_t bitSelect(int small, int big) const;
-    physical_address_t bitRemove(int small, int big) const;
-    physical_address_t maskLowOrderBits(int number) const;
-    physical_address_t maskHighOrderBits(int number) const;
-    physical_address_t shiftLowOrderBits(int number) const;
+    physical_address_t bitSelect(unsigned int small, unsigned int big) const;
+    physical_address_t bitRemove(unsigned int small, unsigned int big) const;
+    physical_address_t maskLowOrderBits(unsigned int number) const;
+    physical_address_t maskHighOrderBits(unsigned int number) const;
+    physical_address_t shiftLowOrderBits(unsigned int number) const;
 
     physical_address_t getLineAddress() const;
     physical_address_t getOffset() const;
@@ -126,10 +126,10 @@ operator!=(const Address& obj1, const Address& obj2)
 
 // rips bits inclusive
 inline physical_address_t
-Address::bitSelect(int small, int big) const
+Address::bitSelect(unsigned int small, unsigned int big) const
 {
     physical_address_t mask;
-    assert((unsigned)big >= (unsigned)small);
+    assert(big >= small);
 
     if (big >= ADDRESS_WIDTH - 1) {
         return (m_address >> small);
@@ -143,10 +143,10 @@ Address::bitSelect(int small, int big) const
 
 // removes bits inclusive
 inline physical_address_t
-Address::bitRemove(int small, int big) const
+Address::bitRemove(unsigned int small, unsigned int big) const
 {
     physical_address_t mask;
-    assert((unsigned)big >= (unsigned)small);
+    assert(big >= small);
 
     if (small >= ADDRESS_WIDTH - 1) {
         return m_address;
@@ -169,7 +169,7 @@ Address::bitRemove(int small, int big) const
 }
 
 inline physical_address_t
-Address::maskLowOrderBits(int number) const
+Address::maskLowOrderBits(unsigned int number) const
 {
   physical_address_t mask;
 
@@ -182,7 +182,7 @@ Address::maskLowOrderBits(int number) const
 }
 
 inline physical_address_t
-Address::maskHighOrderBits(int number) const
+Address::maskHighOrderBits(unsigned int number) const
 {
     physical_address_t mask;
 
@@ -195,7 +195,7 @@ Address::maskHighOrderBits(int number) const
 }
 
 inline physical_address_t
-Address::shiftLowOrderBits(int number) const
+Address::shiftLowOrderBits(unsigned int number) const
 {
     return (m_address >> number);
 }
