@@ -174,6 +174,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                                              use_map =
                                                            options.use_map),
                                          memBuffer = mem_cntrl,
+                                         l2_select_num_bits = l2_bits,
                                          transitions_per_cycle = options.ports,
                                          ruby_system = ruby_system)
 
