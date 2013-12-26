@@ -39,14 +39,20 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 {
   // L2 BANK QUEUES
   // From local bank of L2 cache TO the network
-  MessageBuffer DirRequestFromL2Cache, network="To", virtual_network="0", ordered="false", vnet_type="request";  // this L2 bank -> Memory
-  MessageBuffer L1RequestFromL2Cache, network="To", virtual_network="0", ordered="false", vnet_type="request";  // this L2 bank -> a local L1
-  MessageBuffer responseFromL2Cache, network="To", virtual_network="1", ordered="false", vnet_type="response";  // this L2 bank -> a local L1 || Memory
+  MessageBuffer DirRequestFromL2Cache, network="To", virtual_network="0",
+    ordered="false", vnet_type="request";  // this L2 bank -> Memory
+  MessageBuffer L1RequestFromL2Cache, network="To", virtual_network="0",
+    ordered="false", vnet_type="request";  // this L2 bank -> a local L1
+  MessageBuffer responseFromL2Cache, network="To", virtual_network="1",
+    ordered="false", vnet_type="response";  // this L2 bank -> a local L1 || Memory
 
   // FROM the network to this local bank of L2 cache
-  MessageBuffer unblockToL2Cache, network="From", virtual_network="2", ordered="false", vnet_type="unblock";  // a local L1 || Memory -> this L2 bank
-  MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0", ordered="false", vnet_type="request";  // a local L1 -> this L2 bank
-  MessageBuffer responseToL2Cache, network="From", virtual_network="1", ordered="false", vnet_type="response";  // a local L1 || Memory -> this L2 bank
+  MessageBuffer unblockToL2Cache, network="From", virtual_network="2",
+    ordered="false", vnet_type="unblock";  // a local L1 || Memory -> this L2 bank
+  MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0",
+    ordered="false", vnet_type="request";  // a local L1 -> this L2 bank
+  MessageBuffer responseToL2Cache, network="From", virtual_network="1",
+    ordered="false", vnet_type="response";  // a local L1 || Memory -> this L2 bank
 
   // STATES
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
@@ -91,10 +97,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     L1_PUTX,                 desc="L1 replacing data";
     L1_PUTX_old,             desc="L1 replacing data, but no longer sharer";
 
-    Fwd_L1_GETX,             desc="L1 did not have data, so we supply";
-    Fwd_L1_GETS,             desc="L1 did not have data, so we supply";
-    Fwd_L1_GET_INSTR,             desc="L1 did not have data, so we supply";
-
     // events initiated by this L2
     L2_Replacement,     desc="L2 Replacement", format="!r";
     L2_Replacement_clean,     desc="L2 Replacement, but data is clean", format="!r";
@@ -110,11 +112,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     Ack_all,      desc="writeback ack";
 
     Unblock, desc="Unblock from L1 requestor";
-    Unblock_Cancel, desc="Unblock from L1 requestor (FOR XACT MEMORY)";
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
     MEM_Inv, desc="Invalidation from directory";
-
   }
 
   // TYPES
@@ -137,8 +137,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
     NetDest L1_GetS_IDs,            desc="Set of the internal processors that want the block in shared state";
     MachineID L1_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
-    bool isPrefetch,            desc="Set if this was caused by a prefetch";
-
     int pendingAcks,            desc="number of pending acks for invalidates during writeback";
   }
 
@@ -161,16 +159,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   // inclusive cache, returns L2 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L2cache[addr]);
-  }
-
-  std::string getCoherenceRequestTypeStr(CoherenceRequestType type) {
-    return CoherenceRequestType_to_string(type);
-  }
-
-  bool isOneSharerLeft(Address addr, MachineID requestor, Entry cache_entry) {
-    assert(is_valid(cache_entry));
-    assert(cache_entry.Sharers.isElement(requestor));
-    return (cache_entry.Sharers.count() == 1);
   }
 
   bool isSharer(Address addr, MachineID requestor, Entry cache_entry) {
@@ -197,12 +185,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     return State:NP;
   }
 
-  std::string getStateStr(TBE tbe, Entry cache_entry, Address addr) {
-    return L2Cache_State_to_string(getState(tbe, cache_entry, addr));
-  }
-
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
-
     // MUST CHANGE
     if (is_valid(tbe)) {
       tbe.TBEState := state;
@@ -336,13 +319,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
         } else { // external message
           if(in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
-              // L2 now has data and all off-chip acks
               trigger(Event:Mem_Data, in_msg.Addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:MEMORY_ACK) {
-              // L2 now has data and all off-chip acks
               trigger(Event:Mem_Ack, in_msg.Addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:INV) {
-              // L2 now has data and all off-chip acks
               trigger(Event:MEM_Inv, in_msg.Addr, cache_entry, tbe);
           } else {
             error("unknown message type");
@@ -466,7 +446,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
 
         out_msg.AckCount := 0 - cache_entry.Sharers.count();
@@ -486,7 +465,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
 
         out_msg.AckCount := 0 - cache_entry.Sharers.count();
@@ -506,7 +484,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.AckCount := 0;
       }
@@ -523,7 +500,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Sender := machineID;
       out_msg.Destination := tbe.L1_GetS_IDs;  // internal nodes
       out_msg.DataBlk := cache_entry.DataBlk;
-      out_msg.Dirty := cache_entry.Dirty;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
@@ -538,7 +514,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Sender := machineID;
       out_msg.Destination := tbe.L1_GetS_IDs;  // internal nodes
       out_msg.DataBlk := cache_entry.DataBlk;
-      out_msg.Dirty := cache_entry.Dirty;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
@@ -553,7 +528,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Destination.add(tbe.L1_GetX_ID);
       DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
       out_msg.DataBlk := cache_entry.DataBlk;
-      out_msg.Dirty := cache_entry.Dirty;
       DPRINTF(RubySlicc, "Address: %s, Destination: %s, DataBlock: %s\n",
               out_msg.Addr, out_msg.Destination, out_msg.DataBlk);
       out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -599,7 +573,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   // OTHER ACTIONS
-  action(i_allocateTBE, "i", desc="Allocate TBE for internal/external request(isPrefetch=0, number of invalidates=0)") {
+  action(i_allocateTBE, "i", desc="Allocate TBE for request") {
     check_allocate(L2_TBEs);
     assert(is_valid(cache_entry));
     L2_TBEs.allocate(address);
@@ -631,7 +605,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     peek(responseIntraChipL2Network_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
+      if (in_msg.Dirty) {
+        cache_entry.Dirty := in_msg.Dirty;
+      }
     }
   }
 
@@ -639,7 +615,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
+      if (in_msg.Dirty) {
+        cache_entry.Dirty := in_msg.Dirty;
+      }
     }
   }
 
@@ -659,9 +637,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       tbe.DataBlk := in_msg.DataBlk;
       tbe.Dirty := in_msg.Dirty;
     }
-  }
-
-  action(z_stall, "z", desc="Stall") {
   }
 
   action(ss_recordGetSL1ID, "\s", desc="Record L1 GetS for load response") {
@@ -726,12 +701,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
       ++L2cache.demand_hits;
-  }
-
-  action(ww_profileMissNoDir, "\w", desc="Profile this transition at the L2 because Dir won't see the request") {
-    peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      // profile_request(in_msg.L1CacheStateStr, getStateStr(address), "NA", getCoherenceRequestTypeStr(in_msg.Type));
-    }
   }
 
   action(nn_addSharer, "\n", desc="Add L1 sharer to list") {
@@ -820,7 +789,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     zn_recycleResponseNetwork;
   }
 
-  transition({S_I, M_I, MT_I}, MEM_Inv) {
+  transition({I_I, S_I, M_I, MT_I, MCT_I, NP}, MEM_Inv) {
     o_popIncomingResponseQueue;
   }
 
@@ -1014,23 +983,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
 
-
-  // transitions from blocking states
-  transition(SS_MB, Unblock_Cancel, SS) {
-    k_popUnblockQueue;
-    kd_wakeUpDependents;
-  }
-
-  transition(MT_MB, Unblock_Cancel, MT) {
-    k_popUnblockQueue;
-    kd_wakeUpDependents;
-  }
-
-  transition(MT_IB, Unblock_Cancel, MT) {
-    k_popUnblockQueue;
-    kd_wakeUpDependents;
-  }
-
   transition({SS_MB,MT_MB}, Exclusive_Unblock, MT) {
     // update actual directory
     mmu_markExclusiveFromUnblock;
@@ -1095,7 +1047,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   // L1 never changed Dirty data
-  transition(MT_I, Ack_all, M_I) {
+  transition(MT_I, {WB_Data_clean, Ack_all}, M_I) {
     ct_exclusiveReplacementFromTBE;
     o_popIncomingResponseQueue;
   }
@@ -1107,12 +1059,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   // possible race between unblock and immediate replacement
   transition({MT_MB,SS_MB}, {L1_PUTX, L1_PUTX_old}) {
     zz_stallAndWaitL1RequestQueue;
-  }
-
-  transition(MT_I, WB_Data_clean, NP) {
-    s_deallocateTBE;
-    o_popIncomingResponseQueue;
-    kd_wakeUpDependents;
   }
 
   transition(S_I, Ack) {
