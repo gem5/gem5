@@ -1,77 +1,77 @@
 
 ---------- Begin Simulation Statistics ----------
-sim_seconds                                  5.303604                       # Number of seconds simulated
-sim_ticks                                5303604289000                       # Number of ticks simulated
-final_tick                               5303604289000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_seconds                                  5.300436                       # Number of seconds simulated
+sim_ticks                                5300435735500                       # Number of ticks simulated
+final_tick                               5300435735500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 170166                       # Simulator instruction rate (inst/s)
-host_op_rate                                   326512                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8335943745                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 875260                       # Number of bytes of host memory used
-host_seconds                                   636.23                       # Real time elapsed on the host
-sim_insts                                   108265301                       # Number of instructions simulated
-sim_ops                                     207738037                       # Number of ops (including micro ops) simulated
-system.physmem.bytes_read::pc.south_bridge.ide        35128                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.dtb.walker        87544                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.itb.walker        33280                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.inst        839536560                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.data         65163112                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.dtb.walker       137640                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.itb.walker        74624                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.inst        188924512                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.data         31786983                       # Number of bytes read from this memory
-system.physmem.bytes_read::total           1125779383                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read::cpu0.inst    839536560                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::cpu1.inst    188924512                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::total      1028461072                       # Number of instructions bytes read from this memory
+host_inst_rate                                 137756                       # Simulator instruction rate (inst/s)
+host_op_rate                                   264143                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             6834713129                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 828636                       # Number of bytes of host memory used
+host_seconds                                   775.52                       # Real time elapsed on the host
+sim_insts                                   106831806                       # Number of instructions simulated
+sim_ops                                     204847037                       # Number of ops (including micro ops) simulated
+system.physmem.bytes_read::pc.south_bridge.ide        35184                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.dtb.walker       121960                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.itb.walker        61480                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.inst        542427168                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.data         38705697                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.dtb.walker       101016                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.itb.walker        45856                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.inst        470385848                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.data         54943175                       # Number of bytes read from this memory
+system.physmem.bytes_read::total           1106827384                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu0.inst    542427168                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::cpu1.inst    470385848                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total      1012813016                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written::pc.south_bridge.ide      2991104                       # Number of bytes written to this memory
 system.physmem.bytes_written::cpu0.itb.walker           16                       # Number of bytes written to this memory
-system.physmem.bytes_written::cpu0.data      45585342                       # Number of bytes written to this memory
-system.physmem.bytes_written::cpu1.data      24372608                       # Number of bytes written to this memory
-system.physmem.bytes_written::total          72949070                       # Number of bytes written to this memory
-system.physmem.num_reads::pc.south_bridge.ide          807                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.dtb.walker        10943                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.itb.walker         4160                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.inst         104942070                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.data          11447211                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.dtb.walker        17205                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.itb.walker         9328                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.inst          23615564                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.data           4748353                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total             144795641                       # Number of read requests responded to by this memory
+system.physmem.bytes_written::cpu0.data      31534134                       # Number of bytes written to this memory
+system.physmem.bytes_written::cpu1.data      36447890                       # Number of bytes written to this memory
+system.physmem.bytes_written::total          70973144                       # Number of bytes written to this memory
+system.physmem.num_reads::pc.south_bridge.ide          814                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.dtb.walker        15245                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.itb.walker         7685                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.inst          67803396                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.data           6494255                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.dtb.walker        12627                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.itb.walker         5732                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.inst          58798231                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.data           9219516                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total             142357501                       # Number of read requests responded to by this memory
 system.physmem.num_writes::pc.south_bridge.ide        46736                       # Number of write requests responded to by this memory
 system.physmem.num_writes::cpu0.itb.walker            2                       # Number of write requests responded to by this memory
-system.physmem.num_writes::cpu0.data          6738169                       # Number of write requests responded to by this memory
-system.physmem.num_writes::cpu1.data          3365460                       # Number of write requests responded to by this memory
-system.physmem.num_writes::total             10150367                       # Number of write requests responded to by this memory
-system.physmem.bw_read::pc.south_bridge.ide         6623                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.dtb.walker         16507                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.itb.walker          6275                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.inst           158295475                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.data            12286571                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.dtb.walker         25952                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.itb.walker         14070                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.inst            35621909                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.data             5993468                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total               212266851                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu0.inst      158295475                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu1.inst       35621909                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total          193917384                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write::pc.south_bridge.ide       563976                       # Write bandwidth from this memory (bytes/s)
+system.physmem.num_writes::cpu0.data          4739560                       # Number of write requests responded to by this memory
+system.physmem.num_writes::cpu1.data          5091370                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total              9877668                       # Number of write requests responded to by this memory
+system.physmem.bw_read::pc.south_bridge.ide         6638                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.dtb.walker         23009                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.itb.walker         11599                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.inst           102336335                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.data             7302361                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.dtb.walker         19058                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.itb.walker          8651                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.inst            88744751                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.data            10365785                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total               208818188                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu0.inst      102336335                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu1.inst       88744751                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total          191081086                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::pc.south_bridge.ide       564313                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_write::cpu0.itb.walker            3                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu0.data            8595163                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu1.data            4595480                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::total               13754622                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total::pc.south_bridge.ide       570599                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.dtb.walker        16507                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.itb.walker         6278                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.inst          158295475                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.data           20881734                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.dtb.walker        25952                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.itb.walker        14070                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.inst           35621909                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.data           10588948                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total              226021473                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_write::cpu0.data            5949347                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu1.data            6876395                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total               13390058                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::pc.south_bridge.ide       570951                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.dtb.walker        23009                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.itb.walker        11602                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.inst          102336335                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.data           13251709                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.dtb.walker        19058                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.itb.walker         8651                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.inst           88744751                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.data           17242180                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total              222208246                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.readReqs                             0                       # Number of read requests accepted
 system.physmem.writeReqs                            0                       # Number of write requests accepted
 system.physmem.readBursts                           0                       # Number of DRAM read bursts, including those serviced by the write queue
@@ -225,115 +225,119 @@ system.physmem.writeRowHitRate                    nan                       # Ro
 system.physmem.avgGap                             nan                       # Average gap between requests
 system.physmem.pageHitRate                        nan                       # Row buffer hit rate, read and write combined
 system.physmem.prechargeAllPercent               0.00                       # Percentage of time for which DRAM has all the banks in precharge state
-system.piobus.throughput                       388759                       # Throughput (bytes/s)
-system.piobus.trans_dist::ReadReq              864194                       # Transaction distribution
-system.piobus.trans_dist::ReadResp             864194                       # Transaction distribution
-system.piobus.trans_dist::WriteReq              40126                       # Transaction distribution
-system.piobus.trans_dist::WriteResp             40126                       # Transaction distribution
-system.piobus.trans_dist::MessageReq             2700                       # Transaction distribution
-system.piobus.trans_dist::MessageResp            2700                       # Transaction distribution
-system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         1702                       # Packet count per connected master and slave (bytes)
+system.piobus.throughput                       386047                       # Throughput (bytes/s)
+system.piobus.trans_dist::ReadReq              863424                       # Transaction distribution
+system.piobus.trans_dist::ReadResp             863424                       # Transaction distribution
+system.piobus.trans_dist::WriteReq              37806                       # Transaction distribution
+system.piobus.trans_dist::WriteResp             37806                       # Transaction distribution
+system.piobus.trans_dist::MessageReq             1919                       # Transaction distribution
+system.piobus.trans_dist::MessageResp            1919                       # Transaction distribution
+system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         1700                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.cpu1.interrupts.int_slave         1644                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3346                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           52                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         5756                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf          180                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          988                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3344                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           36                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         5246                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           88                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          956                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic1.pio           78                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           46                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           38                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.speaker.pio       938970                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio         1014                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio          178                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          984                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio           90                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio        20120                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio       751828                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio        14276                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio       748688                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.pciconfig.pio         2126                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::total      1721420                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         5240                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          376                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl0.sequencer-pio-port::total      1711608                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.cmos.pio           16                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         5796                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           92                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          408                       # Packet count per connected master and slave (bytes)
 system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic1.pio           16                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio            8                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        33180                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          340                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        33180                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio         6556                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio         8324                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::total        87220                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave         1032                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.cpu0.interrupts.int_master::total         1032                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave         1022                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count_system.cpu1.interrupts.int_master::total         1022                       # Packet count per connected master and slave (bytes)
-system.piobus.pkt_count::total                1814040                       # Packet count per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         3404                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio           16                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        33204                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          350                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        33292                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio        12392                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio         5218                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.ruby.l1_cntrl1.sequencer-pio-port::total        90852                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave          244                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu0.interrupts.int_master::total          244                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave          250                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count_system.cpu1.interrupts.int_master::total          250                       # Packet count per connected master and slave (bytes)
+system.piobus.pkt_count::total                1806298                       # Packet count per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.cpu0.interrupts.int_slave         3400                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::system.cpu1.interrupts.int_slave         3288                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::total         6692                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           26                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         3669                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf          221                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          494                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.pc.south_bridge.io_apic.int_master::total         6688                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.cmos.pio           18                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide.pio         2968                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.ide-pciconf          149                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          478                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic1.pio           39                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           23                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pic2.pio           19                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.speaker.pio       469485                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio         2028                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio           89                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.south_bridge.io_apic.pio         1968                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.i_dont_exist.pio           45                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio        10060                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio      1503650                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.com_1.pio         7138                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.cpu0.interrupts.pio      1497370                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::system.pc.pciconfig.pio         4252                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::total      1994078                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         2965                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          188                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl0.sequencer-pio-port::total      1983945                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.cmos.pio            8                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide.pio         3692                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.ide-pciconf           72                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.keyboard.pio          204                       # Cumulative packet size per connected master and slave (bytes)
 system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic1.pio            8                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio            4                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        16590                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          680                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        16590                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio         3278                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio        16645                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::total        56948                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave         2064                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::total         2064                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave         2044                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::total         2044                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.tot_pkt_size::total             2061826                       # Cumulative packet size per connected master and slave (bytes)
-system.piobus.data_through_bus                2061826                       # Total data (bytes)
-system.piobus.reqLayer0.occupancy               51000                       # Layer occupancy (ticks)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pic2.pio            8                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.pit.pio        16602                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.south_bridge.io_apic.pio          700                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.i_dont_exist.pio        16646                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.com_1.pio         6196                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::system.cpu1.interrupts.pio        10433                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.ruby.l1_cntrl1.sequencer-pio-port::total        54595                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::system.cpu1.interrupts.int_slave          488                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu0.interrupts.int_master::total          488                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::system.cpu0.interrupts.int_slave          500                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size_system.cpu1.interrupts.int_master::total          500                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.tot_pkt_size::total             2046216                       # Cumulative packet size per connected master and slave (bytes)
+system.piobus.data_through_bus                2046216                       # Total data (bytes)
+system.piobus.reqLayer0.occupancy               48000                       # Layer occupancy (ticks)
 system.piobus.reqLayer0.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer1.occupancy                6000                       # Layer occupancy (ticks)
+system.piobus.reqLayer1.occupancy                6500                       # Layer occupancy (ticks)
 system.piobus.reqLayer1.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer2.occupancy            10114500                       # Layer occupancy (ticks)
+system.piobus.reqLayer2.occupancy            10168500                       # Layer occupancy (ticks)
 system.piobus.reqLayer2.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer3.occupancy              152000                       # Layer occupancy (ticks)
+system.piobus.reqLayer3.occupancy              154000                       # Layer occupancy (ticks)
 system.piobus.reqLayer3.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer4.occupancy             1060500                       # Layer occupancy (ticks)
+system.piobus.reqLayer4.occupancy             1061500                       # Layer occupancy (ticks)
 system.piobus.reqLayer4.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer5.occupancy               98500                       # Layer occupancy (ticks)
+system.piobus.reqLayer5.occupancy               96000                       # Layer occupancy (ticks)
 system.piobus.reqLayer5.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer6.occupancy               57500                       # Layer occupancy (ticks)
+system.piobus.reqLayer6.occupancy               56000                       # Layer occupancy (ticks)
 system.piobus.reqLayer6.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer7.occupancy            22149500                       # Layer occupancy (ticks)
+system.piobus.reqLayer7.occupancy            22164500                       # Layer occupancy (ticks)
 system.piobus.reqLayer7.utilization               0.0                       # Layer utilization (%)
 system.piobus.reqLayer8.occupancy           586857000                       # Layer occupancy (ticks)
 system.piobus.reqLayer8.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer9.occupancy             1313000                       # Layer occupancy (ticks)
+system.piobus.reqLayer9.occupancy             1295000                       # Layer occupancy (ticks)
 system.piobus.reqLayer9.utilization               0.0                       # Layer utilization (%)
-system.piobus.reqLayer10.occupancy           41670000                       # Layer occupancy (ticks)
+system.piobus.reqLayer10.occupancy           41706500                       # Layer occupancy (ticks)
 system.piobus.reqLayer10.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer11.occupancy               2000                       # Layer occupancy (ticks)
+system.piobus.reqLayer11.occupancy               2500                       # Layer occupancy (ticks)
 system.piobus.reqLayer11.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer12.occupancy           23288000                       # Layer occupancy (ticks)
+system.piobus.reqLayer12.occupancy           23281500                       # Layer occupancy (ticks)
 system.piobus.reqLayer12.utilization              0.0                       # Layer utilization (%)
 system.piobus.reqLayer13.occupancy              10500                       # Layer occupancy (ticks)
 system.piobus.reqLayer13.utilization              0.0                       # Layer utilization (%)
@@ -341,34 +345,34 @@ system.piobus.reqLayer14.occupancy              10500                       # La
 system.piobus.reqLayer14.utilization              0.0                       # Layer utilization (%)
 system.piobus.reqLayer15.occupancy              10500                       # Layer occupancy (ticks)
 system.piobus.reqLayer15.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer16.occupancy              12000                       # Layer occupancy (ticks)
+system.piobus.reqLayer16.occupancy              11000                       # Layer occupancy (ticks)
 system.piobus.reqLayer16.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer17.occupancy          473822500                       # Layer occupancy (ticks)
+system.piobus.reqLayer17.occupancy          470677500                       # Layer occupancy (ticks)
 system.piobus.reqLayer17.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer18.occupancy            3230956                       # Layer occupancy (ticks)
+system.piobus.reqLayer18.occupancy            2359248                       # Layer occupancy (ticks)
 system.piobus.reqLayer18.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer19.occupancy            8830000                       # Layer occupancy (ticks)
+system.piobus.reqLayer19.occupancy            5486500                       # Layer occupancy (ticks)
 system.piobus.reqLayer19.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer20.occupancy            3180944                       # Layer occupancy (ticks)
+system.piobus.reqLayer20.occupancy            2285216                       # Layer occupancy (ticks)
 system.piobus.reqLayer20.utilization              0.0                       # Layer utilization (%)
-system.piobus.reqLayer22.occupancy            1069500                       # Layer occupancy (ticks)
+system.piobus.reqLayer22.occupancy            1083000                       # Layer occupancy (ticks)
 system.piobus.reqLayer22.utilization              0.0                       # Layer utilization (%)
-system.piobus.respLayer0.occupancy            2420900                       # Layer occupancy (ticks)
+system.piobus.respLayer0.occupancy            2422464                       # Layer occupancy (ticks)
 system.piobus.respLayer0.utilization              0.0                       # Layer utilization (%)
-system.piobus.respLayer1.occupancy         1925709500                       # Layer occupancy (ticks)
+system.piobus.respLayer1.occupancy         1917192500                       # Layer occupancy (ticks)
 system.piobus.respLayer1.utilization              0.0                       # Layer utilization (%)
-system.piobus.respLayer2.occupancy           68943500                       # Layer occupancy (ticks)
+system.piobus.respLayer2.occupancy           72612500                       # Layer occupancy (ticks)
 system.piobus.respLayer2.utilization              0.0                       # Layer utilization (%)
-system.piobus.respLayer3.occupancy             649000                       # Layer occupancy (ticks)
+system.piobus.respLayer3.occupancy             151500                       # Layer occupancy (ticks)
 system.piobus.respLayer3.utilization              0.0                       # Layer utilization (%)
-system.piobus.respLayer4.occupancy             642000                       # Layer occupancy (ticks)
+system.piobus.respLayer4.occupancy             151500                       # Layer occupancy (ticks)
 system.piobus.respLayer4.utilization              0.0                       # Layer utilization (%)
-system.ruby.l1_cntrl0.L1Dcache.demand_hits     16641315                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Dcache.demand_misses      1559170                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Dcache.demand_accesses     18200485                       # Number of cache demand accesses
-system.ruby.l1_cntrl0.L1Icache.demand_hits    104473354                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Icache.demand_misses       468716                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Icache.demand_accesses    104942070                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Dcache.demand_hits     10730814                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses       525933                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses     11256747                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits     67479144                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses       324252                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses     67803396                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -378,12 +382,12 @@ system.ruby.l1_cntrl0.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl1.L1Dcache.demand_hits      7796271                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Dcache.demand_misses       344075                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Dcache.demand_accesses      8140346                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L1Icache.demand_hits     23285981                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Icache.demand_misses       329583                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Icache.demand_accesses     23615564                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Dcache.demand_hits     13015879                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses      1313366                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses     14329245                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits     58306780                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses       491451                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses     58798231                       # Number of cache demand accesses
 system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
 system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
 system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
@@ -393,580 +397,568 @@ system.ruby.l1_cntrl1.prefetcher.hits               0                       # nu
 system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
 system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
 system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l2_cntrl0.L2cache.demand_hits      2450353                       # Number of cache demand hits
-system.ruby.l2_cntrl0.L2cache.demand_misses       251191                       # Number of cache demand misses
-system.ruby.l2_cntrl0.L2cache.demand_accesses      2701544                       # Number of cache demand accesses
-system.ruby.network.routers0.percent_links_utilized     0.085942                      
-system.ruby.network.routers0.msg_count.Control::0      2027886                      
-system.ruby.network.routers0.msg_count.Request_Control::0        68787                      
-system.ruby.network.routers0.msg_count.Response_Data::1      2071049                      
-system.ruby.network.routers0.msg_count.Response_Control::1      1525279                      
-system.ruby.network.routers0.msg_count.Response_Control::2      1517023                      
-system.ruby.network.routers0.msg_count.Writeback_Data::0      1403655                      
-system.ruby.network.routers0.msg_count.Writeback_Data::1          171                      
-system.ruby.network.routers0.msg_count.Writeback_Control::0        51157                      
-system.ruby.network.routers0.msg_bytes.Control::0     16223088                      
-system.ruby.network.routers0.msg_bytes.Request_Control::0       550296                      
-system.ruby.network.routers0.msg_bytes.Response_Data::1    149115528                      
-system.ruby.network.routers0.msg_bytes.Response_Control::1     12202232                      
-system.ruby.network.routers0.msg_bytes.Response_Control::2     12136184                      
-system.ruby.network.routers0.msg_bytes.Writeback_Data::0    101063160                      
-system.ruby.network.routers0.msg_bytes.Writeback_Data::1        12312                      
-system.ruby.network.routers0.msg_bytes.Writeback_Control::0       409256                      
-system.ruby.network.routers1.percent_links_utilized     0.023064                      
-system.ruby.network.routers1.msg_count.Control::0       673658                      
-system.ruby.network.routers1.msg_count.Request_Control::0        62763                      
-system.ruby.network.routers1.msg_count.Response_Data::1       711847                      
-system.ruby.network.routers1.msg_count.Response_Control::1       320652                      
-system.ruby.network.routers1.msg_count.Response_Control::2       313476                      
-system.ruby.network.routers1.msg_count.Writeback_Data::0       219226                      
-system.ruby.network.routers1.msg_count.Writeback_Data::1          383                      
-system.ruby.network.routers1.msg_count.Writeback_Control::0        32004                      
-system.ruby.network.routers1.msg_bytes.Control::0      5389264                      
-system.ruby.network.routers1.msg_bytes.Request_Control::0       502104                      
-system.ruby.network.routers1.msg_bytes.Response_Data::1     51252984                      
-system.ruby.network.routers1.msg_bytes.Response_Control::1      2565216                      
-system.ruby.network.routers1.msg_bytes.Response_Control::2      2507808                      
-system.ruby.network.routers1.msg_bytes.Writeback_Data::0     15784272                      
-system.ruby.network.routers1.msg_bytes.Writeback_Data::1        27576                      
-system.ruby.network.routers1.msg_bytes.Writeback_Control::0       256032                      
-system.ruby.network.routers2.percent_links_utilized     0.111968                      
-system.ruby.network.routers2.msg_count.Control::0      2875657                      
-system.ruby.network.routers2.msg_count.Request_Control::0       129481                      
-system.ruby.network.routers2.msg_count.Response_Data::1      2899412                      
-system.ruby.network.routers2.msg_count.Response_Control::1      1882104                      
-system.ruby.network.routers2.msg_count.Response_Control::2      1830499                      
-system.ruby.network.routers2.msg_count.Writeback_Data::0      1622881                      
-system.ruby.network.routers2.msg_count.Writeback_Data::1          554                      
-system.ruby.network.routers2.msg_count.Writeback_Control::0        83161                      
-system.ruby.network.routers2.msg_bytes.Control::0     23005256                      
-system.ruby.network.routers2.msg_bytes.Request_Control::0      1035848                      
-system.ruby.network.routers2.msg_bytes.Response_Data::1    208757664                      
-system.ruby.network.routers2.msg_bytes.Response_Control::1     15056832                      
-system.ruby.network.routers2.msg_bytes.Response_Control::2     14643992                      
-system.ruby.network.routers2.msg_bytes.Writeback_Data::0    116847432                      
-system.ruby.network.routers2.msg_bytes.Writeback_Data::1        39888                      
-system.ruby.network.routers2.msg_bytes.Writeback_Control::0       665288                      
-system.ruby.dir_cntrl0.memBuffer.memReq        315825                       # Total number of memory requests
-system.ruby.dir_cntrl0.memBuffer.memRead       174561                       # Number of memory reads
-system.ruby.dir_cntrl0.memBuffer.memWrite       141264                       # Number of memory writes
-system.ruby.dir_cntrl0.memBuffer.memRefresh       718428                       # Number of memory refreshes
-system.ruby.dir_cntrl0.memBuffer.memWaitCycles       922537                       # Delay stalled at the head of the bank queue
-system.ruby.dir_cntrl0.memBuffer.memInputQ           46                       # Delay in the input queue
-system.ruby.dir_cntrl0.memBuffer.memBankQ         6012                       # Delay behind the head of the bank queue
-system.ruby.dir_cntrl0.memBuffer.totalStalls       928595                       # Total number of stall cycles
-system.ruby.dir_cntrl0.memBuffer.stallsPerReq     2.940220                       # Expected number of stall cycles per request
-system.ruby.dir_cntrl0.memBuffer.memBankBusy       911376                       # memory stalls due to busy bank
-system.ruby.dir_cntrl0.memBuffer.memBusBusy         8161                       # memory stalls due to busy bus
-system.ruby.dir_cntrl0.memBuffer.memReadWriteBusy           74                       # memory stalls due to read write turnaround
+system.ruby.l2_cntrl0.L2cache.demand_hits      2431660                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       223342                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses      2655002                       # Number of cache demand accesses
+system.ruby.network.routers0.percent_links_utilized     0.029766                      
+system.ruby.network.routers0.msg_count.Control::0       850185                      
+system.ruby.network.routers0.msg_count.Request_Control::0        42201                      
+system.ruby.network.routers0.msg_count.Response_Data::1       878303                      
+system.ruby.network.routers0.msg_count.Response_Control::1       503569                      
+system.ruby.network.routers0.msg_count.Response_Control::2       500391                      
+system.ruby.network.routers0.msg_count.Writeback_Data::0       294658                      
+system.ruby.network.routers0.msg_count.Writeback_Data::1           77                      
+system.ruby.network.routers0.msg_count.Writeback_Control::0       168208                      
+system.ruby.network.routers0.msg_bytes.Control::0      6801480                      
+system.ruby.network.routers0.msg_bytes.Request_Control::0       337608                      
+system.ruby.network.routers0.msg_bytes.Response_Data::1     63237816                      
+system.ruby.network.routers0.msg_bytes.Response_Control::1      4028552                      
+system.ruby.network.routers0.msg_bytes.Response_Control::2      4003128                      
+system.ruby.network.routers0.msg_bytes.Writeback_Data::0     21215376                      
+system.ruby.network.routers0.msg_bytes.Writeback_Data::1         5544                      
+system.ruby.network.routers0.msg_bytes.Writeback_Control::0      1345664                      
+system.ruby.network.routers1.percent_links_utilized     0.057219                      
+system.ruby.network.routers1.msg_count.Control::0      1804817                      
+system.ruby.network.routers1.msg_count.Request_Control::0        38464                      
+system.ruby.network.routers1.msg_count.Response_Data::1      1828188                      
+system.ruby.network.routers1.msg_count.Response_Control::1      1255906                      
+system.ruby.network.routers1.msg_count.Response_Control::2      1256121                      
+system.ruby.network.routers1.msg_count.Writeback_Data::0       279078                      
+system.ruby.network.routers1.msg_count.Writeback_Data::1          227                      
+system.ruby.network.routers1.msg_count.Writeback_Control::0       940222                      
+system.ruby.network.routers1.msg_bytes.Control::0     14438536                      
+system.ruby.network.routers1.msg_bytes.Request_Control::0       307712                      
+system.ruby.network.routers1.msg_bytes.Response_Data::1    131629536                      
+system.ruby.network.routers1.msg_bytes.Response_Control::1     10047248                      
+system.ruby.network.routers1.msg_bytes.Response_Control::2     10048968                      
+system.ruby.network.routers1.msg_bytes.Writeback_Data::0     20093616                      
+system.ruby.network.routers1.msg_bytes.Writeback_Data::1        16344                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::0      7521776                      
+system.ruby.network.routers2.percent_links_utilized     0.091302                      
+system.ruby.network.routers2.msg_count.Control::0      2829904                      
+system.ruby.network.routers2.msg_count.Request_Control::0        78999                      
+system.ruby.network.routers2.msg_count.Response_Data::1      2881954                      
+system.ruby.network.routers2.msg_count.Response_Control::1      1837374                      
+system.ruby.network.routers2.msg_count.Response_Control::2      1756512                      
+system.ruby.network.routers2.msg_count.Writeback_Data::0       573736                      
+system.ruby.network.routers2.msg_count.Writeback_Data::1          304                      
+system.ruby.network.routers2.msg_count.Writeback_Control::0      1108430                      
+system.ruby.network.routers2.msg_bytes.Control::0     22639232                      
+system.ruby.network.routers2.msg_bytes.Request_Control::0       631992                      
+system.ruby.network.routers2.msg_bytes.Response_Data::1    207500688                      
+system.ruby.network.routers2.msg_bytes.Response_Control::1     14698992                      
+system.ruby.network.routers2.msg_bytes.Response_Control::2     14052096                      
+system.ruby.network.routers2.msg_bytes.Writeback_Data::0     41308992                      
+system.ruby.network.routers2.msg_bytes.Writeback_Data::1        21888                      
+system.ruby.network.routers2.msg_bytes.Writeback_Control::0      8867440                      
+system.ruby.dir_cntrl0.memBuffer.memReq        317877                       # Total number of memory requests
+system.ruby.dir_cntrl0.memBuffer.memRead       175365                       # Number of memory reads
+system.ruby.dir_cntrl0.memBuffer.memWrite       142512                       # Number of memory writes
+system.ruby.dir_cntrl0.memBuffer.memRefresh       714764                       # Number of memory refreshes
+system.ruby.dir_cntrl0.memBuffer.memWaitCycles       943121                       # Delay stalled at the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.memInputQ           39                       # Delay in the input queue
+system.ruby.dir_cntrl0.memBuffer.memBankQ         6636                       # Delay behind the head of the bank queue
+system.ruby.dir_cntrl0.memBuffer.totalStalls       949796                       # Total number of stall cycles
+system.ruby.dir_cntrl0.memBuffer.stallsPerReq     2.987936                       # Expected number of stall cycles per request
+system.ruby.dir_cntrl0.memBuffer.memBankBusy       931605                       # memory stalls due to busy bank
+system.ruby.dir_cntrl0.memBuffer.memBusBusy         8278                       # memory stalls due to busy bus
+system.ruby.dir_cntrl0.memBuffer.memReadWriteBusy           95                       # memory stalls due to read write turnaround
 system.ruby.dir_cntrl0.memBuffer.memDataBusBusy            8                       # memory stalls due to read read turnaround
-system.ruby.dir_cntrl0.memBuffer.memArbWait         2918                       # memory stalls due to arbitration
-system.ruby.dir_cntrl0.memBuffer.memBankCount |       10778      3.41%      3.41% |        9652      3.06%      6.47% |        9746      3.09%      9.55% |        9756      3.09%     12.64% |       10001      3.17%     15.81% |        9844      3.12%     18.93% |        9739      3.08%     22.01% |        9701      3.07%     25.08% |        9912      3.14%     28.22% |        9771      3.09%     31.31% |        9821      3.11%     34.42% |        9856      3.12%     37.55% |        9814      3.11%     40.65% |        9541      3.02%     43.67% |        9708      3.07%     46.75% |        8720      2.76%     49.51% |        9704      3.07%     52.58% |        9910      3.14%     55.72% |        9720      3.08%     58.80% |        9615      3.04%     61.84% |       10345      3.28%     65.12% |        9799      3.10%     68.22% |        9732      3.08%     71.30% |        9663      3.06%     74.36% |        9975      3.16%     77.52% |        9775      3.10%     80.61% |        9975      3.16%     83.77% |       10515      3.33%     87.10% |       10479      3.32%     90.42% |       10356      3.28%     93.70% |       10312      3.27%     96.96% |        9590      3.04%    100.00% # Number of accesses per bank
-system.ruby.dir_cntrl0.memBuffer.memBankCount::total       315825                       # Number of accesses per bank
+system.ruby.dir_cntrl0.memBuffer.memArbWait         3135                       # memory stalls due to arbitration
+system.ruby.dir_cntrl0.memBuffer.memBankCount |       10282      3.23%      3.23% |        9701      3.05%      6.29% |        9679      3.04%      9.33% |        9712      3.06%     12.39% |       10010      3.15%     15.54% |        9927      3.12%     18.66% |        9854      3.10%     21.76% |        9702      3.05%     24.81% |        9904      3.12%     27.93% |        9752      3.07%     30.99% |        9805      3.08%     34.08% |        9914      3.12%     37.20% |        9948      3.13%     40.33% |        9724      3.06%     43.39% |        9647      3.03%     46.42% |        8750      2.75%     49.17% |       10266      3.23%     52.40% |        9887      3.11%     55.51% |        9844      3.10%     58.61% |        9758      3.07%     61.68% |       10022      3.15%     64.83% |        9879      3.11%     67.94% |        9766      3.07%     71.01% |        9852      3.10%     74.11% |       10073      3.17%     77.28% |        9931      3.12%     80.40% |       10177      3.20%     83.61% |       10769      3.39%     86.99% |       10605      3.34%     90.33% |       10522      3.31%     93.64% |       10506      3.31%     96.95% |        9709      3.05%    100.00% # Number of accesses per bank
+system.ruby.dir_cntrl0.memBuffer.memBankCount::total       317877                       # Number of accesses per bank
 
-system.ruby.network.routers3.percent_links_utilized     0.006686                      
-system.ruby.network.routers3.msg_count.Control::0       174113                      
-system.ruby.network.routers3.msg_count.Response_Data::1       271479                      
-system.ruby.network.routers3.msg_count.Response_Control::1       125011                      
-system.ruby.network.routers3.msg_count.Writeback_Control::0        47543                      
+system.ruby.network.routers3.percent_links_utilized     0.006727                      
+system.ruby.network.routers3.msg_count.Control::0       174902                      
+system.ruby.network.routers3.msg_count.Response_Data::1       273157                      
+system.ruby.network.routers3.msg_count.Response_Control::1       125035                      
+system.ruby.network.routers3.msg_count.Writeback_Control::0        47550                      
 system.ruby.network.routers3.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers3.msg_bytes.Control::0      1392904                      
-system.ruby.network.routers3.msg_bytes.Response_Data::1     19546488                      
-system.ruby.network.routers3.msg_bytes.Response_Control::1      1000088                      
-system.ruby.network.routers3.msg_bytes.Writeback_Control::0       380344                      
+system.ruby.network.routers3.msg_bytes.Control::0      1399216                      
+system.ruby.network.routers3.msg_bytes.Response_Data::1     19667304                      
+system.ruby.network.routers3.msg_bytes.Response_Control::1      1000280                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::0       380400                      
 system.ruby.network.routers3.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.routers4.percent_links_utilized     0.000239                      
-system.ruby.network.routers4.msg_count.Response_Data::1          807                      
-system.ruby.network.routers4.msg_count.Writeback_Control::0        47543                      
+system.ruby.network.routers4.percent_links_utilized     0.000240                      
+system.ruby.network.routers4.msg_count.Response_Data::1          814                      
+system.ruby.network.routers4.msg_count.Writeback_Control::0        47550                      
 system.ruby.network.routers4.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers4.msg_bytes.Response_Data::1        58104                      
-system.ruby.network.routers4.msg_bytes.Writeback_Control::0       380344                      
+system.ruby.network.routers4.msg_bytes.Response_Data::1        58608                      
+system.ruby.network.routers4.msg_bytes.Writeback_Control::0       380400                      
 system.ruby.network.routers4.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.routers5.percent_links_utilized     0.045581                      
-system.ruby.network.routers5.msg_count.Control::0      2875657                      
-system.ruby.network.routers5.msg_count.Request_Control::0       131550                      
-system.ruby.network.routers5.msg_count.Response_Data::1      2977297                      
-system.ruby.network.routers5.msg_count.Response_Control::1      1926523                      
-system.ruby.network.routers5.msg_count.Response_Control::2      1830499                      
-system.ruby.network.routers5.msg_count.Writeback_Data::0      1622881                      
-system.ruby.network.routers5.msg_count.Writeback_Data::1          554                      
-system.ruby.network.routers5.msg_count.Writeback_Control::0       130704                      
+system.ruby.network.routers5.percent_links_utilized     0.037052                      
+system.ruby.network.routers5.msg_count.Control::0      2829904                      
+system.ruby.network.routers5.msg_count.Request_Control::0        80665                      
+system.ruby.network.routers5.msg_count.Response_Data::1      2931208                      
+system.ruby.network.routers5.msg_count.Response_Control::1      1860942                      
+system.ruby.network.routers5.msg_count.Response_Control::2      1756512                      
+system.ruby.network.routers5.msg_count.Writeback_Data::0       573736                      
+system.ruby.network.routers5.msg_count.Writeback_Data::1          304                      
+system.ruby.network.routers5.msg_count.Writeback_Control::0      1155980                      
 system.ruby.network.routers5.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers5.msg_bytes.Control::0     23005256                      
-system.ruby.network.routers5.msg_bytes.Request_Control::0      1052400                      
-system.ruby.network.routers5.msg_bytes.Response_Data::1    214365384                      
-system.ruby.network.routers5.msg_bytes.Response_Control::1     15412184                      
-system.ruby.network.routers5.msg_bytes.Response_Control::2     14643992                      
-system.ruby.network.routers5.msg_bytes.Writeback_Data::0    116847432                      
-system.ruby.network.routers5.msg_bytes.Writeback_Data::1        39888                      
-system.ruby.network.routers5.msg_bytes.Writeback_Control::0      1045632                      
+system.ruby.network.routers5.msg_bytes.Control::0     22639232                      
+system.ruby.network.routers5.msg_bytes.Request_Control::0       645320                      
+system.ruby.network.routers5.msg_bytes.Response_Data::1    211046976                      
+system.ruby.network.routers5.msg_bytes.Response_Control::1     14887536                      
+system.ruby.network.routers5.msg_bytes.Response_Control::2     14052096                      
+system.ruby.network.routers5.msg_bytes.Writeback_Data::0     41308992                      
+system.ruby.network.routers5.msg_bytes.Writeback_Data::1        21888                      
+system.ruby.network.routers5.msg_bytes.Writeback_Control::0      9247840                      
 system.ruby.network.routers5.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.msg_count.Control         8626971                      
-system.ruby.network.msg_count.Request_Control       392581                      
-system.ruby.network.msg_count.Response_Data      8931891                      
-system.ruby.network.msg_count.Response_Control     11271066                      
-system.ruby.network.msg_count.Writeback_Data      4870305                      
-system.ruby.network.msg_count.Writeback_Control       532320                      
-system.ruby.network.msg_byte.Control         69015768                      
-system.ruby.network.msg_byte.Request_Control      3140648                      
-system.ruby.network.msg_byte.Response_Data    643096152                      
-system.ruby.network.msg_byte.Response_Control     90168528                      
-system.ruby.network.msg_byte.Writeback_Data    350661960                      
-system.ruby.network.msg_byte.Writeback_Control      4258560                      
+system.ruby.network.msg_count.Control         8489712                      
+system.ruby.network.msg_count.Request_Control       240329                      
+system.ruby.network.msg_count.Response_Data      8793624                      
+system.ruby.network.msg_count.Response_Control     10852362                      
+system.ruby.network.msg_count.Writeback_Data      1722120                      
+system.ruby.network.msg_count.Writeback_Control      3608148                      
+system.ruby.network.msg_byte.Control         67917696                      
+system.ruby.network.msg_byte.Request_Control      1922632                      
+system.ruby.network.msg_byte.Response_Data    633140928                      
+system.ruby.network.msg_byte.Response_Control     86818896                      
+system.ruby.network.msg_byte.Writeback_Data    123992640                      
+system.ruby.network.msg_byte.Writeback_Control     28865184                      
 system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_bytes        32768                       # Number of bytes transfered via DMA reads (not PRD).
 system.pc.south_bridge.ide.disks0.dma_read_txs           30                       # Number of DMA read transactions (not PRD).
 system.pc.south_bridge.ide.disks0.dma_write_full_pages          693                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks0.dma_write_bytes      2987008                       # Number of bytes transfered via DMA writes.
-system.pc.south_bridge.ide.disks0.dma_write_txs          812                       # Number of DMA write transactions.
+system.pc.south_bridge.ide.disks0.dma_write_txs          813                       # Number of DMA write transactions.
 system.pc.south_bridge.ide.disks1.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
 system.pc.south_bridge.ide.disks1.dma_read_bytes            0                       # Number of bytes transfered via DMA reads (not PRD).
 system.pc.south_bridge.ide.disks1.dma_read_txs            0                       # Number of DMA read transactions (not PRD).
 system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
-system.cpu0.numCycles                     10606043496                       # number of cpu cycles simulated
+system.cpu0.numCycles                     10600871471                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu0.committedInsts                   90093236                       # Number of instructions committed
-system.cpu0.committedOps                    174126687                       # Number of ops (including micro ops) committed
-system.cpu0.num_int_alu_accesses            164075837                       # Number of integer alu accesses
+system.cpu0.committedInsts                   58268800                       # Number of instructions committed
+system.cpu0.committedOps                    112064452                       # Number of ops (including micro ops) committed
+system.cpu0.num_int_alu_accesses            105032474                       # Number of integer alu accesses
 system.cpu0.num_fp_alu_accesses                     0                       # Number of float alu accesses
-system.cpu0.num_func_calls                    2042485                       # number of times a function call or return occured
-system.cpu0.num_conditional_control_insts     16069367                       # number of instructions that are conditional controls
-system.cpu0.num_int_insts                   164075837                       # number of integer instructions
+system.cpu0.num_func_calls                     986042                       # number of times a function call or return occured
+system.cpu0.num_conditional_control_insts      9969773                       # number of instructions that are conditional controls
+system.cpu0.num_int_insts                   105032474                       # number of integer instructions
 system.cpu0.num_fp_insts                            0                       # number of float instructions
-system.cpu0.num_int_register_reads          309321057                       # number of times the integer registers were read
-system.cpu0.num_int_register_writes         138932000                       # number of times the integer registers were written
+system.cpu0.num_int_register_reads          197859045                       # number of times the integer registers were read
+system.cpu0.num_int_register_writes          89264580                       # number of times the integer registers were written
 system.cpu0.num_fp_register_reads                   0                       # number of times the floating registers were read
 system.cpu0.num_fp_register_writes                  0                       # number of times the floating registers were written
-system.cpu0.num_cc_register_reads            95439290                       # number of times the CC registers were read
-system.cpu0.num_cc_register_writes           66446258                       # number of times the CC registers were written
-system.cpu0.num_mem_refs                     19043793                       # number of memory refs
-system.cpu0.num_load_insts                   12292919                       # Number of load instructions
-system.cpu0.num_store_insts                   6750874                       # Number of store instructions
-system.cpu0.num_idle_cycles              9893327113.048590                       # Number of idle cycles
-system.cpu0.num_busy_cycles              712716382.951410                       # Number of busy cycles
-system.cpu0.not_idle_fraction                0.067199                       # Percentage of non-idle cycles
-system.cpu0.idle_fraction                    0.932801                       # Percentage of idle cycles
+system.cpu0.num_cc_register_reads            60358670                       # number of times the CC registers were read
+system.cpu0.num_cc_register_writes           43636307                       # number of times the CC registers were written
+system.cpu0.num_mem_refs                     12087584                       # number of memory refs
+system.cpu0.num_load_insts                    7337910                       # Number of load instructions
+system.cpu0.num_store_insts                   4749674                       # Number of store instructions
+system.cpu0.num_idle_cycles              10090453891.750097                       # Number of idle cycles
+system.cpu0.num_busy_cycles              510417579.249904                       # Number of busy cycles
+system.cpu0.not_idle_fraction                0.048149                       # Percentage of non-idle cycles
+system.cpu0.idle_fraction                    0.951851                       # Percentage of idle cycles
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                       0                       # number of quiesce instructions executed
-system.cpu1.numCycles                     10607208578                       # number of cpu cycles simulated
+system.cpu1.numCycles                     10598039537                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-system.cpu1.committedInsts                   18172065                       # Number of instructions committed
-system.cpu1.committedOps                     33611350                       # Number of ops (including micro ops) committed
-system.cpu1.num_int_alu_accesses             32888204                       # Number of integer alu accesses
+system.cpu1.committedInsts                   48563006                       # Number of instructions committed
+system.cpu1.committedOps                     92782585                       # Number of ops (including micro ops) committed
+system.cpu1.num_int_alu_accesses             89102881                       # Number of integer alu accesses
 system.cpu1.num_fp_alu_accesses                     0                       # Number of float alu accesses
-system.cpu1.num_func_calls                     748563                       # number of times a function call or return occured
-system.cpu1.num_conditional_control_insts      2364634                       # number of instructions that are conditional controls
-system.cpu1.num_int_insts                    32888204                       # number of integer instructions
+system.cpu1.num_func_calls                    1756991                       # number of times a function call or return occured
+system.cpu1.num_conditional_control_insts      8282210                       # number of instructions that are conditional controls
+system.cpu1.num_int_insts                    89102881                       # number of integer instructions
 system.cpu1.num_fp_insts                            0                       # number of float instructions
-system.cpu1.num_int_register_reads           67386533                       # number of times the integer registers were read
-system.cpu1.num_int_register_writes          26370518                       # number of times the integer registers were written
+system.cpu1.num_int_register_reads          172889449                       # number of times the integer registers were read
+system.cpu1.num_int_register_writes          73679026                       # number of times the integer registers were written
 system.cpu1.num_fp_register_reads                   0                       # number of times the floating registers were read
 system.cpu1.num_fp_register_writes                  0                       # number of times the floating registers were written
-system.cpu1.num_cc_register_reads            18215408                       # number of times the CC registers were read
-system.cpu1.num_cc_register_writes           11108428                       # number of times the CC registers were written
-system.cpu1.num_mem_refs                      8150413                       # number of memory refs
-system.cpu1.num_load_insts                    4758811                       # Number of load instructions
-system.cpu1.num_store_insts                   3391602                       # Number of store instructions
-system.cpu1.num_idle_cycles              10456532847.286028                       # Number of idle cycles
-system.cpu1.num_busy_cycles              150675730.713972                       # Number of busy cycles
-system.cpu1.not_idle_fraction                0.014205                       # Percentage of non-idle cycles
-system.cpu1.idle_fraction                    0.985795                       # Percentage of idle cycles
+system.cpu1.num_cc_register_reads            51236507                       # number of times the CC registers were read
+system.cpu1.num_cc_register_writes           33066238                       # number of times the CC registers were written
+system.cpu1.num_mem_refs                     14350514                       # number of memory refs
+system.cpu1.num_load_insts                    9231964                       # Number of load instructions
+system.cpu1.num_store_insts                   5118550                       # Number of store instructions
+system.cpu1.num_idle_cycles              10261752317.862694                       # Number of idle cycles
+system.cpu1.num_busy_cycles              336287219.137307                       # Number of busy cycles
+system.cpu1.not_idle_fraction                0.031731                       # Percentage of non-idle cycles
+system.cpu1.idle_fraction                    0.968269                       # Percentage of idle cycles
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
-system.ruby.network.routers0.throttle0.link_utilization     0.092567                      
-system.ruby.network.routers0.throttle0.msg_count.Request_Control::0        68787                      
-system.ruby.network.routers0.throttle0.msg_count.Response_Data::1      2008081                      
-system.ruby.network.routers0.throttle0.msg_count.Response_Control::1      1496069                      
-system.ruby.network.routers0.throttle0.msg_bytes.Request_Control::0       550296                      
-system.ruby.network.routers0.throttle0.msg_bytes.Response_Data::1    144581832                      
-system.ruby.network.routers0.throttle0.msg_bytes.Response_Control::1     11968552                      
-system.ruby.network.routers0.throttle1.link_utilization     0.079316                      
-system.ruby.network.routers0.throttle1.msg_count.Control::0      2027886                      
-system.ruby.network.routers0.throttle1.msg_count.Response_Data::1        62968                      
-system.ruby.network.routers0.throttle1.msg_count.Response_Control::1        29210                      
-system.ruby.network.routers0.throttle1.msg_count.Response_Control::2      1517023                      
-system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::0      1403655                      
-system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::1          171                      
-system.ruby.network.routers0.throttle1.msg_count.Writeback_Control::0        51157                      
-system.ruby.network.routers0.throttle1.msg_bytes.Control::0     16223088                      
-system.ruby.network.routers0.throttle1.msg_bytes.Response_Data::1      4533696                      
-system.ruby.network.routers0.throttle1.msg_bytes.Response_Control::1       233680                      
-system.ruby.network.routers0.throttle1.msg_bytes.Response_Control::2     12136184                      
-system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::0    101063160                      
-system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::1        12312                      
-system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Control::0       409256                      
-system.ruby.network.routers1.throttle0.link_utilization     0.029348                      
-system.ruby.network.routers1.throttle0.msg_count.Request_Control::0        62763                      
-system.ruby.network.routers1.throttle0.msg_count.Response_Data::1       651911                      
-system.ruby.network.routers1.throttle0.msg_count.Response_Control::1       295944                      
-system.ruby.network.routers1.throttle0.msg_bytes.Request_Control::0       502104                      
-system.ruby.network.routers1.throttle0.msg_bytes.Response_Data::1     46937592                      
-system.ruby.network.routers1.throttle0.msg_bytes.Response_Control::1      2367552                      
-system.ruby.network.routers1.throttle1.link_utilization     0.016780                      
-system.ruby.network.routers1.throttle1.msg_count.Control::0       673658                      
-system.ruby.network.routers1.throttle1.msg_count.Response_Data::1        59936                      
-system.ruby.network.routers1.throttle1.msg_count.Response_Control::1        24708                      
-system.ruby.network.routers1.throttle1.msg_count.Response_Control::2       313476                      
-system.ruby.network.routers1.throttle1.msg_count.Writeback_Data::0       219226                      
-system.ruby.network.routers1.throttle1.msg_count.Writeback_Data::1          383                      
-system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::0        32004                      
-system.ruby.network.routers1.throttle1.msg_bytes.Control::0      5389264                      
-system.ruby.network.routers1.throttle1.msg_bytes.Response_Data::1      4315392                      
-system.ruby.network.routers1.throttle1.msg_bytes.Response_Control::1       197664                      
-system.ruby.network.routers1.throttle1.msg_bytes.Response_Control::2      2507808                      
-system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::0     15784272                      
-system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::1        27576                      
-system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::0       256032                      
-system.ruby.network.routers2.throttle0.link_utilization     0.100531                      
-system.ruby.network.routers2.throttle0.msg_count.Control::0      2701544                      
-system.ruby.network.routers2.throttle0.msg_count.Response_Data::1       219939                      
-system.ruby.network.routers2.throttle0.msg_count.Response_Control::1       121479                      
-system.ruby.network.routers2.throttle0.msg_count.Response_Control::2      1830499                      
-system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::0      1622881                      
-system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::1          554                      
-system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::0        83161                      
-system.ruby.network.routers2.throttle0.msg_bytes.Control::0     21612352                      
-system.ruby.network.routers2.throttle0.msg_bytes.Response_Data::1     15835608                      
-system.ruby.network.routers2.throttle0.msg_bytes.Response_Control::1       971832                      
-system.ruby.network.routers2.throttle0.msg_bytes.Response_Control::2     14643992                      
-system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::0    116847432                      
-system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::1        39888                      
-system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::0       665288                      
-system.ruby.network.routers2.throttle1.link_utilization     0.123404                      
-system.ruby.network.routers2.throttle1.msg_count.Control::0       174113                      
-system.ruby.network.routers2.throttle1.msg_count.Request_Control::0       129481                      
-system.ruby.network.routers2.throttle1.msg_count.Response_Data::1      2679473                      
-system.ruby.network.routers2.throttle1.msg_count.Response_Control::1      1760625                      
-system.ruby.network.routers2.throttle1.msg_bytes.Control::0      1392904                      
-system.ruby.network.routers2.throttle1.msg_bytes.Request_Control::0      1035848                      
-system.ruby.network.routers2.throttle1.msg_bytes.Response_Data::1    192922056                      
-system.ruby.network.routers2.throttle1.msg_bytes.Response_Control::1     14085000                      
-system.ruby.network.routers3.throttle0.link_utilization     0.005203                      
-system.ruby.network.routers3.throttle0.msg_count.Control::0       174113                      
-system.ruby.network.routers3.throttle0.msg_count.Response_Data::1        96559                      
-system.ruby.network.routers3.throttle0.msg_count.Response_Control::1        13031                      
-system.ruby.network.routers3.throttle0.msg_count.Writeback_Control::0        47543                      
-system.ruby.network.routers3.throttle0.msg_bytes.Control::0      1392904                      
-system.ruby.network.routers3.throttle0.msg_bytes.Response_Data::1      6952248                      
-system.ruby.network.routers3.throttle0.msg_bytes.Response_Control::1       104248                      
-system.ruby.network.routers3.throttle0.msg_bytes.Writeback_Control::0       380344                      
-system.ruby.network.routers3.throttle1.link_utilization     0.008169                      
-system.ruby.network.routers3.throttle1.msg_count.Response_Data::1       174920                      
-system.ruby.network.routers3.throttle1.msg_count.Response_Control::1       111980                      
+system.ruby.network.routers0.throttle0.link_utilization     0.038081                      
+system.ruby.network.routers0.throttle0.msg_count.Request_Control::0        42201                      
+system.ruby.network.routers0.throttle0.msg_count.Response_Data::1       838238                      
+system.ruby.network.routers0.throttle0.msg_count.Response_Control::1       487495                      
+system.ruby.network.routers0.throttle0.msg_bytes.Request_Control::0       337608                      
+system.ruby.network.routers0.throttle0.msg_bytes.Response_Data::1     60353136                      
+system.ruby.network.routers0.throttle0.msg_bytes.Response_Control::1      3899960                      
+system.ruby.network.routers0.throttle1.link_utilization     0.021451                      
+system.ruby.network.routers0.throttle1.msg_count.Control::0       850185                      
+system.ruby.network.routers0.throttle1.msg_count.Response_Data::1        40065                      
+system.ruby.network.routers0.throttle1.msg_count.Response_Control::1        16074                      
+system.ruby.network.routers0.throttle1.msg_count.Response_Control::2       500391                      
+system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::0       294658                      
+system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::1           77                      
+system.ruby.network.routers0.throttle1.msg_count.Writeback_Control::0       168208                      
+system.ruby.network.routers0.throttle1.msg_bytes.Control::0      6801480                      
+system.ruby.network.routers0.throttle1.msg_bytes.Response_Data::1      2884680                      
+system.ruby.network.routers0.throttle1.msg_bytes.Response_Control::1       128592                      
+system.ruby.network.routers0.throttle1.msg_bytes.Response_Control::2      4003128                      
+system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::0     21215376                      
+system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::1         5544                      
+system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Control::0      1345664                      
+system.ruby.network.routers1.throttle0.link_utilization     0.082224                      
+system.ruby.network.routers1.throttle0.msg_count.Request_Control::0        38464                      
+system.ruby.network.routers1.throttle0.msg_count.Response_Data::1      1794944                      
+system.ruby.network.routers1.throttle0.msg_count.Response_Control::1      1240059                      
+system.ruby.network.routers1.throttle0.msg_bytes.Request_Control::0       307712                      
+system.ruby.network.routers1.throttle0.msg_bytes.Response_Data::1    129235968                      
+system.ruby.network.routers1.throttle0.msg_bytes.Response_Control::1      9920472                      
+system.ruby.network.routers1.throttle1.link_utilization     0.032214                      
+system.ruby.network.routers1.throttle1.msg_count.Control::0      1804817                      
+system.ruby.network.routers1.throttle1.msg_count.Response_Data::1        33244                      
+system.ruby.network.routers1.throttle1.msg_count.Response_Control::1        15847                      
+system.ruby.network.routers1.throttle1.msg_count.Response_Control::2      1256121                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Data::0       279078                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Data::1          227                      
+system.ruby.network.routers1.throttle1.msg_count.Writeback_Control::0       940222                      
+system.ruby.network.routers1.throttle1.msg_bytes.Control::0     14438536                      
+system.ruby.network.routers1.throttle1.msg_bytes.Response_Data::1      2393568                      
+system.ruby.network.routers1.throttle1.msg_bytes.Response_Control::1       126776                      
+system.ruby.network.routers1.throttle1.msg_bytes.Response_Control::2     10048968                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::0     20093616                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::1        16344                      
+system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::0      7521776                      
+system.ruby.network.routers2.throttle0.link_utilization     0.059452                      
+system.ruby.network.routers2.throttle0.msg_count.Control::0      2655002                      
+system.ruby.network.routers2.throttle0.msg_count.Response_Data::1       199771                      
+system.ruby.network.routers2.throttle0.msg_count.Response_Control::1       120599                      
+system.ruby.network.routers2.throttle0.msg_count.Response_Control::2      1756512                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::0       573736                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::1          304                      
+system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::0      1108430                      
+system.ruby.network.routers2.throttle0.msg_bytes.Control::0     21240016                      
+system.ruby.network.routers2.throttle0.msg_bytes.Response_Data::1     14383512                      
+system.ruby.network.routers2.throttle0.msg_bytes.Response_Control::1       964792                      
+system.ruby.network.routers2.throttle0.msg_bytes.Response_Control::2     14052096                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::0     41308992                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::1        21888                      
+system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::0      8867440                      
+system.ruby.network.routers2.throttle1.link_utilization     0.123152                      
+system.ruby.network.routers2.throttle1.msg_count.Control::0       174902                      
+system.ruby.network.routers2.throttle1.msg_count.Request_Control::0        78999                      
+system.ruby.network.routers2.throttle1.msg_count.Response_Data::1      2682183                      
+system.ruby.network.routers2.throttle1.msg_count.Response_Control::1      1716775                      
+system.ruby.network.routers2.throttle1.msg_bytes.Control::0      1399216                      
+system.ruby.network.routers2.throttle1.msg_bytes.Request_Control::0       631992                      
+system.ruby.network.routers2.throttle1.msg_bytes.Response_Data::1    193117176                      
+system.ruby.network.routers2.throttle1.msg_bytes.Response_Control::1     13734200                      
+system.ruby.network.routers3.throttle0.link_utilization     0.005246                      
+system.ruby.network.routers3.throttle0.msg_count.Control::0       174902                      
+system.ruby.network.routers3.throttle0.msg_count.Response_Data::1        97441                      
+system.ruby.network.routers3.throttle0.msg_count.Response_Control::1        12789                      
+system.ruby.network.routers3.throttle0.msg_count.Writeback_Control::0        47550                      
+system.ruby.network.routers3.throttle0.msg_bytes.Control::0      1399216                      
+system.ruby.network.routers3.throttle0.msg_bytes.Response_Data::1      7015752                      
+system.ruby.network.routers3.throttle0.msg_bytes.Response_Control::1       102312                      
+system.ruby.network.routers3.throttle0.msg_bytes.Writeback_Control::0       380400                      
+system.ruby.network.routers3.throttle1.link_utilization     0.008209                      
+system.ruby.network.routers3.throttle1.msg_count.Response_Data::1       175716                      
+system.ruby.network.routers3.throttle1.msg_count.Response_Control::1       112246                      
 system.ruby.network.routers3.throttle1.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers3.throttle1.msg_bytes.Response_Data::1     12594240                      
-system.ruby.network.routers3.throttle1.msg_bytes.Response_Control::1       895840                      
+system.ruby.network.routers3.throttle1.msg_bytes.Response_Data::1     12651552                      
+system.ruby.network.routers3.throttle1.msg_bytes.Response_Control::1       897968                      
 system.ruby.network.routers3.throttle1.msg_bytes.Writeback_Control::1       373888                      
 system.ruby.network.routers4.throttle0.link_utilization     0.000255                      
-system.ruby.network.routers4.throttle0.msg_count.Response_Data::1          807                      
+system.ruby.network.routers4.throttle0.msg_count.Response_Data::1          814                      
 system.ruby.network.routers4.throttle0.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers4.throttle0.msg_bytes.Response_Data::1        58104                      
+system.ruby.network.routers4.throttle0.msg_bytes.Response_Data::1        58608                      
 system.ruby.network.routers4.throttle0.msg_bytes.Writeback_Control::1       373888                      
 system.ruby.network.routers4.throttle1.link_utilization     0.000224                      
-system.ruby.network.routers4.throttle1.msg_count.Writeback_Control::0        47543                      
-system.ruby.network.routers4.throttle1.msg_bytes.Writeback_Control::0       380344                      
-system.ruby.network.routers5.throttle0.link_utilization     0.092567                      
-system.ruby.network.routers5.throttle0.msg_count.Request_Control::0        68787                      
-system.ruby.network.routers5.throttle0.msg_count.Response_Data::1      2008081                      
-system.ruby.network.routers5.throttle0.msg_count.Response_Control::1      1496069                      
-system.ruby.network.routers5.throttle0.msg_bytes.Request_Control::0       550296                      
-system.ruby.network.routers5.throttle0.msg_bytes.Response_Data::1    144581832                      
-system.ruby.network.routers5.throttle0.msg_bytes.Response_Control::1     11968552                      
-system.ruby.network.routers5.throttle1.link_utilization     0.029348                      
-system.ruby.network.routers5.throttle1.msg_count.Request_Control::0        62763                      
-system.ruby.network.routers5.throttle1.msg_count.Response_Data::1       651911                      
-system.ruby.network.routers5.throttle1.msg_count.Response_Control::1       295944                      
-system.ruby.network.routers5.throttle1.msg_bytes.Request_Control::0       502104                      
-system.ruby.network.routers5.throttle1.msg_bytes.Response_Data::1     46937592                      
-system.ruby.network.routers5.throttle1.msg_bytes.Response_Control::1      2367552                      
-system.ruby.network.routers5.throttle2.link_utilization     0.100531                      
-system.ruby.network.routers5.throttle2.msg_count.Control::0      2701544                      
-system.ruby.network.routers5.throttle2.msg_count.Response_Data::1       219939                      
-system.ruby.network.routers5.throttle2.msg_count.Response_Control::1       121479                      
-system.ruby.network.routers5.throttle2.msg_count.Response_Control::2      1830499                      
-system.ruby.network.routers5.throttle2.msg_count.Writeback_Data::0      1622881                      
-system.ruby.network.routers5.throttle2.msg_count.Writeback_Data::1          554                      
-system.ruby.network.routers5.throttle2.msg_count.Writeback_Control::0        83161                      
-system.ruby.network.routers5.throttle2.msg_bytes.Control::0     21612352                      
-system.ruby.network.routers5.throttle2.msg_bytes.Response_Data::1     15835608                      
-system.ruby.network.routers5.throttle2.msg_bytes.Response_Control::1       971832                      
-system.ruby.network.routers5.throttle2.msg_bytes.Response_Control::2     14643992                      
-system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Data::0    116847432                      
-system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Data::1        39888                      
-system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Control::0       665288                      
-system.ruby.network.routers5.throttle3.link_utilization     0.005203                      
-system.ruby.network.routers5.throttle3.msg_count.Control::0       174113                      
-system.ruby.network.routers5.throttle3.msg_count.Response_Data::1        96559                      
-system.ruby.network.routers5.throttle3.msg_count.Response_Control::1        13031                      
-system.ruby.network.routers5.throttle3.msg_count.Writeback_Control::0        47543                      
-system.ruby.network.routers5.throttle3.msg_bytes.Control::0      1392904                      
-system.ruby.network.routers5.throttle3.msg_bytes.Response_Data::1      6952248                      
-system.ruby.network.routers5.throttle3.msg_bytes.Response_Control::1       104248                      
-system.ruby.network.routers5.throttle3.msg_bytes.Writeback_Control::0       380344                      
+system.ruby.network.routers4.throttle1.msg_count.Writeback_Control::0        47550                      
+system.ruby.network.routers4.throttle1.msg_bytes.Writeback_Control::0       380400                      
+system.ruby.network.routers5.throttle0.link_utilization     0.038081                      
+system.ruby.network.routers5.throttle0.msg_count.Request_Control::0        42201                      
+system.ruby.network.routers5.throttle0.msg_count.Response_Data::1       838238                      
+system.ruby.network.routers5.throttle0.msg_count.Response_Control::1       487495                      
+system.ruby.network.routers5.throttle0.msg_bytes.Request_Control::0       337608                      
+system.ruby.network.routers5.throttle0.msg_bytes.Response_Data::1     60353136                      
+system.ruby.network.routers5.throttle0.msg_bytes.Response_Control::1      3899960                      
+system.ruby.network.routers5.throttle1.link_utilization     0.082224                      
+system.ruby.network.routers5.throttle1.msg_count.Request_Control::0        38464                      
+system.ruby.network.routers5.throttle1.msg_count.Response_Data::1      1794944                      
+system.ruby.network.routers5.throttle1.msg_count.Response_Control::1      1240059                      
+system.ruby.network.routers5.throttle1.msg_bytes.Request_Control::0       307712                      
+system.ruby.network.routers5.throttle1.msg_bytes.Response_Data::1    129235968                      
+system.ruby.network.routers5.throttle1.msg_bytes.Response_Control::1      9920472                      
+system.ruby.network.routers5.throttle2.link_utilization     0.059452                      
+system.ruby.network.routers5.throttle2.msg_count.Control::0      2655002                      
+system.ruby.network.routers5.throttle2.msg_count.Response_Data::1       199771                      
+system.ruby.network.routers5.throttle2.msg_count.Response_Control::1       120599                      
+system.ruby.network.routers5.throttle2.msg_count.Response_Control::2      1756512                      
+system.ruby.network.routers5.throttle2.msg_count.Writeback_Data::0       573736                      
+system.ruby.network.routers5.throttle2.msg_count.Writeback_Data::1          304                      
+system.ruby.network.routers5.throttle2.msg_count.Writeback_Control::0      1108430                      
+system.ruby.network.routers5.throttle2.msg_bytes.Control::0     21240016                      
+system.ruby.network.routers5.throttle2.msg_bytes.Response_Data::1     14383512                      
+system.ruby.network.routers5.throttle2.msg_bytes.Response_Control::1       964792                      
+system.ruby.network.routers5.throttle2.msg_bytes.Response_Control::2     14052096                      
+system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Data::0     41308992                      
+system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Data::1        21888                      
+system.ruby.network.routers5.throttle2.msg_bytes.Writeback_Control::0      8867440                      
+system.ruby.network.routers5.throttle3.link_utilization     0.005246                      
+system.ruby.network.routers5.throttle3.msg_count.Control::0       174902                      
+system.ruby.network.routers5.throttle3.msg_count.Response_Data::1        97441                      
+system.ruby.network.routers5.throttle3.msg_count.Response_Control::1        12789                      
+system.ruby.network.routers5.throttle3.msg_count.Writeback_Control::0        47550                      
+system.ruby.network.routers5.throttle3.msg_bytes.Control::0      1399216                      
+system.ruby.network.routers5.throttle3.msg_bytes.Response_Data::1      7015752                      
+system.ruby.network.routers5.throttle3.msg_bytes.Response_Control::1       102312                      
+system.ruby.network.routers5.throttle3.msg_bytes.Writeback_Control::0       380400                      
 system.ruby.network.routers5.throttle4.link_utilization     0.000255                      
-system.ruby.network.routers5.throttle4.msg_count.Response_Data::1          807                      
+system.ruby.network.routers5.throttle4.msg_count.Response_Data::1          814                      
 system.ruby.network.routers5.throttle4.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers5.throttle4.msg_bytes.Response_Data::1        58104                      
+system.ruby.network.routers5.throttle4.msg_bytes.Response_Data::1        58608                      
 system.ruby.network.routers5.throttle4.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.l1_cntrl0.Load               |    10937660     71.18%     71.18% |     4428777     28.82%    100.00%
-system.ruby.l1_cntrl0.Load::total            15366437                      
+system.ruby.l1_cntrl0.Load               |     6084593     40.78%     40.78% |     8836682     59.22%    100.00%
+system.ruby.l1_cntrl0.Load::total            14921275                      
 
-system.ruby.l1_cntrl0.Ifetch             |   104942071     81.63%     81.63% |    23615568     18.37%    100.00%
-system.ruby.l1_cntrl0.Ifetch::total         128557639                      
+system.ruby.l1_cntrl0.Ifetch             |    67803399     53.56%     53.56% |    58798232     46.44%    100.00%
+system.ruby.l1_cntrl0.Ifetch::total         126601631                      
 
-system.ruby.l1_cntrl0.Store              |     7262825     66.18%     66.18% |     3711569     33.82%    100.00%
-system.ruby.l1_cntrl0.Store::total           10974394                      
+system.ruby.l1_cntrl0.Store              |     5172154     48.50%     48.50% |     5492563     51.50%    100.00%
+system.ruby.l1_cntrl0.Store::total           10664717                      
 
-system.ruby.l1_cntrl0.Inv                |       29381     53.94%     53.94% |       25091     46.06%    100.00%
-system.ruby.l1_cntrl0.Inv::total                54472                      
+system.ruby.l1_cntrl0.Inv                |       16151     50.12%     50.12% |       16074     49.88%    100.00%
+system.ruby.l1_cntrl0.Inv::total                32225                      
 
-system.ruby.l1_cntrl0.L1_Replacement     |     1982628     75.99%     75.99% |      626364     24.01%    100.00%
-system.ruby.l1_cntrl0.L1_Replacement::total      2608992                      
+system.ruby.l1_cntrl0.L1_Replacement     |      823061     31.64%     31.64% |     1778014     68.36%    100.00%
+system.ruby.l1_cntrl0.L1_Replacement::total      2601075                      
 
-system.ruby.l1_cntrl0.Fwd_GETX           |       15844     50.70%     50.70% |       15408     49.30%    100.00%
-system.ruby.l1_cntrl0.Fwd_GETX::total           31252                      
+system.ruby.l1_cntrl0.Fwd_GETX           |       12035     51.06%     51.06% |       11536     48.94%    100.00%
+system.ruby.l1_cntrl0.Fwd_GETX::total           23571                      
 
-system.ruby.l1_cntrl0.Fwd_GETS           |       23557     51.41%     51.41% |       22264     48.59%    100.00%
-system.ruby.l1_cntrl0.Fwd_GETS::total           45821                      
+system.ruby.l1_cntrl0.Fwd_GETS           |       14011     56.35%     56.35% |       10854     43.65%    100.00%
+system.ruby.l1_cntrl0.Fwd_GETS::total           24865                      
 
-system.ruby.l1_cntrl0.Fwd_GET_INSTR      |           5    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.Fwd_GET_INSTR::total            5                      
+system.ruby.l1_cntrl0.Fwd_GET_INSTR      |           4    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.l1_cntrl0.Fwd_GET_INSTR::total            4                      
 
-system.ruby.l1_cntrl0.Data               |        1647     57.45%     57.45% |        1220     42.55%    100.00%
-system.ruby.l1_cntrl0.Data::total                2867                      
+system.ruby.l1_cntrl0.Data               |         735     42.05%     42.05% |        1013     57.95%    100.00%
+system.ruby.l1_cntrl0.Data::total                1748                      
 
-system.ruby.l1_cntrl0.Data_Exclusive     |     1191679     90.64%     90.64% |      123071      9.36%    100.00%
-system.ruby.l1_cntrl0.Data_Exclusive::total      1314750                      
+system.ruby.l1_cntrl0.Data_Exclusive     |      250285     19.59%     19.59% |     1027592     80.41%    100.00%
+system.ruby.l1_cntrl0.Data_Exclusive::total      1277877                      
 
-system.ruby.l1_cntrl0.DataS_fromL1       |       22264     48.58%     48.58% |       23562     51.42%    100.00%
-system.ruby.l1_cntrl0.DataS_fromL1::total        45826                      
+system.ruby.l1_cntrl0.DataS_fromL1       |       10854     43.64%     43.64% |       14015     56.36%    100.00%
+system.ruby.l1_cntrl0.DataS_fromL1::total        24869                      
 
-system.ruby.l1_cntrl0.Data_all_Acks      |      792491     61.12%     61.12% |      504058     38.88%    100.00%
-system.ruby.l1_cntrl0.Data_all_Acks::total      1296549                      
+system.ruby.l1_cntrl0.Data_all_Acks      |      576364     43.38%     43.38% |      752324     56.62%    100.00%
+system.ruby.l1_cntrl0.Data_all_Acks::total      1328688                      
 
-system.ruby.l1_cntrl0.Ack                |       19805     47.66%     47.66% |       21747     52.34%    100.00%
-system.ruby.l1_cntrl0.Ack::total                41552                      
+system.ruby.l1_cntrl0.Ack                |       11947     54.75%     54.75% |        9873     45.25%    100.00%
+system.ruby.l1_cntrl0.Ack::total                21820                      
 
-system.ruby.l1_cntrl0.Ack_all            |       21452     48.29%     48.29% |       22967     51.71%    100.00%
-system.ruby.l1_cntrl0.Ack_all::total            44419                      
+system.ruby.l1_cntrl0.Ack_all            |       12682     53.81%     53.81% |       10886     46.19%    100.00%
+system.ruby.l1_cntrl0.Ack_all::total            23568                      
 
-system.ruby.l1_cntrl0.WB_Ack             |     1454812     85.27%     85.27% |      251230     14.73%    100.00%
-system.ruby.l1_cntrl0.WB_Ack::total           1706042                      
+system.ruby.l1_cntrl0.WB_Ack             |      462866     27.52%     27.52% |     1219300     72.48%    100.00%
+system.ruby.l1_cntrl0.WB_Ack::total           1682166                      
 
-system.ruby.l1_cntrl0.NP.Load            |     1239865     88.45%     88.45% |      161879     11.55%    100.00%
-system.ruby.l1_cntrl0.NP.Load::total          1401744                      
+system.ruby.l1_cntrl0.NP.Load            |      278296     20.36%     20.36% |     1088636     79.64%    100.00%
+system.ruby.l1_cntrl0.NP.Load::total          1366932                      
 
-system.ruby.l1_cntrl0.NP.Ifetch          |      468275     58.71%     58.71% |      329378     41.29%    100.00%
-system.ruby.l1_cntrl0.NP.Ifetch::total         797653                      
+system.ruby.l1_cntrl0.NP.Ifetch          |      324154     39.75%     39.75% |      491322     60.25%    100.00%
+system.ruby.l1_cntrl0.NP.Ifetch::total         815476                      
 
-system.ruby.l1_cntrl0.NP.Store           |      275512     66.93%     66.93% |      136131     33.07%    100.00%
-system.ruby.l1_cntrl0.NP.Store::total          411643                      
+system.ruby.l1_cntrl0.NP.Store           |      221635     52.68%     52.68% |      199080     47.32%    100.00%
+system.ruby.l1_cntrl0.NP.Store::total          420715                      
 
-system.ruby.l1_cntrl0.NP.Inv             |        6534     64.01%     64.01% |        3673     35.99%    100.00%
-system.ruby.l1_cntrl0.NP.Inv::total             10207                      
+system.ruby.l1_cntrl0.NP.Inv             |        5298     59.24%     59.24% |        3645     40.76%    100.00%
+system.ruby.l1_cntrl0.NP.Inv::total              8943                      
 
-system.ruby.l1_cntrl0.I.Load             |       16225     51.38%     51.38% |       15353     48.62%    100.00%
-system.ruby.l1_cntrl0.I.Load::total             31578                      
+system.ruby.l1_cntrl0.I.Load             |        8385     45.08%     45.08% |       10216     54.92%    100.00%
+system.ruby.l1_cntrl0.I.Load::total             18601                      
 
-system.ruby.l1_cntrl0.I.Ifetch           |         441     68.27%     68.27% |         205     31.73%    100.00%
-system.ruby.l1_cntrl0.I.Ifetch::total             646                      
+system.ruby.l1_cntrl0.I.Ifetch           |          98     43.17%     43.17% |         129     56.83%    100.00%
+system.ruby.l1_cntrl0.I.Ifetch::total             227                      
 
-system.ruby.l1_cntrl0.I.Store            |        7763     46.41%     46.41% |        8965     53.59%    100.00%
-system.ruby.l1_cntrl0.I.Store::total            16728                      
+system.ruby.l1_cntrl0.I.Store            |        5670     50.49%     50.49% |        5561     49.51%    100.00%
+system.ruby.l1_cntrl0.I.Store::total            11231                      
 
-system.ruby.l1_cntrl0.I.L1_Replacement   |       14196     53.57%     53.57% |       12303     46.43%    100.00%
-system.ruby.l1_cntrl0.I.L1_Replacement::total        26499                      
+system.ruby.l1_cntrl0.I.L1_Replacement   |        8735     52.29%     52.29% |        7971     47.71%    100.00%
+system.ruby.l1_cntrl0.I.L1_Replacement::total        16706                      
 
-system.ruby.l1_cntrl0.S.Load             |      716363     57.80%     57.80% |      523017     42.20%    100.00%
-system.ruby.l1_cntrl0.S.Load::total           1239380                      
+system.ruby.l1_cntrl0.S.Load             |      550458     51.55%     51.55% |      517421     48.45%    100.00%
+system.ruby.l1_cntrl0.S.Load::total           1067879                      
 
-system.ruby.l1_cntrl0.S.Ifetch           |   104473354     81.77%     81.77% |    23285981     18.23%    100.00%
-system.ruby.l1_cntrl0.S.Ifetch::total       127759335                      
+system.ruby.l1_cntrl0.S.Ifetch           |    67479144     53.65%     53.65% |    58306780     46.35%    100.00%
+system.ruby.l1_cntrl0.S.Ifetch::total       125785924                      
 
-system.ruby.l1_cntrl0.S.Store            |       19805     47.66%     47.66% |       21747     52.34%    100.00%
-system.ruby.l1_cntrl0.S.Store::total            41552                      
+system.ruby.l1_cntrl0.S.Store            |       11947     54.75%     54.75% |        9873     45.25%    100.00%
+system.ruby.l1_cntrl0.S.Store::total            21820                      
 
-system.ruby.l1_cntrl0.S.Inv              |       22660     52.04%     52.04% |       20885     47.96%    100.00%
-system.ruby.l1_cntrl0.S.Inv::total              43545                      
+system.ruby.l1_cntrl0.S.Inv              |       10719     46.81%     46.81% |       12178     53.19%    100.00%
+system.ruby.l1_cntrl0.S.Inv::total              22897                      
 
-system.ruby.l1_cntrl0.S.L1_Replacement   |      513620     58.60%     58.60% |      362831     41.40%    100.00%
-system.ruby.l1_cntrl0.S.L1_Replacement::total       876451                      
+system.ruby.l1_cntrl0.S.L1_Replacement   |      351460     38.96%     38.96% |      550743     61.04%    100.00%
+system.ruby.l1_cntrl0.S.L1_Replacement::total       902203                      
 
-system.ruby.l1_cntrl0.E.Load             |     2877485     78.07%     78.07% |      808285     21.93%    100.00%
-system.ruby.l1_cntrl0.E.Load::total           3685770                      
+system.ruby.l1_cntrl0.E.Load             |     1120786     29.13%     29.13% |     2726694     70.87%    100.00%
+system.ruby.l1_cntrl0.E.Load::total           3847480                      
 
-system.ruby.l1_cntrl0.E.Store            |      114491     74.50%     74.50% |       39180     25.50%    100.00%
-system.ruby.l1_cntrl0.E.Store::total           153671                      
+system.ruby.l1_cntrl0.E.Store            |       80619     48.39%     48.39% |       85992     51.61%    100.00%
+system.ruby.l1_cntrl0.E.Store::total           166611                      
 
-system.ruby.l1_cntrl0.E.Inv              |          16      9.64%      9.64% |         150     90.36%    100.00%
-system.ruby.l1_cntrl0.E.Inv::total                166                      
+system.ruby.l1_cntrl0.E.Inv              |          57     70.37%     70.37% |          24     29.63%    100.00%
+system.ruby.l1_cntrl0.E.Inv::total                 81                      
 
-system.ruby.l1_cntrl0.E.L1_Replacement   |     1075597     92.92%     92.92% |       82009      7.08%    100.00%
-system.ruby.l1_cntrl0.E.L1_Replacement::total      1157606                      
+system.ruby.l1_cntrl0.E.L1_Replacement   |      168208     15.18%     15.18% |      940222     84.82%    100.00%
+system.ruby.l1_cntrl0.E.L1_Replacement::total      1108430                      
 
-system.ruby.l1_cntrl0.E.Fwd_GETX         |         157     36.77%     36.77% |         270     63.23%    100.00%
-system.ruby.l1_cntrl0.E.Fwd_GETX::total           427                      
+system.ruby.l1_cntrl0.E.Fwd_GETX         |         208     58.92%     58.92% |         145     41.08%    100.00%
+system.ruby.l1_cntrl0.E.Fwd_GETX::total           353                      
 
-system.ruby.l1_cntrl0.E.Fwd_GETS         |        1309     50.17%     50.17% |        1300     49.83%    100.00%
-system.ruby.l1_cntrl0.E.Fwd_GETS::total          2609                      
+system.ruby.l1_cntrl0.E.Fwd_GETS         |        1001     46.45%     46.45% |        1154     53.55%    100.00%
+system.ruby.l1_cntrl0.E.Fwd_GETS::total          2155                      
 
-system.ruby.l1_cntrl0.E.Fwd_GET_INSTR    |           1    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.E.Fwd_GET_INSTR::total            1                      
+system.ruby.l1_cntrl0.M.Load             |     4126668     47.87%     47.87% |     4493715     52.13%    100.00%
+system.ruby.l1_cntrl0.M.Load::total           8620383                      
 
-system.ruby.l1_cntrl0.M.Load             |     6087722     67.58%     67.58% |     2920243     32.42%    100.00%
-system.ruby.l1_cntrl0.M.Load::total           9007965                      
+system.ruby.l1_cntrl0.M.Store            |     4852283     48.31%     48.31% |     5192057     51.69%    100.00%
+system.ruby.l1_cntrl0.M.Store::total         10044340                      
 
-system.ruby.l1_cntrl0.M.Store            |     6845254     66.13%     66.13% |     3505546     33.87%    100.00%
-system.ruby.l1_cntrl0.M.Store::total         10350800                      
+system.ruby.l1_cntrl0.M.Inv              |          77     25.33%     25.33% |         227     74.67%    100.00%
+system.ruby.l1_cntrl0.M.Inv::total                304                      
 
-system.ruby.l1_cntrl0.M.Inv              |         171     30.87%     30.87% |         383     69.13%    100.00%
-system.ruby.l1_cntrl0.M.Inv::total                554                      
+system.ruby.l1_cntrl0.M.L1_Replacement   |      294658     51.36%     51.36% |      279078     48.64%    100.00%
+system.ruby.l1_cntrl0.M.L1_Replacement::total       573736                      
 
-system.ruby.l1_cntrl0.M.L1_Replacement   |      379215     69.14%     69.14% |      169221     30.86%    100.00%
-system.ruby.l1_cntrl0.M.L1_Replacement::total       548436                      
+system.ruby.l1_cntrl0.M.Fwd_GETX         |       11827     50.94%     50.94% |       11391     49.06%    100.00%
+system.ruby.l1_cntrl0.M.Fwd_GETX::total         23218                      
 
-system.ruby.l1_cntrl0.M.Fwd_GETX         |       15687     50.89%     50.89% |       15138     49.11%    100.00%
-system.ruby.l1_cntrl0.M.Fwd_GETX::total         30825                      
-
-system.ruby.l1_cntrl0.M.Fwd_GETS         |       22248     51.49%     51.49% |       20963     48.51%    100.00%
-system.ruby.l1_cntrl0.M.Fwd_GETS::total         43211                      
+system.ruby.l1_cntrl0.M.Fwd_GETS         |       13010     57.29%     57.29% |        9700     42.71%    100.00%
+system.ruby.l1_cntrl0.M.Fwd_GETS::total         22710                      
 
 system.ruby.l1_cntrl0.M.Fwd_GET_INSTR    |           4    100.00%    100.00% |           0      0.00%    100.00%
 system.ruby.l1_cntrl0.M.Fwd_GET_INSTR::total            4                      
 
-system.ruby.l1_cntrl0.IS.Data_Exclusive  |     1191679     90.64%     90.64% |      123071      9.36%    100.00%
-system.ruby.l1_cntrl0.IS.Data_Exclusive::total      1314750                      
+system.ruby.l1_cntrl0.IS.Data_Exclusive  |      250285     19.59%     19.59% |     1027592     80.41%    100.00%
+system.ruby.l1_cntrl0.IS.Data_Exclusive::total      1277877                      
 
-system.ruby.l1_cntrl0.IS.DataS_fromL1    |       22264     48.58%     48.58% |       23562     51.42%    100.00%
-system.ruby.l1_cntrl0.IS.DataS_fromL1::total        45826                      
+system.ruby.l1_cntrl0.IS.DataS_fromL1    |       10854     43.64%     43.64% |       14015     56.36%    100.00%
+system.ruby.l1_cntrl0.IS.DataS_fromL1::total        24869                      
 
-system.ruby.l1_cntrl0.IS.Data_all_Acks   |      510863     58.65%     58.65% |      360182     41.35%    100.00%
-system.ruby.l1_cntrl0.IS.Data_all_Acks::total       871045                      
+system.ruby.l1_cntrl0.IS.Data_all_Acks   |      349794     38.93%     38.93% |      548696     61.07%    100.00%
+system.ruby.l1_cntrl0.IS.Data_all_Acks::total       898490                      
 
-system.ruby.l1_cntrl0.IM.Data            |        1647     57.45%     57.45% |        1220     42.55%    100.00%
-system.ruby.l1_cntrl0.IM.Data::total             2867                      
+system.ruby.l1_cntrl0.IM.Data            |         735     42.05%     42.05% |        1013     57.95%    100.00%
+system.ruby.l1_cntrl0.IM.Data::total             1748                      
 
-system.ruby.l1_cntrl0.IM.Data_all_Acks   |      281628     66.19%     66.19% |      143876     33.81%    100.00%
-system.ruby.l1_cntrl0.IM.Data_all_Acks::total       425504                      
+system.ruby.l1_cntrl0.IM.Data_all_Acks   |      226570     52.67%     52.67% |      203628     47.33%    100.00%
+system.ruby.l1_cntrl0.IM.Data_all_Acks::total       430198                      
 
-system.ruby.l1_cntrl0.SM.Ack             |       19805     47.66%     47.66% |       21747     52.34%    100.00%
-system.ruby.l1_cntrl0.SM.Ack::total             41552                      
+system.ruby.l1_cntrl0.SM.Ack             |       11947     54.75%     54.75% |        9873     45.25%    100.00%
+system.ruby.l1_cntrl0.SM.Ack::total             21820                      
 
-system.ruby.l1_cntrl0.SM.Ack_all         |       21452     48.29%     48.29% |       22967     51.71%    100.00%
-system.ruby.l1_cntrl0.SM.Ack_all::total         44419                      
+system.ruby.l1_cntrl0.SM.Ack_all         |       12682     53.81%     53.81% |       10886     46.19%    100.00%
+system.ruby.l1_cntrl0.SM.Ack_all::total         23568                      
 
-system.ruby.l1_cntrl0.M_I.Ifetch         |           1     20.00%     20.00% |           4     80.00%    100.00%
-system.ruby.l1_cntrl0.M_I.Ifetch::total             5                      
+system.ruby.l1_cntrl0.M_I.Ifetch         |           3     75.00%     75.00% |           1     25.00%    100.00%
+system.ruby.l1_cntrl0.M_I.Ifetch::total             4                      
 
-system.ruby.l1_cntrl0.M_I.Fwd_GETS       |           0      0.00%      0.00% |           1    100.00%    100.00%
-system.ruby.l1_cntrl0.M_I.Fwd_GETS::total            1                      
+system.ruby.l1_cntrl0.M_I.WB_Ack         |      462866     27.52%     27.52% |     1219300     72.48%    100.00%
+system.ruby.l1_cntrl0.M_I.WB_Ack::total       1682166                      
 
-system.ruby.l1_cntrl0.M_I.WB_Ack         |     1454812     85.27%     85.27% |      251229     14.73%    100.00%
-system.ruby.l1_cntrl0.M_I.WB_Ack::total       1706041                      
-
-system.ruby.l1_cntrl0.SINK_WB_ACK.WB_Ack |           0      0.00%      0.00% |           1    100.00%    100.00%
-system.ruby.l1_cntrl0.SINK_WB_ACK.WB_Ack::total            1                      
-
-system.ruby.l2_cntrl0.L1_GET_INSTR             798300      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_GETS                 1433505      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_GETX                  428371      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_UPGRADE                41552      0.00%      0.00%
-system.ruby.l2_cntrl0.L1_PUTX                 1706043      0.00%      0.00%
-system.ruby.l2_cntrl0.L2_Replacement            93999      0.00%      0.00%
-system.ruby.l2_cntrl0.L2_Replacement_clean        13201      0.00%      0.00%
-system.ruby.l2_cntrl0.Mem_Data                 174113      0.00%      0.00%
-system.ruby.l2_cntrl0.Mem_Ack                  109590      0.00%      0.00%
-system.ruby.l2_cntrl0.WB_Data                   45725      0.00%      0.00%
-system.ruby.l2_cntrl0.WB_Data_clean               655      0.00%      0.00%
-system.ruby.l2_cntrl0.Ack                        2069      0.00%      0.00%
-system.ruby.l2_cntrl0.Ack_all                    7430      0.00%      0.00%
-system.ruby.l2_cntrl0.Unblock                   45826      0.00%      0.00%
-system.ruby.l2_cntrl0.Exclusive_Unblock       1784673      0.00%      0.00%
-system.ruby.l2_cntrl0.MEM_Inv                    4780      0.00%      0.00%
-system.ruby.l2_cntrl0.NP.L1_GET_INSTR           15882      0.00%      0.00%
-system.ruby.l2_cntrl0.NP.L1_GETS                31693      0.00%      0.00%
-system.ruby.l2_cntrl0.NP.L1_GETX               126538      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L1_GET_INSTR          782387      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L1_GETS                72751      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L1_GETX                 3011      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L1_UPGRADE             41552      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L1_PUTX                    1      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L2_Replacement           271      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.L2_Replacement_clean         6989      0.00%      0.00%
-system.ruby.l2_cntrl0.SS.MEM_Inv                    4      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L1_GET_INSTR               25      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L1_GETS               1283057      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L1_GETX                267570      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L2_Replacement          93550      0.00%      0.00%
-system.ruby.l2_cntrl0.M.L2_Replacement_clean         5909      0.00%      0.00%
-system.ruby.l2_cntrl0.M.MEM_Inv                  2147      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L1_GET_INSTR               5      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L1_GETS                45821      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L1_GETX                31252      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L1_PUTX              1706041      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L2_Replacement           178      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.L2_Replacement_clean          303      0.00%      0.00%
-system.ruby.l2_cntrl0.MT.MEM_Inv                  239      0.00%      0.00%
-system.ruby.l2_cntrl0.M_I.L1_GET_INSTR              1      0.00%      0.00%
-system.ruby.l2_cntrl0.M_I.Mem_Ack              109590      0.00%      0.00%
-system.ruby.l2_cntrl0.M_I.MEM_Inv                2147      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_I.WB_Data                384      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_I.Ack_all                 33      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_I.MEM_Inv                239      0.00%      0.00%
-system.ruby.l2_cntrl0.MCT_I.WB_Data               170      0.00%      0.00%
-system.ruby.l2_cntrl0.MCT_I.Ack_all               133      0.00%      0.00%
-system.ruby.l2_cntrl0.I_I.Ack                    1795      0.00%      0.00%
-system.ruby.l2_cntrl0.I_I.Ack_all                6989      0.00%      0.00%
-system.ruby.l2_cntrl0.S_I.Ack                     274      0.00%      0.00%
-system.ruby.l2_cntrl0.S_I.Ack_all                 275      0.00%      0.00%
-system.ruby.l2_cntrl0.S_I.MEM_Inv                   4      0.00%      0.00%
-system.ruby.l2_cntrl0.ISS.Mem_Data              31693      0.00%      0.00%
-system.ruby.l2_cntrl0.IS.Mem_Data               15882      0.00%      0.00%
-system.ruby.l2_cntrl0.IM.Mem_Data              126538      0.00%      0.00%
-system.ruby.l2_cntrl0.SS_MB.L1_GETS               134      0.00%      0.00%
-system.ruby.l2_cntrl0.SS_MB.Exclusive_Unblock        44563      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_MB.L1_GETS                49      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_MB.Exclusive_Unblock      1740110      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IIB.L1_PUTX                1      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IIB.WB_Data            45078      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IIB.WB_Data_clean          654      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IIB.Unblock               94      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IB.WB_Data                93      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_IB.WB_Data_clean            1      0.00%      0.00%
-system.ruby.l2_cntrl0.MT_SB.Unblock             45732      0.00%      0.00%
-system.ruby.dma_cntrl0.ReadRequest                807      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_GET_INSTR             815703      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_GETS                 1385690      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_GETX                  431947      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_UPGRADE                21820      0.00%      0.00%
+system.ruby.l2_cntrl0.L1_PUTX                 1682166      0.00%      0.00%
+system.ruby.l2_cntrl0.L2_Replacement            95350      0.00%      0.00%
+system.ruby.l2_cntrl0.L2_Replacement_clean        12864      0.00%      0.00%
+system.ruby.l2_cntrl0.Mem_Data                 174902      0.00%      0.00%
+system.ruby.l2_cntrl0.Mem_Ack                  110230      0.00%      0.00%
+system.ruby.l2_cntrl0.WB_Data                   23018      0.00%      0.00%
+system.ruby.l2_cntrl0.WB_Data_clean              2155      0.00%      0.00%
+system.ruby.l2_cntrl0.Ack                        1666      0.00%      0.00%
+system.ruby.l2_cntrl0.Ack_all                    6687      0.00%      0.00%
+system.ruby.l2_cntrl0.Unblock                   24869      0.00%      0.00%
+system.ruby.l2_cntrl0.Exclusive_Unblock       1731643      0.00%      0.00%
+system.ruby.l2_cntrl0.MEM_Inv                    4032      0.00%      0.00%
+system.ruby.l2_cntrl0.NP.L1_GET_INSTR           15306      0.00%      0.00%
+system.ruby.l2_cntrl0.NP.L1_GETS                32147      0.00%      0.00%
+system.ruby.l2_cntrl0.NP.L1_GETX               127449      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L1_GET_INSTR          800365      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L1_GETS                82791      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L1_GETX                 1783      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L1_UPGRADE             21820      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L2_Replacement           268      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.L2_Replacement_clean         6335      0.00%      0.00%
+system.ruby.l2_cntrl0.SS.MEM_Inv                    3      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L1_GET_INSTR               28      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L1_GETS               1245730      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L1_GETX                279143      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L2_Replacement          94921      0.00%      0.00%
+system.ruby.l2_cntrl0.M.L2_Replacement_clean         6421      0.00%      0.00%
+system.ruby.l2_cntrl0.M.MEM_Inv                  1897      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L1_GET_INSTR               4      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L1_GETS                24865      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L1_GETX                23571      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L1_PUTX              1682166      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L2_Replacement           161      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.L2_Replacement_clean          108      0.00%      0.00%
+system.ruby.l2_cntrl0.MT.MEM_Inv                  116      0.00%      0.00%
+system.ruby.l2_cntrl0.M_I.Mem_Ack              110230      0.00%      0.00%
+system.ruby.l2_cntrl0.M_I.MEM_Inv                1897      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_I.WB_Data                229      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_I.Ack_all                 48      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_I.MEM_Inv                116      0.00%      0.00%
+system.ruby.l2_cntrl0.MCT_I.WB_Data                75      0.00%      0.00%
+system.ruby.l2_cntrl0.MCT_I.Ack_all                33      0.00%      0.00%
+system.ruby.l2_cntrl0.I_I.Ack                    1395      0.00%      0.00%
+system.ruby.l2_cntrl0.I_I.Ack_all                6335      0.00%      0.00%
+system.ruby.l2_cntrl0.S_I.Ack                     271      0.00%      0.00%
+system.ruby.l2_cntrl0.S_I.Ack_all                 271      0.00%      0.00%
+system.ruby.l2_cntrl0.S_I.MEM_Inv                   3      0.00%      0.00%
+system.ruby.l2_cntrl0.ISS.Mem_Data              32147      0.00%      0.00%
+system.ruby.l2_cntrl0.IS.Mem_Data               15306      0.00%      0.00%
+system.ruby.l2_cntrl0.IM.Mem_Data              127449      0.00%      0.00%
+system.ruby.l2_cntrl0.SS_MB.L1_GETS               119      0.00%      0.00%
+system.ruby.l2_cntrl0.SS_MB.Exclusive_Unblock        23603      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_MB.L1_GETS                38      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_MB.L1_GETX                 1      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_MB.Exclusive_Unblock      1708040      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_IIB.WB_Data            22711      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_IIB.WB_Data_clean         2155      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_IIB.Unblock                3      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_IB.WB_Data                 3      0.00%      0.00%
+system.ruby.l2_cntrl0.MT_SB.Unblock             24866      0.00%      0.00%
+system.ruby.dma_cntrl0.ReadRequest                814      0.00%      0.00%
 system.ruby.dma_cntrl0.WriteRequest             46736      0.00%      0.00%
-system.ruby.dma_cntrl0.Data                       807      0.00%      0.00%
+system.ruby.dma_cntrl0.Data                       814      0.00%      0.00%
 system.ruby.dma_cntrl0.Ack                      46736      0.00%      0.00%
-system.ruby.dma_cntrl0.READY.ReadRequest          807      0.00%      0.00%
+system.ruby.dma_cntrl0.READY.ReadRequest          814      0.00%      0.00%
 system.ruby.dma_cntrl0.READY.WriteRequest        46736      0.00%      0.00%
-system.ruby.dma_cntrl0.BUSY_RD.Data               807      0.00%      0.00%
+system.ruby.dma_cntrl0.BUSY_RD.Data               814      0.00%      0.00%
 system.ruby.dma_cntrl0.BUSY_WR.Ack              46736      0.00%      0.00%
-system.ruby.dir_cntrl0.Fetch                   174113      0.00%      0.00%
-system.ruby.dir_cntrl0.Data                     96559      0.00%      0.00%
-system.ruby.dir_cntrl0.Memory_Data             174561      0.00%      0.00%
-system.ruby.dir_cntrl0.Memory_Ack              141264      0.00%      0.00%
-system.ruby.dir_cntrl0.DMA_READ                   807      0.00%      0.00%
+system.ruby.dir_cntrl0.Fetch                   174902      0.00%      0.00%
+system.ruby.dir_cntrl0.Data                     97441      0.00%      0.00%
+system.ruby.dir_cntrl0.Memory_Data             175365      0.00%      0.00%
+system.ruby.dir_cntrl0.Memory_Ack              142512      0.00%      0.00%
+system.ruby.dir_cntrl0.DMA_READ                   814      0.00%      0.00%
 system.ruby.dir_cntrl0.DMA_WRITE                46736      0.00%      0.00%
-system.ruby.dir_cntrl0.CleanReplacement         13031      0.00%      0.00%
-system.ruby.dir_cntrl0.I.Fetch                 174113      0.00%      0.00%
-system.ruby.dir_cntrl0.I.DMA_READ                 448      0.00%      0.00%
-system.ruby.dir_cntrl0.I.DMA_WRITE              44705      0.00%      0.00%
-system.ruby.dir_cntrl0.ID.Memory_Data             448      0.00%      0.00%
-system.ruby.dir_cntrl0.ID_W.Memory_Ack          44705      0.00%      0.00%
-system.ruby.dir_cntrl0.M.Data                   94169      0.00%      0.00%
-system.ruby.dir_cntrl0.M.DMA_READ                 359      0.00%      0.00%
-system.ruby.dir_cntrl0.M.DMA_WRITE               2031      0.00%      0.00%
-system.ruby.dir_cntrl0.M.CleanReplacement        13031      0.00%      0.00%
-system.ruby.dir_cntrl0.IM.Memory_Data          174113      0.00%      0.00%
-system.ruby.dir_cntrl0.MI.Memory_Ack            94169      0.00%      0.00%
-system.ruby.dir_cntrl0.M_DRD.Data                 359      0.00%      0.00%
-system.ruby.dir_cntrl0.M_DRDI.Memory_Ack          359      0.00%      0.00%
-system.ruby.dir_cntrl0.M_DWR.Data                2031      0.00%      0.00%
-system.ruby.dir_cntrl0.M_DWRI.Memory_Ack         2031      0.00%      0.00%
+system.ruby.dir_cntrl0.CleanReplacement         12789      0.00%      0.00%
+system.ruby.dir_cntrl0.I.Fetch                 174902      0.00%      0.00%
+system.ruby.dir_cntrl0.I.DMA_READ                 463      0.00%      0.00%
+system.ruby.dir_cntrl0.I.DMA_WRITE              45071      0.00%      0.00%
+system.ruby.dir_cntrl0.ID.Memory_Data             463      0.00%      0.00%
+system.ruby.dir_cntrl0.ID_W.Memory_Ack          45071      0.00%      0.00%
+system.ruby.dir_cntrl0.M.Data                   95425      0.00%      0.00%
+system.ruby.dir_cntrl0.M.DMA_READ                 351      0.00%      0.00%
+system.ruby.dir_cntrl0.M.DMA_WRITE               1665      0.00%      0.00%
+system.ruby.dir_cntrl0.M.CleanReplacement        12789      0.00%      0.00%
+system.ruby.dir_cntrl0.IM.Memory_Data          174902      0.00%      0.00%
+system.ruby.dir_cntrl0.MI.Memory_Ack            95425      0.00%      0.00%
+system.ruby.dir_cntrl0.M_DRD.Data                 351      0.00%      0.00%
+system.ruby.dir_cntrl0.M_DRDI.Memory_Ack          351      0.00%      0.00%
+system.ruby.dir_cntrl0.M_DWR.Data                1665      0.00%      0.00%
+system.ruby.dir_cntrl0.M_DWRI.Memory_Ack         1665      0.00%      0.00%
 
 ---------- End Simulation Statistics   ----------

@@ -1,24 +1,9 @@
-Real time: Sep/22/2013 05:27:18
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 5
-Elapsed_time_in_minutes: 0.0833333
-Elapsed_time_in_hours: 0.00138889
-Elapsed_time_in_days: 5.78704e-05
-
-Virtual_time_in_seconds: 0.38
-Virtual_time_in_minutes: 0.00633333
-Virtual_time_in_hours:   0.000105556
-Virtual_time_in_days:    4.39815e-06
-
-Ruby_current_time: 52575
+Ruby_current_time: 52548
 Ruby_start_time: 0
-Ruby_cycles: 52575
-
-mbytes_resident: 68.4688
-mbytes_total: 122.754
-resident_ratio: 0.557772
+Ruby_cycles: 52548
 
 Busy Controller Counts:
 L1Cache-0:0  
@@ -32,18 +17,18 @@ sequencer_requests_outstanding: [binsize: 1 max: 1 count: 3295 average:     1 | 
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-latency: [binsize: 8 max: 116 count: 3294 average: 14.9608 | standard deviation: 26.5582 | 2722 0 25 0 0 0 0 0 0 518 22 3 0 3 1 ]
-latency: LD: [binsize: 8 max: 116 count: 415 average: 36.7566 | standard deviation: 35.7458 | 211 0 12 0 0 0 0 0 0 178 10 1 0 2 1 ]
-latency: ST: [binsize: 8 max: 106 count: 294 average: 18.915 | standard deviation: 29.8083 | 226 0 4 0 0 0 0 0 0 60 3 0 0 1 ]
-latency: IFETCH: [binsize: 8 max: 89 count: 2585 average: 11.012 | standard deviation: 22.3546 | 2285 0 9 0 0 0 0 0 0 280 9 2 ]
+latency: [binsize: 8 max: 116 count: 3294 average: 14.9526 | standard deviation: 26.5342 | 2722 0 25 0 0 0 0 0 0 520 21 3 0 2 1 ]
+latency: LD: [binsize: 8 max: 116 count: 415 average: 36.6627 | standard deviation: 35.6119 | 211 0 12 0 0 0 0 0 0 181 8 1 0 1 1 ]
+latency: ST: [binsize: 8 max: 106 count: 294 average: 18.9456 | standard deviation: 29.8676 | 226 0 4 0 0 0 0 0 0 59 4 0 0 1 ]
+latency: IFETCH: [binsize: 8 max: 89 count: 2585 average: 11.0132 | standard deviation: 22.3578 | 2285 0 9 0 0 0 0 0 0 280 9 2 ]
 hit latency: [binsize: 1 max: 3 count: 2722 average:     3 | standard deviation: 0 | 0 0 0 2722 ]
 hit latency: LD: [binsize: 1 max: 3 count: 211 average:     3 | standard deviation: 0 | 0 0 0 211 ]
 hit latency: ST: [binsize: 1 max: 3 count: 226 average:     3 | standard deviation: 0 | 0 0 0 226 ]
 hit latency: IFETCH: [binsize: 1 max: 3 count: 2285 average:     3 | standard deviation: 0 | 0 0 0 2285 ]
-miss latency: [binsize: 8 max: 116 count: 572 average: 71.8794 | standard deviation: 11.8476 | 0 0 25 0 0 0 0 0 0 518 22 3 0 3 1 ]
-miss latency: LD: [binsize: 8 max: 116 count: 204 average: 71.6716 | standard deviation: 14.0142 | 0 0 12 0 0 0 0 0 0 178 10 1 0 2 1 ]
-miss latency: ST: [binsize: 8 max: 106 count: 68 average: 71.8088 | standard deviation: 13.8494 | 0 0 4 0 0 0 0 0 0 60 3 0 0 1 ]
-miss latency: IFETCH: [binsize: 8 max: 89 count: 300 average: 72.0367 | standard deviation: 9.57509 | 0 0 9 0 0 0 0 0 0 280 9 2 ]
+miss latency: [binsize: 8 max: 116 count: 572 average: 71.8322 | standard deviation: 11.764 | 0 0 25 0 0 0 0 0 0 520 21 3 0 2 1 ]
+miss latency: LD: [binsize: 8 max: 116 count: 204 average: 71.4804 | standard deviation: 13.7953 | 0 0 12 0 0 0 0 0 0 181 8 1 0 1 1 ]
+miss latency: ST: [binsize: 8 max: 106 count: 68 average: 71.9412 | standard deviation: 13.8941 | 0 0 4 0 0 0 0 0 0 59 4 0 0 1 ]
+miss latency: IFETCH: [binsize: 8 max: 89 count: 300 average: 72.0467 | standard deviation: 9.57561 | 0 0 9 0 0 0 0 0 0 280 9 2 ]
 
 Request vs. RubySystem State Profile
 --------------------------------
@@ -52,8 +37,8 @@ Request vs. RubySystem State Profile
 
 Message Delayed Cycles
 ----------------------
-Total_delay_cycles: [binsize: 1 max: 4 count: 3612 average: 0.0520487 | standard deviation: 0.453608 | 3565 0 0 0 47 ]
-  virtual_network_0_delay_cycles: [binsize: 1 max: 4 count: 968 average: 0.194215 | standard deviation: 0.860485 | 921 0 0 0 47 ]
+Total_delay_cycles: [binsize: 1 max: 4 count: 3612 average: 0.0498339 | standard deviation: 0.444044 | 3567 0 0 0 45 ]
+  virtual_network_0_delay_cycles: [binsize: 1 max: 4 count: 968 average: 0.18595 | standard deviation: 0.842879 | 923 0 0 0 45 ]
   virtual_network_1_delay_cycles: [binsize: 1 max: 0 count: 2213 average:     0 | standard deviation: 0 | 2213 ]
   virtual_network_2_delay_cycles: [binsize: 1 max: 0 count: 431 average:     0 | standard deviation: 0 | 431 ]
   virtual_network_3_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
