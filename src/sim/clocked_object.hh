@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2013 Cornell University
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,6 +36,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andreas Hansson
+ *          Christopher Torng
  */
 
 /**
@@ -118,6 +120,9 @@ class ClockedObject : public SimObject
     ClockedObject(const ClockedObjectParams* p) :
         SimObject(p), tick(0), cycle(0), clockDomain(*p->clk_domain)
     {
+        // Register with the clock domain, so that if the clock domain
+        // frequency changes, we can update this object's tick.
+        clockDomain.registerWithClockDomain(this);
     }
 
     /**
@@ -138,6 +143,15 @@ class ClockedObject : public SimObject
     }
 
   public:
+
+    /**
+     * Update the tick to the current tick.
+     *
+     */
+    inline void updateClockPeriod() const
+    {
+        update();
+    }
 
     /**
      * Determine the tick when a cycle begins, by default the current
