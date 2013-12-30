@@ -1242,8 +1242,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     //Field When rs=W
                     0x4: decode FUNCTION {
                         format FloatConvertOp {
-                            0x20: cvt_s_w({{ val = Fs_uw; }}, ToSingle);
-                            0x21: cvt_d_w({{ val = Fs_uw; }}, ToDouble);
+                            0x20: cvt_s_w({{ val = Fs_sw; }}, ToSingle);
+                            0x21: cvt_d_w({{ val = Fs_sw; }}, ToDouble);
                             0x26: CP1Unimpl::cvt_ps_w();
                         }
                         default: CP1Unimpl::unknown();
@@ -1255,8 +1255,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     //floating point operations are enabled."
                     0x5: decode FUNCTION {
                         format FloatConvertOp {
-                            0x20: cvt_s_l({{ val = Fs_ud; }}, ToSingle);
-                            0x21: cvt_d_l({{ val = Fs_ud; }}, ToDouble);
+                            0x20: cvt_s_l({{ val = Fs_sd; }}, ToSingle);
+                            0x21: cvt_d_l({{ val = Fs_sd; }}, ToDouble);
                             0x26: CP1Unimpl::cvt_ps_l();
                         }
                         default: CP1Unimpl::unknown();

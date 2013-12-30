@@ -268,11 +268,11 @@ def format FloatConvertOp(code, *flags) {{
     elif '_df' in code:
         code = 'double ' + code + '\n'
         convert += 'DOUBLE_TO_'
-    elif '_uw' in code:
-        code = 'uint32_t ' + code + '\n'
+    elif '_sw' in code:
+        code = 'int32_t ' + code + '\n'
         convert += 'WORD_TO_'
-    elif '_ud' in code:
-        code = 'uint64_t ' + code + '\n'
+    elif '_sd' in code:
+        code = 'int64_t ' + code + '\n'
         convert += 'LONG_TO_'
     else:
         sys.exit("Error Determining Source Type for Conversion")
