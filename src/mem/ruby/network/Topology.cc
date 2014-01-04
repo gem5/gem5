@@ -129,7 +129,7 @@ Topology::createLinks(Network *net)
     SwitchID max_switch_id = 0;
     for (LinkMap::const_iterator i = m_link_map.begin();
          i != m_link_map.end(); ++i) {
-        std::pair<int, int> src_dest = (*i).first;
+        std::pair<SwitchID, SwitchID> src_dest = (*i).first;
         max_switch_id = max(max_switch_id, src_dest.first);
         max_switch_id = max(max_switch_id, src_dest.second);        
     }
@@ -310,7 +310,7 @@ shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& weights,
     max_machines = MachineType_base_number(MachineType_NUM);
 
     for (int m = 0; m < machines; m++) {
-        for (int i = 0; i < MachineType_base_count((MachineType)m); i++) {
+        for (NodeID i = 0; i < MachineType_base_count((MachineType)m); i++) {
             // we use "d+max_machines" below since the "destination"
             // switches for the machines are numbered
             // [MachineType_base_number(MachineType_NUM)...

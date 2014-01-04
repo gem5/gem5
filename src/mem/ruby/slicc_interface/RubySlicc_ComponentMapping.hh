@@ -58,7 +58,7 @@ inline NetDest
 broadcast(MachineType type)
 {
     NetDest dest;
-    for (int i = 0; i < MachineType_base_count(type); i++) {
+    for (NodeID i = 0; i < MachineType_base_count(type); i++) {
         MachineID mach = {type, i};
         dest.add(mach);
     }
@@ -67,12 +67,14 @@ broadcast(MachineType type)
 
 inline MachineID
 mapAddressToRange(const Address & addr, MachineType type, int low_bit,
-                  int num_bits)
+                  int num_bits, int cluster_id = 0)
 {
     MachineID mach = {type, 0};
     if (num_bits == 0)
-        return mach;
-    mach.num = addr.bitSelect(low_bit, low_bit + num_bits - 1);
+        mach.num = cluster_id;
+    else
+        mach.num = addr.bitSelect(low_bit, low_bit + num_bits - 1)
+            + (1 << num_bits) * cluster_id;
     return mach;
 }
 

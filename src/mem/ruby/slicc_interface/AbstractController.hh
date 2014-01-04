@@ -56,7 +56,7 @@ class AbstractController : public ClockedObject, public Consumer
     void init();
     const Params *params() const { return (const Params *)_params; }
 
-    const int & getVersion() const { return m_version; }
+    const NodeID getVersion() const { return m_version; }
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
 
     // return instance name
@@ -133,13 +133,12 @@ class AbstractController : public ClockedObject, public Consumer
     void wakeUpAllBuffers();
 
   protected:
-    int m_transitions_per_cycle;
-    int m_buffer_size;
-    Cycles m_recycle_latency;
     std::string m_name;
     NodeID m_version;
-    Network* m_net_ptr;
     MachineID m_machineID;
+    NodeID m_clusterID;
+
+    Network* m_net_ptr;
     bool m_is_blocking;
     std::map<Address, MessageBuffer*> m_block_map;
     typedef std::vector<MessageBuffer*> MsgVecType;
@@ -148,6 +147,9 @@ class AbstractController : public ClockedObject, public Consumer
     unsigned int m_in_ports;
     unsigned int m_cur_in_port;
     int m_number_of_TBEs;
+    int m_transitions_per_cycle;
+    int m_buffer_size;
+    Cycles m_recycle_latency;
 
     //! Map from physical network number to the Message Buffer.
     std::map<uint32_t, MessageBuffer*> peerQueueMap;

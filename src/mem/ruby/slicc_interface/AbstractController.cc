@@ -35,6 +35,8 @@ AbstractController::AbstractController(const Params *p)
     m_request_count(0)
 {
     m_version = p->version;
+    m_clusterID = p->cluster_id;
+
     m_transitions_per_cycle = p->transitions_per_cycle;
     m_buffer_size = p->buffer_size;
     m_recycle_latency = p->recycle_latency;

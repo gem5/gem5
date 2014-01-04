@@ -31,4 +31,4 @@
 NodeID id;
 NodeID version;
 MachineID machineID;
-
+NodeID clusterID;

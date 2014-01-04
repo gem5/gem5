@@ -39,7 +39,6 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
    MemoryControl * memBuffer,
    Cycles to_mem_ctrl_latency = 1,
    Cycles directory_latency = 6,
-   int l2_select_num_bits
 {
   MessageBuffer requestToDir, network="From", virtual_network="0",
         ordered="false", vnet_type="request";
@@ -83,6 +82,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
+    MachineID Owner;
   }
 
   // TBE entries for DMA requests
@@ -102,8 +102,6 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
 
   // ** OBJECTS **
-
-  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
   TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
   void set_tbe(TBE tbe);
@@ -262,6 +260,9 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
+
+        Entry e := getDirectoryEntry(in_msg.Addr);
+        e.Owner := in_msg.OriginalRequestorMachId;
       }
     }
   }
@@ -409,12 +410,11 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=directory_latency) {
-      out_msg.Addr := address;
-      out_msg.Type := CoherenceResponseType:INV;
-      out_msg.Sender := machineID;
-      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                     l2_select_low_bit, l2_select_num_bits));
-      out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.Addr := address;
+        out_msg.Type := CoherenceResponseType:INV;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(getDirectoryEntry(address).Owner);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
   }
@@ -483,6 +483,11 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     j_popIncomingRequestQueue;
   }
 
+  transition(M, Fetch) {
+    inv_sendCacheInvalidate;
+    z_stallAndWaitRequest;
+  }
+
   transition(IM, Memory_Data, M) {
     d_sendData;
     l_popMemQueue;
@@ -492,6 +497,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   transition(M, CleanReplacement, I) {
     a_sendAck;
     k_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(M, Data, MI) {
@@ -578,5 +584,4 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     l_popMemQueue;
     kd_wakeUpDependents;
   }
-
 }

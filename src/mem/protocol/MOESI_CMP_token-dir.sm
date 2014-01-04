@@ -443,9 +443,8 @@ machine(Directory, "Token protocol")
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Persistent_Control;
@@ -485,9 +484,8 @@ machine(Directory, "Token protocol")
         //
         out_msg.Destination.broadcast(MachineType:L1Cache);
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.RetryNum := 0;
         out_msg.MessageSize := MessageSizeType:Broadcast_Control;
@@ -513,9 +511,8 @@ machine(Directory, "Token protocol")
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Persistent_Control;
@@ -551,9 +548,8 @@ machine(Directory, "Token protocol")
         //
         out_msg.Destination.broadcast(MachineType:L1Cache);
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.RetryNum := 0;
         out_msg.MessageSize := MessageSizeType:Broadcast_Control;
@@ -730,9 +726,8 @@ machine(Directory, "Token protocol")
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Persistent_Control;

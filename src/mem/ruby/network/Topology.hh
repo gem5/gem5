@@ -59,7 +59,7 @@ struct LinkEntry
     LinkDirection direction;
 };
 
-typedef std::map<std::pair<int, int>, LinkEntry> LinkMap;
+typedef std::map<std::pair<SwitchID, SwitchID>, LinkEntry> LinkMap;
 
 class Topology
 {

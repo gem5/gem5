@@ -406,7 +406,7 @@ machine(L1Cache, "Token protocol")
     } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
 
       if (sender == mapAddressToRange(addr, MachineType:L2Cache,
-                      l2_select_low_bit, l2_select_num_bits)) {
+                      l2_select_low_bit, l2_select_num_bits, intToID(0))) {
         return false;
       } else {
         return  true;
@@ -540,9 +540,8 @@ machine(L1Cache, "Token protocol")
         if ( machineIDToMachineType(in_msg.Sender) == MachineType:L2Cache ) {
 
           if (in_msg.Sender == mapAddressToRange(in_msg.Addr,
-                                                 MachineType:L2Cache,
-                                                 l2_select_low_bit,
-                                                 l2_select_num_bits)) {
+                                 MachineType:L2Cache, l2_select_low_bit,
+                                 l2_select_num_bits, intToID(0))) {
 
             // came from an off-chip L2 cache
             if (is_valid(tbe)) {
@@ -748,9 +747,8 @@ machine(L1Cache, "Token protocol")
             //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
             out_msg.Destination.add(mapAddressToRange(address,
-                                                      MachineType:L2Cache,
-                                                      l2_select_low_bit,
-                                                      l2_select_num_bits));
+                                      MachineType:L2Cache, l2_select_low_bit,
+                                      l2_select_num_bits, intToID(0)));
 
             out_msg.Destination.add(map_Address_to_Directory(address));
             out_msg.MessageSize := MessageSizeType:Persistent_Control;
@@ -792,9 +790,8 @@ machine(L1Cache, "Token protocol")
           out_msg.Type := CoherenceRequestType:GETS;
           out_msg.Requestor := machineID;
           out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:L2Cache,
-                                                    l2_select_low_bit,
-                                                    l2_select_num_bits));
+                                    MachineType:L2Cache, l2_select_low_bit,
+                                    l2_select_num_bits, intToID(0)));
 
           out_msg.RetryNum := tbe.IssueCount;
           if (tbe.IssueCount == 0) {
@@ -869,9 +866,8 @@ machine(L1Cache, "Token protocol")
             //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
             out_msg.Destination.add(mapAddressToRange(address,
-                                                      MachineType:L2Cache,
-                                                      l2_select_low_bit,
-                                                      l2_select_num_bits));
+                                      MachineType:L2Cache, l2_select_low_bit,
+                                      l2_select_num_bits, intToID(0)));
 
             out_msg.Destination.add(map_Address_to_Directory(address));
             out_msg.MessageSize := MessageSizeType:Persistent_Control;
@@ -914,9 +910,8 @@ machine(L1Cache, "Token protocol")
           out_msg.Requestor := machineID;
 
           out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:L2Cache,
-                                                    l2_select_low_bit,
-                                                    l2_select_num_bits));
+                                    MachineType:L2Cache, l2_select_low_bit,
+                                    l2_select_num_bits, intToID(0)));
 
           out_msg.RetryNum := tbe.IssueCount;
 
@@ -991,9 +986,8 @@ machine(L1Cache, "Token protocol")
       out_msg.Sender := machineID;
 
       out_msg.Destination.add(mapAddressToRange(address,
-                                                MachineType:L2Cache,
-                                                l2_select_low_bit,
-                                                l2_select_num_bits));
+                                MachineType:L2Cache, l2_select_low_bit,
+                                l2_select_num_bits, intToID(0)));
 
       out_msg.Tokens := cache_entry.Tokens;
       out_msg.DataBlk := cache_entry.DataBlk;
@@ -1016,9 +1010,8 @@ machine(L1Cache, "Token protocol")
         out_msg.Sender := machineID;
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Tokens := cache_entry.Tokens;
         out_msg.DataBlk := cache_entry.DataBlk;
@@ -1039,9 +1032,8 @@ machine(L1Cache, "Token protocol")
         out_msg.Sender := machineID;
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Tokens := cache_entry.Tokens;
         out_msg.DataBlk := cache_entry.DataBlk;
@@ -1384,10 +1376,8 @@ machine(L1Cache, "Token protocol")
        out_msg.Sender := machineID;
 
        out_msg.Destination.add(mapAddressToRange(address,
-                                                 MachineType:L2Cache,
-                                                 l2_select_low_bit,
-                                                 l2_select_num_bits));
-
+                                 MachineType:L2Cache, l2_select_low_bit,
+                                 l2_select_num_bits, intToID(0)));
        out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -1427,9 +1417,8 @@ machine(L1Cache, "Token protocol")
         //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
 
         out_msg.Destination.add(mapAddressToRange(address,
-                                                  MachineType:L2Cache,
-                                                  l2_select_low_bit,
-                                                  l2_select_num_bits));
+                                  MachineType:L2Cache, l2_select_low_bit,
+                                  l2_select_num_bits, intToID(0)));
 
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Persistent_Control;

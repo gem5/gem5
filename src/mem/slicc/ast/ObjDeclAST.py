@@ -70,6 +70,8 @@ class ObjDeclAST(DeclAST):
             c_code = "m_version"
         elif self.ident == "machineID":
             c_code = "m_machineID"
+        elif self.ident == "clusterID":
+            c_code = "m_clusterID"
         elif machine:
             c_code = "(*m_%s_%s_ptr)" % (machine.ident, self.ident)
         else:

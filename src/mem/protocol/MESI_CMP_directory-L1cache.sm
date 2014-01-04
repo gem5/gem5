@@ -500,7 +500,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
@@ -518,7 +518,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                      l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
@@ -535,7 +535,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Type := CoherenceRequestType:GET_INSTR;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
@@ -555,7 +555,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
               out_msg.Requestor := machineID;
               out_msg.Destination.add(
                   mapAddressToRange(address, MachineType:L2Cache,
-                                    l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
               out_msg.MessageSize := MessageSizeType:Control;
               out_msg.Prefetch := in_msg.Prefetch;
               out_msg.AccessMode := in_msg.AccessMode;
@@ -574,7 +574,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
@@ -593,10 +593,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
               out_msg.Requestor := machineID;
               DPRINTF(RubySlicc, "%s\n", machineID);
 
-              out_msg.Destination.add(mapAddressToRange(address,
-                                                        MachineType:L2Cache,
-                                                        l2_select_low_bit,
-                                                        l2_select_num_bits));
+              out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
 
               DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                       address, out_msg.Destination);
@@ -614,7 +612,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Type := CoherenceRequestType:UPGRADE;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
@@ -648,7 +646,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
@@ -677,7 +675,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Dirty := tbe.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
@@ -703,7 +701,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
   }
@@ -717,7 +715,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Dirty := tbe.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
   }
@@ -751,7 +749,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Requestor:= machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       if (cache_entry.Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
       } else {
@@ -766,7 +764,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Response_Control;
       DPRINTF(RubySlicc, "%s\n", address);
     }
@@ -778,7 +776,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Type := CoherenceResponseType:EXCLUSIVE_UNBLOCK;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                                                  l2_select_low_bit, l2_select_num_bits));
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Response_Control;
       DPRINTF(RubySlicc, "%s\n", address);
 
