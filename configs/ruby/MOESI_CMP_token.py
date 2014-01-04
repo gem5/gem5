@@ -85,8 +85,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
     l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
     
-    cntrl_count = 0
-
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
@@ -99,7 +97,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                             start_index_bit = block_size_bits)
 
         l1_cntrl = L1Cache_Controller(version = i,
-                                      cntrl_id = cntrl_count,
                                       L1Icache = l1i_cache,
                                       L1Dcache = l1d_cache,
                                       l2_select_num_bits = l2_bits,
@@ -134,8 +131,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
 
-        cntrl_count += 1
-
     l2_index_start = block_size_bits + l2_bits
 
     for i in xrange(options.num_l2caches):
@@ -147,7 +142,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                            start_index_bit = l2_index_start)
 
         l2_cntrl = L2Cache_Controller(version = i,
-                                      cntrl_id = cntrl_count,
                                       L2cache = l2_cache,
                                       N_tokens = n_tokens,
                                       transitions_per_cycle = options.ports,
@@ -155,8 +149,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
-
-        cntrl_count += 1
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
@@ -183,7 +175,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         dir_size.value = mem_module_size
 
         dir_cntrl = Directory_Controller(version = i,
-                                         cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                              use_map = options.use_map,
@@ -196,8 +187,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
-        cntrl_count += 1
-
     for i, dma_port in enumerate(dma_ports):
         #
         # Create the Ruby objects associated with the dma controller
@@ -206,7 +195,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                ruby_system = ruby_system)
         
         dma_cntrl = DMA_Controller(version = i,
-                                   cntrl_id = cntrl_count,
                                    dma_sequencer = dma_seq,
                                    transitions_per_cycle = options.ports,
                                    ruby_system = ruby_system)
@@ -214,7 +202,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
         exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
-        cntrl_count += 1
 
     all_cntrls = l1_cntrl_nodes + \
                  l2_cntrl_nodes + \

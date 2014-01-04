@@ -68,8 +68,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
     # controller constructors are called before the network constructor
     #
 
-    cntrl_count = 0
-
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
@@ -83,7 +81,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
         l1_cntrl = L1Cache_Controller(version = i,
-                                      cntrl_id = cntrl_count,
                                       cacheMemory = cache,
                                       ruby_system = ruby_system)
 
@@ -100,8 +97,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
-
-        cntrl_count += 1
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
@@ -128,7 +123,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         dir_size.value = mem_module_size
 
         dir_cntrl = Directory_Controller(version = i,
-                                         cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                                              size = dir_size),
@@ -138,10 +132,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
-        cntrl_count += 1
-
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes
-
     topology = create_topology(all_cntrls, options)
-
     return (cpu_sequencers, dir_cntrl_nodes, topology)
