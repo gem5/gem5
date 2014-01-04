@@ -724,8 +724,14 @@ class SimObject(object):
         if self._ccObject and hasattr(self._ccObject, attr):
             return getattr(self._ccObject, attr)
 
-        raise AttributeError, "object '%s' has no attribute '%s'" \
+        err_string = "object '%s' has no attribute '%s'" \
               % (self.__class__.__name__, attr)
+
+        if not self._ccObject:
+            err_string += "\n  (C++ object is not yet constructed," \
+                          " so wrapped C++ methods are unavailable.)"
+
+        raise AttributeError, err_string
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
