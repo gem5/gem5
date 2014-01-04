@@ -740,11 +740,6 @@ class SimObject(object):
             self._get_port_ref(attr).connect(value)
             return
 
-        if isSimObjectOrSequence(value) and self._instantiated:
-            raise RuntimeError, \
-                  "cannot set SimObject parameter '%s' after\n" \
-                  "    instance been cloned %s" % (attr, `self`)
-
         param = self._params.get(attr)
         if param:
             try:
