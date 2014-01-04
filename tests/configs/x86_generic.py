@@ -60,7 +60,6 @@ class LinuxX86SystemBuilder(object):
         system = FSConfig.makeLinuxX86System(self.mem_mode,
                                              numCPUs=self.num_cpus,
                                              mdesc=mdesc)
-        system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')
 
         self.init_system(system)
         return system
