@@ -66,7 +66,7 @@ class NetDest
     void broadcast();
     void broadcast(MachineType machine);
     int count() const;
-    bool isEqual(const NetDest& netDest);
+    bool isEqual(const NetDest& netDest) const;
 
     // return the logical OR of this netDest and orNetDest
     NetDest OR(const NetDest& orNetDest) const;

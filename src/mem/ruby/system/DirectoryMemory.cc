@@ -68,7 +68,7 @@ DirectoryMemory::init()
     }
 
     m_num_directories++;
-    m_num_directories_bits = floorLog2(m_num_directories);
+    m_num_directories_bits = ceilLog2(m_num_directories);
     m_total_size_bytes += m_size_bytes;
 
     if (m_numa_high_bit == 0) {

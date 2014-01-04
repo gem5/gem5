@@ -275,3 +275,13 @@ NetDest::print(std::ostream& out) const
     out << "]";
 }
 
+bool
+NetDest::isEqual(const NetDest& n) const
+{
+    assert(m_bits.size() == n.m_bits.size());
+    for (unsigned int i = 0; i < m_bits.size(); ++i) {
+        if (!m_bits[i].isEqual(n.m_bits[i]))
+            return false;
+    }
+    return true;
+}
