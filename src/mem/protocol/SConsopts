@@ -33,7 +33,7 @@ import os
 Import('*')
 
 all_protocols.extend([
-    'MESI_CMP_directory',
+    'MESI_Two_Level',
     'MI_example',
     'MOESI_CMP_directory',
     'MOESI_CMP_token',

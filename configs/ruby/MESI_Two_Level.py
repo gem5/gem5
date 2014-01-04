@@ -49,12 +49,12 @@ def define_options(parser):
     return
 
 def create_system(options, system, piobus, dma_ports, ruby_system):
-    
-    if buildEnv['PROTOCOL'] != 'MESI_CMP_directory':
-        panic("This script requires the MESI_CMP_directory protocol to be built.")
+
+    if buildEnv['PROTOCOL'] != 'MESI_Two_Level':
+        fatal("This script requires the MESI_Two_Level protocol to be built.")
 
     cpu_sequencers = []
-    
+
     #
     # The ruby network creation expects the list of nodes in the system to be
     # consistent with the NetDest list.  Therefore the l1 controller nodes must be
@@ -71,7 +71,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
     #
     l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
-    
+
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
@@ -109,13 +109,13 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
             cpu_seq.pio_port = piobus.slave
 
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
-        
+
         #
         # Add controllers and sequencers to the appropriate lists
         #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
-        
+
     l2_index_start = block_size_bits + l2_bits
 
     for i in xrange(options.num_l2caches):
@@ -130,10 +130,10 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                       L2cache = l2_cache,
                                       transitions_per_cycle=options.ports,
                                       ruby_system = ruby_system)
-        
+
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
-        
+
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
     mem_module_size = phys_mem_size / options.num_dirs
@@ -177,7 +177,7 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         #
         dma_seq = DMASequencer(version = i,
                                ruby_system = ruby_system)
-        
+
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,
                                    transitions_per_cycle = options.ports,

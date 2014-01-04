@@ -34,7 +34,7 @@
 // Copied here by aep 12/14/07
 
 
-machine(Directory, "MESI_CMP_filter_directory protocol")
+machine(Directory, "MESI Two Level directory protocol")
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
    Cycles to_mem_ctrl_latency = 1,

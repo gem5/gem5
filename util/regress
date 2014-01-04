@@ -41,14 +41,14 @@ add_option('-v', '--verbose', action='store_true', default=False,
            help='echo commands before executing')
 add_option('--builds',
            default='ALPHA,ALPHA_MOESI_hammer,' \
-           'ALPHA_MESI_CMP_directory,'  \
+           'ALPHA_MESI_Two_Level,'  \
            'ALPHA_MOESI_CMP_directory,' \
            'ALPHA_MOESI_CMP_token,' \
            'MIPS,' \
            'NULL,' \
            'POWER,' \
            'SPARC,' \
-           'X86,X86_MESI_CMP_directory,' \
+           'X86,X86_MESI_Two_Level,' \
            'ARM',
            help="comma-separated build targets to test (default: '%default')")
 add_option('--modes',
