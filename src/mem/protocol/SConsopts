@@ -34,6 +34,7 @@ Import('*')
 
 all_protocols.extend([
     'MESI_Two_Level',
+    'MESI_Three_Level',
     'MI_example',
     'MOESI_CMP_directory',
     'MOESI_CMP_token',

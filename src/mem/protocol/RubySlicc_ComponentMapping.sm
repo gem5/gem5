@@ -39,3 +39,4 @@ NodeID map_Address_to_DirectoryNode(Address addr);
 NodeID machineIDToNodeID(MachineID machID);
 NodeID machineIDToVersion(MachineID machID);
 MachineType machineIDToMachineType(MachineID machID);
+MachineID createMachineID(MachineType t, NodeID i);

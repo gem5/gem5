@@ -543,7 +543,7 @@ void
 $c_ident::init()
 {
     MachineType machine_type = string_to_MachineType("${{var.machine.ident}}");
-    int base = MachineType_base_number(machine_type);
+    int base M5_VAR_USED = MachineType_base_number(machine_type);
 
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;

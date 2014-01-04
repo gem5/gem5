@@ -28,7 +28,6 @@
  */
 
 // Hack, no node object since base class has them
-NodeID id;
 NodeID version;
 MachineID machineID;
 NodeID clusterID;

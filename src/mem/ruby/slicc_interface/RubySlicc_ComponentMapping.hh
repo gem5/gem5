@@ -96,4 +96,11 @@ machineCount(MachineType machType)
     return MachineType_base_count(machType);
 }
 
+inline MachineID
+createMachineID(MachineType type, NodeID id)
+{
+    MachineID mach = {type, id};
+    return mach;
+}
+
 #endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__
