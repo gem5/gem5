@@ -93,7 +93,8 @@ class FuncCallExprAST(ExprAST):
         for expr,expected_type in zip(self.exprs, func.param_types):
             # Check the types of the parameter
             actual_type,param_code = expr.inline(True)
-            if str(actual_type) != str(expected_type):
+            if str(actual_type) != 'OOD' and \
+            str(actual_type) != str(expected_type):
                 expr.error("Type mismatch: expected: %s actual: %s" % \
                            (expected_type, actual_type))
             cvec.append(param_code)
@@ -116,23 +117,22 @@ class FuncCallExprAST(ExprAST):
         if self.proc_name == "trigger":
             code('''
 {
-    Address addr = ${{cvec[1]}};
 ''')
             if machine.TBEType != None and machine.EntryType != None:
                 code('''
-    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[3]}}, addr);
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[3]}}, ${{cvec[1]}});
 ''')
             elif machine.TBEType != None:
                 code('''
-    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, addr);
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[1]}});
 ''')
             elif machine.EntryType != None:
                 code('''
-    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, addr);
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[1]}});
 ''')
             else:
                 code('''
-    TransitionResult result = doTransition(${{cvec[0]}}, addr);
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[1]}});
 ''')
 
             code('''
