@@ -298,7 +298,7 @@ TransitionResult doTransition(${ident}_Event event,
 ''')
 
         code('''
-                              const Address& addr);
+                              const Address addr);
 
 TransitionResult doTransitionWorker(${ident}_Event event,
                                     ${ident}_State state,
@@ -1158,7 +1158,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
                                   ${{self.TBEType.c_ident}}* m_tbe_ptr,
 ''')
         code('''
-                                  const Address &addr)
+                                  const Address addr)
 {
 ''')
         if self.TBEType != None and self.EntryType != None:
