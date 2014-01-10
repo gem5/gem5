@@ -100,8 +100,7 @@ def create_topology(controllers, options):
 
 def create_system(options, system, piobus = None, dma_ports = []):
 
-    system.ruby = RubySystem(stats_filename = options.ruby_stats,
-                             no_mem_vec = options.use_map)
+    system.ruby = RubySystem(no_mem_vec = options.use_map)
     ruby = system.ruby
 
     protocol = buildEnv['PROTOCOL']
@@ -186,10 +185,8 @@ def create_system(options, system, piobus = None, dma_ports = []):
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(total_mem_size.value == phys_mem_size)
 
-    ruby_profiler = RubyProfiler(ruby_system = ruby,
-                                 num_of_sequencers = len(cpu_sequencers))
     ruby.network = network
-    ruby.profiler = ruby_profiler
     ruby.mem_size = total_mem_size
     ruby._cpu_ruby_ports = cpu_sequencers
+    ruby.num_of_sequencers = len(cpu_sequencers)
     ruby.random_seed    = options.random_seed

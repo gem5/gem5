@@ -257,7 +257,7 @@ class $c_ident : public AbstractController
 
     void print(std::ostream& out) const;
     void wakeup();
-    void clearStats();
+    void resetStats();
     void regStats();
     void collateStats();
 
@@ -690,7 +690,7 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
         code.dedent()
         code('''
     AbstractController::init();
-    clearStats();
+    resetStats();
 }
 ''')
 
@@ -715,12 +715,15 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 void
 $c_ident::regStats()
 {
+    AbstractController::regStats();
+
     if (m_version == 0) {
         for (${ident}_Event event = ${ident}_Event_FIRST;
              event < ${ident}_Event_NUM; ++event) {
             Stats::Vector *t = new Stats::Vector();
             t->init(m_num_controllers);
-            t->name(name() + "." + ${ident}_Event_to_string(event));
+            t->name(g_system_ptr->name() + ".${c_ident}." +
+                ${ident}_Event_to_string(event));
             t->flags(Stats::pdf | Stats::total | Stats::oneline |
                      Stats::nozero);
 
@@ -737,7 +740,8 @@ $c_ident::regStats()
 
                 Stats::Vector *t = new Stats::Vector();
                 t->init(m_num_controllers);
-                t->name(name() + "." + ${ident}_State_to_string(state) +
+                t->name(g_system_ptr->name() + ".${c_ident}." +
+                        ${ident}_State_to_string(state) +
                         "." + ${ident}_Event_to_string(event));
 
                 t->flags(Stats::pdf | Stats::total | Stats::oneline |
@@ -842,7 +846,7 @@ $c_ident::print(ostream& out) const
     out << "[$c_ident " << m_version << "]";
 }
 
-void $c_ident::clearStats()
+void $c_ident::resetStats()
 {
     for (int state = 0; state < ${ident}_State_NUM; state++) {
         for (int event = 0; event < ${ident}_Event_NUM; event++) {
@@ -854,7 +858,7 @@ void $c_ident::clearStats()
         m_event_counters[event] = 0;
     }
 
-    AbstractController::clearStats();
+    AbstractController::resetStats();
 }
 ''')
 

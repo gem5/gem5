@@ -31,8 +31,7 @@
 #include "mem/ruby/system/System.hh"
 
 AbstractController::AbstractController(const Params *p)
-    : ClockedObject(p), Consumer(this), m_fully_busy_cycles(0),
-    m_request_count(0)
+    : ClockedObject(p), Consumer(this)
 {
     m_version = p->version;
     m_clusterID = p->cluster_id;
@@ -54,44 +53,39 @@ void
 AbstractController::init()
 {
     params()->ruby_system->registerAbstractController(this);
-}
-
-void
-AbstractController::clearStats()
-{
-    m_requestProfileMap.clear();
-    m_request_count = 0;
-
-    m_delayHistogram.clear();
-
+    m_delayHistogram.init(10);
     uint32_t size = Network::getNumberOfVirtualNetworks();
-    m_delayVCHistogram.resize(size);
     for (uint32_t i = 0; i < size; i++) {
-        m_delayVCHistogram[i].clear();
-    }
-
-    Sequencer *seq = getSequencer();
-    if (seq != NULL) {
-        seq->clearStats();
+        m_delayVCHistogram.push_back(new Stats::Histogram());
+        m_delayVCHistogram[i]->init(10);
     }
 }
 
 void
-AbstractController::profileRequest(const std::string &request)
+AbstractController::resetStats()
 {
-    m_request_count++;
+    m_delayHistogram.reset();
+    uint32_t size = Network::getNumberOfVirtualNetworks();
+    for (uint32_t i = 0; i < size; i++) {
+        m_delayVCHistogram[i]->reset();
+    }
+}
 
-    // if it doesn't exist, conveniently, it will be created with the
-    // default value which is 0
-    m_requestProfileMap[request]++;
+void
+AbstractController::regStats()
+{
+    m_fully_busy_cycles
+        .name(name() + ".fully_busy_cycles")
+        .desc("cycles for which number of transistions == max transitions")
+        .flags(Stats::nozero);
 }
 
 void
 AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 {
     assert(virtualNetwork < m_delayVCHistogram.size());
-    m_delayHistogram.add(delay);
-    m_delayVCHistogram[virtualNetwork].add(delay);
+    m_delayHistogram.sample(delay);
+    m_delayVCHistogram[virtualNetwork]->sample(delay);
 }
 
 void

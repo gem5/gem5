@@ -72,8 +72,8 @@ class AbstractController : public ClockedObject, public Consumer
 
     virtual void print(std::ostream & out) const = 0;
     virtual void wakeup() = 0;
-    virtual void clearStats() = 0;
-    virtual void regStats() = 0;
+    virtual void resetStats() = 0;
+    virtual void regStats();
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getSequencer() const = 0;
@@ -99,14 +99,10 @@ class AbstractController : public ClockedObject, public Consumer
 
   public:
     MachineID getMachineID() const { return m_machineID; }
-    uint64_t getFullyBusyCycles() const { return m_fully_busy_cycles; }
-    uint64_t getRequestCount() const { return m_request_count; }
-    const std::map<std::string, uint64_t>& getRequestProfileMap() const
-    { return m_requestProfileMap; }
 
-    Histogram& getDelayHist() { return m_delayHistogram; }
-    Histogram& getDelayVCHist(uint32_t index)
-    { return m_delayVCHistogram[index]; }
+    Stats::Histogram& getDelayHist() { return m_delayHistogram; }
+    Stats::Histogram& getDelayVCHist(uint32_t index)
+    { return *(m_delayVCHistogram[index]); }
 
     MessageBuffer *getPeerQueue(uint32_t pid)
     {
@@ -156,17 +152,12 @@ class AbstractController : public ClockedObject, public Consumer
 
     //! Counter for the number of cycles when the transitions carried out
     //! were equal to the maximum allowed
-    uint64_t m_fully_busy_cycles;
-
-    //! Map for couting requests of different types. The controller should
-    //! call requisite function for updating the count.
-    std::map<std::string, uint64_t> m_requestProfileMap;
-    uint64_t m_request_count;
+    Stats::Scalar m_fully_busy_cycles;
 
     //! Histogram for profiling delay for the messages this controller
     //! cares for
-    Histogram m_delayHistogram;
-    std::vector<Histogram> m_delayVCHistogram;
+    Stats::Histogram m_delayHistogram;
+    std::vector<Stats::Histogram *> m_delayVCHistogram;
 
     //! Callback class used for collating statistics from all the
     //! controller of this type.
@@ -177,12 +168,7 @@ class AbstractController : public ClockedObject, public Consumer
 
       public:
         virtual ~StatsCallback() {}
-
-        StatsCallback(AbstractController *_ctr)
-            : ctr(_ctr)
-        {
-        }
-
+        StatsCallback(AbstractController *_ctr) : ctr(_ctr) {}
         void process() {ctr->collateStats();}
     };
 };

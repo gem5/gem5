@@ -136,7 +136,7 @@ class RubyPort : public MemObject
     // A pointer to the controller is needed for atomic support.
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
-    int getId() { return m_version; }
+    uint32_t getId() { return m_version; }
     unsigned int drain(DrainManager *dm);
 
   protected:
@@ -145,7 +145,7 @@ class RubyPort : public MemObject
     void testDrainComplete();
     void ruby_eviction_callback(const Address& address);
 
-    int m_version;
+    uint32_t m_version;
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;
     PioPort pio_port;

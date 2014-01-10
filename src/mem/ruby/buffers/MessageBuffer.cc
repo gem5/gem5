@@ -414,13 +414,6 @@ MessageBuffer::print(ostream& out) const
     ccprintf(out, "%s] %s", copy, m_name);
 }
 
-void
-MessageBuffer::printStats(ostream& out)
-{
-    out << "MessageBuffer: " << m_name << " stats - msgs:" << m_msg_counter
-        << " full:" << m_not_avail_count << endl;
-}
-
 bool
 MessageBuffer::isReady() const
 {

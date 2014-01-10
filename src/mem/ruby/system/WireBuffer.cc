@@ -146,16 +146,6 @@ WireBuffer::print(ostream& out) const
 }
 
 void
-WireBuffer::clearStats() const
-{
-}
-
-void
-WireBuffer::printStats(ostream& out) const
-{
-}
-
-void
 WireBuffer::wakeup()
 {
 }

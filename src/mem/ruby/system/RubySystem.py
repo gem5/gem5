@@ -39,6 +39,9 @@ class RubySystem(ClockedObject):
     block_size_bytes = Param.UInt32(64,
         "default cache block size; must be a power of two");
     mem_size = Param.MemorySize("total memory size of the system");
-    stats_filename = Param.String("ruby.stats",
-        "file to which ruby dumps its stats")
     no_mem_vec = Param.Bool(False, "do not allocate Ruby's mem vector");
+
+    # Profiler related configuration variables
+    hot_lines = Param.Bool(False, "")
+    all_instructions = Param.Bool(False, "")
+    num_of_sequencers = Param.Int("")

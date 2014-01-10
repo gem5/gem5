@@ -45,88 +45,42 @@
 #ifndef __MEM_RUBY_PROFILER_PROFILER_HH__
 #define __MEM_RUBY_PROFILER_PROFILER_HH__
 
-#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "base/callback.hh"
 #include "base/hashmap.hh"
+#include "base/statistics.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Histogram.hh"
-#include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/system/MemoryControl.hh"
-#include "params/RubyProfiler.hh"
-#include "sim/sim_object.hh"
+#include "params/RubySystem.hh"
 
 class RubyRequest;
 class AddressProfiler;
 
-class Profiler : public SimObject
+class Profiler
 {
   public:
-    typedef RubyProfilerParams Params;
-    Profiler(const Params *);
+    Profiler(const RubySystemParams *);
     ~Profiler();
 
     void wakeup();
-
-    void setPeriodicStatsFile(const std::string& filename);
-    void setPeriodicStatsInterval(int64_t period);
-
-    void printStats(std::ostream& out, bool short_stats=false);
-    void printShortStats(std::ostream& out) { printStats(out, true); }
-    void printTraceStats(std::ostream& out) const;
-    void clearStats();
-    void printResourceUsage(std::ostream& out) const;
+    void regStats(const std::string &name);
+    void collateStats();
 
     AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
     AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
 
     void addAddressTraceSample(const RubyRequest& msg, NodeID id);
 
-    void profileRequest(const std::string& requestStr);
-    void profileSharing(const Address& addr, AccessType type,
-                        NodeID requestor, const Set& sharers,
-                        const Set& owner);
-
-    void profileMulticastRetry(const Address& addr, int count);
-
-    void profileFilterAction(int action);
-
-    void profileConflictingRequests(const Address& addr);
-
-    void
-    profileAverageLatencyEstimate(int latency)
-    {
-        m_average_latency_estimate.add(latency);
-    }
-
-    void controllerBusy(MachineID machID);
-    void bankBusy();
-    
-    void print(std::ostream& out) const;
-
-    void rubyWatch(int proc);
-    bool watchAddress(Address addr);
-
-    // return Ruby's start time
-    Cycles getRubyStartTime() { return m_ruby_start; }
-
     // added by SS
     bool getHotLines() { return m_hot_lines; }
     bool getAllInstructions() { return m_all_instructions; }
-
-  private:
-    void printRequestProfile(std::ostream &out) const;
-    void printDelayProfile(std::ostream &out) const;
-    void printOutstandingReqProfile(std::ostream &out) const;
-    void printMissLatencyProfile(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -136,33 +90,46 @@ class Profiler : public SimObject
     AddressProfiler* m_address_profiler_ptr;
     AddressProfiler* m_inst_profiler_ptr;
 
-    Cycles m_ruby_start;
-    time_t m_real_time_start_time;
+    Stats::Histogram delayHistogram;
+    std::vector<Stats::Histogram *> delayVCHistogram;
 
-    int64_t m_busyBankCount;
+    //! Histogram for number of outstanding requests per cycle.
+    Stats::Histogram m_outstandReqHist;
 
-    Histogram m_read_sharing_histogram;
-    Histogram m_write_sharing_histogram;
-    Histogram m_all_sharing_histogram;
-    int64 m_cache_to_cache;
-    int64 m_memory_to_cache;
+    //! Histogram for holding latency profile of all requests.
+    Stats::Histogram m_latencyHist;
+    std::vector<Stats::Histogram *> m_typeLatencyHist;
 
-    Histogram m_average_latency_estimate;
-    m5::hash_set<Address> m_watch_address_set;
+    //! Histogram for holding latency profile of all requests that
+    //! hit in the controller connected to this sequencer.
+    Stats::Histogram m_hitLatencyHist;
+    std::vector<Stats::Histogram *> m_hitTypeLatencyHist;
+
+    //! Histograms for profiling the latencies for requests that
+    //! did not required external messages.
+    std::vector<Stats::Histogram *> m_hitMachLatencyHist;
+    std::vector< std::vector<Stats::Histogram *> > m_hitTypeMachLatencyHist;
+
+    //! Histogram for holding latency profile of all requests that
+    //! miss in the controller connected to this sequencer.
+    Stats::Histogram m_missLatencyHist;
+    std::vector<Stats::Histogram *> m_missTypeLatencyHist;
+
+    //! Histograms for profiling the latencies for requests that
+    //! required external messages.
+    std::vector<Stats::Histogram *> m_missMachLatencyHist;
+    std::vector< std::vector<Stats::Histogram *> > m_missTypeMachLatencyHist;
+
+    //! Histograms for recording the breakdown of miss latency
+    std::vector<Stats::Histogram *> m_IssueToInitialDelayHist;
+    std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
+    std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
+    std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+    std::vector<Stats::Scalar> m_IncompleteTimes;
 
     //added by SS
     bool m_hot_lines;
     bool m_all_instructions;
-
-    int m_num_of_sequencers;
 };
-
-inline std::ostream&
-operator<<(std::ostream& out, const Profiler& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
-}
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__

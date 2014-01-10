@@ -148,7 +148,6 @@ class MessageBuffer
     void clear();
 
     void print(std::ostream& out) const;
-    void printStats(std::ostream& out);
     void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
     void setIncomingLink(int link_id) { m_input_link_id = link_id; }

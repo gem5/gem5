@@ -81,9 +81,6 @@ class WireBuffer : public SimObject
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
     void print(std::ostream& out) const;
-    void clearStats() const;
-    void printStats(std::ostream& out) const;
-
     uint64_t m_msg_counter;
 
   private:

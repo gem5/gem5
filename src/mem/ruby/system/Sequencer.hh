@@ -66,7 +66,9 @@ class Sequencer : public RubyPort
     // Public Methods
     void wakeup(); // Used only for deadlock detection
     void printProgress(std::ostream& out) const;
-    void clearStats();
+    void resetStats();
+    void collateStats();
+    void regStats();
 
     void writeCallback(const Address& address,
                        DataBlock& data,
@@ -95,7 +97,6 @@ class Sequencer : public RubyPort
     { deschedule(deadlockCheckEvent); }
 
     void print(std::ostream& out) const;
-    void printStats(std::ostream& out) const;
     void checkCoherence(const Address& address);
 
     void markRemoved();
@@ -104,45 +105,50 @@ class Sequencer : public RubyPort
     void invalidateSC(const Address& address);
 
     void recordRequestType(SequencerRequestType requestType);
-    Histogram& getOutstandReqHist() { return m_outstandReqHist; }
+    Stats::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
 
-    Histogram& getLatencyHist() { return m_latencyHist; }
-    Histogram& getTypeLatencyHist(uint32_t t)
-    { return m_typeLatencyHist[t]; }
+    Stats::Histogram& getLatencyHist() { return m_latencyHist; }
+    Stats::Histogram& getTypeLatencyHist(uint32_t t)
+    { return *m_typeLatencyHist[t]; }
 
-    Histogram& getHitLatencyHist() { return m_hitLatencyHist; }
-    Histogram& getHitTypeLatencyHist(uint32_t t)
-    { return m_hitTypeLatencyHist[t]; }
+    Stats::Histogram& getHitLatencyHist() { return m_hitLatencyHist; }
+    Stats::Histogram& getHitTypeLatencyHist(uint32_t t)
+    { return *m_hitTypeLatencyHist[t]; }
 
-    Histogram& getHitMachLatencyHist(uint32_t t)
-    { return m_hitMachLatencyHist[t]; }
+    Stats::Histogram& getHitMachLatencyHist(uint32_t t)
+    { return *m_hitMachLatencyHist[t]; }
 
-    Histogram& getHitTypeMachLatencyHist(uint32_t r, uint32_t t)
-    { return m_hitTypeMachLatencyHist[r][t]; }
+    Stats::Histogram& getHitTypeMachLatencyHist(uint32_t r, uint32_t t)
+    { return *m_hitTypeMachLatencyHist[r][t]; }
 
-    Histogram& getMissLatencyHist() { return m_missLatencyHist; }
-    Histogram& getMissTypeLatencyHist(uint32_t t)
-    { return m_missTypeLatencyHist[t]; }
+    Stats::Histogram& getMissLatencyHist()
+    { return m_missLatencyHist; }
+    Stats::Histogram& getMissTypeLatencyHist(uint32_t t)
+    { return *m_missTypeLatencyHist[t]; }
 
-    Histogram& getMissMachLatencyHist(uint32_t t)
-    { return m_missMachLatencyHist[t]; }
+    Stats::Histogram& getMissMachLatencyHist(uint32_t t) const
+    { return *m_missMachLatencyHist[t]; }
 
-    Histogram& getMissTypeMachLatencyHist(uint32_t r, uint32_t t)
-    { return m_missTypeMachLatencyHist[r][t]; }
+    Stats::Histogram&
+    getMissTypeMachLatencyHist(uint32_t r, uint32_t t) const
+    { return *m_missTypeMachLatencyHist[r][t]; }
 
-    Histogram& getIssueToInitialDelayHist(uint32_t t)
-    { return m_IssueToInitialDelayHist[t]; }
+    Stats::Histogram& getIssueToInitialDelayHist(uint32_t t) const
+    { return *m_IssueToInitialDelayHist[t]; }
 
-    Histogram& getInitialToForwardDelayHist(const MachineType t)
-    { return m_InitialToForwardDelayHist[t]; }
+    Stats::Histogram&
+    getInitialToForwardDelayHist(const MachineType t) const
+    { return *m_InitialToForwardDelayHist[t]; }
 
-    Histogram& getForwardRequestToFirstResponseHist(const MachineType t)
-    { return m_ForwardToFirstResponseDelayHist[t]; }
+    Stats::Histogram&
+    getForwardRequestToFirstResponseHist(const MachineType t) const
+    { return *m_ForwardToFirstResponseDelayHist[t]; }
 
-    Histogram& getFirstResponseToCompletionDelayHist(const MachineType t)
-    { return m_FirstResponseToCompletionDelayHist[t]; }
+    Stats::Histogram&
+    getFirstResponseToCompletionDelayHist(const MachineType t) const
+    { return *m_FirstResponseToCompletionDelayHist[t]; }
 
-    const uint64_t getIncompleteTimes(const MachineType t) const
+    Stats::Counter getIncompleteTimes(const MachineType t) const
     { return m_IncompleteTimes[t]; }
 
   private:
@@ -183,46 +189,47 @@ class Sequencer : public RubyPort
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;
 
-    uint32_t m_store_waiting_on_load_cycles;
-    uint32_t m_store_waiting_on_store_cycles;
-    uint32_t m_load_waiting_on_store_cycles;
-    uint32_t m_load_waiting_on_load_cycles;
+    //! Counters for recording aliasing information.
+    Stats::Scalar m_store_waiting_on_load;
+    Stats::Scalar m_store_waiting_on_store;
+    Stats::Scalar m_load_waiting_on_store;
+    Stats::Scalar m_load_waiting_on_load;
 
     bool m_usingNetworkTester;
 
     //! Histogram for number of outstanding requests per cycle.
-    Histogram m_outstandReqHist;
+    Stats::Histogram m_outstandReqHist;
 
     //! Histogram for holding latency profile of all requests.
-    Histogram m_latencyHist;
-    std::vector<Histogram> m_typeLatencyHist;
+    Stats::Histogram m_latencyHist;
+    std::vector<Stats::Histogram *> m_typeLatencyHist;
 
     //! Histogram for holding latency profile of all requests that
     //! hit in the controller connected to this sequencer.
-    Histogram m_hitLatencyHist;
-    std::vector<Histogram> m_hitTypeLatencyHist;
+    Stats::Histogram m_hitLatencyHist;
+    std::vector<Stats::Histogram *> m_hitTypeLatencyHist;
 
     //! Histograms for profiling the latencies for requests that
     //! did not required external messages.
-    std::vector<Histogram> m_hitMachLatencyHist;
-    std::vector< std::vector<Histogram> > m_hitTypeMachLatencyHist;
+    std::vector<Stats::Histogram *> m_hitMachLatencyHist;
+    std::vector< std::vector<Stats::Histogram *> > m_hitTypeMachLatencyHist;
 
     //! Histogram for holding latency profile of all requests that
     //! miss in the controller connected to this sequencer.
-    Histogram m_missLatencyHist;
-    std::vector<Histogram> m_missTypeLatencyHist;
+    Stats::Histogram m_missLatencyHist;
+    std::vector<Stats::Histogram *> m_missTypeLatencyHist;
 
     //! Histograms for profiling the latencies for requests that
     //! required external messages.
-    std::vector<Histogram> m_missMachLatencyHist;
-    std::vector< std::vector<Histogram> > m_missTypeMachLatencyHist;
+    std::vector<Stats::Histogram *> m_missMachLatencyHist;
+    std::vector< std::vector<Stats::Histogram *> > m_missTypeMachLatencyHist;
 
     //! Histograms for recording the breakdown of miss latency
-    std::vector<Histogram> m_IssueToInitialDelayHist;
-    std::vector<Histogram> m_InitialToForwardDelayHist;
-    std::vector<Histogram> m_ForwardToFirstResponseDelayHist;
-    std::vector<Histogram> m_FirstResponseToCompletionDelayHist;
-    std::vector<uint64_t> m_IncompleteTimes;
+    std::vector<Stats::Histogram *> m_IssueToInitialDelayHist;
+    std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
+    std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
+    std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+    std::vector<Stats::Counter> m_IncompleteTimes;
 
 
     class SequencerWakeupEvent : public Event

@@ -67,6 +67,8 @@ class AddressProfiler
     //added by SS
     void setHotLines(bool hot_lines);
     void setAllInstructions(bool all_instructions);
+    void regStats(const std::string &name) {}
+    void collateStats() {}
 
   private:
     // Private copy constructor and assignment operator
