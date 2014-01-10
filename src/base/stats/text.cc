@@ -210,7 +210,7 @@ ScalarPrint::update(Result val, Result total)
 void
 ScalarPrint::operator()(ostream &stream, bool oneLine) const
 {
-    if ((flags.isSet(nozero) && value == 0.0) ||
+    if ((flags.isSet(nozero) && (!oneLine) && value == 0.0) ||
         (flags.isSet(nonan) && std::isnan(value)))
         return;
 
@@ -312,7 +312,6 @@ VectorPrint::operator()(std::ostream &stream) const
                 if (!desc.empty())
                     ccprintf(stream, " # %s", desc);
             }
-
             stream << endl;
         }
     }
@@ -324,10 +323,6 @@ VectorPrint::operator()(std::ostream &stream) const
         print.desc = desc;
         print.value = total;
         print(stream);
-    }
-
-    if (flags.isSet(oneline) && ((!flags.isSet(nozero)) || (total != 0))) {
-        stream << endl;
     }
 }
 
@@ -380,6 +375,7 @@ DistPrint::init(const Text *text, const Info &info)
 void
 DistPrint::operator()(ostream &stream) const
 {
+    if (flags.isSet(nozero) && data.samples == 0) return;
     string base = name + separatorString;
 
     ScalarPrint print;
@@ -389,6 +385,20 @@ DistPrint::operator()(ostream &stream) const
     print.desc = desc;
     print.pdf = NAN;
     print.cdf = NAN;
+
+    if (flags.isSet(oneline)) {
+        print.name = base + "bucket_size";
+        print.value = data.bucket_size;
+        print(stream);
+
+        print.name = base + "min_bucket";
+        print.value = data.min;
+        print(stream);
+
+        print.name = base + "max_bucket";
+        print.value = data.max;
+        print(stream);
+    }
 
     print.name = base + "samples";
     print.value = data.samples;
@@ -436,6 +446,10 @@ DistPrint::operator()(ostream &stream) const
         print(stream);
     }
 
+    if (flags.isSet(oneline)) {
+        ccprintf(stream, "%-40s", name);
+    }
+
     for (off_type i = 0; i < size; ++i) {
         stringstream namestr;
         namestr << base;
@@ -448,7 +462,15 @@ DistPrint::operator()(ostream &stream) const
 
         print.name = namestr.str();
         print.update(data.cvec[i], total);
-        print(stream);
+        print(stream, flags.isSet(oneline));
+    }
+
+    if (flags.isSet(oneline)) {
+        if (descriptions) {
+            if (!desc.empty())
+                ccprintf(stream, " # %s", desc);
+        }
+        stream << endl;
     }
 
     if (data.type == Dist && data.overflow != NAN) {

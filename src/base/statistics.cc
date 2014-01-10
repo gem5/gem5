@@ -352,6 +352,27 @@ HistStor::grow_up()
     bucket_size *= 2;
 }
 
+void
+HistStor::add(HistStor *hs)
+{
+    int b_size = hs->size();
+    assert(size() == b_size);
+    assert(min_bucket == hs->min_bucket);
+
+    sum += hs->sum;
+    logs += hs->logs;
+    squares += hs->squares;
+    samples += hs->samples;
+
+    while(bucket_size > hs->bucket_size)
+        hs->grow_up();
+    while(bucket_size < hs->bucket_size)
+        grow_up();
+
+    for (uint32_t i = 0; i < b_size; i++)
+        cvec[i] += hs->cvec[i];
+}
+
 Formula::Formula()
 {
 }

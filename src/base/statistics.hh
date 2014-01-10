@@ -228,12 +228,12 @@ class DataWrap : public InfoAccess
     /**
      * Copy constructor, copies are not allowed.
      */
-    DataWrap(const DataWrap &stat);
+    DataWrap(const DataWrap &stat) {}
 
     /**
      * Can't copy stats.
      */
-    void operator=(const DataWrap &);
+    void operator=(const DataWrap &) {}
 
   public:
     DataWrap()
@@ -1502,6 +1502,7 @@ class HistStor
     void grow_up();
     void grow_out();
     void grow_convert();
+    void add(HistStor *);
 
     /**
      * Add a value to the distribution for the given number of times.
@@ -1840,6 +1841,12 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
     {
         data()->reset(this->info());
     }
+
+    /**
+     *  Add the argument distribution to the this distibution.
+     */
+    void add(DistBase &d) { data()->add(d.data()); }
+
 };
 
 template <class Stat>
