@@ -4,9 +4,42 @@ sim_seconds                                  0.005796                       # Nu
 sim_ticks                                     5795833                       # Number of ticks simulated
 final_tick                                    5795833                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  58777                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 258656                       # Number of bytes of host memory used
-host_seconds                                    98.61                       # Real time elapsed on the host
+host_tick_rate                                  40133                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 303548                       # Number of bytes of host memory used
+host_seconds                                   144.41                       # Real time elapsed on the host
+system.ruby.outstanding_req_hist::bucket_size            2                      
+system.ruby.outstanding_req_hist::max_bucket           19                      
+system.ruby.outstanding_req_hist::samples       618244                      
+system.ruby.outstanding_req_hist::mean      15.998447                      
+system.ruby.outstanding_req_hist::gmean     15.997166                      
+system.ruby.outstanding_req_hist::stdev      0.126661                      
+system.ruby.outstanding_req_hist         |           8      0.00%      0.00% |          16      0.00%      0.00% |          16      0.00%      0.01% |          16      0.00%      0.01% |          16      0.00%      0.01% |          16      0.00%      0.01% |          16      0.00%      0.02% |          16      0.00%      0.02% |      618124     99.98%    100.00% |           0      0.00%    100.00%
+system.ruby.outstanding_req_hist::total        618244                      
+system.ruby.latency_hist::bucket_size            1024                      
+system.ruby.latency_hist::max_bucket            10239                      
+system.ruby.latency_hist::samples              618116                      
+system.ruby.latency_hist::mean            1200.021813                      
+system.ruby.latency_hist::gmean            820.629025                      
+system.ruby.latency_hist::stdev            895.776411                      
+system.ruby.latency_hist                 |      317693     51.40%     51.40% |      164349     26.59%     77.99% |      123580     19.99%     97.98% |       12269      1.98%     99.96% |         224      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.latency_hist::total                618116                      
+system.ruby.hit_latency_hist::bucket_size          256                      
+system.ruby.hit_latency_hist::max_bucket         2559                      
+system.ruby.hit_latency_hist::samples             737                      
+system.ruby.hit_latency_hist::mean         133.263229                      
+system.ruby.hit_latency_hist::gmean         41.298079                      
+system.ruby.hit_latency_hist::stdev        176.676430                      
+system.ruby.hit_latency_hist             |         600     81.41%     81.41% |         109     14.79%     96.20% |          20      2.71%     98.91% |           6      0.81%     99.73% |           1      0.14%     99.86% |           0      0.00%     99.86% |           0      0.00%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.hit_latency_hist::total               737                      
+system.ruby.miss_latency_hist::bucket_size         1024                      
+system.ruby.miss_latency_hist::max_bucket        10239                      
+system.ruby.miss_latency_hist::samples         617379                      
+system.ruby.miss_latency_hist::mean       1201.295263                      
+system.ruby.miss_latency_hist::gmean       823.562623                      
+system.ruby.miss_latency_hist::stdev       895.531111                      
+system.ruby.miss_latency_hist            |      316958     51.34%     51.34% |      164347     26.62%     77.96% |      123580     20.02%     97.98% |       12269      1.99%     99.96% |         224      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.miss_latency_hist::total           617379                      
+system.ruby.L1Cache.incomplete_times              439                      
 system.ruby.l1_cntrl4.L1Dcache.demand_hits           14                       # Number of cache demand hits
 system.ruby.l1_cntrl4.L1Dcache.demand_misses        77212                       # Number of cache demand misses
 system.ruby.l1_cntrl4.L1Dcache.demand_accesses        77226                       # Number of cache demand accesses
@@ -264,7 +297,6 @@ system.ruby.dir_cntrl0.memBuffer.memArbWait      6011646                       #
 system.ruby.dir_cntrl0.memBuffer.memNotOld      7180359                       # memory stalls due to anti starvation
 system.ruby.dir_cntrl0.memBuffer.memBankCount |       25525      3.15%      3.15% |       25047      3.09%      6.23% |       25485      3.14%      9.37% |       25568      3.15%     12.52% |       25590      3.15%     15.68% |       25517      3.14%     18.82% |       25716      3.17%     21.99% |       25410      3.13%     25.12% |       25335      3.12%     28.24% |       25484      3.14%     31.38% |       25540      3.15%     34.53% |       25414      3.13%     37.66% |       25457      3.14%     40.80% |       25303      3.12%     43.92% |       25416      3.13%     47.05% |       25361      3.13%     50.17% |       25622      3.16%     53.33% |       25433      3.13%     56.46% |       25171      3.10%     59.56% |       25194      3.10%     62.67% |       25397      3.13%     65.80% |       25498      3.14%     68.94% |       25175      3.10%     72.04% |       25106      3.09%     75.14% |       25081      3.09%     78.23% |       25088      3.09%     81.32% |       24820      3.06%     84.38% |       25599      3.15%     87.53% |       25387      3.13%     90.66% |       25331      3.12%     93.78% |       25290      3.12%     96.90% |       25186      3.10%    100.00% # Number of accesses per bank
 system.ruby.dir_cntrl0.memBuffer.memBankCount::total       811546                       # Number of accesses per bank
-
 system.ruby.dir_cntrl0.probeFilter.demand_hits            0                       # Number of cache demand hits
 system.ruby.dir_cntrl0.probeFilter.demand_misses            0                       # Number of cache demand misses
 system.ruby.dir_cntrl0.probeFilter.demand_accesses            0                       # Number of cache demand accesses
@@ -675,458 +707,531 @@ system.ruby.network.routers9.throttle8.msg_bytes.Writeback_Data::5     15409656
 system.ruby.network.routers9.throttle8.msg_bytes.Writeback_Control::2      4658336                      
 system.ruby.network.routers9.throttle8.msg_bytes.Writeback_Control::5      2944376                      
 system.ruby.network.routers9.throttle8.msg_bytes.Unblock_Control::5      4940768                      
-system.ruby.l1_cntrl0.Load               |       50266     12.51%     12.51% |       50315     12.53%     25.04% |       50271     12.52%     37.56% |       50212     12.50%     50.06% |       50263     12.51%     62.57% |       50069     12.47%     75.04% |       50306     12.52%     87.56% |       49970     12.44%    100.00%
-system.ruby.l1_cntrl0.Load::total              401672                      
-
-system.ruby.l1_cntrl0.Store              |       26762     12.34%     12.34% |       27215     12.55%     24.89% |       27106     12.50%     37.39% |       27272     12.58%     49.96% |       27014     12.46%     62.42% |       27080     12.49%     74.91% |       27361     12.62%     87.52% |       27054     12.48%    100.00%
-system.ruby.l1_cntrl0.Store::total             216864                      
-
-system.ruby.l1_cntrl0.L2_Replacement     |       76877     12.45%     12.45% |       77378     12.53%     24.99% |       77204     12.51%     37.50% |       77319     12.53%     50.02% |       77135     12.50%     62.52% |       76978     12.47%     74.99% |       77528     12.56%     87.55% |       76877     12.45%    100.00%
-system.ruby.l1_cntrl0.L2_Replacement::total       617296                      
-
-system.ruby.l1_cntrl0.L1_to_L2           |      839684     12.46%     12.46% |      843217     12.52%     24.98% |      843158     12.52%     37.50% |      840771     12.48%     49.98% |      842565     12.51%     62.49% |      841910     12.50%     74.98% |      845488     12.55%     87.54% |      839694     12.46%    100.00%
-system.ruby.l1_cntrl0.L1_to_L2::total         6736487                      
-
-system.ruby.l1_cntrl0.Trigger_L2_to_L1D  |          75     12.08%     12.08% |          72     11.59%     23.67% |          99     15.94%     39.61% |          79     12.72%     52.33% |          66     10.63%     62.96% |          89     14.33%     77.29% |          69     11.11%     88.41% |          72     11.59%    100.00%
-system.ruby.l1_cntrl0.Trigger_L2_to_L1D::total          621                      
-
-system.ruby.l1_cntrl0.Complete_L2_to_L1  |          75     12.08%     12.08% |          72     11.59%     23.67% |          99     15.94%     39.61% |          79     12.72%     52.33% |          66     10.63%     62.96% |          89     14.33%     77.29% |          69     11.11%     88.41% |          72     11.59%    100.00%
-system.ruby.l1_cntrl0.Complete_L2_to_L1::total          621                      
-
-system.ruby.l1_cntrl0.Other_GETX         |      189761     12.52%     12.52% |      189309     12.49%     25.02% |      189417     12.50%     37.52% |      189262     12.49%     50.01% |      189522     12.51%     62.51% |      189457     12.50%     75.01% |      189156     12.48%     87.50% |      189455     12.50%    100.00%
-system.ruby.l1_cntrl0.Other_GETX::total       1515339                      
-
-system.ruby.l1_cntrl0.Other_GETS         |      350360     12.50%     12.50% |      350304     12.50%     24.99% |      350380     12.50%     37.49% |      350430     12.50%     49.99% |      350354     12.50%     62.49% |      350578     12.51%     75.00% |      350311     12.50%     87.49% |      350671     12.51%    100.00%
-system.ruby.l1_cntrl0.Other_GETS::total       2803388                      
-
-system.ruby.l1_cntrl0.Merged_GETS        |          67     15.26%     15.26% |          47     10.71%     25.97% |          56     12.76%     38.72% |          60     13.67%     52.39% |          48     10.93%     63.33% |          51     11.62%     74.94% |          52     11.85%     86.79% |          58     13.21%    100.00%
-system.ruby.l1_cntrl0.Merged_GETS::total          439                      
-
-system.ruby.l1_cntrl0.Ack                |      535380     12.45%     12.45% |      538939     12.54%     24.99% |      537669     12.51%     37.50% |      538458     12.53%     50.02% |      537124     12.49%     62.52% |      535993     12.47%     74.99% |      539952     12.56%     87.55% |      535252     12.45%    100.00%
-system.ruby.l1_cntrl0.Ack::total              4298767                      
-
-system.ruby.l1_cntrl0.Shared_Ack         |          61     12.55%     12.55% |          58     11.93%     24.49% |          61     12.55%     37.04% |          63     12.96%     50.00% |          51     10.49%     60.49% |          74     15.23%     75.72% |          50     10.29%     86.01% |          68     13.99%    100.00%
-system.ruby.l1_cntrl0.Shared_Ack::total           486                      
-
-system.ruby.l1_cntrl0.Data               |        2873     11.99%     11.99% |        3045     12.71%     24.69% |        2960     12.35%     37.04% |        3027     12.63%     49.67% |        2998     12.51%     62.18% |        3000     12.52%     74.70% |        2981     12.44%     87.14% |        3082     12.86%    100.00%
-system.ruby.l1_cntrl0.Data::total               23966                      
-
-system.ruby.l1_cntrl0.Shared_Data        |        1060     12.39%     12.39% |        1048     12.25%     24.63% |        1056     12.34%     36.98% |        1053     12.31%     49.28% |        1045     12.21%     61.49% |        1094     12.78%     74.28% |        1078     12.60%     86.88% |        1123     13.12%    100.00%
-system.ruby.l1_cntrl0.Shared_Data::total         8557                      
-
-system.ruby.l1_cntrl0.Exclusive_Data     |       72953     12.47%     12.47% |       73296     12.53%     25.01% |       73198     12.52%     37.52% |       73248     12.52%     50.05% |       73100     12.50%     62.54% |       72896     12.46%     75.01% |       73480     12.56%     87.57% |       72683     12.43%    100.00%
-system.ruby.l1_cntrl0.Exclusive_Data::total       584854                      
-
-system.ruby.l1_cntrl0.Writeback_Ack      |       72619     12.47%     12.47% |       73022     12.54%     25.01% |       72821     12.51%     37.52% |       72965     12.53%     50.05% |       72792     12.50%     62.55% |       72564     12.46%     75.01% |       73169     12.57%     87.58% |       72340     12.42%    100.00%
-system.ruby.l1_cntrl0.Writeback_Ack::total       582292                      
-
-system.ruby.l1_cntrl0.All_acks           |        1114     12.42%     12.42% |        1096     12.21%     24.63% |        1109     12.36%     36.99% |        1107     12.34%     49.33% |        1091     12.16%     61.48% |        1156     12.88%     74.37% |        1120     12.48%     86.85% |        1180     13.15%    100.00%
-system.ruby.l1_cntrl0.All_acks::total            8973                      
-
-system.ruby.l1_cntrl0.All_acks_no_sharers |       75773     12.45%     12.45% |       76294     12.54%     24.99% |       76104     12.51%     37.50% |       76221     12.53%     50.03% |       76052     12.50%     62.53% |       75834     12.46%     75.00% |       76419     12.56%     87.56% |       75708     12.44%    100.00%
-system.ruby.l1_cntrl0.All_acks_no_sharers::total       608405                      
-
-system.ruby.l1_cntrl0.I.Load             |       50174     12.51%     12.51% |       50224     12.53%     25.04% |       50155     12.51%     37.55% |       50116     12.50%     50.05% |       50191     12.52%     62.57% |       49971     12.46%     75.04% |       50219     12.53%     87.56% |       49868     12.44%    100.00%
-system.ruby.l1_cntrl0.I.Load::total            400918                      
-
-system.ruby.l1_cntrl0.I.Store            |       26713     12.34%     12.34% |       27165     12.55%     24.89% |       27060     12.50%     37.39% |       27213     12.57%     49.96% |       26955     12.45%     62.42% |       27016     12.48%     74.90% |       27320     12.62%     87.52% |       27019     12.48%    100.00%
-system.ruby.l1_cntrl0.I.Store::total           216461                      
-
-system.ruby.l1_cntrl0.I.L2_Replacement   |        1339     11.82%     11.82% |        1403     12.39%     24.21% |        1446     12.76%     36.97% |        1410     12.45%     49.42% |        1437     12.69%     62.10% |        1441     12.72%     74.82% |        1373     12.12%     86.94% |        1479     13.06%    100.00%
-system.ruby.l1_cntrl0.I.L2_Replacement::total        11328                      
-
-system.ruby.l1_cntrl0.I.L1_to_L2         |         263     12.00%     12.00% |         295     13.46%     25.47% |         253     11.55%     37.02% |         281     12.83%     49.84% |         292     13.33%     63.17% |         256     11.68%     74.85% |         261     11.91%     86.76% |         290     13.24%    100.00%
-system.ruby.l1_cntrl0.I.L1_to_L2::total          2191                      
-
-system.ruby.l1_cntrl0.I.Trigger_L2_to_L1D |           3     20.00%     20.00% |           0      0.00%     20.00% |           1      6.67%     26.67% |           2     13.33%     40.00% |           0      0.00%     40.00% |           4     26.67%     66.67% |           2     13.33%     80.00% |           3     20.00%    100.00%
-system.ruby.l1_cntrl0.I.Trigger_L2_to_L1D::total           15                      
-
-system.ruby.l1_cntrl0.I.Other_GETX       |      188850     12.52%     12.52% |      188385     12.49%     25.02% |      188473     12.50%     37.52% |      188307     12.49%     50.00% |      188572     12.51%     62.51% |      188504     12.50%     75.01% |      188287     12.49%     87.50% |      188527     12.50%    100.00%
-system.ruby.l1_cntrl0.I.Other_GETX::total      1507905                      
-
-system.ruby.l1_cntrl0.I.Other_GETS       |      348728     12.50%     12.50% |      348598     12.49%     24.99% |      348711     12.50%     37.49% |      348779     12.50%     49.99% |      348712     12.50%     62.49% |      348887     12.50%     75.00% |      348575     12.49%     87.49% |      348998     12.51%    100.00%
-system.ruby.l1_cntrl0.I.Other_GETS::total      2789988                      
-
-system.ruby.l1_cntrl0.S.Load             |           1     16.67%     16.67% |           1     16.67%     33.33% |           2     33.33%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           1     16.67%     83.33% |           1     16.67%    100.00%
-system.ruby.l1_cntrl0.S.Load::total                 6                      
-
-system.ruby.l1_cntrl0.S.L2_Replacement   |        2919     12.33%     12.33% |        2953     12.47%     24.80% |        2937     12.41%     37.21% |        2944     12.44%     49.65% |        2906     12.28%     61.92% |        2973     12.56%     74.48% |        2984     12.60%     87.08% |        3058     12.92%    100.00%
-system.ruby.l1_cntrl0.S.L2_Replacement::total        23674                      
-
-system.ruby.l1_cntrl0.S.L1_to_L2         |        2947     12.34%     12.34% |        2984     12.49%     24.83% |        2973     12.45%     37.27% |        2971     12.44%     49.71% |        2929     12.26%     61.97% |        2993     12.53%     74.50% |        3006     12.58%     87.08% |        3086     12.92%    100.00%
-system.ruby.l1_cntrl0.S.L1_to_L2::total         23889                      
-
-system.ruby.l1_cntrl0.S.Trigger_L2_to_L1D |           2      8.70%      8.70% |           5     21.74%     30.43% |           4     17.39%     47.83% |           1      4.35%     52.17% |           0      0.00%     52.17% |           2      8.70%     60.87% |           3     13.04%     73.91% |           6     26.09%    100.00%
-system.ruby.l1_cntrl0.S.Trigger_L2_to_L1D::total           23                      
-
-system.ruby.l1_cntrl0.S.Other_GETX       |          29     11.74%     11.74% |          31     12.55%     24.29% |          38     15.38%     39.68% |          33     13.36%     53.04% |          32     12.96%     65.99% |          28     11.34%     77.33% |          25     10.12%     87.45% |          31     12.55%    100.00%
-system.ruby.l1_cntrl0.S.Other_GETX::total          247                      
-
-system.ruby.l1_cntrl0.S.Other_GETS       |          57     11.73%     11.73% |          56     11.52%     23.25% |          59     12.14%     35.39% |          72     14.81%     50.21% |          52     10.70%     60.91% |          62     12.76%     73.66% |          79     16.26%     89.92% |          49     10.08%    100.00%
-system.ruby.l1_cntrl0.S.Other_GETS::total          486                      
-
-system.ruby.l1_cntrl0.O.Store            |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.O.Store::total                1                      
-
-system.ruby.l1_cntrl0.O.L2_Replacement   |        1037     12.92%     12.92% |        1033     12.87%     25.79% |         990     12.33%     38.12% |         999     12.45%     50.57% |         972     12.11%     62.68% |        1001     12.47%     75.15% |        1015     12.64%     87.79% |         980     12.21%    100.00%
-system.ruby.l1_cntrl0.O.L2_Replacement::total         8027                      
-
-system.ruby.l1_cntrl0.O.L1_to_L2         |         204     12.62%     12.62% |         188     11.63%     24.26% |         202     12.50%     36.76% |         199     12.31%     49.07% |         190     11.76%     60.83% |         218     13.49%     74.32% |         217     13.43%     87.75% |         198     12.25%    100.00%
-system.ruby.l1_cntrl0.O.L1_to_L2::total          1616                      
-
-system.ruby.l1_cntrl0.O.Trigger_L2_to_L1D |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           0      0.00%     50.00% |           1     16.67%     66.67% |           0      0.00%     66.67% |           2     33.33%    100.00%
-system.ruby.l1_cntrl0.O.Trigger_L2_to_L1D::total            6                      
-
-system.ruby.l1_cntrl0.O.Other_GETX       |           7     12.50%     12.50% |           8     14.29%     26.79% |           8     14.29%     41.07% |           5      8.93%     50.00% |           3      5.36%     55.36% |          11     19.64%     75.00% |           9     16.07%     91.07% |           5      8.93%    100.00%
-system.ruby.l1_cntrl0.O.Other_GETX::total           56                      
-
-system.ruby.l1_cntrl0.O.Other_GETS       |           9      9.89%      9.89% |          14     15.38%     25.27% |          12     13.19%     38.46% |          12     13.19%     51.65% |          13     14.29%     65.93% |           9      9.89%     75.82% |           9      9.89%     85.71% |          13     14.29%    100.00%
-system.ruby.l1_cntrl0.O.Other_GETS::total           91                      
-
-system.ruby.l1_cntrl0.O.Merged_GETS      |           4     19.05%     19.05% |           3     14.29%     33.33% |           2      9.52%     42.86% |           6     28.57%     71.43% |           3     14.29%     85.71% |           1      4.76%     90.48% |           1      4.76%     95.24% |           1      4.76%    100.00%
-system.ruby.l1_cntrl0.O.Merged_GETS::total           21                      
-
-system.ruby.l1_cntrl0.M.Load             |           7     16.67%     16.67% |           3      7.14%     23.81% |           5     11.90%     35.71% |           6     14.29%     50.00% |           2      4.76%     54.76% |          11     26.19%     80.95% |           6     14.29%     95.24% |           2      4.76%    100.00%
-system.ruby.l1_cntrl0.M.Load::total                42                      
-
-system.ruby.l1_cntrl0.M.Store            |           5     16.13%     16.13% |           5     16.13%     32.26% |           2      6.45%     38.71% |           5     16.13%     54.84% |           2      6.45%     61.29% |           9     29.03%     90.32% |           1      3.23%     93.55% |           2      6.45%    100.00%
-system.ruby.l1_cntrl0.M.Store::total               31                      
-
-system.ruby.l1_cntrl0.M.L2_Replacement   |       45647     12.52%     12.52% |       45669     12.52%     25.04% |       45641     12.52%     37.56% |       45593     12.50%     50.06% |       45746     12.55%     62.61% |       45407     12.45%     75.06% |       45688     12.53%     87.59% |       45251     12.41%    100.00%
-system.ruby.l1_cntrl0.M.L2_Replacement::total       364642                      
-
-system.ruby.l1_cntrl0.M.L1_to_L2         |       46941     12.52%     12.52% |       46960     12.53%     25.05% |       46927     12.52%     37.57% |       46865     12.50%     50.08% |       46980     12.53%     62.61% |       46700     12.46%     75.07% |       46933     12.52%     87.59% |       46507     12.41%    100.00%
-system.ruby.l1_cntrl0.M.L1_to_L2::total        374813                      
-
-system.ruby.l1_cntrl0.M.Trigger_L2_to_L1D |          49     13.14%     13.14% |          40     10.72%     23.86% |          60     16.09%     39.95% |          51     13.67%     53.62% |          41     10.99%     64.61% |          55     14.75%     79.36% |          37      9.92%     89.28% |          40     10.72%    100.00%
-system.ruby.l1_cntrl0.M.Trigger_L2_to_L1D::total          373                      
-
-system.ruby.l1_cntrl0.M.Other_GETX       |         529     12.54%     12.54% |         518     12.28%     24.82% |         538     12.75%     37.57% |         533     12.63%     50.20% |         520     12.33%     62.53% |         540     12.80%     75.33% |         502     11.90%     87.22% |         539     12.78%    100.00%
-system.ruby.l1_cntrl0.M.Other_GETX::total         4219                      
-
-system.ruby.l1_cntrl0.M.Other_GETS       |         983     12.81%     12.81% |         999     13.02%     25.84% |         944     12.31%     38.14% |         950     12.38%     50.53% |         931     12.14%     62.66% |         962     12.54%     75.21% |         974     12.70%     87.90% |         928     12.10%    100.00%
-system.ruby.l1_cntrl0.M.Other_GETS::total         7671                      
-
-system.ruby.l1_cntrl0.M.Merged_GETS      |          39     15.29%     15.29% |          27     10.59%     25.88% |          33     12.94%     38.82% |          31     12.16%     50.98% |          27     10.59%     61.57% |          27     10.59%     72.16% |          29     11.37%     83.53% |          42     16.47%    100.00%
-system.ruby.l1_cntrl0.M.Merged_GETS::total          255                      
-
-system.ruby.l1_cntrl0.MM.Load            |           4     10.00%     10.00% |           8     20.00%     30.00% |           2      5.00%     35.00% |           6     15.00%     50.00% |           6     15.00%     65.00% |           4     10.00%     75.00% |           3      7.50%     82.50% |           7     17.50%    100.00%
-system.ruby.l1_cntrl0.MM.Load::total               40                      
-
-system.ruby.l1_cntrl0.MM.Store           |           0      0.00%      0.00% |           5     26.32%     26.32% |           1      5.26%     31.58% |           2     10.53%     42.11% |           4     21.05%     63.16% |           4     21.05%     84.21% |           1      5.26%     89.47% |           2     10.53%    100.00%
-system.ruby.l1_cntrl0.MM.Store::total              19                      
-
-system.ruby.l1_cntrl0.MM.L2_Replacement  |       25935     12.37%     12.37% |       26320     12.56%     24.93% |       26190     12.49%     37.42% |       26373     12.58%     50.00% |       26074     12.44%     62.44% |       26156     12.48%     74.92% |       26468     12.63%     87.54% |       26109     12.46%    100.00%
-system.ruby.l1_cntrl0.MM.L2_Replacement::total       209625                      
-
-system.ruby.l1_cntrl0.MM.L1_to_L2        |       26603     12.35%     12.35% |       27029     12.54%     24.89% |       26955     12.51%     37.40% |       27088     12.57%     49.98% |       26817     12.45%     62.42% |       26905     12.49%     74.91% |       27186     12.62%     87.53% |       26874     12.47%    100.00%
-system.ruby.l1_cntrl0.MM.L1_to_L2::total       215457                      
-
-system.ruby.l1_cntrl0.MM.Trigger_L2_to_L1D |          21     10.29%     10.29% |          25     12.25%     22.55% |          34     16.67%     39.22% |          24     11.76%     50.98% |          25     12.25%     63.24% |          27     13.24%     76.47% |          27     13.24%     89.71% |          21     10.29%    100.00%
-system.ruby.l1_cntrl0.MM.Trigger_L2_to_L1D::total          204                      
-
-system.ruby.l1_cntrl0.MM.Other_GETX      |         296     12.11%     12.11% |         298     12.19%     24.30% |         301     12.32%     36.62% |         320     13.09%     49.71% |         334     13.67%     63.38% |         308     12.60%     75.98% |         279     11.42%     87.40% |         308     12.60%    100.00%
-system.ruby.l1_cntrl0.MM.Other_GETX::total         2444                      
-
-system.ruby.l1_cntrl0.MM.Other_GETS      |         481     10.98%     10.98% |         549     12.54%     23.52% |         562     12.83%     36.36% |         521     11.90%     48.25% |         548     12.51%     60.77% |         558     12.74%     73.51% |         561     12.81%     86.32% |         599     13.68%    100.00%
-system.ruby.l1_cntrl0.MM.Other_GETS::total         4379                      
-
-system.ruby.l1_cntrl0.MM.Merged_GETS     |          23     14.37%     14.37% |          16     10.00%     24.38% |          21     13.12%     37.50% |          23     14.37%     51.88% |          18     11.25%     63.13% |          23     14.37%     77.50% |          21     13.12%     90.63% |          15      9.38%    100.00%
-system.ruby.l1_cntrl0.MM.Merged_GETS::total          160                      
-
-system.ruby.l1_cntrl0.IR.Load            |           1     16.67%     16.67% |           0      0.00%     16.67% |           1     16.67%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
-system.ruby.l1_cntrl0.IR.Load::total                6                      
-
-system.ruby.l1_cntrl0.IR.Store           |           2     22.22%     22.22% |           0      0.00%     22.22% |           0      0.00%     22.22% |           2     22.22%     44.44% |           0      0.00%     44.44% |           3     33.33%     77.78% |           1     11.11%     88.89% |           1     11.11%    100.00%
-system.ruby.l1_cntrl0.IR.Store::total               9                      
-
-system.ruby.l1_cntrl0.IR.L1_to_L2        |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |          11     84.62%     84.62% |           0      0.00%     84.62% |           2     15.38%    100.00%
-system.ruby.l1_cntrl0.IR.L1_to_L2::total           13                      
-
-system.ruby.l1_cntrl0.SR.Load            |           2     11.76%     11.76% |           3     17.65%     29.41% |           4     23.53%     52.94% |           1      5.88%     58.82% |           0      0.00%     58.82% |           1      5.88%     64.71% |           2     11.76%     76.47% |           4     23.53%    100.00%
-system.ruby.l1_cntrl0.SR.Load::total               17                      
-
-system.ruby.l1_cntrl0.SR.Store           |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
-system.ruby.l1_cntrl0.SR.Store::total               6                      
-
-system.ruby.l1_cntrl0.SR.L1_to_L2        |           0      0.00%      0.00% |           3     18.75%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |          13     81.25%    100.00%
-system.ruby.l1_cntrl0.SR.L1_to_L2::total           16                      
-
-system.ruby.l1_cntrl0.OR.Load            |           0      0.00%      0.00% |           1     20.00%     20.00% |           0      0.00%     20.00% |           1     20.00%     40.00% |           0      0.00%     40.00% |           1     20.00%     60.00% |           0      0.00%     60.00% |           2     40.00%    100.00%
-system.ruby.l1_cntrl0.OR.Load::total                5                      
-
-system.ruby.l1_cntrl0.OR.Store           |           0      0.00%      0.00% |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OR.Store::total               1                      
-
-system.ruby.l1_cntrl0.MR.Load            |          32     12.85%     12.85% |          27     10.84%     23.69% |          42     16.87%     40.56% |          33     13.25%     53.82% |          20      8.03%     61.85% |          37     14.86%     76.71% |          27     10.84%     87.55% |          31     12.45%    100.00%
-system.ruby.l1_cntrl0.MR.Load::total              249                      
-
-system.ruby.l1_cntrl0.MR.Store           |          17     13.71%     13.71% |          13     10.48%     24.19% |          18     14.52%     38.71% |          18     14.52%     53.23% |          21     16.94%     70.16% |          18     14.52%     84.68% |          10      8.06%     92.74% |           9      7.26%    100.00%
-system.ruby.l1_cntrl0.MR.Store::total             124                      
-
-system.ruby.l1_cntrl0.MR.L1_to_L2        |          91     14.35%     14.35% |          56      8.83%     23.19% |         102     16.09%     39.27% |          86     13.56%     52.84% |          95     14.98%     67.82% |          89     14.04%     81.86% |          59      9.31%     91.17% |          56      8.83%    100.00%
-system.ruby.l1_cntrl0.MR.L1_to_L2::total          634                      
-
-system.ruby.l1_cntrl0.MMR.Load           |          14     10.22%     10.22% |          17     12.41%     22.63% |          26     18.98%     41.61% |          16     11.68%     53.28% |          16     11.68%     64.96% |          16     11.68%     76.64% |          18     13.14%     89.78% |          14     10.22%    100.00%
-system.ruby.l1_cntrl0.MMR.Load::total             137                      
-
-system.ruby.l1_cntrl0.MMR.Store          |           7     10.45%     10.45% |           8     11.94%     22.39% |           8     11.94%     34.33% |           8     11.94%     46.27% |           9     13.43%     59.70% |          11     16.42%     76.12% |           9     13.43%     89.55% |           7     10.45%    100.00%
-system.ruby.l1_cntrl0.MMR.Store::total             67                      
-
-system.ruby.l1_cntrl0.MMR.L1_to_L2       |          59     15.28%     15.28% |          75     19.43%     34.72% |          46     11.92%     46.63% |          41     10.62%     57.25% |          49     12.69%     69.95% |          33      8.55%     78.50% |          49     12.69%     91.19% |          34      8.81%    100.00%
-system.ruby.l1_cntrl0.MMR.L1_to_L2::total          386                      
-
-system.ruby.l1_cntrl0.IM.L1_to_L2        |      264282     12.35%     12.35% |      266577     12.46%     24.81% |      267890     12.52%     37.33% |      269848     12.61%     49.94% |      268056     12.53%     62.46% |      268579     12.55%     75.02% |      269306     12.59%     87.60% |      265306     12.40%    100.00%
-system.ruby.l1_cntrl0.IM.L1_to_L2::total      2139844                      
-
-system.ruby.l1_cntrl0.IM.Other_GETX      |           7      7.69%      7.69% |          12     13.19%     20.88% |          10     10.99%     31.87% |          15     16.48%     48.35% |           9      9.89%     58.24% |          15     16.48%     74.73% |          10     10.99%     85.71% |          13     14.29%    100.00%
-system.ruby.l1_cntrl0.IM.Other_GETX::total           91                      
-
-system.ruby.l1_cntrl0.IM.Other_GETS      |          21     14.00%     14.00% |          19     12.67%     26.67% |          20     13.33%     40.00% |          24     16.00%     56.00% |          14      9.33%     65.33% |          14      9.33%     74.67% |          22     14.67%     89.33% |          16     10.67%    100.00%
-system.ruby.l1_cntrl0.IM.Other_GETS::total          150                      
-
-system.ruby.l1_cntrl0.IM.Ack             |      183448     12.33%     12.33% |      186647     12.55%     24.88% |      185973     12.50%     37.38% |      187270     12.59%     49.97% |      185299     12.46%     62.42% |      185768     12.49%     74.91% |      187652     12.61%     87.52% |      185613     12.48%    100.00%
-system.ruby.l1_cntrl0.IM.Ack::total           1487670                      
-
-system.ruby.l1_cntrl0.IM.Data            |         985     11.47%     11.47% |        1103     12.85%     24.32% |        1041     12.12%     36.44% |        1101     12.82%     49.27% |        1105     12.87%     62.14% |        1091     12.71%     74.84% |        1048     12.21%     87.05% |        1112     12.95%    100.00%
-system.ruby.l1_cntrl0.IM.Data::total             8586                      
-
-system.ruby.l1_cntrl0.IM.Exclusive_Data  |       25729     12.38%     12.38% |       26061     12.54%     24.91% |       26018     12.52%     37.43% |       26114     12.56%     49.99% |       25848     12.43%     62.43% |       25928     12.47%     74.90% |       26272     12.64%     87.54% |       25907     12.46%    100.00%
-system.ruby.l1_cntrl0.IM.Exclusive_Data::total       207877                      
-
-system.ruby.l1_cntrl0.SM.L1_to_L2        |           0      0.00%      0.00% |          11     57.89%     57.89% |           0      0.00%     57.89% |           0      0.00%     57.89% |           0      0.00%     57.89% |           1      5.26%     63.16% |           7     36.84%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.SM.L1_to_L2::total           19                      
-
-system.ruby.l1_cntrl0.SM.Ack             |           0      0.00%      0.00% |          14     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           7     16.67%     50.00% |           7     16.67%     66.67% |          14     33.33%    100.00%
-system.ruby.l1_cntrl0.SM.Ack::total                42                      
-
-system.ruby.l1_cntrl0.SM.Data            |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
-system.ruby.l1_cntrl0.SM.Data::total                6                      
-
-system.ruby.l1_cntrl0.OM.Ack             |           7     50.00%     50.00% |           7     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OM.Ack::total                14                      
-
-system.ruby.l1_cntrl0.OM.All_acks_no_sharers |           1     50.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OM.All_acks_no_sharers::total            2                      
-
-system.ruby.l1_cntrl0.ISM.L1_to_L2       |           2     11.11%     11.11% |           0      0.00%     11.11% |           0      0.00%     11.11% |           0      0.00%     11.11% |           1      5.56%     16.67% |           0      0.00%     16.67% |          14     77.78%     94.44% |           1      5.56%    100.00%
-system.ruby.l1_cntrl0.ISM.L1_to_L2::total           18                      
-
-system.ruby.l1_cntrl0.ISM.Ack            |         104     12.84%     12.84% |          73      9.01%     21.85% |         108     13.33%     35.19% |         117     14.44%     49.63% |         100     12.35%     61.98% |         106     13.09%     75.06% |         115     14.20%     89.26% |          87     10.74%    100.00%
-system.ruby.l1_cntrl0.ISM.Ack::total              810                      
-
-system.ruby.l1_cntrl0.ISM.All_acks_no_sharers |         985     11.46%     11.46% |        1105     12.86%     24.32% |        1041     12.12%     36.44% |        1101     12.81%     49.26% |        1105     12.86%     62.12% |        1092     12.71%     74.83% |        1049     12.21%     87.03% |        1114     12.97%    100.00%
-system.ruby.l1_cntrl0.ISM.All_acks_no_sharers::total         8592                      
-
-system.ruby.l1_cntrl0.M_W.L1_to_L2       |         539     13.66%     13.66% |         550     13.94%     27.60% |         404     10.24%     37.84% |         533     13.51%     51.34% |         478     12.11%     63.46% |         492     12.47%     75.92% |         525     13.30%     89.23% |         425     10.77%    100.00%
-system.ruby.l1_cntrl0.M_W.L1_to_L2::total         3946                      
-
-system.ruby.l1_cntrl0.M_W.Ack            |        1618     12.50%     12.50% |        1714     13.24%     25.73% |        1578     12.19%     37.92% |        1607     12.41%     50.33% |        1665     12.86%     63.19% |        1631     12.60%     75.78% |        1583     12.22%     88.01% |        1553     11.99%    100.00%
-system.ruby.l1_cntrl0.M_W.Ack::total            12949                      
-
-system.ruby.l1_cntrl0.M_W.All_acks_no_sharers |       47224     12.53%     12.53% |       47235     12.53%     25.06% |       47179     12.52%     37.57% |       47134     12.50%     50.08% |       47252     12.53%     62.61% |       46968     12.46%     75.07% |       47208     12.52%     87.59% |       46776     12.41%    100.00%
-system.ruby.l1_cntrl0.M_W.All_acks_no_sharers::total       376976                      
-
-system.ruby.l1_cntrl0.MM_W.L1_to_L2      |        1079     15.32%     15.32% |         875     12.43%     27.75% |         817     11.60%     39.36% |         808     11.48%     50.83% |         798     11.33%     62.16% |         840     11.93%     74.09% |         931     13.22%     87.32% |         893     12.68%    100.00%
-system.ruby.l1_cntrl0.MM_W.L1_to_L2::total         7041                      
-
-system.ruby.l1_cntrl0.MM_W.Ack           |        2578     12.99%     12.99% |        2557     12.89%     25.88% |        2465     12.42%     38.30% |        2275     11.47%     49.77% |        2427     12.23%     62.00% |        2427     12.23%     74.23% |        2583     13.02%     87.24% |        2531     12.76%    100.00%
-system.ruby.l1_cntrl0.MM_W.Ack::total           19843                      
-
-system.ruby.l1_cntrl0.MM_W.All_acks_no_sharers |       25729     12.38%     12.38% |       26061     12.54%     24.91% |       26018     12.52%     37.43% |       26114     12.56%     49.99% |       25848     12.43%     62.43% |       25928     12.47%     74.90% |       26272     12.64%     87.54% |       25907     12.46%    100.00%
-system.ruby.l1_cntrl0.MM_W.All_acks_no_sharers::total       207877                      
-
-system.ruby.l1_cntrl0.IS.L1_to_L2        |      495283     12.52%     12.52% |      496463     12.55%     25.07% |      495139     12.51%     37.58% |      490703     12.40%     49.98% |      494908     12.51%     62.49% |      493655     12.48%     74.97% |      495921     12.53%     87.50% |      494562     12.50%    100.00%
-system.ruby.l1_cntrl0.IS.L1_to_L2::total      3956634                      
-
-system.ruby.l1_cntrl0.IS.Other_GETX      |          18     11.46%     11.46% |          25     15.92%     27.39% |          17     10.83%     38.22% |          24     15.29%     53.50% |          21     13.38%     66.88% |          22     14.01%     80.89% |          15      9.55%     90.45% |          15      9.55%    100.00%
-system.ruby.l1_cntrl0.IS.Other_GETX::total          157                      
-
-system.ruby.l1_cntrl0.IS.Other_GETS      |          33     12.36%     12.36% |          30     11.24%     23.60% |          33     12.36%     35.96% |          29     10.86%     46.82% |          36     13.48%     60.30% |          40     14.98%     75.28% |          28     10.49%     85.77% |          38     14.23%    100.00%
-system.ruby.l1_cntrl0.IS.Other_GETS::total          267                      
-
-system.ruby.l1_cntrl0.IS.Ack             |      344673     12.52%     12.52% |      344866     12.53%     25.05% |      344538     12.51%     37.56% |      344199     12.50%     50.06% |      344619     12.52%     62.58% |      343059     12.46%     75.04% |      344891     12.53%     87.57% |      342300     12.43%    100.00%
-system.ruby.l1_cntrl0.IS.Ack::total           2753145                      
-
-system.ruby.l1_cntrl0.IS.Shared_Ack      |          57     12.61%     12.61% |          54     11.95%     24.56% |          57     12.61%     37.17% |          59     13.05%     50.22% |          48     10.62%     60.84% |          68     15.04%     75.88% |          45      9.96%     85.84% |          64     14.16%    100.00%
-system.ruby.l1_cntrl0.IS.Shared_Ack::total          452                      
-
-system.ruby.l1_cntrl0.IS.Data            |        1888     12.28%     12.28% |        1940     12.62%     24.90% |        1919     12.48%     37.38% |        1926     12.53%     49.91% |        1893     12.31%     62.22% |        1908     12.41%     74.63% |        1932     12.57%     87.20% |        1968     12.80%    100.00%
-system.ruby.l1_cntrl0.IS.Data::total            15374                      
-
-system.ruby.l1_cntrl0.IS.Shared_Data     |        1060     12.39%     12.39% |        1048     12.25%     24.63% |        1056     12.34%     36.98% |        1053     12.31%     49.28% |        1045     12.21%     61.49% |        1094     12.78%     74.28% |        1078     12.60%     86.88% |        1123     13.12%    100.00%
-system.ruby.l1_cntrl0.IS.Shared_Data::total         8557                      
-
-system.ruby.l1_cntrl0.IS.Exclusive_Data  |       47224     12.53%     12.53% |       47235     12.53%     25.06% |       47180     12.52%     37.57% |       47134     12.50%     50.08% |       47252     12.53%     62.61% |       46968     12.46%     75.07% |       47208     12.52%     87.59% |       46776     12.41%    100.00%
-system.ruby.l1_cntrl0.IS.Exclusive_Data::total       376977                      
-
-system.ruby.l1_cntrl0.SS.L1_to_L2        |        1116     14.02%     14.02% |         874     10.98%     25.01% |        1194     15.00%     40.01% |        1064     13.37%     53.38% |         767      9.64%     63.02% |         881     11.07%     74.09% |         901     11.32%     85.41% |        1161     14.59%    100.00%
-system.ruby.l1_cntrl0.SS.L1_to_L2::total         7958                      
-
-system.ruby.l1_cntrl0.SS.Ack             |        2952     12.15%     12.15% |        3061     12.60%     24.75% |        3007     12.38%     37.13% |        2990     12.31%     49.44% |        3014     12.41%     61.84% |        2995     12.33%     74.17% |        3121     12.85%     87.02% |        3154     12.98%    100.00%
-system.ruby.l1_cntrl0.SS.Ack::total             24294                      
-
-system.ruby.l1_cntrl0.SS.Shared_Ack      |           4     11.76%     11.76% |           4     11.76%     23.53% |           4     11.76%     35.29% |           4     11.76%     47.06% |           3      8.82%     55.88% |           6     17.65%     73.53% |           5     14.71%     88.24% |           4     11.76%    100.00%
-system.ruby.l1_cntrl0.SS.Shared_Ack::total           34                      
-
-system.ruby.l1_cntrl0.SS.All_acks        |        1114     12.42%     12.42% |        1096     12.21%     24.63% |        1109     12.36%     36.99% |        1107     12.34%     49.33% |        1091     12.16%     61.48% |        1156     12.88%     74.37% |        1120     12.48%     86.85% |        1180     13.15%    100.00%
-system.ruby.l1_cntrl0.SS.All_acks::total         8973                      
-
-system.ruby.l1_cntrl0.SS.All_acks_no_sharers |        1834     12.26%     12.26% |        1892     12.65%     24.91% |        1866     12.47%     37.38% |        1872     12.52%     49.90% |        1847     12.35%     62.25% |        1846     12.34%     74.59% |        1890     12.64%     87.22% |        1911     12.78%    100.00%
-system.ruby.l1_cntrl0.SS.All_acks_no_sharers::total        14958                      
-
-system.ruby.l1_cntrl0.OI.Load            |           0      0.00%      0.00% |           1     33.33%     33.33% |           2     66.67%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OI.Load::total                3                      
-
-system.ruby.l1_cntrl0.OI.Other_GETX      |           0      0.00%      0.00% |           0      0.00%      0.00% |           2    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OI.Other_GETX::total            2                      
-
-system.ruby.l1_cntrl0.OI.Other_GETS      |           1     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     33.33%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           1     33.33%    100.00%
-system.ruby.l1_cntrl0.OI.Other_GETS::total            3                      
-
-system.ruby.l1_cntrl0.OI.Merged_GETS     |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OI.Merged_GETS::total            1                      
-
-system.ruby.l1_cntrl0.OI.Writeback_Ack   |        1085     12.95%     12.95% |        1073     12.81%     25.75% |        1027     12.26%     38.01% |        1041     12.42%     50.44% |        1020     12.17%     62.61% |        1047     12.50%     75.10% |        1077     12.85%     87.96% |        1009     12.04%    100.00%
-system.ruby.l1_cntrl0.OI.Writeback_Ack::total         8379                      
-
-system.ruby.l1_cntrl0.MI.Load            |          10     11.63%     11.63% |          11     12.79%     24.42% |          14     16.28%     40.70% |          12     13.95%     54.65% |          12     13.95%     68.60% |           8      9.30%     77.91% |           7      8.14%     86.05% |          12     13.95%    100.00%
-system.ruby.l1_cntrl0.MI.Load::total               86                      
-
-system.ruby.l1_cntrl0.MI.Store           |           7     12.07%     12.07% |           4      6.90%     18.97% |           4      6.90%     25.86% |          12     20.69%     46.55% |           9     15.52%     62.07% |           7     12.07%     74.14% |           8     13.79%     87.93% |           7     12.07%    100.00%
-system.ruby.l1_cntrl0.MI.Store::total              58                      
-
-system.ruby.l1_cntrl0.MI.Other_GETX      |          25     11.47%     11.47% |          32     14.68%     26.15% |          30     13.76%     39.91% |          25     11.47%     51.38% |          31     14.22%     65.60% |          29     13.30%     78.90% |          29     13.30%     92.20% |          17      7.80%    100.00%
-system.ruby.l1_cntrl0.MI.Other_GETX::total          218                      
-
-system.ruby.l1_cntrl0.MI.Other_GETS      |          47     13.31%     13.31% |          39     11.05%     24.36% |          39     11.05%     35.41% |          42     11.90%     47.31% |          48     13.60%     60.91% |          46     13.03%     73.94% |          63     17.85%     91.78% |          29      8.22%    100.00%
-system.ruby.l1_cntrl0.MI.Other_GETS::total          353                      
-
-system.ruby.l1_cntrl0.MI.Merged_GETS     |           1     50.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.MI.Merged_GETS::total            2                      
-
-system.ruby.l1_cntrl0.MI.Writeback_Ack   |       71509     12.46%     12.46% |       71917     12.54%     25.00% |       71762     12.51%     37.51% |       71899     12.53%     50.04% |       71741     12.51%     62.55% |       71488     12.46%     75.01% |       72063     12.56%     87.57% |       71314     12.43%    100.00%
-system.ruby.l1_cntrl0.MI.Writeback_Ack::total       573693                      
-
-system.ruby.l1_cntrl0.II.Writeback_Ack   |          25     11.36%     11.36% |          32     14.55%     25.91% |          32     14.55%     40.45% |          25     11.36%     51.82% |          31     14.09%     65.91% |          29     13.18%     79.09% |          29     13.18%     92.27% |          17      7.73%    100.00%
-system.ruby.l1_cntrl0.II.Writeback_Ack::total          220                      
-
-system.ruby.l1_cntrl0.IT.Load            |           0      0.00%      0.00% |           0      0.00%      0.00% |           1     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           2     66.67%    100.00%
-system.ruby.l1_cntrl0.IT.Load::total                3                      
-
-system.ruby.l1_cntrl0.IT.Store           |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1     50.00%     50.00% |           0      0.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.IT.Store::total               2                      
-
-system.ruby.l1_cntrl0.IT.L1_to_L2        |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1      4.17%      4.17% |           0      0.00%      4.17% |          11     45.83%     50.00% |           9     37.50%     87.50% |           3     12.50%    100.00%
-system.ruby.l1_cntrl0.IT.L1_to_L2::total           24                      
-
-system.ruby.l1_cntrl0.IT.Complete_L2_to_L1 |           3     20.00%     20.00% |           0      0.00%     20.00% |           1      6.67%     26.67% |           2     13.33%     40.00% |           0      0.00%     40.00% |           4     26.67%     66.67% |           2     13.33%     80.00% |           3     20.00%    100.00%
-system.ruby.l1_cntrl0.IT.Complete_L2_to_L1::total           15                      
-
-system.ruby.l1_cntrl0.ST.Load            |           0      0.00%      0.00% |           1     20.00%     20.00% |           0      0.00%     20.00% |           0      0.00%     20.00% |           0      0.00%     20.00% |           1     20.00%     40.00% |           0      0.00%     40.00% |           3     60.00%    100.00%
-system.ruby.l1_cntrl0.ST.Load::total                5                      
-
-system.ruby.l1_cntrl0.ST.Store           |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00%
-system.ruby.l1_cntrl0.ST.Store::total               1                      
-
-system.ruby.l1_cntrl0.ST.L1_to_L2        |          10     12.99%     12.99% |          21     27.27%     40.26% |           7      9.09%     49.35% |           9     11.69%     61.04% |           0      0.00%     61.04% |           0      0.00%     61.04% |           5      6.49%     67.53% |          25     32.47%    100.00%
-system.ruby.l1_cntrl0.ST.L1_to_L2::total           77                      
-
-system.ruby.l1_cntrl0.ST.Complete_L2_to_L1 |           2      8.70%      8.70% |           5     21.74%     30.43% |           4     17.39%     47.83% |           1      4.35%     52.17% |           0      0.00%     52.17% |           2      8.70%     60.87% |           3     13.04%     73.91% |           6     26.09%    100.00%
-system.ruby.l1_cntrl0.ST.Complete_L2_to_L1::total           23                      
-
-system.ruby.l1_cntrl0.OT.Load            |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           2    100.00%    100.00%
-system.ruby.l1_cntrl0.OT.Load::total                2                      
-
-system.ruby.l1_cntrl0.OT.L1_to_L2        |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           6    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.l1_cntrl0.OT.L1_to_L2::total            6                      
-
-system.ruby.l1_cntrl0.OT.Complete_L2_to_L1 |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           0      0.00%     50.00% |           1     16.67%     66.67% |           0      0.00%     66.67% |           2     33.33%    100.00%
-system.ruby.l1_cntrl0.OT.Complete_L2_to_L1::total            6                      
-
-system.ruby.l1_cntrl0.MT.Load            |          13     13.68%     13.68% |           7      7.37%     21.05% |          10     10.53%     31.58% |          13     13.68%     45.26% |          10     10.53%     55.79% |          14     14.74%     70.53% |          13     13.68%     84.21% |          15     15.79%    100.00%
-system.ruby.l1_cntrl0.MT.Load::total               95                      
-
-system.ruby.l1_cntrl0.MT.Store           |           6     10.71%     10.71% |           9     16.07%     26.79% |           9     16.07%     42.86% |           9     16.07%     58.93% |           9     16.07%     75.00% |           7     12.50%     87.50% |           5      8.93%     96.43% |           2      3.57%    100.00%
-system.ruby.l1_cntrl0.MT.Store::total              56                      
-
-system.ruby.l1_cntrl0.MT.L1_to_L2        |         179     15.61%     15.61% |         117     10.20%     25.81% |         164     14.30%     40.10% |         171     14.91%     55.01% |         115     10.03%     65.04% |         155     13.51%     78.55% |          80      6.97%     85.53% |         166     14.47%    100.00%
-system.ruby.l1_cntrl0.MT.L1_to_L2::total         1147                      
-
-system.ruby.l1_cntrl0.MT.Complete_L2_to_L1 |          49     13.14%     13.14% |          40     10.72%     23.86% |          60     16.09%     39.95% |          51     13.67%     53.62% |          41     10.99%     64.61% |          55     14.75%     79.36% |          37      9.92%     89.28% |          40     10.72%    100.00%
-system.ruby.l1_cntrl0.MT.Complete_L2_to_L1::total          373                      
-
-system.ruby.l1_cntrl0.MMT.Load           |           8     13.79%     13.79% |          11     18.97%     32.76% |           7     12.07%     44.83% |           8     13.79%     58.62% |           6     10.34%     68.97% |           4      6.90%     75.86% |           9     15.52%     91.38% |           5      8.62%    100.00%
-system.ruby.l1_cntrl0.MMT.Load::total              58                      
-
-system.ruby.l1_cntrl0.MMT.Store          |           4     14.29%     14.29% |           3     10.71%     25.00% |           4     14.29%     39.29% |           2      7.14%     46.43% |           5     17.86%     64.29% |           3     10.71%     75.00% |           5     17.86%     92.86% |           2      7.14%    100.00%
-system.ruby.l1_cntrl0.MMT.Store::total             28                      
-
-system.ruby.l1_cntrl0.MMT.L1_to_L2       |          86     11.35%     11.35% |         139     18.34%     29.68% |          85     11.21%     40.90% |          97     12.80%     53.69% |          90     11.87%     65.57% |          91     12.01%     77.57% |          78     10.29%     87.86% |          92     12.14%    100.00%
-system.ruby.l1_cntrl0.MMT.L1_to_L2::total          758                      
-
-system.ruby.l1_cntrl0.MMT.Complete_L2_to_L1 |          21     10.29%     10.29% |          25     12.25%     22.55% |          34     16.67%     39.22% |          24     11.76%     50.98% |          25     12.25%     63.24% |          27     13.24%     76.47% |          27     13.24%     89.71% |          21     10.29%    100.00%
-system.ruby.l1_cntrl0.MMT.Complete_L2_to_L1::total          204                      
-
-system.ruby.dir_cntrl0.GETX                    220023      0.00%      0.00%
-system.ruby.dir_cntrl0.GETS                    406995      0.00%      0.00%
-system.ruby.dir_cntrl0.PUT                     585083      0.00%      0.00%
-system.ruby.dir_cntrl0.Unblock                    220      0.00%      0.00%
-system.ruby.dir_cntrl0.UnblockS                 23931      0.00%      0.00%
-system.ruby.dir_cntrl0.UnblockM                593445      0.00%      0.00%
-system.ruby.dir_cntrl0.Writeback_Clean           8030      0.00%      0.00%
-system.ruby.dir_cntrl0.Writeback_Dirty            349      0.00%      0.00%
-system.ruby.dir_cntrl0.Writeback_Exclusive_Clean       360015      0.00%      0.00%
-system.ruby.dir_cntrl0.Writeback_Exclusive_Dirty       213674      0.00%      0.00%
-system.ruby.dir_cntrl0.Memory_Data             597503      0.00%      0.00%
-system.ruby.dir_cntrl0.Memory_Ack              214013      0.00%      0.00%
-system.ruby.dir_cntrl0.All_Unblocks               439      0.00%      0.00%
-system.ruby.dir_cntrl0.NX.GETX                     61      0.00%      0.00%
-system.ruby.dir_cntrl0.NX.GETS                     97      0.00%      0.00%
-system.ruby.dir_cntrl0.NX.PUT                    8595      0.00%      0.00%
-system.ruby.dir_cntrl0.NO.GETX                   6880      0.00%      0.00%
-system.ruby.dir_cntrl0.NO.GETS                  12400      0.00%      0.00%
-system.ruby.dir_cntrl0.NO.PUT                  573697      0.00%      0.00%
-system.ruby.dir_cntrl0.O.GETX                    8316      0.00%      0.00%
-system.ruby.dir_cntrl0.O.GETS                   15375      0.00%      0.00%
-system.ruby.dir_cntrl0.E.GETX                  201220      0.00%      0.00%
-system.ruby.dir_cntrl0.E.GETS                  372612      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B.GETX                  205      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B.GETS                  439      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B.PUT                  2778      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B.UnblockS             8092      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B.UnblockM           592827      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_X.UnblockS              4      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_X.UnblockM            201      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S.PUT                   2      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S.UnblockS             22      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S.UnblockM            417      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S_W.GETX                1      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S_W.GETS                1      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S_W.PUT                 7      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S_W.UnblockS          439      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_S_W.All_Unblocks          439      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B.GETX                     9      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B.GETS                     6      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B.UnblockS             15374      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_W.GETX               1957      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_W.GETS               3492      0.00%      0.00%
-system.ruby.dir_cntrl0.NO_B_W.Memory_Data       582129      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B_W.GETX                  38      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B_W.GETS                 103      0.00%      0.00%
-system.ruby.dir_cntrl0.O_B_W.Memory_Data        15374      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.GETX                    295      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.GETS                    514      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.PUT                       4      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.Unblock                 220      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.Writeback_Clean         8030      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.Writeback_Dirty          349      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.Writeback_Exclusive_Clean       360015      0.00%      0.00%
-system.ruby.dir_cntrl0.WB.Writeback_Exclusive_Dirty       213674      0.00%      0.00%
-system.ruby.dir_cntrl0.WB_O_W.GETS                  3      0.00%      0.00%
-system.ruby.dir_cntrl0.WB_O_W.Memory_Ack          348      0.00%      0.00%
-system.ruby.dir_cntrl0.WB_E_W.GETX               1041      0.00%      0.00%
-system.ruby.dir_cntrl0.WB_E_W.GETS               1953      0.00%      0.00%
-system.ruby.dir_cntrl0.WB_E_W.Memory_Ack       213665      0.00%      0.00%
+system.ruby.LD.latency_hist::bucket_size         1024                      
+system.ruby.LD.latency_hist::max_bucket         10239                      
+system.ruby.LD.latency_hist::samples           401404                      
+system.ruby.LD.latency_hist::mean         1200.205225                      
+system.ruby.LD.latency_hist::gmean         820.467518                      
+system.ruby.LD.latency_hist::stdev         896.107731                      
+system.ruby.LD.latency_hist              |      206231     51.38%     51.38% |      106792     26.60%     77.98% |       80227     19.99%     97.97% |        8012      2.00%     99.96% |         141      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.latency_hist::total             401404                      
+system.ruby.LD.hit_latency_hist::bucket_size          256                      
+system.ruby.LD.hit_latency_hist::max_bucket         2559                      
+system.ruby.LD.hit_latency_hist::samples          496                      
+system.ruby.LD.hit_latency_hist::mean      129.788306                      
+system.ruby.LD.hit_latency_hist::gmean      40.678454                      
+system.ruby.LD.hit_latency_hist::stdev     179.340502                      
+system.ruby.LD.hit_latency_hist          |         409     82.46%     82.46% |          72     14.52%     96.98% |           8      1.61%     98.59% |           5      1.01%     99.60% |           1      0.20%     99.80% |           0      0.00%     99.80% |           0      0.00%     99.80% |           1      0.20%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.hit_latency_hist::total            496                      
+system.ruby.LD.miss_latency_hist::bucket_size         1024                      
+system.ruby.LD.miss_latency_hist::max_bucket        10239                      
+system.ruby.LD.miss_latency_hist::samples       400908                      
+system.ruby.LD.miss_latency_hist::mean    1201.529535                      
+system.ruby.LD.miss_latency_hist::gmean    823.522657                      
+system.ruby.LD.miss_latency_hist::stdev    895.847928                      
+system.ruby.LD.miss_latency_hist         |      205737     51.32%     51.32% |      106790     26.64%     77.95% |       80227     20.01%     97.97% |        8012      2.00%     99.96% |         141      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.miss_latency_hist::total        400908                      
+system.ruby.ST.latency_hist::bucket_size          512                      
+system.ruby.ST.latency_hist::max_bucket          5119                      
+system.ruby.ST.latency_hist::samples           216712                      
+system.ruby.ST.latency_hist::mean         1199.682090                      
+system.ruby.ST.latency_hist::gmean         820.928261                      
+system.ruby.ST.latency_hist::stdev         895.164370                      
+system.ruby.ST.latency_hist              |       72217     33.32%     33.32% |       39245     18.11%     51.43% |       26157     12.07%     63.50% |       31400     14.49%     77.99% |       29405     13.57%     91.56% |       13948      6.44%     98.00% |        3617      1.67%     99.67% |         640      0.30%     99.96% |          77      0.04%    100.00% |           6      0.00%    100.00%
+system.ruby.ST.latency_hist::total             216712                      
+system.ruby.ST.hit_latency_hist::bucket_size          128                      
+system.ruby.ST.hit_latency_hist::max_bucket         1279                      
+system.ruby.ST.hit_latency_hist::samples          241                      
+system.ruby.ST.hit_latency_hist::mean      140.414938                      
+system.ruby.ST.hit_latency_hist::gmean      42.603184                      
+system.ruby.ST.hit_latency_hist::stdev     171.207823                      
+system.ruby.ST.hit_latency_hist          |         141     58.51%     58.51% |          50     20.75%     79.25% |          31     12.86%     92.12% |           6      2.49%     94.61% |           6      2.49%     97.10% |           6      2.49%     99.59% |           1      0.41%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.hit_latency_hist::total            241                      
+system.ruby.ST.miss_latency_hist::bucket_size          512                      
+system.ruby.ST.miss_latency_hist::max_bucket         5119                      
+system.ruby.ST.miss_latency_hist::samples       216471                      
+system.ruby.ST.miss_latency_hist::mean    1200.861386                      
+system.ruby.ST.miss_latency_hist::gmean    823.636647                      
+system.ruby.ST.miss_latency_hist::stdev    894.945970                      
+system.ruby.ST.miss_latency_hist         |       71989     33.26%     33.26% |       39232     18.12%     51.38% |       26157     12.08%     63.46% |       31400     14.51%     77.97% |       29405     13.58%     91.55% |       13948      6.44%     98.00% |        3617      1.67%     99.67% |         640      0.30%     99.96% |          77      0.04%    100.00% |           6      0.00%    100.00%
+system.ruby.ST.miss_latency_hist::total        216471                      
+system.ruby.L1Cache.hit_mach_latency_hist::bucket_size            1                      
+system.ruby.L1Cache.hit_mach_latency_hist::max_bucket            9                      
+system.ruby.L1Cache.hit_mach_latency_hist::samples          138                      
+system.ruby.L1Cache.hit_mach_latency_hist::mean            2                      
+system.ruby.L1Cache.hit_mach_latency_hist::gmean     2.000000                      
+system.ruby.L1Cache.hit_mach_latency_hist |           0      0.00%      0.00% |           0      0.00%      0.00% |         138    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.hit_mach_latency_hist::total          138                      
+system.ruby.L1Cache.miss_mach_latency_hist::bucket_size          512                      
+system.ruby.L1Cache.miss_mach_latency_hist::max_bucket         5119                      
+system.ruby.L1Cache.miss_mach_latency_hist::samples        19877                      
+system.ruby.L1Cache.miss_mach_latency_hist::mean  1068.632842                      
+system.ruby.L1Cache.miss_mach_latency_hist::gmean   609.184476                      
+system.ruby.L1Cache.miss_mach_latency_hist::stdev   891.446161                      
+system.ruby.L1Cache.miss_mach_latency_hist |        8066     40.58%     40.58% |        2780     13.99%     54.57% |        2446     12.31%     66.87% |        2998     15.08%     81.95% |        2398     12.06%     94.02% |         956      4.81%     98.83% |         195      0.98%     99.81% |          36      0.18%     99.99% |           2      0.01%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.miss_mach_latency_hist::total        19877                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::bucket_size          512                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::max_bucket         5119                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::samples        19438                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::mean   985.051343                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::gmean   380.663652                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::stdev   886.076563                      
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request |        8575     44.11%     44.11% |        2388     12.29%     56.40% |        2456     12.64%     69.03% |        2961     15.23%     84.27% |        2158     11.10%     95.37% |         735      3.78%     99.15% |         140      0.72%     99.87% |          24      0.12%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.miss_latency_hist.issue_to_initial_request::total        19438                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::bucket_size          128                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::max_bucket         1279                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::samples        19438                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::mean    56.696677                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::gmean    19.964374                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::stdev    97.360116                      
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward |       16154     83.11%     83.11% |        2126     10.94%     94.04% |         813      4.18%     98.23% |         254      1.31%     99.53% |          69      0.35%     99.89% |          19      0.10%     99.98% |           2      0.01%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.miss_latency_hist.initial_to_forward::total        19438                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::bucket_size            8                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::max_bucket           79                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::samples        19438                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::mean    25.929108                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::gmean    25.840194                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::stdev     2.214187                      
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |       19044     97.97%     97.97% |         390      2.01%     99.98% |           4      0.02%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.miss_latency_hist.forward_to_first_response::total        19438                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::bucket_size            2                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::max_bucket           19                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::samples        19438                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::mean     1.883990                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::stdev     1.916605                      
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion |        9557     49.17%     49.17% |        7546     38.82%     87.99% |        1175      6.04%     94.03% |         733      3.77%     97.80% |         258      1.33%     99.13% |         122      0.63%     99.76% |          25      0.13%     99.89% |          17      0.09%     99.97% |           5      0.03%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache.miss_latency_hist.first_response_to_completion::total        19438                      
+system.ruby.L2Cache.hit_mach_latency_hist::bucket_size          256                      
+system.ruby.L2Cache.hit_mach_latency_hist::max_bucket         2559                      
+system.ruby.L2Cache.hit_mach_latency_hist::samples          599                      
+system.ruby.L2Cache.hit_mach_latency_hist::mean   163.504174                      
+system.ruby.L2Cache.hit_mach_latency_hist::gmean    82.958655                      
+system.ruby.L2Cache.hit_mach_latency_hist::stdev   183.100288                      
+system.ruby.L2Cache.hit_mach_latency_hist |         462     77.13%     77.13% |         109     18.20%     95.33% |          20      3.34%     98.66% |           6      1.00%     99.67% |           1      0.17%     99.83% |           0      0.00%     99.83% |           0      0.00%     99.83% |           1      0.17%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L2Cache.hit_mach_latency_hist::total          599                      
+system.ruby.Directory.miss_mach_latency_hist::bucket_size         1024                      
+system.ruby.Directory.miss_mach_latency_hist::max_bucket        10239                      
+system.ruby.Directory.miss_mach_latency_hist::samples       597502                      
+system.ruby.Directory.miss_mach_latency_hist::mean  1205.708521                      
+system.ruby.Directory.miss_mach_latency_hist::gmean   831.864990                      
+system.ruby.Directory.miss_mach_latency_hist::stdev   895.329653                      
+system.ruby.Directory.miss_mach_latency_hist |      306112     51.23%     51.23% |      158903     26.59%     77.83% |      120226     20.12%     97.95% |       12038      2.01%     99.96% |         222      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_mach_latency_hist::total       597502                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::bucket_size          512                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::max_bucket         5119                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::samples       597502                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::mean   986.665291                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::gmean   384.184543                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::stdev   885.752609                      
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request |      262430     43.92%     43.92% |       74515     12.47%     56.39% |       75171     12.58%     68.97% |       92711     15.52%     84.49% |       64576     10.81%     95.30% |       22828      3.82%     99.12% |        4553      0.76%     99.88% |         651      0.11%     99.99% |          67      0.01%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist.issue_to_initial_request::total       597502                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::bucket_size          128                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::max_bucket         1279                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::samples       597502                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::mean    10.380273                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::gmean     9.287009                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward::stdev    16.805315                      
+system.ruby.Directory.miss_latency_hist.initial_to_forward |      595424     99.65%     99.65% |        1243      0.21%     99.86% |         564      0.09%     99.95% |         180      0.03%     99.98% |          66      0.01%    100.00% |          18      0.00%    100.00% |           6      0.00%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist.initial_to_forward::total       597502                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::bucket_size            8                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::max_bucket           79                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::samples       597502                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::mean    26.125536                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::gmean    26.035848                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::stdev     2.225599                      
+system.ruby.Directory.miss_latency_hist.forward_to_first_response |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |      583382     97.64%     97.64% |       14030      2.35%     99.98% |          90      0.02%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist.forward_to_first_response::total       597502                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::bucket_size          128                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::max_bucket         1279                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::samples       597502                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::mean   182.537421                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::gmean   136.140125                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::stdev   133.940990                      
+system.ruby.Directory.miss_latency_hist.first_response_to_completion |      252378     42.24%     42.24% |      203805     34.11%     76.35% |       91328     15.28%     91.63% |       33805      5.66%     97.29% |       11457      1.92%     99.21% |        3490      0.58%     99.79% |         948      0.16%     99.95% |         231      0.04%     99.99% |          51      0.01%    100.00% |           9      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist.first_response_to_completion::total       597502                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::bucket_size            1                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::max_bucket            9                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::samples           88                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::mean            2                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::gmean            2                      
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist |           0      0.00%      0.00% |           0      0.00%      0.00% |          88    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.L1Cache.hit_type_mach_latency_hist::total           88                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::bucket_size          512                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::max_bucket         5119                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::samples        12936                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::mean  1063.318878                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::gmean   603.424470                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::stdev   892.034712                      
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist |        5286     40.86%     40.86% |        1815     14.03%     54.89% |        1582     12.23%     67.12% |        1934     14.95%     82.07% |        1539     11.90%     93.97% |         627      4.85%     98.82% |         128      0.99%     99.81% |          24      0.19%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.L1Cache.miss_type_mach_latency_hist::total        12936                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::bucket_size          256                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::max_bucket         2559                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::samples          408                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::mean   157.350490                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::gmean    77.903007                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::stdev   186.614207                      
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist |         321     78.68%     78.68% |          72     17.65%     96.32% |           8      1.96%     98.28% |           5      1.23%     99.51% |           1      0.25%     99.75% |           0      0.00%     99.75% |           0      0.00%     99.75% |           1      0.25%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.L2Cache.hit_type_mach_latency_hist::total          408                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::bucket_size         1024                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::max_bucket        10239                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::samples       387972                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::mean  1206.137840                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::gmean   832.105820                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::stdev   895.608577                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist |      198636     51.20%     51.20% |      103274     26.62%     77.82% |       78061     20.12%     97.94% |        7860      2.03%     99.96% |         140      0.04%    100.00% |           1      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.Directory.miss_type_mach_latency_hist::total       387972                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::bucket_size            1                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::max_bucket            9                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::samples           50                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::mean            2                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::gmean            2                      
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist |           0      0.00%      0.00% |           0      0.00%      0.00% |          50    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.L1Cache.hit_type_mach_latency_hist::total           50                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::bucket_size          512                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::max_bucket         5119                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::samples         6941                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::mean  1078.536522                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::gmean   620.066573                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::stdev   890.327819                      
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist |        2780     40.05%     40.05% |         965     13.90%     53.95% |         864     12.45%     66.40% |        1064     15.33%     81.73% |         859     12.38%     94.11% |         329      4.74%     98.85% |          67      0.97%     99.81% |          12      0.17%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.L1Cache.miss_type_mach_latency_hist::total         6941                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::bucket_size          128                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::max_bucket         1279                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::samples          191                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::mean   176.649215                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::gmean    94.884201                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::stdev   175.112077                      
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist |          91     47.64%     47.64% |          50     26.18%     73.82% |          31     16.23%     90.05% |           6      3.14%     93.19% |           6      3.14%     96.34% |           6      3.14%     99.48% |           1      0.52%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.L2Cache.hit_type_mach_latency_hist::total          191                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::bucket_size          512                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::max_bucket         5119                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::samples       209530                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::mean  1204.913583                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::gmean   831.419247                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::stdev   894.814552                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist |       69209     33.03%     33.03% |       38267     18.26%     51.29% |       25293     12.07%     63.37% |       30336     14.48%     77.84% |       28546     13.62%     91.47% |       13619      6.50%     97.97% |        3550      1.69%     99.66% |         628      0.30%     99.96% |          76      0.04%    100.00% |           6      0.00%    100.00%
+system.ruby.ST.Directory.miss_type_mach_latency_hist::total       209530                      
+system.ruby.L1Cache_Controller.Load      |       50266     12.51%     12.51% |       50315     12.53%     25.04% |       50271     12.52%     37.56% |       50212     12.50%     50.06% |       50263     12.51%     62.57% |       50069     12.47%     75.04% |       50306     12.52%     87.56% |       49970     12.44%    100.00%
+system.ruby.L1Cache_Controller.Load::total       401672                      
+system.ruby.L1Cache_Controller.Store     |       26762     12.34%     12.34% |       27215     12.55%     24.89% |       27106     12.50%     37.39% |       27272     12.58%     49.96% |       27014     12.46%     62.42% |       27080     12.49%     74.91% |       27361     12.62%     87.52% |       27054     12.48%    100.00%
+system.ruby.L1Cache_Controller.Store::total       216864                      
+system.ruby.L1Cache_Controller.L2_Replacement |       76877     12.45%     12.45% |       77378     12.53%     24.99% |       77204     12.51%     37.50% |       77319     12.53%     50.02% |       77135     12.50%     62.52% |       76978     12.47%     74.99% |       77528     12.56%     87.55% |       76877     12.45%    100.00%
+system.ruby.L1Cache_Controller.L2_Replacement::total       617296                      
+system.ruby.L1Cache_Controller.L1_to_L2  |      839684     12.46%     12.46% |      843217     12.52%     24.98% |      843158     12.52%     37.50% |      840771     12.48%     49.98% |      842565     12.51%     62.49% |      841910     12.50%     74.98% |      845488     12.55%     87.54% |      839694     12.46%    100.00%
+system.ruby.L1Cache_Controller.L1_to_L2::total      6736487                      
+system.ruby.L1Cache_Controller.Trigger_L2_to_L1D |          75     12.08%     12.08% |          72     11.59%     23.67% |          99     15.94%     39.61% |          79     12.72%     52.33% |          66     10.63%     62.96% |          89     14.33%     77.29% |          69     11.11%     88.41% |          72     11.59%    100.00%
+system.ruby.L1Cache_Controller.Trigger_L2_to_L1D::total          621                      
+system.ruby.L1Cache_Controller.Complete_L2_to_L1 |          75     12.08%     12.08% |          72     11.59%     23.67% |          99     15.94%     39.61% |          79     12.72%     52.33% |          66     10.63%     62.96% |          89     14.33%     77.29% |          69     11.11%     88.41% |          72     11.59%    100.00%
+system.ruby.L1Cache_Controller.Complete_L2_to_L1::total          621                      
+system.ruby.L1Cache_Controller.Other_GETX |      189761     12.52%     12.52% |      189309     12.49%     25.02% |      189417     12.50%     37.52% |      189262     12.49%     50.01% |      189522     12.51%     62.51% |      189457     12.50%     75.01% |      189156     12.48%     87.50% |      189455     12.50%    100.00%
+system.ruby.L1Cache_Controller.Other_GETX::total      1515339                      
+system.ruby.L1Cache_Controller.Other_GETS |      350360     12.50%     12.50% |      350304     12.50%     24.99% |      350380     12.50%     37.49% |      350430     12.50%     49.99% |      350354     12.50%     62.49% |      350578     12.51%     75.00% |      350311     12.50%     87.49% |      350671     12.51%    100.00%
+system.ruby.L1Cache_Controller.Other_GETS::total      2803388                      
+system.ruby.L1Cache_Controller.Merged_GETS |          67     15.26%     15.26% |          47     10.71%     25.97% |          56     12.76%     38.72% |          60     13.67%     52.39% |          48     10.93%     63.33% |          51     11.62%     74.94% |          52     11.85%     86.79% |          58     13.21%    100.00%
+system.ruby.L1Cache_Controller.Merged_GETS::total          439                      
+system.ruby.L1Cache_Controller.Ack       |      535380     12.45%     12.45% |      538939     12.54%     24.99% |      537669     12.51%     37.50% |      538458     12.53%     50.02% |      537124     12.49%     62.52% |      535993     12.47%     74.99% |      539952     12.56%     87.55% |      535252     12.45%    100.00%
+system.ruby.L1Cache_Controller.Ack::total      4298767                      
+system.ruby.L1Cache_Controller.Shared_Ack |          61     12.55%     12.55% |          58     11.93%     24.49% |          61     12.55%     37.04% |          63     12.96%     50.00% |          51     10.49%     60.49% |          74     15.23%     75.72% |          50     10.29%     86.01% |          68     13.99%    100.00%
+system.ruby.L1Cache_Controller.Shared_Ack::total          486                      
+system.ruby.L1Cache_Controller.Data      |        2873     11.99%     11.99% |        3045     12.71%     24.69% |        2960     12.35%     37.04% |        3027     12.63%     49.67% |        2998     12.51%     62.18% |        3000     12.52%     74.70% |        2981     12.44%     87.14% |        3082     12.86%    100.00%
+system.ruby.L1Cache_Controller.Data::total        23966                      
+system.ruby.L1Cache_Controller.Shared_Data |        1060     12.39%     12.39% |        1048     12.25%     24.63% |        1056     12.34%     36.98% |        1053     12.31%     49.28% |        1045     12.21%     61.49% |        1094     12.78%     74.28% |        1078     12.60%     86.88% |        1123     13.12%    100.00%
+system.ruby.L1Cache_Controller.Shared_Data::total         8557                      
+system.ruby.L1Cache_Controller.Exclusive_Data |       72953     12.47%     12.47% |       73296     12.53%     25.01% |       73198     12.52%     37.52% |       73248     12.52%     50.05% |       73100     12.50%     62.54% |       72896     12.46%     75.01% |       73480     12.56%     87.57% |       72683     12.43%    100.00%
+system.ruby.L1Cache_Controller.Exclusive_Data::total       584854                      
+system.ruby.L1Cache_Controller.Writeback_Ack |       72619     12.47%     12.47% |       73022     12.54%     25.01% |       72821     12.51%     37.52% |       72965     12.53%     50.05% |       72792     12.50%     62.55% |       72564     12.46%     75.01% |       73169     12.57%     87.58% |       72340     12.42%    100.00%
+system.ruby.L1Cache_Controller.Writeback_Ack::total       582292                      
+system.ruby.L1Cache_Controller.All_acks  |        1114     12.42%     12.42% |        1096     12.21%     24.63% |        1109     12.36%     36.99% |        1107     12.34%     49.33% |        1091     12.16%     61.48% |        1156     12.88%     74.37% |        1120     12.48%     86.85% |        1180     13.15%    100.00%
+system.ruby.L1Cache_Controller.All_acks::total         8973                      
+system.ruby.L1Cache_Controller.All_acks_no_sharers |       75773     12.45%     12.45% |       76294     12.54%     24.99% |       76104     12.51%     37.50% |       76221     12.53%     50.03% |       76052     12.50%     62.53% |       75834     12.46%     75.00% |       76419     12.56%     87.56% |       75708     12.44%    100.00%
+system.ruby.L1Cache_Controller.All_acks_no_sharers::total       608405                      
+system.ruby.L1Cache_Controller.I.Load    |       50174     12.51%     12.51% |       50224     12.53%     25.04% |       50155     12.51%     37.55% |       50116     12.50%     50.05% |       50191     12.52%     62.57% |       49971     12.46%     75.04% |       50219     12.53%     87.56% |       49868     12.44%    100.00%
+system.ruby.L1Cache_Controller.I.Load::total       400918                      
+system.ruby.L1Cache_Controller.I.Store   |       26713     12.34%     12.34% |       27165     12.55%     24.89% |       27060     12.50%     37.39% |       27213     12.57%     49.96% |       26955     12.45%     62.42% |       27016     12.48%     74.90% |       27320     12.62%     87.52% |       27019     12.48%    100.00%
+system.ruby.L1Cache_Controller.I.Store::total       216461                      
+system.ruby.L1Cache_Controller.I.L2_Replacement |        1339     11.82%     11.82% |        1403     12.39%     24.21% |        1446     12.76%     36.97% |        1410     12.45%     49.42% |        1437     12.69%     62.10% |        1441     12.72%     74.82% |        1373     12.12%     86.94% |        1479     13.06%    100.00%
+system.ruby.L1Cache_Controller.I.L2_Replacement::total        11328                      
+system.ruby.L1Cache_Controller.I.L1_to_L2 |         263     12.00%     12.00% |         295     13.46%     25.47% |         253     11.55%     37.02% |         281     12.83%     49.84% |         292     13.33%     63.17% |         256     11.68%     74.85% |         261     11.91%     86.76% |         290     13.24%    100.00%
+system.ruby.L1Cache_Controller.I.L1_to_L2::total         2191                      
+system.ruby.L1Cache_Controller.I.Trigger_L2_to_L1D |           3     20.00%     20.00% |           0      0.00%     20.00% |           1      6.67%     26.67% |           2     13.33%     40.00% |           0      0.00%     40.00% |           4     26.67%     66.67% |           2     13.33%     80.00% |           3     20.00%    100.00%
+system.ruby.L1Cache_Controller.I.Trigger_L2_to_L1D::total           15                      
+system.ruby.L1Cache_Controller.I.Other_GETX |      188850     12.52%     12.52% |      188385     12.49%     25.02% |      188473     12.50%     37.52% |      188307     12.49%     50.00% |      188572     12.51%     62.51% |      188504     12.50%     75.01% |      188287     12.49%     87.50% |      188527     12.50%    100.00%
+system.ruby.L1Cache_Controller.I.Other_GETX::total      1507905                      
+system.ruby.L1Cache_Controller.I.Other_GETS |      348728     12.50%     12.50% |      348598     12.49%     24.99% |      348711     12.50%     37.49% |      348779     12.50%     49.99% |      348712     12.50%     62.49% |      348887     12.50%     75.00% |      348575     12.49%     87.49% |      348998     12.51%    100.00%
+system.ruby.L1Cache_Controller.I.Other_GETS::total      2789988                      
+system.ruby.L1Cache_Controller.S.Load    |           1     16.67%     16.67% |           1     16.67%     33.33% |           2     33.33%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           1     16.67%     83.33% |           1     16.67%    100.00%
+system.ruby.L1Cache_Controller.S.Load::total            6                      
+system.ruby.L1Cache_Controller.S.L2_Replacement |        2919     12.33%     12.33% |        2953     12.47%     24.80% |        2937     12.41%     37.21% |        2944     12.44%     49.65% |        2906     12.28%     61.92% |        2973     12.56%     74.48% |        2984     12.60%     87.08% |        3058     12.92%    100.00%
+system.ruby.L1Cache_Controller.S.L2_Replacement::total        23674                      
+system.ruby.L1Cache_Controller.S.L1_to_L2 |        2947     12.34%     12.34% |        2984     12.49%     24.83% |        2973     12.45%     37.27% |        2971     12.44%     49.71% |        2929     12.26%     61.97% |        2993     12.53%     74.50% |        3006     12.58%     87.08% |        3086     12.92%    100.00%
+system.ruby.L1Cache_Controller.S.L1_to_L2::total        23889                      
+system.ruby.L1Cache_Controller.S.Trigger_L2_to_L1D |           2      8.70%      8.70% |           5     21.74%     30.43% |           4     17.39%     47.83% |           1      4.35%     52.17% |           0      0.00%     52.17% |           2      8.70%     60.87% |           3     13.04%     73.91% |           6     26.09%    100.00%
+system.ruby.L1Cache_Controller.S.Trigger_L2_to_L1D::total           23                      
+system.ruby.L1Cache_Controller.S.Other_GETX |          29     11.74%     11.74% |          31     12.55%     24.29% |          38     15.38%     39.68% |          33     13.36%     53.04% |          32     12.96%     65.99% |          28     11.34%     77.33% |          25     10.12%     87.45% |          31     12.55%    100.00%
+system.ruby.L1Cache_Controller.S.Other_GETX::total          247                      
+system.ruby.L1Cache_Controller.S.Other_GETS |          57     11.73%     11.73% |          56     11.52%     23.25% |          59     12.14%     35.39% |          72     14.81%     50.21% |          52     10.70%     60.91% |          62     12.76%     73.66% |          79     16.26%     89.92% |          49     10.08%    100.00%
+system.ruby.L1Cache_Controller.S.Other_GETS::total          486                      
+system.ruby.L1Cache_Controller.O.Store   |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.O.Store::total            1                      
+system.ruby.L1Cache_Controller.O.L2_Replacement |        1037     12.92%     12.92% |        1033     12.87%     25.79% |         990     12.33%     38.12% |         999     12.45%     50.57% |         972     12.11%     62.68% |        1001     12.47%     75.15% |        1015     12.64%     87.79% |         980     12.21%    100.00%
+system.ruby.L1Cache_Controller.O.L2_Replacement::total         8027                      
+system.ruby.L1Cache_Controller.O.L1_to_L2 |         204     12.62%     12.62% |         188     11.63%     24.26% |         202     12.50%     36.76% |         199     12.31%     49.07% |         190     11.76%     60.83% |         218     13.49%     74.32% |         217     13.43%     87.75% |         198     12.25%    100.00%
+system.ruby.L1Cache_Controller.O.L1_to_L2::total         1616                      
+system.ruby.L1Cache_Controller.O.Trigger_L2_to_L1D |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           0      0.00%     50.00% |           1     16.67%     66.67% |           0      0.00%     66.67% |           2     33.33%    100.00%
+system.ruby.L1Cache_Controller.O.Trigger_L2_to_L1D::total            6                      
+system.ruby.L1Cache_Controller.O.Other_GETX |           7     12.50%     12.50% |           8     14.29%     26.79% |           8     14.29%     41.07% |           5      8.93%     50.00% |           3      5.36%     55.36% |          11     19.64%     75.00% |           9     16.07%     91.07% |           5      8.93%    100.00%
+system.ruby.L1Cache_Controller.O.Other_GETX::total           56                      
+system.ruby.L1Cache_Controller.O.Other_GETS |           9      9.89%      9.89% |          14     15.38%     25.27% |          12     13.19%     38.46% |          12     13.19%     51.65% |          13     14.29%     65.93% |           9      9.89%     75.82% |           9      9.89%     85.71% |          13     14.29%    100.00%
+system.ruby.L1Cache_Controller.O.Other_GETS::total           91                      
+system.ruby.L1Cache_Controller.O.Merged_GETS |           4     19.05%     19.05% |           3     14.29%     33.33% |           2      9.52%     42.86% |           6     28.57%     71.43% |           3     14.29%     85.71% |           1      4.76%     90.48% |           1      4.76%     95.24% |           1      4.76%    100.00%
+system.ruby.L1Cache_Controller.O.Merged_GETS::total           21                      
+system.ruby.L1Cache_Controller.M.Load    |           7     16.67%     16.67% |           3      7.14%     23.81% |           5     11.90%     35.71% |           6     14.29%     50.00% |           2      4.76%     54.76% |          11     26.19%     80.95% |           6     14.29%     95.24% |           2      4.76%    100.00%
+system.ruby.L1Cache_Controller.M.Load::total           42                      
+system.ruby.L1Cache_Controller.M.Store   |           5     16.13%     16.13% |           5     16.13%     32.26% |           2      6.45%     38.71% |           5     16.13%     54.84% |           2      6.45%     61.29% |           9     29.03%     90.32% |           1      3.23%     93.55% |           2      6.45%    100.00%
+system.ruby.L1Cache_Controller.M.Store::total           31                      
+system.ruby.L1Cache_Controller.M.L2_Replacement |       45647     12.52%     12.52% |       45669     12.52%     25.04% |       45641     12.52%     37.56% |       45593     12.50%     50.06% |       45746     12.55%     62.61% |       45407     12.45%     75.06% |       45688     12.53%     87.59% |       45251     12.41%    100.00%
+system.ruby.L1Cache_Controller.M.L2_Replacement::total       364642                      
+system.ruby.L1Cache_Controller.M.L1_to_L2 |       46941     12.52%     12.52% |       46960     12.53%     25.05% |       46927     12.52%     37.57% |       46865     12.50%     50.08% |       46980     12.53%     62.61% |       46700     12.46%     75.07% |       46933     12.52%     87.59% |       46507     12.41%    100.00%
+system.ruby.L1Cache_Controller.M.L1_to_L2::total       374813                      
+system.ruby.L1Cache_Controller.M.Trigger_L2_to_L1D |          49     13.14%     13.14% |          40     10.72%     23.86% |          60     16.09%     39.95% |          51     13.67%     53.62% |          41     10.99%     64.61% |          55     14.75%     79.36% |          37      9.92%     89.28% |          40     10.72%    100.00%
+system.ruby.L1Cache_Controller.M.Trigger_L2_to_L1D::total          373                      
+system.ruby.L1Cache_Controller.M.Other_GETX |         529     12.54%     12.54% |         518     12.28%     24.82% |         538     12.75%     37.57% |         533     12.63%     50.20% |         520     12.33%     62.53% |         540     12.80%     75.33% |         502     11.90%     87.22% |         539     12.78%    100.00%
+system.ruby.L1Cache_Controller.M.Other_GETX::total         4219                      
+system.ruby.L1Cache_Controller.M.Other_GETS |         983     12.81%     12.81% |         999     13.02%     25.84% |         944     12.31%     38.14% |         950     12.38%     50.53% |         931     12.14%     62.66% |         962     12.54%     75.21% |         974     12.70%     87.90% |         928     12.10%    100.00%
+system.ruby.L1Cache_Controller.M.Other_GETS::total         7671                      
+system.ruby.L1Cache_Controller.M.Merged_GETS |          39     15.29%     15.29% |          27     10.59%     25.88% |          33     12.94%     38.82% |          31     12.16%     50.98% |          27     10.59%     61.57% |          27     10.59%     72.16% |          29     11.37%     83.53% |          42     16.47%    100.00%
+system.ruby.L1Cache_Controller.M.Merged_GETS::total          255                      
+system.ruby.L1Cache_Controller.MM.Load   |           4     10.00%     10.00% |           8     20.00%     30.00% |           2      5.00%     35.00% |           6     15.00%     50.00% |           6     15.00%     65.00% |           4     10.00%     75.00% |           3      7.50%     82.50% |           7     17.50%    100.00%
+system.ruby.L1Cache_Controller.MM.Load::total           40                      
+system.ruby.L1Cache_Controller.MM.Store  |           0      0.00%      0.00% |           5     26.32%     26.32% |           1      5.26%     31.58% |           2     10.53%     42.11% |           4     21.05%     63.16% |           4     21.05%     84.21% |           1      5.26%     89.47% |           2     10.53%    100.00%
+system.ruby.L1Cache_Controller.MM.Store::total           19                      
+system.ruby.L1Cache_Controller.MM.L2_Replacement |       25935     12.37%     12.37% |       26320     12.56%     24.93% |       26190     12.49%     37.42% |       26373     12.58%     50.00% |       26074     12.44%     62.44% |       26156     12.48%     74.92% |       26468     12.63%     87.54% |       26109     12.46%    100.00%
+system.ruby.L1Cache_Controller.MM.L2_Replacement::total       209625                      
+system.ruby.L1Cache_Controller.MM.L1_to_L2 |       26603     12.35%     12.35% |       27029     12.54%     24.89% |       26955     12.51%     37.40% |       27088     12.57%     49.98% |       26817     12.45%     62.42% |       26905     12.49%     74.91% |       27186     12.62%     87.53% |       26874     12.47%    100.00%
+system.ruby.L1Cache_Controller.MM.L1_to_L2::total       215457                      
+system.ruby.L1Cache_Controller.MM.Trigger_L2_to_L1D |          21     10.29%     10.29% |          25     12.25%     22.55% |          34     16.67%     39.22% |          24     11.76%     50.98% |          25     12.25%     63.24% |          27     13.24%     76.47% |          27     13.24%     89.71% |          21     10.29%    100.00%
+system.ruby.L1Cache_Controller.MM.Trigger_L2_to_L1D::total          204                      
+system.ruby.L1Cache_Controller.MM.Other_GETX |         296     12.11%     12.11% |         298     12.19%     24.30% |         301     12.32%     36.62% |         320     13.09%     49.71% |         334     13.67%     63.38% |         308     12.60%     75.98% |         279     11.42%     87.40% |         308     12.60%    100.00%
+system.ruby.L1Cache_Controller.MM.Other_GETX::total         2444                      
+system.ruby.L1Cache_Controller.MM.Other_GETS |         481     10.98%     10.98% |         549     12.54%     23.52% |         562     12.83%     36.36% |         521     11.90%     48.25% |         548     12.51%     60.77% |         558     12.74%     73.51% |         561     12.81%     86.32% |         599     13.68%    100.00%
+system.ruby.L1Cache_Controller.MM.Other_GETS::total         4379                      
+system.ruby.L1Cache_Controller.MM.Merged_GETS |          23     14.37%     14.37% |          16     10.00%     24.38% |          21     13.12%     37.50% |          23     14.37%     51.88% |          18     11.25%     63.13% |          23     14.37%     77.50% |          21     13.12%     90.63% |          15      9.38%    100.00%
+system.ruby.L1Cache_Controller.MM.Merged_GETS::total          160                      
+system.ruby.L1Cache_Controller.IR.Load   |           1     16.67%     16.67% |           0      0.00%     16.67% |           1     16.67%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
+system.ruby.L1Cache_Controller.IR.Load::total            6                      
+system.ruby.L1Cache_Controller.IR.Store  |           2     22.22%     22.22% |           0      0.00%     22.22% |           0      0.00%     22.22% |           2     22.22%     44.44% |           0      0.00%     44.44% |           3     33.33%     77.78% |           1     11.11%     88.89% |           1     11.11%    100.00%
+system.ruby.L1Cache_Controller.IR.Store::total            9                      
+system.ruby.L1Cache_Controller.IR.L1_to_L2 |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |          11     84.62%     84.62% |           0      0.00%     84.62% |           2     15.38%    100.00%
+system.ruby.L1Cache_Controller.IR.L1_to_L2::total           13                      
+system.ruby.L1Cache_Controller.SR.Load   |           2     11.76%     11.76% |           3     17.65%     29.41% |           4     23.53%     52.94% |           1      5.88%     58.82% |           0      0.00%     58.82% |           1      5.88%     64.71% |           2     11.76%     76.47% |           4     23.53%    100.00%
+system.ruby.L1Cache_Controller.SR.Load::total           17                      
+system.ruby.L1Cache_Controller.SR.Store  |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
+system.ruby.L1Cache_Controller.SR.Store::total            6                      
+system.ruby.L1Cache_Controller.SR.L1_to_L2 |           0      0.00%      0.00% |           3     18.75%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |           0      0.00%     18.75% |          13     81.25%    100.00%
+system.ruby.L1Cache_Controller.SR.L1_to_L2::total           16                      
+system.ruby.L1Cache_Controller.OR.Load   |           0      0.00%      0.00% |           1     20.00%     20.00% |           0      0.00%     20.00% |           1     20.00%     40.00% |           0      0.00%     40.00% |           1     20.00%     60.00% |           0      0.00%     60.00% |           2     40.00%    100.00%
+system.ruby.L1Cache_Controller.OR.Load::total            5                      
+system.ruby.L1Cache_Controller.OR.Store  |           0      0.00%      0.00% |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OR.Store::total            1                      
+system.ruby.L1Cache_Controller.MR.Load   |          32     12.85%     12.85% |          27     10.84%     23.69% |          42     16.87%     40.56% |          33     13.25%     53.82% |          20      8.03%     61.85% |          37     14.86%     76.71% |          27     10.84%     87.55% |          31     12.45%    100.00%
+system.ruby.L1Cache_Controller.MR.Load::total          249                      
+system.ruby.L1Cache_Controller.MR.Store  |          17     13.71%     13.71% |          13     10.48%     24.19% |          18     14.52%     38.71% |          18     14.52%     53.23% |          21     16.94%     70.16% |          18     14.52%     84.68% |          10      8.06%     92.74% |           9      7.26%    100.00%
+system.ruby.L1Cache_Controller.MR.Store::total          124                      
+system.ruby.L1Cache_Controller.MR.L1_to_L2 |          91     14.35%     14.35% |          56      8.83%     23.19% |         102     16.09%     39.27% |          86     13.56%     52.84% |          95     14.98%     67.82% |          89     14.04%     81.86% |          59      9.31%     91.17% |          56      8.83%    100.00%
+system.ruby.L1Cache_Controller.MR.L1_to_L2::total          634                      
+system.ruby.L1Cache_Controller.MMR.Load  |          14     10.22%     10.22% |          17     12.41%     22.63% |          26     18.98%     41.61% |          16     11.68%     53.28% |          16     11.68%     64.96% |          16     11.68%     76.64% |          18     13.14%     89.78% |          14     10.22%    100.00%
+system.ruby.L1Cache_Controller.MMR.Load::total          137                      
+system.ruby.L1Cache_Controller.MMR.Store |           7     10.45%     10.45% |           8     11.94%     22.39% |           8     11.94%     34.33% |           8     11.94%     46.27% |           9     13.43%     59.70% |          11     16.42%     76.12% |           9     13.43%     89.55% |           7     10.45%    100.00%
+system.ruby.L1Cache_Controller.MMR.Store::total           67                      
+system.ruby.L1Cache_Controller.MMR.L1_to_L2 |          59     15.28%     15.28% |          75     19.43%     34.72% |          46     11.92%     46.63% |          41     10.62%     57.25% |          49     12.69%     69.95% |          33      8.55%     78.50% |          49     12.69%     91.19% |          34      8.81%    100.00%
+system.ruby.L1Cache_Controller.MMR.L1_to_L2::total          386                      
+system.ruby.L1Cache_Controller.IM.L1_to_L2 |      264282     12.35%     12.35% |      266577     12.46%     24.81% |      267890     12.52%     37.33% |      269848     12.61%     49.94% |      268056     12.53%     62.46% |      268579     12.55%     75.02% |      269306     12.59%     87.60% |      265306     12.40%    100.00%
+system.ruby.L1Cache_Controller.IM.L1_to_L2::total      2139844                      
+system.ruby.L1Cache_Controller.IM.Other_GETX |           7      7.69%      7.69% |          12     13.19%     20.88% |          10     10.99%     31.87% |          15     16.48%     48.35% |           9      9.89%     58.24% |          15     16.48%     74.73% |          10     10.99%     85.71% |          13     14.29%    100.00%
+system.ruby.L1Cache_Controller.IM.Other_GETX::total           91                      
+system.ruby.L1Cache_Controller.IM.Other_GETS |          21     14.00%     14.00% |          19     12.67%     26.67% |          20     13.33%     40.00% |          24     16.00%     56.00% |          14      9.33%     65.33% |          14      9.33%     74.67% |          22     14.67%     89.33% |          16     10.67%    100.00%
+system.ruby.L1Cache_Controller.IM.Other_GETS::total          150                      
+system.ruby.L1Cache_Controller.IM.Ack    |      183448     12.33%     12.33% |      186647     12.55%     24.88% |      185973     12.50%     37.38% |      187270     12.59%     49.97% |      185299     12.46%     62.42% |      185768     12.49%     74.91% |      187652     12.61%     87.52% |      185613     12.48%    100.00%
+system.ruby.L1Cache_Controller.IM.Ack::total      1487670                      
+system.ruby.L1Cache_Controller.IM.Data   |         985     11.47%     11.47% |        1103     12.85%     24.32% |        1041     12.12%     36.44% |        1101     12.82%     49.27% |        1105     12.87%     62.14% |        1091     12.71%     74.84% |        1048     12.21%     87.05% |        1112     12.95%    100.00%
+system.ruby.L1Cache_Controller.IM.Data::total         8586                      
+system.ruby.L1Cache_Controller.IM.Exclusive_Data |       25729     12.38%     12.38% |       26061     12.54%     24.91% |       26018     12.52%     37.43% |       26114     12.56%     49.99% |       25848     12.43%     62.43% |       25928     12.47%     74.90% |       26272     12.64%     87.54% |       25907     12.46%    100.00%
+system.ruby.L1Cache_Controller.IM.Exclusive_Data::total       207877                      
+system.ruby.L1Cache_Controller.SM.L1_to_L2 |           0      0.00%      0.00% |          11     57.89%     57.89% |           0      0.00%     57.89% |           0      0.00%     57.89% |           0      0.00%     57.89% |           1      5.26%     63.16% |           7     36.84%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.SM.L1_to_L2::total           19                      
+system.ruby.L1Cache_Controller.SM.Ack    |           0      0.00%      0.00% |          14     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           7     16.67%     50.00% |           7     16.67%     66.67% |          14     33.33%    100.00%
+system.ruby.L1Cache_Controller.SM.Ack::total           42                      
+system.ruby.L1Cache_Controller.SM.Data   |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           1     16.67%     66.67% |           2     33.33%    100.00%
+system.ruby.L1Cache_Controller.SM.Data::total            6                      
+system.ruby.L1Cache_Controller.OM.Ack    |           7     50.00%     50.00% |           7     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OM.Ack::total           14                      
+system.ruby.L1Cache_Controller.OM.All_acks_no_sharers |           1     50.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OM.All_acks_no_sharers::total            2                      
+system.ruby.L1Cache_Controller.ISM.L1_to_L2 |           2     11.11%     11.11% |           0      0.00%     11.11% |           0      0.00%     11.11% |           0      0.00%     11.11% |           1      5.56%     16.67% |           0      0.00%     16.67% |          14     77.78%     94.44% |           1      5.56%    100.00%
+system.ruby.L1Cache_Controller.ISM.L1_to_L2::total           18                      
+system.ruby.L1Cache_Controller.ISM.Ack   |         104     12.84%     12.84% |          73      9.01%     21.85% |         108     13.33%     35.19% |         117     14.44%     49.63% |         100     12.35%     61.98% |         106     13.09%     75.06% |         115     14.20%     89.26% |          87     10.74%    100.00%
+system.ruby.L1Cache_Controller.ISM.Ack::total          810                      
+system.ruby.L1Cache_Controller.ISM.All_acks_no_sharers |         985     11.46%     11.46% |        1105     12.86%     24.32% |        1041     12.12%     36.44% |        1101     12.81%     49.26% |        1105     12.86%     62.12% |        1092     12.71%     74.83% |        1049     12.21%     87.03% |        1114     12.97%    100.00%
+system.ruby.L1Cache_Controller.ISM.All_acks_no_sharers::total         8592                      
+system.ruby.L1Cache_Controller.M_W.L1_to_L2 |         539     13.66%     13.66% |         550     13.94%     27.60% |         404     10.24%     37.84% |         533     13.51%     51.34% |         478     12.11%     63.46% |         492     12.47%     75.92% |         525     13.30%     89.23% |         425     10.77%    100.00%
+system.ruby.L1Cache_Controller.M_W.L1_to_L2::total         3946                      
+system.ruby.L1Cache_Controller.M_W.Ack   |        1618     12.50%     12.50% |        1714     13.24%     25.73% |        1578     12.19%     37.92% |        1607     12.41%     50.33% |        1665     12.86%     63.19% |        1631     12.60%     75.78% |        1583     12.22%     88.01% |        1553     11.99%    100.00%
+system.ruby.L1Cache_Controller.M_W.Ack::total        12949                      
+system.ruby.L1Cache_Controller.M_W.All_acks_no_sharers |       47224     12.53%     12.53% |       47235     12.53%     25.06% |       47179     12.52%     37.57% |       47134     12.50%     50.08% |       47252     12.53%     62.61% |       46968     12.46%     75.07% |       47208     12.52%     87.59% |       46776     12.41%    100.00%
+system.ruby.L1Cache_Controller.M_W.All_acks_no_sharers::total       376976                      
+system.ruby.L1Cache_Controller.MM_W.L1_to_L2 |        1079     15.32%     15.32% |         875     12.43%     27.75% |         817     11.60%     39.36% |         808     11.48%     50.83% |         798     11.33%     62.16% |         840     11.93%     74.09% |         931     13.22%     87.32% |         893     12.68%    100.00%
+system.ruby.L1Cache_Controller.MM_W.L1_to_L2::total         7041                      
+system.ruby.L1Cache_Controller.MM_W.Ack  |        2578     12.99%     12.99% |        2557     12.89%     25.88% |        2465     12.42%     38.30% |        2275     11.47%     49.77% |        2427     12.23%     62.00% |        2427     12.23%     74.23% |        2583     13.02%     87.24% |        2531     12.76%    100.00%
+system.ruby.L1Cache_Controller.MM_W.Ack::total        19843                      
+system.ruby.L1Cache_Controller.MM_W.All_acks_no_sharers |       25729     12.38%     12.38% |       26061     12.54%     24.91% |       26018     12.52%     37.43% |       26114     12.56%     49.99% |       25848     12.43%     62.43% |       25928     12.47%     74.90% |       26272     12.64%     87.54% |       25907     12.46%    100.00%
+system.ruby.L1Cache_Controller.MM_W.All_acks_no_sharers::total       207877                      
+system.ruby.L1Cache_Controller.IS.L1_to_L2 |      495283     12.52%     12.52% |      496463     12.55%     25.07% |      495139     12.51%     37.58% |      490703     12.40%     49.98% |      494908     12.51%     62.49% |      493655     12.48%     74.97% |      495921     12.53%     87.50% |      494562     12.50%    100.00%
+system.ruby.L1Cache_Controller.IS.L1_to_L2::total      3956634                      
+system.ruby.L1Cache_Controller.IS.Other_GETX |          18     11.46%     11.46% |          25     15.92%     27.39% |          17     10.83%     38.22% |          24     15.29%     53.50% |          21     13.38%     66.88% |          22     14.01%     80.89% |          15      9.55%     90.45% |          15      9.55%    100.00%
+system.ruby.L1Cache_Controller.IS.Other_GETX::total          157                      
+system.ruby.L1Cache_Controller.IS.Other_GETS |          33     12.36%     12.36% |          30     11.24%     23.60% |          33     12.36%     35.96% |          29     10.86%     46.82% |          36     13.48%     60.30% |          40     14.98%     75.28% |          28     10.49%     85.77% |          38     14.23%    100.00%
+system.ruby.L1Cache_Controller.IS.Other_GETS::total          267                      
+system.ruby.L1Cache_Controller.IS.Ack    |      344673     12.52%     12.52% |      344866     12.53%     25.05% |      344538     12.51%     37.56% |      344199     12.50%     50.06% |      344619     12.52%     62.58% |      343059     12.46%     75.04% |      344891     12.53%     87.57% |      342300     12.43%    100.00%
+system.ruby.L1Cache_Controller.IS.Ack::total      2753145                      
+system.ruby.L1Cache_Controller.IS.Shared_Ack |          57     12.61%     12.61% |          54     11.95%     24.56% |          57     12.61%     37.17% |          59     13.05%     50.22% |          48     10.62%     60.84% |          68     15.04%     75.88% |          45      9.96%     85.84% |          64     14.16%    100.00%
+system.ruby.L1Cache_Controller.IS.Shared_Ack::total          452                      
+system.ruby.L1Cache_Controller.IS.Data   |        1888     12.28%     12.28% |        1940     12.62%     24.90% |        1919     12.48%     37.38% |        1926     12.53%     49.91% |        1893     12.31%     62.22% |        1908     12.41%     74.63% |        1932     12.57%     87.20% |        1968     12.80%    100.00%
+system.ruby.L1Cache_Controller.IS.Data::total        15374                      
+system.ruby.L1Cache_Controller.IS.Shared_Data |        1060     12.39%     12.39% |        1048     12.25%     24.63% |        1056     12.34%     36.98% |        1053     12.31%     49.28% |        1045     12.21%     61.49% |        1094     12.78%     74.28% |        1078     12.60%     86.88% |        1123     13.12%    100.00%
+system.ruby.L1Cache_Controller.IS.Shared_Data::total         8557                      
+system.ruby.L1Cache_Controller.IS.Exclusive_Data |       47224     12.53%     12.53% |       47235     12.53%     25.06% |       47180     12.52%     37.57% |       47134     12.50%     50.08% |       47252     12.53%     62.61% |       46968     12.46%     75.07% |       47208     12.52%     87.59% |       46776     12.41%    100.00%
+system.ruby.L1Cache_Controller.IS.Exclusive_Data::total       376977                      
+system.ruby.L1Cache_Controller.SS.L1_to_L2 |        1116     14.02%     14.02% |         874     10.98%     25.01% |        1194     15.00%     40.01% |        1064     13.37%     53.38% |         767      9.64%     63.02% |         881     11.07%     74.09% |         901     11.32%     85.41% |        1161     14.59%    100.00%
+system.ruby.L1Cache_Controller.SS.L1_to_L2::total         7958                      
+system.ruby.L1Cache_Controller.SS.Ack    |        2952     12.15%     12.15% |        3061     12.60%     24.75% |        3007     12.38%     37.13% |        2990     12.31%     49.44% |        3014     12.41%     61.84% |        2995     12.33%     74.17% |        3121     12.85%     87.02% |        3154     12.98%    100.00%
+system.ruby.L1Cache_Controller.SS.Ack::total        24294                      
+system.ruby.L1Cache_Controller.SS.Shared_Ack |           4     11.76%     11.76% |           4     11.76%     23.53% |           4     11.76%     35.29% |           4     11.76%     47.06% |           3      8.82%     55.88% |           6     17.65%     73.53% |           5     14.71%     88.24% |           4     11.76%    100.00%
+system.ruby.L1Cache_Controller.SS.Shared_Ack::total           34                      
+system.ruby.L1Cache_Controller.SS.All_acks |        1114     12.42%     12.42% |        1096     12.21%     24.63% |        1109     12.36%     36.99% |        1107     12.34%     49.33% |        1091     12.16%     61.48% |        1156     12.88%     74.37% |        1120     12.48%     86.85% |        1180     13.15%    100.00%
+system.ruby.L1Cache_Controller.SS.All_acks::total         8973                      
+system.ruby.L1Cache_Controller.SS.All_acks_no_sharers |        1834     12.26%     12.26% |        1892     12.65%     24.91% |        1866     12.47%     37.38% |        1872     12.52%     49.90% |        1847     12.35%     62.25% |        1846     12.34%     74.59% |        1890     12.64%     87.22% |        1911     12.78%    100.00%
+system.ruby.L1Cache_Controller.SS.All_acks_no_sharers::total        14958                      
+system.ruby.L1Cache_Controller.OI.Load   |           0      0.00%      0.00% |           1     33.33%     33.33% |           2     66.67%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OI.Load::total            3                      
+system.ruby.L1Cache_Controller.OI.Other_GETX |           0      0.00%      0.00% |           0      0.00%      0.00% |           2    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OI.Other_GETX::total            2                      
+system.ruby.L1Cache_Controller.OI.Other_GETS |           1     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           1     33.33%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           0      0.00%     66.67% |           1     33.33%    100.00%
+system.ruby.L1Cache_Controller.OI.Other_GETS::total            3                      
+system.ruby.L1Cache_Controller.OI.Merged_GETS |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OI.Merged_GETS::total            1                      
+system.ruby.L1Cache_Controller.OI.Writeback_Ack |        1085     12.95%     12.95% |        1073     12.81%     25.75% |        1027     12.26%     38.01% |        1041     12.42%     50.44% |        1020     12.17%     62.61% |        1047     12.50%     75.10% |        1077     12.85%     87.96% |        1009     12.04%    100.00%
+system.ruby.L1Cache_Controller.OI.Writeback_Ack::total         8379                      
+system.ruby.L1Cache_Controller.MI.Load   |          10     11.63%     11.63% |          11     12.79%     24.42% |          14     16.28%     40.70% |          12     13.95%     54.65% |          12     13.95%     68.60% |           8      9.30%     77.91% |           7      8.14%     86.05% |          12     13.95%    100.00%
+system.ruby.L1Cache_Controller.MI.Load::total           86                      
+system.ruby.L1Cache_Controller.MI.Store  |           7     12.07%     12.07% |           4      6.90%     18.97% |           4      6.90%     25.86% |          12     20.69%     46.55% |           9     15.52%     62.07% |           7     12.07%     74.14% |           8     13.79%     87.93% |           7     12.07%    100.00%
+system.ruby.L1Cache_Controller.MI.Store::total           58                      
+system.ruby.L1Cache_Controller.MI.Other_GETX |          25     11.47%     11.47% |          32     14.68%     26.15% |          30     13.76%     39.91% |          25     11.47%     51.38% |          31     14.22%     65.60% |          29     13.30%     78.90% |          29     13.30%     92.20% |          17      7.80%    100.00%
+system.ruby.L1Cache_Controller.MI.Other_GETX::total          218                      
+system.ruby.L1Cache_Controller.MI.Other_GETS |          47     13.31%     13.31% |          39     11.05%     24.36% |          39     11.05%     35.41% |          42     11.90%     47.31% |          48     13.60%     60.91% |          46     13.03%     73.94% |          63     17.85%     91.78% |          29      8.22%    100.00%
+system.ruby.L1Cache_Controller.MI.Other_GETS::total          353                      
+system.ruby.L1Cache_Controller.MI.Merged_GETS |           1     50.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.MI.Merged_GETS::total            2                      
+system.ruby.L1Cache_Controller.MI.Writeback_Ack |       71509     12.46%     12.46% |       71917     12.54%     25.00% |       71762     12.51%     37.51% |       71899     12.53%     50.04% |       71741     12.51%     62.55% |       71488     12.46%     75.01% |       72063     12.56%     87.57% |       71314     12.43%    100.00%
+system.ruby.L1Cache_Controller.MI.Writeback_Ack::total       573693                      
+system.ruby.L1Cache_Controller.II.Writeback_Ack |          25     11.36%     11.36% |          32     14.55%     25.91% |          32     14.55%     40.45% |          25     11.36%     51.82% |          31     14.09%     65.91% |          29     13.18%     79.09% |          29     13.18%     92.27% |          17      7.73%    100.00%
+system.ruby.L1Cache_Controller.II.Writeback_Ack::total          220                      
+system.ruby.L1Cache_Controller.IT.Load   |           0      0.00%      0.00% |           0      0.00%      0.00% |           1     33.33%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           0      0.00%     33.33% |           2     66.67%    100.00%
+system.ruby.L1Cache_Controller.IT.Load::total            3                      
+system.ruby.L1Cache_Controller.IT.Store  |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1     50.00%     50.00% |           0      0.00%     50.00% |           1     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.IT.Store::total            2                      
+system.ruby.L1Cache_Controller.IT.L1_to_L2 |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1      4.17%      4.17% |           0      0.00%      4.17% |          11     45.83%     50.00% |           9     37.50%     87.50% |           3     12.50%    100.00%
+system.ruby.L1Cache_Controller.IT.L1_to_L2::total           24                      
+system.ruby.L1Cache_Controller.IT.Complete_L2_to_L1 |           3     20.00%     20.00% |           0      0.00%     20.00% |           1      6.67%     26.67% |           2     13.33%     40.00% |           0      0.00%     40.00% |           4     26.67%     66.67% |           2     13.33%     80.00% |           3     20.00%    100.00%
+system.ruby.L1Cache_Controller.IT.Complete_L2_to_L1::total           15                      
+system.ruby.L1Cache_Controller.ST.Load   |           0      0.00%      0.00% |           1     20.00%     20.00% |           0      0.00%     20.00% |           0      0.00%     20.00% |           0      0.00%     20.00% |           1     20.00%     40.00% |           0      0.00%     40.00% |           3     60.00%    100.00%
+system.ruby.L1Cache_Controller.ST.Load::total            5                      
+system.ruby.L1Cache_Controller.ST.Store  |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00%
+system.ruby.L1Cache_Controller.ST.Store::total            1                      
+system.ruby.L1Cache_Controller.ST.L1_to_L2 |          10     12.99%     12.99% |          21     27.27%     40.26% |           7      9.09%     49.35% |           9     11.69%     61.04% |           0      0.00%     61.04% |           0      0.00%     61.04% |           5      6.49%     67.53% |          25     32.47%    100.00%
+system.ruby.L1Cache_Controller.ST.L1_to_L2::total           77                      
+system.ruby.L1Cache_Controller.ST.Complete_L2_to_L1 |           2      8.70%      8.70% |           5     21.74%     30.43% |           4     17.39%     47.83% |           1      4.35%     52.17% |           0      0.00%     52.17% |           2      8.70%     60.87% |           3     13.04%     73.91% |           6     26.09%    100.00%
+system.ruby.L1Cache_Controller.ST.Complete_L2_to_L1::total           23                      
+system.ruby.L1Cache_Controller.OT.Load   |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           2    100.00%    100.00%
+system.ruby.L1Cache_Controller.OT.Load::total            2                      
+system.ruby.L1Cache_Controller.OT.L1_to_L2 |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           6    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.L1Cache_Controller.OT.L1_to_L2::total            6                      
+system.ruby.L1Cache_Controller.OT.Complete_L2_to_L1 |           0      0.00%      0.00% |           2     33.33%     33.33% |           0      0.00%     33.33% |           1     16.67%     50.00% |           0      0.00%     50.00% |           1     16.67%     66.67% |           0      0.00%     66.67% |           2     33.33%    100.00%
+system.ruby.L1Cache_Controller.OT.Complete_L2_to_L1::total            6                      
+system.ruby.L1Cache_Controller.MT.Load   |          13     13.68%     13.68% |           7      7.37%     21.05% |          10     10.53%     31.58% |          13     13.68%     45.26% |          10     10.53%     55.79% |          14     14.74%     70.53% |          13     13.68%     84.21% |          15     15.79%    100.00%
+system.ruby.L1Cache_Controller.MT.Load::total           95                      
+system.ruby.L1Cache_Controller.MT.Store  |           6     10.71%     10.71% |           9     16.07%     26.79% |           9     16.07%     42.86% |           9     16.07%     58.93% |           9     16.07%     75.00% |           7     12.50%     87.50% |           5      8.93%     96.43% |           2      3.57%    100.00%
+system.ruby.L1Cache_Controller.MT.Store::total           56                      
+system.ruby.L1Cache_Controller.MT.L1_to_L2 |         179     15.61%     15.61% |         117     10.20%     25.81% |         164     14.30%     40.10% |         171     14.91%     55.01% |         115     10.03%     65.04% |         155     13.51%     78.55% |          80      6.97%     85.53% |         166     14.47%    100.00%
+system.ruby.L1Cache_Controller.MT.L1_to_L2::total         1147                      
+system.ruby.L1Cache_Controller.MT.Complete_L2_to_L1 |          49     13.14%     13.14% |          40     10.72%     23.86% |          60     16.09%     39.95% |          51     13.67%     53.62% |          41     10.99%     64.61% |          55     14.75%     79.36% |          37      9.92%     89.28% |          40     10.72%    100.00%
+system.ruby.L1Cache_Controller.MT.Complete_L2_to_L1::total          373                      
+system.ruby.L1Cache_Controller.MMT.Load  |           8     13.79%     13.79% |          11     18.97%     32.76% |           7     12.07%     44.83% |           8     13.79%     58.62% |           6     10.34%     68.97% |           4      6.90%     75.86% |           9     15.52%     91.38% |           5      8.62%    100.00%
+system.ruby.L1Cache_Controller.MMT.Load::total           58                      
+system.ruby.L1Cache_Controller.MMT.Store |           4     14.29%     14.29% |           3     10.71%     25.00% |           4     14.29%     39.29% |           2      7.14%     46.43% |           5     17.86%     64.29% |           3     10.71%     75.00% |           5     17.86%     92.86% |           2      7.14%    100.00%
+system.ruby.L1Cache_Controller.MMT.Store::total           28                      
+system.ruby.L1Cache_Controller.MMT.L1_to_L2 |          86     11.35%     11.35% |         139     18.34%     29.68% |          85     11.21%     40.90% |          97     12.80%     53.69% |          90     11.87%     65.57% |          91     12.01%     77.57% |          78     10.29%     87.86% |          92     12.14%    100.00%
+system.ruby.L1Cache_Controller.MMT.L1_to_L2::total          758                      
+system.ruby.L1Cache_Controller.MMT.Complete_L2_to_L1 |          21     10.29%     10.29% |          25     12.25%     22.55% |          34     16.67%     39.22% |          24     11.76%     50.98% |          25     12.25%     63.24% |          27     13.24%     76.47% |          27     13.24%     89.71% |          21     10.29%    100.00%
+system.ruby.L1Cache_Controller.MMT.Complete_L2_to_L1::total          204                      
+system.ruby.Directory_Controller.GETX          220023      0.00%      0.00%
+system.ruby.Directory_Controller.GETS          406995      0.00%      0.00%
+system.ruby.Directory_Controller.PUT           585083      0.00%      0.00%
+system.ruby.Directory_Controller.Unblock          220      0.00%      0.00%
+system.ruby.Directory_Controller.UnblockS        23931      0.00%      0.00%
+system.ruby.Directory_Controller.UnblockM       593445      0.00%      0.00%
+system.ruby.Directory_Controller.Writeback_Clean         8030      0.00%      0.00%
+system.ruby.Directory_Controller.Writeback_Dirty          349      0.00%      0.00%
+system.ruby.Directory_Controller.Writeback_Exclusive_Clean       360015      0.00%      0.00%
+system.ruby.Directory_Controller.Writeback_Exclusive_Dirty       213674      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Data       597503      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Ack       214013      0.00%      0.00%
+system.ruby.Directory_Controller.All_Unblocks          439      0.00%      0.00%
+system.ruby.Directory_Controller.NX.GETX           61      0.00%      0.00%
+system.ruby.Directory_Controller.NX.GETS           97      0.00%      0.00%
+system.ruby.Directory_Controller.NX.PUT          8595      0.00%      0.00%
+system.ruby.Directory_Controller.NO.GETX         6880      0.00%      0.00%
+system.ruby.Directory_Controller.NO.GETS        12400      0.00%      0.00%
+system.ruby.Directory_Controller.NO.PUT        573697      0.00%      0.00%
+system.ruby.Directory_Controller.O.GETX          8316      0.00%      0.00%
+system.ruby.Directory_Controller.O.GETS         15375      0.00%      0.00%
+system.ruby.Directory_Controller.E.GETX        201220      0.00%      0.00%
+system.ruby.Directory_Controller.E.GETS        372612      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B.GETX          205      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B.GETS          439      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B.PUT         2778      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B.UnblockS         8092      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B.UnblockM       592827      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_X.UnblockS            4      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_X.UnblockM          201      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S.PUT            2      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S.UnblockS           22      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S.UnblockM          417      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S_W.GETX            1      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S_W.GETS            1      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S_W.PUT            7      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S_W.UnblockS          439      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_S_W.All_Unblocks          439      0.00%      0.00%
+system.ruby.Directory_Controller.O_B.GETX            9      0.00%      0.00%
+system.ruby.Directory_Controller.O_B.GETS            6      0.00%      0.00%
+system.ruby.Directory_Controller.O_B.UnblockS        15374      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_W.GETX         1957      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_W.GETS         3492      0.00%      0.00%
+system.ruby.Directory_Controller.NO_B_W.Memory_Data       582129      0.00%      0.00%
+system.ruby.Directory_Controller.O_B_W.GETX           38      0.00%      0.00%
+system.ruby.Directory_Controller.O_B_W.GETS          103      0.00%      0.00%
+system.ruby.Directory_Controller.O_B_W.Memory_Data        15374      0.00%      0.00%
+system.ruby.Directory_Controller.WB.GETX          295      0.00%      0.00%
+system.ruby.Directory_Controller.WB.GETS          514      0.00%      0.00%
+system.ruby.Directory_Controller.WB.PUT             4      0.00%      0.00%
+system.ruby.Directory_Controller.WB.Unblock          220      0.00%      0.00%
+system.ruby.Directory_Controller.WB.Writeback_Clean         8030      0.00%      0.00%
+system.ruby.Directory_Controller.WB.Writeback_Dirty          349      0.00%      0.00%
+system.ruby.Directory_Controller.WB.Writeback_Exclusive_Clean       360015      0.00%      0.00%
+system.ruby.Directory_Controller.WB.Writeback_Exclusive_Dirty       213674      0.00%      0.00%
+system.ruby.Directory_Controller.WB_O_W.GETS            3      0.00%      0.00%
+system.ruby.Directory_Controller.WB_O_W.Memory_Ack          348      0.00%      0.00%
+system.ruby.Directory_Controller.WB_E_W.GETX         1041      0.00%      0.00%
+system.ruby.Directory_Controller.WB_E_W.GETS         1953      0.00%      0.00%
+system.ruby.Directory_Controller.WB_E_W.Memory_Ack       213665      0.00%      0.00%
 
 ---------- End Simulation Statistics   ----------
