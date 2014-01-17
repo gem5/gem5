@@ -32,8 +32,8 @@ machine(DMA, "DMA Controller")
   Cycles request_latency = 6
 {
 
-  MessageBuffer responseFromDir, network="From", virtual_network="1", ordered="true", vnet_type="response", no_vector="true";
-  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", vnet_type="request", no_vector="true";
+  MessageBuffer responseFromDir, network="From", virtual_network="1", ordered="true", vnet_type="response";
+  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", vnet_type="request";
 
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
@@ -48,8 +48,8 @@ machine(DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  MessageBuffer mandatoryQueue, ordered="false", no_vector="true";
-  State cur_state, no_vector="true";
+  MessageBuffer mandatoryQueue, ordered="false";
+  State cur_state;
 
   State getState(Address addr) {
     return cur_state;
