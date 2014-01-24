@@ -618,7 +618,6 @@ AtomicSimpleCPU::profileSimPoint()
             // If basic block is seen before, just increment the count by the
             // number of insts in basic block.
             BBInfo& info = map_itr->second;
-            assert(info.insts == currentBBVInstCount);
             info.count += currentBBVInstCount;
         }
         currentBBVInstCount = 0;
