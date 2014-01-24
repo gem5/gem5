@@ -142,6 +142,8 @@ class Request
 
     /** The request targets the secure memory space. */
     static const FlagsType SECURE                      = 0x10000000;
+    /** The request is a page table walk */
+    static const FlagsType PT_WALK                     = 0x20000000;
 
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
@@ -616,6 +618,7 @@ class Request
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
     bool isSecure() const { return _flags.isSet(SECURE); }
+    bool isPTWalk() const { return _flags.isSet(PT_WALK); }
 };
 
 #endif // __MEM_REQUEST_HH__
