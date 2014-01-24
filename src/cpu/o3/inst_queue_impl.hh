@@ -1192,8 +1192,15 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
                 NonSpecMapIt ns_inst_it =
                     nonSpecInsts.find(squashed_inst->seqNum);
 
+                // we remove non-speculative instructions from
+                // nonSpecInsts already when they are ready, and so we
+                // cannot always expect to find them
                 if (ns_inst_it == nonSpecInsts.end()) {
-                    assert(squashed_inst->getFault() != NoFault);
+                    // loads that became ready but stalled on a
+                    // blocked cache are alreayd removed from
+                    // nonSpecInsts, and have not faulted
+                    assert(squashed_inst->getFault() != NoFault ||
+                           squashed_inst->isMemRef());
                 } else {
 
                     (*ns_inst_it).second = NULL;
