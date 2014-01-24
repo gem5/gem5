@@ -81,6 +81,8 @@ class LRU : public BaseTags
     const unsigned assoc;
     /** The number of sets in the cache. */
     const unsigned numSets;
+    /** Whether tags and data are accessed sequentially. */
+    const bool sequentialAccess;
 
     /** The cache sets. */
     SetType *sets;

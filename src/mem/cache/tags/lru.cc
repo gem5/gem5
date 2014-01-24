@@ -58,7 +58,8 @@ using namespace std;
 
 LRU::LRU(const Params *p)
     :BaseTags(p), assoc(p->assoc),
-     numSets(p->size / (p->block_size * p->assoc))
+     numSets(p->size / (p->block_size * p->assoc)),
+     sequentialAccess(p->sequential_access)
 {
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
@@ -132,6 +133,19 @@ LRU::accessBlock(Addr addr, Cycles &lat, int master_id)
     unsigned set = extractSet(addr);
     BlkType *blk = sets[set].findBlk(tag);
     lat = hitLatency;
+
+    // Access all tags in parallel, hence one in each way.  The data side
+    // either accesses all blocks in parallel, or one block sequentially on
+    // a hit.  Sequential access with a miss doesn't access data.
+    tagAccesses += assoc;
+    if (sequentialAccess) {
+        if (blk != NULL) {
+            dataAccesses += 1;
+        }
+    } else {
+        dataAccesses += assoc;
+    }
+
     if (blk != NULL) {
         // move this block to head of the MRU list
         sets[set].moveToHead(blk);
@@ -216,6 +230,10 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
 
     unsigned set = extractSet(addr);
     sets[set].moveToHead(blk);
+
+    // We only need to write into one tag and one data block.
+    tagAccesses += 1;
+    dataAccesses += 1;
 }
 
 void

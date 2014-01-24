@@ -58,6 +58,8 @@ class LRU(BaseTags):
     cxx_class = 'LRU'
     cxx_header = "mem/cache/tags/lru.hh"
     assoc = Param.Int(Parent.assoc, "associativity")
+    sequential_access = Param.Bool(Parent.sequential_access,
+        "Whether to access tags and data sequentially")
 
 class FALRU(BaseTags):
     type = 'FALRU'

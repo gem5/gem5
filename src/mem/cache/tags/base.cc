@@ -147,6 +147,16 @@ BaseTags::regStats()
 
     percentOccsTaskId = occupanciesTaskId / Stats::constant(numBlocks);
 
+    tagAccesses
+        .name(name() + ".tag_accesses")
+        .desc("Number of tag accesses")
+        ;
+
+    dataAccesses
+        .name(name() + ".data_accesses")
+        .desc("Number of data accesses")
+        ;
+
     registerDumpCallback(new BaseTagsDumpCallback(this));
     registerExitCallback(new BaseTagsCallback(this));
 }
