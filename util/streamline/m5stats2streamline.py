@@ -56,7 +56,7 @@
 #
 # <dest .apc folder>: Destination .apc folder path
 #
-# APC project generation based on Gator v12 (DS-5 v5.13)
+# APC project generation based on Gator v17 (DS-5 v5.17)
 # Subsequent versions should be backward compatible
 
 import re, sys, os
@@ -78,7 +78,7 @@ parser = argparse.ArgumentParser(
 
         Visit http://www.gem5.org/Streamline for more details.
 
-        APC project generation based on Gator v12 (DS-5 v5.13)
+        APC project generation based on Gator v17 (DS-5 v5.17)
         Subsequent versions should be backward compatible
         """)
 
@@ -198,8 +198,26 @@ class Event(object):
 #  - string
 ############################################################
 
-#  variable length packed 4-byte signed value
 def packed32(x):
+    ret = []
+    more = True
+    while more:
+        b = x & 0x7f
+        x = x >> 7
+        if (((x == 0) and ((b & 0x40) == 0)) or \
+            ((x == -1) and ((b & 0x40) != 0))):
+            more = False
+        else:
+            b = b | 0x80
+        ret.append(b)
+    return ret
+
+# For historical reasons, 32/64-bit versions of functions are presevered
+def packed64(x):
+    return packed32(x)
+
+#  variable length packed 4-byte signed value
+def unsigned_packed32(x):
     ret = []
     if ((x & 0xffffff80) == 0):
         ret.append(x & 0x7f)
@@ -224,7 +242,7 @@ def packed32(x):
     return ret
 
 #  variable length packed 8-byte signed value
-def packed64(x):
+def unsigned_packed64(x):
     ret = []
     if ((x & 0xffffffffffffff80) == 0):
         ret.append(x & 0x7f)
@@ -382,7 +400,11 @@ def addFrameHeader(frame_type, body, core):
 #  - uptime: packed64
 def summaryFrame(timestamp, uptime):
     frame_type = "Summary"
-    body = packed64(timestamp) + packed64(uptime)
+    newline_canary = stringList("1\n2\r\n3\r4\n\r5")
+    monotonic_delta = packed64(0)
+    end_of_attr = stringList("")
+    body = newline_canary + packed64(timestamp) + packed64(uptime)
+    body += monotonic_delta + end_of_attr
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
@@ -415,10 +437,23 @@ def threadNameFrame(timestamp, thread_id, name):
 
 # Core name message
 #  - name: string
-def coreNameFrame(name):
+#  - core_id: packed32
+#  - cpuid: packed32
+def coreNameFrame(name, core_id, cpuid):
     frame_type = "Name"
     packed_code = packed32(3)
-    body = packed_code + stringList(name)
+    body = packed_code + packed32(core_id) + packed32(cpuid) + stringList(name)
+    ret = addFrameHeader(frame_type, body, 0)
+    return ret
+
+# IRQ Cookie name message
+#  - cookie: packed32
+#  - name: string
+#  - irq: packed32
+def irqCookieNameFrame(cookie, name, irq):
+    frame_type = "Name"
+    packed_code = packed32(5)
+    body = packed_code + packed32(cookie) + stringList(name) + packed32(irq)
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
@@ -999,7 +1034,8 @@ def doCapturedXML(output_path, stats):
 
     xml = ET.Element("captured")
     xml.set("version", "1")
-    xml.set("protocol", "12")
+    xml.set("protocol", "17")
+    xml.set("backtrace_processing", "none")
 
     target = ET.SubElement(xml, "target")
     target.set("name", "gem5")
