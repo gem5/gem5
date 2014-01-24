@@ -308,6 +308,7 @@ TableWalker::processWalk()
         f = currState->fault;
     } else {
         RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag, masterId);
+        req->taskId(ContextSwitchTaskId::DMA);
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
         port.sendFunctional(pkt);
@@ -653,6 +654,7 @@ TableWalker::doL1Descriptor()
         } else {
             RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0,
                                          masterId);
+            req->taskId(ContextSwitchTaskId::DMA);
             PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
             pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
             port.sendFunctional(pkt);

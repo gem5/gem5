@@ -253,6 +253,11 @@ public:
     virtual std::string print() const;
 
     /**
+     * Called prior to dumping stats to compute task occupancy
+     */
+    virtual void computeStats();
+
+    /**
      * Visit each block in the tag store and apply a visitor to the
      * block.
      *

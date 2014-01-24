@@ -166,6 +166,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     for (ChunkGenerator gen(addr, size, sys->cacheLineSize());
          !gen.done(); gen.next()) {
         Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
+        req->taskId(ContextSwitchTaskId::DMA);
         PacketPtr pkt = new Packet(req, cmd);
 
         // Increment the data pointer on a write

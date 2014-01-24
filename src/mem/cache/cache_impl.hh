@@ -1074,6 +1074,11 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
                 Request::wbMasterId);
+
+    writebackReq->taskId(blk->task_id);
+    blk->task_id= ContextSwitchTaskId::Unknown;
+    blk->tickInserted = curTick();
+
     PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
     if (blk->isWritable()) {
         writeback->setSupplyExclusive();
@@ -1120,6 +1125,7 @@ Cache<TagStore>::writebackVisitor(BlkType &blk)
 
         Request request(tags->regenerateBlkAddr(blk.tag, blk.set),
                         blkSize, 0, Request::funcMasterId);
+        request.taskId(blk.task_id);
 
         Packet packet(&request, MemCmd::WriteReq);
         packet.dataStatic(blk.data);

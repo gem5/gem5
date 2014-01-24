@@ -604,6 +604,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
                     Request::INST_FETCH, cpu->instMasterId(), pc,
                     cpu->thread[tid]->contextId(), tid);
 
+    mem_req->taskId(cpu->taskId());
+
     memReq[tid] = mem_req;
 
     // Initiate translation of the icache block

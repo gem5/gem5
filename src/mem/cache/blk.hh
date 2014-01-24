@@ -80,6 +80,9 @@ enum CacheBlkStatusBits {
 class CacheBlk
 {
   public:
+    /** Task Id associated with this block */
+    uint32_t task_id;
+
     /** The address space ID of this block. */
     int asid;
     /** Data block tag value. */
@@ -118,6 +121,8 @@ class CacheBlk
 
     /** holds the source requestor ID for this block. */
     int srcMasterId;
+
+    Tick tickInserted;
 
   protected:
     /**
@@ -162,9 +167,11 @@ class CacheBlk
   public:
 
     CacheBlk()
-        : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
+        : task_id(ContextSwitchTaskId::Unknown),
+          asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
           set(-1), isTouched(false), refCount(0),
-          srcMasterId(Request::invldMasterId)
+          srcMasterId(Request::invldMasterId),
+          tickInserted(0)
     {}
 
     /**
@@ -182,6 +189,7 @@ class CacheBlk
         whenReady = rhs.whenReady;
         set = rhs.set;
         refCount = rhs.refCount;
+        task_id = rhs.task_id;
         return *this;
     }
 

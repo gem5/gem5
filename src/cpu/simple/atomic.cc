@@ -301,6 +301,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
 
     dcache_latency = 0;
 
+    req->taskId(taskId());
     while (1) {
         req->setVirt(0, addr, size, flags, dataMasterId(), thread->pcState().instAddr());
 
@@ -387,6 +388,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
     dcache_latency = 0;
 
+    req->taskId(taskId());
     while(1) {
         req->setVirt(0, addr, size, flags, dataMasterId(), thread->pcState().instAddr());
 
@@ -492,6 +494,7 @@ AtomicSimpleCPU::tick()
         bool needToFetch = !isRomMicroPC(pcState.microPC()) &&
                            !curMacroStaticInst;
         if (needToFetch) {
+            ifetch_req.taskId(taskId());
             setupFetchRequest(&ifetch_req);
             fault = thread->itb->translateAtomic(&ifetch_req, tc,
                                                  BaseTLB::Execute);

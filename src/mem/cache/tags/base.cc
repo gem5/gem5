@@ -125,5 +125,28 @@ BaseTags::regStats()
 
     avgOccs = occupancies / Stats::constant(numBlocks);
 
+    occupanciesTaskId
+        .init(ContextSwitchTaskId::NumTaskId)
+        .name(name() + ".occ_task_id_blocks")
+        .desc("Occupied blocks per task id")
+        .flags(nozero | nonan)
+        ;
+
+    ageTaskId
+        .init(ContextSwitchTaskId::NumTaskId, 5)
+        .name(name() + ".age_task_id_blocks")
+        .desc("Occupied blocks per task id")
+        .flags(nozero | nonan)
+        ;
+
+    percentOccsTaskId
+        .name(name() + ".occ_task_id_percent")
+        .desc("Percentage of cache occupancy per task id")
+        .flags(nozero)
+        ;
+
+    percentOccsTaskId = occupanciesTaskId / Stats::constant(numBlocks);
+
+    registerDumpCallback(new BaseTagsDumpCallback(this));
     registerExitCallback(new BaseTagsCallback(this));
 }

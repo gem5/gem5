@@ -121,6 +121,15 @@ class BaseTags : public ClockedObject
     /** Average occ % of each requestor using the cache */
     Stats::Formula avgOccs;
 
+    /** Occupancy of each context/cpu using the cache */
+    Stats::Vector occupanciesTaskId;
+
+    /** Occupancy of each context/cpu using the cache */
+    Stats::Vector2d ageTaskId;
+
+    /** Occ % of each context/cpu using the cache */
+    Stats::Formula percentOccsTaskId;
+
     /**
      * @}
      */
@@ -152,6 +161,11 @@ class BaseTags : public ClockedObject
     virtual void cleanupRefs() {}
 
     /**
+     * Computes stats just prior to dump event
+     */
+    virtual void computeStats() {}
+
+    /**
      *iterated through all blocks and clear all locks
      *Needed to clear all lock tracking at once
      */
@@ -169,6 +183,14 @@ class BaseTagsCallback : public Callback
   public:
     BaseTagsCallback(BaseTags *t) : tags(t) {}
     virtual void process() { tags->cleanupRefs(); };
+};
+
+class BaseTagsDumpCallback : public Callback
+{
+    BaseTags *tags;
+  public:
+    BaseTagsDumpCallback(BaseTags *t) : tags(t) {}
+    virtual void process() { tags->computeStats(); };
 };
 
 #endif //__BASE_TAGS_HH__

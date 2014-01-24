@@ -54,6 +54,7 @@
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/TLB.hh"
@@ -476,6 +477,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     req->setAsid(contextId.asid);
     if (is_priv)
         req->setFlags(Request::PRIVILEGED);
+
+    req->taskId(tc->getCpuPtr()->taskId());
 
     DPRINTF(TLBVerbose, "CPSR is priv:%d UserMode:%d\n",
             isPriv, flags & UserMode);

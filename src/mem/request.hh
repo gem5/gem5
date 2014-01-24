@@ -219,6 +219,11 @@ class Request
      */
     Tick _time;
 
+    /**
+     * The task id associated with this request
+     */
+    uint32_t _taskId;
+
     /** The address space ID. */
     int _asid;
 
@@ -244,7 +249,8 @@ class Request
      *  default constructor.)
      */
     Request()
-        : translateDelta(0), accessDelta(0), depth(0)
+        : _taskId(ContextSwitchTaskId::Unknown),
+        translateDelta(0), accessDelta(0), depth(0)
     {}
 
     /**
@@ -253,16 +259,19 @@ class Request
      * These fields are adequate to perform a request. 
      */
     Request(Addr paddr, int size, Flags flags, MasterID mid)
+        : _taskId(ContextSwitchTaskId::Unknown)
     {
         setPhys(paddr, size, flags, mid);
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time)
+        : _taskId(ContextSwitchTaskId::Unknown)
     {
         setPhys(paddr, size, flags, mid, time);
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time, Addr pc)
+        : _taskId(ContextSwitchTaskId::Unknown)
     {
         setPhys(paddr, size, flags, mid, time);
         privateFlags.set(VALID_PC);
@@ -271,6 +280,7 @@ class Request
 
     Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
             int cid, ThreadID tid)
+        : _taskId(ContextSwitchTaskId::Unknown)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setThreadContext(cid, tid);
@@ -475,6 +485,17 @@ class Request
     masterId()
     {
         return _masterId;
+    }
+
+    uint32_t
+    taskId() const
+    {
+        return _taskId;
+    }
+
+    void
+    taskId(uint32_t id) {
+        _taskId = id;
     }
 
     /** Accessor function for asid.*/

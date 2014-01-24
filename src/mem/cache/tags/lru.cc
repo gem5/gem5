@@ -176,6 +176,7 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
 {
     Addr addr = pkt->getAddr();
     MasterID master_id = pkt->req->masterId();
+    uint32_t task_id = pkt->req->taskId();
     if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
@@ -210,6 +211,8 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
     assert(master_id < cache->system->maxMasters());
     occupancies[master_id]++;
     blk->srcMasterId = master_id;
+    blk->task_id = task_id;
+    blk->tickInserted = curTick();
 
     unsigned set = extractSet(addr);
     sets[set].moveToHead(blk);
@@ -224,6 +227,8 @@ LRU::invalidate(BlkType *blk)
     assert(blk->srcMasterId < cache->system->maxMasters());
     occupancies[blk->srcMasterId]--;
     blk->srcMasterId = Request::invldMasterId;
+    blk->task_id = ContextSwitchTaskId::Unknown;
+    blk->tickInserted = curTick();
 
     // should be evicted before valid blocks
     unsigned set = blk->set;
@@ -270,3 +275,38 @@ LRU::cleanupRefs()
         }
     }
 }
+
+void
+LRU::computeStats()
+{
+    for (unsigned i = 0; i < ContextSwitchTaskId::NumTaskId; ++i) {
+        occupanciesTaskId[i] = 0;
+        for (unsigned j = 0; j < 5; ++j) {
+            ageTaskId[i][j] = 0;
+        }
+    }
+
+    for (unsigned i = 0; i < numSets * assoc; ++i) {
+        if (blks[i].isValid()) {
+            assert(blks[i].task_id < ContextSwitchTaskId::NumTaskId);
+            occupanciesTaskId[blks[i].task_id]++;
+            Tick age = curTick() - blks[i].tickInserted;
+            assert(age >= 0);
+
+            int age_index;
+            if (age / SimClock::Int::us < 10) { // <10us
+                age_index = 0;
+            } else if (age / SimClock::Int::us < 100) { // <100us
+                age_index = 1;
+            } else if (age / SimClock::Int::ms < 1) { // <1ms
+                age_index = 2;
+            } else if (age / SimClock::Int::ms < 10) { // <10ms
+                age_index = 3;
+            } else
+                age_index = 4; // >10ms
+
+            ageTaskId[blks[i].task_id][age_index]++;
+        }
+    }
+}
+

@@ -890,6 +890,8 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
         req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
                           thread->contextId(), threadNumber);
 
+        req->taskId(cpu->taskId());
+
         // Only split the request if the ISA supports unaligned accesses.
         if (TheISA::HasUnalignedMemAcc) {
             splitRequest(req, sreqLow, sreqHigh);
@@ -952,6 +954,8 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
     } else {
         req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
                           thread->contextId(), threadNumber);
+
+        req->taskId(cpu->taskId());
 
         // Only split the request if the ISA supports unaligned accesses.
         if (TheISA::HasUnalignedMemAcc) {

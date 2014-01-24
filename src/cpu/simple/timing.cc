@@ -415,6 +415,8 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
     RequestPtr req  = new Request(asid, addr, size,
                                   flags, dataMasterId(), pc, _cpuId, tid);
 
+    req->taskId(taskId());
+
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
@@ -483,6 +485,8 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
     RequestPtr req = new Request(asid, addr, size,
                                  flags, dataMasterId(), pc, _cpuId, tid);
+
+    req->taskId(taskId());
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
@@ -561,6 +565,7 @@ TimingSimpleCPU::fetch()
     if (needToFetch) {
         _status = BaseSimpleCPU::Running;
         Request *ifetch_req = new Request();
+        ifetch_req->taskId(taskId());
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
         DPRINTF(SimpleCPU, "Translating address %#x\n", ifetch_req->getVaddr());
