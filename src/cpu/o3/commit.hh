@@ -50,6 +50,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"
+#include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
 
@@ -150,6 +151,10 @@ class DefaultCommit
     /** Commit policy used in SMT mode. */
     CommitPolicy commitPolicy;
 
+    /** Probe Points. */
+    ProbePointArg<DynInstPtr> *ppCommit;
+    ProbePointArg<DynInstPtr> *ppCommitStall;
+
   public:
     /** Construct a DefaultCommit with the given parameters. */
     DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params);
@@ -159,6 +164,9 @@ class DefaultCommit
 
     /** Registers statistics. */
     void regStats();
+
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Sets the list of threads. */
     void setThreads(std::vector<Thread *> &threads);

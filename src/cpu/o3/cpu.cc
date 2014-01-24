@@ -468,6 +468,17 @@ FullO3CPU<Impl>::~FullO3CPU()
 
 template <class Impl>
 void
+FullO3CPU<Impl>::regProbePoints()
+{
+    ppInstAccessComplete = new ProbePointArg<PacketPtr>(getProbeManager(), "InstAccessComplete");
+    ppDataAccessComplete = new ProbePointArg<std::pair<DynInstPtr, PacketPtr> >(getProbeManager(), "DataAccessComplete");
+    fetch.regProbePoints();
+    iew.regProbePoints();
+    commit.regProbePoints();
+}
+
+template <class Impl>
+void
 FullO3CPU<Impl>::regStats()
 {
     BaseO3CPU::regStats();

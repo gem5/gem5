@@ -113,6 +113,14 @@ DefaultIEW<Impl>::name() const
 
 template <class Impl>
 void
+DefaultIEW<Impl>::regProbePoints()
+{
+    ppDispatch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Dispatch");
+    ppMispredict = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Mispredict");
+}
+
+template <class Impl>
+void
 DefaultIEW<Impl>::regStats()
 {
     using namespace Stats;
@@ -1158,6 +1166,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
 #if TRACING_ON
         inst->dispatchTick = curTick() - inst->fetchTick;
 #endif
+        ppDispatch->notify(inst);
     }
 
     if (!insts_to_dispatch.empty()) {
@@ -1356,6 +1365,8 @@ DefaultIEW<Impl>::executeInsts()
                         inst->pcState());
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
+
+                ppMispredict->notify(inst);
 
                 if (inst->readPredTaken()) {
                     predictedTakenIncorrect++;

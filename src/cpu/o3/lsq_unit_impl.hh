@@ -131,6 +131,8 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     }
 
     pkt->req->setAccessLatency();
+    cpu->ppDataAccessComplete->notify(std::make_pair(inst, pkt));
+
     delete state;
     delete pkt->req;
     delete pkt;

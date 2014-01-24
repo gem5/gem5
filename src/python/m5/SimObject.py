@@ -616,6 +616,8 @@ class SimObject(object):
     void initState();
     void regStats();
     void resetStats();
+    void regProbePoints();
+    void regProbeListeners();
     void startup();
 ''')
 

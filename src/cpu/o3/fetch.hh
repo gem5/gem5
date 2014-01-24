@@ -55,6 +55,7 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
+#include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
 
@@ -194,6 +195,9 @@ class DefaultFetch
     /** List that has the threads organized by priority. */
     std::list<ThreadID> priorityList;
 
+    /** Probe points. */
+    ProbePointArg<DynInstPtr> *ppFetch;
+
   public:
     /** DefaultFetch constructor. */
     DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params);
@@ -203,6 +207,9 @@ class DefaultFetch
 
     /** Registers statistics. */
     void regStats();
+
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);

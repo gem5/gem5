@@ -118,6 +118,12 @@ def instantiate(ckpt_dir=None):
     # Do a third pass to initialize statistics
     for obj in root.descendants(): obj.regStats()
 
+    # Do a fourth pass to initialize probe points
+    for obj in root.descendants(): obj.regProbePoints()
+
+    # Do a fifth pass to connect probe listeners
+    for obj in root.descendants(): obj.regProbeListeners()
+
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
 

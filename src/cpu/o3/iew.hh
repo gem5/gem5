@@ -52,6 +52,7 @@
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/timebuf.hh"
 #include "debug/IEW.hh"
+#include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
 class FUPool;
@@ -122,6 +123,10 @@ class DefaultIEW
     /** Writeback status. */
     StageStatus wbStatus;
 
+    /** Probe points. */
+    ProbePointArg<DynInstPtr> *ppMispredict;
+    ProbePointArg<DynInstPtr> *ppDispatch;
+
   public:
     /** Constructs a DefaultIEW with the given parameters. */
     DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params);
@@ -131,6 +136,9 @@ class DefaultIEW
 
     /** Registers statistics. */
     void regStats();
+
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Initializes stage; sends back the number of free IQ and LSQ entries. */
     void startupStage();

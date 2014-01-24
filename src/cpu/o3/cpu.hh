@@ -375,6 +375,12 @@ class FullO3CPU : public BaseO3CPU
     /** Registers statistics. */
     void regStats();
 
+    ProbePointArg<PacketPtr> *ppInstAccessComplete;
+    ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
+
+    /** Register probe points. */
+    void regProbePoints();
+
     void demapPage(Addr vaddr, uint64_t asn)
     {
         this->itb->demapPage(vaddr, asn);

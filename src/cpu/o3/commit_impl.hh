@@ -163,6 +163,14 @@ DefaultCommit<Impl>::name() const
 
 template <class Impl>
 void
+DefaultCommit<Impl>::regProbePoints()
+{
+    ppCommit = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Commit");
+    ppCommitStall = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "CommitStall");
+}
+
+template <class Impl>
+void
 DefaultCommit<Impl>::regStats()
 {
     using namespace Stats;
@@ -705,6 +713,8 @@ DefaultCommit<Impl>::tick()
         } else if (!rob->isEmpty(tid)) {
             DynInstPtr inst = rob->readHeadInst(tid);
 
+            ppCommitStall->notify(inst);
+
             DPRINTF(Commit,"[tid:%i]: Can't commit, Instruction [sn:%lli] PC "
                     "%s is head of ROB and not ready\n",
                     tid, inst->seqNum, inst->pcState());
@@ -1017,6 +1027,7 @@ DefaultCommit<Impl>::commitInsts()
 
             if (commit_success) {
                 ++num_committed;
+                ppCommit->notify(head_inst);
 
                 changedROBNumEntries[tid] = true;
 

@@ -163,6 +163,13 @@ DefaultFetch<Impl>::name() const
 
 template <class Impl>
 void
+DefaultFetch<Impl>::regProbePoints()
+{
+    ppFetch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Fetch");
+}
+
+template <class Impl>
+void
 DefaultFetch<Impl>::regStats()
 {
     icacheStallCycles
@@ -401,6 +408,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     }
 
     pkt->req->setAccessLatency();
+    cpu->ppInstAccessComplete->notify(pkt);
     // Reset the mem req to NULL.
     delete pkt->req;
     delete pkt;
@@ -666,7 +674,6 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             DPRINTF(Fetch, "[tid:%i]: Doing Icache access.\n", tid);
             DPRINTF(Activity, "[tid:%i]: Activity: Waiting on I-cache "
                     "response.\n", tid);
-
             lastIcacheStall[tid] = curTick();
             fetchStatus[tid] = IcacheWaitResponse;
         }
@@ -1312,6 +1319,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 buildInst(tid, staticInst, curMacroop,
                           thisPC, nextPC, true);
 
+            ppFetch->notify(instruction);
             numInst++;
 
 #if TRACING_ON
