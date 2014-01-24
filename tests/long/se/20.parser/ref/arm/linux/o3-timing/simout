@@ -1,11 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:24:06
-gem5 started Jan 22 2014 22:41:42
+gem5 compiled Jan 23 2014 12:08:08
+gem5 started Jan 23 2014 17:14:04
 gem5 executing on u200540-lin
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/20.parser/arm/linux/o3-timing -re tests/run.py build/ARM/tests/opt/long/se/20.parser/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
+      0: system.cpu.isa: ISA system set to: 0 0x4cfd380
 info: Entering event queue @ 0.  Starting simulation...
 
  Reading the dictionary files: *************************************************
@@ -67,4 +68,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 202741893000 because target called exit()
+Exiting @ tick 202696649500 because target called exit()

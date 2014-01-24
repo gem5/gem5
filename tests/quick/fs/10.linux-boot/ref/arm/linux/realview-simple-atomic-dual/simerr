@@ -10,7 +10,4 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-warn: 	instruction 'mcr bpiallis' unimplemented
 warn: LCD dual screen mode not supported
-warn: 	instruction 'mcr icialluis' unimplemented
-warn: 	instruction 'mcr icialluis' unimplemented

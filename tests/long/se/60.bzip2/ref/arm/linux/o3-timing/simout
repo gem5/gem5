@@ -1,11 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:24:06
-gem5 started Jan 22 2014 23:27:54
+gem5 compiled Jan 23 2014 12:08:08
+gem5 started Jan 23 2014 18:05:55
 gem5 executing on u200540-lin
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/60.bzip2/arm/linux/o3-timing -re tests/run.py build/ARM/tests/opt/long/se/60.bzip2/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
+      0: system.cpu.isa: ISA system set to: 0 0x5017340
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
 Loading Input Data
@@ -24,4 +25,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 533797009000 because target called exit()
+Exiting @ tick 533761922000 because target called exit()

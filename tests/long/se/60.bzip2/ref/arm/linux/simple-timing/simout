@@ -1,11 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:24:06
-gem5 started Jan 22 2014 23:38:44
+gem5 compiled Jan 23 2014 12:08:08
+gem5 started Jan 23 2014 18:15:41
 gem5 executing on u200540-lin
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/60.bzip2/arm/linux/simple-timing -re tests/run.py build/ARM/tests/opt/long/se/60.bzip2/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
+      0: system.cpu.isa: ISA system set to: 0 0x5333d00
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
 Loading Input Data
