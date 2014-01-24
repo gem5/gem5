@@ -49,6 +49,20 @@
 #include "sim/voltage_domain.hh"
 #include "sim/clocked_object.hh"
 
+void
+ClockDomain::regStats()
+{
+    using namespace Stats;
+
+    // Expose the current clock period as a stat for observability in
+    // the dumps
+    currentClock
+        .scalar(_clockPeriod)
+        .name(params()->name + ".clock")
+        .desc("Clock period in ticks")
+        ;
+}
+
 double
 ClockDomain::voltage() const
 {

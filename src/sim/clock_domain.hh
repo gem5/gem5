@@ -72,6 +72,13 @@ class ClockedObject;
 class ClockDomain : public SimObject
 {
 
+  private:
+
+    /**
+     * Stat to report clock period of clock domain
+     */
+    Stats::Value currentClock;
+
   protected:
 
     /**
@@ -104,6 +111,8 @@ class ClockDomain : public SimObject
         SimObject(p),
         _clockPeriod(0),
         _voltageDomain(voltage_domain) {}
+
+    void regStats();
 
     /**
      * Get the clock period.
