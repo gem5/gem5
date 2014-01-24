@@ -54,10 +54,16 @@ handleLockedRead(XC *xc, Request *req)
 {
 }
 
+template <class XC>
+inline void
+handleLockedSnoopHit(XC *xc)
+{
+}
+
 
 template <class XC>
 inline bool
-handleLockedWrite(XC *xc, Request *req)
+handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
 {
     return true;
 }

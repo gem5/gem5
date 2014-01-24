@@ -56,9 +56,15 @@ namespace X86ISA
 
     template <class XC>
     inline bool
-    handleLockedWrite(XC *xc, Request *req)
+    handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
     {
         return true;
+    }
+
+    template <class XC>
+    inline void
+    handleLockedSnoopHit(XC *xc)
+    {
     }
 }
 

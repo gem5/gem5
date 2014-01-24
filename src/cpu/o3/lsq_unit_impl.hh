@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -433,12 +433,13 @@ void
 LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 {
     int load_idx = loadHead;
+    DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
 
     // Unlock the cpu-local monitor when the CPU sees a snoop to a locked
     // address. The CPU can speculatively execute a LL operation after a pending
     // SC operation in the pipeline and that can make the cache monitor the CPU
     // is connected to valid while it really shouldn't be.
-    for (int x = 0; x < cpu->numActiveThreads(); x++) {
+    for (int x = 0; x < cpu->numContexts(); x++) {
         ThreadContext *tc = cpu->getContext(x);
         bool no_squash = cpu->thread[x]->noSquashFromTC;
         cpu->thread[x]->noSquashFromTC = true;
@@ -446,13 +447,23 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
         cpu->thread[x]->noSquashFromTC = no_squash;
     }
 
+    Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
+
+    DynInstPtr ld_inst = loadQueue[load_idx];
+    if (ld_inst) {
+        Addr load_addr = ld_inst->physEffAddr & cacheBlockMask;
+        // Check that this snoop didn't just invalidate our lock flag
+        if (ld_inst->effAddrValid() && load_addr == invalidate_addr &&
+            ld_inst->memReqFlags & Request::LLSC)
+            TheISA::handleLockedSnoopHit(ld_inst.get());
+    }
+
     // If this is the only load in the LSQ we don't care
     if (load_idx == loadTail)
         return;
+
     incrLdIdx(load_idx);
 
-    DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
-    Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
 
@@ -468,11 +479,20 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
         if (load_addr == invalidate_addr) {
             if (ld_inst->possibleLoadViolation()) {
                 DPRINTF(LSQUnit, "Conflicting load at addr %#x [sn:%lli]\n",
-                        ld_inst->physEffAddr, pkt->getAddr(), ld_inst->seqNum);
+                        pkt->getAddr(), ld_inst->seqNum);
 
                 // Mark the load for re-execution
                 ld_inst->fault = new ReExec;
             } else {
+                DPRINTF(LSQUnit, "HitExternal Snoop for addr %#x [sn:%lli]\n",
+                        pkt->getAddr(), ld_inst->seqNum);
+
+                // Make sure that we don't lose a snoop hitting a LOCKED
+                // address since the LOCK* flags don't get updated until
+                // commit.
+                if (ld_inst->memReqFlags & Request::LLSC)
+                    TheISA::handleLockedSnoopHit(ld_inst.get());
+
                 // If a older load checks this and it's true
                 // then we might have missed the snoop
                 // in which case we need to invalidate to be sure
@@ -849,7 +869,7 @@ LSQUnit<Impl>::writebackStores()
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
             inst->recordResult(false);
-            bool success = TheISA::handleLockedWrite(inst.get(), req);
+            bool success = TheISA::handleLockedWrite(inst.get(), req, cacheBlockMask);
             inst->recordResult(true);
 
             if (!success) {

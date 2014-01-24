@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -278,6 +278,36 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
 }
 
 
+Tick
+AtomicSimpleCPU::AtomicCPUDPort::recvAtomicSnoop(PacketPtr pkt)
+{
+    DPRINTF(SimpleCPU, "received snoop pkt for addr:%#x %s\n", pkt->getAddr(),
+            pkt->cmdString());
+
+    // if snoop invalidates, release any associated locks
+    if (pkt->isInvalidate()) {
+        DPRINTF(SimpleCPU, "received invalidation for addr:%#x\n",
+                pkt->getAddr());
+        TheISA::handleLockedSnoop(cpu->thread, pkt, cacheBlockMask);
+    }
+
+    return 0;
+}
+
+void
+AtomicSimpleCPU::AtomicCPUDPort::recvFunctionalSnoop(PacketPtr pkt)
+{
+    DPRINTF(SimpleCPU, "received snoop pkt for addr:%#x %s\n", pkt->getAddr(),
+            pkt->cmdString());
+
+    // if snoop invalidates, release any associated locks
+    if (pkt->isInvalidate()) {
+        DPRINTF(SimpleCPU, "received invalidation for addr:%#x\n",
+                pkt->getAddr());
+        TheISA::handleLockedSnoop(cpu->thread, pkt, cacheBlockMask);
+    }
+}
+
 Fault
 AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
                          unsigned size, unsigned flags)
@@ -402,7 +432,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
             if (req->isLLSC()) {
                 cmd = MemCmd::StoreCondReq;
-                do_access = TheISA::handleLockedWrite(thread, req);
+                do_access = TheISA::handleLockedWrite(thread, req, dcachePort.cacheBlockMask);
             } else if (req->isSwap()) {
                 cmd = MemCmd::SwapReq;
                 if (req->isCondSwap()) {

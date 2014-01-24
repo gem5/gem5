@@ -164,6 +164,8 @@ class BaseDynInst : public RefCounted
     /** Pointer to the Impl's CPU object. */
     ImplCPU *cpu;
 
+    BaseCPU *getCpuPtr() { return cpu; }
+
     /** Pointer to the thread state. */
     ImplState *thread;
 

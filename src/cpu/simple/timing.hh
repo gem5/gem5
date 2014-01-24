@@ -165,7 +165,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         /**
          * Snooping a coherence request, do nothing.
          */
-        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
+        virtual void recvTimingSnoopReq(PacketPtr pkt) {}
 
         TimingSimpleCPU* cpu;
 
@@ -217,9 +217,17 @@ class TimingSimpleCPU : public BaseSimpleCPU
         DcachePort(TimingSimpleCPU *_cpu)
             : TimingCPUPort(_cpu->name() + ".dcache_port", _cpu),
               tickEvent(_cpu)
-        { }
+        {
+           cacheBlockMask = ~(cpu->cacheLineSize() - 1);
+        }
 
+        Addr cacheBlockMask;
       protected:
+
+        /** Snoop a coherence request, we need to check if this causes
+         * a wakeup event on a cpu that is monitoring an address
+         */
+        virtual void recvTimingSnoopReq(PacketPtr pkt);
 
         virtual bool recvTimingResp(PacketPtr pkt);
 

@@ -261,6 +261,9 @@ class BaseCPU : public MemObject
    /// Given a thread num get tho thread context for it
    virtual ThreadContext *getContext(int tn) { return threadContexts[tn]; }
 
+   /// Get the number of thread contexts available
+   unsigned numContexts() { return threadContexts.size(); }
+
   public:
     typedef BaseCPUParams Params;
     const Params *params() const

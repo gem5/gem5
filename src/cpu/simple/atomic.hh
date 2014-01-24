@@ -147,17 +147,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
       public:
 
-        AtomicCPUPort(const std::string &_name, BaseCPU* _cpu)
+        AtomicCPUPort(const std::string &_name, BaseSimpleCPU* _cpu)
             : MasterPort(_name, _cpu)
         { }
 
       protected:
-
-        virtual Tick recvAtomicSnoop(PacketPtr pkt)
-        {
-            // Snooping a coherence request, just return
-            return 0;
-        }
+        virtual Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
 
         bool recvTimingResp(PacketPtr pkt)
         {
@@ -172,8 +167,30 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     };
 
+    class AtomicCPUDPort : public AtomicCPUPort
+    {
+
+      public:
+
+        AtomicCPUDPort(const std::string &_name, BaseSimpleCPU* _cpu)
+            : AtomicCPUPort(_name, _cpu), cpu(_cpu)
+        {
+            cacheBlockMask = ~(cpu->cacheLineSize() - 1);
+        }
+
+        bool isSnooping() const { return true; }
+
+        Addr cacheBlockMask;
+      protected:
+        BaseSimpleCPU *cpu;
+
+        virtual Tick recvAtomicSnoop(PacketPtr pkt);
+        virtual void recvFunctionalSnoop(PacketPtr pkt);
+    };
+
+
     AtomicCPUPort icachePort;
-    AtomicCPUPort dcachePort;
+    AtomicCPUDPort dcachePort;
 
     bool fastmem;
     Request ifetch_req;

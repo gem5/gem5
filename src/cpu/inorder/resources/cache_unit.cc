@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -863,7 +875,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         if (mem_req->isLLSC()) {
             assert(cache_req->inst->isStoreConditional());
             DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
-            do_access = TheISA::handleLockedWrite(inst.get(), mem_req);
+            do_access = TheISA::handleLockedWrite(inst.get(), mem_req, cacheBlkSize);
         }
      }
 

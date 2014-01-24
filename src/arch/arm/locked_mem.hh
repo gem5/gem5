@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -66,9 +66,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
         return;
 
     Addr locked_addr = xc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
-    Addr snoop_addr = pkt->getAddr();
-
-    assert((cacheBlockMask & snoop_addr) == snoop_addr);
+    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
 
     if (locked_addr == snoop_addr)
         xc->setMiscReg(MISCREG_LOCKFLAG, false);
@@ -76,16 +74,22 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 
 template <class XC>
 inline void
+handleLockedSnoopHit(XC *xc)
+{
+}
+
+template <class XC>
+inline void
 handleLockedRead(XC *xc, Request *req)
 {
-    xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr() & ~0xf);
+    xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
     xc->setMiscReg(MISCREG_LOCKFLAG, true);
 }
 
 
 template <class XC>
 inline bool
-handleLockedWrite(XC *xc, Request *req)
+handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
 {
     if (req->isSwap())
         return true;
@@ -93,8 +97,8 @@ handleLockedWrite(XC *xc, Request *req)
     // Verify that the lock flag is still set and the address
     // is correct
     bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
-    Addr lock_addr = xc->readMiscReg(MISCREG_LOCKADDR);
-    if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
+    Addr lock_addr = xc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
+    if (!lock_flag || (req->getPaddr() & cacheBlockMask) != lock_addr) {
         // Lock flag not set or addr mismatch in CPU;
         // don't even bother sending to memory system
         req->setExtraData(0);

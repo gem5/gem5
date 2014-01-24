@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,6 +94,7 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
 
     system->totalNumInsts = 0;
 }
+
 
 
 TimingSimpleCPU::~TimingSimpleCPU()
@@ -273,7 +274,7 @@ TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
         bool do_access = true;  // flag to suppress cache access
 
         if (req->isLLSC()) {
-            do_access = TheISA::handleLockedWrite(thread, req);
+            do_access = TheISA::handleLockedWrite(thread, req, dcachePort.cacheBlockMask);
         } else if (req->isCondSwap()) {
             assert(res);
             req->setExtraData(*res);
@@ -812,6 +813,13 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     advanceInst(fault);
 }
+
+void
+TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
+{
+    TheISA::handleLockedSnoop(cpu->thread, pkt, cacheBlockMask);
+}
+
 
 bool
 TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)

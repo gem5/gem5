@@ -93,10 +93,15 @@ handleLockedRead(XC *xc, Request *req)
     xc->setMiscReg(MISCREG_LOCKFLAG, true);
 }
 
+template <class XC>
+inline void
+handleLockedSnoopHit(XC *xc)
+{
+}
 
 template <class XC>
 inline bool
-handleLockedWrite(XC *xc, Request *req)
+handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
 {
     if (req->isUncacheable()) {
         // Funky Turbolaser mailbox access...don't update
