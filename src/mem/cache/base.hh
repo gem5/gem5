@@ -568,7 +568,7 @@ class BaseCache : public MemObject
     {
         assert(pkt->req->masterId() < system->maxMasters());
         misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
-
+        pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
             if (missCount == 0)

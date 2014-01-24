@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -244,6 +244,7 @@ class Request
      *  default constructor.)
      */
     Request()
+        : translateDelta(0), accessDelta(0), depth(0)
     {}
 
     /**
@@ -304,6 +305,9 @@ class Request
         _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
+        depth = 0;
+        accessDelta = 0;
+        //translateDelta = 0;
     }
 
     void
@@ -331,6 +335,9 @@ class Request
         _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
+        depth = 0;
+        accessDelta = 0;
+        translateDelta = 0;
     }
 
     /**
@@ -380,6 +387,23 @@ class Request
         assert(privateFlags.isSet(VALID_PADDR));
         return _paddr;
     }
+
+    /**
+     * Time for the TLB/table walker to successfully translate this request.
+     */
+    Tick translateDelta;
+
+    /**
+     * Access latency to complete this memory transaction not including
+     * translation time.
+     */
+    Tick accessDelta;
+
+    /**
+     * Level of the cache hierachy where this request was responded to
+     * (e.g. 0 = L1; 1 = L2).
+     */
+    int depth;
 
     /**
      *  Accessor for size.
@@ -534,6 +558,26 @@ class Request
         assert(privateFlags.isSet(VALID_PC));
         return _pc;
     }
+
+    /**
+     * Increment/Get the depth at which this request is responded to.
+     * This currently happens when the request misses in any cache level.
+     */
+    void incAccessDepth() { depth++; }
+    int getAccessDepth() const { return depth; }
+
+    /**
+     * Set/Get the time taken for this request to be successfully translated.
+     */
+    void setTranslateLatency() { translateDelta = curTick() - _time; }
+    Tick getTranslateLatency() const { return translateDelta; }
+
+    /**
+     * Set/Get the time taken to complete this request's access, not including
+     *  the time to successfully translate the request.
+     */
+    void setAccessLatency() { accessDelta = curTick() - _time - translateDelta; }
+    Tick getAccessLatency() const { return accessDelta; }
 
     /** Accessor functions for flags.  Note that these are for testing
        only; setting flags should be done via setFlags(). */

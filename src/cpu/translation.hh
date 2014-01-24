@@ -256,6 +256,7 @@ class DataTranslation : public BaseTLB::Translation
         assert(mode == state->mode);
         if (state->finish(fault, index)) {
             xc->finishTranslation(state);
+            req->setTranslateLatency();
         }
         delete this;
     }

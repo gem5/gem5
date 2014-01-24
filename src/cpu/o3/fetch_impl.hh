@@ -400,6 +400,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         fetchStatus[tid] = IcacheAccessComplete;
     }
 
+    pkt->req->setAccessLatency();
     // Reset the mem req to NULL.
     delete pkt->req;
     delete pkt;

@@ -646,7 +646,6 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     // received a response from the icache: execute the received
     // instruction
-
     assert(!pkt || !pkt->isError());
     assert(_status == IcacheWaitResponse);
 
@@ -654,6 +653,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     numCycles += curCycle() - previousCycle;
     previousCycle = curCycle();
+
+    if (pkt)
+        pkt->req->setAccessLatency();
+
 
     preExecute();
     if (curStaticInst && curStaticInst->isMemRef()) {
@@ -749,6 +752,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
+    pkt->req->setAccessLatency();
     numCycles += curCycle() - previousCycle;
     previousCycle = curCycle();
 

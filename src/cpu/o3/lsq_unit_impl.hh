@@ -129,6 +129,8 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
         delete state->mainPkt->req;
         delete state->mainPkt;
     }
+
+    pkt->req->setAccessLatency();
     delete state;
     delete pkt->req;
     delete pkt;
