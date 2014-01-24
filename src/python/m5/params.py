@@ -1220,22 +1220,9 @@ class Frequency(TickParamValue):
     def ini_str(self):
         return '%d' % self.getValue()
 
-# A generic frequency and/or Latency value. Value is stored as a
-# latency, and any manipulation using a multiplier thus scales the
-# clock period, i.e. a 2x multiplier doubles the clock period and thus
-# halves the clock frequency.
-class Clock(ParamValue):
-    cxx_type = 'Tick'
-
-    @classmethod
-    def cxx_predecls(cls, code):
-        code('#include "base/types.hh"')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%import "stdint.i"')
-        code('%import "base/types.hh"')
-
+# A generic Frequency and/or Latency value. Value is stored as a
+# latency, just like Latency and Frequency.
+class Clock(TickParamValue):
     def __init__(self, value):
         if isinstance(value, (Latency, Clock)):
             self.ticks = value.ticks
