@@ -87,26 +87,26 @@ class ISA : public SimObject
     }
 
     int
-    flattenIntIndex(int reg)
+    flattenIntIndex(int reg) const
     {
         return reg;
     }
 
     int
-    flattenFloatIndex(int reg)
+    flattenFloatIndex(int reg) const
     {
         return reg;
     }
 
     // dummy
     int
-    flattenCCIndex(int reg)
+    flattenCCIndex(int reg) const
     {
         return reg;
     }
 
     int
-    flattenMiscIndex(int reg)
+    flattenMiscIndex(int reg) const
     {
         return reg;
     }

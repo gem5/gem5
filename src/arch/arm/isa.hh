@@ -96,13 +96,13 @@ namespace ArmISA
       public:
         void clear();
 
-        MiscReg readMiscRegNoEffect(int misc_reg);
+        MiscReg readMiscRegNoEffect(int misc_reg) const;
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc);
         void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
         void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
 
         int
-        flattenIntIndex(int reg)
+        flattenIntIndex(int reg) const
         {
             assert(reg >= 0);
             if (reg < NUM_ARCH_INTREGS) {
@@ -135,20 +135,20 @@ namespace ArmISA
         }
 
         int
-        flattenFloatIndex(int reg)
+        flattenFloatIndex(int reg) const
         {
             return reg;
         }
 
         // dummy
         int
-        flattenCCIndex(int reg)
+        flattenCCIndex(int reg) const
         {
             return reg;
         }
 
         int
-        flattenMiscIndex(int reg)
+        flattenMiscIndex(int reg) const
         {
             if (reg == MISCREG_SPSR) {
                 int spsr_idx = NUM_MISCREGS;

@@ -177,7 +177,7 @@ ISA::clear()
 }
 
 MiscReg
-ISA::readMiscRegNoEffect(int misc_reg)
+ISA::readMiscRegNoEffect(int misc_reg) const
 {
     assert(misc_reg < NumMiscRegs);
 

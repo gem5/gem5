@@ -191,7 +191,7 @@ class ISA : public SimObject
             ThreadContext *tc);
 
     int
-    flattenIntIndex(int reg)
+    flattenIntIndex(int reg) const
     {
         assert(reg < TotalInstIntRegs);
         RegIndex flatIndex = intRegMap[reg];
@@ -200,20 +200,20 @@ class ISA : public SimObject
     }
 
     int
-    flattenFloatIndex(int reg)
+    flattenFloatIndex(int reg) const
     {
         return reg;
     }
 
     // dummy
     int
-    flattenCCIndex(int reg)
+    flattenCCIndex(int reg) const
     {
         return reg;
     }
 
     int
-    flattenMiscIndex(int reg)
+    flattenMiscIndex(int reg) const
     {
         return reg;
     }
