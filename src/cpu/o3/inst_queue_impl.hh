@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -1157,11 +1157,17 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
             DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %s squashed.\n",
                     tid, squashed_inst->seqNum, squashed_inst->pcState());
 
+            bool is_acq_rel = squashed_inst->isMemBarrier() &&
+                         (squashed_inst->isLoad() ||
+                           (squashed_inst->isStore() &&
+                             !squashed_inst->isStoreConditional()));
+
             // Remove the instruction from the dependency list.
-            if (!squashed_inst->isNonSpeculative() &&
-                !squashed_inst->isStoreConditional() &&
-                !squashed_inst->isMemBarrier() &&
-                !squashed_inst->isWriteBarrier()) {
+            if (is_acq_rel ||
+                (!squashed_inst->isNonSpeculative() &&
+                 !squashed_inst->isStoreConditional() &&
+                 !squashed_inst->isMemBarrier() &&
+                 !squashed_inst->isWriteBarrier())) {
 
                 for (int src_reg_idx = 0;
                      src_reg_idx < squashed_inst->numSrcRegs();
