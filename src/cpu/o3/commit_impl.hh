@@ -1043,6 +1043,12 @@ DefaultCommit<Impl>::commitInsts()
                 // Updates misc. registers.
                 head_inst->updateMiscRegs();
 
+                // Check instruction execution if it successfully commits and
+                // is not carrying a fault.
+                if (cpu->checker) {
+                    cpu->checker->verify(head_inst);
+                }
+
                 cpu->traceFunctions(pc[tid].instAddr());
 
                 TheISA::advancePC(pc[tid], head_inst->staticInst);
@@ -1168,12 +1174,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         head_inst->setCompleted();
     }
 
-    // Use checker prior to updating anything due to traps or PC
-    // based events.
-    if (cpu->checker) {
-        cpu->checker->verify(head_inst);
-    }
-
     if (inst_fault != NoFault) {
         DPRINTF(Commit, "Inst [sn:%lli] PC %s has a fault\n",
                 head_inst->seqNum, head_inst->pcState());
@@ -1185,6 +1185,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         head_inst->setCompleted();
 
+        // If instruction has faulted, let the checker execute it and
+        // check if it sees the same fault and control flow.
         if (cpu->checker) {
             // Need to check the instruction before its fault is processed
             cpu->checker->verify(head_inst);

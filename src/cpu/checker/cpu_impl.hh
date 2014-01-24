@@ -230,11 +230,6 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
             }
             changedPC = false;
         }
-        if (changedNextPC) {
-            DPRINTF(Checker, "Changed NextPC recently to %#x\n",
-                    thread->nextInstAddr());
-            changedNextPC = false;
-        }
 
         // Try to fetch the instruction
         uint64_t fetchOffset = 0;

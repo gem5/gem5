@@ -296,12 +296,14 @@ class CheckerCPU : public BaseCPU
 
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
+        DPRINTF(Checker, "Setting misc reg %d with no effect to check later\n", misc_reg);
         miscRegIdxs.push(misc_reg);
         return thread->setMiscRegNoEffect(misc_reg, val);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
+        DPRINTF(Checker, "Setting misc reg %d with effect to check later\n", misc_reg);
         miscRegIdxs.push(misc_reg);
         return thread->setMiscReg(misc_reg, val);
     }
@@ -316,7 +318,7 @@ class CheckerCPU : public BaseCPU
             const StaticInst *si, int idx, const MiscReg &val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::Misc_Reg_Base;
-        return thread->setMiscReg(reg_idx, val);
+        return this->setMiscReg(reg_idx, val);
     }
 
 #if THE_ISA == MIPS_ISA
@@ -392,7 +394,6 @@ class CheckerCPU : public BaseCPU
     bool changedPC;
     bool willChangePC;
     TheISA::PCState newPCState;
-    bool changedNextPC;
     bool exitOnError;
     bool updateOnError;
     bool warnOnlyOnLoadError;

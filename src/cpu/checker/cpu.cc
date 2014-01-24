@@ -78,7 +78,7 @@ CheckerCPU::CheckerCPU(Params *p)
     startNumLoad = 0;
     youngestSN = 0;
 
-    changedPC = willChangePC = changedNextPC = false;
+    changedPC = willChangePC = false;
 
     exitOnError = p->exitOnError;
     warnOnlyOnLoadError = p->warnOnlyOnLoadError;
