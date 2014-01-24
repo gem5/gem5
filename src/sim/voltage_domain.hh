@@ -60,6 +60,11 @@ class VoltageDomain : public SimObject
      */
     double _voltage;
 
+    /**
+     * Stat for reporting voltage of the domain
+     */
+    Stats::Value currentVoltage;
+
   public:
 
     typedef VoltageDomainParams Params;
@@ -78,6 +83,8 @@ class VoltageDomain : public SimObject
      * @param Voltage value to be set
      */
     void voltage(double voltage);
+
+    void regStats();
 
 };
 

@@ -61,6 +61,18 @@ VoltageDomain::voltage(double voltage)
             "Setting voltage to %f for domain %s\n", _voltage, name());
 }
 
+void
+VoltageDomain::regStats()
+{
+    using namespace Stats;
+
+    currentVoltage
+        .scalar(_voltage)
+        .name(params()->name + ".voltage")
+        .desc("Voltage in Volts")
+        ;
+}
+
 VoltageDomain *
 VoltageDomainParams::create()
 {
