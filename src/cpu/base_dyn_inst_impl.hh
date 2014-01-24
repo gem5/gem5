@@ -90,6 +90,7 @@ BaseDynInst<Impl>::initVars()
     effAddr = 0;
     physEffAddr = 0;
     readyRegs = 0;
+    memReqFlags = 0;
 
     status.reset();
 

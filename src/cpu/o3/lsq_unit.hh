@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -361,7 +361,7 @@ class LSQUnit {
         /** Constructs a store queue entry for a given instruction. */
         SQEntry(DynInstPtr &_inst)
             : inst(_inst), req(NULL), sreqLow(NULL), sreqHigh(NULL), size(0),
-              isSplit(0), canWB(0), committed(0), completed(0)
+              isSplit(0), canWB(0), committed(0), completed(0), isAllZeros(0)
         {
             std::memset(data, 0, sizeof(data));
         }
@@ -384,6 +384,11 @@ class LSQUnit {
         bool committed;
         /** Whether or not the store is completed. */
         bool completed;
+        /** Does this request write all zeros and thus doesn't
+         * have any data attached to it. Used for cache block zero
+         * style instructs (ARM DC ZVA; ALPHA WH64)
+         */
+        bool isAllZeros;
     };
 
   private:
@@ -691,13 +696,18 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() - storeQueue[store_idx].inst->effAddr;
 
-            memcpy(data, storeQueue[store_idx].data + shift_amt,
+            if (storeQueue[store_idx].isAllZeros)
+                memset(data, 0, req->getSize());
+            else
+                memcpy(data, storeQueue[store_idx].data + shift_amt,
                    req->getSize());
 
             assert(!load_inst->memData);
-            load_inst->memData = new uint8_t[64];
-
-            memcpy(load_inst->memData,
+            load_inst->memData = new uint8_t[req->getSize()];
+            if (storeQueue[store_idx].isAllZeros)
+                memset(load_inst->memData, 0, req->getSize());
+            else
+                memcpy(load_inst->memData,
                     storeQueue[store_idx].data + shift_amt, req->getSize());
 
             DPRINTF(LSQUnit, "Forwarding from store idx %i to load to "
@@ -777,7 +787,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             load_inst->seqNum, load_inst->pcState());
 
     assert(!load_inst->memData);
-    load_inst->memData = new uint8_t[64];
+    load_inst->memData = new uint8_t[req->getSize()];
 
     ++usedPorts;
 
@@ -916,7 +926,9 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
     storeQueue[store_idx].sreqHigh = sreqHigh;
     unsigned size = req->getSize();
     storeQueue[store_idx].size = size;
-    assert(size <= sizeof(storeQueue[store_idx].data));
+    storeQueue[store_idx].isAllZeros = req->getFlags() & Request::CACHE_BLOCK_ZERO;
+    assert(size <= sizeof(storeQueue[store_idx].data) ||
+            (req->getFlags() & Request::CACHE_BLOCK_ZERO));
 
     // Split stores can only occur in ISAs with unaligned memory accesses.  If
     // a store request has been split, sreqLow and sreqHigh will be non-null.
@@ -924,7 +936,8 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
         storeQueue[store_idx].isSplit = true;
     }
 
-    memcpy(storeQueue[store_idx].data, data, size);
+    if (!(req->getFlags() & Request::CACHE_BLOCK_ZERO))
+        memcpy(storeQueue[store_idx].data, data, size);
 
     // This function only writes the data to the store queue, so no fault
     // can happen here.

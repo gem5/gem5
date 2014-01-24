@@ -399,6 +399,16 @@ Fault
 AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
                           Addr addr, unsigned flags, uint64_t *res)
 {
+
+    static uint8_t zero_array[64] = {};
+
+    if (data == NULL) {
+        assert(size <= 64);
+        assert(flags & Request::CACHE_BLOCK_ZERO);
+        // This must be a cache block cleaning request
+        data = zero_array;
+    }
+
     // use the CPU's statically allocated write request and packet objects
     Request *req = &data_write_req;
 

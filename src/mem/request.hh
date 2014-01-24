@@ -114,6 +114,11 @@ class Request
     /** This request is made in privileged mode. */
     static const FlagsType PRIVILEGED                   = 0x00008000;
 
+    /** This is a write that is targeted and zeroing an entire cache block.
+     * There is no need for a read/modify/write
+     */
+    static const FlagsType CACHE_BLOCK_ZERO            = 0x00010000;
+
     /** The request should not cause a memory access. */
     static const FlagsType NO_ACCESS                   = 0x00080000;
     /** This request will lock or unlock the accessed memory. When used with

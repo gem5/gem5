@@ -816,9 +816,12 @@ LSQUnit<Impl>::writebackStores()
         storeQueue[storeWBIdx].committed = true;
 
         assert(!inst->memData);
-        inst->memData = new uint8_t[64];
+        inst->memData = new uint8_t[req->getSize()];
 
-        memcpy(inst->memData, storeQueue[storeWBIdx].data, req->getSize());
+        if (storeQueue[storeWBIdx].isAllZeros)
+            memset(inst->memData, 0, req->getSize());
+        else
+            memcpy(inst->memData, storeQueue[storeWBIdx].data, req->getSize());
 
         MemCmd command =
             req->isSwap() ? MemCmd::SwapReq :

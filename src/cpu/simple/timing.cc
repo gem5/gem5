@@ -472,13 +472,19 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
                           Addr addr, unsigned flags, uint64_t *res)
 {
     uint8_t *newData = new uint8_t[size];
-    memcpy(newData, data, size);
-
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Write;
+
+    if (data == NULL) {
+        assert(flags & Request::CACHE_BLOCK_ZERO);
+        // This must be a cache block cleaning request
+        memset(newData, 0, size);
+    } else {
+        memcpy(newData, data, size);
+    }
 
     if (traceData) {
         traceData->setAddr(addr);
