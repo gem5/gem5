@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012-2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -600,15 +612,13 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return -ENOTTY;
 }
 
-/// Target open() handler.
 template <class OS>
-SyscallReturn
+static SyscallReturn
 openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-         ThreadContext *tc)
+         ThreadContext *tc, int index)
 {
     std::string path;
 
-    int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
@@ -662,6 +672,28 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -local_errno;
 
     return process->alloc_fd(fd, path.c_str(), hostFlags, mode, false);
+}
+
+/// Target open() handler.
+template <class OS>
+SyscallReturn
+openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+         ThreadContext *tc)
+{
+    return openFunc<OS>(desc, callnum, process, tc, 0);
+}
+
+/// Target openat() handler.
+template <class OS>
+SyscallReturn
+openatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+         ThreadContext *tc)
+{
+    int index = 0;
+    int dirfd = process->getSyscallArg(tc, index);
+    if (dirfd != OS::TGT_AT_FDCWD)
+        warn("openat: first argument not AT_FDCWD; unlikely to work");
+    return openFunc<OS>(desc, callnum, process, tc, 1);
 }
 
 /// Target sysinfo() handler.
@@ -752,40 +784,58 @@ mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *
     uint64_t old_length = process->getSyscallArg(tc, index);
     uint64_t new_length = process->getSyscallArg(tc, index);
     uint64_t flags = process->getSyscallArg(tc, index);
+    uint64_t provided_address = 0;
+    bool use_provided_address = flags & OS::TGT_MREMAP_FIXED;
+
+    if (use_provided_address)
+        provided_address = process->getSyscallArg(tc, index);
 
     if ((start % TheISA::VMPageSize != 0) ||
-            (new_length % TheISA::VMPageSize != 0)) {
+        (new_length % TheISA::VMPageSize != 0) ||
+        (provided_address % TheISA::VMPageSize != 0)) {
         warn("mremap failing: arguments not page aligned");
         return -EINVAL;
     }
 
     if (new_length > old_length) {
-        if ((start + old_length) == process->mmap_end) {
+        if ((start + old_length) == process->mmap_end &&
+            (!use_provided_address || provided_address == start)) {
             uint64_t diff = new_length - old_length;
             process->allocateMem(process->mmap_end, diff);
             process->mmap_end += diff;
             return start;
         } else {
-            // sys/mman.h defined MREMAP_MAYMOVE
-            if (!(flags & 1)) {
+            if (!use_provided_address && !(flags & OS::TGT_MREMAP_MAYMOVE)) {
                 warn("can't remap here and MREMAP_MAYMOVE flag not set\n");
                 return -ENOMEM;
             } else {
-                process->pTable->remap(start, old_length, process->mmap_end);
-                warn("mremapping to totally new vaddr %08p-%08p, adding %d\n", 
-                        process->mmap_end, process->mmap_end + new_length, new_length);
-                start = process->mmap_end;
+                uint64_t new_start = use_provided_address ?
+                    provided_address : process->mmap_end;
+                process->pTable->remap(start, old_length, new_start);
+                warn("mremapping to new vaddr %08p-%08p, adding %d\n",
+                     new_start, new_start + new_length,
+                     new_length - old_length);
                 // add on the remaining unallocated pages
-                process->allocateMem(start + old_length,
-                                     new_length - old_length);
-                process->mmap_end += new_length;
-                warn("returning %08p as start\n", start);
-                return start;
+                process->allocateMem(new_start + old_length,
+                                     new_length - old_length,
+                                     use_provided_address /* clobber */);
+                if (!use_provided_address)
+                    process->mmap_end += new_length;
+                if (use_provided_address &&
+                    new_start + new_length > process->mmap_end) {
+                    // something fishy going on here, at least notify the user
+                    // @todo: increase mmap_end?
+                    warn("mmap region limit exceeded with MREMAP_FIXED\n");
+                }
+                warn("returning %08p as start\n", new_start);
+                return new_start;
             }
         }
     } else {
+        if (use_provided_address && provided_address != start)
+            process->pTable->remap(start, new_length, provided_address);
         process->pTable->unmap(start + new_length, old_length - new_length);
-        return start;
+        return use_provided_address ? provided_address : start;
     }
 }
 
@@ -828,6 +878,43 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    if (!tc->getMemProxy().tryReadString(path,
+                process->getSyscallArg(tc, index)))
+        return -EFAULT;
+    Addr bufPtr = process->getSyscallArg(tc, index);
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
+#if NO_STAT64
+    struct stat  hostBuf;
+    int result = stat(path.c_str(), &hostBuf);
+#else
+    struct stat64 hostBuf;
+    int result = stat64(path.c_str(), &hostBuf);
+#endif
+
+    if (result < 0)
+        return -errno;
+
+    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+
+    return 0;
+}
+
+
+/// Target fstatat64() handler.
+template <class OS>
+SyscallReturn
+fstatat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
+              ThreadContext *tc)
+{
+    int index = 0;
+    int dirfd = process->getSyscallArg(tc, index);
+    if (dirfd != OS::TGT_AT_FDCWD)
+        warn("openat: first argument not AT_FDCWD; unlikely to work");
+
+    std::string path;
     if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
