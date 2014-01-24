@@ -165,8 +165,18 @@ Walker::recvRetry()
 
 bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
 {
-    pkt->pushSenderState(new WalkerSenderState(sendingState));
-    return port.sendTimingReq(pkt);
+    WalkerSenderState* walker_state = new WalkerSenderState(sendingState);
+    pkt->pushSenderState(walker_state);
+    if (port.sendTimingReq(pkt)) {
+        return true;
+    } else {
+        // undo the adding of the sender state and delete it, as we
+        // will do it again the next time we attempt to send it
+        pkt->popSenderState();
+        delete walker_state;
+        return false;
+    }
+
 }
 
 BaseMasterPort &
