@@ -79,4 +79,3 @@ system.cpu4: completed 90000 read, 48685 write accesses @6602186
 system.cpu5: completed 90000 read, 48384 write accesses @6637212
 system.cpu3: completed 90000 read, 48869 write accesses @6654178
 system.cpu6: completed 100000 read, 53414 write accesses @7257449
-hack: be nice to actually delete the event here

@@ -1,11 +1,9 @@
-Redirecting stdout to build/ARM/tests/opt/long/se/30.eon/arm/linux/simple-atomic/simout
-Redirecting stderr to build/ARM/tests/opt/long/se/30.eon/arm/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 07:58:15
-gem5 started Sep 22 2013 09:21:07
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 17:24:06
+gem5 started Jan 22 2014 22:52:31
+gem5 executing on u200540-lin
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/30.eon/arm/linux/simple-atomic -re tests/run.py build/ARM/tests/opt/long/se/30.eon/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

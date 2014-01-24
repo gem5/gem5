@@ -4,25 +4,15 @@ sim_seconds                                  2.332810                       # Nu
 sim_ticks                                2332810264000                       # Number of ticks simulated
 final_tick                               2332810264000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 840369                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1080663                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            32452660609                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 444352                       # Number of bytes of host memory used
-host_seconds                                    71.88                       # Real time elapsed on the host
+host_inst_rate                                1583722                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2036569                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            61158803315                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 399324                       # Number of bytes of host memory used
+host_seconds                                    38.14                       # Real time elapsed on the host
 sim_insts                                    60408639                       # Number of instructions simulated
 sim_ops                                      77681819                       # Number of ops (including micro ops) simulated
-system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu0.inst            9                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total                9                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu0.inst            9                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu0.inst            9                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::realview.clcd    111673344                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker          128                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          192                       # Number of bytes read from this memory
@@ -74,9 +64,22 @@ system.physmem.bw_total::cpu0.data            3386724                       # To
 system.physmem.bw_total::cpu1.inst              91056                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.data            1794913                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total               54942145                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu0.inst            5                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu0.inst            9                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total                9                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu0.inst            9                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total            9                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu0.inst            9                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total               9                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                     55969561                       # Throughput (bytes/s)
 system.membus.data_through_bus              130566366                       # Total data (bytes)
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.l2c.tags.replacements                    62242                       # number of replacements
 system.l2c.tags.tagsinuse                50006.300222                       # Cycle average of tags in use
 system.l2c.tags.total_refs                    1678485                       # Total number of references to valid blocks.
@@ -98,6 +101,18 @@ system.l2c.tags.occ_percent::cpu0.data       0.048104                       # Av
 system.l2c.tags.occ_percent::cpu1.inst       0.032004                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::cpu1.data       0.044807                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::total           0.763036                       # Average percentage of cache occupancy
+system.l2c.tags.occ_task_id_blocks::1023            2                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_blocks::1024        65383                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1023::4            2                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::0           40                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::1          176                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::2         3589                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::3         9187                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::4        52391                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_percent::1023     0.000031                       # Percentage of cache occupancy per task id
+system.l2c.tags.occ_task_id_percent::1024     0.997665                       # Percentage of cache occupancy per task id
+system.l2c.tags.tag_accesses                 17104735                       # Number of tag accesses
+system.l2c.tags.data_accesses                17104735                       # Number of data accesses
 system.l2c.ReadReq_hits::cpu0.dtb.walker         9005                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.itb.walker         3277                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.inst             473134                       # number of ReadReq hits
@@ -321,6 +336,14 @@ system.cpu0.icache.tags.occ_blocks::cpu1.inst    67.168341                      
 system.cpu0.icache.tags.occ_percent::cpu0.inst     0.868184                       # Average percentage of cache occupancy
 system.cpu0.icache.tags.occ_percent::cpu1.inst     0.131188                       # Average percentage of cache occupancy
 system.cpu0.icache.tags.occ_percent::total     0.999372                       # Average percentage of cache occupancy
+system.cpu0.icache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::0          177                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::1           78                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::2          255                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::3            2                       # Occupied blocks per task id
+system.cpu0.icache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu0.icache.tags.tag_accesses         62285702                       # Number of tag accesses
+system.cpu0.icache.tags.data_accesses        62285702                       # Number of data accesses
 system.cpu0.icache.ReadReq_hits::cpu0.inst     32064735                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::cpu1.inst     28518763                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::total       60583498                       # number of ReadReq hits
@@ -377,6 +400,13 @@ system.cpu0.dcache.tags.occ_blocks::cpu1.data    60.698093                      
 system.cpu0.dcache.tags.occ_percent::cpu0.data     0.881443                       # Average percentage of cache occupancy
 system.cpu0.dcache.tags.occ_percent::cpu1.data     0.118551                       # Average percentage of cache occupancy
 system.cpu0.dcache.tags.occ_percent::total     0.999994                       # Average percentage of cache occupancy
+system.cpu0.dcache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::0          278                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::1          208                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::2           26                       # Occupied blocks per task id
+system.cpu0.dcache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu0.dcache.tags.tag_accesses         97632366                       # Number of tag accesses
+system.cpu0.dcache.tags.data_accesses        97632366                       # Number of data accesses
 system.cpu0.dcache.ReadReq_hits::cpu0.data      6995590                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::cpu1.data      6184430                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::total       13180020                       # number of ReadReq hits
@@ -526,6 +556,8 @@ system.iocache.tags.total_refs                      0                       # To
 system.iocache.tags.sampled_refs                    0                       # Sample count of references to valid blocks.
 system.iocache.tags.avg_refs                      nan                       # Average number of references to valid blocks.
 system.iocache.tags.warmup_cycle                    0                       # Cycle when the warmup percentage was hit.
+system.iocache.tags.tag_accesses                    0                       # Number of tag accesses
+system.iocache.tags.data_accesses                   0                       # Number of data accesses
 system.iocache.blocked_cycles::no_mshrs             0                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                    0                       # number of cycles access was blocked

@@ -1,4 +1,3 @@
 warn: Sockets disabled, not accepting gdb connections
 warn: Prefetch instructions in Alpha do not do anything
 warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
-hack: be nice to actually delete the event here

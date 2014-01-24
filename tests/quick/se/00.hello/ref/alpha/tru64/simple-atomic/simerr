@@ -1,4 +1,2 @@
-warn: CoherentBus system.membus has no snooping ports attached!
 warn: Sockets disabled, not accepting gdb connections
 warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
-hack: be nice to actually delete the event here

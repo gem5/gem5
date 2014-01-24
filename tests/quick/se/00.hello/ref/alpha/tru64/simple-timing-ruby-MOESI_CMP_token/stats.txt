@@ -4,13 +4,16 @@ sim_seconds                                  0.000043                       # Nu
 sim_ticks                                       43073                       # Number of ticks simulated
 final_tick                                      43073                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                   7100                       # Simulator instruction rate (inst/s)
-host_op_rate                                     7100                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 118667                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 169652                       # Number of bytes of host memory used
-host_seconds                                     0.36                       # Real time elapsed on the host
+host_inst_rate                                  26553                       # Simulator instruction rate (inst/s)
+host_op_rate                                    26550                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 443703                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 126100                       # Number of bytes of host memory used
+host_seconds                                     0.10                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.outstanding_req_hist::bucket_size            1                      
 system.ruby.outstanding_req_hist::max_bucket            9                      
 system.ruby.outstanding_req_hist::samples         3295                      
@@ -76,6 +79,7 @@ system.ruby.network.routers1.msg_bytes.ResponseL2hit_Data::4         5040
 system.ruby.network.routers1.msg_bytes.Response_Control::4            8                      
 system.ruby.network.routers1.msg_bytes.Writeback_Data::4        42192                      
 system.ruby.network.routers1.msg_bytes.Writeback_Control::4         2920                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.dir_cntrl0.memBuffer.memReq           532                       # Total number of memory requests
 system.ruby.dir_cntrl0.memBuffer.memRead          448                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite           84                       # Number of memory writes
@@ -125,6 +129,7 @@ system.ruby.network.msg_byte.ResponseL2hit_Data        15120
 system.ruby.network.msg_byte.Response_Control           24                      
 system.ruby.network.msg_byte.Writeback_Data       126576                      
 system.ruby.network.msg_byte.Writeback_Control         8760                      
+system.cpu.clk_domain.clock                         1                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv

@@ -560,4 +560,3 @@ warn: ignoring syscall time(4026526436, 4026525968, ...)
 warn: ignoring syscall time(7004192, 4026526056, ...)
 warn: ignoring syscall time(4, 4026527512, ...)
 warn: ignoring syscall time(0, 4026525760, ...)
-hack: be nice to actually delete the event here

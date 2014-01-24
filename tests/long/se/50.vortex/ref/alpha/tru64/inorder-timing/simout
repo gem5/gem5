@@ -1,11 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 24 2013 03:08:53
-gem5 started Sep 28 2013 09:55:43
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:27:55
+gem5 started Jan 22 2014 18:16:43
+gem5 executing on u200540-lin
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/50.vortex/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA/tests/opt/long/se/50.vortex/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 43769191000 because target called exit()
+Exiting @ tick 43690025000 because target called exit()

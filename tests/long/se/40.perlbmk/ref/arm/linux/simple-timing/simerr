@@ -1,3 +1,2 @@
 warn: Sockets disabled, not accepting gdb connections
 warn: fcntl64(3, 2) passed through to host
-hack: be nice to actually delete the event here

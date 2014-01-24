@@ -1,11 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 16 2013 01:36:42
-gem5 started Oct 16 2013 02:08:44
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 17:24:06
+gem5 started Jan 22 2014 23:17:11
+gem5 executing on u200540-lin
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/50.vortex/arm/linux/o3-timing -re tests/run.py build/ARM/tests/opt/long/se/50.vortex/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 26765004500 because target called exit()
+Exiting @ tick 26810051000 because target called exit()

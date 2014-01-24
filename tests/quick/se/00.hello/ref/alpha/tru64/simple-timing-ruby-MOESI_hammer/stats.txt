@@ -4,13 +4,16 @@ sim_seconds                                  0.000035                       # Nu
 sim_ticks                                       35432                       # Number of ticks simulated
 final_tick                                      35432                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  20063                       # Simulator instruction rate (inst/s)
-host_op_rate                                    20060                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 275767                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 169584                       # Number of bytes of host memory used
-host_seconds                                     0.13                       # Real time elapsed on the host
+host_inst_rate                                  28350                       # Simulator instruction rate (inst/s)
+host_op_rate                                    28346                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 389675                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 126044                       # Number of bytes of host memory used
+host_seconds                                     0.09                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.outstanding_req_hist::bucket_size            1                      
 system.ruby.outstanding_req_hist::max_bucket            9                      
 system.ruby.outstanding_req_hist::samples         3295                      
@@ -43,6 +46,7 @@ system.ruby.miss_latency_hist::stdev         8.819211
 system.ruby.miss_latency_hist            |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |         421     95.46%     95.46% |           2      0.45%     95.92% |          12      2.72%     98.64% |           0      0.00%     98.64% |           6      1.36%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist::total              441                      
 system.ruby.Directory.incomplete_times            440                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.l1_cntrl0.L1Dcache.demand_hits          469                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Dcache.demand_misses          240                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L1Dcache.demand_accesses          709                       # Number of cache demand accesses
@@ -123,6 +127,7 @@ system.ruby.network.msg_byte.Response_Data        95256
 system.ruby.network.msg_byte.Writeback_Data        17496                      
 system.ruby.network.msg_byte.Writeback_Control        28656                      
 system.ruby.network.msg_byte.Unblock_Control        10560                      
+system.cpu.clk_domain.clock                         1                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv

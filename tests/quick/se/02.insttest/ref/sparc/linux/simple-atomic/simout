@@ -1,11 +1,9 @@
-Redirecting stdout to build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic/simout
-Redirecting stderr to build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 06:07:13
-gem5 started Sep 22 2013 06:11:45
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 17:04:27
+gem5 started Jan 22 2014 17:29:44
+gem5 executing on u200540-lin
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic -re tests/run.py build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

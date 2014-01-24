@@ -2,4 +2,3 @@ warn: rounding error > tolerance
     0.072760 rounded to 0
 warn: rounding error > tolerance
     0.072760 rounded to 0
-hack: be nice to actually delete the event here

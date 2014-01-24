@@ -4,13 +4,15 @@ sim_seconds                                  0.054241                       # Nu
 sim_ticks                                 54240661000                       # Number of ticks simulated
 final_tick                                54240661000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2267620                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2283902                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1357548360                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 366572                       # Number of bytes of host memory used
-host_seconds                                    39.95                       # Real time elapsed on the host
+host_inst_rate                                2327254                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2343964                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1393249116                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 371180                       # Number of bytes of host memory used
+host_seconds                                    38.93                       # Real time elapsed on the host
 sim_insts                                    90602407                       # Number of instructions simulated
 sim_ops                                      91252960                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::cpu.inst         431323080                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.data          90016598                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            521339678                       # Number of bytes read from this memory
@@ -36,6 +38,7 @@ system.physmem.bw_total::total             9960199711                       # To
 system.membus.throughput                   9960199711                       # Throughput (bytes/s)
 system.membus.data_through_bus              540247816                       # Total data (bytes)
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
 system.cpu.dtb.read_hits                            0                       # DTB read hits

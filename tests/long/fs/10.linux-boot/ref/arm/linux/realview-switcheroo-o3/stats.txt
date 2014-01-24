@@ -4,13 +4,15 @@ sim_seconds                                  2.549345                       # Nu
 sim_ticks                                2549345168000                       # Number of ticks simulated
 final_tick                               2549345168000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  48945                       # Simulator instruction rate (inst/s)
-host_op_rate                                    62980                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2068782078                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 448444                       # Number of bytes of host memory used
-host_seconds                                  1232.29                       # Real time elapsed on the host
+host_inst_rate                                  76720                       # Simulator instruction rate (inst/s)
+host_op_rate                                    98719                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             3242754050                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 404480                       # Number of bytes of host memory used
+host_seconds                                   786.17                       # Real time elapsed on the host
 sim_insts                                    60314699                       # Number of instructions simulated
 sim_ops                                      77609228                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::realview.clcd    121110528                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker         1856                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          128                       # Number of bytes read from this memory
@@ -639,6 +641,7 @@ system.membus.respLayer1.occupancy         4736419263                       # La
 system.membus.respLayer1.utilization              0.2                       # Layer utilization (%)
 system.membus.respLayer2.occupancy        34186627978                       # Layer occupancy (ticks)
 system.membus.respLayer2.utilization              1.3                       # Layer utilization (%)
+system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.l2c.tags.replacements                    64357                       # number of replacements
 system.l2c.tags.tagsinuse                51453.251473                       # Cycle average of tags in use
 system.l2c.tags.total_refs                    1905423                       # Total number of references to valid blocks.
@@ -662,6 +665,18 @@ system.l2c.tags.occ_percent::cpu1.dtb.walker     0.000207                       
 system.l2c.tags.occ_percent::cpu1.inst       0.051046                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::cpu1.data       0.044272                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::total           0.785114                       # Average percentage of cache occupancy
+system.l2c.tags.occ_task_id_blocks::1023           24                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_blocks::1024        65363                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1023::4           24                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::0           37                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::1          345                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::2         3051                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::3         6862                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::4        55068                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_percent::1023     0.000366                       # Percentage of cache occupancy per task id
+system.l2c.tags.occ_task_id_percent::1024     0.997360                       # Percentage of cache occupancy per task id
+system.l2c.tags.tag_accesses                 18937227                       # Number of tag accesses
+system.l2c.tags.data_accesses                18937227                       # Number of data accesses
 system.l2c.ReadReq_hits::cpu0.dtb.walker        32950                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.itb.walker         7107                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.inst             506567                       # number of ReadReq hits
@@ -1517,6 +1532,13 @@ system.cpu0.icache.tags.occ_blocks::cpu1.inst   191.745915                      
 system.cpu0.icache.tags.occ_percent::cpu0.inst     0.624663                       # Average percentage of cache occupancy
 system.cpu0.icache.tags.occ_percent::cpu1.inst     0.374504                       # Average percentage of cache occupancy
 system.cpu0.icache.tags.occ_percent::total     0.999166                       # Average percentage of cache occupancy
+system.cpu0.icache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::0          135                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::1          210                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::2          167                       # Occupied blocks per task id
+system.cpu0.icache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu0.icache.tags.tag_accesses         12566622                       # Number of tag accesses
+system.cpu0.icache.tags.data_accesses        12566622                       # Number of data accesses
 system.cpu0.icache.ReadReq_hits::cpu0.inst      5233615                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::cpu1.inst      5282125                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::total       10515740                       # number of ReadReq hits
@@ -1644,6 +1666,13 @@ system.cpu0.dcache.tags.occ_blocks::cpu1.data   257.286930                      
 system.cpu0.dcache.tags.occ_percent::cpu0.data     0.497473                       # Average percentage of cache occupancy
 system.cpu0.dcache.tags.occ_percent::cpu1.data     0.502514                       # Average percentage of cache occupancy
 system.cpu0.dcache.tags.occ_percent::total     0.999987                       # Average percentage of cache occupancy
+system.cpu0.dcache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::0          193                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::1          300                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::2           19                       # Occupied blocks per task id
+system.cpu0.dcache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu0.dcache.tags.tag_accesses        101674783                       # Number of tag accesses
+system.cpu0.dcache.tags.data_accesses       101674783                       # Number of data accesses
 system.cpu0.dcache.ReadReq_hits::cpu0.data      6830201                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::cpu1.data      6949651                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::total       13779852                       # number of ReadReq hits
@@ -2200,6 +2229,8 @@ system.iocache.tags.total_refs                      0                       # To
 system.iocache.tags.sampled_refs                    0                       # Sample count of references to valid blocks.
 system.iocache.tags.avg_refs                      nan                       # Average number of references to valid blocks.
 system.iocache.tags.warmup_cycle                    0                       # Cycle when the warmup percentage was hit.
+system.iocache.tags.tag_accesses                    0                       # Number of tag accesses
+system.iocache.tags.data_accesses                   0                       # Number of data accesses
 system.iocache.blocked_cycles::no_mshrs             0                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                    0                       # number of cycles access was blocked

@@ -4,13 +4,16 @@ sim_seconds                                  0.000108                       # Nu
 sim_ticks                                      107952                       # Number of ticks simulated
 final_tick                                     107952                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                    352                       # Simulator instruction rate (inst/s)
-host_op_rate                                      352                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                   7141                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 177732                       # Number of bytes of host memory used
-host_seconds                                    15.12                       # Real time elapsed on the host
+host_inst_rate                                  32230                       # Simulator instruction rate (inst/s)
+host_op_rate                                    32227                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 653032                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 134144                       # Number of bytes of host memory used
+host_seconds                                     0.17                       # Real time elapsed on the host
 sim_insts                                        5327                       # Number of instructions simulated
 sim_ops                                          5327                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  1                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                   9                       # delay histogram for all message
 system.ruby.delayHist::samples                   2574                       # delay histogram for all message
@@ -47,6 +50,7 @@ system.ruby.miss_latency_hist::stdev         6.536157
 system.ruby.miss_latency_hist            |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |         306     23.74%     23.74% |         913     70.83%     94.57% |          68      5.28%     99.84% |           1      0.08%     99.92% |           1      0.08%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist::total             1289                      
 system.ruby.Directory.incomplete_times           1288                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.l1_cntrl0.cacheMemory.demand_hits         5469                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses         1289                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses         6758                       # Number of cache demand accesses
@@ -99,6 +103,7 @@ system.ruby.network.msg_byte.Control            30936
 system.ruby.network.msg_byte.Data              277560                      
 system.ruby.network.msg_byte.Response_Data       278424                      
 system.ruby.network.msg_byte.Writeback_Control        30840                      
+system.cpu.clk_domain.clock                         1                       # Clock period in ticks
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
 system.cpu.numCycles                           107952                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

@@ -1,4 +1,3 @@
-warn: add_child('terminal'): child 'terminal' already has parent
 warn: Sockets disabled, not accepting terminal connections
 warn: Reading current count from inactive timer.
 warn: Sockets disabled, not accepting gdb connections
@@ -10,4 +9,3 @@ warn: x86 cpuid: unknown family 0x8086
 hack: Assuming logical destinations are 1 << id.
 warn: Tried to clear PCI interrupt 14
 warn: Unknown mouse command 0xe1.
-hack: be nice to actually delete the event here

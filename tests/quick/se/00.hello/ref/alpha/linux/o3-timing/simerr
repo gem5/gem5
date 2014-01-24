@@ -1,2 +1,1 @@
 warn: Sockets disabled, not accepting gdb connections
-hack: be nice to actually delete the event here

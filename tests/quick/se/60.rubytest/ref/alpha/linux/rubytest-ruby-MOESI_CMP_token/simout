@@ -1,11 +1,9 @@
-Redirecting stdout to build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token/simout
-Redirecting stderr to build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 05:44:48
-gem5 started Sep 22 2013 05:44:59
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:47:59
+gem5 started Jan 22 2014 17:27:41
+gem5 executing on u200540-lin
 command line: build/ALPHA_MOESI_CMP_token/gem5.opt -d build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

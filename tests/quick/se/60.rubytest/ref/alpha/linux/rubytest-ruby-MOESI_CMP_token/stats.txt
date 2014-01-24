@@ -4,9 +4,12 @@ sim_seconds                                  0.000225                       # Nu
 sim_ticks                                      225141                       # Number of ticks simulated
 final_tick                                     225141                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                1264878                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 168320                       # Number of bytes of host memory used
-host_seconds                                     0.18                       # Real time elapsed on the host
+host_tick_rate                                1830870                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 123716                       # Number of bytes of host memory used
+host_seconds                                     0.12                       # Real time elapsed on the host
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.outstanding_req_hist::bucket_size            2                      
 system.ruby.outstanding_req_hist::max_bucket           19                      
 system.ruby.outstanding_req_hist::samples         1007                      
@@ -83,6 +86,7 @@ system.ruby.network.routers1.msg_bytes.Response_Control::4            8
 system.ruby.network.routers1.msg_bytes.Writeback_Data::4       120168                      
 system.ruby.network.routers1.msg_bytes.Writeback_Control::4          576                      
 system.ruby.network.routers1.msg_bytes.Persistent_Control::3         2984                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.dir_cntrl0.memBuffer.memReq          1655                       # Total number of memory requests
 system.ruby.dir_cntrl0.memBuffer.memRead          868                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite          787                       # Number of memory writes

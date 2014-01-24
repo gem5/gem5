@@ -1,11 +1,9 @@
-Redirecting stdout to build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory/simout
-Redirecting stderr to build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 05:36:12
-gem5 started Sep 22 2013 05:36:23
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:42:56
+gem5 started Jan 22 2014 17:26:33
+gem5 executing on u200540-lin
 command line: build/ALPHA_MOESI_CMP_directory/gem5.opt -d build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_MOESI_CMP_directory/tests/opt/quick/se/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

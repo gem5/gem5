@@ -4,9 +4,12 @@ sim_seconds                                  0.000222                       # Nu
 sim_ticks                                      221941                       # Number of ticks simulated
 final_tick                                     221941                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                2165156                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 165760                       # Number of bytes of host memory used
-host_seconds                                     0.10                       # Real time elapsed on the host
+host_tick_rate                                3307860                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 122180                       # Number of bytes of host memory used
+host_seconds                                     0.07                       # Real time elapsed on the host
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  2                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                  19                       # delay histogram for all message
 system.ruby.delayHist::samples                   1828                       # delay histogram for all message
@@ -47,6 +50,7 @@ system.ruby.miss_latency_hist::stdev       573.775637
 system.ruby.miss_latency_hist            |           6      0.66%      0.66% |           4      0.44%      1.09% |          82      8.95%     10.04% |         594     64.85%     74.89% |         229     25.00%     99.89% |           1      0.11%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist::total              916                      
 system.ruby.Directory.incomplete_times            916                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.l1_cntrl0.cacheMemory.demand_hits           38                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses          917                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses          955                       # Number of cache demand accesses

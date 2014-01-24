@@ -1,7 +1,6 @@
 warn: Sockets disabled, not accepting vnc client connections
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
-warn: DTB file specified, but no device tree support in kernel
 warn: The clidr register always reports 0 caches.
 warn: clidr LoUIS field of 0b001 to match current ARM implementations.
 warn: The csselr register isn't implemented.
@@ -11,7 +10,6 @@ warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr dccimvac' unimplemented
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
-hack: be nice to actually delete the event here
 warn: LCD dual screen mode not supported
 warn: 	instruction 'mcr icialluis' unimplemented
 warn: 	instruction 'mcr bpiallis' unimplemented

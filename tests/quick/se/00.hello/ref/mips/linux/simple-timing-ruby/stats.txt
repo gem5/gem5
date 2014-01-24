@@ -4,13 +4,16 @@ sim_seconds                                  0.000125                       # Nu
 sim_ticks                                      125334                       # Number of ticks simulated
 final_tick                                     125334                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  30165                       # Simulator instruction rate (inst/s)
-host_op_rate                                    30162                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 650140                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 172408                       # Number of bytes of host memory used
-host_seconds                                     0.19                       # Real time elapsed on the host
+host_inst_rate                                  38153                       # Simulator instruction rate (inst/s)
+host_op_rate                                    38149                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 822314                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 127760                       # Number of bytes of host memory used
+host_seconds                                     0.15                       # Real time elapsed on the host
 sim_insts                                        5814                       # Number of instructions simulated
 sim_ops                                          5814                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                             1                       # Clock period in ticks
+system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  1                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                   9                       # delay histogram for all message
 system.ruby.delayHist::samples                   2982                       # delay histogram for all message
@@ -47,6 +50,7 @@ system.ruby.miss_latency_hist::stdev         6.088981
 system.ruby.miss_latency_hist            |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |         328     21.97%     21.97% |        1088     72.87%     94.84% |          74      4.96%     99.80% |           3      0.20%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist::total             1493                      
 system.ruby.Directory.incomplete_times           1492                      
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.l1_cntrl0.cacheMemory.demand_hits         6410                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses         1493                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses         7903                       # Number of cache demand accesses
@@ -99,6 +103,7 @@ system.ruby.network.msg_byte.Control            35832
 system.ruby.network.msg_byte.Data              321624                      
 system.ruby.network.msg_byte.Response_Data       322488                      
 system.ruby.network.msg_byte.Writeback_Control        35736                      
+system.cpu.clk_domain.clock                         1                       # Clock period in ticks
 system.cpu.dtb.read_hits                            0                       # DTB read hits
 system.cpu.dtb.read_misses                          0                       # DTB read misses
 system.cpu.dtb.read_accesses                        0                       # DTB read accesses

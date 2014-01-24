@@ -3,4 +3,3 @@ warn: rounding error > tolerance
 warn: rounding error > tolerance
     0.072760 rounded to 0
 warn: Sockets disabled, not accepting gdb connections
-hack: be nice to actually delete the event here

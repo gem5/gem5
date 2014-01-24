@@ -1,14 +1,12 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/inorder-timing/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/inorder-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 24 2013 03:08:53
-gem5 started Sep 28 2013 03:05:26
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:27:55
+gem5 started Jan 22 2014 17:24:08
+gem5 executing on u200540-lin
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/inorder-timing -re tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 25046000 because target called exit()
+Exiting @ tick 25485000 because target called exit()

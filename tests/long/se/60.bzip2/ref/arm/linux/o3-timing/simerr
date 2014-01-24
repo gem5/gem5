@@ -1,3 +1,2 @@
 warn: Sockets disabled, not accepting gdb connections
 warn: CP14 unimplemented crn[8], opc1[2], crm[9], opc2[4]
-hack: be nice to actually delete the event here

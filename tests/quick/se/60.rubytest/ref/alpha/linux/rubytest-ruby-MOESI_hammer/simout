@@ -1,11 +1,9 @@
-Redirecting stdout to build/ALPHA_MOESI_hammer/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer/simout
-Redirecting stderr to build/ALPHA_MOESI_hammer/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 05:17:28
-gem5 started Sep 22 2013 05:17:38
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:32:54
+gem5 started Jan 22 2014 17:25:38
+gem5 executing on u200540-lin
 command line: build/ALPHA_MOESI_hammer/gem5.opt -d build/ALPHA_MOESI_hammer/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_MOESI_hammer/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

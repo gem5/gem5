@@ -49,4 +49,3 @@ Writing to chair.cook.ppm
 13  8  14
 14  8  14
 warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
-hack: be nice to actually delete the event here

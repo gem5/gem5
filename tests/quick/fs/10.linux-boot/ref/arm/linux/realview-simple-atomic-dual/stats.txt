@@ -4,13 +4,15 @@ sim_seconds                                  0.912097                       # Nu
 sim_ticks                                912096763500                       # Number of ticks simulated
 final_tick                               912096763500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1031681                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1328287                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            15269405009                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 443324                       # Number of bytes of host memory used
-host_seconds                                    59.73                       # Real time elapsed on the host
+host_inst_rate                                1859152                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2393654                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            27516397451                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 399324                       # Number of bytes of host memory used
+host_seconds                                    33.15                       # Real time elapsed on the host
 sim_insts                                    61625970                       # Number of instructions simulated
 sim_ops                                      79343340                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::realview.clcd     39321600                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker           64                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          192                       # Number of bytes read from this memory
@@ -87,6 +89,7 @@ system.realview.nvmem.bw_total::total              75                       # To
 system.membus.throughput                     64986577                       # Throughput (bytes/s)
 system.membus.data_through_bus               59274047                       # Total data (bytes)
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.l2c.tags.replacements                    70658                       # number of replacements
 system.l2c.tags.tagsinuse                51560.149653                       # Cycle average of tags in use
 system.l2c.tags.total_refs                    1623339                       # Total number of references to valid blocks.
@@ -110,6 +113,19 @@ system.l2c.tags.occ_percent::cpu1.dtb.walker     0.000041                       
 system.l2c.tags.occ_percent::cpu1.inst       0.032447                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::cpu1.data       0.050521                       # Average percentage of cache occupancy
 system.l2c.tags.occ_percent::total           0.786745                       # Average percentage of cache occupancy
+system.l2c.tags.occ_task_id_blocks::1023            4                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_blocks::1024        65148                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1023::2            1                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1023::4            3                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::0           50                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::1          203                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::2         3771                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::3        12549                       # Occupied blocks per task id
+system.l2c.tags.age_task_id_blocks_1024::4        48575                       # Occupied blocks per task id
+system.l2c.tags.occ_task_id_percent::1023     0.000061                       # Percentage of cache occupancy per task id
+system.l2c.tags.occ_task_id_percent::1024     0.994080                       # Percentage of cache occupancy per task id
+system.l2c.tags.tag_accesses                 16906854                       # Number of tag accesses
+system.l2c.tags.data_accesses                16906854                       # Number of data accesses
 system.l2c.ReadReq_hits::cpu0.dtb.walker         3874                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.itb.walker         1919                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.inst             421038                       # number of ReadReq hits
@@ -349,6 +365,12 @@ system.cpu0.icache.tags.warmup_cycle      64537139000                       # Cy
 system.cpu0.icache.tags.occ_blocks::cpu0.inst   511.015216                       # Average occupied blocks per requestor
 system.cpu0.icache.tags.occ_percent::cpu0.inst     0.998077                       # Average percentage of cache occupancy
 system.cpu0.icache.tags.occ_percent::total     0.998077                       # Average percentage of cache occupancy
+system.cpu0.icache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::2          508                       # Occupied blocks per task id
+system.cpu0.icache.tags.age_task_id_blocks_1024::3            4                       # Occupied blocks per task id
+system.cpu0.icache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu0.icache.tags.tag_accesses         30669233                       # Number of tag accesses
+system.cpu0.icache.tags.data_accesses        30669233                       # Number of data accesses
 system.cpu0.icache.ReadReq_hits::cpu0.inst     29811115                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::total       29811115                       # number of ReadReq hits
 system.cpu0.icache.demand_hits::cpu0.inst     29811115                       # number of demand (read+write) hits
@@ -391,6 +413,11 @@ system.cpu0.dcache.tags.warmup_cycle         22115000                       # Cy
 system.cpu0.dcache.tags.occ_blocks::cpu0.data   494.763091                       # Average occupied blocks per requestor
 system.cpu0.dcache.tags.occ_percent::cpu0.data     0.966334                       # Average percentage of cache occupancy
 system.cpu0.dcache.tags.occ_percent::total     0.966334                       # Average percentage of cache occupancy
+system.cpu0.dcache.tags.occ_task_id_blocks::1024          372                       # Occupied blocks per task id
+system.cpu0.dcache.tags.age_task_id_blocks_1024::2          372                       # Occupied blocks per task id
+system.cpu0.dcache.tags.occ_task_id_percent::1024     0.726562                       # Percentage of cache occupancy per task id
+system.cpu0.dcache.tags.tag_accesses         51675155                       # Number of tag accesses
+system.cpu0.dcache.tags.data_accesses        51675155                       # Number of data accesses
 system.cpu0.dcache.ReadReq_hits::cpu0.data      6512305                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::total        6512305                       # number of ReadReq hits
 system.cpu0.dcache.WriteReq_hits::cpu0.data      5630881                       # number of WriteReq hits
@@ -409,8 +436,8 @@ system.cpu0.dcache.WriteReq_misses::cpu0.data       167342                      
 system.cpu0.dcache.WriteReq_misses::total       167342                       # number of WriteReq misses
 system.cpu0.dcache.LoadLockedReq_misses::cpu0.data         9062                       # number of LoadLockedReq misses
 system.cpu0.dcache.LoadLockedReq_misses::total         9062                       # number of LoadLockedReq misses
-system.cpu0.dcache.StoreCondReq_misses::cpu0.data         7469                       # number of StoreCondReq misses
-system.cpu0.dcache.StoreCondReq_misses::total         7469                       # number of StoreCondReq misses
+system.cpu0.dcache.StoreCondReq_misses::cpu0.data         7466                       # number of StoreCondReq misses
+system.cpu0.dcache.StoreCondReq_misses::total         7466                       # number of StoreCondReq misses
 system.cpu0.dcache.demand_misses::cpu0.data       364509                       # number of demand (read+write) misses
 system.cpu0.dcache.demand_misses::total        364509                       # number of demand (read+write) misses
 system.cpu0.dcache.overall_misses::cpu0.data       364509                       # number of overall misses
@@ -421,8 +448,8 @@ system.cpu0.dcache.WriteReq_accesses::cpu0.data      5798223                    
 system.cpu0.dcache.WriteReq_accesses::total      5798223                       # number of WriteReq accesses(hits+misses)
 system.cpu0.dcache.LoadLockedReq_accesses::cpu0.data       160681                       # number of LoadLockedReq accesses(hits+misses)
 system.cpu0.dcache.LoadLockedReq_accesses::total       160681                       # number of LoadLockedReq accesses(hits+misses)
-system.cpu0.dcache.StoreCondReq_accesses::cpu0.data       160649                       # number of StoreCondReq accesses(hits+misses)
-system.cpu0.dcache.StoreCondReq_accesses::total       160649                       # number of StoreCondReq accesses(hits+misses)
+system.cpu0.dcache.StoreCondReq_accesses::cpu0.data       160646                       # number of StoreCondReq accesses(hits+misses)
+system.cpu0.dcache.StoreCondReq_accesses::total       160646                       # number of StoreCondReq accesses(hits+misses)
 system.cpu0.dcache.demand_accesses::cpu0.data     12507695                       # number of demand (read+write) accesses
 system.cpu0.dcache.demand_accesses::total     12507695                       # number of demand (read+write) accesses
 system.cpu0.dcache.overall_accesses::cpu0.data     12507695                       # number of overall (read+write) accesses
@@ -433,8 +460,8 @@ system.cpu0.dcache.WriteReq_miss_rate::cpu0.data     0.028861                   
 system.cpu0.dcache.WriteReq_miss_rate::total     0.028861                       # miss rate for WriteReq accesses
 system.cpu0.dcache.LoadLockedReq_miss_rate::cpu0.data     0.056397                       # miss rate for LoadLockedReq accesses
 system.cpu0.dcache.LoadLockedReq_miss_rate::total     0.056397                       # miss rate for LoadLockedReq accesses
-system.cpu0.dcache.StoreCondReq_miss_rate::cpu0.data     0.046493                       # miss rate for StoreCondReq accesses
-system.cpu0.dcache.StoreCondReq_miss_rate::total     0.046493                       # miss rate for StoreCondReq accesses
+system.cpu0.dcache.StoreCondReq_miss_rate::cpu0.data     0.046475                       # miss rate for StoreCondReq accesses
+system.cpu0.dcache.StoreCondReq_miss_rate::total     0.046475                       # miss rate for StoreCondReq accesses
 system.cpu0.dcache.demand_miss_rate::cpu0.data     0.029143                       # miss rate for demand accesses
 system.cpu0.dcache.demand_miss_rate::total     0.029143                       # miss rate for demand accesses
 system.cpu0.dcache.overall_miss_rate::cpu0.data     0.029143                       # miss rate for overall accesses
@@ -525,6 +552,14 @@ system.cpu1.icache.tags.warmup_cycle      69967763000                       # Cy
 system.cpu1.icache.tags.occ_blocks::cpu1.inst   475.447912                       # Average occupied blocks per requestor
 system.cpu1.icache.tags.occ_percent::cpu1.inst     0.928609                       # Average percentage of cache occupancy
 system.cpu1.icache.tags.occ_percent::total     0.928609                       # Average percentage of cache occupancy
+system.cpu1.icache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu1.icache.tags.age_task_id_blocks_1024::0          168                       # Occupied blocks per task id
+system.cpu1.icache.tags.age_task_id_blocks_1024::1           63                       # Occupied blocks per task id
+system.cpu1.icache.tags.age_task_id_blocks_1024::2          261                       # Occupied blocks per task id
+system.cpu1.icache.tags.age_task_id_blocks_1024::3           20                       # Occupied blocks per task id
+system.cpu1.icache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu1.icache.tags.tag_accesses         32848033                       # Number of tag accesses
+system.cpu1.icache.tags.data_accesses        32848033                       # Number of data accesses
 system.cpu1.icache.ReadReq_hits::cpu1.inst     31979125                       # number of ReadReq hits
 system.cpu1.icache.ReadReq_hits::total       31979125                       # number of ReadReq hits
 system.cpu1.icache.demand_hits::cpu1.inst     31979125                       # number of demand (read+write) hits
@@ -567,6 +602,14 @@ system.cpu1.dcache.tags.warmup_cycle      67293493000                       # Cy
 system.cpu1.dcache.tags.occ_blocks::cpu1.data   447.573682                       # Average occupied blocks per requestor
 system.cpu1.dcache.tags.occ_percent::cpu1.data     0.874167                       # Average percentage of cache occupancy
 system.cpu1.dcache.tags.occ_percent::total     0.874167                       # Average percentage of cache occupancy
+system.cpu1.dcache.tags.occ_task_id_blocks::1024          512                       # Occupied blocks per task id
+system.cpu1.dcache.tags.age_task_id_blocks_1024::0          267                       # Occupied blocks per task id
+system.cpu1.dcache.tags.age_task_id_blocks_1024::1          226                       # Occupied blocks per task id
+system.cpu1.dcache.tags.age_task_id_blocks_1024::2           17                       # Occupied blocks per task id
+system.cpu1.dcache.tags.age_task_id_blocks_1024::3            2                       # Occupied blocks per task id
+system.cpu1.dcache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
+system.cpu1.dcache.tags.tag_accesses         48417680                       # Number of tag accesses
+system.cpu1.dcache.tags.data_accesses        48417680                       # Number of data accesses
 system.cpu1.dcache.ReadReq_hits::cpu1.data      7002209                       # number of ReadReq hits
 system.cpu1.dcache.ReadReq_hits::total        7002209                       # number of ReadReq hits
 system.cpu1.dcache.WriteReq_hits::cpu1.data      4520313                       # number of WriteReq hits
@@ -585,8 +628,8 @@ system.cpu1.dcache.WriteReq_misses::cpu1.data       125920                      
 system.cpu1.dcache.WriteReq_misses::total       125920                       # number of WriteReq misses
 system.cpu1.dcache.LoadLockedReq_misses::cpu1.data        11251                       # number of LoadLockedReq misses
 system.cpu1.dcache.LoadLockedReq_misses::total        11251                       # number of LoadLockedReq misses
-system.cpu1.dcache.StoreCondReq_misses::cpu1.data        10139                       # number of StoreCondReq misses
-system.cpu1.dcache.StoreCondReq_misses::total        10139                       # number of StoreCondReq misses
+system.cpu1.dcache.StoreCondReq_misses::cpu1.data        10133                       # number of StoreCondReq misses
+system.cpu1.dcache.StoreCondReq_misses::total        10133                       # number of StoreCondReq misses
 system.cpu1.dcache.demand_misses::cpu1.data       324195                       # number of demand (read+write) misses
 system.cpu1.dcache.demand_misses::total        324195                       # number of demand (read+write) misses
 system.cpu1.dcache.overall_misses::cpu1.data       324195                       # number of overall misses
@@ -597,8 +640,8 @@ system.cpu1.dcache.WriteReq_accesses::cpu1.data      4646233                    
 system.cpu1.dcache.WriteReq_accesses::total      4646233                       # number of WriteReq accesses(hits+misses)
 system.cpu1.dcache.LoadLockedReq_accesses::cpu1.data        89205                       # number of LoadLockedReq accesses(hits+misses)
 system.cpu1.dcache.LoadLockedReq_accesses::total        89205                       # number of LoadLockedReq accesses(hits+misses)
-system.cpu1.dcache.StoreCondReq_accesses::cpu1.data        89169                       # number of StoreCondReq accesses(hits+misses)
-system.cpu1.dcache.StoreCondReq_accesses::total        89169                       # number of StoreCondReq accesses(hits+misses)
+system.cpu1.dcache.StoreCondReq_accesses::cpu1.data        89163                       # number of StoreCondReq accesses(hits+misses)
+system.cpu1.dcache.StoreCondReq_accesses::total        89163                       # number of StoreCondReq accesses(hits+misses)
 system.cpu1.dcache.demand_accesses::cpu1.data     11846717                       # number of demand (read+write) accesses
 system.cpu1.dcache.demand_accesses::total     11846717                       # number of demand (read+write) accesses
 system.cpu1.dcache.overall_accesses::cpu1.data     11846717                       # number of overall (read+write) accesses
@@ -609,8 +652,8 @@ system.cpu1.dcache.WriteReq_miss_rate::cpu1.data     0.027102                   
 system.cpu1.dcache.WriteReq_miss_rate::total     0.027102                       # miss rate for WriteReq accesses
 system.cpu1.dcache.LoadLockedReq_miss_rate::cpu1.data     0.126125                       # miss rate for LoadLockedReq accesses
 system.cpu1.dcache.LoadLockedReq_miss_rate::total     0.126125                       # miss rate for LoadLockedReq accesses
-system.cpu1.dcache.StoreCondReq_miss_rate::cpu1.data     0.113705                       # miss rate for StoreCondReq accesses
-system.cpu1.dcache.StoreCondReq_miss_rate::total     0.113705                       # miss rate for StoreCondReq accesses
+system.cpu1.dcache.StoreCondReq_miss_rate::cpu1.data     0.113646                       # miss rate for StoreCondReq accesses
+system.cpu1.dcache.StoreCondReq_miss_rate::total     0.113646                       # miss rate for StoreCondReq accesses
 system.cpu1.dcache.demand_miss_rate::cpu1.data     0.027366                       # miss rate for demand accesses
 system.cpu1.dcache.demand_miss_rate::total     0.027366                       # miss rate for demand accesses
 system.cpu1.dcache.overall_miss_rate::cpu1.data     0.027366                       # miss rate for overall accesses
@@ -632,6 +675,8 @@ system.iocache.tags.total_refs                      0                       # To
 system.iocache.tags.sampled_refs                    0                       # Sample count of references to valid blocks.
 system.iocache.tags.avg_refs                      nan                       # Average number of references to valid blocks.
 system.iocache.tags.warmup_cycle                    0                       # Cycle when the warmup percentage was hit.
+system.iocache.tags.tag_accesses                    0                       # Number of tag accesses
+system.iocache.tags.data_accesses                   0                       # Number of data accesses
 system.iocache.blocked_cycles::no_mshrs             0                       # number of cycles access was blocked
 system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.blocked::no_mshrs                    0                       # number of cycles access was blocked

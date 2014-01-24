@@ -4,13 +4,15 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409284500                       # Number of ticks simulated
 final_tick                               4321214250500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               21337245                       # Simulator instruction rate (inst/s)
-host_op_rate                                 21337231                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8163912733                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 473328                       # Number of bytes of host memory used
-host_seconds                                    24.55                       # Real time elapsed on the host
+host_inst_rate                               22333008                       # Simulator instruction rate (inst/s)
+host_op_rate                                 22332995                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8544906534                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 473604                       # Number of bytes of host memory used
+host_seconds                                    23.45                       # Real time elapsed on the host
 sim_insts                                   523790075                       # Number of instructions simulated
 sim_ops                                     523790075                       # Number of ops (including micro ops) simulated
+testsys.voltage_domain.voltage                      1                       # Voltage in Volts
+testsys.clk_domain.clock                         1000                       # Clock period in ticks
 testsys.physmem.bytes_read::cpu.inst         81046720                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::cpu.data         27826276                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet     57260496                       # Number of bytes read from this memory
@@ -55,6 +57,7 @@ testsys.disk2.dma_read_txs                          0                       # Nu
 testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
 testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
 testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.cpu.clk_domain.clock                      500                       # Clock period in ticks
 testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
@@ -178,6 +181,7 @@ testsys.cpu.kern.mode_ticks::kernel         994603000     60.01%     60.01% # nu
 testsys.cpu.kern.mode_ticks::user           533068000     32.16%     92.17% # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::idle           129740500      7.83%    100.00% # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                     438                       # number of times the context was actually changed
+testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
 testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
 testsys.tsunami.ethernet.txPackets                  8                       # Number of Packets Transmitted
@@ -229,6 +233,8 @@ testsys.tsunami.ethernet.postedInterrupts      2385819                       # n
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
 testsys.iobus.throughput                    290423421                       # Throughput (bytes/s)
 testsys.iobus.data_through_bus               58203550                       # Total data (bytes)
+drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
+drivesys.clk_domain.clock                        1000                       # Clock period in ticks
 drivesys.physmem.bytes_read::cpu.inst        76205572                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data        26284292                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::tsunami.ethernet     57260526                       # Number of bytes read from this memory
@@ -273,6 +279,7 @@ drivesys.disk2.dma_read_txs                         0                       # Nu
 drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
 drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
 drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.cpu.clk_domain.clock                     250                       # Clock period in ticks
 drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
 drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
 drivesys.cpu.dtb.fetch_acv                          0                       # ITB acv
@@ -386,6 +393,7 @@ drivesys.cpu.kern.mode_ticks::kernel         78134250      2.63%      2.63% # nu
 drivesys.cpu.kern.mode_ticks::user          319668250     10.78%     13.41% # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::idle         2567942000     86.59%    100.00% # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                     72                       # number of times the context was actually changed
+drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
 drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
@@ -445,13 +453,15 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321621592000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            10977168844                       # Simulator instruction rate (inst/s)
-host_op_rate                              10973505866                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8529941400                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 473328                       # Number of bytes of host memory used
+host_inst_rate                            11306223920                       # Simulator instruction rate (inst/s)
+host_op_rate                              11302970418                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8786485437                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 473604                       # Number of bytes of host memory used
 host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                   523862353                       # Number of instructions simulated
 sim_ops                                     523862353                       # Number of ops (including micro ops) simulated
+testsys.voltage_domain.voltage                      1                       # Voltage in Volts
+testsys.clk_domain.clock                         1000                       # Clock period in ticks
 testsys.physmem.bytes_read::cpu.inst           144504                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::cpu.data            49936                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet       116376                       # Number of bytes read from this memory
@@ -493,6 +503,7 @@ testsys.disk2.dma_read_txs                          0                       # Nu
 testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
 testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
 testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.cpu.clk_domain.clock                      500                       # Clock period in ticks
 testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
@@ -588,6 +599,7 @@ testsys.cpu.kern.mode_ticks::kernel                 0                       # nu
 testsys.cpu.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
+testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 testsys.tsunami.ethernet.descDMAReads            4849                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
 testsys.tsunami.ethernet.descDmaReadBytes       116376                       # number of descriptor bytes read w/ DMA
@@ -621,6 +633,8 @@ testsys.tsunami.ethernet.postedInterrupts         4849                       # n
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
 testsys.iobus.throughput                    290429529                       # Throughput (bytes/s)
 testsys.iobus.data_through_bus                 118304                       # Total data (bytes)
+drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
+drivesys.clk_domain.clock                        1000                       # Clock period in ticks
 drivesys.physmem.bytes_read::cpu.inst          144608                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data           49952                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::tsunami.ethernet       116400                       # Number of bytes read from this memory
@@ -662,6 +676,7 @@ drivesys.disk2.dma_read_txs                         0                       # Nu
 drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
 drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
 drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.cpu.clk_domain.clock                     250                       # Clock period in ticks
 drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
 drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
 drivesys.cpu.dtb.fetch_acv                          0                       # ITB acv
@@ -757,6 +772,7 @@ drivesys.cpu.kern.mode_ticks::kernel                0                       # nu
 drivesys.cpu.kern.mode_ticks::user                  0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::idle                  0                       # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
+drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 drivesys.tsunami.ethernet.descDMAReads           4850                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites             0                       # Number of descriptors the device wrote w/ DMA
 drivesys.tsunami.ethernet.descDmaReadBytes       116400                       # number of descriptor bytes read w/ DMA

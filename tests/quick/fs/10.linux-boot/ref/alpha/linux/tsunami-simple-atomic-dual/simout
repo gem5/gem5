@@ -1,15 +1,13 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 24 2013 03:08:53
-gem5 started Sep 28 2013 03:05:50
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 16:27:55
+gem5 started Jan 22 2014 17:24:41
+gem5 executing on u200540-lin
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual -re tests/run.py build/ALPHA/tests/opt/quick/fs/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /dist/binaries/vmlinux
       0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
 info: Entering event queue @ 0.  Starting simulation...
 info: Launching CPU 1 @ 97861500
-Exiting @ tick 1870335643500 because m5_exit instruction encountered
+Exiting @ tick 1870335522500 because m5_exit instruction encountered

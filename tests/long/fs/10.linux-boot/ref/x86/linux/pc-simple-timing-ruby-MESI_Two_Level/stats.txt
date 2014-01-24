@@ -4,13 +4,15 @@ sim_seconds                                  5.300436                       # Nu
 sim_ticks                                5300435735500                       # Number of ticks simulated
 final_tick                               5300435735500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 127150                       # Simulator instruction rate (inst/s)
-host_op_rate                                   243807                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6308537728                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 832728                       # Number of bytes of host memory used
-host_seconds                                   840.20                       # Real time elapsed on the host
+host_inst_rate                                 165870                       # Simulator instruction rate (inst/s)
+host_op_rate                                   318050                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8229583651                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 786300                       # Number of bytes of host memory used
+host_seconds                                   644.07                       # Real time elapsed on the host
 sim_insts                                   106831806                       # Number of instructions simulated
 sim_ops                                     204847037                       # Number of ops (including micro ops) simulated
+system.voltage_domain.voltage                       1                       # Voltage in Volts
+system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::pc.south_bridge.ide        35184                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker       121960                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker        61480                       # Number of bytes read from this memory
@@ -364,6 +366,7 @@ system.piobus.respLayer3.occupancy             151500                       # La
 system.piobus.respLayer3.utilization              0.0                       # Layer utilization (%)
 system.piobus.respLayer4.occupancy             151500                       # Layer occupancy (ticks)
 system.piobus.respLayer4.utilization              0.0                       # Layer utilization (%)
+system.ruby.clk_domain.clock                      500                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  2                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                  19                       # delay histogram for all message
 system.ruby.delayHist::samples               10855755                       # delay histogram for all message
@@ -489,6 +492,7 @@ system.ruby.network.routers2.msg_bytes.Response_Control::2     14052096
 system.ruby.network.routers2.msg_bytes.Writeback_Data::0     41308992                      
 system.ruby.network.routers2.msg_bytes.Writeback_Data::1        21888                      
 system.ruby.network.routers2.msg_bytes.Writeback_Control::0      8867440                      
+system.ruby.memctrl_clk_domain.clock             1500                       # Clock period in ticks
 system.ruby.dir_cntrl0.memBuffer.memReq        317877                       # Total number of memory requests
 system.ruby.dir_cntrl0.memBuffer.memRead       175365                       # Number of memory reads
 system.ruby.dir_cntrl0.memBuffer.memWrite       142512                       # Number of memory writes
@@ -566,6 +570,8 @@ system.pc.south_bridge.ide.disks1.dma_read_txs            0                     
 system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
 system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
+system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
 system.cpu0.numCycles                     10600871471                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -592,6 +598,7 @@ system.cpu0.not_idle_fraction                0.048149                       # Pe
 system.cpu0.idle_fraction                    0.951851                       # Percentage of idle cycles
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                       0                       # number of quiesce instructions executed
+system.cpu1.apic_clk_domain.clock                8000                       # Clock period in ticks
 system.cpu1.numCycles                     10598039537                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed

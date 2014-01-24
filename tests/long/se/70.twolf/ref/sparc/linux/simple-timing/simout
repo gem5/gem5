@@ -1,11 +1,9 @@
-Redirecting stdout to build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/simout
-Redirecting stderr to build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 22 2013 06:07:13
-gem5 started Sep 22 2013 06:08:55
-gem5 executing on zizzer
+gem5 compiled Jan 22 2014 17:04:27
+gem5 started Jan 22 2014 19:50:23
+gem5 executing on u200540-lin
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing -re tests/run.py build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sav
 Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sv2
