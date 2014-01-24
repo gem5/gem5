@@ -137,9 +137,9 @@ class BasePrefetcher : public ClockedObject
      */
     Tick notify(PacketPtr &pkt, Tick tick);
 
-    bool inCache(Addr addr);
+    bool inCache(Addr addr, bool is_secure);
 
-    bool inMissQueue(Addr addr);
+    bool inMissQueue(Addr addr, bool is_secure);
 
     PacketPtr getPacket();
 
@@ -157,7 +157,7 @@ class BasePrefetcher : public ClockedObject
                                    std::list<Addr> &addresses,
                                    std::list<Cycles> &delays) = 0;
 
-    std::list<DeferredPacket>::iterator inPrefetch(Addr address);
+    std::list<DeferredPacket>::iterator inPrefetch(Addr address, bool is_secure);
 
     /**
      * Utility function: are addresses a and b on the same VM page?

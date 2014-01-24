@@ -301,11 +301,12 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     }
 
     int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
-    blk = tags->accessBlock(pkt->getAddr(), lat, id);
+    blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat, id);
 
-    DPRINTF(Cache, "%s%s %x %s %s\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s%s %x (%s) %s %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
-            pkt->getAddr(), blk ? "hit" : "miss", blk ? blk->print() : "");
+            pkt->getAddr(), pkt->isSecure() ? "s" : "ns",
+            blk ? "hit" : "miss", blk ? blk->print() : "");
 
     if (blk != NULL) {
 
@@ -327,7 +328,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         assert(blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
-            blk = allocateBlock(pkt->getAddr(), writebacks);
+            blk = allocateBlock(pkt->getAddr(), pkt->isSecure(), writebacks);
             if (blk == NULL) {
                 // no replaceable block available, give up.
                 // writeback will be forwarded to next level.
@@ -390,8 +391,8 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
         assert(pkt->cmd == MemCmd::HardPFResp);
         // Check if it's a prefetch response and handle it. We shouldn't
         // get any other kinds of responses without FRRs.
-        DPRINTF(Cache, "Got prefetch response from above for addr %#x\n",
-                pkt->getAddr());
+        DPRINTF(Cache, "Got prefetch response from above for addr %#x (%s)\n",
+                pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         recvTimingResp(pkt);
         return;
     }
@@ -431,8 +432,8 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     }
 
     if (pkt->memInhibitAsserted()) {
-        DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
-                pkt->getAddr());
+        DPRINTF(Cache, "mem inhibited on 0x%x (%s): not responding\n",
+                pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         assert(!pkt->req->isUncacheable());
         // Special tweak for multilevel coherence: snoop downward here
         // on invalidates since there may be other caches below here
@@ -489,7 +490,8 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         (pkt->cmd == MemCmd::WriteReq
          || pkt->cmd == MemCmd::WriteInvalidateReq) ) {
         // not outstanding misses, can do this
-        MSHR *outstanding_miss = mshrQueue.findMatch(pkt->getAddr());
+        MSHR *outstanding_miss = mshrQueue.findMatch(pkt->getAddr(),
+                                                     pkt->isSecure());
         if (pkt->cmd == MemCmd::WriteInvalidateReq || !outstanding_miss) {
             if (outstanding_miss) {
                 warn("WriteInv doing a fastallocate"
@@ -532,7 +534,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
         Addr blk_addr = blockAlign(pkt->getAddr());
-        MSHR *mshr = mshrQueue.findMatch(blk_addr);
+        MSHR *mshr = mshrQueue.findMatch(blk_addr, pkt->isSecure());
 
         if (mshr) {
             /// MSHR hit
@@ -672,16 +674,19 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
         // have to invalidate ourselves and any lower caches even if
         // upper cache will be responding
         if (pkt->isInvalidate()) {
-            BlkType *blk = tags->findBlock(pkt->getAddr());
+            BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
             if (blk && blk->isValid()) {
                 tags->invalidate(blk);
                 blk->invalidate();
-                DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: invalidating\n",
-                        pkt->cmdString(), pkt->getAddr());
+                DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x (%s):"
+                        " invalidating\n",
+                        pkt->cmdString(), pkt->getAddr(),
+                        pkt->isSecure() ? "s" : "ns");
             }
             if (!last_level_cache) {
-                DPRINTF(Cache, "forwarding mem-inhibited %s on 0x%x\n",
-                        pkt->cmdString(), pkt->getAddr());
+                DPRINTF(Cache, "forwarding mem-inhibited %s on 0x%x (%s)\n",
+                        pkt->cmdString(), pkt->getAddr(),
+                        pkt->isSecure() ? "s" : "ns");
                 lat += ticksToCycles(memSidePort->sendAtomic(pkt));
             }
         } else {
@@ -711,8 +716,9 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
             bus_pkt = pkt;
         }
 
-        DPRINTF(Cache, "Sending an atomic %s for %x\n",
-                bus_pkt->cmdString(), bus_pkt->getAddr());
+        DPRINTF(Cache, "Sending an atomic %s for %x (%s)\n",
+                bus_pkt->cmdString(), bus_pkt->getAddr(),
+                bus_pkt->isSecure() ? "s" : "ns");
 
 #if TRACING_ON
         CacheBlk::State old_state = blk ? blk->status : 0;
@@ -720,8 +726,10 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
 
         lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
 
-        DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
-                bus_pkt->cmdString(), bus_pkt->getAddr(), old_state);
+        DPRINTF(Cache, "Receive response: %s for addr %x (%s) in state %i\n",
+                bus_pkt->cmdString(), bus_pkt->getAddr(),
+                bus_pkt->isSecure() ? "s" : "ns",
+                old_state);
 
         // If packet was a forward, the response (if any) is already
         // in place in the bus_pkt == pkt structure, so we don't need
@@ -794,8 +802,9 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
     }
 
     Addr blk_addr = blockAlign(pkt->getAddr());
-    BlkType *blk = tags->findBlock(pkt->getAddr());
-    MSHR *mshr = mshrQueue.findMatch(blk_addr);
+    bool is_secure = pkt->isSecure();
+    BlkType *blk = tags->findBlock(pkt->getAddr(), is_secure);
+    MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
     pkt->pushLabel(name());
 
@@ -808,7 +817,8 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 
     // see if we have data at all (owned or otherwise)
     bool have_data = blk && blk->isValid()
-        && pkt->checkFunctional(&cbpw, blk_addr, blkSize, blk->data);
+        && pkt->checkFunctional(&cbpw, blk_addr, is_secure, blkSize,
+                                blk->data);
 
     // data we have is dirty if marked as such or if valid & ownership
     // pending due to outstanding UpgradeReq
@@ -822,8 +832,8 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         || writeBuffer.checkFunctional(pkt, blk_addr)
         || memSidePort->checkFunctional(pkt);
 
-    DPRINTF(Cache, "functional %s %x %s%s%s\n",
-            pkt->cmdString(), pkt->getAddr(),
+    DPRINTF(Cache, "functional %s %x (%s) %s%s%s\n",
+            pkt->cmdString(), pkt->getAddr(), is_secure ? "s" : "ns",
             (blk && blk->isValid()) ? "valid " : "",
             have_data ? "data " : "", done ? "done " : "");
 
@@ -866,12 +876,13 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     assert(mshr);
 
     if (is_error) {
-        DPRINTF(Cache, "Cache received packet with error for address %x, "
-                "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
+        DPRINTF(Cache, "Cache received packet with error for address %x (%s), "
+                "cmd: %s\n", pkt->getAddr(), pkt->isSecure() ? "s" : "ns",
+                pkt->cmdString());
     }
 
-    DPRINTF(Cache, "Handling response to %s for address %x\n",
-            pkt->cmdString(), pkt->getAddr());
+    DPRINTF(Cache, "Handling response to %s for address %x (%s)\n",
+            pkt->cmdString(), pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
 
     MSHRQueue *mq = mshr->queue;
     bool wasFull = mq->isFull();
@@ -884,7 +895,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
 
     // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
@@ -1074,6 +1085,8 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
                 Request::wbMasterId);
+    if (blk->isSecure())
+        writebackReq->setFlags(Request::SECURE);
 
     writebackReq->taskId(blk->task_id);
     blk->task_id= ContextSwitchTaskId::Unknown;
@@ -1166,7 +1179,7 @@ Cache<TagStore>::uncacheableFlush(PacketPtr pkt)
     if (pkt->req->isClearLL())
         tags->clearLocks();
 
-    BlkType *blk(tags->findBlock(pkt->getAddr()));
+    BlkType *blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
     if (blk) {
         writebackVisitor(*blk);
         invalidateVisitor(*blk);
@@ -1176,13 +1189,14 @@ Cache<TagStore>::uncacheableFlush(PacketPtr pkt)
 
 template<class TagStore>
 typename Cache<TagStore>::BlkType*
-Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
+Cache<TagStore>::allocateBlock(Addr addr, bool is_secure,
+                               PacketList &writebacks)
 {
     BlkType *blk = tags->findVictim(addr, writebacks);
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
-        MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
+        MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
         if (repl_mshr) {
             // must be an outstanding upgrade request on block
             // we're about to replace...
@@ -1192,8 +1206,9 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
             // allocation failed, block not inserted
             return NULL;
         } else {
-            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
-                    repl_addr, addr,
+            DPRINTF(Cache, "replacement: replacing %x (%s) with %x (%s): %s\n",
+                    repl_addr, blk->isSecure() ? "s" : "ns",
+                    addr, is_secure ? "s" : "ns",
                     blk->isDirty() ? "writeback" : "clean");
 
             if (blk->isDirty()) {
@@ -1218,6 +1233,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                             PacketList &writebacks)
 {
     Addr addr = pkt->getAddr();
+    bool is_secure = pkt->isSecure();
 #if TRACING_ON
     CacheBlk::State old_state = blk ? blk->status : 0;
 #endif
@@ -1226,7 +1242,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // better have read new data...
         assert(pkt->hasData());
         // need to do a replacement
-        blk = allocateBlock(addr, writebacks);
+        blk = allocateBlock(addr, is_secure, writebacks);
         if (blk == NULL) {
             // No replaceable block... just use temporary storage to
             // complete the current request and then get rid of it
@@ -1234,7 +1250,9 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             blk = tempBlock;
             tempBlock->set = tags->extractSet(addr);
             tempBlock->tag = tags->extractTag(addr);
-            DPRINTF(Cache, "using temp block for %x\n", addr);
+            // @todo: set security state as well...
+            DPRINTF(Cache, "using temp block for %x (%s)\n", addr,
+                    is_secure ? "s" : "ns");
         } else {
             tags->insertBlock(pkt, blk);
         }
@@ -1250,6 +1268,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // don't want to lose that
     }
 
+    if (is_secure)
+        blk->status |= BlkSecure;
     blk->status |= BlkValid | BlkReadable;
 
     if (!pkt->sharedAsserted()) {
@@ -1265,8 +1285,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             blk->status |= BlkDirty;
     }
 
-    DPRINTF(Cache, "Block addr %x moving from state %x to %s\n",
-            addr, old_state, blk->print());
+    DPRINTF(Cache, "Block addr %x (%s) moving from state %x to %s\n",
+            addr, is_secure ? "s" : "ns", old_state, blk->print());
 
     // if we got new data, copy it in
     if (pkt->isRead()) {
@@ -1453,16 +1473,18 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
         return;
     }
 
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    bool is_secure = pkt->isSecure();
+    BlkType *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
     Addr blk_addr = blockAlign(pkt->getAddr());
-    MSHR *mshr = mshrQueue.findMatch(blk_addr);
+    MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
     if (mshr && mshr->handleSnoop(pkt, order++)) {
-        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x."
-                "mshrs: %s\n", blk_addr, mshr->print());
+        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x (%s)."
+                "mshrs: %s\n", blk_addr, is_secure ? "s" : "ns",
+                mshr->print());
 
         if (mshr->getNumTargets() > numTarget)
             warn("allocating bonus target for snoop"); //handle later
@@ -1471,9 +1493,9 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 
     //We also need to check the writeback buffers and handle those
     std::vector<MSHR *> writebacks;
-    if (writeBuffer.findMatches(blk_addr, writebacks)) {
-        DPRINTF(Cache, "Snoop hit in writeback to addr: %x\n",
-                pkt->getAddr());
+    if (writeBuffer.findMatches(blk_addr, is_secure, writebacks)) {
+        DPRINTF(Cache, "Snoop hit in writeback to addr: %x (%s)\n",
+                pkt->getAddr(), is_secure ? "s" : "ns");
 
         //Look through writebacks for any non-uncachable writes, use that
         if (writebacks.size()) {
@@ -1538,7 +1560,7 @@ Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
         return 0;
     }
 
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     handleSnoop(pkt, blk, false, false, false);
     return hitLatency * clockPeriod();
 }
@@ -1567,7 +1589,8 @@ Cache<TagStore>::getNextMSHR()
             // Write buffer is full, so we'd like to issue a write;
             // need to search MSHR queue for conflicting earlier miss.
             MSHR *conflict_mshr =
-                mshrQueue.findPending(write_mshr->addr, write_mshr->size);
+                mshrQueue.findPending(write_mshr->addr, write_mshr->size,
+                                      write_mshr->isSecure);
 
             if (conflict_mshr && conflict_mshr->order < write_mshr->order) {
                 // Service misses in order until conflict is cleared.
@@ -1581,7 +1604,8 @@ Cache<TagStore>::getNextMSHR()
         // Write buffer isn't full, but need to check it for
         // conflicting earlier writeback
         MSHR *conflict_mshr =
-            writeBuffer.findPending(miss_mshr->addr, miss_mshr->size);
+            writeBuffer.findPending(miss_mshr->addr, miss_mshr->size,
+                                    miss_mshr->isSecure);
         if (conflict_mshr) {
             // not sure why we don't check order here... it was in the
             // original code but commented out.
@@ -1609,8 +1633,9 @@ Cache<TagStore>::getNextMSHR()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = blockAlign(pkt->getAddr());
-            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr) &&
-                                             !writeBuffer.findMatch(pf_addr)) {
+            if (!tags->findBlock(pf_addr, pkt->isSecure()) &&
+                !mshrQueue.findMatch(pf_addr, pkt->isSecure()) &&
+                !writeBuffer.findMatch(pf_addr, pkt->isSecure())) {
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->masterId() < system->maxMasters());
@@ -1659,10 +1684,10 @@ Cache<TagStore>::getTimingPacket()
         return NULL;
     } else if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
-        assert(tags->findBlock(mshr->addr) == NULL);
+        assert(tags->findBlock(mshr->addr, mshr->isSecure) == NULL);
         pkt = tgt_pkt;
     } else {
-        BlkType *blk = tags->findBlock(mshr->addr);
+        BlkType *blk = tags->findBlock(mshr->addr, mshr->isSecure);
 
         if (tgt_pkt->cmd == MemCmd::HardPFReq) {
             // It might be possible for a writeback to arrive between
@@ -1683,8 +1708,9 @@ Cache<TagStore>::getTimingPacket()
 
             if (snoop_pkt.memInhibitAsserted()) {
                 markInService(mshr, &snoop_pkt);
-                DPRINTF(Cache, "Upward snoop of prefetch for addr %#x hit\n",
-                        tgt_pkt->getAddr());
+                DPRINTF(Cache, "Upward snoop of prefetch for addr"
+                        " %#x (%s) hit\n",
+                        tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
                 return NULL;
             }
         }

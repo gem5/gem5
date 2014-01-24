@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -172,14 +172,16 @@ MemCmd::commandInfo[] =
 };
 
 bool
-Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
+Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
+                        uint8_t *data)
 {
     Addr func_start = getAddr();
     Addr func_end   = getAddr() + getSize() - 1;
     Addr val_start  = addr;
     Addr val_end    = val_start + size - 1;
 
-    if (func_start > val_end || val_start > func_end) {
+    if (is_secure != _isSecure || func_start > val_end ||
+        val_start > func_end) {
         // no intersection
         return false;
     }

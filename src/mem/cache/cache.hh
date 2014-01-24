@@ -209,12 +209,13 @@ class Cache : public BaseCache
     void cmpAndSwap(BlkType *blk, PacketPtr pkt);
 
     /**
-     * Find a block frame for new block at address addr, assuming that
-     * the block is not currently in the cache.  Append writebacks if
-     * any to provided packet list.  Return free block frame.  May
-     * return NULL if there are no replaceable blocks at the moment.
+     * Find a block frame for new block at address addr targeting the
+     * given security space, assuming that the block is not currently
+     * in the cache.  Append writebacks if any to provided packet
+     * list.  Return free block frame.  May return NULL if there are
+     * no replaceable blocks at the moment.
      */
-    BlkType *allocateBlock(Addr addr, PacketList &writebacks);
+    BlkType *allocateBlock(Addr addr, bool is_secure, PacketList &writebacks);
 
     /**
      * Populates a cache block and handles all outstanding requests for the
@@ -384,16 +385,16 @@ class Cache : public BaseCache
         return mshrQueue.allocated != 0;
     }
 
-    CacheBlk *findBlock(Addr addr) const {
-        return tags->findBlock(addr);
+    CacheBlk *findBlock(Addr addr, bool is_secure) const {
+        return tags->findBlock(addr, is_secure);
     }
 
-    bool inCache(Addr addr) const {
-        return (tags->findBlock(addr) != 0);
+    bool inCache(Addr addr, bool is_secure) const {
+        return (tags->findBlock(addr, is_secure) != 0);
     }
 
-    bool inMissQueue(Addr addr) const {
-        return (mshrQueue.findMatch(addr) != 0);
+    bool inMissQueue(Addr addr, bool is_secure) const {
+        return (mshrQueue.findMatch(addr, is_secure) != 0);
     }
 
     /**

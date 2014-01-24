@@ -113,25 +113,29 @@ class MSHRQueue : public Drainable
     /**
      * Find the first MSHR that matches the provided address.
      * @param addr The address to find.
+     * @param is_secure True if the target memory space is secure.
      * @return Pointer to the matching MSHR, null if not found.
      */
-    MSHR *findMatch(Addr addr) const;
+    MSHR *findMatch(Addr addr, bool is_secure) const;
 
     /**
      * Find and return all the matching entries in the provided vector.
      * @param addr The address to find.
+     * @param is_secure True if the target memory space is secure.
      * @param matches The vector to return pointers to the matching entries.
      * @return True if any matches are found, false otherwise.
      * @todo Typedef the vector??
      */
-    bool findMatches(Addr addr, std::vector<MSHR*>& matches) const;
+    bool findMatches(Addr addr, bool is_secure,
+                     std::vector<MSHR*>& matches) const;
 
     /**
      * Find any pending requests that overlap the given request.
      * @param pkt The request to find.
+     * @param is_secure True if the target memory space is secure.
      * @return A pointer to the earliest matching MSHR.
      */
-    MSHR *findPending(Addr addr, int size) const;
+    MSHR *findPending(Addr addr, int size, bool is_secure) const;
 
     bool checkFunctional(PacketPtr pkt, Addr blk_addr);
 

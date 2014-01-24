@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -70,7 +70,9 @@ enum CacheBlkStatusBits {
     /** block was referenced */
     BlkReferenced =     0x10,
     /** block was a hardware prefetch yet unaccessed*/
-    BlkHWPrefetched =   0x20
+    BlkHWPrefetched =   0x20,
+    /** block holds data from the secure memory space */
+    BlkSecure =         0x40
 };
 
 /**
@@ -260,6 +262,15 @@ class CacheBlk
     bool wasPrefetched() const
     {
         return (status & BlkHWPrefetched) != 0;
+    }
+
+    /**
+     * Check if this block holds data from the secure memory space.
+     * @return True if the block holds data from the secure memory space.
+     */
+    bool isSecure() const
+    {
+        return (status & BlkSecure) != 0;
     }
 
     /**

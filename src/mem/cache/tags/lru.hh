@@ -148,20 +148,23 @@ public:
      * NULL pointer is returned.  This has all the implications of a cache
      * access and should only be used as such. Returns the access latency as a side effect.
      * @param addr The address to find.
+     * @param is_secure True if the target memory space is secure.
      * @param asid The address space ID.
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    BlkType* accessBlock(Addr addr, Cycles &lat, int context_src);
+    BlkType* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+                         int context_src);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
      * i.e. This is a no-side-effect find of a block.
      * @param addr The address to find.
+     * @param is_secure True if the target memory space is secure.
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    BlkType* findBlock(Addr addr) const;
+    BlkType* findBlock(Addr addr, bool is_secure) const;
 
     /**
      * Find a block to evict for the address provided.

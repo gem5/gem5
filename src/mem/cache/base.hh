@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -560,9 +560,9 @@ class BaseCache : public MemObject
 
     virtual unsigned int drain(DrainManager *dm);
 
-    virtual bool inCache(Addr addr) const = 0;
+    virtual bool inCache(Addr addr, bool is_secure) const = 0;
 
-    virtual bool inMissQueue(Addr addr) const = 0;
+    virtual bool inMissQueue(Addr addr, bool is_secure) const = 0;
 
     void incMissCount(PacketPtr pkt)
     {

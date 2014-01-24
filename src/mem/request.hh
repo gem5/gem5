@@ -140,6 +140,9 @@ class Request
      * valid together with MMAPPED_IPR) */
     static const FlagsType GENERIC_IPR                 = 0x08000000;
 
+    /** The request targets the secure memory space. */
+    static const FlagsType SECURE                      = 0x10000000;
+
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
     static const FlagsType STICKY_FLAGS = INST_FETCH;
@@ -612,6 +615,7 @@ class Request
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
+    bool isSecure() const { return _flags.isSet(SECURE); }
 };
 
 #endif // __MEM_REQUEST_HH__

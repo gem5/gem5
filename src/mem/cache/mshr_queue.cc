@@ -62,13 +62,13 @@ MSHRQueue::MSHRQueue(const std::string &_label,
 }
 
 MSHR *
-MSHRQueue::findMatch(Addr addr) const
+MSHRQueue::findMatch(Addr addr, bool is_secure) const
 {
     MSHR::ConstIterator i = allocatedList.begin();
     MSHR::ConstIterator end = allocatedList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
-        if (mshr->addr == addr) {
+        if (mshr->addr == addr && mshr->isSecure == is_secure) {
             return mshr;
         }
     }
@@ -76,7 +76,7 @@ MSHRQueue::findMatch(Addr addr) const
 }
 
 bool
-MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
+MSHRQueue::findMatches(Addr addr, bool is_secure, vector<MSHR*>& matches) const
 {
     // Need an empty vector
     assert(matches.empty());
@@ -85,7 +85,7 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
     MSHR::ConstIterator end = allocatedList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
-        if (mshr->addr == addr) {
+        if (mshr->addr == addr && mshr->isSecure == is_secure) {
             retval = true;
             matches.push_back(mshr);
         }
@@ -113,19 +113,19 @@ MSHRQueue::checkFunctional(PacketPtr pkt, Addr blk_addr)
 
 
 MSHR *
-MSHRQueue::findPending(Addr addr, int size) const
+MSHRQueue::findPending(Addr addr, int size, bool is_secure) const
 {
     MSHR::ConstIterator i = readyList.begin();
     MSHR::ConstIterator end = readyList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
-        if (mshr->addr < addr) {
-            if (mshr->addr + mshr->size > addr) {
-                return mshr;
-            }
-        } else {
-            if (addr + size > mshr->addr) {
-                return mshr;
+        if (mshr->isSecure == is_secure) {
+            if (mshr->addr < addr) {
+                if (mshr->addr + mshr->size > addr)
+                    return mshr;
+            } else {
+                if (addr + size > mshr->addr)
+                    return mshr;
             }
         }
     }

@@ -127,11 +127,11 @@ LRU::~LRU()
 }
 
 LRU::BlkType*
-LRU::accessBlock(Addr addr, Cycles &lat, int master_id)
+LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    BlkType *blk = sets[set].findBlk(tag);
+    BlkType *blk = sets[set].findBlk(tag, is_secure);
     lat = hitLatency;
 
     // Access all tags in parallel, hence one in each way.  The data side
@@ -149,8 +149,8 @@ LRU::accessBlock(Addr addr, Cycles &lat, int master_id)
     if (blk != NULL) {
         // move this block to head of the MRU list
         sets[set].moveToHead(blk);
-        DPRINTF(CacheRepl, "set %x: moving blk %x to MRU\n",
-                set, regenerateBlkAddr(tag, set));
+        DPRINTF(CacheRepl, "set %x: moving blk %x (%s) to MRU\n",
+                set, regenerateBlkAddr(tag, set), is_secure ? "s" : "ns");
         if (blk->whenReady > curTick()
             && cache->ticksToCycles(blk->whenReady - curTick()) > hitLatency) {
             lat = cache->ticksToCycles(blk->whenReady - curTick());
@@ -163,11 +163,11 @@ LRU::accessBlock(Addr addr, Cycles &lat, int master_id)
 
 
 LRU::BlkType*
-LRU::findBlock(Addr addr) const
+LRU::findBlock(Addr addr, bool is_secure) const
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    BlkType *blk = sets[set].findBlk(tag);
+    BlkType *blk = sets[set].findBlk(tag, is_secure);
     return blk;
 }
 
@@ -191,6 +191,7 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
     Addr addr = pkt->getAddr();
     MasterID master_id = pkt->req->masterId();
     uint32_t task_id = pkt->req->taskId();
+    bool is_secure = pkt->isSecure();
     if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
@@ -220,6 +221,8 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
     blk->isTouched = true;
     // Set tag for new block.  Caller is responsible for setting status.
     blk->tag = extractTag(addr);
+    if (is_secure)
+        blk->status |= BlkSecure;
 
     // deal with what we are bringing in
     assert(master_id < cache->system->maxMasters());

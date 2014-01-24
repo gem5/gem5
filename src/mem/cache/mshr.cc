@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -64,8 +64,8 @@ using namespace std;
 MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
                pendingDirty(false), postInvalidate(false),
                postDowngrade(false), queue(NULL), order(0), addr(0), size(0),
-               inService(false), isForward(false), threadNum(InvalidThreadID),
-               data(NULL)
+               isSecure(false), inService(false), isForward(false),
+               threadNum(InvalidThreadID), data(NULL)
 {
 }
 
@@ -201,11 +201,12 @@ print(std::ostream &os, int verbosity, const std::string &prefix) const
 
 
 void
-MSHR::allocate(Addr _addr, int _size, PacketPtr target,
-               Tick whenReady, Counter _order)
+MSHR::allocate(Addr _addr, int _size, PacketPtr target, Tick whenReady,
+               Counter _order)
 {
     addr = _addr;
     size = _size;
+    isSecure = target->isSecure();
     readyTime = whenReady;
     order = _order;
     assert(target);
@@ -440,7 +441,7 @@ MSHR::checkFunctional(PacketPtr pkt)
     // For other requests, we iterate over the individual targets
     // since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, addr, size, NULL);
+        pkt->checkFunctional(this, addr, isSecure, size, NULL);
         return false;
     } else {
         return (targets.checkFunctional(pkt) ||
@@ -452,8 +453,9 @@ MSHR::checkFunctional(PacketPtr pkt)
 void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
-    ccprintf(os, "%s[%x:%x] %s %s %s state: %s %s %s %s %s\n",
+    ccprintf(os, "%s[%x:%x](%s) %s %s %s state: %s %s %s %s %s\n",
              prefix, addr, addr+size-1,
+             isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
              isForwardNoResponse() ? "ForwNoResp" : "",
              needsExclusive() ? "Excl" : "",

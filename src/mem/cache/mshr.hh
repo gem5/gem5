@@ -155,6 +155,9 @@ class MSHR : public Packet::SenderState, public Printable
     /** Size of the request. */
     int size;
 
+    /** True if the request targets the secure memory space. */
+    bool isSecure;
+
     /** True if the request has been sent to the bus. */
     bool inService;
 

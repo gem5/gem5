@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012-2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -43,16 +55,26 @@ GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                  std::list<Cycles> &delays)
 {
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
+    bool is_secure = pkt->isSecure();
     int master_id = useMasterId ? pkt->req->masterId() : 0;
     assert(master_id < Max_Masters);
+
+    bool same_sec_state = true;
+    // Avoid activating prefetch if the security state is not
+    // consistent across requests
+    if (is_secure != lastMissIsSecure[master_id] ||
+        is_secure != secondLastMissIsSecure[master_id])
+        same_sec_state = false;
 
     int new_stride = blk_addr - lastMissAddr[master_id];
     int old_stride = lastMissAddr[master_id] - secondLastMissAddr[master_id];
 
     secondLastMissAddr[master_id] = lastMissAddr[master_id];
+    secondLastMissIsSecure[master_id] = lastMissIsSecure[master_id];
     lastMissAddr[master_id] = blk_addr;
+    lastMissIsSecure[master_id] = is_secure;
 
-    if (new_stride == old_stride) {
+    if (same_sec_state && new_stride == old_stride) {
         for (int d = 1; d <= degree; d++) {
             Addr new_addr = blk_addr + d * new_stride;
             if (pageStop && !samePage(blk_addr, new_addr)) {

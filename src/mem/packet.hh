@@ -286,6 +286,9 @@ class Packet : public Printable
     /// physical, depending on the system configuration.
     Addr addr;
 
+    /// True if the request targets the secure memory space.
+    bool _isSecure;
+
     /// The size of the request or transfer.
     unsigned size;
 
@@ -562,6 +565,12 @@ class Packet : public Printable
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
 
+    bool isSecure() const
+    {
+        assert(flags.isSet(VALID_ADDR));
+        return _isSecure;
+    }
+
     /**
      * It has been determined that the SC packet should successfully update
      * memory.  Therefore, convert this SC packet to a normal write.
@@ -601,6 +610,7 @@ class Packet : public Printable
         if (req->hasPaddr()) {
             addr = req->getPaddr();
             flags.set(VALID_ADDR);
+            _isSecure = req->isSecure();
         }
         if (req->hasSize()) {
             size = req->getSize();
@@ -623,6 +633,7 @@ class Packet : public Printable
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
             flags.set(VALID_ADDR);
+            _isSecure = req->isSecure();
         }
         size = _blkSize;
         flags.set(VALID_SIZE);
@@ -638,7 +649,8 @@ class Packet : public Printable
     Packet(Packet *pkt, bool clearFlags = false)
         :  cmd(pkt->cmd), req(pkt->req),
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
-           addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
+           addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
+           src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart),
            bytesValidEnd(pkt->bytesValidEnd),
            busFirstWordDelay(pkt->busFirstWordDelay),
@@ -679,6 +691,7 @@ class Packet : public Printable
         assert(req->hasPaddr());
         flags = 0;
         addr = req->getPaddr();
+        _isSecure = req->isSecure();
         size = req->getSize();
 
         src = InvalidPortID;
@@ -887,7 +900,8 @@ class Packet : public Printable
      * value.  If the functional request is a write, it may update the
      * memory value.
      */
-    bool checkFunctional(Printable *obj, Addr base, int size, uint8_t *data);
+    bool checkFunctional(Printable *obj, Addr base, bool is_secure, int size,
+                         uint8_t *data);
 
     /**
      * Check a functional request against a memory value stored in
@@ -897,8 +911,8 @@ class Packet : public Printable
     checkFunctional(PacketPtr other) 
     {
         uint8_t *data = other->hasData() ? other->getPtr<uint8_t>() : NULL;
-        return checkFunctional(other, other->getAddr(), other->getSize(),
-                               data);
+        return checkFunctional(other, other->getAddr(), other->isSecure(),
+                               other->getSize(), data);
     }
 
     /**

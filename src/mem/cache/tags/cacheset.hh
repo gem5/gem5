@@ -69,10 +69,11 @@ class CacheSet
      * Find a block matching the tag in this set.
      * @param way_id The id of the way that matches the tag.
      * @param tag The Tag to find.
+     * @param is_secure True if the target memory space is secure.
      * @return Pointer to the block if found. Set way_id to assoc if none found
      */
-    Blktype* findBlk(Addr tag, int& way_id) const ;
-    Blktype* findBlk(Addr tag) const ;
+    Blktype* findBlk(Addr tag, bool is_secure, int& way_id) const ;
+    Blktype* findBlk(Addr tag, bool is_secure) const ;
 
     /**
      * Move the given block to the head of the list.
@@ -90,7 +91,7 @@ class CacheSet
 
 template <class Blktype>
 Blktype*
-CacheSet<Blktype>::findBlk(Addr tag, int& way_id) const
+CacheSet<Blktype>::findBlk(Addr tag, bool is_secure, int& way_id) const
 {
     /**
      * Way_id returns the id of the way that matches the block
@@ -98,7 +99,8 @@ CacheSet<Blktype>::findBlk(Addr tag, int& way_id) const
      */
     way_id = assoc;
     for (int i = 0; i < assoc; ++i) {
-        if (blks[i]->tag == tag && blks[i]->isValid()) {
+        if (blks[i]->tag == tag && blks[i]->isValid() &&
+            blks[i]->isSecure() == is_secure) {
             way_id = i;
             return blks[i];
         }
@@ -108,10 +110,10 @@ CacheSet<Blktype>::findBlk(Addr tag, int& way_id) const
 
 template <class Blktype>
 Blktype*
-CacheSet<Blktype>::findBlk(Addr tag) const
+CacheSet<Blktype>::findBlk(Addr tag, bool is_secure) const
 {
     int ignored_way_id;
-    return findBlk(tag, ignored_way_id);
+    return findBlk(tag, is_secure, ignored_way_id);
 }
 
 template <class Blktype>
