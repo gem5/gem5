@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2012 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -48,8 +48,8 @@ let {{
             self.constructTemplate = eval(self.decConstBase + 'Constructor')
 
         def fillTemplates(self, name, Name, codeBlobs, memFlags, instFlags,
-                          base = 'Memory', wbDecl = None, pcDecl = None,
-                          rasPop = False):
+                          base='Memory', wbDecl=None, pcDecl=None,
+                          rasPop=False, size=4, sign=False, faCode=None):
             # Make sure flags are in lists (convert to lists if not).
             memFlags = makeList(memFlags)
             instFlags = makeList(instFlags)
@@ -62,6 +62,22 @@ let {{
             eaCode += (string.join(memFlags, '|') + ';')
 
             codeBlobs["ea_code"] = eaCode
+
+            if faCode:
+                # For AArch64 the fa_code snippet comes already assembled here
+                codeBlobs["fa_code"] = faCode
+            elif wbDecl == None:
+                codeBlobs["fa_code"] = '''
+                    if (dest != INTREG_PC) {
+                        fault->annotate(ArmFault::SAS, %s);
+                        fault->annotate(ArmFault::SSE, %s);
+                        fault->annotate(ArmFault::SRT, dest);
+                    }
+                ''' %("0"    if size == 1 else
+                      "1"    if size == 2 else "2",
+                      "true" if sign      else "false")
+            else:
+                codeBlobs["fa_code"] = ''
 
             macroName = Name
             instFlagsCopy = list(instFlags)
@@ -108,6 +124,7 @@ let {{
                                       "use_uops" : use_uops,
                                       "use_pc" : use_pc,
                                       "use_wb" : use_wb,
+                                      "fa_code" : '',
                                       "is_ras_pop" : is_ras_pop },
                                     ['IsMacroop'])
                 header_output += self.declareTemplate.subst(iop)
@@ -176,8 +193,13 @@ let {{
         return Name
 
     def buildMemSuffix(sign, size):
-        if size == 4:
-            memSuffix = ''
+        if size == 8:
+            memSuffix = '_ud'
+        elif size == 4:
+            if sign:
+                memSuffix = '_sw'
+            else:
+                memSuffix = '_uw'
         elif size == 2:
             if sign:
                 memSuffix = '_sh'

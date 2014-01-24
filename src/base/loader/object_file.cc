@@ -66,10 +66,10 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask)
+ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask, Addr offset)
 {
     if (sec->size != 0) {
-        Addr addr = sec->baseAddr & addrMask;
+        Addr addr = (sec->baseAddr & addrMask) + offset;
         if (sec->fileImage) {
             memProxy.writeBlob(addr, sec->fileImage, sec->size);
         }
@@ -83,11 +83,11 @@ ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask)
 
 
 bool
-ObjectFile::loadSections(PortProxy& memProxy, Addr addrMask)
+ObjectFile::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
 {
-    return (loadSection(&text, memProxy, addrMask)
-            && loadSection(&data, memProxy, addrMask)
-            && loadSection(&bss, memProxy, addrMask));
+    return (loadSection(&text, memProxy, addrMask, offset)
+            && loadSection(&data, memProxy, addrMask, offset)
+            && loadSection(&bss, memProxy, addrMask, offset));
 }
 
 

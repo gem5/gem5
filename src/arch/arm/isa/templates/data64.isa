@@ -1,0 +1,279 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2011 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+def template DataXImmDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, uint64_t _imm);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXImmConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          uint64_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataXSRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, IntRegIndex _op2,
+                int32_t _shiftAmt, ArmShiftType _shiftType);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXSRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          int32_t _shiftAmt,
+                                          ArmShiftType _shiftType)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _shiftAmt, _shiftType)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataXERegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, IntRegIndex _op2,
+                ArmExtendType _extendType, int32_t _shiftAmt);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXERegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          ArmExtendType _extendType,
+                                          int32_t _shiftAmt)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _extendType, _shiftAmt)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataX1RegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       IntRegIndex _op1);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataX1RegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataX2RegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       IntRegIndex _op1, IntRegIndex _op2);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataX2RegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataX2RegImmDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       IntRegIndex _op1, IntRegIndex _op2, uint64_t _imm);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataX2RegImmConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          uint64_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataX3RegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _op3);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataX3RegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          IntRegIndex _op3)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _op3)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataXCondCompImmDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                       uint64_t _imm, ConditionCode _condCode, uint8_t _defCc);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXCondCompImmConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _op1,
+                                          uint64_t _imm,
+                                          ConditionCode _condCode,
+                                          uint8_t _defCc)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _op1, _imm, _condCode, _defCc)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataXCondCompRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                       IntRegIndex _op2, ConditionCode _condCode,
+                       uint8_t _defCc);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXCondCompRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          ConditionCode _condCode,
+                                          uint8_t _defCc)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _op1, _op2, _condCode, _defCc)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataXCondSelDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       IntRegIndex _op1, IntRegIndex _op2,
+                       ConditionCode _condCode);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataXCondSelConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          ConditionCode _condCode)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _condCode)
+    {
+        %(constructor)s;
+    }
+}};

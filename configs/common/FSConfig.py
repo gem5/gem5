@@ -242,7 +242,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
         self.realview = VExpress_ELT()
     elif machine_type == "VExpress_EMM":
         self.realview = VExpress_EMM()
-        self.load_addr_mask = 0xffffffff
+    elif machine_type == "VExpress_EMM64":
+        self.realview = VExpress_EMM64()
     else:
         print "Unknown Machine Type"
         sys.exit(1)

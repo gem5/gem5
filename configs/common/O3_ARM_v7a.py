@@ -139,7 +139,7 @@ class O3_ARM_v7a_3(DerivO3CPU):
     backComSize = 5
     forwardComSize = 5
     numPhysIntRegs = 128
-    numPhysFloatRegs = 128
+    numPhysFloatRegs = 192
     numIQEntries = 32
     numROBEntries = 40
 

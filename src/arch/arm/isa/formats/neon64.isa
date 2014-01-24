@@ -1,0 +1,2626 @@
+// Copyright (c) 2012-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+//          Mbou Eyole
+
+output header {{
+namespace Aarch64
+{
+    // AdvSIMD three same
+    StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
+    // AdvSIMD three different
+    StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
+    // AdvSIMD two-reg misc
+    StaticInstPtr decodeNeon2RegMisc(ExtMachInst machInst);
+    // AdvSIMD across lanes
+    StaticInstPtr decodeNeonAcrossLanes(ExtMachInst machInst);
+    // AdvSIMD copy
+    StaticInstPtr decodeNeonCopy(ExtMachInst machInst);
+    // AdvSIMD vector x indexed element
+    StaticInstPtr decodeNeonIndexedElem(ExtMachInst machInst);
+    // AdvSIMD modified immediate
+    StaticInstPtr decodeNeonModImm(ExtMachInst machInst);
+    // AdvSIMD shift by immediate
+    StaticInstPtr decodeNeonShiftByImm(ExtMachInst machInst);
+    // AdvSIMD TBL/TBX
+    StaticInstPtr decodeNeonTblTbx(ExtMachInst machInst);
+    // AdvSIMD ZIP/UZP/TRN
+    StaticInstPtr decodeNeonZipUzpTrn(ExtMachInst machInst);
+    // AdvSIMD EXT
+    StaticInstPtr decodeNeonExt(ExtMachInst machInst);
+
+    // AdvSIMD scalar three same
+    StaticInstPtr decodeNeonSc3Same(ExtMachInst machInst);
+    // AdvSIMD scalar three different
+    StaticInstPtr decodeNeonSc3Diff(ExtMachInst machInst);
+    // AdvSIMD scalar two-reg misc
+    StaticInstPtr decodeNeonSc2RegMisc(ExtMachInst machInst);
+    // AdvSIMD scalar pairwise
+    StaticInstPtr decodeNeonScPwise(ExtMachInst machInst);
+    // AdvSIMD scalar copy
+    StaticInstPtr decodeNeonScCopy(ExtMachInst machInst);
+    // AdvSIMD scalar x indexed element
+    StaticInstPtr decodeNeonScIndexedElem(ExtMachInst machInst);
+    // AdvSIMD scalar shift by immediate
+    StaticInstPtr decodeNeonScShiftByImm(ExtMachInst machInst);
+
+    // AdvSIMD load/store
+    StaticInstPtr decodeNeonMem(ExtMachInst machInst);
+}
+}};
+
+output decoder {{
+namespace Aarch64
+{
+    StaticInstPtr
+    decodeNeon3Same(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 15, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size_q = (size << 1) | q;
+        uint8_t sz_q = size_q & 0x3;
+
+        switch (opcode) {
+          case 0x00:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UhaddDX, UhaddQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<ShaddDX, ShaddQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x01:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UqaddDX, UqaddQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SqaddDX, SqaddQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x02:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UrhaddDX, UrhaddQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SrhaddDX, SrhaddQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x03:
+            switch (size) {
+              case 0x0:
+                if (u) {
+                    if (q)
+                        return new EorQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new EorDX<uint64_t>(machInst, vd, vn, vm);
+                } else {
+                    if (q)
+                        return new AndQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new AndDX<uint64_t>(machInst, vd, vn, vm);
+                }
+              case 0x1:
+                if (u) {
+                    if (q)
+                        return new BslQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new BslDX<uint64_t>(machInst, vd, vn, vm);
+                } else {
+                    if (q)
+                        return new BicQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new BicDX<uint64_t>(machInst, vd, vn, vm);
+                }
+              case 0x2:
+                if (u) {
+                    if (q)
+                        return new BitQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new BitDX<uint64_t>(machInst, vd, vn, vm);
+                } else {
+                    if (q)
+                        return new OrrQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new OrrDX<uint64_t>(machInst, vd, vn, vm);
+                }
+              case 0x3:
+                if (u) {
+                    if (q)
+                        return new BifQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new BifDX<uint64_t>(machInst, vd, vn, vm);
+                } else {
+                    if (q)
+                        return new OrnQX<uint64_t>(machInst, vd, vn, vm);
+                    else
+                        return new OrnDX<uint64_t>(machInst, vd, vn, vm);
+                }
+            }
+          case 0x04:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UhsubDX, UhsubQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<ShsubDX, ShsubQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x05:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UqsubDX, UqsubQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SqsubDX, SqsubQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x06:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<CmhiDX, CmhiQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<CmgtDX, CmgtQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x07:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<CmhsDX, CmhsQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<CmgeDX, CmgeQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x08:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UshlDX, UshlQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SshlDX, SshlQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x09:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UqshlDX, UqshlQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SqshlDX, SqshlQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0a:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UrshlDX, UrshlQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SrshlDX, SrshlQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0b:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<UqrshlDX, UqrshlQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeXReg<SqrshlDX, SqrshlQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0c:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UmaxDX, UmaxQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SmaxDX, SmaxQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0d:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UminDX, UminQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SminDX, SminQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0e:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UabdDX, UabdQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SabdDX, SabdQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x0f:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UabaDX, UabaQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SabaDX, SabaQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x10:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<SubDX, SubQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeXReg<AddDX, AddQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x11:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeXReg<CmeqDX, CmeqQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeXReg<CmtstDX, CmtstQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x12:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<MlsDX, MlsQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeSReg<MlaDX, MlaQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x13:
+            if (size == 0x3 || (size != 0x0 && bits(machInst, 29)))
+                return new Unknown64(machInst);
+            if (u) {
+                if (q)
+                    return new PmulQX<uint8_t>(machInst, vd, vn, vm);
+                else
+                    return new PmulDX<uint8_t>(machInst, vd, vn, vm);
+            } else {
+                return decodeNeonUThreeSReg<MulDX, MulQX>(
+                    q, size, machInst, vd, vn, vm);
+            }
+          case 0x14:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UmaxpDX, UmaxpQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SmaxpDX, SmaxpQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x15:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UminpDX, UminpQX>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SminpDX, SminpQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x16:
+            if (size == 0x3 || size == 0x0)
+                return new Unknown64(machInst);
+            if (u) {
+                if (q)
+                    return decodeNeonSThreeHAndWReg<SqrdmulhQX>(
+                        size, machInst, vd, vn, vm);
+                else
+                    return decodeNeonSThreeHAndWReg<SqrdmulhDX>(
+                        size, machInst, vd, vn, vm);
+            } else {
+                if (q)
+                    return decodeNeonSThreeHAndWReg<SqdmulhQX>(
+                        size, machInst, vd, vn, vm);
+                else
+                    return decodeNeonSThreeHAndWReg<SqdmulhDX>(
+                        size, machInst, vd, vn, vm);
+            }
+          case 0x17:
+            if (u || size_q == 0x6)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeXReg<AddpDX, AddpQX>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x18:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FmaxnmpDX, FmaxnmpQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FmaxnmDX, FmaxnmQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return decodeNeonUThreeFpReg<FminnmpDX, FminnmpQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FminnmDX, FminnmQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            }
+          case 0x19:
+            if (size < 0x2) {
+                if (u || sz_q == 0x2)
+                    return new Unknown64(machInst);
+                else
+                    return decodeNeonUThreeFpReg<FmlaDX, FmlaQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u || sz_q == 0x2)
+                    return new Unknown64(machInst);
+                else
+                    return decodeNeonUThreeFpReg<FmlsDX, FmlsQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            }
+          case 0x1a:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FaddpDX, FaddpQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FaddDX, FaddQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return decodeNeonUThreeFpReg<FabdDX, FabdQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FsubDX, FsubQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            }
+          case 0x1b:
+            if (size < 0x2 && sz_q != 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FmulDX, FmulQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FmulxDX, FmulxQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x1c:
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FcmgeDX, FcmgeQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FcmeqDX, FcmeqQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return decodeNeonUThreeFpReg<FcmgtDX, FcmgtQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x1d:
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FacgeDX, FacgeQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return new Unknown64(machInst);
+            } else {
+                if (u)
+                    return decodeNeonUThreeFpReg<FacgtDX, FacgtQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x1e:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FmaxpDX, FmaxpQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FmaxDX, FmaxQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return decodeNeonUThreeFpReg<FminpDX, FminpQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FminDX, FminQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            }
+          case 0x1f:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeFpReg<FdivDX, FdivQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeFpReg<FrecpsDX, FrecpsQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return new Unknown64(machInst);
+                else
+                    return decodeNeonUThreeFpReg<FrsqrtsDX, FrsqrtsQX>(
+                        q, size & 0x1, machInst, vd, vn, vm);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeon3Diff(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 15, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x0:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UaddlX, Uaddl2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SaddlX, Saddl2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x1:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UaddwX, Uaddw2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SaddwX, Saddw2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x2:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UsublX, Usubl2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SsublX, Ssubl2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x3:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UsubwX, Usubw2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SsubwX, Ssubw2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x4:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<RaddhnX, Raddhn2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeSReg<AddhnX, Addhn2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x5:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UabalX, Uabal2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SabalX, Sabal2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x6:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<RsubhnX, Rsubhn2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeSReg<SubhnX, Subhn2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x7:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UabdlX, Uabdl2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SabdlX, Sabdl2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x8:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UmlalX, Umlal2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SmlalX, Smlal2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0x9:
+            if (u || (size == 0x0 || size == 0x3)) {
+                return new Unknown64(machInst);
+            } else {
+                if (q) {
+                    return decodeNeonSThreeHAndWReg<Sqdmlal2X>(
+                        size, machInst, vd, vn, vm);
+                } else {
+                    return decodeNeonSThreeHAndWReg<SqdmlalX>(
+                        size, machInst, vd, vn, vm);
+                }
+            }
+          case 0xa:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UmlslX, Umlsl2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SmlslX, Smlsl2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0xb:
+            if (u || (size == 0x0 || size == 0x3)) {
+                return new Unknown64(machInst);
+            } else {
+                if (q) {
+                    return decodeNeonSThreeHAndWReg<Sqdmlsl2X>(
+                        size, machInst, vd, vn, vm);
+                } else {
+                    return decodeNeonSThreeHAndWReg<SqdmlslX>(
+                        size, machInst, vd, vn, vm);
+                }
+            }
+          case 0xc:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeSReg<UmullX, Umull2X>(
+                    q, size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeSReg<SmullX, Smull2X>(
+                    q, size, machInst, vd, vn, vm);
+          case 0xd:
+            if (u || (size == 0x0 || size == 0x3)) {
+                return new Unknown64(machInst);
+            } else {
+                if (q) {
+                    return decodeNeonSThreeHAndWReg<Sqdmull2X>(
+                        size, machInst, vd, vn, vm);
+                } else {
+                    return decodeNeonSThreeHAndWReg<SqdmullX>(
+                        size, machInst, vd, vn, vm);
+                }
+            }
+          case 0xe:
+            if (u || size != 0) {
+                return new Unknown64(machInst);
+            } else {
+                if (q)
+                    return new Pmull2X<uint8_t>(machInst, vd, vn, vm);
+                else
+                    return new PmullX<uint8_t>(machInst, vd, vn, vm);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeon2RegMisc(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 16, 12);
+
+        IntRegIndex vd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+
+        uint8_t size_q = (size << 1) | q;
+        uint8_t sz_q = size_q & 0x3;
+        uint8_t op = (uint8_t)((bits(machInst, 12) << 1) |
+                               bits(machInst, 29));
+        uint8_t switchVal = opcode | ((u ? 1 : 0) << 5);
+
+        switch (switchVal) {
+          case 0x00:
+            if (op + size >= 3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<Rev64DX, Rev64QX>(
+                q, size, machInst, vd, vn);
+          case 0x01:
+            if (op + size >= 3)
+                return new Unknown64(machInst);
+            if (q)
+                return new Rev16QX<uint8_t>(machInst, vd, vn);
+            else
+                return new Rev16DX<uint8_t>(machInst, vd, vn);
+          case 0x02:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<SaddlpDX, SaddlpQX>(
+                q, size, machInst, vd, vn);
+          case 0x03:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscXReg<SuqaddDX, SuqaddQX>(
+                q, size, machInst, vd, vn);
+          case 0x04:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<ClsDX, ClsQX>(
+                q, size, machInst, vd, vn);
+          case 0x05:
+            if (size != 0x0)
+                return new Unknown64(machInst);
+            if (q)
+                return new CntQX<uint8_t>(machInst, vd, vn);
+            else
+                return new CntDX<uint8_t>(machInst, vd, vn);
+          case 0x06:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<SadalpDX, SadalpQX>(
+                q, size, machInst, vd, vn);
+          case 0x07:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<SqabsDX, SqabsQX>(
+                q, size, machInst, vd, vn);
+          case 0x08:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<CmgtZeroDX, CmgtZeroQX>(
+                q, size, machInst, vd, vn);
+          case 0x09:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<CmeqZeroDX, CmeqZeroQX>(
+                q, size, machInst, vd, vn);
+          case 0x0a:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<CmltZeroDX, CmltZeroQX>(
+                q, size, machInst, vd, vn);
+          case 0x0b:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<AbsDX, AbsQX>(
+                q, size, machInst, vd, vn);
+          case 0x0c:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FcmgtZeroDX, FcmgtZeroQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x0d:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FcmeqZeroDX, FcmeqZeroQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x0e:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FcmltZeroDX, FcmltZeroQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x0f:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FabsDX, FabsQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x12:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<XtnX, Xtn2X>(
+                q, size, machInst, vd, vn);
+          case 0x14:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<SqxtnX, Sqxtn2X>(
+                q, size, machInst, vd, vn);
+          case 0x16:
+            if (size > 0x1)
+                return new Unknown64(machInst);
+            if (q) {
+                if (size)
+                    return new Fcvtn2X<uint32_t>(machInst, vd, vn);
+                else
+                    return new Fcvtn2X<uint16_t>(machInst, vd, vn);
+            } else {
+                if (size)
+                    return new FcvtnX<uint32_t>(machInst, vd, vn);
+                else
+                    return new FcvtnX<uint16_t>(machInst, vd, vn);
+            }
+          case 0x17:
+            if (size > 0x1)
+                return new Unknown64(machInst);
+            if (q) {
+                if (size)
+                    return new Fcvtl2X<uint32_t>(machInst, vd, vn);
+                else
+                    return new Fcvtl2X<uint16_t>(machInst, vd, vn);
+            } else {
+                if (size)
+                    return new FcvtlX<uint32_t>(machInst, vd, vn);
+                else
+                    return new FcvtlX<uint16_t>(machInst, vd, vn);
+            }
+          case 0x18:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FrintnDX, FrintnQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FrintpDX, FrintpQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x19:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FrintmDX, FrintmQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FrintzDX, FrintzQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x1a:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FcvtnsDX, FcvtnsQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FcvtpsDX, FcvtpsQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x1b:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FcvtmsDX, FcvtmsQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FcvtzsIntDX, FcvtzsIntQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x1c:
+            if (size < 0x2) {
+                if (sz_q == 0x2)
+                    return new Unknown64(machInst);
+                return decodeNeonUTwoMiscFpReg<FcvtasDX, FcvtasQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else {
+                if (size & 0x1)
+                    return new Unknown64(machInst);
+                if (q)
+                    return new UrecpeQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new UrecpeDX<uint32_t>(machInst, vd, vn);
+            }
+          case 0x1d:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (q) {
+                    if (size & 0x1)
+                        return new ScvtfIntDQX<uint64_t>(machInst, vd, vn);
+                    else
+                        return new ScvtfIntSQX<uint32_t>(machInst, vd, vn);
+                } else {
+                    if (size & 0x1)
+                        return new Unknown(machInst);
+                    else
+                        return new ScvtfIntDX<uint32_t>(machInst, vd, vn);
+                }
+            } else {
+                return decodeNeonUTwoMiscFpReg<FrecpeDX, FrecpeQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            }
+          case 0x20:
+            if (op + size >= 3)
+                return new Unknown64(machInst);
+            if (q) {
+                if (size & 0x1)
+                    return new Rev32QX<uint16_t>(machInst, vd, vn);
+                else
+                    return new Rev32QX<uint8_t>(machInst, vd, vn);
+            } else {
+                if (size & 0x1)
+                    return new Rev32DX<uint16_t>(machInst, vd, vn);
+                else
+                    return new Rev32DX<uint8_t>(machInst, vd, vn);
+            }
+          case 0x22:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<UaddlpDX, UaddlpQX>(
+                q, size, machInst, vd, vn);
+          case 0x23:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscXReg<UsqaddDX, UsqaddQX>(
+                q, size, machInst, vd, vn);
+            return new Unknown64(machInst);
+          case 0x24:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<ClzDX, ClzQX>(
+                q, size, machInst, vd, vn);
+          case 0x25:
+            if (size == 0x0) {
+                if (q)
+                    return new MvnQX<uint64_t>(machInst, vd, vn);
+                else
+                    return new MvnDX<uint64_t>(machInst, vd, vn);
+            } else if (size == 0x1) {
+                if (q)
+                    return new RbitQX<uint8_t>(machInst, vd, vn);
+                else
+                    return new RbitDX<uint8_t>(machInst, vd, vn);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x26:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<UadalpDX, UadalpQX>(
+                q, size, machInst, vd, vn);
+          case 0x27:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<SqnegDX, SqnegQX>(
+                q, size, machInst, vd, vn);
+          case 0x28:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<CmgeZeroDX, CmgeZeroQX>(
+                q, size, machInst, vd, vn);
+          case 0x29:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<CmleZeroDX, CmleZeroQX>(
+                q, size, machInst, vd, vn);
+          case 0x2b:
+            if (size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscXReg<NegDX, NegQX>(
+                q, size, machInst, vd, vn);
+          case 0x2c:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FcmgeZeroDX, FcmgeZeroQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x2d:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FcmleZeroDX, FcmleZeroQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x2f:
+            if (size < 0x2 || size_q == 0x6)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FnegDX, FnegQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x32:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSTwoMiscSReg<SqxtunX, Sqxtun2X>(
+                q, size, machInst, vd, vn);
+          case 0x33:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<ShllX, Shll2X>(
+                q, size, machInst, vd, vn);
+          case 0x34:
+            if (size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscSReg<UqxtnX, Uqxtn2X>(
+                q, size, machInst, vd, vn);
+          case 0x36:
+            if (size != 0x1)
+                return new Unknown64(machInst);
+            if (q)
+                return new Fcvtxn2X<uint32_t>(machInst, vd, vn);
+            else
+                return new FcvtxnX<uint32_t>(machInst, vd, vn);
+          case 0x38:
+            if (size > 0x1 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FrintaDX, FrintaQX>(
+                q, size & 0x1, machInst, vd, vn);
+          case 0x39:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FrintxDX, FrintxQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FrintiDX, FrintiQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x3a:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FcvtnuDX, FcvtnuQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FcvtpuDX, FcvtpuQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x3b:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<FcvtmuDX, FcvtmuQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FcvtzuIntDX, FcvtzuIntQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x3c:
+            if (size < 0x2) {
+                return decodeNeonUTwoMiscFpReg<FcvtauDX, FcvtauQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else if (size == 0x2) {
+                if (q)
+                    return new UrsqrteQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new UrsqrteDX<uint32_t>(machInst, vd, vn);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x3d:
+            if (sz_q == 0x2)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUTwoMiscFpReg<UcvtfIntDX, UcvtfIntQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscFpReg<FrsqrteDX, FrsqrteQX>(
+                    q, size & 0x1, machInst, vd, vn);
+          case 0x3f:
+            if (size < 0x2 || sz_q == 0x2)
+                return new Unknown64(machInst);
+            return decodeNeonUTwoMiscFpReg<FsqrtDX, FsqrtQX>(
+                q, size & 0x1, machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonAcrossLanes(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 16, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size_q = (size << 1) | q;
+        uint8_t sz_q = size_q & 0x3;
+        uint8_t switchVal = opcode | ((u ? 1 : 0) << 5);
+
+        switch (switchVal) {
+          case 0x03:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSAcrossLanesLongReg<SaddlvDX, SaddlvQX,
+                                                 SaddlvBQX>(
+                q, size, machInst, vd, vn);
+          case 0x0a:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSAcrossLanesReg<SmaxvDX, SmaxvQX>(
+                q, size, machInst, vd, vn);
+          case 0x1a:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonSAcrossLanesReg<SminvDX, SminvQX>(
+                q, size, machInst, vd, vn);
+          case 0x1b:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUAcrossLanesReg<AddvDX, AddvQX>(
+                q, size, machInst, vd, vn);
+          case 0x23:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUAcrossLanesLongReg<UaddlvDX, UaddlvQX,
+                                                 UaddlvBQX>(
+                q, size, machInst, vd, vn);
+          case 0x2a:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUAcrossLanesReg<UmaxvDX, UmaxvQX>(
+                q, size, machInst, vd, vn);
+          case 0x2c:
+            if (sz_q != 0x1)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (q)
+                    return new FmaxnmvQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new Unknown64(machInst);
+            } else {
+                if (q)
+                    return new FminnmvQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x2f:
+            if (sz_q != 0x1)
+                return new Unknown64(machInst);
+            if (size < 0x2) {
+                if (q)
+                    return new FmaxvQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new Unknown64(machInst);
+            } else {
+                if (q)
+                    return new FminvQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x3a:
+            if (size_q == 0x4 || size == 0x3)
+                return new Unknown64(machInst);
+            return decodeNeonUAcrossLanesReg<UminvDX, UminvQX>(
+                q, size, machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonCopy(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t op = bits(machInst, 29);
+        uint8_t imm5 = bits(machInst, 20, 16);
+        uint8_t imm4 = bits(machInst, 14, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t imm5_pos = findLsbSet(imm5);
+        uint8_t index1 = 0, index2 = 0;
+
+        if (op) {
+            if (!q || (imm4 & mask(imm5_pos)))
+                return new Unknown64(machInst);
+
+            index1 = bits(imm5, 4, imm5_pos + 1);  // dst
+            index2 = bits(imm4, 3, imm5_pos);  // src
+
+            switch (imm5_pos) {
+              case 0:
+                return new InsElemX<uint8_t>(machInst, vd, vn, index1, index2);
+              case 1:
+                return new InsElemX<uint16_t>(machInst, vd, vn, index1, index2);
+              case 2:
+                return new InsElemX<uint32_t>(machInst, vd, vn, index1, index2);
+              case 3:
+                return new InsElemX<uint64_t>(machInst, vd, vn, index1, index2);
+              default:
+                return new Unknown64(machInst);
+            }
+        }
+
+        switch (imm4) {
+          case 0x0:
+            index1 = bits(imm5, 4, imm5_pos + 1);
+            switch (imm5_pos) {
+              case 0:
+                if (q)
+                    return new DupElemQX<uint8_t>(machInst, vd, vn, index1);
+                else
+                    return new DupElemDX<uint8_t>(machInst, vd, vn, index1);
+              case 1:
+                if (q)
+                    return new DupElemQX<uint16_t>(machInst, vd, vn, index1);
+                else
+                    return new DupElemDX<uint16_t>(machInst, vd, vn, index1);
+              case 2:
+                if (q)
+                    return new DupElemQX<uint32_t>(machInst, vd, vn, index1);
+                else
+                    return new DupElemDX<uint32_t>(machInst, vd, vn, index1);
+              case 3:
+                if (q)
+                    return new DupElemQX<uint64_t>(machInst, vd, vn, index1);
+                else
+                    return new Unknown64(machInst);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x1:
+            switch (imm5) {
+              case 0x1:
+                if (q)
+                    return new DupGprWQX<uint8_t>(machInst, vd, vn);
+                else
+                    return new DupGprWDX<uint8_t>(machInst, vd, vn);
+              case 0x2:
+                if (q)
+                    return new DupGprWQX<uint16_t>(machInst, vd, vn);
+                else
+                    return new DupGprWDX<uint16_t>(machInst, vd, vn);
+              case 0x4:
+                if (q)
+                    return new DupGprWQX<uint32_t>(machInst, vd, vn);
+                else
+                    return new DupGprWDX<uint32_t>(machInst, vd, vn);
+              case 0x8:
+                if (q)
+                    return new DupGprXQX<uint64_t>(machInst, vd, vn);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x3:
+            index1 = imm5 >> (imm5_pos + 1);
+            switch (imm5_pos) {
+              case 0:
+                return new InsGprWX<uint8_t>(machInst, vd, vn, index1);
+              case 1:
+                return new InsGprWX<uint16_t>(machInst, vd, vn, index1);
+              case 2:
+                return new InsGprWX<uint32_t>(machInst, vd, vn, index1);
+              case 3:
+                return new InsGprXX<uint64_t>(machInst, vd, vn, index1);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x5:
+            index1 = bits(imm5, 4, imm5_pos + 1);
+            switch (imm5_pos) {
+              case 0:
+                if (q)
+                    return new SmovXX<int8_t>(machInst, vd, vn, index1);
+                else
+                    return new SmovWX<int8_t>(machInst, vd, vn, index1);
+              case 1:
+                if (q)
+                    return new SmovXX<int16_t>(machInst, vd, vn, index1);
+                else
+                    return new SmovWX<int16_t>(machInst, vd, vn, index1);
+              case 2:
+                if (q)
+                    return new SmovXX<int32_t>(machInst, vd, vn, index1);
+                else
+                    return new Unknown64(machInst);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x7:
+            index1 = imm5 >> (imm5_pos + 1);
+
+            if ((q && imm5_pos != 3) || (!q && imm5_pos >= 3))
+                return new Unknown64(machInst);
+
+            switch (imm5_pos) {
+              case 0:
+                return new UmovWX<uint8_t>(machInst, vd, vn, index1);
+              case 1:
+                return new UmovWX<uint16_t>(machInst, vd, vn, index1);
+              case 2:
+                return new UmovWX<uint32_t>(machInst, vd, vn, index1);
+              case 3:
+                return new UmovXX<uint64_t>(machInst, vd, vn, index1);
+              default:
+                return new Unknown64(machInst);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonIndexedElem(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t L = bits(machInst, 21);
+        uint8_t M = bits(machInst, 20);
+        uint8_t opcode = bits(machInst, 15, 12);
+        uint8_t H = bits(machInst, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm_bf = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+
+        uint8_t index = 0;
+        uint8_t index_fp = 0;
+        uint8_t vmh = 0;
+        uint8_t sz = size & 0x1;
+        uint8_t sz_q = (sz << 1) | bits(machInst, 30);
+        uint8_t sz_L = (sz << 1) | L;
+
+        // Index and 2nd register operand for integer instructions
+        if (size == 0x1) {
+            index = (H << 2) | (L << 1) | M;
+            // vmh = 0;
+        } else if (size == 0x2) {
+            index = (H << 1) | L;
+            vmh = M;
+        }
+        IntRegIndex vm = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        // Index and 2nd register operand for FP instructions
+        vmh = M;
+        if ((size & 0x1) == 0) {
+            index_fp = (H << 1) | L;
+        } else if (L == 0) {
+            index_fp = H;
+        }
+        IntRegIndex vm_fp = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        switch (opcode) {
+          case 0x0:
+            if (!u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeImmHAndWReg<MlaElemDX, MlaElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x1:
+            if (!u && size >= 2 && sz_q != 0x2 && sz_L != 0x3)
+                return decodeNeonUThreeImmFpReg<FmlaElemDX, FmlaElemQX>(
+                    q, sz, machInst, vd, vn, vm_fp, index_fp);
+            else
+                return new Unknown64(machInst);
+          case 0x2:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeImmHAndWReg<UmlalElemX, UmlalElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+            else
+                return decodeNeonSThreeImmHAndWReg<SmlalElemX, SmlalElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x3:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmlalElemX,
+                                                   SqdmlalElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x4:
+            if (u && !(size == 0x0 || size == 0x3))
+                return decodeNeonUThreeImmHAndWReg<MlsElemDX, MlsElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+            else
+                return new Unknown64(machInst);
+          case 0x5:
+            if (!u && size >= 0x2 && sz_L != 0x3 && sz_q != 0x2)
+                return decodeNeonUThreeImmFpReg<FmlsElemDX, FmlsElemQX>(
+                    q, sz, machInst, vd, vn, vm_fp, index_fp);
+            else
+                return new Unknown64(machInst);
+          case 0x6:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeImmHAndWReg<UmlslElemX, UmlslElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+            else
+                return decodeNeonSThreeImmHAndWReg<SmlslElemX, SmlslElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x7:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmlslElemX,
+                                                   SqdmlslElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x8:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeImmHAndWReg<MulElemDX, MulElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0x9:
+            if (size >= 2 && sz_q != 0x2 && sz_L != 0x3) {
+                if (u)
+                    return decodeNeonUThreeImmFpReg<FmulxElemDX, FmulxElemQX>(
+                        q, sz, machInst, vd, vn, vm_fp, index_fp);
+                else
+                    return decodeNeonUThreeImmFpReg<FmulElemDX, FmulElemQX>(
+                        q, sz, machInst, vd, vn, vm_fp, index_fp);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0xa:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeImmHAndWReg<UmullElemX, UmullElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+            else
+                return decodeNeonSThreeImmHAndWReg<SmullElemX, SmullElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0xb:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmullElemX, SqdmullElem2X>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0xc:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmulhElemDX, SqdmulhElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+          case 0xd:
+            if (u || (size == 0x0 || size == 0x3))
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqrdmulhElemDX, SqrdmulhElemQX>(
+                    q, size, machInst, vd, vn, vm, index);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonModImm(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t op = bits(machInst, 29);
+        uint8_t abcdefgh = (bits(machInst, 18, 16) << 5) |
+                           bits(machInst, 9, 5);
+        uint8_t cmode = bits(machInst, 15, 12);
+        uint8_t o2 = bits(machInst, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+
+        if (o2 == 0x1 || (op == 0x1 && cmode == 0xf && !q))
+            return new Unknown64(machInst);
+
+        bool immValid = true;
+        const uint64_t bigImm = simd_modified_imm(op, cmode, abcdefgh,
+                                                  immValid,
+                                                  true /* isAarch64 */);
+        if (!immValid) {
+            return new Unknown(machInst);
+        }
+
+        if (op) {
+            if (bits(cmode, 3) == 0) {
+                if (bits(cmode, 0) == 0) {
+                    if (q)
+                        return new MvniQX<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new MvniDX<uint64_t>(machInst, vd, bigImm);
+                } else {
+                    if (q)
+                        return new BicImmQX<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new BicImmDX<uint64_t>(machInst, vd, bigImm);
+                }
+            } else {
+                if (bits(cmode, 2) == 1) {
+                    switch (bits(cmode, 1, 0)) {
+                      case 0:
+                      case 1:
+                        if (q)
+                            return new MvniQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MvniDX<uint64_t>(machInst, vd, bigImm);
+                      case 2:
+                        if (q)
+                            return new MoviQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MoviDX<uint64_t>(machInst, vd, bigImm);
+                      case 3:
+                        if (q)
+                            return new FmovQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MoviDX<uint64_t>(machInst, vd, bigImm);
+                    }
+                } else {
+                    if (bits(cmode, 0) == 0) {
+                        if (q)
+                            return new MvniQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MvniDX<uint64_t>(machInst, vd, bigImm);
+                    } else {
+                        if (q)
+                            return new BicImmQX<uint64_t>(machInst, vd,
+                                                          bigImm);
+                        else
+                            return new BicImmDX<uint64_t>(machInst, vd,
+                                                          bigImm);
+                    }
+                }
+            }
+        } else {
+            if (bits(cmode, 3) == 0) {
+                if (bits(cmode, 0) == 0) {
+                    if (q)
+                        return new MoviQX<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new MoviDX<uint64_t>(machInst, vd, bigImm);
+                } else {
+                    if (q)
+                        return new OrrImmQX<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new OrrImmDX<uint64_t>(machInst, vd, bigImm);
+                }
+            } else {
+                if (bits(cmode, 2) == 1) {
+                    if (bits(cmode, 1, 0) == 0x3) {
+                        if (q)
+                            return new FmovQX<uint32_t>(machInst, vd, bigImm);
+                        else
+                            return new FmovDX<uint32_t>(machInst, vd, bigImm);
+                    } else {
+                        if (q)
+                            return new MoviQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MoviDX<uint64_t>(machInst, vd, bigImm);
+                    }
+                } else {
+                    if (bits(cmode, 0) == 0) {
+                        if (q)
+                            return new MoviQX<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new MoviDX<uint64_t>(machInst, vd, bigImm);
+                    } else {
+                        if (q)
+                            return new OrrImmQX<uint64_t>(machInst, vd,
+                                                          bigImm);
+                        else
+                            return new OrrImmDX<uint64_t>(machInst, vd, bigImm);
+                    }
+                }
+            }
+        }
+        return new Unknown(machInst);
+    }
+
+    StaticInstPtr
+    decodeNeonShiftByImm(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t u = bits(machInst, 29);
+        uint8_t immh = bits(machInst, 22, 19);
+        uint8_t immb = bits(machInst, 18, 16);
+        uint8_t opcode = bits(machInst, 15, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t immh3 = bits(machInst, 22);
+        uint8_t immh3_q = (immh3 << 1) | q;
+        uint8_t op_u = (bits(machInst, 12) << 1) | u;
+        uint8_t size = findMsbSet(immh);
+        int shiftAmt = 0;
+
+        switch (opcode) {
+          case 0x00:
+            if (immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftXReg<UshrDX, UshrQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftXReg<SshrDX, SshrQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x02:
+            if (immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftXReg<UsraDX, UsraQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftXReg<SsraDX, SsraQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x04:
+            if (immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftXReg<UrshrDX, UrshrQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftXReg<SrshrDX, SrshrQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x06:
+            if (immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftXReg<UrsraDX, UrsraQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftXReg<SrsraDX, SrsraQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x08:
+            if (u && !(immh3_q == 0x2)) {
+                shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+                return decodeNeonUTwoShiftXReg<SriDX, SriQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x0a:
+            if (immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = ((immh << 3) | immb) - (8 << size);
+            if (u)
+                return decodeNeonUTwoShiftXReg<SliDX, SliQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonUTwoShiftXReg<ShlDX, ShlQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x0c:
+            if (u && !(immh3_q == 0x2 || op_u == 0x0)) {
+                shiftAmt = ((immh << 3) | immb) - (8 << size);
+                return decodeNeonSTwoShiftXReg<SqshluDX, SqshluQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x0e:
+            if (immh3_q == 0x2 || op_u == 0x0)
+                return new Unknown64(machInst);
+            shiftAmt = ((immh << 3) | immb) - (8 << size);
+            if (u)
+                return decodeNeonUTwoShiftXReg<UqshlImmDX, UqshlImmQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftXReg<SqshlImmDX, SqshlImmQX>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x10:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonSTwoShiftSReg<SqshrunX, Sqshrun2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonUTwoShiftSReg<ShrnX, Shrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x11:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonSTwoShiftSReg<SqrshrunX, Sqrshrun2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonUTwoShiftSReg<RshrnX, Rshrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x12:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftSReg<UqshrnX, Uqshrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftSReg<SqshrnX, Sqshrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x13:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftSReg<UqrshrnX, Uqrshrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftSReg<SqrshrnX, Sqrshrn2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x14:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = ((immh << 3) | immb) - (8 << size);
+            if (u)
+                return decodeNeonUTwoShiftSReg<UshllX, Ushll2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftSReg<SshllX, Sshll2X>(
+                    q, size, machInst, vd, vn, shiftAmt);
+          case 0x1c:
+            if (immh < 0x4 || immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u) {
+                return decodeNeonUTwoShiftFpReg<UcvtfFixedDX, UcvtfFixedQX>(
+                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+            } else {
+                if (q) {
+                    if (size & 0x1)
+                        return new ScvtfFixedDQX<uint64_t>(machInst, vd, vn,
+                                                           shiftAmt);
+                    else
+                        return new ScvtfFixedSQX<uint32_t>(machInst, vd, vn,
+                                                           shiftAmt);
+                } else {
+                    if (size & 0x1)
+                        return new Unknown(machInst);
+                    else
+                        return new ScvtfFixedDX<uint32_t>(machInst, vd, vn,
+                                                          shiftAmt);
+                }
+            }
+          case 0x1f:
+            if (immh < 0x4 || immh3_q == 0x2)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftFpReg<FcvtzuFixedDX, FcvtzuFixedQX>(
+                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonUTwoShiftFpReg<FcvtzsFixedDX, FcvtzsFixedQX>(
+                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonTblTbx(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t switchVal = bits(machInst, 14, 12);
+
+        switch (switchVal) {
+          case 0x0:
+            if (q)
+                return new Tbl1QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbl1DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x1:
+            if (q)
+                return new Tbx1QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbx1DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x2:
+            if (q)
+                return new Tbl2QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbl2DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x3:
+            if (q)
+                return new Tbx2QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbx2DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x4:
+            if (q)
+                return new Tbl3QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbl3DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x5:
+            if (q)
+                return new Tbx3QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbx3DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x6:
+            if (q)
+                return new Tbl4QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbl4DX<uint8_t>(machInst, vd, vn, vm);
+          case 0x7:
+            if (q)
+                return new Tbx4QX<uint8_t>(machInst, vd, vn, vm);
+            else
+                return new Tbx4DX<uint8_t>(machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeNeonZipUzpTrn(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 14, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x1:
+            return decodeNeonUThreeXReg<Uzp1DX, Uzp1QX>(
+                q, size, machInst, vd, vn, vm);
+          case 0x2:
+            return decodeNeonUThreeXReg<Trn1DX, Trn1QX>(
+                q, size, machInst, vd, vn, vm);
+          case 0x3:
+            return decodeNeonUThreeXReg<Zip1DX, Zip1QX>(
+                q, size, machInst, vd, vn, vm);
+          case 0x5:
+            return decodeNeonUThreeXReg<Uzp2DX, Uzp2QX>(
+                q, size, machInst, vd, vn, vm);
+          case 0x6:
+            return decodeNeonUThreeXReg<Trn2DX, Trn2QX>(
+                q, size, machInst, vd, vn, vm);
+          case 0x7:
+            return decodeNeonUThreeXReg<Zip2DX, Zip2QX>(
+                q, size, machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeNeonExt(ExtMachInst machInst)
+    {
+        uint8_t q = bits(machInst, 30);
+        uint8_t op2 = bits(machInst, 23, 22);
+        uint8_t imm4 = bits(machInst, 14, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        if (op2 != 0 || (q == 0x0 && bits(imm4, 3) == 0x1))
+            return new Unknown64(machInst);
+
+        uint8_t index = q ? imm4 : imm4 & 0x7;
+
+        if (q) {
+            return new ExtQX<uint8_t>(machInst, vd, vn, vm, index);
+        } else {
+            return new ExtDX<uint8_t>(machInst, vd, vn, vm, index);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonSc3Same(ExtMachInst machInst)
+    {
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 15, 11);
+        uint8_t s = bits(machInst, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x01:
+            if (u)
+                return decodeNeonUThreeUReg<UqaddScX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeUReg<SqaddScX>(
+                    size, machInst, vd, vn, vm);
+          case 0x05:
+            if (u)
+                return decodeNeonUThreeUReg<UqsubScX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeUReg<SqsubScX>(
+                    size, machInst, vd, vn, vm);
+          case 0x06:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new CmhiDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new CmgtDX<int64_t>(machInst, vd, vn, vm);
+          case 0x07:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new CmhsDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new CmgeDX<int64_t>(machInst, vd, vn, vm);
+          case 0x08:
+            if (!s && size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new UshlDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new SshlDX<int64_t>(machInst, vd, vn, vm);
+          case 0x09:
+            if (!s && size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeUReg<UqshlScX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeUReg<SqshlScX>(
+                    size, machInst, vd, vn, vm);
+          case 0x0a:
+            if (!s && size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new UrshlDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new SrshlDX<int64_t>(machInst, vd, vn, vm);
+          case 0x0b:
+            if (!s && size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeUReg<UqrshlScX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeUReg<SqrshlScX>(
+                    size, machInst, vd, vn, vm);
+          case 0x10:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new SubDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new AddDX<uint64_t>(machInst, vd, vn, vm);
+          case 0x11:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return new CmeqDX<uint64_t>(machInst, vd, vn, vm);
+            else
+                return new CmtstDX<uint64_t>(machInst, vd, vn, vm);
+          case 0x16:
+            if (size == 0x3 || size == 0x0)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonSThreeHAndWReg<SqrdmulhScX>(
+                    size, machInst, vd, vn, vm);
+            else
+                return decodeNeonSThreeHAndWReg<SqdmulhScX>(
+                    size, machInst, vd, vn, vm);
+          case 0x1a:
+            if (!u || size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeScFpReg<FabdScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+          case 0x1b:
+            if (u || size > 0x1)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeScFpReg<FmulxScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+          case 0x1c:
+            if (size < 0x2) {
+                if (u)
+                    return decodeNeonUThreeScFpReg<FcmgeScX>(
+                        size & 0x1, machInst, vd, vn, vm);
+                else
+                    return decodeNeonUThreeScFpReg<FcmeqScX>(
+                        size & 0x1, machInst, vd, vn, vm);
+            } else {
+                if (u)
+                    return decodeNeonUThreeScFpReg<FcmgtScX>(
+                        size & 0x1, machInst, vd, vn, vm);
+                else
+                    return new Unknown64(machInst);
+            }
+          case 0x1d:
+            if (!u)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUThreeScFpReg<FacgeScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeScFpReg<FacgtScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+          case 0x1f:
+            if (u)
+                return new Unknown64(machInst);
+            if (size < 0x2)
+                return decodeNeonUThreeScFpReg<FrecpsScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+            else
+                return decodeNeonUThreeScFpReg<FrsqrtsScX>(
+                    size & 0x1, machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonSc3Diff(ExtMachInst machInst)
+    {
+        if (bits(machInst, 29))
+            return new Unknown64(machInst);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0x0 || size == 0x3)
+            return new Unknown64(machInst);
+
+        uint8_t opcode = bits(machInst, 15, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (opcode) {
+          case 0x9:
+            return decodeNeonSThreeHAndWReg<SqdmlalScX>(size, machInst, vd, vn, vm);
+          case 0xb:
+            return decodeNeonSThreeHAndWReg<SqdmlslScX>(size, machInst, vd, vn, vm);
+          case 0xd:
+            return decodeNeonSThreeHAndWReg<SqdmullScX>(size, machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonSc2RegMisc(ExtMachInst machInst)
+    {
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 16, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t switchVal = opcode | ((u ? 1 : 0) << 5);
+        switch (switchVal) {
+          case 0x03:
+            return decodeNeonUTwoMiscUReg<SuqaddScX>(size, machInst, vd, vn);
+          case 0x07:
+            return decodeNeonSTwoMiscUReg<SqabsScX>(size, machInst, vd, vn);
+          case 0x08:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new CmgtZeroDX<int64_t>(machInst, vd, vn);
+          case 0x09:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new CmeqZeroDX<int64_t>(machInst, vd, vn);
+          case 0x0a:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new CmltZeroDX<int64_t>(machInst, vd, vn);
+          case 0x0b:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new AbsDX<int64_t>(machInst, vd, vn);
+          case 0x0c:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcmgtZeroScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x0d:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcmeqZeroScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x0e:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcmltZeroScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x14:
+            if (size == 0x3) {
+                return new Unknown64(machInst);
+            } else {
+                switch (size) {
+                  case 0x0:
+                    return new SqxtnScX<int8_t>(machInst, vd, vn);
+                  case 0x1:
+                    return new SqxtnScX<int16_t>(machInst, vd, vn);
+                  case 0x2:
+                    return new SqxtnScX<int32_t>(machInst, vd, vn);
+                }
+            }
+          case 0x1a:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtnsScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcvtpsScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x1b:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtmsScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcvtzsIntScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x1c:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtasScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return new Unknown64(machInst);
+          case 0x1d:
+            if (size < 0x2) {
+                if (size & 0x1)
+                    return new ScvtfIntScDX<uint64_t>(machInst, vd, vn);
+                else
+                    return new ScvtfIntScSX<uint32_t>(machInst, vd, vn);
+            } else {
+                return decodeNeonUTwoMiscScFpReg<FrecpeScX>(
+                    size & 0x1, machInst, vd, vn);
+            }
+          case 0x1f:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FrecpxX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x23:
+            return decodeNeonUTwoMiscUReg<UsqaddScX>(size, machInst, vd, vn);
+          case 0x27:
+            return decodeNeonSTwoMiscUReg<SqnegScX>(size, machInst, vd, vn);
+          case 0x28:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new CmgeZeroDX<int64_t>(machInst, vd, vn);
+          case 0x29:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new CmleZeroDX<int64_t>(machInst, vd, vn);
+          case 0x2b:
+            if (size != 0x3)
+                return new Unknown64(machInst);
+            else
+                return new NegDX<int64_t>(machInst, vd, vn);
+          case 0x2c:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcmgeZeroScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x2d:
+            if (size < 0x2)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcmleZeroScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x32:
+            if (size == 0x3) {
+                return new Unknown64(machInst);
+            } else {
+                switch (size) {
+                  case 0x0:
+                    return new SqxtunScX<int8_t>(machInst, vd, vn);
+                  case 0x1:
+                    return new SqxtunScX<int16_t>(machInst, vd, vn);
+                  case 0x2:
+                    return new SqxtunScX<int32_t>(machInst, vd, vn);
+                }
+            }
+          case 0x34:
+            if (size == 0x3) {
+                return new Unknown64(machInst);
+            } else {
+                switch (size) {
+                  case 0x0:
+                    return new UqxtnScX<uint8_t>(machInst, vd, vn);
+                  case 0x1:
+                    return new UqxtnScX<uint16_t>(machInst, vd, vn);
+                  case 0x2:
+                    return new UqxtnScX<uint32_t>(machInst, vd, vn);
+                }
+            }
+          case 0x36:
+            if (size != 0x1) {
+                return new Unknown64(machInst);
+            } else {
+                return new FcvtxnScX<uint32_t>(machInst, vd, vn);
+            }
+          case 0x3a:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtnuScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcvtpuScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x3b:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtmuScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscScFpReg<FcvtzuIntScX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x3c:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<FcvtauScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return new Unknown64(machInst);
+          case 0x3d:
+            if (size < 0x2)
+                return decodeNeonUTwoMiscScFpReg<UcvtfIntScX>(
+                    size & 0x1, machInst, vd, vn);
+            else
+                return decodeNeonUTwoMiscScFpReg<FrsqrteScX>(
+                    size & 0x1, machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonScPwise(ExtMachInst machInst)
+    {
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 16, 12);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        if (!u) {
+            if (opcode == 0x1b && size == 0x3)
+                return new AddpScQX<uint64_t>(machInst, vd, vn);
+            else
+                return new Unknown64(machInst);
+        }
+
+        uint8_t switchVal = (opcode << 0) | (size << 5);
+        switch (switchVal) {
+          case 0x0c:
+          case 0x2c:
+            return decodeNeonUTwoMiscPwiseScFpReg<FmaxnmpScDX, FmaxnmpScQX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x0d:
+          case 0x2d:
+            return decodeNeonUTwoMiscPwiseScFpReg<FaddpScDX, FaddpScQX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x0f:
+          case 0x2f:
+            return decodeNeonUTwoMiscPwiseScFpReg<FmaxpScDX, FmaxpScQX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x4c:
+          case 0x6c:
+            return decodeNeonUTwoMiscPwiseScFpReg<FminnmpScDX, FminnmpScQX>(
+                    size & 0x1, machInst, vd, vn);
+          case 0x4f:
+          case 0x6f:
+            return decodeNeonUTwoMiscPwiseScFpReg<FminpScDX, FminpScQX>(
+                    size & 0x1, machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonScCopy(ExtMachInst machInst)
+    {
+        if (bits(machInst, 14, 11) != 0 || bits(machInst, 29))
+            return new Unknown64(machInst);
+
+        uint8_t imm5 = bits(machInst, 20, 16);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size = findLsbSet(imm5);
+        uint8_t index = bits(imm5, 4, size + 1);
+
+        return decodeNeonUTwoShiftUReg<DupElemScX>(
+            size, machInst, vd, vn, index);
+    }
+
+    StaticInstPtr
+    decodeNeonScIndexedElem(ExtMachInst machInst)
+    {
+        uint8_t u = bits(machInst, 29);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t L = bits(machInst, 21);
+        uint8_t M = bits(machInst, 20);
+        uint8_t opcode = bits(machInst, 15, 12);
+        uint8_t H = bits(machInst, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex vm_bf = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+
+        uint8_t index = 0;
+        uint8_t index_fp = 0;
+        uint8_t vmh = 0;
+        uint8_t sz_L = bits(machInst, 22, 21);
+
+        // Index and 2nd register operand for integer instructions
+        if (size == 0x1) {
+            index = (H << 2) | (L << 1) | M;
+            // vmh = 0;
+        } else if (size == 0x2) {
+            index = (H << 1) | L;
+            vmh = M;
+        } else if (size == 0x3) {
+            index = H;
+            vmh = M;
+        }
+        IntRegIndex vm = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        // Index and 2nd register operand for FP instructions
+        vmh = M;
+        if ((size & 0x1) == 0) {
+            index_fp = (H << 1) | L;
+        } else if (L == 0) {
+            index_fp = H;
+        }
+        IntRegIndex vm_fp = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        if (u && opcode != 9)
+            return new Unknown64(machInst);
+
+        switch (opcode) {
+          case 0x1:
+            if (size < 2 || sz_L == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeImmScFpReg<FmlaElemScX>(
+                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+          case 0x3:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmlalElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          case 0x5:
+            if (size < 2 || sz_L == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonUThreeImmScFpReg<FmlsElemScX>(
+                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+          case 0x7:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmlslElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          case 0x9:
+            if (size < 2 || sz_L == 0x3)
+                return new Unknown64(machInst);
+            if (u)
+                return decodeNeonUThreeImmScFpReg<FmulxElemScX>(
+                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+            else
+                return decodeNeonUThreeImmScFpReg<FmulElemScX>(
+                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+          case 0xb:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmullElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          case 0xc:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqdmulhElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          case 0xd:
+            if (size == 0x0 || size == 0x3)
+                return new Unknown64(machInst);
+            else
+                return decodeNeonSThreeImmHAndWReg<SqrdmulhElemScX>(
+                    size, machInst, vd, vn, vm, index);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonScShiftByImm(ExtMachInst machInst)
+    {
+        bool u = bits(machInst, 29);
+        uint8_t immh = bits(machInst, 22, 19);
+        uint8_t immb = bits(machInst, 18, 16);
+        uint8_t opcode = bits(machInst, 15, 11);
+
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t immh3 = bits(machInst, 22);
+        uint8_t size = findMsbSet(immh);
+        int shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+
+        if (immh == 0x0)
+            return new Unknown64(machInst);
+
+        switch (opcode) {
+          case 0x00:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return new UshrDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new SshrDX<int64_t>(machInst, vd, vn, shiftAmt);
+          case 0x02:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return new UsraDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new SsraDX<int64_t>(machInst, vd, vn, shiftAmt);
+          case 0x04:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return new UrshrDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new SrshrDX<int64_t>(machInst, vd, vn, shiftAmt);
+          case 0x06:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return new UrsraDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new SrsraDX<int64_t>(machInst, vd, vn, shiftAmt);
+          case 0x08:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return new SriDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new Unknown64(machInst);
+          case 0x0a:
+            if (!immh3)
+                return new Unknown64(machInst);
+            shiftAmt = ((immh << 3) | immb) - (8 << size);
+            if (u)
+                return new SliDX<uint64_t>(machInst, vd, vn, shiftAmt);
+            else
+                return new ShlDX<uint64_t>(machInst, vd, vn, shiftAmt);
+          case 0x0c:
+            if (u) {
+                shiftAmt = ((immh << 3) | immb) - (8 << size);
+                return decodeNeonSTwoShiftUReg<SqshluScX>(
+                    size, machInst, vd, vn, shiftAmt);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x0e:
+            shiftAmt = ((immh << 3) | immb) - (8 << size);
+            if (u)
+                return decodeNeonUTwoShiftUReg<UqshlImmScX>(
+                    size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftUReg<SqshlImmScX>(
+                    size, machInst, vd, vn, shiftAmt);
+          case 0x10:
+            if (!u || immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            return decodeNeonSTwoShiftUSReg<SqshrunScX>(
+                size, machInst, vd, vn, shiftAmt);
+          case 0x11:
+            if (!u || immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            return decodeNeonSTwoShiftUSReg<SqrshrunScX>(
+                size, machInst, vd, vn, shiftAmt);
+          case 0x12:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftUSReg<UqshrnScX>(
+                    size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftUSReg<SqshrnScX>(
+                    size, machInst, vd, vn, shiftAmt);
+          case 0x13:
+            if (immh3)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftUSReg<UqrshrnScX>(
+                    size, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonSTwoShiftUSReg<SqrshrnScX>(
+                    size, machInst, vd, vn, shiftAmt);
+          case 0x1c:
+            if (immh < 0x4)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u) {
+                return decodeNeonUTwoShiftUFpReg<UcvtfFixedScX>(
+                    size & 0x1, machInst, vd, vn, shiftAmt);
+            } else {
+                if (size & 0x1)
+                    return new ScvtfFixedScDX<uint64_t>(machInst, vd, vn,
+                                                        shiftAmt);
+                else
+                    return new ScvtfFixedScSX<uint32_t>(machInst, vd, vn,
+                                                        shiftAmt);
+            }
+          case 0x1f:
+            if (immh < 0x4)
+                return new Unknown64(machInst);
+            shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
+            if (u)
+                return decodeNeonUTwoShiftUFpReg<FcvtzuFixedScX>(
+                    size & 0x1, machInst, vd, vn, shiftAmt);
+            else
+                return decodeNeonUTwoShiftUFpReg<FcvtzsFixedScX>(
+                    size & 0x1, machInst, vd, vn, shiftAmt);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeonMem(ExtMachInst machInst)
+    {
+        uint8_t dataSize = bits(machInst, 30) ? 128 : 64;
+        bool multiple = bits(machInst, 24, 23) < 0x2;
+        bool load = bits(machInst, 22);
+
+        uint8_t numStructElems = 0;
+        uint8_t numRegs = 0;
+
+        if (multiple) {  // AdvSIMD load/store multiple structures
+            uint8_t opcode = bits(machInst, 15, 12);
+            uint8_t eSize = bits(machInst, 11, 10);
+            bool wb = !(bits(machInst, 20, 16) == 0x0 && !bits(machInst, 23));
+
+            switch (opcode) {
+              case 0x0:  // LD/ST4 (4 regs)
+                numStructElems = 4;
+                numRegs = 4;
+                break;
+              case 0x2:  // LD/ST1 (4 regs)
+                numStructElems = 1;
+                numRegs = 4;
+                break;
+              case 0x4:  // LD/ST3 (3 regs)
+                numStructElems = 3;
+                numRegs = 3;
+                break;
+              case 0x6:  // LD/ST1 (3 regs)
+                numStructElems = 1;
+                numRegs = 3;
+                break;
+              case 0x7:  // LD/ST1 (1 reg)
+                numStructElems = 1;
+                numRegs = 1;
+                break;
+              case 0x8:  // LD/ST2 (2 regs)
+                numStructElems = 2;
+                numRegs = 2;
+                break;
+              case 0xa:  // LD/ST1 (2 regs)
+                numStructElems = 1;
+                numRegs = 2;
+                break;
+              default:
+                return new Unknown64(machInst);
+            }
+
+            IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+            if (load) {
+                return new VldMult64(machInst, rn, vd, rm, eSize, dataSize,
+                                     numStructElems, numRegs, wb);
+            } else {
+                return new VstMult64(machInst, rn, vd, rm, eSize, dataSize,
+                                     numStructElems, numRegs, wb);
+            }
+        } else {  // AdvSIMD load/store single structure
+            uint8_t scale = bits(machInst, 15, 14);
+            uint8_t numStructElems = (((uint8_t) bits(machInst, 13) << 1) |
+                                      (uint8_t) bits(machInst, 21)) + 1;
+            uint8_t index = 0;
+            bool wb = !(bits(machInst, 20, 16) == 0x0 && !bits(machInst, 23));
+            bool replicate = false;
+
+            switch (scale) {
+              case 0x0:
+                index = ((uint8_t) bits(machInst, 30) << 3) |
+                    ((uint8_t) bits(machInst, 12) << 2) |
+                    (uint8_t) bits(machInst, 11, 10);
+                break;
+              case 0x1:
+                index = ((uint8_t) bits(machInst, 30) << 2) |
+                    ((uint8_t) bits(machInst, 12) << 1) |
+                    (uint8_t) bits(machInst, 11);
+                break;
+              case 0x2:
+                if (bits(machInst, 10) == 0x0) {
+                    index = ((uint8_t) bits(machInst, 30) << 1) |
+                        bits(machInst, 12);
+                } else {
+                    index = (uint8_t) bits(machInst, 30);
+                    scale = 0x3;
+                }
+                break;
+              case 0x3:
+                scale = bits(machInst, 11, 10);
+                replicate = true;
+                break;
+              default:
+                return new Unknown64(machInst);
+            }
+
+            uint8_t eSize = scale;
+
+            IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+            if (load) {
+                return new VldSingle64(machInst, rn, vd, rm, eSize, dataSize,
+                                       numStructElems, index, wb, replicate);
+            } else {
+                return new VstSingle64(machInst, rn, vd, rm, eSize, dataSize,
+                                       numStructElems, index, wb, replicate);
+            }
+        }
+    }
+}
+}};

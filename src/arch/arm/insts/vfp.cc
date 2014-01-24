@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,37 @@
  * the rounding mode might be set after the operation it was intended for, the
  * exception bits read before it, etc.
  */
+
+std::string
+FpCondCompRegOp::generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printReg(ss, op1);
+    ccprintf(ss, ", ");
+    printReg(ss, op2);
+    ccprintf(ss, ", #%d", defCc);
+    ccprintf(ss, ", ");
+    printCondition(ss, condCode, true);
+    return ss.str();
+}
+
+std::string
+FpCondSelOp::generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printReg(ss, dest);
+    ccprintf(ss, ", ");
+    printReg(ss, op1);
+    ccprintf(ss, ", ");
+    printReg(ss, op2);
+    ccprintf(ss, ", ");
+    printCondition(ss, condCode, true);
+    return ss.str();
+}
 
 std::string
 FpRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
@@ -92,6 +123,21 @@ FpRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
+FpRegRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, dest + FP_Reg_Base);
+    ss << ", ";
+    printReg(ss, op1 + FP_Reg_Base);
+    ss << ", ";
+    printReg(ss, op2 + FP_Reg_Base);
+    ss << ", ";
+    printReg(ss, op3 + FP_Reg_Base);
+    return ss.str();
+}
+
+std::string
 FpRegRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
@@ -131,24 +177,25 @@ prepFpState(uint32_t rMode)
 }
 
 void
-finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush)
+finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush, FPSCR mask)
 {
     int exceptions = fetestexcept(FeAllExceptions);
     bool underflow = false;
-    if (exceptions & FeInvalid) {
+    if ((exceptions & FeInvalid) && mask.ioc) {
         fpscr.ioc = 1;
     }
-    if (exceptions & FeDivByZero) {
+    if ((exceptions & FeDivByZero) && mask.dzc) {
         fpscr.dzc = 1;
     }
-    if (exceptions & FeOverflow) {
+    if ((exceptions & FeOverflow) && mask.ofc) {
         fpscr.ofc = 1;
     }
     if (exceptions & FeUnderflow) {
         underflow = true;
-        fpscr.ufc = 1;
+        if (mask.ufc)
+            fpscr.ufc = 1;
     }
-    if ((exceptions & FeInexact) && !(underflow && flush)) {
+    if ((exceptions & FeInexact) && !(underflow && flush) && mask.ixc) {
         fpscr.ixc = 1;
     }
     fesetround(state);
@@ -329,19 +376,33 @@ fixFpSFpDDest(FPSCR fpscr, float val)
     return mid;
 }
 
-uint16_t
-vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-           uint32_t rMode, bool ahp, float op)
+static inline uint16_t
+vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
+          uint32_t rMode, bool ahp, uint64_t opBits, bool isDouble)
 {
-    uint32_t opBits = fpToBits(op);
+    uint32_t mWidth;
+    uint32_t eWidth;
+    uint32_t eHalfRange;
+    uint32_t sBitPos;
+
+    if (isDouble) {
+        mWidth = 52;
+        eWidth = 11;
+    } else {
+        mWidth = 23;
+        eWidth = 8;
+    }
+    sBitPos    = eWidth + mWidth;
+    eHalfRange = (1 << (eWidth-1)) - 1;
+
     // Extract the operand.
-    bool neg = bits(opBits, 31);
-    uint32_t exponent = bits(opBits, 30, 23);
-    uint32_t oldMantissa = bits(opBits, 22, 0);
-    uint32_t mantissa = oldMantissa >> (23 - 10);
+    bool neg = bits(opBits, sBitPos);
+    uint32_t exponent = bits(opBits, sBitPos-1, mWidth);
+    uint64_t oldMantissa = bits(opBits, mWidth-1, 0);
+    uint32_t mantissa = oldMantissa >> (mWidth - 10);
     // Do the conversion.
-    uint32_t extra = oldMantissa & mask(23 - 10);
-    if (exponent == 0xff) {
+    uint64_t extra = oldMantissa & mask(mWidth - 10);
+    if (exponent == mask(eWidth)) {
         if (oldMantissa != 0) {
             // Nans.
             if (bits(mantissa, 9) == 0) {
@@ -379,7 +440,6 @@ vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
 
         if (exponent == 0) {
             // Denormalized.
-
             // If flush to zero is on, this shouldn't happen.
             assert(!flush);
 
@@ -407,13 +467,13 @@ vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
 
             // We need to track the dropped bits differently since
             // more can be dropped by denormalizing.
-            bool topOne = bits(extra, 12);
-            bool restZeros = bits(extra, 11, 0) == 0;
+            bool topOne = bits(extra, mWidth - 10 - 1);
+            bool restZeros = bits(extra, mWidth - 10 - 2, 0) == 0;
 
-            if (exponent <= (127 - 15)) {
+            if (exponent <= (eHalfRange - 15)) {
                 // The result is too small. Denormalize.
                 mantissa |= (1 << 10);
-                while (mantissa && exponent <= (127 - 15)) {
+                while (mantissa && exponent <= (eHalfRange - 15)) {
                     restZeros = restZeros && !topOne;
                     topOne = bits(mantissa, 0);
                     mantissa = mantissa >> 1;
@@ -424,7 +484,7 @@ vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
                 exponent = 0;
             } else {
                 // Change bias.
-                exponent -= (127 - 15);
+                exponent -= (eHalfRange - 15);
             }
 
             if (exponent == 0 && (inexact || fpscr.ufe)) {
@@ -488,155 +548,115 @@ vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
     return result;
 }
 
-float
-vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op)
+uint16_t
+vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
+           uint32_t rMode, bool ahp, float op)
 {
-    float junk = 0.0;
+    uint64_t opBits = fpToBits(op);
+    return vcvtFpFpH(fpscr, flush, defaultNan, rMode, ahp, opBits, false);
+}
+
+uint16_t
+vcvtFpDFpH(FPSCR &fpscr, bool flush, bool defaultNan,
+           uint32_t rMode, bool ahp, double op)
+{
+    uint64_t opBits = fpToBits(op);
+    return vcvtFpFpH(fpscr, flush, defaultNan, rMode, ahp, opBits, true);
+}
+
+static inline uint64_t
+vcvtFpHFp(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op, bool isDouble)
+{
+    uint32_t mWidth;
+    uint32_t eWidth;
+    uint32_t eHalfRange;
+    uint32_t sBitPos;
+
+    if (isDouble) {
+        mWidth = 52;
+        eWidth = 11;
+    } else {
+        mWidth = 23;
+        eWidth = 8;
+    }
+    sBitPos    = eWidth + mWidth;
+    eHalfRange = (1 << (eWidth-1)) - 1;
+
     // Extract the bitfields.
     bool neg = bits(op, 15);
     uint32_t exponent = bits(op, 14, 10);
-    uint32_t mantissa = bits(op, 9, 0);
+    uint64_t mantissa = bits(op, 9, 0);
     // Do the conversion.
     if (exponent == 0) {
         if (mantissa != 0) {
             // Normalize the value.
-            exponent = exponent + (127 - 15) + 1;
+            exponent = exponent + (eHalfRange - 15) + 1;
             while (mantissa < (1 << 10)) {
                 mantissa = mantissa << 1;
                 exponent--;
             }
         }
-        mantissa = mantissa << (23 - 10);
+        mantissa = mantissa << (mWidth - 10);
     } else if (exponent == 0x1f && !ahp) {
         // Infinities and nans.
-        exponent = 0xff;
+        exponent = mask(eWidth);
         if (mantissa != 0) {
             // Nans.
-            mantissa = mantissa << (23 - 10);
-            if (bits(mantissa, 22) == 0) {
+            mantissa = mantissa << (mWidth - 10);
+            if (bits(mantissa, mWidth-1) == 0) {
                 // Signalling nan.
                 fpscr.ioc = 1;
-                mantissa |= (1 << 22);
+                mantissa |= (((uint64_t) 1) << (mWidth-1));
             }
             if (defaultNan) {
-                mantissa &= ~mask(22);
+                mantissa &= ~mask(mWidth-1);
                 neg = false;
             }
         }
     } else {
-        exponent = exponent + (127 - 15);
-        mantissa = mantissa << (23 - 10);
+        exponent = exponent + (eHalfRange - 15);
+        mantissa = mantissa << (mWidth - 10);
     }
     // Reassemble the result.
-    uint32_t result = bits(mantissa, 22, 0);
-    replaceBits(result, 30, 23, exponent);
-    if (neg)
-        result |= (1 << 31);
+    uint64_t result = bits(mantissa, mWidth-1, 0);
+    replaceBits(result, sBitPos-1, mWidth, exponent);
+    if (neg) {
+        result |= (((uint64_t) 1) << sBitPos);
+    }
+    return result;
+}
+
+double
+vcvtFpHFpD(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op)
+{
+    double junk = 0.0;
+    uint64_t result;
+
+    result = vcvtFpHFp(fpscr, defaultNan, ahp, op, true);
     return bitsToFp(result, junk);
 }
 
-uint64_t
-vfpFpSToFixed(float val, bool isSigned, bool half,
-              uint8_t imm, bool rzero)
+float
+vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op)
 {
-    int rmode = rzero ? FeRoundZero : fegetround();
-    __asm__ __volatile__("" : "=m" (rmode) : "m" (rmode));
-    fesetround(FeRoundNearest);
-    val = val * powf(2.0, imm);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    fesetround(rmode);
-    feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    float origVal = val;
-    val = rintf(val);
-    int fpType = std::fpclassify(val);
-    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
-        if (fpType == FP_NAN) {
-            feraiseexcept(FeInvalid);
-        }
-        val = 0.0;
-    } else if (origVal != val) {
-        switch (rmode) {
-          case FeRoundNearest:
-            if (origVal - val > 0.5)
-                val += 1.0;
-            else if (val - origVal > 0.5)
-                val -= 1.0;
-            break;
-          case FeRoundDown:
-            if (origVal < val)
-                val -= 1.0;
-            break;
-          case FeRoundUpward:
-            if (origVal > val)
-                val += 1.0;
-            break;
-        }
-        feraiseexcept(FeInexact);
-    }
+    float junk = 0.0;
+    uint64_t result;
 
-    if (isSigned) {
-        if (half) {
-            if ((double)val < (int16_t)(1 << 15)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int16_t)(1 << 15);
-            }
-            if ((double)val > (int16_t)mask(15)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int16_t)mask(15);
-            }
-            return (int16_t)val;
-        } else {
-            if ((double)val < (int32_t)(1 << 31)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int32_t)(1 << 31);
-            }
-            if ((double)val > (int32_t)mask(31)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int32_t)mask(31);
-            }
-            return (int32_t)val;
-        }
-    } else {
-        if (half) {
-            if ((double)val < 0) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return 0;
-            }
-            if ((double)val > (mask(16))) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return mask(16);
-            }
-            return (uint16_t)val;
-        } else {
-            if ((double)val < 0) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return 0;
-            }
-            if ((double)val > (mask(32))) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return mask(32);
-            }
-            return (uint32_t)val;
-        }
-    }
+    result = vcvtFpHFp(fpscr, defaultNan, ahp, op, false);
+    return bitsToFp(result, junk);
 }
 
 float
 vfpUFixedToFpS(bool flush, bool defaultNan,
-        uint32_t val, bool half, uint8_t imm)
+        uint64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
-    if (half)
+    if (width == 16)
         val = (uint16_t)val;
+    else if (width == 32)
+        val = (uint32_t)val;
+    else if (width != 64)
+        panic("Unsupported width %d", width);
     float scale = powf(2.0, imm);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
@@ -646,11 +666,16 @@ vfpUFixedToFpS(bool flush, bool defaultNan,
 
 float
 vfpSFixedToFpS(bool flush, bool defaultNan,
-        int32_t val, bool half, uint8_t imm)
+        int64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
-    if (half)
+    if (width == 16)
         val = sext<16>(val & mask(16));
+    else if (width == 32)
+        val = sext<32>(val & mask(32));
+    else if (width != 64)
+        panic("Unsupported width %d", width);
+
     float scale = powf(2.0, imm);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
@@ -658,106 +683,19 @@ vfpSFixedToFpS(bool flush, bool defaultNan,
     return fixDivDest(flush, defaultNan, val / scale, (float)val, scale);
 }
 
-uint64_t
-vfpFpDToFixed(double val, bool isSigned, bool half,
-              uint8_t imm, bool rzero)
-{
-    int rmode = rzero ? FeRoundZero : fegetround();
-    fesetround(FeRoundNearest);
-    val = val * pow(2.0, imm);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    fesetround(rmode);
-    feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    double origVal = val;
-    val = rint(val);
-    int fpType = std::fpclassify(val);
-    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
-        if (fpType == FP_NAN) {
-            feraiseexcept(FeInvalid);
-        }
-        val = 0.0;
-    } else if (origVal != val) {
-        switch (rmode) {
-          case FeRoundNearest:
-            if (origVal - val > 0.5)
-                val += 1.0;
-            else if (val - origVal > 0.5)
-                val -= 1.0;
-            break;
-          case FeRoundDown:
-            if (origVal < val)
-                val -= 1.0;
-            break;
-          case FeRoundUpward:
-            if (origVal > val)
-                val += 1.0;
-            break;
-        }
-        feraiseexcept(FeInexact);
-    }
-    if (isSigned) {
-        if (half) {
-            if (val < (int16_t)(1 << 15)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int16_t)(1 << 15);
-            }
-            if (val > (int16_t)mask(15)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int16_t)mask(15);
-            }
-            return (int16_t)val;
-        } else {
-            if (val < (int32_t)(1 << 31)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int32_t)(1 << 31);
-            }
-            if (val > (int32_t)mask(31)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return (int32_t)mask(31);
-            }
-            return (int32_t)val;
-        }
-    } else {
-        if (half) {
-            if (val < 0) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return 0;
-            }
-            if (val > mask(16)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return mask(16);
-            }
-            return (uint16_t)val;
-        } else {
-            if (val < 0) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return 0;
-            }
-            if (val > mask(32)) {
-                feraiseexcept(FeInvalid);
-                feclearexcept(FeInexact);
-                return mask(32);
-            }
-            return (uint32_t)val;
-        }
-    }
-}
 
 double
 vfpUFixedToFpD(bool flush, bool defaultNan,
-        uint32_t val, bool half, uint8_t imm)
+        uint64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
-    if (half)
+    if (width == 16)
         val = (uint16_t)val;
+    else if (width == 32)
+        val = (uint32_t)val;
+    else if (width != 64)
+        panic("Unsupported width %d", width);
+
     double scale = pow(2.0, imm);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
@@ -767,11 +705,16 @@ vfpUFixedToFpD(bool flush, bool defaultNan,
 
 double
 vfpSFixedToFpD(bool flush, bool defaultNan,
-        int32_t val, bool half, uint8_t imm)
+        int64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
-    if (half)
+    if (width == 16)
         val = sext<16>(val & mask(16));
+    else if (width == 32)
+        val = sext<32>(val & mask(32));
+    else if (width != 64)
+        panic("Unsupported width %d", width);
+
     double scale = pow(2.0, imm);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
@@ -975,6 +918,85 @@ float FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
 template
 double FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
                          double op1, double op2) const;
+
+// @TODO remove this function when we've finished switching all FMA code to use the new FPLIB
+template <class fpType>
+fpType
+FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
+                fpType (*func)(fpType, fpType, fpType),
+                bool flush, bool defaultNan, uint32_t rMode) const
+{
+    const bool single = (sizeof(fpType) == sizeof(float));
+    fpType junk = 0.0;
+
+    if (flush && (flushToZero(op1, op2) || flushToZero(op3)))
+        fpscr.idc = 1;
+    VfpSavedState state = prepFpState(rMode);
+    __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3), "=m" (state)
+                             :  "m" (op1),  "m" (op2),  "m" (op3),  "m" (state));
+    fpType dest = func(op1, op2, op3);
+    __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+
+    int fpClass = std::fpclassify(dest);
+    // Get NAN behavior right. This varies between x86 and ARM.
+    if (fpClass == FP_NAN) {
+        const uint64_t qnan =
+            single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+        const bool nan1 = std::isnan(op1);
+        const bool nan2 = std::isnan(op2);
+        const bool nan3 = std::isnan(op3);
+        const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
+        const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
+        const bool signal3 = nan3 && ((fpToBits(op3) & qnan) != qnan);
+        if ((!nan1 && !nan2 && !nan3) || (defaultNan == 1)) {
+            dest = bitsToFp(qnan, junk);
+        } else if (signal1) {
+            dest = bitsToFp(fpToBits(op1) | qnan, junk);
+        } else if (signal2) {
+            dest = bitsToFp(fpToBits(op2) | qnan, junk);
+        } else if (signal3) {
+            dest = bitsToFp(fpToBits(op3) | qnan, junk);
+        } else if (nan1) {
+            dest = op1;
+        } else if (nan2) {
+            dest = op2;
+        } else if (nan3) {
+            dest = op3;
+        }
+    } else if (flush && flushToZero(dest)) {
+        feraiseexcept(FeUnderflow);
+    } else if ((
+                (single && (dest == bitsToFp(0x00800000, junk) ||
+                     dest == bitsToFp(0x80800000, junk))) ||
+                (!single &&
+                    (dest == bitsToFp(ULL(0x0010000000000000), junk) ||
+                     dest == bitsToFp(ULL(0x8010000000000000), junk)))
+               ) && rMode != VfpRoundZero) {
+        /*
+         * Correct for the fact that underflow is detected -before- rounding
+         * in ARM and -after- rounding in x86.
+         */
+        fesetround(FeRoundZero);
+        __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3)
+                                 :  "m" (op1),  "m" (op2),  "m" (op3));
+        fpType temp = func(op1, op2, op2);
+        __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+        if (flush && flushToZero(temp)) {
+            dest = temp;
+        }
+    }
+    finishVfp(fpscr, state, flush);
+    return dest;
+}
+
+template
+float FpOp::ternaryOp(FPSCR &fpscr, float op1, float op2, float op3,
+                      float (*func)(float, float, float),
+                      bool flush, bool defaultNan, uint32_t rMode) const;
+template
+double FpOp::ternaryOp(FPSCR &fpscr, double op1, double op2, double op3,
+                       double (*func)(double, double, double),
+                       bool flush, bool defaultNan, uint32_t rMode) const;
 
 template <class fpType>
 fpType

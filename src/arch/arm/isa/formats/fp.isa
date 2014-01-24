@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2011 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -151,8 +151,7 @@ let {{
             if (singleAll) {
                 size = bits(machInst, 7, 6);
                 bool t = bits(machInst, 5);
-                unsigned eBytes = (1 << size);
-                align = (eBytes - 1) | TLB::AllowUnaligned;
+                align = size | TLB::AllowUnaligned;
                 if (width == 1) {
                     regs = t ? 2 : 1;
                     inc = 1;
@@ -164,7 +163,7 @@ let {{
                   case 1:
                   case 2:
                     if (bits(machInst, 4))
-                        align = width * eBytes - 1;
+                        align = size + width - 1;
                     break;
                   case 3:
                     break;
@@ -173,20 +172,19 @@ let {{
                         if (bits(machInst, 4) == 0)
                             return new Unknown(machInst);
                         size = 2;
-                        align = 0xf;
+                        align = 0x4;
                     } else if (size == 2) {
                         if (bits(machInst, 4))
-                            align = 7;
+                            align = 0x3;
                     } else {
                         if (bits(machInst, 4))
-                            align = 4 * eBytes - 1;
+                            align = size + 2;
                     }
                     break;
                 }
             } else {
                 size = bits(machInst, 11, 10);
-                unsigned eBytes = (1 << size);
-                align = (eBytes - 1) | TLB::AllowUnaligned;
+                align = size | TLB::AllowUnaligned;
                 regs = width;
                 unsigned indexAlign = bits(machInst, 7, 4);
                 // If width is 1, inc is always 1. That's overridden later.
@@ -219,13 +217,13 @@ let {{
                         break;
                       case 2:
                         if (bits(indexAlign, 1, 0))
-                            align = 3;
+                            align = 2;
                         break;
                     }
                     break;
                   case 2:
                     if (bits(indexAlign, 0))
-                        align = (2 * eBytes) - 1;
+                        align = size + 1;
                     break;
                   case 3:
                     break;
@@ -234,11 +232,11 @@ let {{
                       case 0:
                       case 1:
                         if (bits(indexAlign, 0))
-                            align = (4 * eBytes) - 1;
+                            align = size + 2;
                         break;
                       case 2:
                         if (bits(indexAlign, 0))
-                            align = (4 << bits(indexAlign, 1, 0)) - 1;
+                            align = bits(indexAlign, 1, 0) + 2;
                         break;
                     }
                     break;
@@ -252,9 +250,9 @@ let {{
             align = bits(machInst, 5, 4);
             if (align == 0) {
                 // @align wasn't specified, so alignment can be turned off.
-                align = ((1 << size) - 1) | TLB::AllowUnaligned;
+                align = size | TLB::AllowUnaligned;
             } else {
-                align = ((4 << align) - 1);
+                align = align + 2;
             }
             switch (width) {
               case 1:
@@ -588,6 +586,23 @@ let {{
                 }
             }
           case 0xc:
+            if (b) {
+                if (!u) {
+                    if (bits(c, 1) == 0) {
+                        if (q) {
+                            return new NVfmaQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new NVfmaDFp<float>(machInst, vd, vn, vm);
+                        }
+                    } else {
+                        if (q) {
+                            return new NVfmsQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new NVfmsDFp<float>(machInst, vd, vn, vm);
+                        }
+                    }
+                }
+            }
             return new Unknown(machInst);
           case 0xd:
             if (b) {
@@ -1827,7 +1842,7 @@ let {{
             break;
           case 0x1:
             {
-                if (offset == 0 || vd + offset/2 > NumFloatArchRegs) {
+                if (offset == 0 || vd + offset/2 > NumFloatV7ArchRegs) {
                     break;
                 }
                 switch (bits(opcode, 1, 0)) {
@@ -1951,8 +1966,9 @@ let {{
             } else if (a == 0x7) {
                 const IntRegIndex rt =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                uint32_t specReg = bits(machInst, 19, 16);
-                switch (specReg) {
+                uint32_t reg = bits(machInst, 19, 16);
+                uint32_t specReg;
+                switch (reg) {
                   case 0:
                     specReg = MISCREG_FPSID;
                     break;
@@ -1974,7 +1990,9 @@ let {{
                 if (specReg == MISCREG_FPSCR) {
                     return new VmsrFpscr(machInst, (IntRegIndex)specReg, rt);
                 } else {
-                    return new Vmsr(machInst, (IntRegIndex)specReg, rt);
+                    uint32_t iss = mcrMrcIssBuild(0, bits(machInst, 3, 0), rt,
+                        reg, a, bits(machInst, 7, 5));
+                    return new Vmsr(machInst, (IntRegIndex)specReg, rt, iss);
                 }
             }
         } else if (l == 0 && c == 1) {
@@ -2041,8 +2059,9 @@ let {{
             } else if (a == 7) {
                 const IntRegIndex rt =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                uint32_t specReg = bits(machInst, 19, 16);
-                switch (specReg) {
+                uint32_t reg = bits(machInst, 19, 16);
+                uint32_t specReg;
+                switch (reg) {
                   case 0:
                     specReg = MISCREG_FPSID;
                     break;
@@ -2070,7 +2089,9 @@ let {{
                 } else if (specReg == MISCREG_FPSCR) {
                     return new VmrsFpscr(machInst, rt, (IntRegIndex)specReg);
                 } else {
-                    return new Vmrs(machInst, rt, (IntRegIndex)specReg);
+                    uint32_t iss = mcrMrcIssBuild(l, bits(machInst, 3, 0), rt,
+                        reg, a, bits(machInst, 7, 5));
+                    return new Vmrs(machInst, rt, (IntRegIndex)specReg, iss);
                 }
             }
         } else {
@@ -2231,6 +2252,44 @@ let {{
                             machInst, vd, vn, vm, false);
                 } else {
                     return decodeVfpRegRegRegOp<VdivD>(
+                            machInst, vd, vn, vm, true);
+                }
+            }
+            break;
+          case 0x9:
+            if ((opc3 & 0x1) == 0) {
+                if (single) {
+                    return decodeVfpRegRegRegOp<VfnmaS>(
+                            machInst, vd, vn, vm, false);
+                } else {
+                    return decodeVfpRegRegRegOp<VfnmaD>(
+                            machInst, vd, vn, vm, true);
+                }
+            } else {
+                if (single) {
+                    return decodeVfpRegRegRegOp<VfnmsS>(
+                            machInst, vd, vn, vm, false);
+                } else {
+                    return decodeVfpRegRegRegOp<VfnmsD>(
+                            machInst, vd, vn, vm, true);
+                }
+            }
+            break;
+          case 0xa:
+            if ((opc3 & 0x1) == 0) {
+                if (single) {
+                    return decodeVfpRegRegRegOp<VfmaS>(
+                            machInst, vd, vn, vm, false);
+                } else {
+                    return decodeVfpRegRegRegOp<VfmaD>(
+                            machInst, vd, vn, vm, true);
+                }
+            } else {
+                if (single) {
+                    return decodeVfpRegRegRegOp<VfmsS>(
+                            machInst, vd, vn, vm, false);
+                } else {
+                    return decodeVfpRegRegRegOp<VfmsD>(
                             machInst, vd, vn, vm, true);
                 }
             }

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011-2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -61,7 +73,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
     assert(elf != NULL);
 
     // Check that we actually have a elf file
-    if (gelf_getehdr(elf, &ehdr) ==0) {
+    if (gelf_getehdr(elf, &ehdr) == 0) {
         DPRINTFR(Loader, "Not ELF\n");
         elf_end(elf);
         return NULL;
@@ -94,23 +106,27 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         } else if (ehdr.e_machine == EM_386 &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
             arch = ObjectFile::I386;
-        } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            arch = ObjectFile::Alpha;
-        } else if (ehdr.e_machine == EM_ARM) {
+        } else if (ehdr.e_machine == EM_ARM &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
             if (bits(ehdr.e_entry, 0)) {
                 arch = ObjectFile::Thumb;
             } else {
                 arch = ObjectFile::Arm;
             }
+        } else if ((ehdr.e_machine == EM_AARCH64) &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+            arch = ObjectFile::Arm64;
+        } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+            arch = ObjectFile::Alpha;
         } else if (ehdr.e_machine == EM_PPC &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-          if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) {
-                arch = ObjectFile::Power;
-          } else {
-                fatal("The binary you're trying to load is compiled for "
+            if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) {
+                  arch = ObjectFile::Power;
+            } else {
+                  fatal("The binary you're trying to load is compiled for "
                         "little endian Power.\nM5 only supports big "
                         "endian Power. Please recompile your binary.\n");
-          }
+            }
         } else if (ehdr.e_machine == EM_PPC64) {
             fatal("The binary you're trying to load is compiled for 64-bit "
                   "Power. M5\n only supports 32-bit Power. Please "
@@ -121,9 +137,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         }
 
         //Detect the operating system
-        switch (ehdr.e_ident[EI_OSABI])
-        {
-
+        switch (ehdr.e_ident[EI_OSABI]) {
           case ELFOSABI_LINUX:
             opSys = ObjectFile::Linux;
             break;
@@ -206,7 +220,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
                 if(phdr.p_offset <= e_phoff &&
                         phdr.p_offset + phdr.p_filesz > e_phoff)
                 {
-                    result->_programHeaderTable = phdr.p_paddr + e_phoff;
+                    result->_programHeaderTable =
+                        phdr.p_paddr + (e_phoff - phdr.p_offset);
                     break;
                 }
             }
@@ -423,15 +438,15 @@ ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr addrMask)
 }
 
 bool
-ElfObject::loadSections(PortProxy& memProxy, Addr addrMask)
+ElfObject::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
 {
-    if (!ObjectFile::loadSections(memProxy, addrMask))
+    if (!ObjectFile::loadSections(memProxy, addrMask, offset))
         return false;
 
     vector<Segment>::iterator extraIt;
     for (extraIt = extraSegments.begin();
             extraIt != extraSegments.end(); extraIt++) {
-        if (!loadSection(&(*extraIt), memProxy, addrMask)) {
+        if (!loadSection(&(*extraIt), memProxy, addrMask, offset)) {
             return false;
         }
     }

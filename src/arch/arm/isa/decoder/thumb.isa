@@ -95,8 +95,14 @@ decode BIGTHUMB {
                     0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStre();
                     0xf: decode HTOPCODE_9_4 {
                         0x00: Unknown::undefined();
-                        0x04: WarnUnimpl::mcrr(); // mcrr2
-                        0x05: WarnUnimpl::mrrc(); // mrrc2
+                        0x04: decode LTCOPROC {
+                            0xf: Mcrr15::Mcrr15();
+                            default: WarnUnimpl::mcrr(); // mcrr2
+                        }
+                        0x05: decode LTCOPROC {
+                            0xf: Mrrc15::Mrrc15();
+                            default: WarnUnimpl::mrrc(); // mrrc2
+                        }
                         0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
                         0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e:
                             WarnUnimpl::stc(); // stc2

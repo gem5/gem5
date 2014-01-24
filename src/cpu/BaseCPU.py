@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -76,7 +76,7 @@ elif buildEnv['TARGET_ISA'] == 'mips':
     from MipsISA import MipsISA
     isa_class = MipsISA
 elif buildEnv['TARGET_ISA'] == 'arm':
-    from ArmTLB import ArmTLB
+    from ArmTLB import ArmTLB, ArmStage2IMMU, ArmStage2DMMU
     from ArmInterrupts import ArmInterrupts
     from ArmISA import ArmISA
     isa_class = ArmISA
@@ -171,6 +171,8 @@ class BaseCPU(MemObject):
     elif buildEnv['TARGET_ISA'] == 'arm':
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
+        istage2_mmu = Param.ArmStage2MMU(ArmStage2IMMU(), "Stage 2 trans")
+        dstage2_mmu = Param.ArmStage2MMU(ArmStage2DMMU(), "Stage 2 trans")
         interrupts = Param.ArmInterrupts(
                 NULL, "Interrupt Controller")
         isa = VectorParam.ArmISA([ isa_class() ], "ISA instance")
@@ -211,6 +213,9 @@ class BaseCPU(MemObject):
 
     if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
+        if buildEnv['TARGET_ISA'] in ['arm']:
+            _cached_ports += ["istage2_mmu.stage2_tlb.walker.port",
+                              "dstage2_mmu.stage2_tlb.walker.port"]
 
     _uncached_slave_ports = []
     _uncached_master_ports = []
@@ -267,18 +272,35 @@ class BaseCPU(MemObject):
             if iwc and dwc:
                 self.itb_walker_cache = iwc
                 self.dtb_walker_cache = dwc
-                self.itb.walker.port = iwc.cpu_side
-                self.dtb.walker.port = dwc.cpu_side
+                if buildEnv['TARGET_ISA'] in ['arm']:
+                    self.itb_walker_cache_bus = CoherentBus()
+                    self.dtb_walker_cache_bus = CoherentBus()
+                    self.itb_walker_cache_bus.master = iwc.cpu_side
+                    self.dtb_walker_cache_bus.master = dwc.cpu_side
+                    self.itb.walker.port = self.itb_walker_cache_bus.slave
+                    self.dtb.walker.port = self.dtb_walker_cache_bus.slave
+                    self.istage2_mmu.stage2_tlb.walker.port = self.itb_walker_cache_bus.slave
+                    self.dstage2_mmu.stage2_tlb.walker.port = self.dtb_walker_cache_bus.slave
+                else:
+                    self.itb.walker.port = iwc.cpu_side
+                    self.dtb.walker.port = dwc.cpu_side
                 self._cached_ports += ["itb_walker_cache.mem_side", \
                                        "dtb_walker_cache.mem_side"]
             else:
                 self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
+
+                if buildEnv['TARGET_ISA'] in ['arm']:
+                    self._cached_ports += ["istage2_mmu.stage2_tlb.walker.port", \
+                                           "dstage2_mmu.stage2_tlb.walker.port"]
 
             # Checker doesn't need its own tlb caches because it does
             # functional accesses only
             if self.checker != NULL:
                 self._cached_ports += ["checker.itb.walker.port", \
                                        "checker.dtb.walker.port"]
+                if buildEnv['TARGET_ISA'] in ['arm']:
+                    self._cached_ports += ["checker.istage2_mmu.stage2_tlb.walker.port", \
+                                           "checker.dstage2_mmu.stage2_tlb.walker.port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)

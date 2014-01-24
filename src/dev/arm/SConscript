@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009 ARM Limited
+# Copyright (c) 2009, 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('amba_device.cc')
     Source('amba_fake.cc')
     Source('base_gic.cc')
+    Source('generic_timer.cc')
     Source('gic_pl390.cc')
     Source('pl011.cc')
     Source('pl111.cc')
@@ -57,6 +58,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('realview.cc')
     Source('rtc_pl031.cc')
     Source('timer_cpulocal.cc')
+    Source('vgic.cc')
 
     DebugFlag('AMBA')
     DebugFlag('HDLcd')
@@ -64,3 +66,4 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('Pl050')
     DebugFlag('GIC')
     DebugFlag('RVCTRL')
+    DebugFlag('VGIC')

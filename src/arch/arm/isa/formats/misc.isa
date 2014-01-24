@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2012 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -36,19 +36,42 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Gabe Black
+//          Giacomo Gabrielli
+
+def format ArmERet() {{
+    decode_block = "return new Eret(machInst);"
+}};
 
 def format Svc() {{
-    decode_block = "return new Svc(machInst);"
+    decode_block = "return new Svc(machInst, bits(machInst, 23, 0));"
+}};
+
+def format ArmSmcHyp() {{
+    decode_block = '''
+    {
+        if (bits(machInst, 21))
+        {
+            return new Smc(machInst);
+        } else {
+            uint32_t imm16 = (bits(machInst, 19, 8) << 4) |
+                             (bits(machInst,  3, 0) << 0);
+            return new Hvc(machInst, imm16);
+        }
+    }
+    '''
 }};
 
 def format ArmMsrMrs() {{
     decode_block = '''
     {
         const uint8_t byteMask = bits(machInst, 19, 16);
+        const uint8_t sysM     = byteMask | (bits(machInst, 8) << 4);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
         const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
         const uint32_t opcode = bits(machInst, 24, 21);
         const bool useImm = bits(machInst, 25);
+        const bool r      = bits(machInst, 22);
+        const bool isBanked = bits(machInst, 9);
 
         const uint32_t unrotated = bits(machInst, 7, 0);
         const uint32_t rotation = (bits(machInst, 11, 8) << 1);
@@ -56,20 +79,36 @@ def format ArmMsrMrs() {{
 
         switch (opcode) {
           case 0x8:
-            return new MrsCpsr(machInst, rd);
+            if (isBanked) {
+                return new MrsBankedReg(machInst, rd, sysM, r!=0);
+            } else {
+                return new MrsCpsr(machInst, rd);
+            }
           case 0x9:
             if (useImm) {
                 return new MsrCpsrImm(machInst, imm, byteMask);
             } else {
-                return new MsrCpsrReg(machInst, rn, byteMask);
+                if (isBanked) {
+                    return new MsrBankedReg(machInst, rn, sysM, r!=0);
+                } else {
+                    return new MsrCpsrReg(machInst, rn, byteMask);
+                }
             }
           case 0xa:
-            return new MrsSpsr(machInst, rd);
+            if (isBanked) {
+                return new MrsBankedReg(machInst, rd, sysM, r!=0);
+            } else {
+                return new MrsSpsr(machInst, rd);
+            }
           case 0xb:
             if (useImm) {
                 return new MsrSpsrImm(machInst, imm, byteMask);
             } else {
-                return new MsrSpsrReg(machInst, rn, byteMask);
+                if (isBanked) {
+                    return new MsrBankedReg(machInst, rn, sysM, r!=0);
+                } else {
+                    return new MsrSpsrReg(machInst, rn, byteMask);
+                }
             }
           default:
             return new Unknown(machInst);
@@ -99,16 +138,17 @@ let {{
         switch (miscReg) {
           case MISCREG_NOP:
             return new NopInst(machInst);
-          case NUM_MISCREGS:
+          case MISCREG_CP14_UNIMPL:
             return new FailUnimplemented(
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
                     crn, opc1, crm, opc2, isRead ? "read" : "write").c_str(),
                     machInst);
           default:
+            uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
             if (isRead) {
-                return new Mrc14(machInst, rt, (IntRegIndex)miscReg);
+                return new Mrc14(machInst, rt, (IntRegIndex)miscReg, iss);
             } else {
-                return new Mcr14(machInst, (IntRegIndex)miscReg, rt);
+                return new Mcr14(machInst, (IntRegIndex)miscReg, rt, iss);
             }
         }
     }
@@ -123,8 +163,8 @@ def format McrMrc14() {{
 
 let {{
     header_output = '''
-    StaticInstPtr
-    decodeMcrMrc15(ExtMachInst machInst);
+    StaticInstPtr decodeMcrMrc14(ExtMachInst machInst);
+    StaticInstPtr decodeMcrMrc15(ExtMachInst machInst);
     '''
     decoder_output = '''
     StaticInstPtr
@@ -136,107 +176,50 @@ let {{
         const uint32_t crm = bits(machInst, 3, 0);
         const MiscRegIndex miscReg = decodeCP15Reg(crn, opc1, crm, opc2);
         const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-
         const bool isRead = bits(machInst, 20);
+        uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
 
         switch (miscReg) {
           case MISCREG_NOP:
             return new NopInst(machInst);
-          case NUM_MISCREGS:
+          case MISCREG_CP15_UNIMPL:
             return new FailUnimplemented(
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
                     crn, opc1, crm, opc2, isRead ? "read" : "write").c_str(),
                     machInst);
-          case MISCREG_DCCISW:
-            return new WarnUnimplemented(
-                    isRead ? "mrc dccisw" : "mcr dcisw", machInst);
-          case MISCREG_DCCIMVAC:
-            return new WarnUnimplemented(
-                    isRead ? "mrc dccimvac" : "mcr dccimvac", machInst);
-          case MISCREG_DCIMVAC:
-            return new WarnUnimplemented(
-                    isRead ? "mrc dcimvac" : "mcr dcimvac", machInst);
           case MISCREG_DCCMVAC:
             return new FlushPipeInst(
                     isRead ? "mrc dccmvac" : "mcr dccmvac", machInst);
-          case MISCREG_DCCMVAU:
-            return new WarnUnimplemented(
-                    isRead ? "mrc dccmvau" : "mcr dccmvau", machInst);
           case MISCREG_CP15ISB:
-            return new Isb(machInst);
+            return new Isb(machInst, iss);
           case MISCREG_CP15DSB:
-            return new Dsb(machInst);
+            return new Dsb(machInst, iss);
           case MISCREG_CP15DMB:
-            return new Dmb(machInst);
-          case MISCREG_ICIALLUIS:
-            return new WarnUnimplemented(
-                    isRead ? "mrc icialluis" : "mcr icialluis", machInst);
-          case MISCREG_ICIMVAU:
-            return new WarnUnimplemented(
-                    isRead ? "mrc icimvau" : "mcr icimvau", machInst);
-          case MISCREG_BPIMVA:
-            return new WarnUnimplemented(
-                    isRead ? "mrc bpimva" : "mcr bpimva", machInst);
-          case MISCREG_BPIALLIS:
-            return new WarnUnimplemented(
-                    isRead ? "mrc bpiallis" : "mcr bpiallis", machInst);
-          case MISCREG_BPIALL:
-            return new WarnUnimplemented(
-                    isRead ? "mrc bpiall" : "mcr bpiall", machInst);
-          case MISCREG_L2LATENCY:
-            return new WarnUnimplemented(
-                    isRead ? "mrc l2latency" : "mcr l2latency", machInst);
-          case MISCREG_CRN15:
-            return new WarnUnimplemented(
-                    isRead ? "mrc crn15" : "mcr crn15", machInst);
-
-            // Write only.
-          case MISCREG_TLBIALLIS:
-          case MISCREG_TLBIMVAIS:
-          case MISCREG_TLBIASIDIS:
-          case MISCREG_TLBIMVAAIS:
-          case MISCREG_ITLBIALL:
-          case MISCREG_ITLBIMVA:
-          case MISCREG_ITLBIASID:
-          case MISCREG_DTLBIALL:
-          case MISCREG_DTLBIMVA:
-          case MISCREG_DTLBIASID:
-          case MISCREG_TLBIALL:
-          case MISCREG_TLBIMVA:
-          case MISCREG_TLBIASID:
-          case MISCREG_TLBIMVAA:
-            if (isRead) {
-                return new Unknown(machInst);
-            } else {
-                return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
-            }
-
-            // Read only in user mode.
-          case MISCREG_TPIDRURO:
-            if (isRead) {
-                return new Mrc15User(machInst, rt, (IntRegIndex)miscReg);
-            } else {
-                return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
-            }
-
-            // Read/write in user mode.
-          case MISCREG_TPIDRURW:
-            if (isRead) {
-                return new Mrc15User(machInst, rt, (IntRegIndex)miscReg);
-            } else {
-                return new Mcr15User(machInst, (IntRegIndex)miscReg, rt);
-            }
-
-            // Read/write, priveleged only.
+            return new Dmb(machInst, iss);
           default:
-            if (miscReg >= MISCREG_CP15_UNIMP_START)
+            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+                std::string full_mnem = csprintf("%s %s",
+                    isRead ? "mrc" : "mcr", miscRegName[miscReg]);
+                warn("\\tinstruction '%s' unimplemented\\n", full_mnem);
+
+                // Remove the warn flag and set the implemented flag. This
+                // prevents the instruction warning a second time, it also
+                // means the instruction is actually generated. Actually
+                // creating the instruction to access an register that isn't
+                // implemented sounds a bit silly, but its required to get
+                // the correct behaviour for hyp traps and undef exceptions.
+                miscRegInfo[miscReg][MISCREG_IMPLEMENTED]   = true;
+                miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL] = false;
+            }
+
+            if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
+                if (isRead)
+                    return new Mrc15(machInst, rt, (IntRegIndex)miscReg, iss);
+                return new Mcr15(machInst, (IntRegIndex)miscReg, rt, iss);
+            } else {
                 return new FailUnimplemented(csprintf("%s %s",
                     isRead ? "mrc" : "mcr", miscRegName[miscReg]).c_str(),
                     machInst);
-            if (isRead) {
-                return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
-            } else {
-                return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
             }
         }
     }
@@ -246,5 +229,72 @@ let {{
 def format McrMrc15() {{
     decode_block = '''
     return decodeMcrMrc15(machInst);
+    '''
+}};
+
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeMcrrMrrc15(ExtMachInst machInst);
+    '''
+    decoder_output = '''
+    StaticInstPtr
+    decodeMcrrMrrc15(ExtMachInst machInst)
+    {
+        const uint32_t crm = bits(machInst, 3, 0);
+        const uint32_t opc1 = bits(machInst, 7, 4);
+        const MiscRegIndex miscReg = decodeCP15Reg64(crm, opc1);
+        const IntRegIndex rt = (IntRegIndex) (uint32_t) bits(machInst, 15, 12);
+        const IntRegIndex rt2 = (IntRegIndex) (uint32_t) bits(machInst, 19, 16);
+
+        const bool isRead = bits(machInst, 20);
+
+        switch (miscReg) {
+          case MISCREG_CP15_UNIMPL:
+            return new FailUnimplemented(
+                    csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
+                    crm, opc1, isRead ? "read" : "write").c_str(),
+                    machInst);
+          default:
+            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+                std::string full_mnem = csprintf("%s %s",
+                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]);
+                warn("\\tinstruction '%s' unimplemented\\n", full_mnem);
+
+                // Remove the warn flag and set the implemented flag. This
+                // prevents the instruction warning a second time, it also
+                // means the instruction is actually generated. Actually
+                // creating the instruction to access an register that isn't
+                // implemented sounds a bit silly, but its required to get
+                // the correct behaviour for hyp traps and undef exceptions.
+                miscRegInfo[miscReg][MISCREG_IMPLEMENTED]   = true;
+                miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL] = false;
+            }
+
+            if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
+                uint32_t iss = mcrrMrrcIssBuild(isRead, crm, rt, rt2, opc1);
+
+                if (isRead)
+                    return new Mrrc15(machInst, (IntRegIndex) miscReg, rt2, rt, iss);
+                return new Mcrr15(machInst, rt2, rt, (IntRegIndex) miscReg, iss);
+            } else {
+                return new FailUnimplemented(csprintf("%s %s",
+                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]).c_str(),
+                    machInst);
+            }
+        }
+    }
+    '''
+}};
+
+def format Mcrr15() {{
+    decode_block = '''
+    return decodeMcrrMrrc15(machInst);
+    '''
+}};
+
+def format Mrrc15() {{
+    decode_block = '''
+    return decodeMcrrMrrc15(machInst);
     '''
 }};

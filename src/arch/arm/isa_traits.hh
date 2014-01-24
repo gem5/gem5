@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -95,6 +95,9 @@ namespace ArmISA
 
     const Addr PAddrImplMask = (ULL(1) << PABits) - 1;
 
+    // Max. physical address range in bits supported by the architecture
+    const unsigned MaxPhysAddrRange = 48;
+
     // return a no-op instruction... used for instruction fetch faults
     const ExtMachInst NoopMachInst = 0x01E320F000ULL;
 
@@ -124,6 +127,8 @@ namespace ArmISA
         INT_IRQ,
         INT_FIQ,
         INT_SEV, // Special interrupt for recieving SEV's
+        INT_VIRT_IRQ,
+        INT_VIRT_FIQ,
         NumInterruptTypes
     };
 } // namespace ArmISA

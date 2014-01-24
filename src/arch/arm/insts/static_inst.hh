@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/utility.hh"
+#include "arch/arm/system.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 #include "sim/byteswap.hh"
@@ -55,6 +56,9 @@ namespace ArmISA
 class ArmStaticInst : public StaticInst
 {
   protected:
+    bool aarch64;
+    uint8_t intWidth;
+
     int32_t shift_rm_imm(uint32_t base, uint32_t shamt,
                          uint32_t type, uint32_t cfval) const;
     int32_t shift_rm_rs(uint32_t base, uint32_t shamt,
@@ -64,6 +68,11 @@ class ArmStaticInst : public StaticInst
                          uint32_t type, uint32_t cfval) const;
     bool shift_carry_rs(uint32_t base, uint32_t shamt,
                         uint32_t type, uint32_t cfval) const;
+
+    int64_t shiftReg64(uint64_t base, uint64_t shiftAmt,
+                       ArmShiftType type, uint8_t width) const;
+    int64_t extendReg64(uint64_t base, ArmExtendType type,
+                        uint64_t shiftAmt, uint8_t width) const;
 
     template<int width>
     static inline bool
@@ -135,6 +144,11 @@ class ArmStaticInst : public StaticInst
                   OpClass __opClass)
         : StaticInst(mnem, _machInst, __opClass)
     {
+        aarch64 = machInst.aarch64;
+        if (bits(machInst, 28, 24) == 0x10)
+            intWidth = 64;  // Force 64-bit width for ADR/ADRP
+        else
+            intWidth = (aarch64 && bits(machInst, 31)) ? 64 : 32;
     }
 
     /// Print a register name for disassembly given the unique
@@ -142,13 +156,22 @@ class ArmStaticInst : public StaticInst
     void printReg(std::ostream &os, int reg) const;
     void printMnemonic(std::ostream &os,
                        const std::string &suffix = "",
-                       bool withPred = true) const;
+                       bool withPred = true,
+                       bool withCond64 = false,
+                       ConditionCode cond64 = COND_UC) const;
+    void printTarget(std::ostream &os, Addr target,
+                     const SymbolTable *symtab) const;
+    void printCondition(std::ostream &os, unsigned code,
+                        bool noImplicit=false) const;
     void printMemSymbol(std::ostream &os, const SymbolTable *symtab,
                         const std::string &prefix, const Addr addr,
                         const std::string &suffix) const;
     void printShiftOperand(std::ostream &os, IntRegIndex rm,
                            bool immShift, uint32_t shiftAmt,
                            IntRegIndex rs, ArmShiftType type) const;
+    void printExtendOperand(bool firstOperand, std::ostream &os,
+                            IntRegIndex rm, ArmExtendType type,
+                            int64_t shiftAmt) const;
 
 
     void printDataInst(std::ostream &os, bool withImm) const;
@@ -166,10 +189,13 @@ class ArmStaticInst : public StaticInst
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
     static inline uint32_t
-    cpsrWriteByInstr(CPSR cpsr, uint32_t val,
-            uint8_t byteMask, bool affectState, bool nmfi)
+    cpsrWriteByInstr(CPSR cpsr, uint32_t val, SCR scr, NSACR nsacr,
+            uint8_t byteMask, bool affectState, bool nmfi, ThreadContext *tc)
     {
-        bool privileged = (cpsr.mode != MODE_USER);
+        bool privileged   = (cpsr.mode != MODE_USER);
+        bool haveVirt     = ArmSystem::haveVirtualization(tc);
+        bool haveSecurity = ArmSystem::haveSecurity(tc);
+        bool isSecure     = inSecureState(scr, cpsr) || !haveSecurity;
 
         uint32_t bitMask = 0;
 
@@ -182,14 +208,53 @@ class ArmStaticInst : public StaticInst
         }
         if (bits(byteMask, 1)) {
             unsigned highIdx = affectState ? 15 : 9;
-            unsigned lowIdx = privileged ? 8 : 9;
+            unsigned lowIdx = (privileged && (isSecure || scr.aw || haveVirt))
+                            ? 8 : 9;
             bitMask = bitMask | mask(highIdx, lowIdx);
         }
         if (bits(byteMask, 0)) {
             if (privileged) {
-                bitMask = bitMask | mask(7, 6);
-                if (!badMode((OperatingMode)(val & mask(5)))) {
-                    bitMask = bitMask | mask(5);
+                bitMask |= 1 << 7;
+                if ( (!nmfi || !((val >> 6) & 0x1)) &&
+                     (isSecure || scr.fw || haveVirt) ) {
+                    bitMask |= 1 << 6;
+                }
+                // Now check the new mode is allowed
+                OperatingMode newMode = (OperatingMode) (val & mask(5));
+                OperatingMode oldMode = (OperatingMode)(uint32_t)cpsr.mode;
+                if (!badMode(newMode)) {
+                    bool validModeChange = true;
+                    // Check for attempts to enter modes only permitted in
+                    // Secure state from Non-secure state. These are Monitor
+                    // mode ('10110'), and FIQ mode ('10001') if the Security
+                    // Extensions have reserved it.
+                    if (!isSecure && newMode == MODE_MON)
+                        validModeChange = false;
+                    if (!isSecure && newMode == MODE_FIQ && nsacr.rfr == '1')
+                        validModeChange = false;
+                    // There is no Hyp mode ('11010') in Secure state, so that
+                    // is UNPREDICTABLE
+                    if (scr.ns == '0' && newMode == MODE_HYP)
+                        validModeChange = false;
+                    // Cannot move into Hyp mode directly from a Non-secure
+                    // PL1 mode
+                    if (!isSecure && oldMode != MODE_HYP && newMode == MODE_HYP)
+                        validModeChange = false;
+                    // Cannot move out of Hyp mode with this function except
+                    // on an exception return
+                    if (oldMode == MODE_HYP && newMode != MODE_HYP && !affectState)
+                        validModeChange = false;
+                    // Must not change to 64 bit when running in 32 bit mode
+                    if (!opModeIs64(oldMode) && opModeIs64(newMode))
+                        validModeChange = false;
+
+                    // If we passed all of the above then set the bit mask to
+                    // copy the mode accross
+                    if (validModeChange) {
+                        bitMask = bitMask | mask(5);
+                    } else {
+                        warn_once("Illegal change to CPSR mode attempted\n");
+                    }
                 } else {
                     warn_once("Ignoring write of bad mode to CPSR.\n");
                 }
@@ -198,11 +263,7 @@ class ArmStaticInst : public StaticInst
                 bitMask = bitMask | (1 << 5);
         }
 
-        bool cpsr_f = cpsr.f;
-        uint32_t new_cpsr = ((uint32_t)cpsr & ~bitMask) | (val & bitMask);
-        if (nmfi && !cpsr_f)
-            new_cpsr &= ~(1 << 6);
-        return new_cpsr;
+        return ((uint32_t)cpsr & ~bitMask) | (val & bitMask);
     }
 
     static inline uint32_t
@@ -296,12 +357,12 @@ class ArmStaticInst : public StaticInst
     inline Fault
     disabledFault() const
     {
-        if (FullSystem) {
-            return new UndefinedInstruction();
-        } else {
-            return new UndefinedInstruction(machInst, false, mnemonic, true);
-        }
+        return new UndefinedInstruction(machInst, false, mnemonic, true);
     }
+
+  public:
+    virtual void
+    annotateFault(ArmFault *fault) {}
 };
 }
 

@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009 ARM Limited
+# Copyright (c) 2009, 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,12 +49,17 @@ if env['TARGET_ISA'] == 'arm':
     Dir('isa/formats')
     Source('decoder.cc')
     Source('faults.cc')
+    Source('insts/branch64.cc')
+    Source('insts/data64.cc')
     Source('insts/macromem.cc')
     Source('insts/mem.cc')
+    Source('insts/mem64.cc')
     Source('insts/misc.cc')
+    Source('insts/misc64.cc')
     Source('insts/pred_inst.cc')
     Source('insts/static_inst.cc')
     Source('insts/vfp.cc')
+    Source('insts/fplib.cc')
     Source('interrupts.cc')
     Source('isa.cc')
     Source('linux/linux.cc')
@@ -67,6 +72,8 @@ if env['TARGET_ISA'] == 'arm':
     Source('stacktrace.cc')
     Source('system.cc')
     Source('table_walker.cc')
+    Source('stage2_mmu.cc')
+    Source('stage2_lookup.cc')
     Source('tlb.cc')
     Source('utility.cc')
     Source('vtophys.cc')

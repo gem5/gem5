@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2011 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
 // Authors: Gabe Black
 
 let {{
+    import math
 
     header_output = ""
     decoder_output = ""
@@ -78,7 +79,8 @@ let {{
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
                                            self.memFlags, instFlags, base,
-                                           wbDecl, pcDecl, self.rasPop)
+                                           wbDecl, pcDecl, self.rasPop,
+                                           self.size, self.sign)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -160,7 +162,7 @@ let {{
                                       self.size, self.sign, self.user)
 
             # Add memory request flags where necessary
-            self.memFlags.append("%d" % (self.size - 1))
+            self.memFlags.append("%d" % int(math.log(self.size, 2)))
             if self.user:
                 self.memFlags.append("ArmISA::TLB::UserMode")
 

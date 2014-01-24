@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,7 +63,8 @@ using namespace Linux;
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      kernelPanicEvent(NULL), kernelOopsEvent(NULL)
+      kernelPanicEvent(NULL), kernelOopsEvent(NULL),
+      bootReleaseAddr(p->boot_release_addr)
 {
     if (p->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -98,22 +99,30 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     secDataPtrAddr = 0;
     secDataAddr = 0;
     penReleaseAddr = 0;
+
     kernelSymtab->findAddress("__secondary_data", secDataPtrAddr);
     kernelSymtab->findAddress("secondary_data", secDataAddr);
     kernelSymtab->findAddress("pen_release", penReleaseAddr);
+    kernelSymtab->findAddress("secondary_holding_pen_release", pen64ReleaseAddr);
 
     secDataPtrAddr &= ~ULL(0x7F);
     secDataAddr &= ~ULL(0x7F);
     penReleaseAddr &= ~ULL(0x7F);
+    pen64ReleaseAddr &= ~ULL(0x7F);
+    bootReleaseAddr = (bootReleaseAddr & ~ULL(0x7F)) + loadAddrOffset;
+
 }
 
 bool
 LinuxArmSystem::adderBootUncacheable(Addr a)
 {
     Addr block = a & ~ULL(0x7F);
+
     if (block == secDataPtrAddr || block == secDataAddr ||
-            block == penReleaseAddr)
+            block == penReleaseAddr || pen64ReleaseAddr == block ||
+            block == bootReleaseAddr)
         return true;
+
     return false;
 }
 
@@ -145,7 +154,8 @@ LinuxArmSystem::initState()
     if (kernel_has_fdt_support && dtb_file_specified) {
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
-        inform("Loading DTB file: %s\n", params()->dtb_filename);
+        inform("Loading DTB file: %s at address %#x\n", params()->dtb_filename,
+                params()->atags_addr + loadAddrOffset);
 
         ObjectFile *dtb_file = createObjectFile(params()->dtb_filename, true);
         if (!dtb_file) {
@@ -165,7 +175,7 @@ LinuxArmSystem::initState()
                  "to DTB file: %s\n", params()->dtb_filename);
         }
 
-        dtb_file->setTextBase(params()->atags_addr);
+        dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
         dtb_file->loadSections(physProxy);
         delete dtb_file;
     } else {
@@ -215,15 +225,17 @@ LinuxArmSystem::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
+        physProxy.writeBlob(params()->atags_addr + loadAddrOffset, boot_data,
+                size << 2);
 
         delete[] boot_data;
     }
 
+    // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);
         threadContexts[i]->setIntReg(1, params()->machine_type);
-        threadContexts[i]->setIntReg(2, params()->atags_addr);
+        threadContexts[i]->setIntReg(2, params()->atags_addr + loadAddrOffset);
     }
 }
 

@@ -1,0 +1,147 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2011-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+    svcCode = '''
+    fault = new SupervisorCall(machInst, bits(machInst, 20, 5));
+    '''
+
+    svcIop = InstObjParams("svc", "Svc64", "ArmStaticInst",
+                           svcCode, ["IsSyscall", "IsNonSpeculative",
+                                     "IsSerializeAfter"])
+    header_output = BasicDeclare.subst(svcIop)
+    decoder_output = BasicConstructor64.subst(svcIop)
+    exec_output = BasicExecute.subst(svcIop)
+
+    # @todo: extend to take into account Virtualization.
+    smcCode = '''
+    SCR scr = Scr64;
+    CPSR cpsr = Cpsr;
+
+    if (!ArmSystem::haveSecurity(xc->tcBase()) || inUserMode(cpsr) || scr.smd) {
+        fault = disabledFault();
+    } else {
+        fault = new SecureMonitorCall(machInst);
+    }
+    '''
+
+    smcIop = InstObjParams("smc", "Smc64", "ArmStaticInst",
+                           smcCode, ["IsNonSpeculative", "IsSerializeAfter"])
+    header_output += BasicDeclare.subst(smcIop)
+    decoder_output += BasicConstructor64.subst(smcIop)
+    exec_output += BasicExecute.subst(smcIop)
+
+    def subst(templateBase, iop):
+        global header_output, decoder_output, exec_output
+        header_output += eval(templateBase + "Declare").subst(iop)
+        decoder_output += eval(templateBase + "Constructor").subst(iop)
+        exec_output += BasicExecute.subst(iop)
+
+    bfmMaskCode = '''
+    uint64_t bitMask;
+    int diff = imm2 - imm1;
+    if (imm1 <= imm2) {
+        bitMask = mask(diff + 1);
+    } else {
+        bitMask = mask(imm2 + 1);
+        bitMask = (bitMask >> imm1) | (bitMask << (intWidth - imm1));
+        diff += intWidth;
+    }
+    uint64_t topBits M5_VAR_USED = ~mask(diff+1);
+    uint64_t result = (Op164 >> imm1) | (Op164 << (intWidth - imm1));
+    result &= bitMask;
+    '''
+
+    bfmCode = bfmMaskCode + 'Dest64 = result | (Dest64 & ~bitMask);'
+    bfmIop = InstObjParams("bfm", "Bfm64", "RegRegImmImmOp64", bfmCode);
+    subst("RegRegImmImmOp64", bfmIop)
+
+    ubfmCode = bfmMaskCode + 'Dest64 = result;'
+    ubfmIop = InstObjParams("ubfm", "Ubfm64", "RegRegImmImmOp64", ubfmCode);
+    subst("RegRegImmImmOp64", ubfmIop)
+
+    sbfmCode = bfmMaskCode + \
+        'Dest64 = result | (bits(Op164, imm2) ? topBits : 0);'
+    sbfmIop = InstObjParams("sbfm", "Sbfm64", "RegRegImmImmOp64", sbfmCode);
+    subst("RegRegImmImmOp64", sbfmIop)
+
+    extrCode = '''
+        if (imm == 0) {
+            Dest64 = Op264;
+        } else {
+            Dest64 = (Op164 << (intWidth - imm)) | (Op264 >> imm);
+        }
+    '''
+    extrIop = InstObjParams("extr", "Extr64", "RegRegRegImmOp64", extrCode);
+    subst("RegRegRegImmOp64", extrIop);
+
+    unknownCode = '''
+            return new UndefinedInstruction(machInst, true);
+    '''
+    unknown64Iop = InstObjParams("unknown", "Unknown64", "UnknownOp64",
+                                 unknownCode)
+    header_output += BasicDeclare.subst(unknown64Iop)
+    decoder_output += BasicConstructor64.subst(unknown64Iop)
+    exec_output += BasicExecute.subst(unknown64Iop)
+
+    isbIop = InstObjParams("isb", "Isb64", "ArmStaticInst",
+                           "fault = new FlushPipe;", ['IsSerializeAfter'])
+    header_output += BasicDeclare.subst(isbIop)
+    decoder_output += BasicConstructor64.subst(isbIop)
+    exec_output += BasicExecute.subst(isbIop)
+
+    dsbIop = InstObjParams("dsb", "Dsb64", "ArmStaticInst",
+                           "fault = new FlushPipe;",
+                           ['IsMemBarrier', 'IsSerializeAfter'])
+    header_output += BasicDeclare.subst(dsbIop)
+    decoder_output += BasicConstructor64.subst(dsbIop)
+    exec_output += BasicExecute.subst(dsbIop)
+
+    dmbIop = InstObjParams("dmb", "Dmb64", "ArmStaticInst", "",
+                           ['IsMemBarrier'])
+    header_output += BasicDeclare.subst(dmbIop)
+    decoder_output += BasicConstructor64.subst(dmbIop)
+    exec_output += BasicExecute.subst(dmbIop)
+
+    clrexIop = InstObjParams("clrex", "Clrex64", "ArmStaticInst",
+                             "LLSCLock = 0;")
+    header_output += BasicDeclare.subst(clrexIop)
+    decoder_output += BasicConstructor64.subst(clrexIop)
+    exec_output += BasicExecute.subst(clrexIop)
+}};

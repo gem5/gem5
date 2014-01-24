@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010,2012 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
+#include "arch/arm/utility.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"
 #include "params/ArmInterrupts.hh"
@@ -123,31 +124,79 @@ class Interrupts : public SimObject
         memset(interrupts, 0, sizeof(interrupts));
     }
 
+    enum InterruptMask {
+        INT_MASK_M, // masked (subject to PSTATE.{A,I,F} mask bit
+        INT_MASK_T, // taken regardless of mask
+        INT_MASK_P  // pending
+    };
+
+    bool takeInt(ThreadContext *tc, InterruptTypes int_type) const;
+
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        if (!intStatus)
+        HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
+
+        if (!(intStatus || hcr.va || hcr.vi || hcr.vf))
             return false;
 
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        SCR  scr  = tc->readMiscReg(MISCREG_SCR);
 
-        return ((interrupts[INT_IRQ] && !cpsr.i) ||
-                (interrupts[INT_FIQ] && !cpsr.f) ||
-                (interrupts[INT_ABT] && !cpsr.a) ||
-                (interrupts[INT_RST]) ||
-                (interrupts[INT_SEV]));
+        bool isHypMode   = cpsr.mode == MODE_HYP;
+        bool isSecure    = inSecureState(scr, cpsr);
+        bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
+        bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
+        bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
+
+        bool take_irq = takeInt(tc, INT_IRQ);
+        bool take_fiq = takeInt(tc, INT_FIQ);
+        bool take_ea =  takeInt(tc, INT_ABT);
+
+        return ((interrupts[INT_IRQ] && take_irq)                   ||
+                (interrupts[INT_FIQ] && take_fiq)                   ||
+                (interrupts[INT_ABT] && take_ea)                    ||
+                ((interrupts[INT_VIRT_IRQ] || hcr.vi) && allowVIrq) ||
+                ((interrupts[INT_VIRT_FIQ] || hcr.vf) && allowVFiq) ||
+                (hcr.va && allowVAbort)                             ||
+                (interrupts[INT_RST])                               ||
+                (interrupts[INT_SEV])
+               );
     }
 
     /**
-     * Check the raw interrupt state.
      * This function is used to check if a wfi operation should sleep. If there
      * is an interrupt pending, even if it's masked, wfi doesn't sleep.
      * @return any interrupts pending
      */
     bool
-    checkRaw() const
+    checkWfiWake(HCR hcr, CPSR cpsr, SCR scr) const
     {
-        return intStatus;
+        uint64_t maskedIntStatus;
+        bool     virtWake;
+
+        maskedIntStatus = intStatus & ~((1 << INT_VIRT_IRQ) |
+                                        (1 << INT_VIRT_FIQ));
+        virtWake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
+        virtWake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
+        virtWake |=  hcr.va                              && hcr.amo;
+        virtWake &= (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr);
+        return maskedIntStatus || virtWake;
+    }
+
+    uint32_t
+    getISR(HCR hcr, CPSR cpsr, SCR scr)
+    {
+        bool useHcrMux;
+        CPSR isr = 0; // ARM ARM states ISR reg uses same bit possitions as CPSR
+
+        useHcrMux = (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr);
+        isr.i = (useHcrMux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
+                                      :  interrupts[INT_IRQ];
+        isr.f = (useHcrMux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
+                                      :  interrupts[INT_FIQ];
+        isr.a = (useHcrMux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
+        return isr;
     }
 
     /**
@@ -172,22 +221,45 @@ class Interrupts : public SimObject
     Fault
     getInterrupt(ThreadContext *tc)
     {
-        if (!intStatus)
+        HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        SCR  scr  = tc->readMiscReg(MISCREG_SCR);
+
+        // Calculate a few temp vars so we can work out if there's a pending
+        // virtual interrupt, and if its allowed to happen
+        // ARM ARM Issue C section B1.9.9, B1.9.11, and B1.9.13
+        bool isHypMode   = cpsr.mode == MODE_HYP;
+        bool isSecure    = inSecureState(scr, cpsr);
+        bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
+        bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
+        bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
+
+        if ( !(intStatus || (hcr.vi && allowVIrq) || (hcr.vf && allowVFiq) ||
+               (hcr.va && allowVAbort)) )
             return NoFault;
 
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        bool take_irq = takeInt(tc, INT_IRQ);
+        bool take_fiq = takeInt(tc, INT_FIQ);
+        bool take_ea =  takeInt(tc, INT_ABT);
 
-        if (interrupts[INT_IRQ] && !cpsr.i)
+
+        if (interrupts[INT_IRQ] && take_irq)
             return new Interrupt;
-        if (interrupts[INT_FIQ] && !cpsr.f)
+        if ((interrupts[INT_VIRT_IRQ] || hcr.vi) && allowVIrq)
+            return new VirtualInterrupt;
+        if (interrupts[INT_FIQ] && take_fiq)
             return new FastInterrupt;
-        if (interrupts[INT_ABT] && !cpsr.a)
-            return new DataAbort(0, false, 0,
-                    ArmFault::AsynchronousExternalAbort);
+        if ((interrupts[INT_VIRT_FIQ] || hcr.vf) && allowVFiq)
+            return new VirtualFastInterrupt;
+        if (interrupts[INT_ABT] && take_ea)
+            return new SystemError;
+        if (hcr.va && allowVAbort)
+            return new VirtualDataAbort(0, TlbEntry::DomainType::NoAccess, false,
+                                 ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
-           return new Reset;
+            return new Reset;
         if (interrupts[INT_SEV])
-           return new ArmSev;
+            return new ArmSev;
 
         panic("intStatus and interrupts not in sync\n");
     }

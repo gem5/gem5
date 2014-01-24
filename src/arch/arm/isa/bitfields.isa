@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010, 2011 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -73,6 +73,7 @@ def bitfield SEVEN_AND_FOUR sevenAndFour;
 
 def bitfield THUMB         thumb;
 def bitfield BIGTHUMB      bigThumb;
+def bitfield AARCH64       aarch64;
 
 // Other
 def bitfield COND_CODE     condCode;

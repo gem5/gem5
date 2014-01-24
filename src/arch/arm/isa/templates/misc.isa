@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -62,6 +62,69 @@ def template MrsConstructor {{
     }
 }};
 
+def template MrsBankedRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    uint8_t byteMask;
+    bool    r;
+
+  public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                       uint8_t _sysM, bool _r);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template MrsBankedRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          uint8_t     _sysM,
+                                          bool        _r)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest),
+          byteMask(_sysM), r(_r)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
+def template MsrBankedRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    bool r;
+
+  public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                       uint8_t _sysM, bool _r);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template MsrBankedRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _op1,
+                                          uint8_t     _sysM,
+                                          bool        _r)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _sysM),
+          r(_r)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
 def template MsrRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
@@ -104,6 +167,66 @@ def template MsrImmConstructor {{
                                           uint32_t imm,
                                           uint8_t mask)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm, mask)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
+def template MrrcOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                       IntRegIndex _dest, IntRegIndex _dest2, uint32_t imm);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template MrrcOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex op1,
+                                          IntRegIndex dest,
+                                          IntRegIndex dest2,
+                                          uint32_t    imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, dest,
+                         dest2, imm)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
+def template McrrOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2,
+                       IntRegIndex _dest, uint32_t imm);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template McrrOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex op1,
+                                          IntRegIndex op2,
+                                          IntRegIndex dest,
+                                          uint32_t    imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, op2,
+                         dest, imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -300,6 +423,35 @@ def template RegRegImmOpConstructor {{
                                           uint64_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _dest, _op1, _imm)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
+def template RegImmImmOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst,
+                       IntRegIndex _dest, uint64_t _imm1, uint64_t _imm2);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template RegImmImmOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          uint64_t _imm1,
+                                          uint64_t _imm2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _imm1, _imm2)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {

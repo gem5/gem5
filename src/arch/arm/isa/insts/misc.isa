@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2012 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -40,20 +40,101 @@
 let {{
 
     svcCode = '''
-    if (FullSystem) {
-        fault = new SupervisorCall;
-    } else {
-        fault = new SupervisorCall(machInst);
-    }
+    fault = new SupervisorCall(machInst, imm);
     '''
 
-    svcIop = InstObjParams("svc", "Svc", "PredOp",
+    svcIop = InstObjParams("svc", "Svc", "ImmOp",
                            { "code": svcCode,
                              "predicate_test": predicateTest },
                            ["IsSyscall", "IsNonSpeculative", "IsSerializeAfter"])
-    header_output = BasicDeclare.subst(svcIop)
-    decoder_output = BasicConstructor.subst(svcIop)
+    header_output = ImmOpDeclare.subst(svcIop)
+    decoder_output = ImmOpConstructor.subst(svcIop)
     exec_output = PredOpExecute.subst(svcIop)
+
+    smcCode = '''
+    HCR  hcr  = Hcr;
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr;
+
+    if ((cpsr.mode != MODE_USER) && FullSystem) {
+        if (ArmSystem::haveVirtualization(xc->tcBase()) &&
+            !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
+            fault = new HypervisorTrap(machInst, 0, EC_SMC_TO_HYP);
+        } else {
+            if (scr.scd) {
+                fault = disabledFault();
+            } else {
+                fault = new SecureMonitorCall(machInst);
+            }
+        }
+    } else {
+        fault = disabledFault();
+    }
+    '''
+
+    smcIop = InstObjParams("smc", "Smc", "PredOp",
+                           { "code": smcCode,
+                             "predicate_test": predicateTest },
+                           ["IsNonSpeculative", "IsSerializeAfter"])
+    header_output += BasicDeclare.subst(smcIop)
+    decoder_output += BasicConstructor.subst(smcIop)
+    exec_output += PredOpExecute.subst(smcIop)
+
+    hvcCode = '''
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr;
+
+    // Filter out the various cases where this instruction isn't defined
+    if (!FullSystem || !ArmSystem::haveVirtualization(xc->tcBase()) ||
+        (cpsr.mode == MODE_USER) ||
+        (ArmSystem::haveSecurity(xc->tcBase()) && (!scr.ns || !scr.hce))) {
+        fault = disabledFault();
+    } else {
+        fault = new HypervisorCall(machInst, imm);
+    }
+    '''
+
+    hvcIop = InstObjParams("hvc", "Hvc", "ImmOp",
+                           { "code": hvcCode,
+                             "predicate_test": predicateTest },
+                           ["IsNonSpeculative", "IsSerializeAfter"])
+    header_output += ImmOpDeclare.subst(hvcIop)
+    decoder_output += ImmOpConstructor.subst(hvcIop)
+    exec_output += PredOpExecute.subst(hvcIop)
+
+    eretCode = '''
+        SCTLR sctlr   = Sctlr;
+        CPSR old_cpsr = Cpsr;
+        old_cpsr.nz   = CondCodesNZ;
+        old_cpsr.c    = CondCodesC;
+        old_cpsr.v    = CondCodesV;
+        old_cpsr.ge   = CondCodesGE;
+
+        CPSR new_cpsr = cpsrWriteByInstr(old_cpsr, Spsr, Scr, Nsacr, 0xF,
+                            true, sctlr.nmfi, xc->tcBase());
+        Cpsr        = ~CondCodesMask & new_cpsr;
+        CondCodesNZ = new_cpsr.nz;
+        CondCodesC  = new_cpsr.c;
+        CondCodesV  = new_cpsr.v;
+        CondCodesGE = new_cpsr.ge;
+
+        NextThumb = (new_cpsr).t;
+                    NextJazelle = (new_cpsr).j;
+                    NextItState = (((new_cpsr).it2 << 2) & 0xFC)
+                        | ((new_cpsr).it1 & 0x3);
+
+        NPC = (old_cpsr.mode == MODE_HYP) ? ElrHyp : LR;
+    '''
+
+    eretIop = InstObjParams("eret", "Eret", "PredOp",
+                           { "code": eretCode,
+                             "predicate_test": predicateTest },
+                           ["IsNonSpeculative", "IsSerializeAfter"])
+    header_output += BasicDeclare.subst(eretIop)
+    decoder_output += BasicConstructor.subst(eretIop)
+    exec_output += PredOpExecute.subst(eretIop)
+
+
 
 }};
 
@@ -87,6 +168,59 @@ let {{
     decoder_output += MrsConstructor.subst(mrsSpsrIop)
     exec_output += PredOpExecute.subst(mrsSpsrIop)
 
+    mrsBankedRegCode = '''
+        bool isIntReg;
+        int  regIdx;
+
+        if (decodeMrsMsrBankedReg(byteMask, r, isIntReg, regIdx, Cpsr, Scr, Nsacr)) {
+            if (isIntReg) {
+                Dest = DecodedBankedIntReg;
+            } else {
+                Dest = xc->readMiscReg(regIdx);
+            }
+        } else {
+            return new UndefinedInstruction(machInst, false, mnemonic);
+        }
+    '''
+    mrsBankedRegIop = InstObjParams("mrs", "MrsBankedReg", "MrsOp",
+                                    { "code": mrsBankedRegCode,
+                                      "predicate_test": predicateTest },
+                                    ["IsSerializeBefore"])
+    header_output += MrsBankedRegDeclare.subst(mrsBankedRegIop)
+    decoder_output += MrsBankedRegConstructor.subst(mrsBankedRegIop)
+    exec_output += PredOpExecute.subst(mrsBankedRegIop)
+
+    msrBankedRegCode = '''
+        bool isIntReg;
+        int  regIdx;
+
+        if (decodeMrsMsrBankedReg(byteMask, r, isIntReg, regIdx, Cpsr, Scr, Nsacr)) {
+            if (isIntReg) {
+                // This is a bit nasty, you would have thought that
+                // DecodedBankedIntReg wouldn't be written to unless the
+                // conditions on the IF statements above are met, however if
+                // you look at the generated C code you'll find that they are.
+                // However this is safe as DecodedBankedIntReg (which is used
+                // in operands.isa to get the index of DecodedBankedIntReg)
+                // will return INTREG_DUMMY if its not a valid integer
+                // register, so redirecting the write to somewhere we don't
+                // care about.
+                DecodedBankedIntReg = Op1;
+            } else {
+                xc->setMiscReg(regIdx, Op1);
+            }
+        } else {
+            return new UndefinedInstruction(machInst, false, mnemonic);
+        }
+    '''
+    msrBankedRegIop = InstObjParams("msr", "MsrBankedReg", "MsrRegOp",
+                                    { "code": msrBankedRegCode,
+                                      "predicate_test": predicateTest },
+                                    ["IsSerializeAfter"])
+    header_output += MsrBankedRegDeclare.subst(msrBankedRegIop)
+    decoder_output += MsrBankedRegConstructor.subst(msrBankedRegIop)
+    exec_output += PredOpExecute.subst(msrBankedRegIop)
+
     msrCpsrRegCode = '''
         SCTLR sctlr = Sctlr;
         CPSR old_cpsr = Cpsr;
@@ -96,7 +230,8 @@ let {{
         old_cpsr.ge = CondCodesGE;
 
         CPSR new_cpsr =
-            cpsrWriteByInstr(old_cpsr, Op1, byteMask, false, sctlr.nmfi);
+            cpsrWriteByInstr(old_cpsr, Op1, Scr, Nsacr, byteMask, false,
+                             sctlr.nmfi, xc->tcBase());
         Cpsr = ~CondCodesMask & new_cpsr;
         CondCodesNZ = new_cpsr.nz;
         CondCodesC = new_cpsr.c;
@@ -128,7 +263,8 @@ let {{
         old_cpsr.v = CondCodesV;
         old_cpsr.ge = CondCodesGE;
         CPSR new_cpsr =
-            cpsrWriteByInstr(old_cpsr, imm, byteMask, false, sctlr.nmfi);
+            cpsrWriteByInstr(old_cpsr, imm, Scr, Nsacr, byteMask, false,
+                             sctlr.nmfi, xc->tcBase());
         Cpsr = ~CondCodesMask & new_cpsr;
         CondCodesNZ = new_cpsr.nz;
         CondCodesC = new_cpsr.c;
@@ -488,12 +624,10 @@ let {{
     decoder_output += BasicConstructor.subst(bkptIop)
     exec_output += BasicExecute.subst(bkptIop)
 
-    nopIop = InstObjParams("nop", "NopInst", "PredOp", \
-            { "code" : "", "predicate_test" : predicateTest },
-            ['IsNop'])
+    nopIop = InstObjParams("nop", "NopInst", "ArmStaticInst", "", ['IsNop'])
     header_output += BasicDeclare.subst(nopIop)
-    decoder_output += BasicConstructor.subst(nopIop)
-    exec_output += PredOpExecute.subst(nopIop)
+    decoder_output += BasicConstructor64.subst(nopIop)
+    exec_output += BasicExecute.subst(nopIop)
 
     yieldIop = InstObjParams("yield", "YieldInst", "PredOp", \
             { "code" : "", "predicate_test" : predicateTest })
@@ -502,14 +636,31 @@ let {{
     exec_output += PredOpExecute.subst(yieldIop)
 
     wfeCode = '''
-    // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending
+    HCR  hcr  = Hcr;
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr64;
+    SCTLR sctlr = Sctlr;
+
+    // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending,
+    ThreadContext *tc = xc->tcBase();
     if (SevMailbox == 1) {
         SevMailbox = 0;
-        PseudoInst::quiesceSkip(xc->tcBase());
-    } else if (xc->tcBase()->getCpuPtr()->getInterruptController()->checkInterrupts(xc->tcBase())) {
-        PseudoInst::quiesceSkip(xc->tcBase());
+        PseudoInst::quiesceSkip(tc);
+    } else if (tc->getCpuPtr()->getInterruptController()->checkInterrupts(tc)) {
+        PseudoInst::quiesceSkip(tc);
+    } else if (cpsr.el == EL0 && !sctlr.ntwe) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new SupervisorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
+    } else if (ArmSystem::haveVirtualization(tc) &&
+               !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) &&
+               hcr.twe) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new HypervisorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
+    } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twe) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new SecureMonitorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
     } else {
-        PseudoInst::quiesce(xc->tcBase());
+        PseudoInst::quiesce(tc);
     }
     '''
     wfePredFixUpCode = '''
@@ -528,12 +679,30 @@ let {{
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
 
     wfiCode = '''
+    HCR  hcr  = Hcr;
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr64;
+    SCTLR sctlr = Sctlr;
+
     // WFI doesn't sleep if interrupts are pending (masked or not)
-    if (xc->tcBase()->getCpuPtr()->getInterruptController()->checkRaw()) {
-        PseudoInst::quiesceSkip(xc->tcBase());
+    ThreadContext *tc = xc->tcBase();
+    if (tc->getCpuPtr()->getInterruptController()->checkWfiWake(hcr, cpsr,
+                                                                scr)) {
+        PseudoInst::quiesceSkip(tc);
+    } else if (cpsr.el == EL0 && !sctlr.ntwi) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new SupervisorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
+    } else if (ArmSystem::haveVirtualization(tc) && hcr.twi &&
+               (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr)) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new HypervisorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
+    } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twi) {
+        PseudoInst::quiesceSkip(tc);
+        fault = new SecureMonitorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
     } else {
-        PseudoInst::quiesce(xc->tcBase());
+        PseudoInst::quiesce(tc);
     }
+    tc->getCpuPtr()->clearInterrupt(INT_ABT, 0);
     '''
     wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
@@ -564,6 +733,16 @@ let {{
     decoder_output += BasicConstructor.subst(sevIop)
     exec_output += PredOpExecute.subst(sevIop)
 
+    sevlCode = '''
+    SevMailbox = 1;
+    '''
+    sevlIop = InstObjParams("sevl", "SevlInst", "PredOp", \
+            { "code" : sevlCode, "predicate_test" : predicateTest },
+            ["IsNonSpeculative", "IsSquashAfter", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(sevlIop)
+    decoder_output += BasicConstructor.subst(sevlIop)
+    exec_output += BasicExecute.subst(sevlIop)
+
     itIop = InstObjParams("it", "ItInst", "PredOp", \
             { "code" : ";",
               "predicate_test" : predicateTest }, [])
@@ -571,10 +750,7 @@ let {{
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
     unknownCode = '''
-    if (FullSystem)
-        return new UndefinedInstruction;
-    else
-        return new UndefinedInstruction(machInst, true);
+    return new UndefinedInstruction(machInst, true);
     '''
     unknownIop = InstObjParams("unknown", "Unknown", "UnknownOp", \
                                { "code": unknownCode,
@@ -626,108 +802,152 @@ let {{
     exec_output += PredOpExecute.subst(bfiIop)
 
     mrc14code = '''
-    CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER) {
-        if (FullSystem)
-            return new UndefinedInstruction;
-        else
-            return new UndefinedInstruction(false, mnemonic);
+    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(op1);
+    if (!canReadCoprocReg(miscReg, Scr, Cpsr, xc->tcBase())) {
+            return new UndefinedInstruction(machInst, false, mnemonic);
+    }
+    if (mcrMrc14TrapToHyp((const MiscRegIndex) op1, Hcr, Cpsr, Scr, Hdcr,
+                          Hstr, Hcptr, imm)) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP14_MCR_MRC);
     }
     Dest = MiscOp1;
     '''
 
-    mrc14Iop = InstObjParams("mrc", "Mrc14", "RegRegOp",
+    mrc14Iop = InstObjParams("mrc", "Mrc14", "RegRegImmOp",
                              { "code": mrc14code,
                                "predicate_test": predicateTest }, [])
-    header_output += RegRegOpDeclare.subst(mrc14Iop)
-    decoder_output += RegRegOpConstructor.subst(mrc14Iop)
+    header_output += RegRegImmOpDeclare.subst(mrc14Iop)
+    decoder_output += RegRegImmOpConstructor.subst(mrc14Iop)
     exec_output += PredOpExecute.subst(mrc14Iop)
 
 
     mcr14code = '''
-    CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER) {
-        if (FullSystem)
-            return new UndefinedInstruction;
-        else
-            return new UndefinedInstruction(false, mnemonic);
+    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest);
+    if (!canWriteCoprocReg(miscReg, Scr, Cpsr, xc->tcBase())) {
+        return new UndefinedInstruction(machInst, false, mnemonic);
+    }
+    if (mcrMrc14TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr,
+                          Hstr, Hcptr, imm)) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP14_MCR_MRC);
     }
     MiscDest = Op1;
     '''
-    mcr14Iop = InstObjParams("mcr", "Mcr14", "RegRegOp",
+    mcr14Iop = InstObjParams("mcr", "Mcr14", "RegRegImmOp",
                              { "code": mcr14code,
                                "predicate_test": predicateTest },
                                ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += RegRegOpDeclare.subst(mcr14Iop)
-    decoder_output += RegRegOpConstructor.subst(mcr14Iop)
+    header_output += RegRegImmOpDeclare.subst(mcr14Iop)
+    decoder_output += RegRegImmOpConstructor.subst(mcr14Iop)
     exec_output += PredOpExecute.subst(mcr14Iop)
 
-    mrc14UserIop = InstObjParams("mrc", "Mrc14User", "RegRegOp",
-                                 { "code": "Dest = MiscOp1;",
-                                   "predicate_test": predicateTest }, [])
-    header_output += RegRegOpDeclare.subst(mrc14UserIop)
-    decoder_output += RegRegOpConstructor.subst(mrc14UserIop)
-    exec_output += PredOpExecute.subst(mrc14UserIop)
-
-    mcr14UserIop = InstObjParams("mcr", "Mcr14User", "RegRegOp",
-                                 { "code": "MiscDest = Op1",
-                                   "predicate_test": predicateTest },
-                                   ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += RegRegOpDeclare.subst(mcr14UserIop)
-    decoder_output += RegRegOpConstructor.subst(mcr14UserIop)
-    exec_output += PredOpExecute.subst(mcr14UserIop)
-
     mrc15code = '''
-    CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER) {
-        if (FullSystem)
-            return new UndefinedInstruction;
-        else
-            return new UndefinedInstruction(false, mnemonic);
+    int preFlatOp1 = flattenMiscRegNsBanked(op1, xc->tcBase());
+    MiscRegIndex miscReg = (MiscRegIndex)
+                           xc->tcBase()->flattenMiscIndex(preFlatOp1);
+    bool hypTrap = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,
+                                     Hcptr, imm);
+    bool canRead = canReadCoprocReg(miscReg, Scr, Cpsr, xc->tcBase());
+
+    // if we're in non secure PL1 mode then we can trap regargless of whether
+    // the register is accessable, in other modes we trap if only if the register
+    // IS accessable.
+    if (!canRead & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+        return new UndefinedInstruction(machInst, false, mnemonic);
     }
-    Dest = MiscOp1;
+    if (hypTrap) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCR_MRC);
+    }
+    Dest = MiscNsBankedOp1;
     '''
 
-    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegRegOp",
+    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegRegImmOp",
                              { "code": mrc15code,
                                "predicate_test": predicateTest }, [])
-    header_output += RegRegOpDeclare.subst(mrc15Iop)
-    decoder_output += RegRegOpConstructor.subst(mrc15Iop)
+    header_output += RegRegImmOpDeclare.subst(mrc15Iop)
+    decoder_output += RegRegImmOpConstructor.subst(mrc15Iop)
     exec_output += PredOpExecute.subst(mrc15Iop)
 
 
     mcr15code = '''
-    CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER) {
-        if (FullSystem)
-            return new UndefinedInstruction;
-        else
-            return new UndefinedInstruction(false, mnemonic);
+    int preFlatDest = flattenMiscRegNsBanked(dest, xc->tcBase());
+    MiscRegIndex miscReg = (MiscRegIndex)
+                       xc->tcBase()->flattenMiscIndex(preFlatDest);
+    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,
+                                      Hcptr, imm);
+    bool canWrite = canWriteCoprocReg(miscReg, Scr, Cpsr, xc->tcBase());
+
+    // if we're in non secure PL1 mode then we can trap regargless of whether
+    // the register is accessable, in other modes we trap if only if the register
+    // IS accessable.
+    if (!canWrite & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+        return new UndefinedInstruction(machInst, false, mnemonic);
     }
-    MiscDest = Op1;
+    if (hypTrap) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCR_MRC);
+    }
+    MiscNsBankedDest = Op1;
     '''
-    mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegOp",
+    mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegImmOp",
                              { "code": mcr15code,
                                "predicate_test": predicateTest },
                                ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += RegRegOpDeclare.subst(mcr15Iop)
-    decoder_output += RegRegOpConstructor.subst(mcr15Iop)
+    header_output += RegRegImmOpDeclare.subst(mcr15Iop)
+    decoder_output += RegRegImmOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
 
-    mrc15UserIop = InstObjParams("mrc", "Mrc15User", "RegRegOp",
-                                 { "code": "Dest = MiscOp1;",
-                                   "predicate_test": predicateTest }, [])
-    header_output += RegRegOpDeclare.subst(mrc15UserIop)
-    decoder_output += RegRegOpConstructor.subst(mrc15UserIop)
-    exec_output += PredOpExecute.subst(mrc15UserIop)
 
-    mcr15UserIop = InstObjParams("mcr", "Mcr15User", "RegRegOp",
-                                 { "code": "MiscDest = Op1",
-                                   "predicate_test": predicateTest },
-                                   ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += RegRegOpDeclare.subst(mcr15UserIop)
-    decoder_output += RegRegOpConstructor.subst(mcr15UserIop)
-    exec_output += PredOpExecute.subst(mcr15UserIop)
+    mrrc15code = '''
+    int preFlatOp1 = flattenMiscRegNsBanked(op1, xc->tcBase());
+    MiscRegIndex miscReg = (MiscRegIndex)
+                           xc->tcBase()->flattenMiscIndex(preFlatOp1);
+    bool hypTrap = mcrrMrrc15TrapToHyp(miscReg, Cpsr, Scr, Hstr, Hcr, imm);
+    bool canRead = canReadCoprocReg(miscReg, Scr, Cpsr, xc->tcBase());
+
+    // if we're in non secure PL1 mode then we can trap regargless of whether
+    // the register is accessable, in other modes we trap if only if the register
+    // IS accessable.
+    if (!canRead & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+        return new UndefinedInstruction(machInst, false, mnemonic);
+    }
+    if (hypTrap) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCRR_MRRC);
+    }
+    Dest = bits(MiscNsBankedOp164, 63, 32);
+    Dest2 = bits(MiscNsBankedOp164, 31, 0);
+    '''
+    mrrc15Iop = InstObjParams("mrrc", "Mrrc15", "MrrcOp",
+                              { "code": mrrc15code,
+                                "predicate_test": predicateTest }, [])
+    header_output += MrrcOpDeclare.subst(mrrc15Iop)
+    decoder_output += MrrcOpConstructor.subst(mrrc15Iop)
+    exec_output += PredOpExecute.subst(mrrc15Iop)
+
+
+    mcrr15code = '''
+    int preFlatDest = flattenMiscRegNsBanked(dest, xc->tcBase());
+    MiscRegIndex miscReg = (MiscRegIndex)
+                           xc->tcBase()->flattenMiscIndex(preFlatDest);
+    bool hypTrap  = mcrrMrrc15TrapToHyp(miscReg, Cpsr, Scr, Hstr, Hcr, imm);
+    bool canWrite = canWriteCoprocReg(miscReg, Scr, Cpsr, xc->tcBase());
+
+    // if we're in non secure PL1 mode then we can trap regargless of whether
+    // the register is accessable, in other modes we trap if only if the register
+    // IS accessable.
+    if (!canWrite & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+        return new UndefinedInstruction(machInst, false, mnemonic);
+    }
+    if (hypTrap) {
+        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCRR_MRRC);
+    }
+    MiscNsBankedDest64 = ((uint64_t) Op1 << 32) | Op2;
+    '''
+    mcrr15Iop = InstObjParams("mcrr", "Mcrr15", "McrrOp",
+                              { "code": mcrr15code,
+                                "predicate_test": predicateTest }, [])
+    header_output += McrrOpDeclare.subst(mcrr15Iop)
+    decoder_output += McrrOpConstructor.subst(mcrr15Iop)
+    exec_output += PredOpExecute.subst(mcrr15Iop)
+
 
     enterxCode = '''
         NextThumb = true;
@@ -775,35 +995,53 @@ let {{
     exec_output += PredOpExecute.subst(clrexIop)
 
     isbCode = '''
+        // If the barrier is due to a CP15 access check for hyp traps
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB, Hcr, Cpsr, Scr,
+            Hdcr, Hstr, Hcptr, imm)) {
+            return new HypervisorTrap(machInst, imm,
+                EC_TRAPPED_CP15_MCR_MRC);
+        }
         fault = new FlushPipe;
     '''
-    isbIop = InstObjParams("isb", "Isb", "PredOp",
+    isbIop = InstObjParams("isb", "Isb", "ImmOp",
                              {"code": isbCode,
                                "predicate_test": predicateTest},
                                 ['IsSerializeAfter'])
-    header_output += BasicDeclare.subst(isbIop)
-    decoder_output += BasicConstructor.subst(isbIop)
+    header_output += ImmOpDeclare.subst(isbIop)
+    decoder_output += ImmOpConstructor.subst(isbIop)
     exec_output += PredOpExecute.subst(isbIop)
 
     dsbCode = '''
+        // If the barrier is due to a CP15 access check for hyp traps
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB, Hcr, Cpsr, Scr,
+            Hdcr, Hstr, Hcptr, imm)) {
+            return new HypervisorTrap(machInst, imm,
+                EC_TRAPPED_CP15_MCR_MRC);
+        }
         fault = new FlushPipe;
     '''
-    dsbIop = InstObjParams("dsb", "Dsb", "PredOp",
+    dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
                              {"code": dsbCode,
                                "predicate_test": predicateTest},
                               ['IsMemBarrier', 'IsSerializeAfter'])
-    header_output += BasicDeclare.subst(dsbIop)
-    decoder_output += BasicConstructor.subst(dsbIop)
+    header_output += ImmOpDeclare.subst(dsbIop)
+    decoder_output += ImmOpConstructor.subst(dsbIop)
     exec_output += PredOpExecute.subst(dsbIop)
 
     dmbCode = '''
+        // If the barrier is due to a CP15 access check for hyp traps
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB, Hcr, Cpsr, Scr,
+            Hdcr, Hstr, Hcptr, imm)) {
+            return new HypervisorTrap(machInst, imm,
+                EC_TRAPPED_CP15_MCR_MRC);
+        }
     '''
-    dmbIop = InstObjParams("dmb", "Dmb", "PredOp",
+    dmbIop = InstObjParams("dmb", "Dmb", "ImmOp",
                              {"code": dmbCode,
                                "predicate_test": predicateTest},
                                ['IsMemBarrier'])
-    header_output += BasicDeclare.subst(dmbIop)
-    decoder_output += BasicConstructor.subst(dmbIop)
+    header_output += ImmOpDeclare.subst(dmbIop)
+    decoder_output += ImmOpConstructor.subst(dmbIop)
     exec_output += PredOpExecute.subst(dmbIop)
 
     dbgCode = '''

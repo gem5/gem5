@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,12 @@ ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
                                ObjectFile::Arch _arch)
     : LiveProcess(params, objFile), arch(_arch)
 {
+}
+
+ArmLiveProcess32::ArmLiveProcess32(LiveProcessParams *params,
+                                   ObjectFile *objFile, ObjectFile::Arch _arch)
+    : ArmLiveProcess(params, objFile, _arch)
+{
     stack_base = 0xbf000000L;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
@@ -74,11 +80,28 @@ ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
     mmap_start = mmap_end = 0x40000000L;
 }
 
+ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
+                                   ObjectFile *objFile, ObjectFile::Arch _arch)
+    : ArmLiveProcess(params, objFile, _arch)
+{
+    stack_base = 0x7fffff0000L;
+
+    // Set pointer for next thread stack.  Reserve 8M for main stack.
+    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+
+    // Set up break point (Top of Heap)
+    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
+    brk_point = roundUp(brk_point, VMPageSize);
+
+    // Set up region for mmaps. For now, start at bottom of kuseg space.
+    mmap_start = mmap_end = 0x4000000000L;
+}
+
 void
-ArmLiveProcess::initState()
+ArmLiveProcess32::initState()
 {
     LiveProcess::initState();
-    argsInit(MachineBytes, VMPageSize);
+    argsInit<uint32_t>(VMPageSize, INTREG_SP);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
         CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
@@ -94,9 +117,34 @@ ArmLiveProcess::initState()
 }
 
 void
-ArmLiveProcess::argsInit(int intSize, int pageSize)
+ArmLiveProcess64::initState()
 {
-    typedef AuxVector<uint32_t> auxv_t;
+    LiveProcess::initState();
+    argsInit<uint64_t>(VMPageSize, INTREG_SP0);
+    for (int i = 0; i < contextIds.size(); i++) {
+        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        cpsr.mode = MODE_EL0T;
+        tc->setMiscReg(MISCREG_CPSR, cpsr);
+        CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
+        // Enable the floating point coprocessors.
+        cpacr.cp10 = 0x3;
+        cpacr.cp11 = 0x3;
+        tc->setMiscReg(MISCREG_CPACR_EL1, cpacr);
+        // Generically enable floating point support.
+        FPEXC fpexc = tc->readMiscReg(MISCREG_FPEXC);
+        fpexc.en = 1;
+        tc->setMiscReg(MISCREG_FPEXC, fpexc);
+    }
+}
+
+template <class IntType>
+void
+ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
+{
+    int intSize = sizeof(IntType);
+
+    typedef AuxVector<IntType> auxv_t;
     std::vector<auxv_t> auxv;
 
     string filename;
@@ -133,7 +181,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     //Auxilliary vectors are loaded only for elf formatted executables.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if (elfObject) {
-        uint32_t features =
+        IntType features =
             Arm_Swp |
             Arm_Half |
             Arm_Thumb |
@@ -253,16 +301,16 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     allocateMem(roundDown(stack_min, pageSize), roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    uint32_t sentry_base = stack_base - sentry_size;
-    uint32_t aux_data_base = sentry_base - aux_data_size;
-    uint32_t env_data_base = aux_data_base - env_data_size;
-    uint32_t arg_data_base = env_data_base - arg_data_size;
-    uint32_t platform_base = arg_data_base - platform_size;
-    uint32_t aux_random_base = platform_base - aux_random_size;
-    uint32_t auxv_array_base = aux_random_base - aux_array_size - aux_padding;
-    uint32_t envp_array_base = auxv_array_base - envp_array_size;
-    uint32_t argv_array_base = envp_array_base - argv_array_size;
-    uint32_t argc_base = argv_array_base - argc_size;
+    IntType sentry_base = stack_base - sentry_size;
+    IntType aux_data_base = sentry_base - aux_data_size;
+    IntType env_data_base = aux_data_base - env_data_size;
+    IntType arg_data_base = env_data_base - arg_data_size;
+    IntType platform_base = arg_data_base - platform_size;
+    IntType aux_random_base = platform_base - aux_random_size;
+    IntType auxv_array_base = aux_random_base - aux_array_size - aux_padding;
+    IntType envp_array_base = auxv_array_base - envp_array_size;
+    IntType argv_array_base = envp_array_base - argv_array_size;
+    IntType argc_base = argv_array_base - argc_size;
 
     DPRINTF(Stack, "The addresses of items on the initial stack:\n");
     DPRINTF(Stack, "0x%x - aux data\n", aux_data_base);
@@ -279,11 +327,11 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     // write contents to stack
 
     // figure out argc
-    uint32_t argc = argv.size();
-    uint32_t guestArgc = ArmISA::htog(argc);
+    IntType argc = argv.size();
+    IntType guestArgc = ArmISA::htog(argc);
 
     //Write out the sentry void *
-    uint32_t sentry_NULL = 0;
+    IntType sentry_NULL = 0;
     initVirtMem.writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
@@ -302,8 +350,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     }
 
     //Copy the aux stuff
-    for(int x = 0; x < auxv.size(); x++)
-    {
+    for (int x = 0; x < auxv.size(); x++) {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
@@ -321,7 +368,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register
-    tc->setIntReg(StackPointerReg, stack_min);
+    tc->setIntReg(spIndex, stack_min);
     //A pointer to a function to run when the program exits. We'll set this
     //to zero explicitly to make sure this isn't used.
     tc->setIntReg(ArgumentReg0, 0);
@@ -342,6 +389,8 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     PCState pc;
     pc.thumb(arch == ObjectFile::Thumb);
     pc.nextThumb(pc.thumb());
+    pc.aarch64(arch == ObjectFile::Arm64);
+    pc.nextAArch64(pc.aarch64());
     pc.set(objFile->entryPoint() & ~mask(1));
     tc->pcState(pc);
 
@@ -350,14 +399,21 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 }
 
 ArmISA::IntReg
-ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+ArmLiveProcess32::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
 
-uint64_t
-ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+ArmISA::IntReg
+ArmLiveProcess64::getSyscallArg(ThreadContext *tc, int &i)
+{
+    assert(i < 8);
+    return tc->readIntReg(ArgumentReg0 + i++);
+}
+
+ArmISA::IntReg
+ArmLiveProcess32::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     assert(width == 32 || width == 64);
     if (width == 32)
@@ -375,17 +431,37 @@ ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
     return val;
 }
 
+ArmISA::IntReg
+ArmLiveProcess64::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    return getSyscallArg(tc, i);
+}
+
 
 void
-ArmLiveProcess::setSyscallArg(ThreadContext *tc,
-        int i, ArmISA::IntReg val)
+ArmLiveProcess32::setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val)
 {
-    assert(i < 4);
+    assert(i < 6);
     tc->setIntReg(ArgumentReg0 + i, val);
 }
 
 void
-ArmLiveProcess::setSyscallReturn(ThreadContext *tc,
+ArmLiveProcess64::setSyscallArg(ThreadContext *tc,
+        int i, ArmISA::IntReg val)
+{
+    assert(i < 8);
+    tc->setIntReg(ArgumentReg0 + i, val);
+}
+
+void
+ArmLiveProcess32::setSyscallReturn(ThreadContext *tc,
+        SyscallReturn return_value)
+{
+    tc->setIntReg(ReturnValueReg, return_value.value());
+}
+
+void
+ArmLiveProcess64::setSyscallReturn(ThreadContext *tc,
         SyscallReturn return_value)
 {
     tc->setIntReg(ReturnValueReg, return_value.value());

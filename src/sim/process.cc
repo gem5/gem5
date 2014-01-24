@@ -695,15 +695,22 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == ARM_ISA
-    if (objFile->getArch() != ObjectFile::Arm &&
-        objFile->getArch() != ObjectFile::Thumb)
+    ObjectFile::Arch arch = objFile->getArch();
+    if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
+        arch != ObjectFile::Arm64)
         fatal("Object file architecture does not match compiled ISA (ARM).");
     switch (objFile->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new ArmLinuxProcess(params, objFile, objFile->getArch());
+        if (arch == ObjectFile::Arm64) {
+            process = new ArmLinuxProcess64(params, objFile,
+                                            objFile->getArch());
+        } else {
+            process = new ArmLinuxProcess32(params, objFile,
+                                            objFile->getArch());
+        }
         break;
       case ObjectFile::LinuxArmOABI:
         fatal("M5 does not support ARM OABI binaries. Please recompile with an"

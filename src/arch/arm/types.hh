@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -82,6 +82,7 @@ namespace ArmISA
         // Bitfields to select mode.
         Bitfield<36>     thumb;
         Bitfield<35>     bigThumb;
+        Bitfield<34>     aarch64;
 
         // Made up bitfields that make life easier.
         Bitfield<33>     sevenAndFour;
@@ -143,9 +144,9 @@ namespace ArmISA
         Bitfield<3,  0>  immedLo3_0;
 
         Bitfield<15, 0>  regList;
-        
+
         Bitfield<23, 0>  offset;
-        
+
         Bitfield<23, 0>  immed23_0;
 
         Bitfield<11, 8>  cpNum;
@@ -213,7 +214,8 @@ namespace ArmISA
 
         enum FlagBits {
             ThumbBit = (1 << 0),
-            JazelleBit = (1 << 1)
+            JazelleBit = (1 << 1),
+            AArch64Bit = (1 << 2)
         };
         uint8_t flags;
         uint8_t nextFlags;
@@ -304,6 +306,37 @@ namespace ArmISA
                 nextFlags &= ~JazelleBit;
         }
 
+        bool
+        aarch64() const
+        {
+            return flags & AArch64Bit;
+        }
+
+        void
+        aarch64(bool val)
+        {
+            if (val)
+                flags |= AArch64Bit;
+            else
+                flags &= ~AArch64Bit;
+        }
+
+        bool
+        nextAArch64() const
+        {
+            return nextFlags & AArch64Bit;
+        }
+
+        void
+        nextAArch64(bool val)
+        {
+            if (val)
+                nextFlags |= AArch64Bit;
+            else
+                nextFlags &= ~AArch64Bit;
+        }
+
+
         uint8_t
         itstate() const
         {
@@ -374,9 +407,15 @@ namespace ArmISA
         }
 
         void
-        instNPC(uint32_t val)
+        instNPC(Addr val)
         {
-            npc(val &~ mask(nextThumb() ? 1 : 2));
+            // @todo: review this when AArch32/64 interprocessing is
+            // supported
+            if (aarch64())
+                npc(val);  // AArch64 doesn't force PC alignment, a PC
+                           // Alignment Fault can be raised instead
+            else
+                npc(val &~ mask(nextThumb() ? 1 : 2));
         }
 
         Addr
@@ -387,7 +426,7 @@ namespace ArmISA
 
         // Perform an interworking branch.
         void
-        instIWNPC(uint32_t val)
+        instIWNPC(Addr val)
         {
             bool thumbEE = (thumb() && jazelle());
 
@@ -417,7 +456,7 @@ namespace ArmISA
         // Perform an interworking branch in ARM mode, a regular branch
         // otherwise.
         void
-        instAIWNPC(uint32_t val)
+        instAIWNPC(Addr val)
         {
             if (!thumb() && !jazelle())
                 instIWNPC(val);
@@ -470,6 +509,18 @@ namespace ArmISA
         ROR
     };
 
+    // Extension types for ARM instructions
+    enum ArmExtendType {
+        UXTB = 0,
+        UXTH = 1,
+        UXTW = 2,
+        UXTX = 3,
+        SXTB = 4,
+        SXTH = 5,
+        SXTW = 6,
+        SXTX = 7
+    };
+
     typedef uint64_t LargestRead;
     // Need to use 64 bits to make sure that read requests get handled properly
 
@@ -508,20 +559,154 @@ namespace ArmISA
         RND_NEAREST
     };
 
+    enum ExceptionLevel {
+        EL0 = 0,
+        EL1,
+        EL2,
+        EL3
+    };
+
     enum OperatingMode {
+        MODE_EL0T = 0x0,
+        MODE_EL1T = 0x4,
+        MODE_EL1H = 0x5,
+        MODE_EL2T = 0x8,
+        MODE_EL2H = 0x9,
+        MODE_EL3T = 0xC,
+        MODE_EL3H = 0xD,
         MODE_USER = 16,
         MODE_FIQ = 17,
         MODE_IRQ = 18,
         MODE_SVC = 19,
         MODE_MON = 22,
         MODE_ABORT = 23,
+        MODE_HYP = 26,
         MODE_UNDEFINED = 27,
         MODE_SYSTEM = 31,
         MODE_MAXMODE = MODE_SYSTEM
     };
 
+    enum ExceptionClass {
+        EC_INVALID                 = -1,
+        EC_UNKNOWN                 = 0x0,
+        EC_TRAPPED_WFI_WFE         = 0x1,
+        EC_TRAPPED_CP15_MCR_MRC    = 0x3,
+        EC_TRAPPED_CP15_MCRR_MRRC  = 0x4,
+        EC_TRAPPED_CP14_MCR_MRC    = 0x5,
+        EC_TRAPPED_CP14_LDC_STC    = 0x6,
+        EC_TRAPPED_HCPTR           = 0x7,
+        EC_TRAPPED_SIMD_FP         = 0x7,   // AArch64 alias
+        EC_TRAPPED_CP10_MRC_VMRS   = 0x8,
+        EC_TRAPPED_BXJ             = 0xA,
+        EC_TRAPPED_CP14_MCRR_MRRC  = 0xC,
+        EC_ILLEGAL_INST            = 0xE,
+        EC_SVC_TO_HYP              = 0x11,
+        EC_SVC                     = 0x11,  // AArch64 alias
+        EC_HVC                     = 0x12,
+        EC_SMC_TO_HYP              = 0x13,
+        EC_SMC                     = 0x13,  // AArch64 alias
+        EC_SVC_64                  = 0x15,
+        EC_HVC_64                  = 0x16,
+        EC_SMC_64                  = 0x17,
+        EC_TRAPPED_MSR_MRS_64      = 0x18,
+        EC_PREFETCH_ABORT_TO_HYP   = 0x20,
+        EC_PREFETCH_ABORT_LOWER_EL = 0x20,  // AArch64 alias
+        EC_PREFETCH_ABORT_FROM_HYP = 0x21,
+        EC_PREFETCH_ABORT_CURR_EL  = 0x21,  // AArch64 alias
+        EC_PC_ALIGNMENT            = 0x22,
+        EC_DATA_ABORT_TO_HYP       = 0x24,
+        EC_DATA_ABORT_LOWER_EL     = 0x24,  // AArch64 alias
+        EC_DATA_ABORT_FROM_HYP     = 0x25,
+        EC_DATA_ABORT_CURR_EL      = 0x25,  // AArch64 alias
+        EC_STACK_PTR_ALIGNMENT     = 0x26,
+        EC_FP_EXCEPTION            = 0x28,
+        EC_FP_EXCEPTION_64         = 0x2C,
+        EC_SERROR                  = 0x2F
+    };
+
+    BitUnion8(OperatingMode64)
+        Bitfield<0> spX;
+        Bitfield<3, 2> el;
+        Bitfield<4> width;
+    EndBitUnion(OperatingMode64)
+
+    static bool inline
+    opModeIs64(OperatingMode mode)
+    {
+        return ((OperatingMode64)(uint8_t)mode).width == 0;
+    }
+
+    static bool inline
+    opModeIsH(OperatingMode mode)
+    {
+        return (mode == MODE_EL1H || mode == MODE_EL2H || mode == MODE_EL3H);
+    }
+
+    static bool inline
+    opModeIsT(OperatingMode mode)
+    {
+        return (mode == MODE_EL0T || mode == MODE_EL1T || mode == MODE_EL2T ||
+                mode == MODE_EL3T);
+    }
+
+    static ExceptionLevel inline
+    opModeToEL(OperatingMode mode)
+    {
+        bool aarch32 = ((mode >> 4) & 1) ? true : false;
+        if (aarch32) {
+            switch (mode) {
+              case MODE_USER:
+                return EL0;
+              case MODE_FIQ:
+              case MODE_IRQ:
+              case MODE_SVC:
+              case MODE_ABORT:
+              case MODE_UNDEFINED:
+              case MODE_SYSTEM:
+                return EL1;
+              case MODE_HYP:
+                return EL2;
+              case MODE_MON:
+                return EL3;
+              default:
+                panic("Invalid operating mode: %d", mode);
+                break;
+            }
+        } else {
+            // aarch64
+            return (ExceptionLevel) ((mode >> 2) & 3);
+        }
+    }
+
     static inline bool
     badMode(OperatingMode mode)
+    {
+        switch (mode) {
+          case MODE_EL0T:
+          case MODE_EL1T:
+          case MODE_EL1H:
+          case MODE_EL2T:
+          case MODE_EL2H:
+          case MODE_EL3T:
+          case MODE_EL3H:
+          case MODE_USER:
+          case MODE_FIQ:
+          case MODE_IRQ:
+          case MODE_SVC:
+          case MODE_MON:
+          case MODE_ABORT:
+          case MODE_HYP:
+          case MODE_UNDEFINED:
+          case MODE_SYSTEM:
+            return false;
+          default:
+            return true;
+        }
+    }
+
+
+    static inline bool
+    badMode32(OperatingMode mode)
     {
         switch (mode) {
           case MODE_USER:
@@ -530,6 +715,7 @@ namespace ArmISA
           case MODE_SVC:
           case MODE_MON:
           case MODE_ABORT:
+          case MODE_HYP:
           case MODE_UNDEFINED:
           case MODE_SYSTEM:
             return false;

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2012 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -73,7 +73,11 @@ format DataOp {
                         0x9: ArmBlxReg::armBlxReg();
                     }
                     0x5: ArmSatAddSub::armSatAddSub();
-                    0x7: Breakpoint::bkpt();
+                    0x6: ArmERet::armERet();
+                    0x7: decode OPCODE_22 {
+                        0: Breakpoint::bkpt();
+                        1: ArmSmcHyp::armSmcHyp();
+                    }
                 }
                 0x1: ArmHalfWordMultAndMultAcc::armHalfWordMultAndMultAcc();
             }
@@ -105,6 +109,10 @@ format DataOp {
     }
     0x6: decode CPNUM {
         0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStore();
+        0xf: decode OPCODE_20 {
+            0: Mcrr15::Mcrr15();
+            1: Mrrc15::Mrrc15();
+        }
     }
     0x7: decode OPCODE_24 {
         0: decode OPCODE_4 {

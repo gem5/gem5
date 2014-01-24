@@ -1,4 +1,16 @@
 /*
+* Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
@@ -34,6 +46,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/arm/intregs.hh"
 #include "base/loader/object_file.hh"
 #include "sim/process.hh"
 
@@ -47,11 +60,37 @@ class ArmLiveProcess : public LiveProcess
     ObjectFile::Arch arch;
     ArmLiveProcess(LiveProcessParams * params, ObjectFile *objFile,
                    ObjectFile::Arch _arch);
+    template<class IntType>
+    void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
+};
+
+class ArmLiveProcess32 : public ArmLiveProcess
+{
+  protected:
+    ObjectFile::Arch arch;
+    ArmLiveProcess32(LiveProcessParams * params, ObjectFile *objFile,
+                     ObjectFile::Arch _arch);
 
     void initState();
 
   public:
-    void argsInit(int intSize, int pageSize);
+
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+};
+
+class ArmLiveProcess64 : public ArmLiveProcess
+{
+  protected:
+    ObjectFile::Arch arch;
+    ArmLiveProcess64(LiveProcessParams * params, ObjectFile *objFile,
+                     ObjectFile::Arch _arch);
+
+    void initState();
+
+  public:
 
     ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
     ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);

@@ -1,0 +1,3355 @@
+// -*- mode: c++ -*-
+
+// Copyright (c) 2012-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+//          Mbou Eyole
+
+let {{
+
+    header_output = ""
+    exec_output = ""
+
+    # FP types (FP operations always work with unsigned representations)
+    floatTypes = ("uint32_t", "uint64_t")
+    smallFloatTypes = ("uint32_t",)
+
+    def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
+                           readDest=False, pairwise=False, scalar=False,
+                           byElem=False):
+        assert (not pairwise) or ((not byElem) and (not scalar))
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1, destReg;
+        '''
+        if byElem:
+            # 2nd register operand has to be read fully
+            eWalkCode += '''
+        FullRegVect srcReg2;
+        '''
+        else:
+            eWalkCode += '''
+        RegVect srcReg2;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        if byElem:
+            # 2nd operand has to be read fully
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        if pairwise:
+            eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(2 * i < eCount ?
+                                    srcReg1.elements[2 * i] :
+                                    srcReg2.elements[2 * i - eCount]);
+            Element srcElem2 = gtoh(2 * i < eCount ?
+                                    srcReg1.elements[2 * i + 1] :
+                                    srcReg2.elements[2 * i + 1 - eCount]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        else:
+            scalarCheck = '''
+            if (i != 0) {
+                destReg.elements[i] = 0;
+                continue;
+            }
+            '''
+            eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(scalarCheck)s
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem2 = gtoh(srcReg2.elements[%(src2Index)s]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode,
+                "scalarCheck" : scalarCheck if scalar else "",
+                "src2Index" : "imm" if byElem else "i" }
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX2RegImmOp" if byElem else "DataX2RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        if byElem:
+            header_output += NeonX2RegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonX2RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def threeUnequalRegInstX(name, Name, opClass, types, op,
+                             bigSrc1, bigSrc2, bigDest, readDest, scalar=False,
+                             byElem=False, hi=False):
+        assert not (scalar and hi)
+        global header_output, exec_output
+        src1Cnt = src2Cnt = destCnt = 2
+        src1Prefix = src2Prefix = destPrefix = ''
+        if bigSrc1:
+            src1Cnt = 4
+            src1Prefix = 'Big'
+        if bigSrc2:
+            src2Cnt = 4
+            src2Prefix = 'Big'
+        if bigDest:
+            destCnt = 4
+            destPrefix = 'Big'
+        if byElem:
+            src2Prefix = 'Full'
+        eWalkCode = simd64EnabledCheckCode + '''
+        %sRegVect srcReg1;
+        %sRegVect srcReg2;
+        %sRegVect destReg;
+        ''' % (src1Prefix, src2Prefix, destPrefix)
+        srcReg1 = 0
+        if hi and not bigSrc1:  # long/widening operations
+            srcReg1 = 2
+        for reg in range(src1Cnt):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(srcReg1)d_uw);
+        ''' % { "reg" : reg, "srcReg1" : srcReg1 }
+            srcReg1 += 1
+        srcReg2 = 0
+        if (not byElem) and (hi and not bigSrc2):  # long/widening operations
+            srcReg2 = 2
+        for reg in range(src2Cnt):
+            eWalkCode += '''
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(srcReg2)d_uw);
+        ''' % { "reg" : reg, "srcReg2" : srcReg2 }
+            srcReg2 += 1
+        if byElem:
+            # 2nd operand has to be read fully
+            for reg in range(src2Cnt, 4):
+                eWalkCode += '''
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(destCnt):
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        scalarCheck = '''
+            if (i != 0) {
+                destReg.elements[i] = 0;
+                continue;
+            }
+            '''
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(scalarCheck)s
+            %(src1Prefix)sElement srcElem1 = gtoh(srcReg1.elements[i]);
+            %(src1Prefix)sElement srcElem2 = gtoh(srcReg2.elements[%(src2Index)s]);
+            %(destPrefix)sElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode,
+                "src1Prefix" : src1Prefix, "src2Prefix" : src2Prefix,
+                "destPrefix" : destPrefix,
+                "scalarCheck" : scalarCheck if scalar else "",
+                "src2Index" : "imm" if byElem else "i" }
+        destReg = 0
+        if hi and not bigDest:
+            # narrowing operations
+            destReg = 2
+        for reg in range(destCnt):
+            eWalkCode += '''
+        AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg, "destReg": destReg }
+            destReg += 1
+        if destCnt < 4 and not hi:  # zero upper half
+            for reg in range(destCnt, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX2RegImmOp" if byElem else "DataX2RegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "op_class": opClass }, [])
+        if byElem:
+            header_output += NeonX2RegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonX2RegOpDeclare.subst(iop)
+        exec_output += NeonXUnequalRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def threeRegNarrowInstX(name, Name, opClass, types, op, readDest=False,
+                            scalar=False, byElem=False, hi=False):
+        assert not byElem
+        threeUnequalRegInstX(name, Name, opClass, types, op,
+                             True, True, False, readDest, scalar, byElem, hi)
+
+    def threeRegLongInstX(name, Name, opClass, types, op, readDest=False,
+                          scalar=False, byElem=False, hi=False):
+        threeUnequalRegInstX(name, Name, opClass, types, op,
+                             False, False, True, readDest, scalar, byElem, hi)
+
+    def threeRegWideInstX(name, Name, opClass, types, op, readDest=False,
+                          scalar=False, byElem=False, hi=False):
+        assert not byElem
+        threeUnequalRegInstX(name, Name, opClass, types, op,
+                             True, False, True, readDest, scalar, byElem, hi)
+
+    def twoEqualRegInstX(name, Name, opClass, types, rCount, op,
+                         readDest=False, scalar=False, byElem=False,
+                         hasImm=False, isDup=False):
+        global header_output, exec_output
+        assert (not isDup) or byElem
+        if byElem:
+            hasImm = True
+        if isDup:
+            eWalkCode = simd64EnabledCheckCode + '''
+        FullRegVect srcReg1;
+        RegVect destReg;
+        '''
+        else:
+            eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1, destReg;
+        '''
+        for reg in range(4 if isDup else rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        scalarCheck = '''
+            if (i != 0) {
+                destReg.elements[i] = 0;
+                continue;
+            }
+            '''
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(scalarCheck)s
+            unsigned j = i;
+            Element srcElem1 = gtoh(srcReg1.elements[%(src1Index)s]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[j] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode,
+                "scalarCheck" : scalarCheck if scalar else "",
+                "src1Index" : "imm" if byElem else "i" }
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        if hasImm:
+            header_output += NeonX1RegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def twoRegLongInstX(name, Name, opClass, types, op, readDest=False,
+                        hi=False, hasImm=False):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1;
+        BigRegVect destReg;
+        '''
+        destReg = 0 if not hi else 2
+        for reg in range(2):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(destReg)d_uw);
+        ''' % { "reg" : reg, "destReg": destReg }
+            destReg += 1
+        destReg = 0 if not hi else 2
+        if readDest:
+            for reg in range(4):
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+                destReg += 1
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(4):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "op_class": opClass }, [])
+        if hasImm:
+            header_output += NeonX1RegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXUnequalRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def twoRegNarrowInstX(name, Name, opClass, types, op, readDest=False,
+                          scalar=False, hi=False, hasImm=False):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        BigRegVect srcReg1;
+        RegVect destReg;
+        '''
+        for reg in range(4):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(2):
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        else:
+            eWalkCode += '''
+        destReg.elements[0] = 0;
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        scalarCheck = '''
+            if (i != 0) {
+                destReg.elements[i] = 0;
+                continue;
+            }
+            '''
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(scalarCheck)s
+            BigElement srcElem1 = gtoh(srcReg1.elements[i]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode,
+                "scalarCheck" : scalarCheck if scalar else "" }
+        destReg = 0 if not hi else 2
+        for reg in range(2):
+            eWalkCode += '''
+        AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg, "destReg": destReg }
+            destReg += 1
+        if not hi:
+            for reg in range(2, 4):  # zero upper half
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "op_class": opClass }, [])
+        if hasImm:
+            header_output += NeonX1RegImmOpDeclare.subst(iop)
+        else:
+            header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXUnequalRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def threeRegScrambleInstX(name, Name, opClass, types, rCount, op):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1, srcReg2, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += op
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX2RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX2RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def insFromVecElemInstX(name, Name, opClass, types, rCount):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        FullRegVect srcReg1;
+        RegVect destReg;
+        '''
+        for reg in range(4):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        for reg in range(rCount):
+            eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += '''
+        Element srcElem1 = gtoh(srcReg1.elements[imm2]);
+        Element destElem = srcElem1;
+        destReg.elements[imm1] = htog(destElem);
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1Reg2ImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1Reg2ImmOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def twoRegPairwiseScInstX(name, Name, opClass, types, rCount, op):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += '''
+        Element srcElem1 = gtoh(srcReg1.elements[0]);
+        Element srcElem2 = gtoh(srcReg1.elements[1]);
+        Element destElem;
+        %(op)s
+        destReg.elements[0] = htog(destElem);
+        ''' % { "op" : op }
+        destCnt = rCount / 2
+        for reg in range(destCnt):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        for reg in range(destCnt, 4):  # zero upper half
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def twoRegAcrossInstX(name, Name, opClass, types, rCount, op,
+                          doubleDest=False, long=False):
+        global header_output, exec_output
+        destPrefix = "Big" if long else ""
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1;
+        %sRegVect destReg;
+        ''' % destPrefix
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += '''
+        destReg.regs[0] = 0;
+        %(destPrefix)sElement destElem = 0;
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            if (i == 0) {
+                destElem = srcElem1;
+            } else {
+                %(op)s
+            }
+        }
+        destReg.elements[0] = htog(destElem);
+        ''' % { "op" : op, "destPrefix" : destPrefix }
+        destCnt = 2 if doubleDest else 1
+        for reg in range(destCnt):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        for reg in range(destCnt, 4):  # zero upper half
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegOpDeclare.subst(iop)
+        if long:
+            exec_output += NeonXUnequalRegOpExecute.subst(iop)
+        else:
+            exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def twoRegCondenseInstX(name, Name, opClass, types, rCount, op,
+                            readDest=False):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcRegs;
+        BigRegVect destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcRegs.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            Element srcElem1 = gtoh(srcRegs.elements[2 * i]);
+            Element srcElem2 = gtoh(srcRegs.elements[2 * i + 1]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXUnequalRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def oneRegImmInstX(name, Name, opClass, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect destReg;
+        '''
+        if readDest:
+            for reg in range(rCount):
+                eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataXImmOnlyOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegImmOnlyOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def dupGprInstX(name, Name, opClass, types, rCount, gprSpec):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect destReg;
+        for (unsigned i = 0; i < eCount; i++) {
+            destReg.elements[i] = htog((Element) %sOp1);
+        }
+        ''' % gprSpec
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def extInstX(name, Name, opClass, types, rCount, op):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect srcReg1, srcReg2, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        srcReg1.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += op
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX2RegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX2RegImmOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def insFromGprInstX(name, Name, opClass, types, rCount, gprSpec):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        RegVect destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        eWalkCode += '''
+        destReg.elements[imm] = htog((Element) %sOp1);
+        ''' % gprSpec
+        for reg in range(rCount):
+            eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX1RegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegImmOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def insToGprInstX(name, Name, opClass, types, rCount, gprSpec,
+                      signExt=False):
+        global header_output, exec_output
+        eWalkCode = simd64EnabledCheckCode + '''
+        FullRegVect srcReg;
+        '''
+        for reg in range(4):
+            eWalkCode += '''
+        srcReg.regs[%(reg)d] = htog(AA64FpOp1P%(reg)d_uw);
+        ''' % { "reg" : reg }
+        if signExt:
+            eWalkCode += '''
+        %sDest = sext<sizeof(Element) * 8>(srcReg.elements[imm]);
+        ''' % gprSpec
+        else:
+            eWalkCode += '''
+        %sDest = srcReg.elements[imm];
+        ''' % gprSpec
+        iop = InstObjParams(name, Name,
+                            "DataX1RegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX1RegImmOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    def tbxTblInstX(name, Name, opClass, types, length, isTbl, rCount):
+        global header_output, decoder_output, exec_output
+        code = simd64EnabledCheckCode + '''
+        union
+        {
+            uint8_t bytes[64];
+            FloatRegBits regs[16];
+        } table;
+
+        union
+        {
+            uint8_t bytes[%(rCount)d * 4];
+            FloatRegBits regs[%(rCount)d];
+        } destReg, srcReg2;
+
+        const unsigned length = %(length)d;
+        const bool isTbl = %(isTbl)s;
+        ''' % { "rCount" : rCount, "length" : length, "isTbl" : isTbl }
+        for reg in range(rCount):
+            code += '''
+        srcReg2.regs[%(reg)d] = htog(AA64FpOp2P%(reg)d_uw);
+        destReg.regs[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+        for reg in range(16):
+            if reg < length * 4:
+                code += '''
+        table.regs[%(reg)d] = htog(AA64FpOp1P%(p)dV%(v)dS_uw);
+        ''' % { "reg" : reg, "p" : reg % 4, "v" : reg / 4 }
+            else:
+                code += '''
+        table.regs[%(reg)d] = 0;
+        ''' % { "reg" : reg }
+        code += '''
+        for (unsigned i = 0; i < sizeof(destReg); i++) {
+            uint8_t index = srcReg2.bytes[i];
+            if (index < 16 * length) {
+                destReg.bytes[i] = table.bytes[index];
+            } else {
+                if (isTbl)
+                    destReg.bytes[i] = 0;
+                // else destReg.bytes[i] unchanged
+            }
+        }
+        '''
+        for reg in range(rCount):
+            code += '''
+        AA64FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
+        ''' % { "reg" : reg }
+        if rCount < 4:  # zero upper half
+            for reg in range(rCount, 4):
+                code += '''
+        AA64FpDestP%(reg)d_uw = 0;
+        ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "DataX2RegOp",
+                            { "code": code,
+                              "r_count": rCount,
+                              "op_class": opClass }, [])
+        header_output += NeonX2RegOpDeclare.subst(iop)
+        exec_output += NeonXEqualRegOpExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonXExecDeclare.subst(substDict)
+
+    # ABS
+    absCode = '''
+            if (srcElem1 < 0) {
+                destElem = -srcElem1;
+            } else {
+                destElem = srcElem1;
+            }
+    '''
+    twoEqualRegInstX("abs", "AbsDX", "SimdAluOp", signedTypes, 2, absCode)
+    twoEqualRegInstX("abs", "AbsQX", "SimdAluOp", signedTypes, 4, absCode)
+    # ADD
+    addCode = "destElem = srcElem1 + srcElem2;"
+    threeEqualRegInstX("add", "AddDX", "SimdAddOp", unsignedTypes, 2, addCode)
+    threeEqualRegInstX("add", "AddQX", "SimdAddOp", unsignedTypes, 4, addCode)
+    # ADDHN, ADDHN2
+    addhnCode = '''
+            destElem = ((BigElement)srcElem1 + (BigElement)srcElem2) >>
+                        (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInstX("addhn", "AddhnX", "SimdAddOp", smallUnsignedTypes,
+                        addhnCode)
+    threeRegNarrowInstX("addhn2", "Addhn2X", "SimdAddOp", smallUnsignedTypes,
+                        addhnCode, hi=True)
+    # ADDP (scalar)
+    twoRegPairwiseScInstX("addp", "AddpScQX", "SimdAddOp", ("uint64_t",), 4,
+                          addCode)
+    # ADDP (vector)
+    threeEqualRegInstX("addp", "AddpDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       addCode, pairwise=True)
+    threeEqualRegInstX("addp", "AddpQX", "SimdAddOp", unsignedTypes, 4,
+                       addCode, pairwise=True)
+    # ADDV
+    # Note: SimdAddOp can be a bit optimistic here
+    addAcrossCode = "destElem += srcElem1;"
+    twoRegAcrossInstX("addv", "AddvDX", "SimdAddOp", ("uint8_t", "uint16_t"),
+                      2, addAcrossCode)
+    twoRegAcrossInstX("addv", "AddvQX", "SimdAddOp", smallUnsignedTypes, 4,
+                      addAcrossCode)
+    # AND
+    andCode = "destElem = srcElem1 & srcElem2;"
+    threeEqualRegInstX("and", "AndDX", "SimdAluOp", ("uint64_t",), 2, andCode)
+    threeEqualRegInstX("and", "AndQX", "SimdAluOp", ("uint64_t",), 4, andCode)
+    # BIC (immediate)
+    bicImmCode = "destElem &= ~imm;"
+    oneRegImmInstX("bic", "BicImmDX", "SimdAluOp", ("uint64_t",), 2,
+                   bicImmCode, True)
+    oneRegImmInstX("bic", "BicImmQX", "SimdAluOp", ("uint64_t",), 4,
+                   bicImmCode, True)
+    # BIC (register)
+    bicCode = "destElem = srcElem1 & ~srcElem2;"
+    threeEqualRegInstX("bic", "BicDX", "SimdAluOp", ("uint64_t",), 2, bicCode)
+    threeEqualRegInstX("bic", "BicQX", "SimdAluOp", ("uint64_t",), 4, bicCode)
+    # BIF
+    bifCode = "destElem = (destElem & srcElem2) | (srcElem1 & ~srcElem2);"
+    threeEqualRegInstX("bif", "BifDX", "SimdAluOp", ("uint64_t",), 2, bifCode,
+                       True)
+    threeEqualRegInstX("bif", "BifQX", "SimdAluOp", ("uint64_t",), 4, bifCode,
+                       True)
+    # BIT
+    bitCode = "destElem = (srcElem1 & srcElem2) | (destElem & ~srcElem2);"
+    threeEqualRegInstX("bit", "BitDX", "SimdAluOp", ("uint64_t",), 2, bitCode,
+                       True)
+    threeEqualRegInstX("bit", "BitQX", "SimdAluOp", ("uint64_t",), 4, bitCode,
+                       True)
+    # BSL
+    bslCode = "destElem = (srcElem1 & destElem) | (srcElem2 & ~destElem);"
+    threeEqualRegInstX("bsl", "BslDX", "SimdAluOp", ("uint64_t",), 2, bslCode,
+                       True)
+    threeEqualRegInstX("bsl", "BslQX", "SimdAluOp", ("uint64_t",), 4, bslCode,
+                       True)
+    # CLS
+    clsCode = '''
+            unsigned count = 0;
+            if (srcElem1 < 0) {
+                srcElem1 <<= 1;
+                while (srcElem1 < 0 && count < sizeof(Element) * 8 - 1) {
+                    count++;
+                    srcElem1 <<= 1;
+                }
+            } else {
+                srcElem1 <<= 1;
+                while (srcElem1 >= 0 && count < sizeof(Element) * 8 - 1) {
+                    count++;
+                    srcElem1 <<= 1;
+                }
+            }
+            destElem = count;
+    '''
+    twoEqualRegInstX("cls", "ClsDX", "SimdAluOp", smallSignedTypes, 2, clsCode)
+    twoEqualRegInstX("cls", "ClsQX", "SimdAluOp", smallSignedTypes, 4, clsCode)
+    # CLZ
+    clzCode = '''
+            unsigned count = 0;
+            while (srcElem1 >= 0 && count < sizeof(Element) * 8) {
+                count++;
+                srcElem1 <<= 1;
+            }
+            destElem = count;
+    '''
+    twoEqualRegInstX("clz", "ClzDX", "SimdAluOp", smallSignedTypes, 2, clzCode)
+    twoEqualRegInstX("clz", "ClzQX", "SimdAluOp", smallSignedTypes, 4, clzCode)
+    # CMEQ (register)
+    cmeqCode = "destElem = (srcElem1 == srcElem2) ? (Element)(-1) : 0;"
+    threeEqualRegInstX("cmeq", "CmeqDX", "SimdCmpOp", unsignedTypes, 2,
+                       cmeqCode)
+    threeEqualRegInstX("cmeq", "CmeqQX", "SimdCmpOp", unsignedTypes, 4,
+                       cmeqCode)
+    # CMEQ (zero)
+    cmeqZeroCode = "destElem = (srcElem1 == 0) ? (Element)(-1) : 0;"
+    twoEqualRegInstX("cmeq", "CmeqZeroDX", "SimdCmpOp", signedTypes, 2,
+                     cmeqZeroCode)
+    twoEqualRegInstX("cmeq", "CmeqZeroQX", "SimdCmpOp", signedTypes, 4,
+                     cmeqZeroCode)
+    # CMGE (register)
+    cmgeCode = "destElem = (srcElem1 >= srcElem2) ? (Element)(-1) : 0;"
+    threeEqualRegInstX("cmge", "CmgeDX", "SimdCmpOp", signedTypes, 2, cmgeCode)
+    threeEqualRegInstX("cmge", "CmgeQX", "SimdCmpOp", signedTypes, 4, cmgeCode)
+    # CMGE (zero)
+    cmgeZeroCode = "destElem = (srcElem1 >= 0) ? (Element)(-1) : 0;"
+    twoEqualRegInstX("cmge", "CmgeZeroDX", "SimdCmpOp", signedTypes, 2,
+                     cmgeZeroCode)
+    twoEqualRegInstX("cmge", "CmgeZeroQX", "SimdCmpOp", signedTypes, 4,
+                     cmgeZeroCode)
+    # CMGT (register)
+    cmgtCode = "destElem = (srcElem1 > srcElem2) ? (Element)(-1) : 0;"
+    threeEqualRegInstX("cmgt", "CmgtDX", "SimdCmpOp", signedTypes, 2, cmgtCode)
+    threeEqualRegInstX("cmgt", "CmgtQX", "SimdCmpOp", signedTypes, 4, cmgtCode)
+    # CMGT (zero)
+    cmgtZeroCode = "destElem = (srcElem1 > 0) ? (Element)(-1) : 0;"
+    twoEqualRegInstX("cmgt", "CmgtZeroDX", "SimdCmpOp", signedTypes, 2,
+                     cmgtZeroCode)
+    twoEqualRegInstX("cmgt", "CmgtZeroQX", "SimdCmpOp", signedTypes, 4,
+                     cmgtZeroCode)
+    # CMHI (register)
+    threeEqualRegInstX("cmhi", "CmhiDX", "SimdCmpOp", unsignedTypes, 2,
+                       cmgtCode)
+    threeEqualRegInstX("cmhi", "CmhiQX", "SimdCmpOp", unsignedTypes, 4,
+                       cmgtCode)
+    # CMHS (register)
+    threeEqualRegInstX("cmhs", "CmhsDX", "SimdCmpOp", unsignedTypes, 2,
+                       cmgeCode)
+    threeEqualRegInstX("cmhs", "CmhsQX", "SimdCmpOp", unsignedTypes, 4,
+                       cmgeCode)
+    # CMLE (zero)
+    cmleZeroCode = "destElem = (srcElem1 <= 0) ? (Element)(-1) : 0;"
+    twoEqualRegInstX("cmle", "CmleZeroDX", "SimdCmpOp", signedTypes, 2,
+                     cmleZeroCode)
+    twoEqualRegInstX("cmle", "CmleZeroQX", "SimdCmpOp", signedTypes, 4,
+                     cmleZeroCode)
+    # CMLT (zero)
+    cmltZeroCode = "destElem = (srcElem1 < 0) ? (Element)(-1) : 0;"
+    twoEqualRegInstX("cmlt", "CmltZeroDX", "SimdCmpOp", signedTypes, 2,
+                     cmltZeroCode)
+    twoEqualRegInstX("cmlt", "CmltZeroQX", "SimdCmpOp", signedTypes, 4,
+                     cmltZeroCode)
+    # CMTST (register)
+    tstCode = "destElem = (srcElem1 & srcElem2) ? (Element)(-1) : 0;"
+    threeEqualRegInstX("cmtst", "CmtstDX", "SimdAluOp", unsignedTypes, 2,
+                       tstCode)
+    threeEqualRegInstX("cmtst", "CmtstQX", "SimdAluOp", unsignedTypes, 4,
+                       tstCode)
+    # CNT
+    cntCode = '''
+            unsigned count = 0;
+            while (srcElem1 && count < sizeof(Element) * 8) {
+                count += srcElem1 & 0x1;
+                srcElem1 >>= 1;
+            }
+            destElem = count;
+    '''
+    twoEqualRegInstX("cnt", "CntDX", "SimdAluOp", ("uint8_t",), 2, cntCode)
+    twoEqualRegInstX("cnt", "CntQX", "SimdAluOp", ("uint8_t",), 4, cntCode)
+    # DUP (element)
+    dupCode = "destElem = srcElem1;"
+    twoEqualRegInstX("dup", "DupElemDX", "SimdMiscOp", smallUnsignedTypes, 2,
+                     dupCode, isDup=True, byElem=True)
+    twoEqualRegInstX("dup", "DupElemQX", "SimdMiscOp", unsignedTypes, 4,
+                     dupCode, isDup=True, byElem=True)
+    twoEqualRegInstX("dup", "DupElemScX", "SimdMiscOp", unsignedTypes, 4,
+                     dupCode, isDup=True, byElem=True, scalar=True)
+    # DUP (general register)
+    dupGprInstX("dup", "DupGprWDX", "SimdMiscOp", smallUnsignedTypes, 2, 'W')
+    dupGprInstX("dup", "DupGprWQX", "SimdMiscOp", smallUnsignedTypes, 4, 'W')
+    dupGprInstX("dup", "DupGprXQX", "SimdMiscOp", ("uint64_t",), 4, 'X')
+    # EOR
+    eorCode = "destElem = srcElem1 ^ srcElem2;"
+    threeEqualRegInstX("eor", "EorDX", "SimdAluOp", ("uint64_t",), 2, eorCode)
+    threeEqualRegInstX("eor", "EorQX", "SimdAluOp", ("uint64_t",), 4, eorCode)
+    # EXT
+    extCode = '''
+            for (unsigned i = 0; i < eCount; i++) {
+                unsigned index = i + imm;
+                if (index < eCount) {
+                    destReg.elements[i] = srcReg1.elements[index];
+                } else {
+                    index -= eCount;
+                    if (index >= eCount) {
+                        fault = new UndefinedInstruction(machInst, false, mnemonic);
+                    } else {
+                        destReg.elements[i] = srcReg2.elements[index];
+                    }
+                }
+            }
+    '''
+    extInstX("Ext", "ExtDX", "SimdMiscOp", ("uint8_t",), 2, extCode)
+    extInstX("Ext", "ExtQX", "SimdMiscOp", ("uint8_t",), 4, extCode)
+    # FABD
+    fpOp = '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            destElem = %s;
+            FpscrExc = fpscr;
+    '''
+    fabdCode = fpOp % "fplibAbs<Element>(fplibSub(srcElem1, srcElem2, fpscr))"
+    threeEqualRegInstX("fabd", "FabdDX", "SimdFloatAddOp", smallFloatTypes, 2,
+                       fabdCode)
+    threeEqualRegInstX("fabd", "FabdQX", "SimdFloatAddOp", floatTypes, 4,
+                       fabdCode)
+    threeEqualRegInstX("fabd", "FabdScX", "SimdFloatAddOp", floatTypes, 4,
+                       fabdCode, scalar=True)
+    # FABS
+    fabsCode = fpOp % "fplibAbs<Element>(srcElem1)"
+    twoEqualRegInstX("Abs", "FabsDX", "SimdFloatAluOp", smallFloatTypes, 2,
+                     fabsCode)
+    twoEqualRegInstX("Abs", "FabsQX", "SimdFloatAluOp", floatTypes, 4,
+                     fabsCode)
+    # FACGE
+    fpCmpAbsOp = fpOp % ("fplibCompare%s<Element>(fplibAbs<Element>(srcElem1),"
+                         " fplibAbs<Element>(srcElem2), fpscr) ? -1 : 0")
+    facgeCode = fpCmpAbsOp % "GE"
+    threeEqualRegInstX("facge", "FacgeDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, facgeCode)
+    threeEqualRegInstX("facge", "FacgeQX", "SimdFloatCmpOp", floatTypes, 4,
+                       facgeCode)
+    threeEqualRegInstX("facge", "FacgeScX", "SimdFloatCmpOp", floatTypes, 4,
+                       facgeCode, scalar=True)
+    # FACGT
+    facgtCode = fpCmpAbsOp % "GT"
+    threeEqualRegInstX("facgt", "FacgtDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, facgtCode)
+    threeEqualRegInstX("facgt", "FacgtQX", "SimdFloatCmpOp", floatTypes, 4,
+                       facgtCode)
+    threeEqualRegInstX("facgt", "FacgtScX", "SimdFloatCmpOp", floatTypes, 4,
+                       facgtCode, scalar=True)
+    # FADD
+    fpBinOp = fpOp % "fplib%s<Element>(srcElem1, srcElem2, fpscr)"
+    faddCode = fpBinOp % "Add"
+    threeEqualRegInstX("fadd", "FaddDX", "SimdFloatAddOp", smallFloatTypes, 2,
+                       faddCode)
+    threeEqualRegInstX("fadd", "FaddQX", "SimdFloatAddOp", floatTypes, 4,
+                       faddCode)
+    # FADDP (scalar)
+    twoRegPairwiseScInstX("faddp", "FaddpScDX", "SimdFloatAddOp",
+                          ("uint32_t",), 2, faddCode)
+    twoRegPairwiseScInstX("faddp", "FaddpScQX", "SimdFloatAddOp",
+                          ("uint64_t",), 4, faddCode)
+    # FADDP (vector)
+    threeEqualRegInstX("faddp", "FaddpDX", "SimdFloatAddOp", smallFloatTypes,
+                       2, faddCode, pairwise=True)
+    threeEqualRegInstX("faddp", "FaddpQX", "SimdFloatAddOp", floatTypes, 4,
+                       faddCode, pairwise=True)
+    # FCMEQ (register)
+    fpCmpOp = fpOp % ("fplibCompare%s<Element>(srcElem1, srcElem2, fpscr) ?"
+                      " -1 : 0")
+    fcmeqCode = fpCmpOp % "EQ"
+    threeEqualRegInstX("fcmeq", "FcmeqDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fcmeqCode)
+    threeEqualRegInstX("fcmeq", "FcmeqQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmeqCode)
+    threeEqualRegInstX("fcmeq", "FcmeqScX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmeqCode, scalar=True)
+    # FCMEQ (zero)
+    fpCmpZeroOp = fpOp % "fplibCompare%s<Element>(srcElem1, 0, fpscr) ? -1 : 0"
+    fcmeqZeroCode = fpCmpZeroOp % "EQ"
+    twoEqualRegInstX("fcmeq", "FcmeqZeroDX", "SimdFloatCmpOp", smallFloatTypes,
+                     2, fcmeqZeroCode)
+    twoEqualRegInstX("fcmeq", "FcmeqZeroQX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmeqZeroCode)
+    twoEqualRegInstX("fcmeq", "FcmeqZeroScX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmeqZeroCode, scalar=True)
+    # FCMGE (register)
+    fcmgeCode = fpCmpOp % "GE"
+    threeEqualRegInstX("fcmge", "FcmgeDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fcmgeCode)
+    threeEqualRegInstX("fcmge", "FcmgeQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmgeCode)
+    threeEqualRegInstX("fcmge", "FcmgeScX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmgeCode, scalar=True)
+    # FCMGE (zero)
+    fcmgeZeroCode = fpCmpZeroOp % "GE"
+    twoEqualRegInstX("fcmge", "FcmgeZeroDX", "SimdFloatCmpOp", smallFloatTypes,
+                     2, fcmgeZeroCode)
+    twoEqualRegInstX("fcmge", "FcmgeZeroQX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmgeZeroCode)
+    twoEqualRegInstX("fcmge", "FcmgeZeroScX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmgeZeroCode, scalar=True)
+    # FCMGT (register)
+    fcmgtCode = fpCmpOp % "GT"
+    threeEqualRegInstX("fcmgt", "FcmgtDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fcmgtCode)
+    threeEqualRegInstX("fcmgt", "FcmgtQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmgtCode)
+    threeEqualRegInstX("fcmgt", "FcmgtScX", "SimdFloatCmpOp", floatTypes, 4,
+                       fcmgtCode, scalar=True)
+    # FCMGT (zero)
+    fcmgtZeroCode = fpCmpZeroOp % "GT"
+    twoEqualRegInstX("fcmgt", "FcmgtZeroDX", "SimdFloatCmpOp", smallFloatTypes,
+                     2, fcmgtZeroCode)
+    twoEqualRegInstX("fcmgt", "FcmgtZeroQX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmgtZeroCode)
+    twoEqualRegInstX("fcmgt", "FcmgtZeroScX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmgtZeroCode, scalar=True)
+    # FCMLE (zero)
+    fpCmpRevZeroOp = fpOp % ("fplibCompare%s<Element>(0, srcElem1, fpscr) ?"
+                             " -1 : 0")
+    fcmleZeroCode = fpCmpRevZeroOp % "GE"
+    twoEqualRegInstX("fcmle", "FcmleZeroDX", "SimdFloatCmpOp", smallFloatTypes,
+                     2, fcmleZeroCode)
+    twoEqualRegInstX("fcmle", "FcmleZeroQX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmleZeroCode)
+    twoEqualRegInstX("fcmle", "FcmleZeroScX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmleZeroCode, scalar=True)
+    # FCMLT (zero)
+    fcmltZeroCode = fpCmpRevZeroOp % "GT"
+    twoEqualRegInstX("fcmlt", "FcmltZeroDX", "SimdFloatCmpOp", smallFloatTypes,
+                     2, fcmltZeroCode)
+    twoEqualRegInstX("fcmlt", "FcmltZeroQX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmltZeroCode)
+    twoEqualRegInstX("fcmlt", "FcmltZeroScX", "SimdFloatCmpOp", floatTypes, 4,
+                     fcmltZeroCode, scalar=True)
+    # FCVTAS
+    fcvtCode = fpOp % ("fplibFPToFixed<Element, Element>("
+                       "srcElem1, %s, %s, %s, fpscr)")
+    fcvtasCode = fcvtCode % ("0", "false", "FPRounding_TIEAWAY")
+    twoEqualRegInstX("fcvtas", "FcvtasDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtasCode)
+    twoEqualRegInstX("fcvtas", "FcvtasQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtasCode)
+    twoEqualRegInstX("fcvtas", "FcvtasScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtasCode, scalar=True)
+    # FCVTAU
+    fcvtauCode = fcvtCode % ("0", "true", "FPRounding_TIEAWAY")
+    twoEqualRegInstX("fcvtau", "FcvtauDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtauCode)
+    twoEqualRegInstX("fcvtau", "FcvtauQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtauCode)
+    twoEqualRegInstX("fcvtau", "FcvtauScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtauCode, scalar=True)
+    # FCVTL, FCVTL2
+    fcvtlCode = fpOp % ("fplibConvert<Element, BigElement>("
+                        "srcElem1, FPCRRounding(fpscr), fpscr)")
+    twoRegLongInstX("fcvtl", "FcvtlX", "SimdCvtOp", ("uint16_t", "uint32_t"),
+                    fcvtlCode)
+    twoRegLongInstX("fcvtl", "Fcvtl2X", "SimdCvtOp", ("uint16_t", "uint32_t"),
+                    fcvtlCode, hi=True)
+    # FCVTMS
+    fcvtmsCode = fcvtCode % ("0", "false", "FPRounding_NEGINF")
+    twoEqualRegInstX("fcvtms", "FcvtmsDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtmsCode)
+    twoEqualRegInstX("fcvtms", "FcvtmsQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtmsCode)
+    twoEqualRegInstX("fcvtms", "FcvtmsScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtmsCode, scalar=True)
+    # FCVTMU
+    fcvtmuCode = fcvtCode % ("0", "true", "FPRounding_NEGINF")
+    twoEqualRegInstX("fcvtmu", "FcvtmuDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtmuCode)
+    twoEqualRegInstX("fcvtmu", "FcvtmuQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtmuCode)
+    twoEqualRegInstX("fcvtmu", "FcvtmuScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtmuCode, scalar=True)
+    # FCVTN, FCVTN2
+    fcvtnCode = fpOp % ("fplibConvert<BigElement, Element>("
+                        "srcElem1, FPCRRounding(fpscr), fpscr)")
+    twoRegNarrowInstX("fcvtn", "FcvtnX", "SimdCvtOp",
+                      ("uint16_t", "uint32_t"), fcvtnCode)
+    twoRegNarrowInstX("fcvtn", "Fcvtn2X", "SimdCvtOp",
+                      ("uint16_t", "uint32_t"), fcvtnCode, hi=True)
+    # FCVTNS
+    fcvtnsCode = fcvtCode % ("0", "false", "FPRounding_TIEEVEN")
+    twoEqualRegInstX("fcvtns", "FcvtnsDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtnsCode)
+    twoEqualRegInstX("fcvtns", "FcvtnsQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtnsCode)
+    twoEqualRegInstX("fcvtns", "FcvtnsScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtnsCode, scalar=True)
+    # FCVTNU
+    fcvtnuCode = fcvtCode % ("0", "true", "FPRounding_TIEEVEN")
+    twoEqualRegInstX("fcvtnu", "FcvtnuDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtnuCode)
+    twoEqualRegInstX("fcvtnu", "FcvtnuQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtnuCode)
+    twoEqualRegInstX("fcvtnu", "FcvtnuScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtnuCode, scalar=True)
+    # FCVTPS
+    fcvtpsCode = fcvtCode % ("0", "false", "FPRounding_POSINF")
+    twoEqualRegInstX("fcvtps", "FcvtpsDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtpsCode)
+    twoEqualRegInstX("fcvtps", "FcvtpsQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtpsCode)
+    twoEqualRegInstX("fcvtps", "FcvtpsScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtpsCode, scalar=True)
+    # FCVTPU
+    fcvtpuCode = fcvtCode % ("0", "true", "FPRounding_POSINF")
+    twoEqualRegInstX("fcvtpu", "FcvtpuDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtpuCode)
+    twoEqualRegInstX("fcvtpu", "FcvtpuQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtpuCode)
+    twoEqualRegInstX("fcvtpu", "FcvtpuScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtpuCode, scalar=True)
+    # FCVTXN, FCVTXN2
+    fcvtxnCode = fpOp % ("fplibConvert<BigElement, Element>("
+                         "srcElem1, FPRounding_ODD, fpscr)")
+    twoRegNarrowInstX("fcvtxn", "FcvtxnX", "SimdCvtOp", smallFloatTypes,
+                      fcvtxnCode)
+    twoRegNarrowInstX("fcvtxn", "Fcvtxn2X", "SimdCvtOp", smallFloatTypes,
+                      fcvtxnCode, hi=True)
+    twoRegNarrowInstX("fcvtxn", "FcvtxnScX", "SimdCvtOp", smallFloatTypes,
+                      fcvtxnCode, scalar=True)
+    # FCVTZS (fixed-point)
+    fcvtzsCode = fcvtCode % ("imm", "false", "FPRounding_ZERO")
+    twoEqualRegInstX("fcvtzs", "FcvtzsFixedDX", "SimdCvtOp", smallFloatTypes,
+                     2, fcvtzsCode, hasImm=True)
+    twoEqualRegInstX("fcvtzs", "FcvtzsFixedQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzsCode, hasImm=True)
+    twoEqualRegInstX("fcvtzs", "FcvtzsFixedScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzsCode, hasImm=True, scalar=True)
+    # FCVTZS (integer)
+    fcvtzsIntCode = fcvtCode % ("0", "false", "FPRounding_ZERO")
+    twoEqualRegInstX("fcvtzs", "FcvtzsIntDX", "SimdCvtOp", smallFloatTypes,
+                     2, fcvtzsIntCode)
+    twoEqualRegInstX("fcvtzs", "FcvtzsIntQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzsIntCode)
+    twoEqualRegInstX("fcvtzs", "FcvtzsIntScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzsIntCode, scalar=True)
+    # FCVTZU (fixed-point)
+    fcvtzuCode = fcvtCode % ("imm", "true", "FPRounding_ZERO")
+    twoEqualRegInstX("fcvtzu", "FcvtzuFixedDX", "SimdCvtOp", smallFloatTypes,
+                     2, fcvtzuCode, hasImm=True)
+    twoEqualRegInstX("fcvtzu", "FcvtzuFixedQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzuCode, hasImm=True)
+    twoEqualRegInstX("fcvtzu", "FcvtzuFixedScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzuCode, hasImm=True, scalar=True)
+    # FCVTZU (integer)
+    fcvtzuIntCode = fcvtCode % ("0", "true", "FPRounding_ZERO")
+    twoEqualRegInstX("fcvtzu", "FcvtzuIntDX", "SimdCvtOp", smallFloatTypes, 2,
+                     fcvtzuIntCode)
+    twoEqualRegInstX("fcvtzu", "FcvtzuIntQX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzuIntCode)
+    twoEqualRegInstX("fcvtzu", "FcvtzuIntScX", "SimdCvtOp", floatTypes, 4,
+                     fcvtzuIntCode, scalar=True)
+    # FDIV
+    fdivCode = fpBinOp % "Div"
+    threeEqualRegInstX("fdiv", "FdivDX", "SimdFloatDivOp", smallFloatTypes, 2,
+                       fdivCode)
+    threeEqualRegInstX("fdiv", "FdivQX", "SimdFloatDivOp", floatTypes, 4,
+                       fdivCode)
+    # FMAX
+    fmaxCode = fpBinOp % "Max"
+    threeEqualRegInstX("fmax", "FmaxDX", "SimdFloatCmpOp", smallFloatTypes, 2,
+                       fmaxCode)
+    threeEqualRegInstX("fmax", "FmaxQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fmaxCode)
+    # FMAXNM
+    fmaxnmCode = fpBinOp % "MaxNum"
+    threeEqualRegInstX("fmaxnm", "FmaxnmDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fmaxnmCode)
+    threeEqualRegInstX("fmaxnm", "FmaxnmQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fmaxnmCode)
+    # FMAXNMP (scalar)
+    twoRegPairwiseScInstX("fmaxnmp", "FmaxnmpScDX", "SimdFloatCmpOp",
+                          ("uint32_t",), 2, fmaxnmCode)
+    twoRegPairwiseScInstX("fmaxnmp", "FmaxnmpScQX", "SimdFloatCmpOp",
+                          ("uint64_t",), 4, fmaxnmCode)
+    # FMAXNMP (vector)
+    threeEqualRegInstX("fmaxnmp", "FmaxnmpDX", "SimdFloatCmpOp",
+                       smallFloatTypes, 2, fmaxnmCode, pairwise=True)
+    threeEqualRegInstX("fmaxnmp", "FmaxnmpQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fmaxnmCode, pairwise=True)
+    # FMAXNMV
+    # Note: SimdFloatCmpOp can be a bit optimistic here
+    fpAcrossOp = fpOp % "fplib%s<Element>(destElem, srcElem1, fpscr)"
+    fmaxnmAcrossCode = fpAcrossOp % "MaxNum"
+    twoRegAcrossInstX("fmaxnmv", "FmaxnmvQX", "SimdFloatCmpOp", ("uint32_t",),
+                      4, fmaxnmAcrossCode)
+    # FMAXP (scalar)
+    twoRegPairwiseScInstX("fmaxp", "FmaxpScDX", "SimdFloatCmpOp",
+                          ("uint32_t",), 2, fmaxCode)
+    twoRegPairwiseScInstX("fmaxp", "FmaxpScQX", "SimdFloatCmpOp",
+                          ("uint64_t",), 4, fmaxCode)
+    # FMAXP (vector)
+    threeEqualRegInstX("fmaxp", "FmaxpDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fmaxCode, pairwise=True)
+    threeEqualRegInstX("fmaxp", "FmaxpQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fmaxCode, pairwise=True)
+    # FMAXV
+    # Note: SimdFloatCmpOp can be a bit optimistic here
+    fmaxAcrossCode = fpAcrossOp % "Max"
+    twoRegAcrossInstX("fmaxv", "FmaxvQX", "SimdFloatCmpOp", ("uint32_t",), 4,
+                      fmaxAcrossCode)
+    # FMIN
+    fminCode = fpBinOp % "Min"
+    threeEqualRegInstX("fmin", "FminDX", "SimdFloatCmpOp", smallFloatTypes, 2,
+                       fminCode)
+    threeEqualRegInstX("fmin", "FminQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fminCode)
+    # FMINNM
+    fminnmCode = fpBinOp % "MinNum"
+    threeEqualRegInstX("fminnm", "FminnmDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fminnmCode)
+    threeEqualRegInstX("fminnm", "FminnmQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fminnmCode)
+    # FMINNMP (scalar)
+    twoRegPairwiseScInstX("fminnmp", "FminnmpScDX", "SimdFloatCmpOp",
+                          ("uint32_t",), 2, fminnmCode)
+    twoRegPairwiseScInstX("fminnmp", "FminnmpScQX", "SimdFloatCmpOp",
+                          ("uint64_t",), 4, fminnmCode)
+    # FMINNMP (vector)
+    threeEqualRegInstX("fminnmp", "FminnmpDX", "SimdFloatCmpOp",
+                       smallFloatTypes, 2, fminnmCode, pairwise=True)
+    threeEqualRegInstX("fminnmp", "FminnmpQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fminnmCode, pairwise=True)
+    # FMINNMV
+    # Note: SimdFloatCmpOp can be a bit optimistic here
+    fminnmAcrossCode = fpAcrossOp % "MinNum"
+    twoRegAcrossInstX("fminnmv", "FminnmvQX", "SimdFloatCmpOp", ("uint32_t",),
+                      4, fminnmAcrossCode)
+    # FMINP (scalar)
+    twoRegPairwiseScInstX("fminp", "FminpScDX", "SimdFloatCmpOp",
+                          ("uint32_t",), 2, fminCode)
+    twoRegPairwiseScInstX("fminp", "FminpScQX", "SimdFloatCmpOp",
+                          ("uint64_t",), 4, fminCode)
+    # FMINP (vector)
+    threeEqualRegInstX("fminp", "FminpDX", "SimdFloatCmpOp", smallFloatTypes,
+                       2, fminCode, pairwise=True)
+    threeEqualRegInstX("fminp", "FminpQX", "SimdFloatCmpOp", floatTypes, 4,
+                       fminCode, pairwise=True)
+    # FMINV
+    # Note: SimdFloatCmpOp can be a bit optimistic here
+    fminAcrossCode = fpAcrossOp % "Min"
+    twoRegAcrossInstX("fminv", "FminvQX", "SimdFloatCmpOp", ("uint32_t",), 4,
+                      fminAcrossCode)
+    # FMLA (by element)
+    fmlaCode = fpOp % ("fplibMulAdd<Element>("
+                       "destElem, srcElem1, srcElem2, fpscr)")
+    threeEqualRegInstX("fmla", "FmlaElemDX", "SimdFloatMultAccOp",
+                       smallFloatTypes, 2, fmlaCode, True, byElem=True)
+    threeEqualRegInstX("fmla", "FmlaElemQX", "SimdFloatMultAccOp", floatTypes,
+                       4, fmlaCode, True, byElem=True)
+    threeEqualRegInstX("fmla", "FmlaElemScX", "SimdFloatMultAccOp", floatTypes,
+                       4, fmlaCode, True, byElem=True, scalar=True)
+    # FMLA (vector)
+    threeEqualRegInstX("fmla", "FmlaDX", "SimdFloatMultAccOp", smallFloatTypes,
+                       2, fmlaCode, True)
+    threeEqualRegInstX("fmla", "FmlaQX", "SimdFloatMultAccOp", floatTypes, 4,
+                       fmlaCode, True)
+    # FMLS (by element)
+    fmlsCode = fpOp % ("fplibMulAdd<Element>(destElem,"
+                       " fplibNeg<Element>(srcElem1), srcElem2, fpscr)")
+    threeEqualRegInstX("fmls", "FmlsElemDX", "SimdFloatMultAccOp",
+                       smallFloatTypes, 2, fmlsCode, True, byElem=True)
+    threeEqualRegInstX("fmls", "FmlsElemQX", "SimdFloatMultAccOp", floatTypes,
+                       4, fmlsCode, True, byElem=True)
+    threeEqualRegInstX("fmls", "FmlsElemScX", "SimdFloatMultAccOp", floatTypes,
+                       4, fmlsCode, True, byElem=True, scalar=True)
+    # FMLS (vector)
+    threeEqualRegInstX("fmls", "FmlsDX", "SimdFloatMultAccOp", smallFloatTypes,
+                       2, fmlsCode, True)
+    threeEqualRegInstX("fmls", "FmlsQX", "SimdFloatMultAccOp", floatTypes, 4,
+                       fmlsCode, True)
+    # FMOV
+    fmovCode = 'destElem = imm;'
+    oneRegImmInstX("fmov", "FmovDX", "SimdMiscOp", smallFloatTypes, 2,
+                   fmovCode)
+    oneRegImmInstX("fmov", "FmovQX", "SimdMiscOp", floatTypes, 4, fmovCode)
+    # FMUL (by element)
+    fmulCode = fpBinOp % "Mul"
+    threeEqualRegInstX("fmul", "FmulElemDX", "SimdFloatMultOp",
+                       smallFloatTypes, 2, fmulCode, byElem=True)
+    threeEqualRegInstX("fmul", "FmulElemQX", "SimdFloatMultOp", floatTypes, 4,
+                       fmulCode, byElem=True)
+    threeEqualRegInstX("fmul", "FmulElemScX", "SimdFloatMultOp", floatTypes, 4,
+                       fmulCode, byElem=True, scalar=True)
+    # FMUL (vector)
+    threeEqualRegInstX("fmul", "FmulDX", "SimdFloatMultOp", smallFloatTypes, 2,
+                       fmulCode)
+    threeEqualRegInstX("fmul", "FmulQX", "SimdFloatMultOp", floatTypes, 4,
+                       fmulCode)
+    # FMULX
+    fmulxCode = fpBinOp % "MulX"
+    threeEqualRegInstX("fmulx", "FmulxDX", "SimdFloatMultOp", smallFloatTypes,
+                       2, fmulxCode)
+    threeEqualRegInstX("fmulx", "FmulxQX", "SimdFloatMultOp", floatTypes, 4,
+                       fmulxCode)
+    threeEqualRegInstX("fmulx", "FmulxScX", "SimdFloatMultOp", floatTypes, 4,
+                       fmulxCode, scalar=True)
+    # FMULX (by element)
+    threeEqualRegInstX("fmulx", "FmulxElemDX", "SimdFloatMultOp",
+                       smallFloatTypes, 2, fmulxCode, byElem=True)
+    threeEqualRegInstX("fmulx", "FmulxElemQX", "SimdFloatMultOp", floatTypes,
+                       4, fmulxCode, byElem=True)
+    threeEqualRegInstX("fmulx", "FmulxElemScX", "SimdFloatMultOp", floatTypes,
+                       4, fmulxCode, byElem=True, scalar=True)
+    # FNEG
+    fnegCode = fpOp % "fplibNeg<Element>(srcElem1)"
+    twoEqualRegInstX("Neg", "FnegDX", "SimdFloatAluOp", smallFloatTypes, 2,
+                     fnegCode)
+    twoEqualRegInstX("Neg", "FnegQX", "SimdFloatAluOp", floatTypes, 4,
+                     fnegCode)
+    # FRECPE
+    frecpeCode = fpOp % "fplibRecipEstimate<Element>(srcElem1, fpscr)"
+    twoEqualRegInstX("frecpe", "FrecpeDX", "SimdFloatMultAccOp",
+                     smallFloatTypes, 2, frecpeCode)
+    twoEqualRegInstX("frecpe", "FrecpeQX", "SimdFloatMultAccOp", floatTypes, 4,
+                     frecpeCode)
+    twoEqualRegInstX("frecpe", "FrecpeScX", "SimdFloatMultAccOp", floatTypes,
+                     4, frecpeCode, scalar=True)
+    # FRECPS
+    frecpsCode = fpBinOp % "RecipStepFused"
+    threeEqualRegInstX("frecps", "FrecpsDX", "SimdFloatMultAccOp",
+                       smallFloatTypes, 2, frecpsCode)
+    threeEqualRegInstX("frecps", "FrecpsQX", "SimdFloatMultAccOp", floatTypes,
+                       4, frecpsCode)
+    threeEqualRegInstX("frecps", "FrecpsScX", "SimdFloatMultAccOp", floatTypes,
+                       4, frecpsCode, scalar=True)
+    # FRECPX
+    frecpxCode = fpOp % "fplibRecpX<Element>(srcElem1, fpscr)"
+    twoEqualRegInstX("frecpx", "FrecpxX", "SimdFloatMultAccOp", floatTypes, 4,
+                     frecpxCode, scalar=True)
+    # FRINTA
+    frintCode = fpOp % "fplibRoundInt<Element>(srcElem1, %s, %s, fpscr)"
+    frintaCode = frintCode % ("FPRounding_TIEAWAY", "false")
+    twoEqualRegInstX("frinta", "FrintaDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintaCode)
+    twoEqualRegInstX("frinta", "FrintaQX", "SimdCvtOp", floatTypes, 4,
+                     frintaCode)
+    # FRINTI
+    frintiCode = frintCode % ("FPCRRounding(fpscr)", "false")
+    twoEqualRegInstX("frinti", "FrintiDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintiCode)
+    twoEqualRegInstX("frinti", "FrintiQX", "SimdCvtOp", floatTypes, 4,
+                     frintiCode)
+    # FRINTM
+    frintmCode = frintCode % ("FPRounding_NEGINF", "false")
+    twoEqualRegInstX("frintm", "FrintmDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintmCode)
+    twoEqualRegInstX("frintm", "FrintmQX", "SimdCvtOp", floatTypes, 4,
+                     frintmCode)
+    # FRINTN
+    frintnCode = frintCode % ("FPRounding_TIEEVEN", "false")
+    twoEqualRegInstX("frintn", "FrintnDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintnCode)
+    twoEqualRegInstX("frintn", "FrintnQX", "SimdCvtOp", floatTypes, 4,
+                     frintnCode)
+    # FRINTP
+    frintpCode = frintCode % ("FPRounding_POSINF", "false")
+    twoEqualRegInstX("frintp", "FrintpDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintpCode)
+    twoEqualRegInstX("frintp", "FrintpQX", "SimdCvtOp", floatTypes, 4,
+                     frintpCode)
+    # FRINTX
+    frintxCode = frintCode % ("FPCRRounding(fpscr)", "true")
+    twoEqualRegInstX("frintx", "FrintxDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintxCode)
+    twoEqualRegInstX("frintx", "FrintxQX", "SimdCvtOp", floatTypes, 4,
+                     frintxCode)
+    # FRINTZ
+    frintzCode = frintCode % ("FPRounding_ZERO", "false")
+    twoEqualRegInstX("frintz", "FrintzDX", "SimdCvtOp", smallFloatTypes, 2,
+                     frintzCode)
+    twoEqualRegInstX("frintz", "FrintzQX", "SimdCvtOp", floatTypes, 4,
+                     frintzCode)
+    # FRSQRTE
+    frsqrteCode = fpOp % "fplibRSqrtEstimate<Element>(srcElem1, fpscr)"
+    twoEqualRegInstX("frsqrte", "FrsqrteDX", "SimdFloatSqrtOp",
+                     smallFloatTypes, 2, frsqrteCode)
+    twoEqualRegInstX("frsqrte", "FrsqrteQX", "SimdFloatSqrtOp", floatTypes, 4,
+                     frsqrteCode)
+    twoEqualRegInstX("frsqrte", "FrsqrteScX", "SimdFloatSqrtOp", floatTypes, 4,
+                     frsqrteCode, scalar=True)
+    # FRSQRTS
+    frsqrtsCode = fpBinOp % "RSqrtStepFused"
+    threeEqualRegInstX("frsqrts", "FrsqrtsDX", "SimdFloatMiscOp",
+                       smallFloatTypes, 2, frsqrtsCode)
+    threeEqualRegInstX("frsqrts", "FrsqrtsQX", "SimdFloatMiscOp", floatTypes,
+                       4, frsqrtsCode)
+    threeEqualRegInstX("frsqrts", "FrsqrtsScX", "SimdFloatMiscOp", floatTypes,
+                       4, frsqrtsCode, scalar=True)
+    # FSQRT
+    fsqrtCode = fpOp % "fplibSqrt<Element>(srcElem1, fpscr)"
+    twoEqualRegInstX("fsqrt", "FsqrtDX", "SimdFloatSqrtOp", smallFloatTypes, 2,
+                     fsqrtCode)
+    twoEqualRegInstX("fsqrt", "FsqrtQX", "SimdFloatSqrtOp", floatTypes, 4,
+                     fsqrtCode)
+    # FSUB
+    fsubCode = fpBinOp % "Sub"
+    threeEqualRegInstX("fsub", "FsubDX", "SimdFloatAddOp", smallFloatTypes, 2,
+                       fsubCode)
+    threeEqualRegInstX("fsub", "FsubQX", "SimdFloatAddOp", floatTypes, 4,
+                       fsubCode)
+    # INS (element)
+    insFromVecElemInstX("ins", "InsElemX", "SimdMiscOp", unsignedTypes, 4)
+    # INS (general register)
+    insFromGprInstX("ins", "InsGprWX", "SimdMiscOp", smallUnsignedTypes, 4,
+                    'W')
+    insFromGprInstX("ins", "InsGprXX", "SimdMiscOp", unsignedTypes, 4, 'X')
+    # MLA (by element)
+    mlaCode = "destElem += srcElem1 * srcElem2;"
+    threeEqualRegInstX("mla", "MlaElemDX", "SimdMultAccOp",
+                       ("uint16_t", "uint32_t"), 2, mlaCode, True, byElem=True)
+    threeEqualRegInstX("mla", "MlaElemQX", "SimdMultAccOp",
+                       ("uint16_t", "uint32_t"), 4, mlaCode, True, byElem=True)
+    # MLA (vector)
+    threeEqualRegInstX("mla", "MlaDX", "SimdMultAccOp", smallUnsignedTypes, 2,
+                       mlaCode, True)
+    threeEqualRegInstX("mla", "MlaQX", "SimdMultAccOp", smallUnsignedTypes, 4,
+                       mlaCode, True)
+    # MLS (by element)
+    mlsCode = "destElem -= srcElem1 * srcElem2;"
+    threeEqualRegInstX("mls", "MlsElemDX", "SimdMultAccOp",
+                       ("uint16_t", "uint32_t"), 2, mlsCode, True, byElem=True)
+    threeEqualRegInstX("mls", "MlsElemQX", "SimdMultAccOp",
+                       ("uint16_t", "uint32_t"), 4, mlsCode, True, byElem=True)
+    # MLS (vector)
+    threeEqualRegInstX("mls", "MlsDX", "SimdMultAccOp", smallUnsignedTypes, 2,
+                       mlsCode, True)
+    threeEqualRegInstX("mls", "MlsQX", "SimdMultAccOp", smallUnsignedTypes, 4,
+                       mlsCode, True)
+    # MOV (element) -> alias to INS (element)
+    # MOV (from general) -> alias to INS (general register)
+    # MOV (scalar) -> alias to DUP (element)
+    # MOV (to general) -> alias to UMOV
+    # MOV (vector) -> alias to ORR (register)
+    # MOVI
+    movImmCode = "destElem = imm;"
+    oneRegImmInstX("movi", "MoviDX", "SimdMiscOp", ("uint64_t",), 2,
+                   movImmCode)
+    oneRegImmInstX("movi", "MoviQX", "SimdMiscOp", ("uint64_t",), 4,
+                   movImmCode)
+    # MUL (by element)
+    mulCode = "destElem = srcElem1 * srcElem2;"
+    threeEqualRegInstX("mul", "MulElemDX", "SimdMultOp",
+                       ("uint16_t", "uint32_t"), 2, mulCode, byElem=True)
+    threeEqualRegInstX("mul", "MulElemQX", "SimdMultOp",
+                       ("uint16_t", "uint32_t"), 4, mulCode, byElem=True)
+    # MUL (vector)
+    threeEqualRegInstX("mul", "MulDX", "SimdMultOp", smallUnsignedTypes, 2,
+                       mulCode)
+    threeEqualRegInstX("mul", "MulQX", "SimdMultOp", smallUnsignedTypes, 4,
+                       mulCode)
+    # MVN
+    mvnCode = "destElem = ~srcElem1;"
+    twoEqualRegInstX("mvn", "MvnDX", "SimdAluOp", ("uint64_t",), 2, mvnCode)
+    twoEqualRegInstX("mvn", "MvnQX", "SimdAluOp", ("uint64_t",), 4, mvnCode)
+    # MVNI
+    mvniCode = "destElem = ~imm;"
+    oneRegImmInstX("mvni", "MvniDX", "SimdAluOp", ("uint64_t",), 2, mvniCode)
+    oneRegImmInstX("mvni", "MvniQX", "SimdAluOp", ("uint64_t",), 4, mvniCode)
+    # NEG
+    negCode = "destElem = -srcElem1;"
+    twoEqualRegInstX("neg", "NegDX", "SimdAluOp", signedTypes, 2, negCode)
+    twoEqualRegInstX("neg", "NegQX", "SimdAluOp", signedTypes, 4, negCode)
+    # NOT -> alias to MVN
+    # ORN
+    ornCode = "destElem = srcElem1 | ~srcElem2;"
+    threeEqualRegInstX("orn", "OrnDX", "SimdAluOp", ("uint64_t",), 2, ornCode)
+    threeEqualRegInstX("orn", "OrnQX", "SimdAluOp", ("uint64_t",), 4, ornCode)
+    # ORR (immediate)
+    orrImmCode = "destElem |= imm;"
+    oneRegImmInstX("orr", "OrrImmDX", "SimdAluOp", ("uint64_t",), 2,
+                   orrImmCode, True)
+    oneRegImmInstX("orr", "OrrImmQX", "SimdAluOp", ("uint64_t",), 4,
+                   orrImmCode, True)
+    # ORR (register)
+    orrCode = "destElem = srcElem1 | srcElem2;"
+    threeEqualRegInstX("orr", "OrrDX", "SimdAluOp", ("uint64_t",), 2, orrCode)
+    threeEqualRegInstX("orr", "OrrQX", "SimdAluOp", ("uint64_t",), 4, orrCode)
+    # PMUL
+    pmulCode = '''
+            destElem = 0;
+            for (unsigned j = 0; j < sizeof(Element) * 8; j++) {
+                if (bits(srcElem2, j))
+                    destElem ^= srcElem1 << j;
+            }
+    '''
+    threeEqualRegInstX("pmul", "PmulDX", "SimdMultOp", ("uint8_t",), 2,
+                       pmulCode)
+    threeEqualRegInstX("pmul", "PmulQX", "SimdMultOp", ("uint8_t",), 4,
+                       pmulCode)
+    # PMULL, PMULL2
+    # Note: 64-bit PMULL is not available (Crypto. Extension)
+    pmullCode = '''
+            destElem = 0;
+            for (unsigned j = 0; j < sizeof(Element) * 8; j++) {
+                if (bits(srcElem2, j))
+                    destElem ^= (BigElement)srcElem1 << j;
+            }
+    '''
+    threeRegLongInstX("pmull", "PmullX", "SimdMultOp", ("uint8_t",), pmullCode)
+    threeRegLongInstX("pmull", "Pmull2X", "SimdMultOp", ("uint8_t",),
+                      pmullCode, hi=True)
+    # RADDHN, RADDHN2
+    raddhnCode = '''
+            destElem = ((BigElement)srcElem1 + (BigElement)srcElem2 +
+                        ((BigElement)1 << (sizeof(Element) * 8 - 1))) >>
+                       (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInstX("raddhn", "RaddhnX", "SimdAddOp", smallUnsignedTypes,
+                        raddhnCode)
+    threeRegNarrowInstX("raddhn2", "Raddhn2X", "SimdAddOp", smallUnsignedTypes,
+                        raddhnCode, hi=True)
+    # RBIT
+    rbitCode = '''
+            destElem = 0;
+            Element temp = srcElem1;
+            for (int i = 0; i < 8 * sizeof(Element); i++) {
+                destElem = destElem  | ((temp & 0x1) <<
+                                        (8 * sizeof(Element) - 1 - i));
+                temp >>= 1;
+            }
+    '''
+    twoEqualRegInstX("rbit", "RbitDX", "SimdAluOp", ("uint8_t",), 2, rbitCode)
+    twoEqualRegInstX("rbit", "RbitQX", "SimdAluOp", ("uint8_t",), 4, rbitCode)
+    # REV16
+    rev16Code = '''
+            destElem = srcElem1;
+            unsigned groupSize = ((1 << 1) / sizeof(Element));
+            unsigned reverseMask = (groupSize - 1);
+            j = i ^ reverseMask;
+    '''
+    twoEqualRegInstX("rev16", "Rev16DX", "SimdAluOp", ("uint8_t",), 2,
+                     rev16Code)
+    twoEqualRegInstX("rev16", "Rev16QX", "SimdAluOp", ("uint8_t",), 4,
+                     rev16Code)
+    # REV32
+    rev32Code = '''
+            destElem = srcElem1;
+            unsigned groupSize = ((1 << 2) / sizeof(Element));
+            unsigned reverseMask = (groupSize - 1);
+            j = i ^ reverseMask;
+    '''
+    twoEqualRegInstX("rev32", "Rev32DX", "SimdAluOp", ("uint8_t", "uint16_t"),
+                     2, rev32Code)
+    twoEqualRegInstX("rev32", "Rev32QX", "SimdAluOp", ("uint8_t", "uint16_t"),
+                     4, rev32Code)
+    # REV64
+    rev64Code = '''
+            destElem = srcElem1;
+            unsigned groupSize = ((1 << 3) / sizeof(Element));
+            unsigned reverseMask = (groupSize - 1);
+            j = i ^ reverseMask;
+    '''
+    twoEqualRegInstX("rev64", "Rev64DX", "SimdAluOp", smallUnsignedTypes, 2,
+                     rev64Code)
+    twoEqualRegInstX("rev64", "Rev64QX", "SimdAluOp", smallUnsignedTypes, 4,
+                     rev64Code)
+    # RSHRN, RSHRN2
+    rshrnCode = '''
+            if (imm > sizeof(srcElem1) * 8) {
+                destElem = 0;
+            } else if (imm) {
+                Element rBit = bits(srcElem1, imm - 1);
+                destElem = ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+            } else {
+                destElem = srcElem1;
+            }
+    '''
+    twoRegNarrowInstX("rshrn", "RshrnX", "SimdShiftOp", smallUnsignedTypes,
+                      rshrnCode, hasImm=True)
+    twoRegNarrowInstX("rshrn2", "Rshrn2X", "SimdShiftOp", smallUnsignedTypes,
+                      rshrnCode, hasImm=True, hi=True)
+    # RSUBHN, RSUBHN2
+    rsubhnCode = '''
+            destElem = ((BigElement)srcElem1 - (BigElement)srcElem2 +
+                        ((BigElement)1 << (sizeof(Element) * 8 - 1))) >>
+                       (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInstX("rsubhn", "RsubhnX", "SimdAddOp", smallTypes,
+                        rsubhnCode)
+    threeRegNarrowInstX("rsubhn2", "Rsubhn2X", "SimdAddOp", smallTypes,
+                        rsubhnCode, hi=True)
+    # SABA
+    abaCode = '''
+            destElem += (srcElem1 > srcElem2) ? (srcElem1 - srcElem2) :
+                                                (srcElem2 - srcElem1);
+    '''
+    threeEqualRegInstX("saba", "SabaDX", "SimdAddAccOp", smallSignedTypes, 2,
+                       abaCode, True)
+    threeEqualRegInstX("saba", "SabaQX", "SimdAddAccOp", smallSignedTypes, 4,
+                       abaCode, True)
+    # SABAL, SABAL2
+    abalCode = '''
+            destElem += (srcElem1 > srcElem2) ?
+                ((BigElement)srcElem1 - (BigElement)srcElem2) :
+                ((BigElement)srcElem2 - (BigElement)srcElem1);
+    '''
+    threeRegLongInstX("sabal", "SabalX", "SimdAddAccOp", smallSignedTypes,
+                      abalCode, True)
+    threeRegLongInstX("sabal2", "Sabal2X", "SimdAddAccOp", smallSignedTypes,
+                      abalCode, True, hi=True)
+    # SABD
+    abdCode = '''
+            destElem = (srcElem1 > srcElem2) ? (srcElem1 - srcElem2) :
+                                               (srcElem2 - srcElem1);
+    '''
+    threeEqualRegInstX("sabd", "SabdDX", "SimdAddOp", smallSignedTypes, 2,
+                       abdCode)
+    threeEqualRegInstX("sabd", "SabdQX", "SimdAddOp", smallSignedTypes, 4,
+                       abdCode)
+    # SABDL, SABDL2
+    abdlCode = '''
+            destElem = (srcElem1 > srcElem2) ?
+                ((BigElement)srcElem1 - (BigElement)srcElem2) :
+                ((BigElement)srcElem2 - (BigElement)srcElem1);
+    '''
+    threeRegLongInstX("sabdl", "SabdlX", "SimdAddAccOp", smallSignedTypes,
+                      abdlCode, True)
+    threeRegLongInstX("sabdl2", "Sabdl2X", "SimdAddAccOp", smallSignedTypes,
+                      abdlCode, True, hi=True)
+    # SADALP
+    adalpCode = "destElem += (BigElement)srcElem1 + (BigElement)srcElem2;"
+    twoRegCondenseInstX("sadalp", "SadalpDX", "SimdAddOp", smallSignedTypes, 2,
+                        adalpCode, True)
+    twoRegCondenseInstX("sadalp", "SadalpQX", "SimdAddOp", smallSignedTypes, 4,
+                        adalpCode, True)
+    # SADDL, SADDL2
+    addlwCode = "destElem = (BigElement)srcElem1 + (BigElement)srcElem2;"
+    threeRegLongInstX("saddl", "SaddlX", "SimdAddAccOp", smallSignedTypes,
+                      addlwCode)
+    threeRegLongInstX("saddl2", "Saddl2X", "SimdAddAccOp", smallSignedTypes,
+                      addlwCode, hi=True)
+    # SADDLP
+    twoRegCondenseInstX("saddlp", "SaddlpDX", "SimdAddOp", smallSignedTypes, 2,
+                        addlwCode)
+    twoRegCondenseInstX("saddlp", "SaddlpQX", "SimdAddOp", smallSignedTypes, 4,
+                        addlwCode)
+    # SADDLV
+    # Note: SimdAddOp can be a bit optimistic here
+    addAcrossLongCode = "destElem += (BigElement)srcElem1;"
+    twoRegAcrossInstX("saddlv", "SaddlvDX", "SimdAddOp", ("int8_t", "int16_t"),
+                      2, addAcrossLongCode, long=True)
+    twoRegAcrossInstX("saddlv", "SaddlvQX", "SimdAddOp", ("int8_t", "int16_t"),
+                      4, addAcrossLongCode, long=True)
+    twoRegAcrossInstX("saddlv", "SaddlvBQX", "SimdAddOp", ("int32_t",), 4,
+                      addAcrossLongCode, doubleDest=True, long=True)
+    # SADDW, SADDW2
+    threeRegWideInstX("saddw", "SaddwX", "SimdAddAccOp", smallSignedTypes,
+                      addlwCode)
+    threeRegWideInstX("saddw2", "Saddw2X", "SimdAddAccOp", smallSignedTypes,
+                      addlwCode, hi=True)
+    # SCVTF (fixed-point)
+    scvtfFixedCode = fpOp % ("fplibFixedToFP<Element>((int%d_t) srcElem1, imm,"
+                             " false, FPCRRounding(fpscr), fpscr)")
+    twoEqualRegInstX("scvtf", "ScvtfFixedDX", "SimdCvtOp", smallFloatTypes, 2,
+                     scvtfFixedCode % 32, hasImm=True)
+    twoEqualRegInstX("scvtf", "ScvtfFixedSQX", "SimdCvtOp", smallFloatTypes, 4,
+                     scvtfFixedCode % 32, hasImm=True)
+    twoEqualRegInstX("scvtf", "ScvtfFixedDQX", "SimdCvtOp", ("uint64_t",), 4,
+                     scvtfFixedCode % 64, hasImm=True)
+    twoEqualRegInstX("scvtf", "ScvtfFixedScSX", "SimdCvtOp", smallFloatTypes,
+                     4, scvtfFixedCode % 32, hasImm=True, scalar=True)
+    twoEqualRegInstX("scvtf", "ScvtfFixedScDX", "SimdCvtOp", ("uint64_t",), 4,
+                     scvtfFixedCode % 64, hasImm=True, scalar=True)
+    # SCVTF (integer)
+    scvtfIntCode = fpOp % ("fplibFixedToFP<Element>((int%d_t) srcElem1, 0,"
+                           " false, FPCRRounding(fpscr), fpscr)")
+    twoEqualRegInstX("scvtf", "ScvtfIntDX", "SimdCvtOp", smallFloatTypes, 2,
+                     scvtfIntCode % 32)
+    twoEqualRegInstX("scvtf", "ScvtfIntSQX", "SimdCvtOp", smallFloatTypes, 4,
+                     scvtfIntCode % 32)
+    twoEqualRegInstX("scvtf", "ScvtfIntDQX", "SimdCvtOp", ("uint64_t",), 4,
+                     scvtfIntCode % 64)
+    twoEqualRegInstX("scvtf", "ScvtfIntScSX", "SimdCvtOp", smallFloatTypes, 4,
+                     scvtfIntCode % 32, scalar=True)
+    twoEqualRegInstX("scvtf", "ScvtfIntScDX", "SimdCvtOp", ("uint64_t",), 4,
+                     scvtfIntCode % 64, scalar=True)
+    # SHADD
+    haddCode = '''
+            Element carryBit =
+                (((unsigned)srcElem1 & 0x1) +
+                 ((unsigned)srcElem2 & 0x1)) >> 1;
+            // Use division instead of a shift to ensure the sign extension works
+            // right. The compiler will figure out if it can be a shift. Mask the
+            // inputs so they get truncated correctly.
+            destElem = (((srcElem1 & ~(Element)1) / 2) +
+                        ((srcElem2 & ~(Element)1) / 2)) + carryBit;
+    '''
+    threeEqualRegInstX("shadd", "ShaddDX", "SimdAddOp", smallSignedTypes, 2,
+                       haddCode)
+    threeEqualRegInstX("shadd", "ShaddQX", "SimdAddOp", smallSignedTypes, 4,
+                       haddCode)
+    # SHL
+    shlCode = '''
+            if (imm >= sizeof(Element) * 8)
+                destElem = (srcElem1 << (sizeof(Element) * 8 - 1)) << 1;
+            else
+                destElem = srcElem1 << imm;
+    '''
+    twoEqualRegInstX("shl", "ShlDX", "SimdShiftOp", unsignedTypes, 2, shlCode,
+                     hasImm=True)
+    twoEqualRegInstX("shl", "ShlQX", "SimdShiftOp", unsignedTypes, 4, shlCode,
+                     hasImm=True)
+    # SHLL, SHLL2
+    shllCode = "destElem = ((BigElement)srcElem1) << (sizeof(Element) * 8);"
+    twoRegLongInstX("shll", "ShllX", "SimdShiftOp", smallTypes, shllCode)
+    twoRegLongInstX("shll", "Shll2X", "SimdShiftOp", smallTypes, shllCode,
+                    hi=True)
+    # SHRN, SHRN2
+    shrnCode = '''
+            if (imm >= sizeof(srcElem1) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem1 >> imm;
+            }
+    '''
+    twoRegNarrowInstX("shrn", "ShrnX", "SimdShiftOp", smallUnsignedTypes,
+                      shrnCode, hasImm=True)
+    twoRegNarrowInstX("shrn2", "Shrn2X", "SimdShiftOp", smallUnsignedTypes,
+                      shrnCode, hasImm=True, hi=True)
+    # SHSUB
+    hsubCode = '''
+            Element borrowBit =
+                (((srcElem1 & 0x1) - (srcElem2 & 0x1)) >> 1) & 0x1;
+            // Use division instead of a shift to ensure the sign extension works
+            // right. The compiler will figure out if it can be a shift. Mask the
+            // inputs so they get truncated correctly.
+            destElem = (((srcElem1 & ~(Element)1) / 2) -
+                        ((srcElem2 & ~(Element)1) / 2)) - borrowBit;
+    '''
+    threeEqualRegInstX("shsub", "ShsubDX", "SimdAddOp", smallSignedTypes, 2,
+                       hsubCode)
+    threeEqualRegInstX("shsub", "ShsubQX", "SimdAddOp", smallSignedTypes, 4,
+                       hsubCode)
+    # SLI
+    sliCode = '''
+            if (imm >= sizeof(Element) * 8)
+                destElem = destElem;
+            else
+                destElem = (srcElem1 << imm) | (destElem & mask(imm));
+    '''
+    twoEqualRegInstX("sli", "SliDX", "SimdShiftOp", unsignedTypes, 2, sliCode,
+                     True, hasImm=True)
+    twoEqualRegInstX("sli", "SliQX", "SimdShiftOp", unsignedTypes, 4, sliCode,
+                     True, hasImm=True)
+    # SMAX
+    maxCode = "destElem = (srcElem1 > srcElem2) ? srcElem1 : srcElem2;"
+    threeEqualRegInstX("smax", "SmaxDX", "SimdCmpOp", smallSignedTypes, 2,
+                       maxCode)
+    threeEqualRegInstX("smax", "SmaxQX", "SimdCmpOp", smallSignedTypes, 4,
+                       maxCode)
+    # SMAXP
+    threeEqualRegInstX("smaxp", "SmaxpDX", "SimdCmpOp", smallSignedTypes, 2,
+                       maxCode, pairwise=True)
+    threeEqualRegInstX("smaxp", "SmaxpQX", "SimdCmpOp", smallSignedTypes, 4,
+                       maxCode, pairwise=True)
+    # SMAXV
+    maxAcrossCode = '''
+            if (i == 0 || srcElem1 > destElem)
+                destElem = srcElem1;
+    '''
+    twoRegAcrossInstX("smaxv", "SmaxvDX", "SimdCmpOp", ("int8_t", "int16_t"),
+                      2, maxAcrossCode)
+    twoRegAcrossInstX("smaxv", "SmaxvQX", "SimdCmpOp", smallSignedTypes, 4,
+                      maxAcrossCode)
+    # SMIN
+    minCode = "destElem = (srcElem1 < srcElem2) ? srcElem1 : srcElem2;"
+    threeEqualRegInstX("smin", "SminDX", "SimdCmpOp", smallSignedTypes, 2,
+                       minCode)
+    threeEqualRegInstX("smin", "SminQX", "SimdCmpOp", smallSignedTypes, 4,
+                       minCode)
+    # SMINP
+    threeEqualRegInstX("sminp", "SminpDX", "SimdCmpOp", smallSignedTypes, 2,
+                       minCode, pairwise=True)
+    threeEqualRegInstX("sminp", "SminpQX", "SimdCmpOp", smallSignedTypes, 4,
+                       minCode, pairwise=True)
+    # SMINV
+    minAcrossCode = '''
+            if (i == 0 || srcElem1 < destElem)
+                destElem = srcElem1;
+    '''
+    twoRegAcrossInstX("sminv", "SminvDX", "SimdCmpOp", ("int8_t", "int16_t"),
+                      2, minAcrossCode)
+    twoRegAcrossInstX("sminv", "SminvQX", "SimdCmpOp", smallSignedTypes, 4,
+                      minAcrossCode)
+    # SMLAL, SMLAL2 (by element)
+    mlalCode = "destElem += (BigElement)srcElem1 * (BigElement)srcElem2;"
+    threeRegLongInstX("smlal", "SmlalElemX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), mlalCode, True, byElem=True)
+    threeRegLongInstX("smlal", "SmlalElem2X", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), mlalCode, True, byElem=True,
+                      hi=True)
+    # SMLAL, SMLAL2 (vector)
+    threeRegLongInstX("smlal", "SmlalX", "SimdMultAccOp", smallSignedTypes,
+                      mlalCode, True)
+    threeRegLongInstX("smlal", "Smlal2X", "SimdMultAccOp", smallSignedTypes,
+                      mlalCode, True, hi=True)
+    # SMLSL, SMLSL2 (by element)
+    mlslCode = "destElem -= (BigElement)srcElem1 * (BigElement)srcElem2;"
+    threeRegLongInstX("smlsl", "SmlslElemX", "SimdMultAccOp", smallSignedTypes,
+                      mlslCode, True, byElem=True)
+    threeRegLongInstX("smlsl", "SmlslElem2X", "SimdMultAccOp",
+                      smallSignedTypes, mlslCode, True, byElem=True, hi=True)
+    # SMLSL, SMLSL2 (vector)
+    threeRegLongInstX("smlsl", "SmlslX", "SimdMultAccOp", smallSignedTypes,
+                      mlslCode, True)
+    threeRegLongInstX("smlsl", "Smlsl2X", "SimdMultAccOp", smallSignedTypes,
+                      mlslCode, True, hi=True)
+    # SMOV
+    insToGprInstX("smov", "SmovWX", "SimdMiscOp", ("int8_t", "int16_t"), 4,
+                  'W', True)
+    insToGprInstX("smov", "SmovXX", "SimdMiscOp", smallSignedTypes, 4, 'X',
+                  True)
+    # SMULL, SMULL2 (by element)
+    mullCode = "destElem = (BigElement)srcElem1 * (BigElement)srcElem2;"
+    threeRegLongInstX("smull", "SmullElemX", "SimdMultOp", smallSignedTypes,
+                      mullCode, byElem=True)
+    threeRegLongInstX("smull", "SmullElem2X", "SimdMultOp", smallSignedTypes,
+                      mullCode, byElem=True, hi=True)
+    # SMULL, SMULL2 (vector)
+    threeRegLongInstX("smull", "SmullX", "SimdMultOp", smallSignedTypes,
+                      mullCode)
+    threeRegLongInstX("smull", "Smull2X", "SimdMultOp", smallSignedTypes,
+                      mullCode, hi=True)
+    # SQABS
+    sqabsCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+            fpscr.qc = 1;
+            destElem = ~srcElem1;
+        } else if (srcElem1 < 0) {
+            destElem = -srcElem1;
+        } else {
+            destElem = srcElem1;
+        }
+        FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("sqabs", "SqabsDX", "SimdAluOp", smallSignedTypes, 2,
+                     sqabsCode)
+    twoEqualRegInstX("sqabs", "SqabsQX", "SimdAluOp", signedTypes, 4,
+                     sqabsCode)
+    twoEqualRegInstX("sqabs", "SqabsScX", "SimdAluOp", signedTypes, 4,
+                     sqabsCode, scalar=True)
+    # SQADD
+    sqaddCode = '''
+            destElem = srcElem1 + srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            bool negDest = (destElem < 0);
+            bool negSrc1 = (srcElem1 < 0);
+            bool negSrc2 = (srcElem2 < 0);
+            if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                if (negDest)
+                    destElem -= 1;
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqadd", "SqaddDX", "SimdAddOp", smallSignedTypes, 2,
+                       sqaddCode)
+    threeEqualRegInstX("sqadd", "SqaddQX", "SimdAddOp", signedTypes, 4,
+                       sqaddCode)
+    threeEqualRegInstX("sqadd", "SqaddScX", "SimdAddOp", signedTypes, 4,
+                       sqaddCode, scalar=True)
+    # SQDMLAL, SQDMLAL2 (by element)
+    qdmlalCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element halfNeg = maxNeg / 2;
+        if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+            midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        bool negPreDest = ltz(destElem);
+        destElem += midElem;
+        bool negDest = ltz(destElem);
+        bool negMid = ltz(midElem);
+        if (negPreDest == negMid && negMid != negDest) {
+            destElem = mask(sizeof(BigElement) * 8 - 1);
+            if (negPreDest)
+                destElem = ~destElem;
+            fpscr.qc = 1;
+        }
+        FpscrQc = fpscr;
+    '''
+    threeRegLongInstX("sqdmlal", "SqdmlalElemX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True, byElem=True)
+    threeRegLongInstX("sqdmlal", "SqdmlalElem2X", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True, byElem=True,
+                      hi=True)
+    threeRegLongInstX("sqdmlal", "SqdmlalElemScX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True, byElem=True,
+                      scalar=True)
+    # SQDMLAL, SQDMLAL2 (vector)
+    threeRegLongInstX("sqdmlal", "SqdmlalX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True)
+    threeRegLongInstX("sqdmlal", "Sqdmlal2X", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True, hi=True)
+    threeRegLongInstX("sqdmlal", "SqdmlalScX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlalCode, True, scalar=True)
+    # SQDMLSL, SQDMLSL2 (by element)
+    qdmlslCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element halfNeg = maxNeg / 2;
+        if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+            midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        bool negPreDest = ltz(destElem);
+        destElem -= midElem;
+        bool negDest = ltz(destElem);
+        bool posMid = ltz((BigElement)-midElem);
+        if (negPreDest == posMid && posMid != negDest) {
+            destElem = mask(sizeof(BigElement) * 8 - 1);
+            if (negPreDest)
+                destElem = ~destElem;
+            fpscr.qc = 1;
+        }
+        FpscrQc = fpscr;
+    '''
+    threeRegLongInstX("sqdmlsl", "SqdmlslElemX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True, byElem=True)
+    threeRegLongInstX("sqdmlsl", "SqdmlslElem2X", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True, byElem=True,
+                      hi=True)
+    threeRegLongInstX("sqdmlsl", "SqdmlslElemScX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True, byElem=True,
+                      scalar=True)
+    # SQDMLSL, SQDMLSL2 (vector)
+    threeRegLongInstX("sqdmlsl", "SqdmlslX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True)
+    threeRegLongInstX("sqdmlsl", "Sqdmlsl2X", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True, hi=True)
+    threeRegLongInstX("sqdmlsl", "SqdmlslScX", "SimdMultAccOp",
+                      ("int16_t", "int32_t"), qdmlslCode, True, scalar=True)
+    # SQDMULH (by element)
+    sqdmulhCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2) >>
+                       (sizeof(Element) * 8);
+            if (srcElem1 == srcElem2 &&
+                    srcElem1 == (Element)((Element)1 <<
+                        (sizeof(Element) * 8 - 1))) {
+                destElem = ~srcElem1;
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqdmulh", "SqdmulhElemDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqdmulhCode, byElem=True)
+    threeEqualRegInstX("sqdmulh", "SqdmulhElemQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqdmulhCode, byElem=True)
+    threeEqualRegInstX("sqdmulh", "SqdmulhElemScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqdmulhCode, byElem=True,
+                       scalar=True)
+    # SQDMULH (vector)
+    threeEqualRegInstX("sqdmulh", "SqdmulhDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqdmulhCode)
+    threeEqualRegInstX("sqdmulh", "SqdmulhQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqdmulhCode)
+    threeEqualRegInstX("sqdmulh", "SqdmulhScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqdmulhCode, scalar=True)
+    # SQDMULL, SQDMULL2 (by element)
+    qdmullCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        if (srcElem1 == srcElem2 &&
+                srcElem1 == (Element)((Element)1 <<
+                    (Element)(sizeof(Element) * 8 - 1))) {
+            destElem = ~((BigElement)srcElem1 << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        FpscrQc = fpscr;
+    '''
+    threeRegLongInstX("sqdmull", "SqdmullElemX", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True, byElem=True)
+    threeRegLongInstX("sqdmull", "SqdmullElem2X", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True, byElem=True,
+                      hi=True)
+    threeRegLongInstX("sqdmull", "SqdmullElemScX", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True, byElem=True,
+                      scalar=True)
+    # SQDMULL, SQDMULL2 (vector)
+    threeRegLongInstX("sqdmull", "SqdmullX", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True)
+    threeRegLongInstX("sqdmull", "Sqdmull2X", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True, hi=True)
+    threeRegLongInstX("sqdmull", "SqdmullScX", "SimdMultOp",
+                      ("int16_t", "int32_t"), qdmullCode, True, scalar=True)
+    # SQNEG
+    sqnegCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+            fpscr.qc = 1;
+            destElem = ~srcElem1;
+        } else {
+            destElem = -srcElem1;
+        }
+        FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("sqneg", "SqnegDX", "SimdAluOp", smallSignedTypes, 2,
+                     sqnegCode)
+    twoEqualRegInstX("sqneg", "SqnegQX", "SimdAluOp", signedTypes, 4,
+                     sqnegCode)
+    twoEqualRegInstX("sqneg", "SqnegScX", "SimdAluOp", signedTypes, 4,
+                     sqnegCode, scalar=True)
+    # SQRDMULH (by element)
+    sqrdmulhCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
+                        ((int64_t)1 << (sizeof(Element) * 8 - 1))) >>
+                       (sizeof(Element) * 8);
+            Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+            Element halfNeg = maxNeg / 2;
+            if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+                (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+                (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+                if (destElem < 0) {
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                } else {
+                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                }
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhElemDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmulhCode, byElem=True)
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhElemQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmulhCode, byElem=True)
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhElemScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmulhCode, byElem=True,
+                       scalar=True)
+    # SQRDMULH (vector)
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhDX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 2, sqrdmulhCode)
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhQX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmulhCode)
+    threeEqualRegInstX("sqrdmulh", "SqrdmulhScX", "SimdMultOp",
+                       ("int16_t", "int32_t"), 4, sqrdmulhCode, scalar=True)
+    # SQRSHL
+    sqrshlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                Element rBit = 0;
+                if (shiftAmt <= sizeof(Element) * 8)
+                    rBit = bits(srcElem1, shiftAmt - 1);
+                if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
+                    rBit = 1;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+                // Make sure the right shift sign extended when it should.
+                if (srcElem1 < 0 && destElem >= 0) {
+                    destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                                 1 - shiftAmt));
+                }
+                destElem += rBit;
+            } else if (shiftAmt > 0) {
+                bool sat = false;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    if (srcElem1 != 0)
+                        sat = true;
+                    else
+                        destElem = 0;
+                } else {
+                    if (bits((uint64_t) srcElem1, sizeof(Element) * 8 - 1,
+                                sizeof(Element) * 8 - 1 - shiftAmt) !=
+                            ((srcElem1 < 0) ? mask(shiftAmt + 1) : 0)) {
+                        sat = true;
+                    } else {
+                        destElem = srcElem1 << shiftAmt;
+                    }
+                }
+                if (sat) {
+                    fpscr.qc = 1;
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                    if (srcElem1 < 0)
+                        destElem = ~destElem;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqrshl", "SqrshlDX", "SimdCmpOp", smallSignedTypes, 2,
+                       sqrshlCode)
+    threeEqualRegInstX("sqrshl", "SqrshlQX", "SimdCmpOp", signedTypes, 4,
+                       sqrshlCode)
+    threeEqualRegInstX("sqrshl", "SqrshlScX", "SimdCmpOp", signedTypes, 4,
+                       sqrshlCode, scalar=True)
+    # SQRSHRN, SQRSHRN2
+    sqrshrnCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm > sizeof(srcElem1) * 8) {
+                if (srcElem1 != 0 && srcElem1 != -1)
+                    fpscr.qc = 1;
+                destElem = 0;
+            } else if (imm) {
+                BigElement mid = (srcElem1 >> (imm - 1));
+                uint64_t rBit = mid & 0x1;
+                mid >>= 1;
+                mid |= -(mid & ((BigElement)1 <<
+                            (sizeof(BigElement) * 8 - 1 - imm)));
+                mid += rBit;
+                if (mid != (Element)mid) {
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                    if (srcElem1 < 0)
+                        destElem = ~destElem;
+                    fpscr.qc = 1;
+                } else {
+                    destElem = mid;
+                }
+            } else {
+                if (srcElem1 != (Element)srcElem1) {
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                    if (srcElem1 < 0)
+                        destElem = ~destElem;
+                    fpscr.qc = 1;
+                } else {
+                    destElem = srcElem1;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqrshrn", "SqrshrnX", "SimdShiftOp", smallSignedTypes,
+                      sqrshrnCode, hasImm=True)
+    twoRegNarrowInstX("sqrshrn2", "Sqrshrn2X", "SimdShiftOp", smallSignedTypes,
+                      sqrshrnCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("sqrshrn", "SqrshrnScX", "SimdShiftOp", smallSignedTypes,
+                      sqrshrnCode, hasImm=True, scalar=True)
+    # SQRSHRUN, SQRSHRUN2
+    sqrshrunCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm > sizeof(srcElem1) * 8) {
+                if (srcElem1 != 0)
+                    fpscr.qc = 1;
+                destElem = 0;
+            } else if (imm) {
+                BigElement mid = (srcElem1 >> (imm - 1));
+                uint64_t rBit = mid & 0x1;
+                mid >>= 1;
+                mid |= -(mid & ((BigElement)1 <<
+                                (sizeof(BigElement) * 8 - 1 - imm)));
+                mid += rBit;
+                if (bits(mid, sizeof(BigElement) * 8 - 1,
+                              sizeof(Element) * 8) != 0) {
+                    if (srcElem1 < 0) {
+                        destElem = 0;
+                    } else {
+                        destElem = mask(sizeof(Element) * 8);
+                    }
+                    fpscr.qc = 1;
+                } else {
+                    destElem = mid;
+                }
+            } else {
+                if (srcElem1 < 0) {
+                    fpscr.qc = 1;
+                    destElem = 0;
+                } else {
+                    destElem = srcElem1;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqrshrun", "SqrshrunX", "SimdShiftOp", smallSignedTypes,
+                      sqrshrunCode, hasImm=True)
+    twoRegNarrowInstX("sqrshrun", "Sqrshrun2X", "SimdShiftOp",
+                      smallSignedTypes, sqrshrunCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("sqrshrun", "SqrshrunScX", "SimdShiftOp",
+                      smallSignedTypes, sqrshrunCode, hasImm=True, scalar=True)
+    # SQSHL (immediate)
+    sqshlImmCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm >= sizeof(Element) * 8) {
+                if (srcElem1 != 0) {
+                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                    if (srcElem1 > 0)
+                        destElem = ~destElem;
+                    fpscr.qc = 1;
+                } else {
+                    destElem = 0;
+                }
+            } else if (imm) {
+                destElem = (srcElem1 << imm);
+                uint64_t topBits = bits((uint64_t)srcElem1,
+                                        sizeof(Element) * 8 - 1,
+                                        sizeof(Element) * 8 - 1 - imm);
+                if (topBits != 0 && topBits != mask(imm + 1)) {
+                    destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                    if (srcElem1 > 0)
+                        destElem = ~destElem;
+                    fpscr.qc = 1;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("sqshl", "SqshlImmDX", "SimdAluOp", smallSignedTypes, 2,
+                     sqshlImmCode, hasImm=True)
+    twoEqualRegInstX("sqshl", "SqshlImmQX", "SimdAluOp", signedTypes, 4,
+                     sqshlImmCode, hasImm=True)
+    twoEqualRegInstX("sqshl", "SqshlImmScX", "SimdAluOp", signedTypes, 4,
+                     sqshlImmCode, hasImm=True, scalar=True)
+    # SQSHL (register)
+    sqshlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+                // Make sure the right shift sign extended when it should.
+                if (srcElem1 < 0 && destElem >= 0) {
+                    destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                                 1 - shiftAmt));
+                }
+            } else if (shiftAmt > 0) {
+                bool sat = false;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    if (srcElem1 != 0)
+                        sat = true;
+                    else
+                        destElem = 0;
+                } else {
+                    if (bits((uint64_t) srcElem1, sizeof(Element) * 8 - 1,
+                                sizeof(Element) * 8 - 1 - shiftAmt) !=
+                            ((srcElem1 < 0) ? mask(shiftAmt + 1) : 0)) {
+                        sat = true;
+                    } else {
+                        destElem = srcElem1 << shiftAmt;
+                    }
+                }
+                if (sat) {
+                    fpscr.qc = 1;
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                    if (srcElem1 < 0)
+                        destElem = ~destElem;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqshl", "SqshlDX", "SimdAluOp", smallSignedTypes, 2,
+                       sqshlCode)
+    threeEqualRegInstX("sqshl", "SqshlQX", "SimdAluOp", signedTypes, 4,
+                       sqshlCode)
+    threeEqualRegInstX("sqshl", "SqshlScX", "SimdAluOp", signedTypes, 4,
+                       sqshlCode, scalar=True)
+    # SQSHLU
+    sqshluCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm >= sizeof(Element) * 8) {
+                if (srcElem1 < 0) {
+                    destElem = 0;
+                    fpscr.qc = 1;
+                } else if (srcElem1 > 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = 0;
+                }
+            } else if (imm) {
+                destElem = (srcElem1 << imm);
+                uint64_t topBits = bits((uint64_t)srcElem1,
+                                        sizeof(Element) * 8 - 1,
+                                        sizeof(Element) * 8 - imm);
+                if (srcElem1 < 0) {
+                    destElem = 0;
+                    fpscr.qc = 1;
+                } else if (topBits != 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                }
+            } else {
+                if (srcElem1 < 0) {
+                    fpscr.qc = 1;
+                    destElem = 0;
+                } else {
+                    destElem = srcElem1;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("sqshlu", "SqshluDX", "SimdAluOp", smallSignedTypes, 2,
+                     sqshluCode, hasImm=True)
+    twoEqualRegInstX("sqshlu", "SqshluQX", "SimdAluOp", signedTypes, 4,
+                     sqshluCode, hasImm=True)
+    twoEqualRegInstX("sqshlu", "SqshluScX", "SimdAluOp", signedTypes, 4,
+                     sqshluCode, hasImm=True, scalar=True)
+    # SQSHRN, SQSHRN2
+    sqshrnCode = '''
+        FPSCR fpscr = (FPSCR) FpscrQc;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0 && srcElem1 != -1)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+            mid |= -(mid & ((BigElement)1 <<
+                        (sizeof(BigElement) * 8 - 1 - imm)));
+            if (mid != (Element)mid) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqshrn", "SqshrnX", "SimdShiftOp", smallSignedTypes,
+                      sqshrnCode, hasImm=True)
+    twoRegNarrowInstX("sqshrn2", "Sqshrn2X", "SimdShiftOp", smallSignedTypes,
+                      sqshrnCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("sqshrn", "SqshrnScX", "SimdShiftOp", smallSignedTypes,
+                      sqshrnCode, hasImm=True, scalar=True)
+    # SQSHRUN, SQSHRUN2
+    sqshrunCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm > sizeof(srcElem1) * 8) {
+                if (srcElem1 != 0)
+                    fpscr.qc = 1;
+                destElem = 0;
+            } else if (imm) {
+                BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+                if (bits(mid, sizeof(BigElement) * 8 - 1,
+                              sizeof(Element) * 8) != 0) {
+                    if (srcElem1 < 0) {
+                        destElem = 0;
+                    } else {
+                        destElem = mask(sizeof(Element) * 8);
+                    }
+                    fpscr.qc = 1;
+                } else {
+                    destElem = mid;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqshrun", "SqshrunX", "SimdShiftOp", smallSignedTypes,
+                      sqshrunCode, hasImm=True)
+    twoRegNarrowInstX("sqshrun", "Sqshrun2X", "SimdShiftOp", smallSignedTypes,
+                      sqshrunCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("sqshrun", "SqshrunScX", "SimdShiftOp", smallSignedTypes,
+                      sqshrunCode, hasImm=True, scalar=True)
+    # SQSUB
+    sqsubCode = '''
+            destElem = srcElem1 - srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            bool negDest = (destElem < 0);
+            bool negSrc1 = (srcElem1 < 0);
+            bool posSrc2 = (srcElem2 >= 0);
+            if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                if (negDest)
+                    destElem -= 1;
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("sqsub", "SqsubDX", "SimdAddOp", smallSignedTypes, 2,
+                       sqsubCode)
+    threeEqualRegInstX("sqsub", "SqsubQX", "SimdAddOp", signedTypes, 4,
+                       sqsubCode)
+    threeEqualRegInstX("sqsub", "SqsubScX", "SimdAddOp", signedTypes, 4,
+                       sqsubCode, scalar=True)
+    # SQXTN, SQXTN2
+    sqxtnCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            destElem = srcElem1;
+            if ((BigElement)destElem != srcElem1) {
+                fpscr.qc = 1;
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqxtn", "SqxtnX", "SimdMiscOp", smallSignedTypes,
+                      sqxtnCode)
+    twoRegNarrowInstX("sqxtn", "Sqxtn2X", "SimdMiscOp", smallSignedTypes,
+                      sqxtnCode, hi=True)
+    twoRegNarrowInstX("sqxtn", "SqxtnScX", "SimdMiscOp", smallSignedTypes,
+                      sqxtnCode, scalar=True)
+    # SQXTUN, SQXTUN2
+    sqxtunCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            destElem = srcElem1;
+            if (srcElem1 < 0 ||
+                    ((BigElement)destElem & mask(sizeof(Element) * 8)) != srcElem1) {
+                fpscr.qc = 1;
+                destElem = mask(sizeof(Element) * 8);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("sqxtun", "SqxtunX", "SimdMiscOp", smallSignedTypes,
+                      sqxtunCode)
+    twoRegNarrowInstX("sqxtun", "Sqxtun2X", "SimdMiscOp", smallSignedTypes,
+                      sqxtunCode, hi=True)
+    twoRegNarrowInstX("sqxtun", "SqxtunScX", "SimdMiscOp", smallSignedTypes,
+                      sqxtunCode, scalar=True)
+    # SRHADD
+    rhaddCode = '''
+            Element carryBit =
+                (((unsigned)srcElem1 & 0x1) +
+                 ((unsigned)srcElem2 & 0x1) + 1) >> 1;
+            // Use division instead of a shift to ensure the sign extension works
+            // right. The compiler will figure out if it can be a shift. Mask the
+            // inputs so they get truncated correctly.
+            destElem = (((srcElem1 & ~(Element)1) / 2) +
+                        ((srcElem2 & ~(Element)1) / 2)) + carryBit;
+    '''
+    threeEqualRegInstX("srhadd", "SrhaddDX", "SimdAddOp", smallSignedTypes, 2,
+                       rhaddCode)
+    threeEqualRegInstX("srhadd", "SrhaddQX", "SimdAddOp", smallSignedTypes, 4,
+                       rhaddCode)
+    # SRI
+    sriCode = '''
+            if (imm >= sizeof(Element) * 8)
+                destElem = destElem;
+            else
+                destElem = (srcElem1 >> imm) |
+                    (destElem & ~mask(sizeof(Element) * 8 - imm));
+    '''
+    twoEqualRegInstX("sri", "SriDX", "SimdShiftOp", unsignedTypes, 2, sriCode,
+                     True, hasImm=True)
+    twoEqualRegInstX("sri", "SriQX", "SimdShiftOp", unsignedTypes, 4, sriCode,
+                     True, hasImm=True)
+    # SRSHL
+    rshlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                Element rBit = 0;
+                if (shiftAmt <= sizeof(Element) * 8)
+                    rBit = bits(srcElem1, shiftAmt - 1);
+                if (shiftAmt > sizeof(Element) * 8 && ltz(srcElem1))
+                    rBit = 1;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+                // Make sure the right shift sign extended when it should.
+                if (ltz(srcElem1) && !ltz(destElem)) {
+                    destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                                 1 - shiftAmt));
+                }
+                destElem += rBit;
+            } else if (shiftAmt > 0) {
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    destElem = 0;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+    '''
+    threeEqualRegInstX("srshl", "SrshlDX", "SimdShiftOp", signedTypes, 2,
+                       rshlCode)
+    threeEqualRegInstX("srshl", "SrshlQX", "SimdShiftOp", signedTypes, 4,
+                       rshlCode)
+    # SRSHR
+    rshrCode = '''
+            if (imm > sizeof(srcElem1) * 8) {
+                destElem = 0;
+            } else if (imm) {
+                Element rBit = bits(srcElem1, imm - 1);
+                destElem = ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+            } else {
+                destElem = srcElem1;
+            }
+    '''
+    twoEqualRegInstX("srshr", "SrshrDX", "SimdShiftOp", signedTypes, 2,
+                     rshrCode, hasImm=True)
+    twoEqualRegInstX("srshr", "SrshrQX", "SimdShiftOp", signedTypes, 4,
+                     rshrCode, hasImm=True)
+    # SRSRA
+    rsraCode = '''
+            if (imm > sizeof(srcElem1) * 8) {
+                destElem += 0;
+            } else if (imm) {
+                Element rBit = bits(srcElem1, imm - 1);
+                destElem += ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+            } else {
+                destElem += srcElem1;
+            }
+    '''
+    twoEqualRegInstX("srsra", "SrsraDX", "SimdShiftOp", signedTypes, 2,
+                     rsraCode, True, hasImm=True)
+    twoEqualRegInstX("srsra", "SrsraQX", "SimdShiftOp", signedTypes, 4,
+                     rsraCode, True, hasImm=True)
+    # SSHL
+    shlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+                // Make sure the right shift sign extended when it should.
+                if (ltz(srcElem1) && !ltz(destElem)) {
+                    destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                                 1 - shiftAmt));
+                }
+            } else {
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    destElem = 0;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            }
+    '''
+    threeEqualRegInstX("sshl", "SshlDX", "SimdShiftOp", signedTypes, 2,
+                       shlCode)
+    threeEqualRegInstX("sshl", "SshlQX", "SimdShiftOp", signedTypes, 4,
+                       shlCode)
+    # SSHLL, SSHLL2
+    shllCode = '''
+            if (imm >= sizeof(destElem) * 8) {
+                destElem = 0;
+            } else {
+                destElem = (BigElement)srcElem1 << imm;
+            }
+    '''
+    twoRegLongInstX("sshll", "SshllX", "SimdShiftOp", smallSignedTypes,
+                    shllCode, hasImm=True)
+    twoRegLongInstX("sshll", "Sshll2X", "SimdShiftOp", smallSignedTypes,
+                    shllCode, hasImm=True, hi=True)
+    # SSHR
+    shrCode = '''
+            if (imm >= sizeof(srcElem1) * 8) {
+                if (ltz(srcElem1))
+                    destElem = -1;
+                else
+                    destElem = 0;
+            } else {
+                destElem = srcElem1 >> imm;
+            }
+    '''
+    twoEqualRegInstX("sshr", "SshrDX", "SimdShiftOp", signedTypes, 2, shrCode,
+                     hasImm=True)
+    twoEqualRegInstX("sshr", "SshrQX", "SimdShiftOp", signedTypes, 4, shrCode,
+                     hasImm=True)
+    # SSRA
+    sraCode = '''
+            Element mid;;
+            if (imm >= sizeof(srcElem1) * 8) {
+                mid = ltz(srcElem1) ? -1 : 0;
+            } else {
+                mid = srcElem1 >> imm;
+                if (ltz(srcElem1) && !ltz(mid)) {
+                    mid |= -(mid & ((Element)1 <<
+                                    (sizeof(Element) * 8 - 1 - imm)));
+                }
+            }
+            destElem += mid;
+    '''
+    twoEqualRegInstX("ssra", "SsraDX", "SimdShiftOp", signedTypes, 2, sraCode,
+                     True, hasImm=True)
+    twoEqualRegInstX("ssra", "SsraQX", "SimdShiftOp", signedTypes, 4, sraCode,
+                     True, hasImm=True)
+    # SSUBL
+    sublwCode = "destElem = (BigElement)srcElem1 - (BigElement)srcElem2;"
+    threeRegLongInstX("ssubl", "SsublX", "SimdAddOp", smallSignedTypes,
+                      sublwCode)
+    threeRegLongInstX("ssubl2", "Ssubl2X", "SimdAddOp", smallSignedTypes,
+                      sublwCode, hi=True)
+    # SSUBW
+    threeRegWideInstX("ssubw", "SsubwX", "SimdAddOp", smallSignedTypes,
+                      sublwCode)
+    threeRegWideInstX("ssubw2", "Ssubw2X", "SimdAddOp", smallSignedTypes,
+                      sublwCode, hi=True)
+    # SUB
+    subCode = "destElem = srcElem1 - srcElem2;"
+    threeEqualRegInstX("sub", "SubDX", "SimdAddOp", unsignedTypes, 2, subCode)
+    threeEqualRegInstX("sub", "SubQX", "SimdAddOp", unsignedTypes, 4, subCode)
+    # SUBHN, SUBHN2
+    subhnCode = '''
+            destElem = ((BigElement)srcElem1 - (BigElement)srcElem2) >>
+                        (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInstX("subhn", "SubhnX", "SimdAddOp", smallUnsignedTypes,
+                        subhnCode)
+    threeRegNarrowInstX("subhn2", "Subhn2X", "SimdAddOp", smallUnsignedTypes,
+                        subhnCode, hi=True)
+    # SUQADD
+    suqaddCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            Element tmp = destElem + srcElem1;
+            if (bits(destElem, sizeof(Element) * 8 - 1) == 0) {
+                if (bits(tmp, sizeof(Element) * 8 - 1) == 1 ||
+                        tmp < srcElem1 || tmp < destElem) {
+                    destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                    fpscr.qc = 1;
+                } else {
+                    destElem = tmp;
+                }
+            } else {
+                Element absDestElem = (~destElem) + 1;
+                if (absDestElem < srcElem1) {
+                    // Still check for positive sat., no need to check for negative sat.
+                    if (bits(tmp, sizeof(Element) * 8 - 1) == 1) {
+                        destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                        fpscr.qc = 1;
+                    } else {
+                        destElem = tmp;
+                    }
+                } else {
+                    destElem = tmp;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("suqadd", "SuqaddDX", "SimdAddOp", smallUnsignedTypes, 2,
+                     suqaddCode, True)
+    twoEqualRegInstX("suqadd", "SuqaddQX", "SimdAddOp", unsignedTypes, 4,
+                     suqaddCode, True)
+    twoEqualRegInstX("suqadd", "SuqaddScX", "SimdAddOp", unsignedTypes, 4,
+                     suqaddCode, True, scalar=True)
+    # SXTL -> alias to SSHLL
+    # TBL
+    tbxTblInstX("tbl", "Tbl1DX", "SimdMiscOp", ("uint8_t",), 1, "true", 2)
+    tbxTblInstX("tbl", "Tbl1QX", "SimdMiscOp", ("uint8_t",), 1, "true", 4)
+    tbxTblInstX("tbl", "Tbl2DX", "SimdMiscOp", ("uint8_t",), 2, "true", 2)
+    tbxTblInstX("tbl", "Tbl2QX", "SimdMiscOp", ("uint8_t",), 2, "true", 4)
+    tbxTblInstX("tbl", "Tbl3DX", "SimdMiscOp", ("uint8_t",), 3, "true", 2)
+    tbxTblInstX("tbl", "Tbl3QX", "SimdMiscOp", ("uint8_t",), 3, "true", 4)
+    tbxTblInstX("tbl", "Tbl4DX", "SimdMiscOp", ("uint8_t",), 4, "true", 2)
+    tbxTblInstX("tbl", "Tbl4QX", "SimdMiscOp", ("uint8_t",), 4, "true", 4)
+    # TBX
+    tbxTblInstX("tbx", "Tbx1DX", "SimdMiscOp", ("uint8_t",), 1, "false", 2)
+    tbxTblInstX("tbx", "Tbx1QX", "SimdMiscOp", ("uint8_t",), 1, "false", 4)
+    tbxTblInstX("tbx", "Tbx2DX", "SimdMiscOp", ("uint8_t",), 2, "false", 2)
+    tbxTblInstX("tbx", "Tbx2QX", "SimdMiscOp", ("uint8_t",), 2, "false", 4)
+    tbxTblInstX("tbx", "Tbx3DX", "SimdMiscOp", ("uint8_t",), 3, "false", 2)
+    tbxTblInstX("tbx", "Tbx3QX", "SimdMiscOp", ("uint8_t",), 3, "false", 4)
+    tbxTblInstX("tbx", "Tbx4DX", "SimdMiscOp", ("uint8_t",), 4, "false", 2)
+    tbxTblInstX("tbx", "Tbx4QX", "SimdMiscOp", ("uint8_t",), 4, "false", 4)
+    # TRN1
+    trnCode = '''
+        unsigned part = %s;
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            destReg.elements[2 * i] = srcReg1.elements[2 * i + part];
+            destReg.elements[2 * i + 1] = srcReg2.elements[2 * i + part];
+        }
+    '''
+    threeRegScrambleInstX("trn1", "Trn1DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          trnCode % "0")
+    threeRegScrambleInstX("trn1", "Trn1QX", "SimdAluOp", unsignedTypes, 4,
+                          trnCode % "0")
+    # TRN2
+    threeRegScrambleInstX("trn2", "Trn2DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          trnCode % "1")
+    threeRegScrambleInstX("trn2", "Trn2QX", "SimdAluOp", unsignedTypes, 4,
+                          trnCode % "1")
+    # UABA
+    threeEqualRegInstX("uaba", "UabaDX", "SimdAddAccOp", smallUnsignedTypes, 2,
+                       abaCode, True)
+    threeEqualRegInstX("uaba", "UabaQX", "SimdAddAccOp", smallUnsignedTypes, 4,
+                       abaCode, True)
+    # UABAL, UABAL2
+    threeRegLongInstX("uabal", "UabalX", "SimdAddAccOp", smallUnsignedTypes,
+                      abalCode, True)
+    threeRegLongInstX("uabal2", "Uabal2X", "SimdAddAccOp", smallUnsignedTypes,
+                      abalCode, True, hi=True)
+    # UABD
+    threeEqualRegInstX("uabd", "UabdDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       abdCode)
+    threeEqualRegInstX("uabd", "UabdQX", "SimdAddOp", smallUnsignedTypes, 4,
+                       abdCode)
+    # UABDL, UABDL2
+    threeRegLongInstX("uabdl", "UabdlX", "SimdAddAccOp", smallUnsignedTypes,
+                      abdlCode, True)
+    threeRegLongInstX("uabdl2", "Uabdl2X", "SimdAddAccOp", smallUnsignedTypes,
+                      abdlCode, True, hi=True)
+    # UADALP
+    twoRegCondenseInstX("uadalp", "UadalpDX", "SimdAddOp", smallUnsignedTypes,
+                        2, adalpCode, True)
+    twoRegCondenseInstX("uadalp", "UadalpQX", "SimdAddOp", smallUnsignedTypes,
+                        4, adalpCode, True)
+    # UADDL, UADDL2
+    threeRegLongInstX("uaddl", "UaddlX", "SimdAddAccOp", smallUnsignedTypes,
+                      addlwCode)
+    threeRegLongInstX("uaddl2", "Uaddl2X", "SimdAddAccOp", smallUnsignedTypes,
+                      addlwCode, hi=True)
+    # UADDLP
+    twoRegCondenseInstX("uaddlp", "UaddlpDX", "SimdAddOp", smallUnsignedTypes,
+                        2, addlwCode)
+    twoRegCondenseInstX("uaddlp", "UaddlpQX", "SimdAddOp", smallUnsignedTypes,
+                        4, addlwCode)
+    # UADDLV
+    twoRegAcrossInstX("uaddlv", "UaddlvDX", "SimdAddOp",
+                      ("uint8_t", "uint16_t"), 2, addAcrossLongCode, long=True)
+    twoRegAcrossInstX("uaddlv", "UaddlvQX", "SimdAddOp",
+                      ("uint8_t", "uint16_t"), 4, addAcrossLongCode, long=True)
+    twoRegAcrossInstX("uaddlv", "UaddlvBQX", "SimdAddOp", ("uint32_t",), 4,
+                      addAcrossLongCode, doubleDest=True, long=True)
+    # UADDW
+    threeRegWideInstX("uaddw", "UaddwX", "SimdAddAccOp", smallUnsignedTypes,
+                      addlwCode)
+    threeRegWideInstX("uaddw2", "Uaddw2X", "SimdAddAccOp", smallUnsignedTypes,
+                      addlwCode, hi=True)
+    # UCVTF (fixed-point)
+    ucvtfFixedCode = fpOp % ("fplibFixedToFP<Element>(srcElem1, imm, true,"
+                             " FPCRRounding(fpscr), fpscr)")
+    twoEqualRegInstX("ucvtf", "UcvtfFixedDX", "SimdCvtOp", smallFloatTypes, 2,
+                     ucvtfFixedCode, hasImm=True)
+    twoEqualRegInstX("ucvtf", "UcvtfFixedQX", "SimdCvtOp", floatTypes, 4,
+                     ucvtfFixedCode, hasImm=True)
+    twoEqualRegInstX("ucvtf", "UcvtfFixedScX", "SimdCvtOp", floatTypes, 4,
+                     ucvtfFixedCode, hasImm=True, scalar=True)
+    # UCVTF (integer)
+    ucvtfIntCode = fpOp % ("fplibFixedToFP<Element>(srcElem1, 0, true,"
+                           " FPCRRounding(fpscr), fpscr)")
+    twoEqualRegInstX("ucvtf", "UcvtfIntDX", "SimdCvtOp", smallFloatTypes, 2,
+                     ucvtfIntCode)
+    twoEqualRegInstX("ucvtf", "UcvtfIntQX", "SimdCvtOp", floatTypes, 4,
+                     ucvtfIntCode)
+    twoEqualRegInstX("ucvtf", "UcvtfIntScX", "SimdCvtOp", floatTypes, 4,
+                     ucvtfIntCode, scalar=True)
+    # UHADD
+    threeEqualRegInstX("uhadd", "UhaddDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       haddCode)
+    threeEqualRegInstX("uhadd", "UhaddQX", "SimdAddOp", smallUnsignedTypes, 4,
+                       haddCode)
+    # UHSUB
+    threeEqualRegInstX("uhsub", "UhsubDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       hsubCode)
+    threeEqualRegInstX("uhsub", "UhsubQX", "SimdAddOp", smallUnsignedTypes, 4,
+                       hsubCode)
+    # UMAX
+    threeEqualRegInstX("umax", "UmaxDX", "SimdCmpOp", smallUnsignedTypes, 2,
+                       maxCode)
+    threeEqualRegInstX("umax", "UmaxQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                       maxCode)
+    # UMAXP
+    threeEqualRegInstX("umaxp", "UmaxpDX", "SimdCmpOp", smallUnsignedTypes, 2,
+                       maxCode, pairwise=True)
+    threeEqualRegInstX("umaxp", "UmaxpQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                       maxCode, pairwise=True)
+    # UMAXV
+    twoRegAcrossInstX("umaxv", "UmaxvDX", "SimdCmpOp", ("uint8_t", "uint16_t"),
+                      2, maxAcrossCode)
+    twoRegAcrossInstX("umaxv", "UmaxvQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                      maxAcrossCode)
+    # UMIN
+    threeEqualRegInstX("umin", "UminDX", "SimdCmpOp", smallUnsignedTypes, 2,
+                       minCode)
+    threeEqualRegInstX("umin", "UminQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                       minCode)
+    # UMINP
+    threeEqualRegInstX("uminp", "UminpDX", "SimdCmpOp", smallUnsignedTypes, 2,
+                       minCode, pairwise=True)
+    threeEqualRegInstX("uminp", "UminpQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                       minCode, pairwise=True)
+    # UMINV
+    twoRegAcrossInstX("uminv", "UminvDX", "SimdCmpOp", ("uint8_t", "uint16_t"),
+                      2, minAcrossCode)
+    twoRegAcrossInstX("uminv", "UminvQX", "SimdCmpOp", smallUnsignedTypes, 4,
+                      minAcrossCode)
+    # UMLAL (by element)
+    threeRegLongInstX("umlal", "UmlalElemX", "SimdMultAccOp",
+                      smallUnsignedTypes, mlalCode, True, byElem=True)
+    threeRegLongInstX("umlal", "UmlalElem2X", "SimdMultAccOp",
+                      smallUnsignedTypes, mlalCode, True, byElem=True, hi=True)
+    # UMLAL (vector)
+    threeRegLongInstX("umlal", "UmlalX", "SimdMultAccOp", smallUnsignedTypes,
+                      mlalCode, True)
+    threeRegLongInstX("umlal", "Umlal2X", "SimdMultAccOp", smallUnsignedTypes,
+                      mlalCode, True, hi=True)
+    # UMLSL (by element)
+    threeRegLongInstX("umlsl", "UmlslElemX", "SimdMultAccOp",
+                      smallUnsignedTypes, mlslCode, True, byElem=True)
+    threeRegLongInstX("umlsl", "UmlslElem2X", "SimdMultAccOp",
+                      smallUnsignedTypes, mlslCode, True, byElem=True, hi=True)
+    # UMLSL (vector)
+    threeRegLongInstX("umlsl", "UmlslX", "SimdMultAccOp", smallUnsignedTypes,
+                      mlslCode, True)
+    threeRegLongInstX("umlsl", "Umlsl2X", "SimdMultAccOp", smallUnsignedTypes,
+                      mlslCode, True, hi=True)
+    # UMOV
+    insToGprInstX("umov", "UmovWX", "SimdMiscOp", smallUnsignedTypes, 4, 'W')
+    insToGprInstX("umov", "UmovXX", "SimdMiscOp", ("uint64_t",), 4, 'X')
+    # UMULL, UMULL2 (by element)
+    threeRegLongInstX("umull", "UmullElemX", "SimdMultOp", smallUnsignedTypes,
+                      mullCode, byElem=True)
+    threeRegLongInstX("umull", "UmullElem2X", "SimdMultOp", smallUnsignedTypes,
+                      mullCode, byElem=True, hi=True)
+    # UMULL, UMULL2 (vector)
+    threeRegLongInstX("umull", "UmullX", "SimdMultOp", smallUnsignedTypes,
+                      mullCode)
+    threeRegLongInstX("umull", "Umull2X", "SimdMultOp", smallUnsignedTypes,
+                      mullCode, hi=True)
+    # UQADD
+    uqaddCode = '''
+            destElem = srcElem1 + srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (destElem < srcElem1 || destElem < srcElem2) {
+                destElem = (Element)(-1);
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("uqadd", "UqaddDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       uqaddCode)
+    threeEqualRegInstX("uqadd", "UqaddQX", "SimdAddOp", unsignedTypes, 4,
+                       uqaddCode)
+    threeEqualRegInstX("uqadd", "UqaddScX", "SimdAddOp", unsignedTypes, 4,
+                       uqaddCode, scalar=True)
+    # UQRSHL
+    uqrshlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                Element rBit = 0;
+                if (shiftAmt <= sizeof(Element) * 8)
+                    rBit = bits(srcElem1, shiftAmt - 1);
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+                destElem += rBit;
+            } else {
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    if (srcElem1 != 0) {
+                        destElem = mask(sizeof(Element) * 8);
+                        fpscr.qc = 1;
+                    } else {
+                        destElem = 0;
+                    }
+                } else {
+                    if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                                sizeof(Element) * 8 - shiftAmt)) {
+                        destElem = mask(sizeof(Element) * 8);
+                        fpscr.qc = 1;
+                    } else {
+                        destElem = srcElem1 << shiftAmt;
+                    }
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("uqrshl", "UqrshlDX", "SimdCmpOp", smallUnsignedTypes,
+                       2, uqrshlCode)
+    threeEqualRegInstX("uqrshl", "UqrshlQX", "SimdCmpOp", unsignedTypes, 4,
+                       uqrshlCode)
+    threeEqualRegInstX("uqrshl", "UqrshlScX", "SimdCmpOp", unsignedTypes, 4,
+                       uqrshlCode, scalar=True)
+    # UQRSHRN
+    uqrshrnCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm > sizeof(srcElem1) * 8) {
+                if (srcElem1 != 0)
+                    fpscr.qc = 1;
+                destElem = 0;
+            } else if (imm) {
+                BigElement mid = (srcElem1 >> (imm - 1));
+                uint64_t rBit = mid & 0x1;
+                mid >>= 1;
+                mid += rBit;
+                if (mid != (Element)mid) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = mid;
+                }
+            } else {
+                if (srcElem1 != (Element)srcElem1) {
+                    destElem = mask(sizeof(Element) * 8 - 1);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = srcElem1;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("uqrshrn", "UqrshrnX", "SimdShiftOp", smallUnsignedTypes,
+                      uqrshrnCode, hasImm=True)
+    twoRegNarrowInstX("uqrshrn2", "Uqrshrn2X", "SimdShiftOp",
+                      smallUnsignedTypes, uqrshrnCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("uqrshrn", "UqrshrnScX", "SimdShiftOp",
+                      smallUnsignedTypes, uqrshrnCode, hasImm=True,
+                      scalar=True)
+    # UQSHL (immediate)
+    uqshlImmCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm >= sizeof(Element) * 8) {
+                if (srcElem1 != 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = 0;
+                }
+            } else if (imm) {
+                destElem = (srcElem1 << imm);
+                uint64_t topBits = bits((uint64_t)srcElem1,
+                                        sizeof(Element) * 8 - 1,
+                                        sizeof(Element) * 8 - imm);
+                if (topBits != 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("uqshl", "UqshlImmDX", "SimdAluOp", smallUnsignedTypes, 2,
+                     uqshlImmCode, hasImm=True)
+    twoEqualRegInstX("uqshl", "UqshlImmQX", "SimdAluOp", unsignedTypes, 4,
+                     uqshlImmCode, hasImm=True)
+    twoEqualRegInstX("uqshl", "UqshlImmScX", "SimdAluOp", unsignedTypes, 4,
+                     uqshlImmCode, hasImm=True, scalar=True)
+    # UQSHL (register)
+    uqshlCode = '''
+            int16_t shiftAmt = (int8_t)srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (shiftAmt < 0) {
+                shiftAmt = -shiftAmt;
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    shiftAmt = sizeof(Element) * 8 - 1;
+                    destElem = 0;
+                } else {
+                    destElem = (srcElem1 >> shiftAmt);
+                }
+            } else if (shiftAmt > 0) {
+                if (shiftAmt >= sizeof(Element) * 8) {
+                    if (srcElem1 != 0) {
+                        destElem = mask(sizeof(Element) * 8);
+                        fpscr.qc = 1;
+                    } else {
+                        destElem = 0;
+                    }
+                } else {
+                    if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                                sizeof(Element) * 8 - shiftAmt)) {
+                        destElem = mask(sizeof(Element) * 8);
+                        fpscr.qc = 1;
+                    } else {
+                        destElem = srcElem1 << shiftAmt;
+                    }
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("uqshl", "UqshlDX", "SimdAluOp", smallUnsignedTypes, 2,
+                       uqshlCode)
+    threeEqualRegInstX("uqshl", "UqshlQX", "SimdAluOp", unsignedTypes, 4,
+                       uqshlCode)
+    threeEqualRegInstX("uqshl", "UqshlScX", "SimdAluOp", unsignedTypes, 4,
+                       uqshlCode, scalar=True)
+    # UQSHRN, UQSHRN2
+    uqshrnCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (imm > sizeof(srcElem1) * 8) {
+                if (srcElem1 != 0)
+                    fpscr.qc = 1;
+                destElem = 0;
+            } else if (imm) {
+                BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+                if (mid != (Element)mid) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = mid;
+                }
+            } else {
+                destElem = srcElem1;
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("uqshrn", "UqshrnX", "SimdShiftOp", smallUnsignedTypes,
+                      uqshrnCode, hasImm=True)
+    twoRegNarrowInstX("uqshrn2", "Uqshrn2X", "SimdShiftOp", smallUnsignedTypes,
+                      uqshrnCode, hasImm=True, hi=True)
+    twoRegNarrowInstX("uqshrn", "UqshrnScX", "SimdShiftOp", smallUnsignedTypes,
+                      uqshrnCode, hasImm=True, scalar=True)
+    # UQSUB
+    uqsubCode = '''
+            destElem = srcElem1 - srcElem2;
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            if (destElem > srcElem1) {
+                destElem = 0;
+                fpscr.qc = 1;
+            }
+            FpscrQc = fpscr;
+    '''
+    threeEqualRegInstX("uqsub", "UqsubDX", "SimdAddOp", smallUnsignedTypes, 2,
+                       uqsubCode)
+    threeEqualRegInstX("uqsub", "UqsubQX", "SimdAddOp", unsignedTypes, 4,
+                       uqsubCode)
+    threeEqualRegInstX("uqsub", "UqsubScX", "SimdAddOp", unsignedTypes, 4,
+                       uqsubCode, scalar=True)
+    # UQXTN
+    uqxtnCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            destElem = srcElem1;
+            if ((BigElement)destElem != srcElem1) {
+                fpscr.qc = 1;
+                destElem = mask(sizeof(Element) * 8);
+            }
+            FpscrQc = fpscr;
+    '''
+    twoRegNarrowInstX("uqxtn", "UqxtnX", "SimdMiscOp", smallUnsignedTypes,
+                      uqxtnCode)
+    twoRegNarrowInstX("uqxtn", "Uqxtn2X", "SimdMiscOp", smallUnsignedTypes,
+                      uqxtnCode, hi=True)
+    twoRegNarrowInstX("uqxtn", "UqxtnScX", "SimdMiscOp", smallUnsignedTypes,
+                      uqxtnCode, scalar=True)
+    # URECPE
+    urecpeCode = "destElem = unsignedRecipEstimate(srcElem1);"
+    twoEqualRegInstX("urecpe", "UrecpeDX", "SimdMultAccOp", ("uint32_t",), 2,
+                     urecpeCode)
+    twoEqualRegInstX("urecpe", "UrecpeQX", "SimdMultAccOp", ("uint32_t",), 4,
+                     urecpeCode)
+    # URHADD
+    threeEqualRegInstX("urhadd", "UrhaddDX", "SimdAddOp", smallUnsignedTypes,
+                       2, rhaddCode)
+    threeEqualRegInstX("urhadd", "UrhaddQX", "SimdAddOp", smallUnsignedTypes,
+                       4, rhaddCode)
+    # URSHL
+    threeEqualRegInstX("urshl", "UrshlDX", "SimdShiftOp", unsignedTypes, 2,
+                       rshlCode)
+    threeEqualRegInstX("urshl", "UrshlQX", "SimdShiftOp", unsignedTypes, 4,
+                       rshlCode)
+    # URSHR
+    twoEqualRegInstX("urshr", "UrshrDX", "SimdShiftOp", unsignedTypes, 2,
+                     rshrCode, hasImm=True)
+    twoEqualRegInstX("urshr", "UrshrQX", "SimdShiftOp", unsignedTypes, 4,
+                     rshrCode, hasImm=True)
+    # URSQRTE
+    ursqrteCode = "destElem = unsignedRSqrtEstimate(srcElem1);"
+    twoEqualRegInstX("ursqrte", "UrsqrteDX", "SimdSqrtOp", ("uint32_t",), 2,
+                     ursqrteCode)
+    twoEqualRegInstX("ursqrte", "UrsqrteQX", "SimdSqrtOp", ("uint32_t",), 4,
+                     ursqrteCode)
+    # URSRA
+    twoEqualRegInstX("ursra", "UrsraDX", "SimdShiftOp", unsignedTypes, 2,
+                     rsraCode, True, hasImm=True)
+    twoEqualRegInstX("ursra", "UrsraQX", "SimdShiftOp", unsignedTypes, 4,
+                     rsraCode, True, hasImm=True)
+    # USHL
+    threeEqualRegInstX("ushl", "UshlDX", "SimdShiftOp", unsignedTypes, 2,
+                       shlCode)
+    threeEqualRegInstX("ushl", "UshlQX", "SimdShiftOp", unsignedTypes, 4,
+                       shlCode)
+    # USHLL, USHLL2
+    twoRegLongInstX("ushll", "UshllX", "SimdShiftOp", smallUnsignedTypes,
+                    shllCode, hasImm=True)
+    twoRegLongInstX("ushll", "Ushll2X", "SimdShiftOp", smallUnsignedTypes,
+                    shllCode, hi=True, hasImm=True)
+    # USHR
+    twoEqualRegInstX("ushr", "UshrDX", "SimdShiftOp", unsignedTypes, 2,
+                     shrCode, hasImm=True)
+    twoEqualRegInstX("ushr", "UshrQX", "SimdShiftOp", unsignedTypes, 4,
+                     shrCode, hasImm=True)
+    # USQADD
+    usqaddCode = '''
+            FPSCR fpscr = (FPSCR) FpscrQc;
+            Element tmp = destElem + srcElem1;
+            if (bits(srcElem1, sizeof(Element) * 8 - 1) == 0) {
+                if (tmp < srcElem1 || tmp < destElem) {
+                    destElem = (Element)(-1);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = tmp;
+                }
+            } else {
+                Element absSrcElem1 = (~srcElem1) + 1;
+                if (absSrcElem1 > destElem) {
+                    destElem = 0;
+                    fpscr.qc = 1;
+                } else {
+                    destElem = tmp;
+                }
+            }
+            FpscrQc = fpscr;
+    '''
+    twoEqualRegInstX("usqadd", "UsqaddDX", "SimdAddOp", smallUnsignedTypes, 2,
+                     usqaddCode, True)
+    twoEqualRegInstX("usqadd", "UsqaddQX", "SimdAddOp", unsignedTypes, 4,
+                     usqaddCode, True)
+    twoEqualRegInstX("usqadd", "UsqaddScX", "SimdAddOp", unsignedTypes, 4,
+                     usqaddCode, True, scalar=True)
+    # USRA
+    twoEqualRegInstX("usra", "UsraDX", "SimdShiftOp", unsignedTypes, 2,
+                     sraCode, True, hasImm=True)
+    twoEqualRegInstX("usra", "UsraQX", "SimdShiftOp", unsignedTypes, 4,
+                     sraCode, True, hasImm=True)
+    # USUBL
+    threeRegLongInstX("usubl", "UsublX", "SimdAddOp", smallUnsignedTypes,
+                      sublwCode)
+    threeRegLongInstX("usubl2", "Usubl2X", "SimdAddOp", smallUnsignedTypes,
+                      sublwCode, hi=True)
+    # USUBW
+    threeRegWideInstX("usubw", "UsubwX", "SimdAddOp", smallUnsignedTypes,
+                      sublwCode)
+    threeRegWideInstX("usubw2", "Usubw2X", "SimdAddOp", smallUnsignedTypes,
+                      sublwCode, hi=True)
+    # UXTL -> alias to USHLL
+    # UZP1
+    uzpCode = '''
+        unsigned part = %s;
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            destReg.elements[i] = srcReg1.elements[2 * i + part];
+            destReg.elements[eCount / 2 + i] = srcReg2.elements[2 * i + part];
+        }
+    '''
+    threeRegScrambleInstX("Uzp1", "Uzp1DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          uzpCode % "0")
+    threeRegScrambleInstX("Uzp1", "Uzp1QX", "SimdAluOp", unsignedTypes, 4,
+                          uzpCode % "0")
+    # UZP2
+    threeRegScrambleInstX("Uzp2", "Uzp2DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          uzpCode % "1")
+    threeRegScrambleInstX("Uzp2", "Uzp2QX", "SimdAluOp", unsignedTypes, 4,
+                          uzpCode % "1")
+    # XTN, XTN2
+    xtnCode = "destElem = srcElem1;"
+    twoRegNarrowInstX("Xtn", "XtnX", "SimdMiscOp", smallUnsignedTypes, xtnCode)
+    twoRegNarrowInstX("Xtn", "Xtn2X", "SimdMiscOp", smallUnsignedTypes,
+                      xtnCode, hi=True)
+    # ZIP1
+    zipCode = '''
+        unsigned base = %s;
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            destReg.elements[2 * i] = srcReg1.elements[base + i];
+            destReg.elements[2 * i + 1] = srcReg2.elements[base + i];
+        }
+    '''
+    threeRegScrambleInstX("zip1", "Zip1DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          zipCode % "0")
+    threeRegScrambleInstX("zip1", "Zip1QX", "SimdAluOp", unsignedTypes, 4,
+                          zipCode % "0")
+    # ZIP2
+    threeRegScrambleInstX("zip2", "Zip2DX", "SimdAluOp", smallUnsignedTypes, 2,
+                          zipCode % "eCount / 2")
+    threeRegScrambleInstX("zip2", "Zip2QX", "SimdAluOp", unsignedTypes, 4,
+                          zipCode % "eCount / 2")
+
+}};

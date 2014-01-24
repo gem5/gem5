@@ -56,7 +56,8 @@ Pl390::Pl390(const Params *p)
     : BaseGic(p), distAddr(p->dist_addr),
       cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
-      enabled(false), itLines(p->it_lines), msixRegAddr(p->msix_addr),
+      enabled(false), itLines(p->it_lines), irqEnable(false),
+      msixRegAddr(p->msix_addr),
       msixReg(0x0)
 {
     itLinesLog2 = ceilLog2(itLines);

@@ -1,0 +1,446 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2011-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    class LoadInst64(LoadStoreInst):
+        execBase = 'Load64'
+        micro = False
+
+        def __init__(self, mnem, Name, size=4, sign=False, user=False,
+                     literal=False, flavor="normal", top=False):
+            super(LoadInst64, self).__init__()
+
+            self.name = mnem
+            self.Name = Name
+            self.size = size
+            self.sign = sign
+            self.user = user
+            self.literal = literal
+            self.flavor = flavor
+            self.top = top
+
+            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.instFlags = []
+            self.codeBlobs = {"postacc_code" : ""}
+
+            # Add memory request flags where necessary
+            if self.user:
+                self.memFlags.append("ArmISA::TLB::UserMode")
+
+            if self.flavor == "dprefetch":
+                self.memFlags.append("Request::PREFETCH")
+                self.instFlags = ['IsDataPrefetch']
+            elif self.flavor == "iprefetch":
+                self.memFlags.append("Request::PREFETCH")
+                self.instFlags = ['IsInstPrefetch']
+            if self.micro:
+                self.instFlags.append("IsMicroop")
+
+            if self.flavor in ("acexp", "exp"):
+                # For exclusive pair ops alignment check is based on total size
+                self.memFlags.append("%d" % int(math.log(self.size, 2) + 1))
+            elif not (self.size == 16 and self.top):
+                # Only the first microop should perform alignment checking.
+                self.memFlags.append("%d" % int(math.log(self.size, 2)))
+
+            if self.flavor not in ("acquire", "acex", "exclusive",
+                                   "acexp", "exp"):
+                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+
+            if self.flavor in ("acquire", "acex", "acexp"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
+            if self.flavor in ("acex", "exclusive", "exp", "acexp"):
+                self.memFlags.append("Request::LLSC")
+
+        def buildEACode(self):
+            # Address computation code
+            eaCode = ""
+            if self.flavor == "fp":
+                eaCode += vfp64EnabledCheckCode
+
+            if self.literal:
+                eaCode += "EA = RawPC"
+            else:
+                eaCode += SPAlignmentCheckCode + "EA = XBase"
+
+            if self.size == 16:
+                if self.top:
+                    eaCode += " + (isBigEndian64(xc->tcBase()) ? 0 : 8)"
+                else:
+                    eaCode += " + (isBigEndian64(xc->tcBase()) ? 8 : 0)"
+            if not self.post:
+                eaCode += self.offset
+            eaCode += ";"
+
+            self.codeBlobs["ea_code"] = eaCode
+
+        def emitHelper(self, base='Memory64', wbDecl=None):
+            global header_output, decoder_output, exec_output
+
+            # If this is a microop itself, don't allow anything that would
+            # require further microcoding.
+            if self.micro:
+                assert not wbDecl
+
+            fa_code = None
+            if not self.micro and self.flavor in ("normal", "widen", "acquire"):
+                fa_code = '''
+                    fault->annotate(ArmFault::SAS, %s);
+                    fault->annotate(ArmFault::SSE, %s);
+                    fault->annotate(ArmFault::SRT, dest);
+                    fault->annotate(ArmFault::SF, %s);
+                    fault->annotate(ArmFault::AR, %s);
+                ''' % ("0" if self.size == 1 else
+                       "1" if self.size == 2 else
+                       "2" if self.size == 4 else "3",
+                       "true" if self.sign else "false",
+                       "true" if (self.size == 8 or
+                                  self.flavor == "widen") else "false",
+                       "true" if self.flavor == "acquire" else "false")
+
+            (newHeader, newDecoder, newExec) = \
+                self.fillTemplates(self.name, self.Name, self.codeBlobs,
+                                   self.memFlags, self.instFlags,
+                                   base, wbDecl, faCode=fa_code)
+
+            header_output += newHeader
+            decoder_output += newDecoder
+            exec_output += newExec
+
+    class LoadImmInst64(LoadInst64):
+        def __init__(self, *args, **kargs):
+            super(LoadImmInst64, self).__init__(*args, **kargs)
+            self.offset = " + imm"
+
+            self.wbDecl = "MicroAddXiUop(machInst, base, base, imm);"
+
+    class LoadRegInst64(LoadInst64):
+        def __init__(self, *args, **kargs):
+            super(LoadRegInst64, self).__init__(*args, **kargs)
+            self.offset = " + extendReg64(XOffset, type, shiftAmt, 64)"
+
+            self.wbDecl = \
+                "MicroAddXERegUop(machInst, base, base, " + \
+                "                 offset, type, shiftAmt);"
+
+    class LoadRawRegInst64(LoadInst64):
+        def __init__(self, *args, **kargs):
+            super(LoadRawRegInst64, self).__init__(*args, **kargs)
+            self.offset = ""
+
+    class LoadSingle64(LoadInst64):
+        def emit(self):
+            self.buildEACode()
+
+            # Code that actually handles the access
+            if self.flavor in ("dprefetch", "iprefetch"):
+                accCode = 'uint64_t temp M5_VAR_USED = Mem%s;'
+            elif self.flavor == "fp":
+                if self.size in (1, 2, 4):
+                    accCode = '''
+                        AA64FpDestP0_uw = cSwap(Mem%s,
+                                                isBigEndian64(xc->tcBase()));
+                        AA64FpDestP1_uw = 0;
+                        AA64FpDestP2_uw = 0;
+                        AA64FpDestP3_uw = 0;
+                    '''
+                elif self.size == 8 or (self.size == 16 and not self.top):
+                    accCode = '''
+                        uint64_t data = cSwap(Mem%s,
+                                              isBigEndian64(xc->tcBase()));
+                        AA64FpDestP0_uw = (uint32_t)data;
+                        AA64FpDestP1_uw = (data >> 32);
+                    '''
+                    # Only zero out the other half if this isn't part of a
+                    # pair of 8 byte loads implementing a 16 byte load.
+                    if self.size == 8:
+                        accCode += '''
+                            AA64FpDestP2_uw = 0;
+                            AA64FpDestP3_uw = 0;
+                        '''
+                elif self.size == 16 and self.top:
+                    accCode = '''
+                        uint64_t data = cSwap(Mem%s,
+                                              isBigEndian64(xc->tcBase()));
+                        AA64FpDestP2_uw = (uint32_t)data;
+                        AA64FpDestP3_uw = (data >> 32);
+                    '''
+            elif self.flavor == "widen" or self.size == 8:
+                accCode = "XDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
+            else:
+                accCode = "WDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
+            if self.size == 16:
+                accCode = accCode % buildMemSuffix(self.sign, 8)
+            else:
+                accCode = accCode % buildMemSuffix(self.sign, self.size)
+
+            self.codeBlobs["memacc_code"] = accCode
+
+            # Push it out to the output files
+            wbDecl = None
+            if self.writeback and not self.micro:
+                wbDecl = self.wbDecl
+            self.emitHelper(self.base, wbDecl)
+
+    class LoadDouble64(LoadInst64):
+        def emit(self):
+            self.buildEACode()
+
+            # Code that actually handles the access
+            if self.flavor == "fp":
+                accCode = '''
+                    uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
+                    AA64FpDestP0_uw = (uint32_t)data;
+                    AA64FpDestP1_uw = 0;
+                    AA64FpDestP2_uw = 0;
+                    AA64FpDestP3_uw = 0;
+                    AA64FpDest2P0_uw = (data >> 32);
+                    AA64FpDest2P1_uw = 0;
+                    AA64FpDest2P2_uw = 0;
+                    AA64FpDest2P3_uw = 0;
+                '''
+            else:
+                if self.sign:
+                    if self.size == 4:
+                        accCode = '''
+                            uint64_t data = cSwap(Mem_ud,
+                                                  isBigEndian64(xc->tcBase()));
+                            XDest = sext<32>((uint32_t)data);
+                            XDest2 = sext<32>(data >> 32);
+                        '''
+                    elif self.size == 8:
+                        accCode = '''
+                            XDest = sext<64>(Mem_tud.a);
+                            XDest2 = sext<64>(Mem_tud.b);
+                        '''
+                else:
+                    if self.size == 4:
+                        accCode = '''
+                            uint64_t data = cSwap(Mem_ud,
+                                                  isBigEndian64(xc->tcBase()));
+                            XDest = (uint32_t)data;
+                            XDest2 = data >> 32;
+                        '''
+                    elif self.size == 8:
+                        accCode = '''
+                            XDest = Mem_tud.a;
+                            XDest2 = Mem_tud.b;
+                        '''
+            self.codeBlobs["memacc_code"] = accCode
+
+            # Push it out to the output files
+            wbDecl = None
+            if self.writeback and not self.micro:
+                wbDecl = self.wbDecl
+            self.emitHelper(self.base, wbDecl)
+
+    class LoadImm64(LoadImmInst64, LoadSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryImm64'
+        writeback = False
+        post = False
+
+    class LoadPre64(LoadImmInst64, LoadSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryPreIndex64'
+        writeback = True
+        post = False
+
+    class LoadPost64(LoadImmInst64, LoadSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryPostIndex64'
+        writeback = True
+        post = True
+
+    class LoadReg64(LoadRegInst64, LoadSingle64):
+        decConstBase = 'LoadStoreReg64'
+        base = 'ArmISA::MemoryReg64'
+        writeback = False
+        post = False
+
+    class LoadRaw64(LoadRawRegInst64, LoadSingle64):
+        decConstBase = 'LoadStoreRaw64'
+        base = 'ArmISA::MemoryRaw64'
+        writeback = False
+        post = False
+
+    class LoadEx64(LoadRawRegInst64, LoadSingle64):
+        decConstBase = 'LoadStoreEx64'
+        base = 'ArmISA::MemoryEx64'
+        writeback = False
+        post = False
+
+    class LoadLit64(LoadImmInst64, LoadSingle64):
+        decConstBase = 'LoadStoreLit64'
+        base = 'ArmISA::MemoryLiteral64'
+        writeback = False
+        post = False
+
+    def buildLoads64(mnem, NameBase, size, sign, flavor="normal"):
+        LoadImm64(mnem, NameBase + "_IMM", size, sign, flavor=flavor).emit()
+        LoadPre64(mnem, NameBase + "_PRE", size, sign, flavor=flavor).emit()
+        LoadPost64(mnem, NameBase + "_POST", size, sign, flavor=flavor).emit()
+        LoadReg64(mnem, NameBase + "_REG", size, sign, flavor=flavor).emit()
+
+    buildLoads64("ldrb", "LDRB64", 1, False)
+    buildLoads64("ldrsb", "LDRSBW64", 1, True)
+    buildLoads64("ldrsb", "LDRSBX64", 1, True, flavor="widen")
+    buildLoads64("ldrh", "LDRH64", 2, False)
+    buildLoads64("ldrsh", "LDRSHW64", 2, True)
+    buildLoads64("ldrsh", "LDRSHX64", 2, True, flavor="widen")
+    buildLoads64("ldrsw", "LDRSW64", 4, True, flavor="widen")
+    buildLoads64("ldr", "LDRW64", 4, False)
+    buildLoads64("ldr", "LDRX64", 8, False)
+    buildLoads64("ldr", "LDRBFP64", 1, False, flavor="fp")
+    buildLoads64("ldr", "LDRHFP64", 2, False, flavor="fp")
+    buildLoads64("ldr", "LDRSFP64", 4, False, flavor="fp")
+    buildLoads64("ldr", "LDRDFP64", 8, False, flavor="fp")
+
+    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="dprefetch").emit()
+    LoadReg64("prfm", "PRFM64_REG", 8, flavor="dprefetch").emit()
+    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True, flavor="dprefetch").emit()
+    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="dprefetch").emit()
+
+    LoadImm64("ldurb", "LDURB64_IMM", 1, False).emit()
+    LoadImm64("ldursb", "LDURSBW64_IMM", 1, True).emit()
+    LoadImm64("ldursb", "LDURSBX64_IMM", 1, True, flavor="widen").emit()
+    LoadImm64("ldurh", "LDURH64_IMM", 2, False).emit()
+    LoadImm64("ldursh", "LDURSHW64_IMM", 2, True).emit()
+    LoadImm64("ldursh", "LDURSHX64_IMM", 2, True, flavor="widen").emit()
+    LoadImm64("ldursw", "LDURSW64_IMM", 4, True, flavor="widen").emit()
+    LoadImm64("ldur", "LDURW64_IMM", 4, False).emit()
+    LoadImm64("ldur", "LDURX64_IMM", 8, False).emit()
+    LoadImm64("ldur", "LDURBFP64_IMM", 1, flavor="fp").emit()
+    LoadImm64("ldur", "LDURHFP64_IMM", 2, flavor="fp").emit()
+    LoadImm64("ldur", "LDURSFP64_IMM", 4, flavor="fp").emit()
+    LoadImm64("ldur", "LDURDFP64_IMM", 8, flavor="fp").emit()
+
+    LoadImm64("ldtrb", "LDTRB64_IMM", 1, False, True).emit()
+    LoadImm64("ldtrsb", "LDTRSBW64_IMM", 1, True, True).emit()
+    LoadImm64("ldtrsb", "LDTRSBX64_IMM", 1, True, True, flavor="widen").emit()
+    LoadImm64("ldtrh", "LDTRH64_IMM", 2, False, True).emit()
+    LoadImm64("ldtrsh", "LDTRSHW64_IMM", 2, True, True).emit()
+    LoadImm64("ldtrsh", "LDTRSHX64_IMM", 2, True, True, flavor="widen").emit()
+    LoadImm64("ldtrsw", "LDTRSW64_IMM", 4, True, flavor="widen").emit()
+    LoadImm64("ldtr", "LDTRW64_IMM", 4, False, True).emit()
+    LoadImm64("ldtr", "LDTRX64_IMM", 8, False, True).emit()
+
+    LoadLit64("ldrsw", "LDRSWL64_LIT", 4, True, \
+              literal=True, flavor="widen").emit()
+    LoadLit64("ldr", "LDRWL64_LIT", 4, False, literal=True).emit()
+    LoadLit64("ldr", "LDRXL64_LIT", 8, False, literal=True).emit()
+    LoadLit64("ldr", "LDRSFP64_LIT", 4, literal=True, flavor="fp").emit()
+    LoadLit64("ldr", "LDRDFP64_LIT", 8, literal=True, flavor="fp").emit()
+
+    LoadRaw64("ldar", "LDARX64", 8, flavor="acquire").emit()
+    LoadRaw64("ldar", "LDARW64", 4, flavor="acquire").emit()
+    LoadRaw64("ldarh", "LDARH64", 2, flavor="acquire").emit()
+    LoadRaw64("ldarb", "LDARB64", 1, flavor="acquire").emit()
+
+    LoadEx64("ldaxr", "LDAXRX64", 8, flavor="acex").emit()
+    LoadEx64("ldaxr", "LDAXRW64", 4, flavor="acex").emit()
+    LoadEx64("ldaxrh", "LDAXRH64", 2, flavor="acex").emit()
+    LoadEx64("ldaxrb", "LDAXRB64", 1, flavor="acex").emit()
+
+    LoadEx64("ldxr", "LDXRX64", 8, flavor="exclusive").emit()
+    LoadEx64("ldxr", "LDXRW64", 4, flavor="exclusive").emit()
+    LoadEx64("ldxrh", "LDXRH64", 2, flavor="exclusive").emit()
+    LoadEx64("ldxrb", "LDXRB64", 1, flavor="exclusive").emit()
+
+    class LoadImmU64(LoadImm64):
+        decConstBase = 'LoadStoreImmU64'
+        micro = True
+
+    class LoadImmDU64(LoadImmInst64, LoadDouble64):
+        decConstBase = 'LoadStoreImmDU64'
+        base = 'ArmISA::MemoryDImm64'
+        micro = True
+        post = False
+        writeback = False
+
+    class LoadImmDouble64(LoadImmInst64, LoadDouble64):
+        decConstBase = 'LoadStoreImmDU64'
+        base = 'ArmISA::MemoryDImm64'
+        micro = False
+        post = False
+        writeback = False
+
+    class LoadRegU64(LoadReg64):
+        decConstBase = 'LoadStoreRegU64'
+        micro = True
+
+    class LoadLitU64(LoadLit64):
+        decConstBase = 'LoadStoreLitU64'
+        micro = True
+
+    LoadImmDouble64("ldaxp", "LDAXPW64", 4, flavor="acexp").emit()
+    LoadImmDouble64("ldaxp", "LDAXPX64", 8, flavor="acexp").emit()
+    LoadImmDouble64("ldxp", "LDXPW64", 4, flavor="exp").emit()
+    LoadImmDouble64("ldxp", "LDXPX64", 8, flavor="exp").emit()
+
+    LoadImmU64("ldrxi_uop", "MicroLdrXImmUop", 8).emit()
+    LoadRegU64("ldrxr_uop", "MicroLdrXRegUop", 8).emit()
+    LoadLitU64("ldrxl_uop", "MicroLdrXLitUop", 8, literal=True).emit()
+    LoadImmU64("ldrfpxi_uop", "MicroLdrFpXImmUop", 8, flavor="fp").emit()
+    LoadRegU64("ldrfpxr_uop", "MicroLdrFpXRegUop", 8, flavor="fp").emit()
+    LoadLitU64("ldrfpxl_uop", "MicroLdrFpXLitUop", 8, literal=True,
+               flavor="fp").emit()
+    LoadImmU64("ldrqbfpxi_uop", "MicroLdrQBFpXImmUop",
+               16, flavor="fp", top = False).emit()
+    LoadRegU64("ldrqbfpxr_uop", "MicroLdrQBFpXRegUop",
+               16, flavor="fp", top = False).emit()
+    LoadLitU64("ldrqbfpxl_uop", "MicroLdrQBFpXLitUop",
+               16, literal=True, flavor="fp", top = False).emit()
+    LoadImmU64("ldrqtfpxi_uop", "MicroLdrQTFpXImmUop",
+               16, flavor="fp", top = True).emit()
+    LoadRegU64("ldrqtfpxr_uop", "MicroLdrQTFpXRegUop",
+               16, flavor="fp", top = True).emit()
+    LoadLitU64("ldrqtfpxl_uop", "MicroLdrQTFpXLitUop",
+               16, literal=True, flavor="fp", top = True).emit()
+    LoadImmDU64("ldrduxi_uop", "MicroLdrDUXImmUop", 4, sign=False).emit()
+    LoadImmDU64("ldrdsxi_uop", "MicroLdrDSXImmUop", 4, sign=True).emit()
+    LoadImmDU64("ldrdfpxi_uop", "MicroLdrDFpXImmUop", 4, flavor="fp").emit()
+}};

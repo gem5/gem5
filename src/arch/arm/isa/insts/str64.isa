@@ -1,0 +1,372 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2011-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    class StoreInst64(LoadStoreInst):
+        execBase = 'Store64'
+        micro = False
+
+        def __init__(self, mnem, Name, size=4, user=False, flavor="normal",
+                     top = False):
+            super(StoreInst64, self).__init__()
+
+            self.name = mnem
+            self.Name = Name
+            self.size = size
+            self.user = user
+            self.flavor = flavor
+            self.top = top
+
+            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.instFlags = []
+            self.codeBlobs = { "postacc_code" : "" }
+
+            # Add memory request flags where necessary
+            if self.user:
+                self.memFlags.append("ArmISA::TLB::UserMode")
+
+            if self.flavor in ("relexp", "exp"):
+                # For exclusive pair ops alignment check is based on total size
+                self.memFlags.append("%d" % int(math.log(self.size, 2) + 1))
+            elif not (self.size == 16 and self.top):
+                # Only the first microop should perform alignment checking.
+                self.memFlags.append("%d" % int(math.log(self.size, 2)))
+
+            if self.flavor not in ("release", "relex", "exclusive",
+                                   "relexp", "exp"):
+                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+
+            if self.micro:
+                self.instFlags.append("IsMicroop")
+
+            if self.flavor in ("release", "relex", "relexp"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
+            if self.flavor in ("relex", "exclusive", "exp", "relexp"):
+                self.instFlags.append("IsStoreConditional")
+                self.memFlags.append("Request::LLSC")
+
+        def emitHelper(self, base = 'Memory64', wbDecl = None):
+            global header_output, decoder_output, exec_output
+
+            # If this is a microop itself, don't allow anything that would
+            # require further microcoding.
+            if self.micro:
+                assert not wbDecl
+
+            fa_code = None
+            if not self.micro and self.flavor in ("normal", "release"):
+                fa_code = '''
+                    fault->annotate(ArmFault::SAS, %s);
+                    fault->annotate(ArmFault::SSE, false);
+                    fault->annotate(ArmFault::SRT, dest);
+                    fault->annotate(ArmFault::SF, %s);
+                    fault->annotate(ArmFault::AR, %s);
+                ''' % ("0" if self.size == 1 else
+                       "1" if self.size == 2 else
+                       "2" if self.size == 4 else "3",
+                       "true" if self.size == 8 else "false",
+                       "true" if self.flavor == "release" else "false")
+
+            (newHeader, newDecoder, newExec) = \
+                self.fillTemplates(self.name, self.Name, self.codeBlobs,
+                                   self.memFlags, self.instFlags,
+                                   base, wbDecl, faCode=fa_code)
+
+            header_output += newHeader
+            decoder_output += newDecoder
+            exec_output += newExec
+
+        def buildEACode(self):
+            # Address computation
+            eaCode = ""
+            if self.flavor == "fp":
+                eaCode += vfp64EnabledCheckCode
+
+            eaCode += SPAlignmentCheckCode + "EA = XBase"
+            if self.size == 16:
+                if self.top:
+                    eaCode += " + (isBigEndian64(xc->tcBase()) ? 0 : 8)"
+                else:
+                    eaCode += " + (isBigEndian64(xc->tcBase()) ? 8 : 0)"
+            if not self.post:
+                eaCode += self.offset
+            eaCode += ";"
+
+            self.codeBlobs["ea_code"] = eaCode
+
+
+    class StoreImmInst64(StoreInst64):
+        def __init__(self, *args, **kargs):
+            super(StoreImmInst64, self).__init__(*args, **kargs)
+            self.offset = "+ imm"
+
+            self.wbDecl = "MicroAddXiUop(machInst, base, base, imm);"
+
+    class StoreRegInst64(StoreInst64):
+        def __init__(self, *args, **kargs):
+            super(StoreRegInst64, self).__init__(*args, **kargs)
+            self.offset = "+ extendReg64(XOffset, type, shiftAmt, 64)"
+
+            self.wbDecl = \
+                "MicroAddXERegUop(machInst, base, base, " + \
+                "                 offset, type, shiftAmt);"
+
+    class StoreRawRegInst64(StoreInst64):
+        def __init__(self, *args, **kargs):
+            super(StoreRawRegInst64, self).__init__(*args, **kargs)
+            self.offset = ""
+
+    class StoreSingle64(StoreInst64):
+        def emit(self):
+            self.buildEACode()
+
+            # Code that actually handles the access
+            if self.flavor == "fp":
+                if self.size in (1, 2, 4):
+                    accCode = '''
+                        Mem%(suffix)s =
+                            cSwap(AA64FpDestP0%(suffix)s, isBigEndian64(xc->tcBase()));
+                    '''
+                elif self.size == 8 or (self.size == 16 and not self.top):
+                    accCode = '''
+                        uint64_t data = AA64FpDestP1_uw;
+                        data = (data << 32) | AA64FpDestP0_uw;
+                        Mem%(suffix)s = cSwap(data, isBigEndian64(xc->tcBase()));
+                    '''
+                elif self.size == 16 and self.top:
+                    accCode = '''
+                        uint64_t data = AA64FpDestP3_uw;
+                        data = (data << 32) | AA64FpDestP2_uw;
+                        Mem%(suffix)s = cSwap(data, isBigEndian64(xc->tcBase()));
+                    '''
+            else:
+                accCode = \
+                    'Mem%(suffix)s = cSwap(XDest%(suffix)s, isBigEndian64(xc->tcBase()));'
+            if self.size == 16:
+                accCode = accCode % \
+                    { "suffix" : buildMemSuffix(False, 8) }
+            else:
+                accCode = accCode % \
+                    { "suffix" : buildMemSuffix(False, self.size) }
+
+            self.codeBlobs["memacc_code"] = accCode
+
+            if self.flavor in ("relex", "exclusive"):
+                self.instFlags.append("IsStoreConditional")
+                self.memFlags.append("Request::LLSC")
+
+            # Push it out to the output files
+            wbDecl = None
+            if self.writeback and not self.micro:
+                wbDecl = self.wbDecl
+            self.emitHelper(self.base, wbDecl)
+
+    class StoreDouble64(StoreInst64):
+        def emit(self):
+            self.buildEACode()
+
+            # Code that actually handles the access
+            if self.flavor == "fp":
+                accCode = '''
+                    uint64_t data = AA64FpDest2P0_uw;
+                    data = (data << 32) | AA64FpDestP0_uw;
+                    Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
+                '''
+            else:
+                if self.size == 4:
+                    accCode = '''
+                        uint64_t data = XDest2_uw;
+                        data = (data << 32) | XDest_uw;
+                        Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
+                    '''
+                elif self.size == 8:
+                    accCode = '''
+                        // This temporary needs to be here so that the parser
+                        // will correctly identify this instruction as a store.
+                        Twin64_t temp;
+                        temp.a = XDest_ud;
+                        temp.b = XDest2_ud;
+                        Mem_tud = temp;
+                    '''
+            self.codeBlobs["memacc_code"] = accCode
+
+            # Push it out to the output files
+            wbDecl = None
+            if self.writeback and not self.micro:
+                wbDecl = self.wbDecl
+            self.emitHelper(self.base, wbDecl)
+
+    class StoreImm64(StoreImmInst64, StoreSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryImm64'
+        writeback = False
+        post = False
+
+    class StorePre64(StoreImmInst64, StoreSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryPreIndex64'
+        writeback = True
+        post = False
+
+    class StorePost64(StoreImmInst64, StoreSingle64):
+        decConstBase = 'LoadStoreImm64'
+        base = 'ArmISA::MemoryPostIndex64'
+        writeback = True
+        post = True
+
+    class StoreReg64(StoreRegInst64, StoreSingle64):
+        decConstBase = 'LoadStoreReg64'
+        base = 'ArmISA::MemoryReg64'
+        writeback = False
+        post = False
+
+    class StoreRaw64(StoreRawRegInst64, StoreSingle64):
+        decConstBase = 'LoadStoreRaw64'
+        base = 'ArmISA::MemoryRaw64'
+        writeback = False
+        post = False
+
+    class StoreEx64(StoreRawRegInst64, StoreSingle64):
+        decConstBase = 'LoadStoreEx64'
+        base = 'ArmISA::MemoryEx64'
+        writeback = False
+        post = False
+        execBase = 'StoreEx64'
+        def __init__(self, *args, **kargs):
+            super(StoreEx64, self).__init__(*args, **kargs)
+            self.codeBlobs["postacc_code"] = "XResult = !writeResult;"
+
+    def buildStores64(mnem, NameBase, size, flavor="normal"):
+        StoreImm64(mnem, NameBase + "_IMM", size, flavor=flavor).emit()
+        StorePre64(mnem, NameBase + "_PRE", size, flavor=flavor).emit()
+        StorePost64(mnem, NameBase + "_POST", size, flavor=flavor).emit()
+        StoreReg64(mnem, NameBase + "_REG", size, flavor=flavor).emit()
+
+    buildStores64("strb", "STRB64", 1)
+    buildStores64("strh", "STRH64", 2)
+    buildStores64("str", "STRW64", 4)
+    buildStores64("str", "STRX64", 8)
+    buildStores64("str", "STRBFP64", 1, flavor="fp")
+    buildStores64("str", "STRHFP64", 2, flavor="fp")
+    buildStores64("str", "STRSFP64", 4, flavor="fp")
+    buildStores64("str", "STRDFP64", 8, flavor="fp")
+
+    StoreImm64("sturb", "STURB64_IMM", 1).emit()
+    StoreImm64("sturh", "STURH64_IMM", 2).emit()
+    StoreImm64("stur", "STURW64_IMM", 4).emit()
+    StoreImm64("stur", "STURX64_IMM", 8).emit()
+    StoreImm64("stur", "STURBFP64_IMM", 1, flavor="fp").emit()
+    StoreImm64("stur", "STURHFP64_IMM", 2, flavor="fp").emit()
+    StoreImm64("stur", "STURSFP64_IMM", 4, flavor="fp").emit()
+    StoreImm64("stur", "STURDFP64_IMM", 8, flavor="fp").emit()
+
+    StoreImm64("sttrb", "STTRB64_IMM", 1, user=True).emit()
+    StoreImm64("sttrh", "STTRH64_IMM", 2, user=True).emit()
+    StoreImm64("sttr", "STTRW64_IMM", 4, user=True).emit()
+    StoreImm64("sttr", "STTRX64_IMM", 8, user=True).emit()
+
+    StoreRaw64("stlr", "STLRX64", 8, flavor="release").emit()
+    StoreRaw64("stlr", "STLRW64", 4, flavor="release").emit()
+    StoreRaw64("stlrh", "STLRH64", 2, flavor="release").emit()
+    StoreRaw64("stlrb", "STLRB64", 1, flavor="release").emit()
+
+    StoreEx64("stlxr", "STLXRX64", 8, flavor="relex").emit()
+    StoreEx64("stlxr", "STLXRW64", 4, flavor="relex").emit()
+    StoreEx64("stlxrh", "STLXRH64", 2, flavor="relex").emit()
+    StoreEx64("stlxrb", "STLXRB64", 1, flavor="relex").emit()
+
+    StoreEx64("stxr", "STXRX64", 8, flavor="exclusive").emit()
+    StoreEx64("stxr", "STXRW64", 4, flavor="exclusive").emit()
+    StoreEx64("stxrh", "STXRH64", 2, flavor="exclusive").emit()
+    StoreEx64("stxrb", "STXRB64", 1, flavor="exclusive").emit()
+
+    class StoreImmU64(StoreImm64):
+        decConstBase = 'LoadStoreImmU64'
+        micro = True
+
+    class StoreImmDU64(StoreImmInst64, StoreDouble64):
+        decConstBase = 'LoadStoreImmDU64'
+        base = 'ArmISA::MemoryDImm64'
+        micro = True
+        post = False
+        writeback = False
+
+    class StoreImmDEx64(StoreImmInst64, StoreDouble64):
+        execBase = 'StoreEx64'
+        decConstBase = 'StoreImmDEx64'
+        base = 'ArmISA::MemoryDImmEx64'
+        micro = False
+        post = False
+        writeback = False
+        def __init__(self, *args, **kargs):
+            super(StoreImmDEx64, self).__init__(*args, **kargs)
+            self.codeBlobs["postacc_code"] = "XResult = !writeResult;"
+
+    class StoreRegU64(StoreReg64):
+        decConstBase = 'LoadStoreRegU64'
+        micro = True
+
+    StoreImmDEx64("stlxp", "STLXPW64", 4, flavor="relexp").emit()
+    StoreImmDEx64("stlxp", "STLXPX64", 8, flavor="relexp").emit()
+    StoreImmDEx64("stxp", "STXPW64", 4, flavor="exp").emit()
+    StoreImmDEx64("stxp", "STXPX64", 8, flavor="exp").emit()
+
+    StoreImmU64("strxi_uop", "MicroStrXImmUop", 8).emit()
+    StoreRegU64("strxr_uop", "MicroStrXRegUop", 8).emit()
+    StoreImmU64("strfpxi_uop", "MicroStrFpXImmUop", 8, flavor="fp").emit()
+    StoreRegU64("strfpxr_uop", "MicroStrFpXRegUop", 8, flavor="fp").emit()
+    StoreImmU64("strqbfpxi_uop", "MicroStrQBFpXImmUop",
+                16, flavor="fp", top=False).emit()
+    StoreRegU64("strqbfpxr_uop", "MicroStrQBFpXRegUop",
+                16, flavor="fp", top=False).emit()
+    StoreImmU64("strqtfpxi_uop", "MicroStrQTFpXImmUop",
+                16, flavor="fp", top=True).emit()
+    StoreRegU64("strqtfpxr_uop", "MicroStrQTFpXRegUop",
+                16, flavor="fp", top=True).emit()
+    StoreImmDU64("strdxi_uop", "MicroStrDXImmUop", 4).emit()
+    StoreImmDU64("strdfpxi_uop", "MicroStrDFpXImmUop", 4, flavor="fp").emit()
+
+}};

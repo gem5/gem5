@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -191,14 +191,17 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
-                            { "code": vmsrEnabledCheckCode + \
-                                      "MiscDest = Op1;",
+    vmsrCode = vmsrEnabledCheckCode + '''
+    MiscDest = Op1;
+    '''
+
+    vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegImmOp",
+                            { "code": vmsrCode,
                               "predicate_test": predicateTest,
                               "op_class": "SimdFloatMiscOp" },
                              ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += FpRegRegOpDeclare.subst(vmsrIop);
-    decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
+    header_output += FpRegRegImmOpDeclare.subst(vmsrIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
 
     vmsrFpscrCode = vmsrEnabledCheckCode + '''
@@ -215,14 +218,36 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmsrFpscrIop);
     exec_output += PredOpExecute.subst(vmsrFpscrIop);
 
-    vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
-                            { "code": vmrsEnabledCheckCode + \
-                                    "Dest = MiscOp1;",
+    vmrsCode = vmrsEnabledCheckCode + '''
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr;
+    if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+        HCR hcr = Hcr;
+        bool hypTrap = false;
+        switch(xc->tcBase()->flattenMiscIndex(op1)) {
+          case MISCREG_FPSID:
+            hypTrap = hcr.tid0;
+            break;
+          case MISCREG_MVFR0:
+          case MISCREG_MVFR1:
+            hypTrap = hcr.tid3;
+            break;
+        }
+        if (hypTrap) {
+            return new HypervisorTrap(machInst, imm,
+                EC_TRAPPED_CP10_MRC_VMRS);
+        }
+    }
+    Dest = MiscOp1;
+    '''
+
+    vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegImmOp",
+                            { "code": vmrsCode,
                               "predicate_test": predicateTest,
                               "op_class": "SimdFloatMiscOp" },
                             ["IsSerializeBefore"])
-    header_output += FpRegRegOpDeclare.subst(vmrsIop);
-    decoder_output += FpRegRegOpConstructor.subst(vmrsIop);
+    header_output += FpRegRegImmOpDeclare.subst(vmrsIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
 
     vmrsFpscrIop = InstObjParams("vmrs", "VmrsFpscr", "FpRegRegOp",
@@ -323,7 +348,7 @@ let {{
     decoder_output  += FpRegRegOpConstructor.subst(vmovRegQIop);
     exec_output += PredOpExecute.subst(vmovRegQIop);
 
-    vmovCoreRegBCode = vfpEnabledCheckCode + '''
+    vmovCoreRegBCode = simdEnabledCheckCode + '''
         FpDest_uw = insertBits(FpDest_uw, imm * 8 + 7, imm * 8, Op1_ub);
     '''
     vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "FpRegRegImmOp",
@@ -334,7 +359,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegBIop);
     exec_output += PredOpExecute.subst(vmovCoreRegBIop);
 
-    vmovCoreRegHCode = vfpEnabledCheckCode + '''
+    vmovCoreRegHCode = simdEnabledCheckCode + '''
         FpDest_uw = insertBits(FpDest_uw, imm * 16 + 15, imm * 16, Op1_uh);
     '''
     vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "FpRegRegImmOp",
@@ -453,6 +478,17 @@ let {{
     singleCode = singleSimpleCode + '''
         FpscrExc = fpscr;
     '''
+    singleTernOp = vfpEnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        float cOp1 = FpOp1;
+        float cOp2 = FpOp2;
+        float cOp3 = FpDestP0;
+        FpDestP0   = ternaryOp(fpscr, %(palam)s, %(op)s,
+                               fpscr.fz, fpscr.dn, fpscr.rMode);
+        finishVfp(fpscr, state, fpscr.fz);
+        FpscrExc = fpscr;
+    '''
     singleBinOp = "binaryOp(fpscr, FpOp1, FpOp2," + \
                 "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
     singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
@@ -461,6 +497,19 @@ let {{
         double dest = %(op)s;
         FpDestP0_uw = dblLow(dest);
         FpDestP1_uw = dblHi(dest);
+        FpscrExc = fpscr;
+    '''
+    doubleTernOp = vfpEnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        double cOp1  = dbl(FpOp1P0_uw, FpOp1P1_uw);
+        double cOp2  = dbl(FpOp2P0_uw, FpOp2P1_uw);
+        double cOp3  = dbl(FpDestP0_uw, FpDestP1_uw);
+        double cDest = ternaryOp(fpscr, %(palam)s, %(op)s,
+                                 fpscr.fz, fpscr.dn, fpscr.rMode);
+        FpDestP0_uw  = dblLow(cDest);
+        FpDestP1_uw  = dblHi(cDest);
+        finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
     doubleBinOp = '''
@@ -472,6 +521,37 @@ let {{
         unaryOp(fpscr, dbl(FpOp1P0_uw, FpOp1P1_uw), %(func)s,
                 fpscr.fz, fpscr.rMode)
     '''
+
+    def buildTernaryFpOp(Name, base, opClass, singleOp, doubleOp, paramStr):
+        global header_output, decoder_output, exec_output
+
+        code = singleTernOp % { "op": singleOp, "palam": paramStr }
+        sIop = InstObjParams(Name.lower() + "s", Name + "S", base,
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
+        code = doubleTernOp % { "op": doubleOp, "palam": paramStr }
+        dIop = InstObjParams(Name.lower() + "d", Name + "D", base,
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
+
+        declareTempl     = eval(base + "Declare");
+        constructorTempl = eval(base + "Constructor");
+
+        for iop in sIop, dIop:
+            header_output  += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output    += PredOpExecute.subst(iop)
+
+    buildTernaryFpOp("Vfma",  "FpRegRegRegOp", "SimdFloatMultAccOp",
+                     "fpMulAdd<float>", "fpMulAdd<double>", " cOp1, cOp2,  cOp3" )
+    buildTernaryFpOp("Vfms",  "FpRegRegRegOp", "SimdFloatMultAccOp",
+                     "fpMulAdd<float>", "fpMulAdd<double>", "-cOp1, cOp2,  cOp3" )
+    buildTernaryFpOp("Vfnma", "FpRegRegRegOp", "SimdFloatMultAccOp",
+                     "fpMulAdd<float>", "fpMulAdd<double>", "-cOp1, cOp2, -cOp3" )
+    buildTernaryFpOp("Vfnms", "FpRegRegRegOp", "SimdFloatMultAccOp",
+                     "fpMulAdd<float>", "fpMulAdd<double>", " cOp1, cOp2, -cOp3" )
 
     def buildBinFpOp(name, Name, base, opClass, singleOp, doubleOp):
         global header_output, decoder_output, exec_output
@@ -830,7 +910,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_uw = vfpFpSToFixed(FpOp1, false, false, 0, false);
+        FpDest_uw = vfpFpToFixed<float>(FpOp1, false, 32, 0, false);
         __asm__ __volatile__("" :: "m" (FpDest_uw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -849,7 +929,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t result = vfpFpDToFixed(cOp1, false, false, 0, false);
+        uint64_t result = vfpFpToFixed<double>(cOp1, false, 32, 0, false);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
@@ -868,7 +948,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_sw = vfpFpSToFixed(FpOp1, true, false, 0, false);
+        FpDest_sw = vfpFpToFixed<float>(FpOp1, true, 32, 0, false);
         __asm__ __volatile__("" :: "m" (FpDest_sw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -887,7 +967,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        int64_t result = vfpFpDToFixed(cOp1, true, false, 0, false);
+        int64_t result = vfpFpToFixed<double>(cOp1, true, 32, 0, false);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
@@ -907,7 +987,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_uw = vfpFpSToFixed(FpOp1, false, false, 0);
+        FpDest_uw = vfpFpToFixed<float>(FpOp1, false, 32, 0);
         __asm__ __volatile__("" :: "m" (FpDest_uw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -927,7 +1007,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t result = vfpFpDToFixed(cOp1, false, false, 0);
+        uint64_t result = vfpFpToFixed<double>(cOp1, false, 32, 0);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
@@ -947,7 +1027,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_sw = vfpFpSToFixed(FpOp1, true, false, 0);
+        FpDest_sw = vfpFpToFixed<float>(FpOp1, true, 32, 0);
         __asm__ __volatile__("" :: "m" (FpDest_sw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -967,7 +1047,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        int64_t result = vfpFpDToFixed(cOp1, true, false, 0);
+        int64_t result = vfpFpToFixed<double>(cOp1, true, 32, 0);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
@@ -1333,7 +1413,7 @@ let {{
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_sw = vfpFpSToFixed(FpOp1, true, false, imm);
+        FpDest_sw = vfpFpToFixed<float>(FpOp1, true, 32, imm);
         __asm__ __volatile__("" :: "m" (FpDest_sw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1352,7 +1432,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t mid = vfpFpDToFixed(cOp1, true, false, imm);
+        uint64_t mid = vfpFpToFixed<double>(cOp1, true, 32, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = mid;
@@ -1372,7 +1452,7 @@ let {{
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_uw = vfpFpSToFixed(FpOp1, false, false, imm);
+        FpDest_uw = vfpFpToFixed<float>(FpOp1, false, 32, imm);
         __asm__ __volatile__("" :: "m" (FpDest_uw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1391,7 +1471,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t mid = vfpFpDToFixed(cOp1, false, false, imm);
+        uint64_t mid = vfpFpToFixed<double>(cOp1, false, 32, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = mid;
@@ -1410,7 +1490,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1_sw) : "m" (FpOp1_sw));
-        FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_sw, false, imm);
+        FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_sw, 32, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1428,7 +1508,7 @@ let {{
         uint64_t mid = ((uint64_t)FpOp1P0_uw | ((uint64_t)FpOp1P1_uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
-        double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, false, imm);
+        double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, 32, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = dblLow(cDest);
@@ -1447,7 +1527,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1_uw) : "m" (FpOp1_uw));
-        FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_uw, false, imm);
+        FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_uw, 32, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1465,7 +1545,7 @@ let {{
         uint64_t mid = ((uint64_t)FpOp1P0_uw | ((uint64_t)FpOp1P1_uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
-        double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, false, imm);
+        double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, 32, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = dblLow(cDest);
@@ -1485,7 +1565,7 @@ let {{
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_sh = vfpFpSToFixed(FpOp1, true, true, imm);
+        FpDest_sh = vfpFpToFixed<float>(FpOp1, true, 16, imm);
         __asm__ __volatile__("" :: "m" (FpDest_sh));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1505,7 +1585,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t result = vfpFpDToFixed(cOp1, true, true, imm);
+        uint64_t result = vfpFpToFixed<double>(cOp1, true, 16, imm);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
@@ -1526,7 +1606,7 @@ let {{
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_uh = vfpFpSToFixed(FpOp1, false, true, imm);
+        FpDest_uh = vfpFpToFixed<float>(FpOp1, false, 16, imm);
         __asm__ __volatile__("" :: "m" (FpDest_uh));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1546,7 +1626,7 @@ let {{
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t mid = vfpFpDToFixed(cOp1, false, true, imm);
+        uint64_t mid = vfpFpToFixed<double>(cOp1, false, 16, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = mid;
@@ -1566,7 +1646,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1_sh) : "m" (FpOp1_sh));
-        FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_sh, true, imm);
+        FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_sh, 16, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1585,7 +1665,7 @@ let {{
         uint64_t mid = ((uint64_t)FpOp1P0_uw | ((uint64_t)FpOp1P1_uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
-        double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, true, imm);
+        double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, 16, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = dblLow(cDest);
@@ -1605,7 +1685,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1_uh) : "m" (FpOp1_uh));
-        FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_uh, true, imm);
+        FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1_uh, 16, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
@@ -1624,7 +1704,7 @@ let {{
         uint64_t mid = ((uint64_t)FpOp1P0_uw | ((uint64_t)FpOp1P1_uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
-        double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, true, imm);
+        double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, 16, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = dblLow(cDest);

@@ -94,6 +94,9 @@ def addCommonOptions(parser):
                       default="512MB",
                       help="Specify the physical memory size (single memory)")
 
+    parser.add_option("-l", "--lpae", action="store_true")
+    parser.add_option("-V", "--virtualisation", action="store_true")
+
     # Cache Options
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")
@@ -197,6 +200,14 @@ def addCommonOptions(parser):
     parser.add_option("--at-instruction", action="store_true", default=False,
         help="""Treat value of --checkpoint-restore or --take-checkpoint as a
                 number of instructions.""")
+    parser.add_option("--spec-input", default="ref", type="choice",
+                      choices=["ref", "test", "train", "smred", "mdred",
+                               "lgred"],
+                      help="Input set size for SPEC CPU2000 benchmarks.")
+    parser.add_option("--arm-iset", default="arm", type="choice",
+                      choices=["arm", "thumb", "aarch64"],
+                      help="ARM instruction set.")
+
 
 def addSEOptions(parser):
     # Benchmark options

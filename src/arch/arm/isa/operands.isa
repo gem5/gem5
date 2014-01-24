@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -80,6 +80,31 @@ let {{
             xc->%(func)s(this, %(op_idx)s, %(final_val)s);
         }
     '''
+    aarch64Read = '''
+        ((xc->%(func)s(this, %(op_idx)s)) & mask(intWidth))
+    '''
+    aarch64Write = '''
+        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(intWidth))
+    '''
+    aarchX64Read = '''
+        ((xc->%(func)s(this, %(op_idx)s)) & mask(aarch64 ? 64 : 32))
+    '''
+    aarchX64Write = '''
+        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(aarch64 ? 64 : 32))
+    '''
+    aarchW64Read = '''
+        ((xc->%(func)s(this, %(op_idx)s)) & mask(32))
+    '''
+    aarchW64Write = '''
+        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(32))
+    '''
+    cntrlNsBankedWrite = '''
+        xc->setMiscReg(flattenMiscRegNsBanked(dest, xc->tcBase()), %(final_val)s)
+    '''
+
+    cntrlNsBankedRead = '''
+        xc->readMiscReg(flattenMiscRegNsBanked(op1, xc->tcBase()))
+    '''
 
     #PCState operands need to have a sorting index (the number at the end)
     #less than all the integer registers which might update the PC. That way
@@ -98,6 +123,18 @@ let {{
     def intReg(idx):
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
                 maybePCRead, maybePCWrite)
+
+    def intReg64(idx):
+        return ('IntReg', 'ud', idx, 'IsInteger', srtNormal,
+                aarch64Read, aarch64Write)
+
+    def intRegX64(idx, id = srtNormal):
+        return ('IntReg', 'ud', idx, 'IsInteger', id,
+                aarchX64Read, aarchX64Write)
+
+    def intRegW64(idx, id = srtNormal):
+        return ('IntReg', 'ud', idx, 'IsInteger', id,
+                aarchW64Read, aarchW64Write)
 
     def intRegNPC(idx):
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal)
@@ -120,26 +157,49 @@ let {{
     def cntrlReg(idx, id = srtNormal, type = 'uw'):
         return ('ControlReg', type, idx, None, id)
 
+    def cntrlNsBankedReg(idx, id = srtNormal, type = 'uw'):
+        return ('ControlReg', type, idx, (None, None, 'IsControl'), id, cntrlNsBankedRead, cntrlNsBankedWrite)
+
+    def cntrlNsBankedReg64(idx, id = srtNormal, type = 'ud'):
+        return ('ControlReg', type, idx, (None, None, 'IsControl'), id, cntrlNsBankedRead, cntrlNsBankedWrite)
+
     def cntrlRegNC(idx, id = srtNormal, type = 'uw'):
         return ('ControlReg', type, idx, None, id)
 
     def pcStateReg(idx, id):
-        return ('PCState', 'uw', idx, (None, None, 'IsControl'), id)
+        return ('PCState', 'ud', idx, (None, None, 'IsControl'), id)
 }};
 
 def operands {{
     #Abstracted integer reg operands
     'Dest': intReg('dest'),
+    'Dest64': intReg64('dest'),
+    'XDest': intRegX64('dest'),
+    'WDest': intRegW64('dest'),
     'IWDest': intRegIWPC('dest'),
     'AIWDest': intRegAIWPC('dest'),
     'Dest2': intReg('dest2'),
+    'XDest2': intRegX64('dest2'),
+    'FDest2': floatReg('dest2'),
     'Result': intReg('result'),
+    'XResult': intRegX64('result'),
+    'XBase': intRegX64('base', id = srtBase),
     'Base': intRegAPC('base', id = srtBase),
+    'XOffset': intRegX64('offset'),
     'Index': intReg('index'),
     'Shift': intReg('shift'),
     'Op1': intReg('op1'),
     'Op2': intReg('op2'),
     'Op3': intReg('op3'),
+    'Op164': intReg64('op1'),
+    'Op264': intReg64('op2'),
+    'Op364': intReg64('op3'),
+    'XOp1': intRegX64('op1'),
+    'XOp2': intRegX64('op2'),
+    'XOp3': intRegX64('op3'),
+    'WOp1': intRegW64('op1'),
+    'WOp2': intRegW64('op2'),
+    'WOp3': intRegW64('op3'),
     'Reg0': intReg('reg0'),
     'Reg1': intReg('reg1'),
     'Reg2': intReg('reg2'),
@@ -147,13 +207,19 @@ def operands {{
 
     #Fixed index integer reg operands
     'SpMode': intRegNPC('intRegInMode((OperatingMode)regMode, INTREG_SP)'),
+    'DecodedBankedIntReg': intRegNPC('decodeMrsMsrBankedIntRegIndex(byteMask, r)'),
     'LR': intRegNPC('INTREG_LR'),
+    'XLR': intRegX64('INTREG_X30'),
     'R7': intRegNPC('7'),
     # First four arguments are passed in registers
     'R0': intRegNPC('0'),
     'R1': intRegNPC('1'),
     'R2': intRegNPC('2'),
     'R3': intRegNPC('3'),
+    'X0': intRegX64('0'),
+    'X1': intRegX64('1'),
+    'X2': intRegX64('2'),
+    'X3': intRegX64('3'),
 
     #Pseudo integer condition code registers
     'CondCodesNZ': intRegCC('INTREG_CONDCODES_NZ'),
@@ -230,9 +296,95 @@ def operands {{
     'FpOp2P2': floatReg('(op2 + 2)'),
     'FpOp2P3': floatReg('(op2 + 3)'),
 
+    # Create AArch64 unpacked view of the FP registers
+    'AA64FpOp1P0':   floatReg('((op1 * 4) + 0)'),
+    'AA64FpOp1P1':   floatReg('((op1 * 4) + 1)'),
+    'AA64FpOp1P2':   floatReg('((op1 * 4) + 2)'),
+    'AA64FpOp1P3':   floatReg('((op1 * 4) + 3)'),
+    'AA64FpOp2P0':   floatReg('((op2 * 4) + 0)'),
+    'AA64FpOp2P1':   floatReg('((op2 * 4) + 1)'),
+    'AA64FpOp2P2':   floatReg('((op2 * 4) + 2)'),
+    'AA64FpOp2P3':   floatReg('((op2 * 4) + 3)'),
+    'AA64FpOp3P0':   floatReg('((op3 * 4) + 0)'),
+    'AA64FpOp3P1':   floatReg('((op3 * 4) + 1)'),
+    'AA64FpOp3P2':   floatReg('((op3 * 4) + 2)'),
+    'AA64FpOp3P3':   floatReg('((op3 * 4) + 3)'),
+    'AA64FpDestP0':  floatReg('((dest * 4) + 0)'),
+    'AA64FpDestP1':  floatReg('((dest * 4) + 1)'),
+    'AA64FpDestP2':  floatReg('((dest * 4) + 2)'),
+    'AA64FpDestP3':  floatReg('((dest * 4) + 3)'),
+    'AA64FpDest2P0': floatReg('((dest2 * 4) + 0)'),
+    'AA64FpDest2P1': floatReg('((dest2 * 4) + 1)'),
+    'AA64FpDest2P2': floatReg('((dest2 * 4) + 2)'),
+    'AA64FpDest2P3': floatReg('((dest2 * 4) + 3)'),
+
+    'AA64FpOp1P0V0':   floatReg('((((op1+0)) * 4) + 0)'),
+    'AA64FpOp1P1V0':   floatReg('((((op1+0)) * 4) + 1)'),
+    'AA64FpOp1P2V0':   floatReg('((((op1+0)) * 4) + 2)'),
+    'AA64FpOp1P3V0':   floatReg('((((op1+0)) * 4) + 3)'),
+
+    'AA64FpOp1P0V1':   floatReg('((((op1+1)) * 4) + 0)'),
+    'AA64FpOp1P1V1':   floatReg('((((op1+1)) * 4) + 1)'),
+    'AA64FpOp1P2V1':   floatReg('((((op1+1)) * 4) + 2)'),
+    'AA64FpOp1P3V1':   floatReg('((((op1+1)) * 4) + 3)'),
+
+    'AA64FpOp1P0V2':   floatReg('((((op1+2)) * 4) + 0)'),
+    'AA64FpOp1P1V2':   floatReg('((((op1+2)) * 4) + 1)'),
+    'AA64FpOp1P2V2':   floatReg('((((op1+2)) * 4) + 2)'),
+    'AA64FpOp1P3V2':   floatReg('((((op1+2)) * 4) + 3)'),
+
+    'AA64FpOp1P0V3':   floatReg('((((op1+3)) * 4) + 0)'),
+    'AA64FpOp1P1V3':   floatReg('((((op1+3)) * 4) + 1)'),
+    'AA64FpOp1P2V3':   floatReg('((((op1+3)) * 4) + 2)'),
+    'AA64FpOp1P3V3':   floatReg('((((op1+3)) * 4) + 3)'),
+
+    'AA64FpOp1P0V0S':   floatReg('((((op1+0)%32) * 4) + 0)'),
+    'AA64FpOp1P1V0S':   floatReg('((((op1+0)%32) * 4) + 1)'),
+    'AA64FpOp1P2V0S':   floatReg('((((op1+0)%32) * 4) + 2)'),
+    'AA64FpOp1P3V0S':   floatReg('((((op1+0)%32) * 4) + 3)'),
+
+    'AA64FpOp1P0V1S':   floatReg('((((op1+1)%32) * 4) + 0)'),
+    'AA64FpOp1P1V1S':   floatReg('((((op1+1)%32) * 4) + 1)'),
+    'AA64FpOp1P2V1S':   floatReg('((((op1+1)%32) * 4) + 2)'),
+    'AA64FpOp1P3V1S':   floatReg('((((op1+1)%32) * 4) + 3)'),
+
+    'AA64FpOp1P0V2S':   floatReg('((((op1+2)%32) * 4) + 0)'),
+    'AA64FpOp1P1V2S':   floatReg('((((op1+2)%32) * 4) + 1)'),
+    'AA64FpOp1P2V2S':   floatReg('((((op1+2)%32) * 4) + 2)'),
+    'AA64FpOp1P3V2S':   floatReg('((((op1+2)%32) * 4) + 3)'),
+
+    'AA64FpOp1P0V3S':   floatReg('((((op1+3)%32) * 4) + 0)'),
+    'AA64FpOp1P1V3S':   floatReg('((((op1+3)%32) * 4) + 1)'),
+    'AA64FpOp1P2V3S':   floatReg('((((op1+3)%32) * 4) + 2)'),
+    'AA64FpOp1P3V3S':   floatReg('((((op1+3)%32) * 4) + 3)'),
+
+    'AA64FpDestP0V0':   floatReg('((((dest+0)) * 4) + 0)'),
+    'AA64FpDestP1V0':   floatReg('((((dest+0)) * 4) + 1)'),
+    'AA64FpDestP2V0':   floatReg('((((dest+0)) * 4) + 2)'),
+    'AA64FpDestP3V0':   floatReg('((((dest+0)) * 4) + 3)'),
+
+    'AA64FpDestP0V1':   floatReg('((((dest+1)) * 4) + 0)'),
+    'AA64FpDestP1V1':   floatReg('((((dest+1)) * 4) + 1)'),
+    'AA64FpDestP2V1':   floatReg('((((dest+1)) * 4) + 2)'),
+    'AA64FpDestP3V1':   floatReg('((((dest+1)) * 4) + 3)'),
+
+    'AA64FpDestP0V0L':   floatReg('((((dest+0)%32) * 4) + 0)'),
+    'AA64FpDestP1V0L':   floatReg('((((dest+0)%32) * 4) + 1)'),
+    'AA64FpDestP2V0L':   floatReg('((((dest+0)%32) * 4) + 2)'),
+    'AA64FpDestP3V0L':   floatReg('((((dest+0)%32) * 4) + 3)'),
+
+    'AA64FpDestP0V1L':   floatReg('((((dest+1)%32) * 4) + 0)'),
+    'AA64FpDestP1V1L':   floatReg('((((dest+1)%32) * 4) + 1)'),
+    'AA64FpDestP2V1L':   floatReg('((((dest+1)%32) * 4) + 2)'),
+    'AA64FpDestP3V1L':   floatReg('((((dest+1)%32) * 4) + 3)'),
+
     #Abstracted control reg operands
     'MiscDest': cntrlReg('dest'),
     'MiscOp1': cntrlReg('op1'),
+    'MiscNsBankedDest': cntrlNsBankedReg('dest'),
+    'MiscNsBankedOp1': cntrlNsBankedReg('op1'),
+    'MiscNsBankedDest64': cntrlNsBankedReg64('dest'),
+    'MiscNsBankedOp164': cntrlNsBankedReg64('op1'),
 
     #Fixed index control regs
     'Cpsr': cntrlReg('MISCREG_CPSR', srtCpsr),
@@ -244,22 +396,41 @@ def operands {{
     'FpscrQc': cntrlRegNC('MISCREG_FPSCR_QC'),
     'FpscrExc': cntrlRegNC('MISCREG_FPSCR_EXC'),
     'Cpacr': cntrlReg('MISCREG_CPACR'),
+    'Cpacr64': cntrlReg('MISCREG_CPACR_EL1'),
     'Fpexc': cntrlRegNC('MISCREG_FPEXC'),
+    'Nsacr': cntrlReg('MISCREG_NSACR'),
+    'ElrHyp': cntrlRegNC('MISCREG_ELR_HYP'),
+    'Hcr': cntrlReg('MISCREG_HCR'),
+    'Hcr64': cntrlReg('MISCREG_HCR_EL2'),
+    'Hdcr': cntrlReg('MISCREG_HDCR'),
+    'Hcptr': cntrlReg('MISCREG_HCPTR'),
+    'CptrEl264': cntrlReg('MISCREG_CPTR_EL2'),
+    'CptrEl364': cntrlReg('MISCREG_CPTR_EL3'),
+    'Hstr': cntrlReg('MISCREG_HSTR'),
+    'Scr': cntrlReg('MISCREG_SCR'),
+    'Scr64': cntrlReg('MISCREG_SCR_EL3'),
     'Sctlr': cntrlRegNC('MISCREG_SCTLR'),
     'SevMailbox': cntrlRegNC('MISCREG_SEV_MAILBOX'),
     'LLSCLock': cntrlRegNC('MISCREG_LOCKFLAG'),
+    'Dczid' : cntrlRegNC('MISCREG_DCZID_EL0'),
 
     #Register fields for microops
     'URa' : intReg('ura'),
+    'XURa' : intRegX64('ura'),
+    'WURa' : intRegW64('ura'),
     'IWRa' : intRegIWPC('ura'),
     'Fa' : floatReg('ura'),
+    'FaP1' : floatReg('ura + 1'),
     'URb' : intReg('urb'),
+    'XURb' : intRegX64('urb'),
     'URc' : intReg('urc'),
+    'XURc' : intRegX64('urc'),
 
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), srtNormal),
 
     #PCState fields
+    'RawPC': pcStateReg('pc', srtPC),
     'PC': pcStateReg('instPC', srtPC),
     'NPC': pcStateReg('instNPC', srtPC),
     'pNPC': pcStateReg('instNPC', srtEPC),

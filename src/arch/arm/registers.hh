@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -74,11 +74,12 @@ typedef uint8_t CCReg;
 // Constants Related to the number of registers
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers
-const int NumFloatArchRegs = 64;
-const int NumFloatSpecialRegs = 8;
+const int NumFloatV7ArchRegs  = 64;
+const int NumFloatV8ArchRegs  = 128;
+const int NumFloatSpecialRegs = 32;
 
 const int NumIntRegs = NUM_INTREGS;
-const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
+const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
 const int NumCCRegs = 0;
 const int NumMiscRegs = NUM_MISCREGS;
 
@@ -89,6 +90,7 @@ const int ReturnValueReg = 0;
 const int ReturnValueReg1 = 1;
 const int ReturnValueReg2 = 2;
 const int NumArgumentRegs = 4;
+const int NumArgumentRegs64 = 8;
 const int ArgumentReg0 = 0;
 const int ArgumentReg1 = 1;
 const int ArgumentReg2 = 2;

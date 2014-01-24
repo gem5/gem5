@@ -237,6 +237,13 @@ class System : public MemObject
      */
     Addr loadAddrMask;
 
+    /** Offset that should be used for binary/symbol loading.
+     * This further allows more flexibily than the loadAddrMask allows alone in
+     * loading kernels and similar. The loadAddrOffset is applied after the
+     * loadAddrMask.
+     */
+    Addr loadAddrOffset;
+
   protected:
     uint64_t nextPID;
 
@@ -321,7 +328,7 @@ class System : public MemObject
      * Called by pseudo_inst to track the number of work items completed by
      * this system.
      */
-    uint64_t 
+    uint64_t
     incWorkItemsEnd()
     {
         return ++workItemsEnd;
@@ -332,13 +339,13 @@ class System : public MemObject
      * Returns the total number of cpus that have executed work item begin or
      * ends.
      */
-    int 
+    int
     markWorkItem(int index)
     {
         int count = 0;
         assert(index < activeCpus.size());
         activeCpus[index] = true;
-        for (std::vector<bool>::iterator i = activeCpus.begin(); 
+        for (std::vector<bool>::iterator i = activeCpus.begin();
              i < activeCpus.end(); i++) {
             if (*i) count++;
         }

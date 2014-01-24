@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2012 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -48,7 +48,7 @@ let {{
         bCode = '''
         NPC = (uint32_t)(PC + imm);
         '''
-        br_tgt_code = '''pcs.instNPC(branchPC.instPC() + imm);'''
+        br_tgt_code = '''pcs.instNPC((uint32_t)(branchPC.instPC() + imm));'''
         instFlags = ["IsDirectControl"]
         if (link):
             bCode += '''
@@ -86,9 +86,9 @@ let {{
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
             # of the current ISA. Thumb is whether the target is ARM.
-            newPC = '(Thumb ? (roundDown(PC, 4) + imm) : (PC + imm))'
+            newPC = '(uint32_t)(Thumb ? (roundDown(PC, 4) + imm) : (PC + imm))'
             br_tgt_code = '''
-            pcs.instNPC((branchPC.thumb() ? (roundDown(branchPC.instPC(),4) + imm) :
+            pcs.instNPC((uint32_t)(branchPC.thumb() ? (roundDown(branchPC.instPC(),4) + imm) :
                                 (branchPC.instPC() + imm)));
             '''
             base = "BranchImmCond"
@@ -150,7 +150,26 @@ let {{
         if imm:
             decoder_output += BranchTarget.subst(blxIop)
 
-    #Ignore BXJ for now
+    bxjcode = '''
+    HSTR hstr = Hstr;
+    CPSR cpsr = Cpsr;
+    SCR  scr  = Scr;
+
+    if (ArmSystem::haveVirtualization(xc->tcBase()) && hstr.tjdbx &&
+        !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+        fault = new HypervisorTrap(machInst, op1, EC_TRAPPED_BXJ);
+    }
+    IWNPC = Op1;
+    '''
+
+    bxjIop = InstObjParams("bxj", "BxjReg", "BranchRegCond",
+                           {"code": bxjcode,
+                            "predicate_test": predicateTest,
+                            "is_ras_pop": "op1 == INTREG_LR" },
+                           ["IsIndirectControl"])
+    header_output += BranchRegCondDeclare.subst(bxjIop)
+    decoder_output += BranchRegCondConstructor.subst(bxjIop)
+    exec_output += PredOpExecute.subst(bxjIop)
 
     #CBNZ, CBZ. These are always unconditional as far as predicates
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):

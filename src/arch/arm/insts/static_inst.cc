@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -84,6 +84,90 @@ ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
         break;
     }
     return 0;
+}
+
+int64_t
+ArmStaticInst::shiftReg64(uint64_t base, uint64_t shiftAmt,
+                          ArmShiftType type, uint8_t width) const
+{
+    shiftAmt = shiftAmt % width;
+    ArmShiftType shiftType;
+    shiftType = (ArmShiftType)type;
+
+    switch (shiftType)
+    {
+      case LSL:
+        return base << shiftAmt;
+      case LSR:
+        if (shiftAmt == 0)
+            return base;
+        else
+            return (base & mask(width)) >> shiftAmt;
+      case ASR:
+        if (shiftAmt == 0) {
+            return base;
+        } else {
+            int sign_bit = bits(base, intWidth - 1);
+            base >>= shiftAmt;
+            base = sign_bit ? (base | ~mask(intWidth - shiftAmt)) : base;
+            return base & mask(intWidth);
+        }
+      case ROR:
+        if (shiftAmt == 0)
+            return base;
+        else
+            return (base << (width - shiftAmt)) | (base >> shiftAmt);
+      default:
+        ccprintf(std::cerr, "Unhandled shift type\n");
+        exit(1);
+        break;
+    }
+    return 0;
+}
+
+int64_t
+ArmStaticInst::extendReg64(uint64_t base, ArmExtendType type,
+                           uint64_t shiftAmt, uint8_t width) const
+{
+    bool sign_extend = false;
+    int len = 0;
+    switch (type) {
+      case UXTB:
+        len = 8;
+        break;
+      case UXTH:
+        len = 16;
+        break;
+      case UXTW:
+        len = 32;
+        break;
+      case UXTX:
+        len = 64;
+        break;
+      case SXTB:
+        len = 8;
+        sign_extend = true;
+        break;
+      case SXTH:
+        len = 16;
+        sign_extend = true;
+        break;
+      case SXTW:
+        len = 32;
+        sign_extend = true;
+        break;
+      case SXTX:
+        len = 64;
+        sign_extend = true;
+        break;
+    }
+    len = len <= width - shiftAmt ? len : width - shiftAmt;
+    uint64_t tmp = (uint64_t) bits(base, len - 1, 0) << shiftAmt;
+    if (sign_extend) {
+        int sign_bit = bits(tmp, len + shiftAmt - 1);
+        tmp = sign_bit ? (tmp | ~mask(len + shiftAmt)) : tmp;
+    }
+    return tmp & mask(width);
 }
 
 // Shift Rm by Rs
@@ -214,22 +298,33 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
 
     switch (regIdxToClass(reg, &rel_reg)) {
       case IntRegClass:
-        switch (rel_reg) {
-          case PCReg:
-            ccprintf(os, "pc");
-            break;
-          case StackPointerReg:
-            ccprintf(os, "sp");
-            break;
-          case FramePointerReg:
-            ccprintf(os, "fp");
-            break;
-          case ReturnAddressReg:
-            ccprintf(os, "lr");
-            break;
-          default:
-            ccprintf(os, "r%d", reg);
-            break;
+        if (aarch64) {
+            if (reg == INTREG_UREG0)
+                ccprintf(os, "ureg0");
+            else if (reg == INTREG_SPX)
+               ccprintf(os, "%s%s", (intWidth == 32) ? "w" : "", "sp");
+            else if (reg == INTREG_X31)
+                ccprintf(os, "%szr", (intWidth == 32) ? "w" : "x");
+            else
+                ccprintf(os, "%s%d", (intWidth == 32) ? "w" : "x", reg);
+        } else {
+            switch (rel_reg) {
+              case PCReg:
+                ccprintf(os, "pc");
+                break;
+              case StackPointerReg:
+                ccprintf(os, "sp");
+                break;
+              case FramePointerReg:
+                ccprintf(os, "fp");
+                break;
+              case ReturnAddressReg:
+                ccprintf(os, "lr");
+                break;
+              default:
+                ccprintf(os, "r%d", reg);
+                break;
+            }
         }
         break;
       case FloatRegClass:
@@ -247,67 +342,102 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
 void
 ArmStaticInst::printMnemonic(std::ostream &os,
                              const std::string &suffix,
-                             bool withPred) const
+                             bool withPred,
+                             bool withCond64,
+                             ConditionCode cond64) const
 {
     os << "  " << mnemonic;
-    if (withPred) {
-        unsigned condCode = machInst.condCode;
-        switch (condCode) {
-          case COND_EQ:
-            os << "eq";
-            break;
-          case COND_NE:
-            os << "ne";
-            break;
-          case COND_CS:
-            os << "cs";
-            break;
-          case COND_CC:
-            os << "cc";
-            break;
-          case COND_MI:
-            os << "mi";
-            break;
-          case COND_PL:
-            os << "pl";
-            break;
-          case COND_VS:
-            os << "vs";
-            break;
-          case COND_VC:
-            os << "vc";
-            break;
-          case COND_HI:
-            os << "hi";
-            break;
-          case COND_LS:
-            os << "ls";
-            break;
-          case COND_GE:
-            os << "ge";
-            break;
-          case COND_LT:
-            os << "lt";
-            break;
-          case COND_GT:
-            os << "gt";
-            break;
-          case COND_LE:
-            os << "le";
-            break;
-          case COND_AL:
-            // This one is implicit.
-            break;
-          case COND_UC:
-            // Unconditional.
-            break;
-          default:
-            panic("Unrecognized condition code %d.\n", condCode);
-        }
+    if (withPred && !aarch64) {
+        printCondition(os, machInst.condCode);
         os << suffix;
-        if (machInst.bigThumb)
-            os << ".w";
-        os << "   ";
+    } else if (withCond64) {
+        os << ".";
+        printCondition(os, cond64);
+        os << suffix;
+    }
+    if (machInst.bigThumb)
+        os << ".w";
+    os << "   ";
+}
+
+void
+ArmStaticInst::printTarget(std::ostream &os, Addr target,
+                           const SymbolTable *symtab) const
+{
+    Addr symbolAddr;
+    std::string symbol;
+
+    if (symtab && symtab->findNearestSymbol(target, symbol, symbolAddr)) {
+        ccprintf(os, "<%s", symbol);
+        if (symbolAddr != target)
+            ccprintf(os, "+%d>", target - symbolAddr);
+        else
+            ccprintf(os, ">");
+    } else {
+        ccprintf(os, "%#x", target);
+    }
+}
+
+void
+ArmStaticInst::printCondition(std::ostream &os,
+                              unsigned code,
+                              bool noImplicit) const
+{
+    switch (code) {
+      case COND_EQ:
+        os << "eq";
+        break;
+      case COND_NE:
+        os << "ne";
+        break;
+      case COND_CS:
+        os << "cs";
+        break;
+      case COND_CC:
+        os << "cc";
+        break;
+      case COND_MI:
+        os << "mi";
+        break;
+      case COND_PL:
+        os << "pl";
+        break;
+      case COND_VS:
+        os << "vs";
+        break;
+      case COND_VC:
+        os << "vc";
+        break;
+      case COND_HI:
+        os << "hi";
+        break;
+      case COND_LS:
+        os << "ls";
+        break;
+      case COND_GE:
+        os << "ge";
+        break;
+      case COND_LT:
+        os << "lt";
+        break;
+      case COND_GT:
+        os << "gt";
+        break;
+      case COND_LE:
+        os << "le";
+        break;
+      case COND_AL:
+        // This one is implicit.
+        if (noImplicit)
+            os << "al";
+        break;
+      case COND_UC:
+        // Unconditional.
+        if (noImplicit)
+            os << "uc";
+        break;
+      default:
+        panic("Unrecognized condition code %d.\n", code);
     }
 }
 
@@ -390,6 +520,38 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
         else
             printReg(os, rs);
     }
+}
+
+void
+ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
+                                  IntRegIndex rm, ArmExtendType type,
+                                  int64_t shiftAmt) const
+{
+    if (!firstOperand)
+        ccprintf(os, ", ");
+    printReg(os, rm);
+    if (type == UXTX && shiftAmt == 0)
+        return;
+    switch (type) {
+      case UXTB: ccprintf(os, ", UXTB");
+        break;
+      case UXTH: ccprintf(os, ", UXTH");
+        break;
+      case UXTW: ccprintf(os, ", UXTW");
+        break;
+      case UXTX: ccprintf(os, ", LSL");
+        break;
+      case SXTB: ccprintf(os, ", SXTB");
+        break;
+      case SXTH: ccprintf(os, ", SXTH");
+        break;
+      case SXTW: ccprintf(os, ", SXTW");
+        break;
+      case SXTX: ccprintf(os, ", SXTW");
+        break;
+    }
+    if (type == UXTX || shiftAmt)
+        ccprintf(os, " #%d", shiftAmt);
 }
 
 void

@@ -86,4 +86,5 @@ class System(MemObject):
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
     load_addr_mask = Param.UInt64(0xffffffffff,
-            "Address to mask loading binaries with");
+            "Address to mask loading binaries with")
+    load_offset = Param.UInt64(0, "Address to offset loading binaries with")

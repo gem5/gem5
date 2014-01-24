@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,8 @@
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+
+class ArmSystem;
 
 namespace ArmISA {
 
@@ -118,7 +120,7 @@ void initCPU(ThreadContext *tc, int cpuId);
 static inline bool
 inUserMode(CPSR cpsr)
 {
-    return cpsr.mode == MODE_USER;
+    return cpsr.mode == MODE_USER || cpsr.mode == MODE_EL0T;
 }
 
 static inline bool
@@ -139,29 +141,138 @@ inPrivilegedMode(ThreadContext *tc)
     return !inUserMode(tc);
 }
 
-static inline bool
-vfpEnabled(CPACR cpacr, CPSR cpsr)
+bool inAArch64(ThreadContext *tc);
+
+static inline OperatingMode
+currOpMode(ThreadContext *tc)
 {
-    return cpacr.cp10 == 0x3 ||
-        (cpacr.cp10 == 0x1 && inPrivilegedMode(cpsr));
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    return (OperatingMode) (uint8_t) cpsr.mode;
 }
 
-static inline bool
-vfpEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+static inline ExceptionLevel
+currEL(ThreadContext *tc)
 {
-    if ((cpacr.cp11 == 0x3) ||
-        ((cpacr.cp11 == 0x1) && inPrivilegedMode(cpsr)))
-        return fpexc.en && vfpEnabled(cpacr, cpsr);
-    else
-        return fpexc.en && vfpEnabled(cpacr, cpsr) &&
-            (cpacr.cp11 == cpacr.cp10);
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    return (ExceptionLevel) (uint8_t) cpsr.el;
 }
 
+bool ELIs64(ThreadContext *tc, ExceptionLevel el);
+
+bool isBigEndian64(ThreadContext *tc);
+
+/**
+ * Removes the tag from tagged addresses if that mode is enabled.
+ * @param addr The address to be purified.
+ * @param tc The thread context.
+ * @param el The controlled exception level.
+ * @return The purified address.
+ */
+Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el);
+
 static inline bool
-neonEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+inSecureState(SCR scr, CPSR cpsr)
 {
-    return !cpacr.asedis && vfpEnabled(cpacr, cpsr, fpexc);
+    switch ((OperatingMode) (uint8_t) cpsr.mode) {
+      case MODE_MON:
+      case MODE_EL3T:
+      case MODE_EL3H:
+        return true;
+      case MODE_HYP:
+      case MODE_EL2T:
+      case MODE_EL2H:
+        return false;
+      default:
+        return !scr.ns;
+    }
 }
+
+bool longDescFormatInUse(ThreadContext *tc);
+
+bool inSecureState(ThreadContext *tc);
+
+uint32_t getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+
+static inline uint32_t
+mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
+               uint32_t opc1, uint32_t opc2)
+{
+    return (isRead <<  0) |
+           (crm    <<  1) |
+           (rt     <<  5) |
+           (crn    << 10) |
+           (opc1   << 14) |
+           (opc2   << 17);
+}
+
+static inline void
+mcrMrcIssExtract(uint32_t iss, bool &isRead, uint32_t &crm, IntRegIndex &rt,
+                 uint32_t &crn, uint32_t &opc1, uint32_t &opc2)
+{
+    isRead = (iss >>  0) & 0x1;
+    crm    = (iss >>  1) & 0xF;
+    rt     = (IntRegIndex) ((iss >>  5) & 0xF);
+    crn    = (iss >> 10) & 0xF;
+    opc1   = (iss >> 14) & 0x7;
+    opc2   = (iss >> 17) & 0x7;
+}
+
+static inline uint32_t
+mcrrMrrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, IntRegIndex rt2,
+                 uint32_t opc1)
+{
+    return (isRead <<  0) |
+           (crm    <<  1) |
+           (rt     <<  5) |
+           (rt2    << 10) |
+           (opc1   << 16);
+}
+
+static inline uint32_t
+msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
+                 uint32_t crm, uint32_t op2, IntRegIndex rt)
+{
+    return isRead |
+        (crm << 1) |
+        (rt << 5) |
+        (crn << 10) |
+        (op1 << 14) |
+        (op2 << 17) |
+        (op0 << 20);
+}
+
+bool
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
+                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+bool
+mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
+                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+bool
+mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
+                    HCR hcr, uint32_t iss);
+
+bool msrMrs64TrapToSup(const MiscRegIndex miscReg, ExceptionLevel el,
+                       CPACR cpacr);
+bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead, CPTR cptr,
+                       HCR hcr, bool * isVfpNeon);
+bool msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr,
+                       ExceptionLevel el, bool * isVfpNeon);
+
+bool
+vfpNeonEnabled(uint32_t &seq, HCPTR hcptr, NSACR nsacr, CPACR cpacr, CPSR cpsr,
+               uint32_t &iss, bool &trap, ThreadContext *tc,
+               FPEXC fpexc = (1<<30), bool isSIMD = false);
+
+static inline bool
+vfpNeon64Enabled(CPACR cpacr, ExceptionLevel el)
+{
+    if ((el == EL0 && cpacr.fpen != 0x3) ||
+        (el == EL1 && !(cpacr.fpen & 0x1)))
+        return false;
+    return true;
+}
+
+bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
@@ -181,6 +292,36 @@ getExecutingAsid(ThreadContext *tc)
 {
     return tc->readMiscReg(MISCREG_CONTEXTIDR);
 }
+
+// Decodes the register index to access based on the fields used in a MSR
+// or MRS instruction
+bool
+decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
+                      CPSR cpsr, SCR scr, NSACR nsacr,
+                      bool checkSecurity = true);
+
+// This wrapper function is used to turn the register index into a source
+// parameter for the instruction. See Operands.isa
+static inline int
+decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r)
+{
+    int  regIdx;
+    bool isIntReg;
+    bool validReg;
+
+    validReg = decodeMrsMsrBankedReg(sysM, r, isIntReg, regIdx, 0, 0, 0, false);
+    return (validReg && isIntReg) ? regIdx : INTREG_DUMMY;
+}
+
+/**
+ * Returns the n. of PA bits corresponding to the specified encoding.
+ */
+int decodePhysAddrRange64(uint8_t pa_enc);
+
+/**
+ * Returns the encoding corresponding to the specified n. of PA bits.
+ */
+uint8_t encodePhysAddrRange64(int pa_size);
 
 }
 

@@ -1,0 +1,248 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2011-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+//          Giacomo Gabrielli
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    # B, BL
+    for (mnem, link) in (("b", False), ("bl", True)):
+        bCode = ('NPC = purifyTaggedAddr(RawPC + imm, xc->tcBase(), '
+                 'currEL(xc->tcBase()));\n')
+        instFlags = ['IsDirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize() + "64",
+                             "BranchImm64", bCode, instFlags)
+        header_output += BranchImm64Declare.subst(bIop)
+        decoder_output += BranchImm64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+    # BR, BLR
+    for (mnem, link) in (("br", False), ("blr", True)):
+        bCode = ('NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+                 'currEL(xc->tcBase()));\n')
+        instFlags = ['IsIndirectControl', 'IsUncondControl']
+        if (link):
+            bCode += 'XLR = RawPC + 4;\n'
+            instFlags += ['IsCall']
+
+        bIop = InstObjParams(mnem, mnem.capitalize() + "64",
+                             "BranchReg64", bCode, instFlags)
+        header_output += BranchReg64Declare.subst(bIop)
+        decoder_output += BranchReg64Constructor.subst(bIop)
+        exec_output += BasicExecute.subst(bIop)
+
+    # B conditional
+    bCode = '''
+        if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode))
+            NPC = purifyTaggedAddr(RawPC + imm, xc->tcBase(),
+                                   currEL(xc->tcBase()));
+        else
+            NPC = NPC;
+    '''
+    bIop = InstObjParams("b", "BCond64", "BranchImmCond64", bCode,
+                         ['IsCondControl', 'IsDirectControl'])
+    header_output += BranchImmCond64Declare.subst(bIop)
+    decoder_output += BranchImmCond64Constructor.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # RET
+    bCode = ('NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
+             'currEL(xc->tcBase()));\n')
+    instFlags = ['IsIndirectControl', 'IsUncondControl', 'IsReturn']
+
+    bIop = InstObjParams('ret', 'Ret64', "BranchRet64", bCode, instFlags)
+    header_output += BranchReg64Declare.subst(bIop)
+    decoder_output += BranchReg64Constructor.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # ERET
+    bCode = '''Addr newPc;
+                CPSR cpsr = Cpsr;
+                CPSR spsr = Spsr;
+
+                ExceptionLevel curr_el = opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+                switch (curr_el) {
+                  case EL3:
+                    newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL3);
+                    break;
+                  case EL2:
+                    newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL2);
+                    break;
+                  case EL1:
+                    newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL1);
+                    break;
+                  default:
+                    return new UndefinedInstruction(machInst, false, mnemonic);
+                    break;
+                }
+                if (spsr.width && (newPc & mask(2))) {
+                    // To avoid PC Alignment fault when returning to AArch32
+                    if (spsr.t)
+                        newPc = newPc & ~mask(1);
+                    else
+                        newPc = newPc & ~mask(2);
+                }
+                spsr.q = 0;
+                spsr.it1 = 0;
+                spsr.j = 0;
+                spsr.res0_23_22 = 0;
+                spsr.ge = 0;
+                spsr.it2 = 0;
+                spsr.t = 0;
+
+                OperatingMode mode = (OperatingMode) (uint8_t) spsr.mode;
+                bool illegal = false;
+                ExceptionLevel target_el;
+                if (badMode(mode)) {
+                    illegal = true;
+                } else {
+                    target_el = opModeToEL(mode);
+                    if (((target_el == EL2) &&
+                         !ArmSystem::haveVirtualization(xc->tcBase())) ||
+                            (target_el > curr_el) ||
+                            (spsr.width == 1)) {
+                        illegal = true;
+                    } else {
+                        bool known = true;
+                        bool from32 = (spsr.width == 1);
+                        bool to32 = false;
+                        if (false) { // TODO: !haveAArch32EL
+                            to32 = false;
+                        } else if (!ArmSystem::highestELIs64(xc->tcBase())) {
+                            to32 = true;
+                        } else {
+                            bool scr_rw, hcr_rw;
+                            if (ArmSystem::haveSecurity(xc->tcBase())) {
+                                SCR scr = xc->tcBase()->readMiscReg(MISCREG_SCR_EL3);
+                                scr_rw = scr.rw;
+                            } else {
+                                scr_rw = true;
+                            }
+
+                            if (ArmSystem::haveVirtualization(xc->tcBase())) {
+                                HCR hcr = xc->tcBase()->readMiscReg(MISCREG_HCR_EL2);
+                                hcr_rw = hcr.rw;
+                            } else {
+                                hcr_rw = scr_rw;
+                            }
+
+                            switch (target_el) {
+                              case EL3:
+                                to32 = false;
+                                break;
+                              case EL2:
+                                to32 = !scr_rw;
+                                break;
+                              case EL1:
+                                to32 = !scr_rw || !hcr_rw;
+                                break;
+                              case EL0:
+                                if (curr_el == EL0) {
+                                    to32 = cpsr.width;
+                                } else if (!scr_rw || !hcr_rw) {
+                                    // EL0 using AArch32 if EL1 using AArch32
+                                    to32 = true;
+                                } else {
+                                    known = false;
+                                    to32 = false;
+                                }
+                            }
+                        }
+                        if (known)
+                            illegal = (from32 != to32);
+                    }
+                }
+
+                if (illegal) {
+                    uint8_t old_mode = cpsr.mode;
+                    spsr.mode = old_mode; // Preserve old mode when invalid
+                    spsr.il = 1;
+                } else {
+                    if (cpsr.width != spsr.width)
+                        panic("AArch32/AArch64 interprocessing not supported yet");
+                }
+                Cpsr = spsr;
+
+                CondCodesNZ = spsr.nz;
+                CondCodesC  = spsr.c;
+                CondCodesV  = spsr.v;
+                NPC = purifyTaggedAddr(newPc, xc->tcBase(),
+                    opModeToEL((OperatingMode) (uint8_t) spsr.mode));
+                LLSCLock = 0;  // Clear exclusive monitor
+                SevMailbox = 1; //Set Event Register
+    '''
+    instFlags = ['IsSerializeAfter', 'IsNonSpeculative', 'IsSquashAfter']
+    bIop = InstObjParams('eret', 'Eret64', "BranchEret64", bCode, instFlags)
+    header_output += BasicDeclare.subst(bIop)
+    decoder_output += BasicConstructor64.subst(bIop)
+    exec_output += BasicExecute.subst(bIop)
+
+    # CBNZ, CBZ
+    for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
+        code = ('NPC = (Op164 %(test)s 0) ? '
+                'purifyTaggedAddr(RawPC + imm, xc->tcBase(), '
+                'currEL(xc->tcBase())) : NPC;\n')
+        code = code % {"test": test}
+        iop = InstObjParams(mnem, mnem.capitalize() + "64",
+                            "BranchImmReg64", code,
+                            ['IsCondControl', 'IsDirectControl'])
+        header_output += BranchImmReg64Declare.subst(iop)
+        decoder_output += BranchImmReg64Constructor.subst(iop)
+        exec_output += BasicExecute.subst(iop)
+
+    # TBNZ, TBZ
+    for (mnem, test) in (("tbz", "=="), ("tbnz", "!=")):
+        code = ('NPC = ((Op164 & imm1) %(test)s 0) ? '
+                'purifyTaggedAddr(RawPC + imm2, xc->tcBase(), '
+                'currEL(xc->tcBase())) : NPC;\n')
+        code = code % {"test": test}
+        iop = InstObjParams(mnem, mnem.capitalize() + "64",
+                            "BranchImmImmReg64", code,
+                            ['IsCondControl', 'IsDirectControl'])
+        header_output += BranchImmImmReg64Declare.subst(iop)
+        decoder_output += BranchImmImmReg64Constructor.subst(iop)
+        exec_output += BasicExecute.subst(iop)
+}};

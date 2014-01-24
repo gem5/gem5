@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010, 2012-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -101,7 +101,7 @@ def format Thumb16CondBranchAndSvc() {{
             return new B(machInst, sext<9>(bits(machInst, 7, 0) << 1),
                          (ConditionCode)(uint32_t)bits(machInst, 11, 8));
         } else if (bits(machInst, 8)) {
-            return new Svc(machInst);
+            return new Svc(machInst, bits(machInst, 7, 0));
         } else {
             // This space will not be allocated in the future.
             return new Unknown(machInst);
@@ -127,7 +127,7 @@ def format Thumb32BranchesAndMiscCtrl() {{
                     // Permanently undefined.
                     return new Unknown(machInst);
                 } else {
-                    return new WarnUnimplemented("smc", machInst);
+                    return new Smc(machInst);
                 }
             } else if ((op & 0x38) != 0x38) {
                 const uint32_t s = bits(machInst, 26);
@@ -141,20 +141,26 @@ def format Thumb32BranchesAndMiscCtrl() {{
                 return new B(machInst, imm,
                              (ConditionCode)(uint32_t)bits(machInst, 25, 22));
             } else {
+                // HIGH: 12-11=10, LOW: 15-14=00, 12=0
                 switch (op) {
                   case 0x38:
-                    {
-                        const IntRegIndex rn =
-                            (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                        const uint8_t byteMask = bits(machInst, 11, 8);
-                        return new MsrCpsrReg(machInst, rn, byteMask);
-                    }
                   case 0x39:
                     {
                         const IntRegIndex rn =
                             (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
                         const uint8_t byteMask = bits(machInst, 11, 8);
-                        return new MsrSpsrReg(machInst, rn, byteMask);
+                        const bool    r        = bits(machInst, 20);
+                        if (bits(machInst, 5)) {
+                            const uint8_t sysM = (bits(machInst, 4) << 4) |
+                                                  byteMask;
+                            return new MsrBankedReg(machInst, rn, sysM, r);
+                        } else {
+                            if (r) {
+                                return new MsrSpsrReg(machInst, rn, byteMask);
+                            } else {
+                                return new MsrCpsrReg(machInst, rn, byteMask);
+                            }
+                        }
                     }
                   case 0x3a:
                     {
@@ -196,11 +202,11 @@ def format Thumb32BranchesAndMiscCtrl() {{
                           case 0x2:
                             return new Clrex(machInst);
                           case 0x4:
-                            return new Dsb(machInst);
+                            return new Dsb(machInst, 0);
                           case 0x5:
-                            return new Dmb(machInst);
+                            return new Dmb(machInst, 0);
                           case 0x6:
-                            return new Isb(machInst);
+                            return new Isb(machInst, 0);
                           default:
                             break;
                         }
@@ -208,28 +214,44 @@ def format Thumb32BranchesAndMiscCtrl() {{
                     }
                   case 0x3c:
                     {
-                        // On systems that don't support bxj, bxj == bx
-                        return new BxReg(machInst,
+                        return new BxjReg(machInst,
                                  (IntRegIndex)(uint32_t)bits(machInst, 19, 16),
                                  COND_UC);
                     }
                   case 0x3d:
                     {
                         const uint32_t imm32 = bits(machInst, 7, 0);
-                        return new SubsImmPclr(machInst, INTREG_PC, INTREG_LR,
-                                               imm32, false);
+                        if (imm32 == 0) {
+                            return new Eret(machInst);
+                        } else {
+                            return new SubsImmPclr(machInst, INTREG_PC,
+                                                   INTREG_LR, imm32, false);
+                        }
                     }
                   case 0x3e:
-                    {
-                        const IntRegIndex rd =
-                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                        return new MrsCpsr(machInst, rd);
-                    }
                   case 0x3f:
                     {
+
                         const IntRegIndex rd =
                             (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                        return new MrsSpsr(machInst, rd);
+                        const bool    r        = bits(machInst, 20);
+                        if (bits(machInst, 5)) {
+                            const uint8_t sysM = (bits(machInst, 4) << 4) |
+                                                  bits(machInst, 11, 8);
+                            return new MrsBankedReg(machInst, rd, sysM, r);
+                        } else {
+                            if (r) {
+                                return new MrsSpsr(machInst, rd);
+                            } else {
+                                return new MrsCpsr(machInst, rd);
+                            }
+                        }
+                    }
+                  case 0xfe:
+                    {
+                        uint32_t imm16 = (bits(machInst, 19, 16) << 12) |
+                                         (bits(machInst, 11,  0) <<  0);
+                        return new Hvc(machInst, imm16);
                     }
                 }
                 break;

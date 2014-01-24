@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -156,6 +156,9 @@ SrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         break;
       case MODE_ABORT:
         ss << "abort";
+        break;
+      case MODE_HYP:
+        ss << "hyp";
         break;
       case MODE_UNDEFINED:
         ss << "undefined";

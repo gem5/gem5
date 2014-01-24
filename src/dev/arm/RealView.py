@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2012 ARM Limited
+# Copyright (c) 2009-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -88,6 +88,17 @@ class RealViewCtrl(BasicPioDevice):
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
+class VGic(PioDevice):
+    type = 'VGic'
+    cxx_header = "dev/arm/vgic.hh"
+    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
+    vcpu_addr = Param.Addr(0, "Address for vcpu interfaces")
+    hv_addr = Param.Addr(0, "Address for hv control")
+    pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
+   # The number of list registers is not currently configurable at runtime.
+    ppint = Param.UInt32("HV maintenance interrupt number")
+
 class AmbaFake(AmbaPioDevice):
     type = 'AmbaFake'
     cxx_header = "dev/arm/amba_fake.hh"
@@ -118,6 +129,15 @@ class CpuLocalTimer(BasicPioDevice):
     gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
     int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
+
+class GenericTimer(SimObject):
+    type = 'GenericTimer'
+    cxx_header = "dev/arm/generic_timer.hh"
+    system = Param.System(Parent.any, "system")
+    gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
+    int_num = Param.UInt32("Interrupt number used per-cpu to GIC")
+    # @todo: for now only one timer per CPU is supported, which is the
+    # normal behaviour when Security and Virt. extensions are disabled.
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
@@ -166,6 +186,9 @@ class RealView(Platform):
                                   conf_table_reported = False)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot.arm')
+        cur_sys.atags_addr = 0x100
+        cur_sys.load_addr_mask = 0xfffffff
+        cur_sys.load_offset = 0
 
 
 # Reference for memory map and interrupt number
@@ -340,12 +363,14 @@ class VExpress_EMM(RealView):
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, pio_addr=0x1C010000)
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
+    generic_timer = GenericTimer(int_num=29)
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
     hdlcd  = HDLcd(pio_addr=0x2b000000, int_num=117)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
+    vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
                             io_shift = 2, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
@@ -380,7 +405,9 @@ class VExpress_EMM(RealView):
                                   conf_table_reported = False)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot_emm.arm')
-        cur_sys.atags_addr = 0x80000100
+        cur_sys.atags_addr = 0x8000000
+        cur_sys.load_addr_mask = 0xfffffff
+        cur_sys.load_offset = 0x80000000
 
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
@@ -396,6 +423,8 @@ class VExpress_EMM(RealView):
                         AddrRange(0x40000000, size='512MB'),
                         AddrRange(0x18000000, size='64MB'),
                         AddrRange(0x1C000000, size='64MB')]
+       self.vgic.pio = bus.master
+
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -434,4 +463,14 @@ class VExpress_EMM(RealView):
        self.lan_fake.pio        = bus.master
        self.usb_fake.pio        = bus.master
        self.mmc_fake.pio        = bus.master
+
+class VExpress_EMM64(VExpress_EMM):
+    def setupBootLoader(self, mem_bus, cur_sys, loc):
+        self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'))
+        self.nvmem.port = mem_bus.master
+        cur_sys.boot_loader = loc('boot_emm.arm64')
+        cur_sys.atags_addr = 0x8000000
+        cur_sys.load_addr_mask = 0xfffffff
+        cur_sys.load_offset = 0x80000000
+
 

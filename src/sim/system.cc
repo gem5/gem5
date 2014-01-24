@@ -79,6 +79,7 @@ System::System(Params *p)
       init_param(p->init_param),
       physProxy(_systemPort, p->cache_line_size),
       loadAddrMask(p->load_addr_mask),
+      loadAddrOffset(p->load_offset),
       nextPID(0),
       physmem(name() + ".physmem", p->memories),
       memoryMode(p->mem_mode),
@@ -274,14 +275,15 @@ System::initState()
          */
         if (params()->kernel != "")  {
             // Validate kernel mapping before loading binary
-            if (!(isMemAddr(kernelStart & loadAddrMask) &&
-                            isMemAddr(kernelEnd & loadAddrMask))) {
+            if (!(isMemAddr((kernelStart & loadAddrMask) + loadAddrOffset) &&
+                     isMemAddr((kernelEnd & loadAddrMask) + loadAddrOffset))) {
                 fatal("Kernel is mapped to invalid location (not memory). "
-                      "kernelStart 0x(%x) - kernelEnd 0x(%x)\n", kernelStart,
-                      kernelEnd);
+                      "kernelStart 0x(%x) - kernelEnd 0x(%x) %#x:%#x\n", kernelStart,
+                      kernelEnd, (kernelStart & loadAddrMask) + loadAddrOffset,
+                      (kernelEnd & loadAddrMask) + loadAddrOffset);
             }
             // Load program sections into memory
-            kernel->loadSections(physProxy, loadAddrMask);
+            kernel->loadSections(physProxy, loadAddrMask, loadAddrOffset);
 
             DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
             DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);

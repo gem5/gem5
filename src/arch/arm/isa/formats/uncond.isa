@@ -99,11 +99,11 @@ def format ArmUnconditional() {{
                       case 0x1:
                         return new Clrex(machInst);
                       case 0x4:
-                        return new Dsb(machInst);
+                        return new Dsb(machInst, 0);
                       case 0x5:
-                        return new Dmb(machInst);
+                        return new Dmb(machInst, 0);
                       case 0x6:
-                        return new Isb(machInst);
+                        return new Isb(machInst, 0);
                     }
                 }
             } else if (bits(op2, 0) == 0) {
@@ -166,7 +166,7 @@ def format ArmUnconditional() {{
                     const uint32_t val = ((machInst >> 20) & 0x5);
                     if (val == 0x4) {
                         const uint32_t mode = bits(machInst, 4, 0);
-                        if (badMode((OperatingMode)mode))
+                        if (badMode32((OperatingMode)mode))
                             return new Unknown(machInst);
                         switch (bits(machInst, 24, 21)) {
                           case 0x2:
@@ -250,17 +250,10 @@ def format ArmUnconditional() {{
                                         "ldc, ldc2 (immediate)", machInst);
                             }
                         }
-                        if (op1 == 0xC5) {
-                            return new WarnUnimplemented(
-                                    "mrrc, mrrc2", machInst);
-                        }
                     } else {
                         if (bits(op1, 4, 3) != 0 || bits(op1, 1) == 1) {
                             return new WarnUnimplemented(
                                     "stc, stc2", machInst);
-                        } else if (op1 == 0xC4) {
-                            return new WarnUnimplemented(
-                                    "mcrr, mcrrc", machInst);
                         }
                     }
                 }

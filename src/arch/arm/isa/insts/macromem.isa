@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -91,7 +91,8 @@ let {{
         SCTLR sctlr = Sctlr;
 
         CPSR new_cpsr =
-            cpsrWriteByInstr(old_cpsr, Spsr, 0xF, true, sctlr.nmfi);
+            cpsrWriteByInstr(old_cpsr, Spsr, Scr, Nsacr, 0xF, true,
+                             sctlr.nmfi, xc->tcBase());
         Cpsr = ~CondCodesMask & new_cpsr;
         CondCodesNZ = new_cpsr.nz;
         CondCodesC = new_cpsr.c;
@@ -158,8 +159,8 @@ let {{
 
     header_output = decoder_output = exec_output = ''
 
-    loadIops = (microLdrUopIop, microLdrRetUopIop,
-                microLdrFpUopIop, microLdrDBFpUopIop, microLdrDTFpUopIop)
+    loadIops = (microLdrUopIop, microLdrRetUopIop, microLdrFpUopIop,
+                microLdrDBFpUopIop, microLdrDTFpUopIop)
     storeIops = (microStrUopIop, microStrFpUopIop,
                  microStrDBFpUopIop, microStrDTFpUopIop)
     for iop in loadIops + storeIops:
@@ -178,7 +179,7 @@ let {{
 let {{
     exec_output = header_output = ''
 
-    eaCode = 'EA = URa + imm;'
+    eaCode = 'EA = XURa + imm;'
 
     for size in (1, 2, 3, 4, 6, 8, 12, 16):
         # Set up the memory access.
@@ -592,6 +593,26 @@ let {{
         URa = URb + shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
     '''
 
+    microAddXiUopIop = InstObjParams('addxi_uop', 'MicroAddXiUop',
+                                     'MicroIntImmXOp',
+                                     'XURa = XURb + imm;',
+                                     ['IsMicroop'])
+
+    microAddXiSpAlignUopIop = InstObjParams('addxi_uop', 'MicroAddXiSpAlignUop',
+                                            'MicroIntImmXOp', '''
+        if (isSP((IntRegIndex) urb) && bits(XURb, 3, 0) &&
+            SPAlignmentCheckEnabled(xc->tcBase())) {
+            return new SPAlignmentFault();
+        }
+        XURa = XURb + imm;
+    ''', ['IsMicroop'])
+
+    microAddXERegUopIop = InstObjParams('addxr_uop', 'MicroAddXERegUop',
+                                        'MicroIntRegXOp',
+                                        'XURa = XURb + ' + \
+                                            'extendReg64(XURc, type, shiftAmt, 64);',
+                                        ['IsMicroop'])
+
     microAddUopIop = InstObjParams('add_uop', 'MicroAddUop',
                                    'MicroIntRegOp',
                                    {'code': microAddUopCode,
@@ -603,6 +624,11 @@ let {{
                                     {'code': 'URa = URb - imm;',
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
+
+    microSubXiUopIop = InstObjParams('subxi_uop', 'MicroSubXiUop',
+                                     'MicroIntImmXOp',
+                                     'XURa = XURb - imm;',
+                                     ['IsMicroop'])
 
     microSubUopCode = '''
         URa = URb - shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
@@ -631,8 +657,8 @@ let {{
                     SCTLR sctlr = Sctlr;
                     pNPC = URa;
                     CPSR new_cpsr =
-                    cpsrWriteByInstr(cpsrOrCondCodes, URb,
-                                     0xF, true, sctlr.nmfi);
+                    cpsrWriteByInstr(cpsrOrCondCodes, URb, Scr, Nsacr,
+                                     0xF, true, sctlr.nmfi, xc->tcBase());
                     Cpsr = ~CondCodesMask & new_cpsr;
                     NextThumb = new_cpsr.t;
                     NextJazelle = new_cpsr.j;
@@ -651,25 +677,37 @@ let {{
                                          ['IsMicroop'])
 
     header_output = MicroIntImmDeclare.subst(microAddiUopIop) + \
+                    MicroIntImmDeclare.subst(microAddXiUopIop) + \
+                    MicroIntImmDeclare.subst(microAddXiSpAlignUopIop) + \
                     MicroIntImmDeclare.subst(microSubiUopIop) + \
+                    MicroIntImmDeclare.subst(microSubXiUopIop) + \
                     MicroIntRegDeclare.subst(microAddUopIop) + \
                     MicroIntRegDeclare.subst(microSubUopIop) + \
+                    MicroIntXERegDeclare.subst(microAddXERegUopIop) + \
                     MicroIntMovDeclare.subst(microUopRegMovIop) + \
                     MicroIntMovDeclare.subst(microUopRegMovRetIop) + \
                     MicroSetPCCPSRDeclare.subst(microUopSetPCCPSRIop)
 
     decoder_output = MicroIntImmConstructor.subst(microAddiUopIop) + \
+                     MicroIntImmXConstructor.subst(microAddXiUopIop) + \
+                     MicroIntImmXConstructor.subst(microAddXiSpAlignUopIop) + \
                      MicroIntImmConstructor.subst(microSubiUopIop) + \
+                     MicroIntImmXConstructor.subst(microSubXiUopIop) + \
                      MicroIntRegConstructor.subst(microAddUopIop) + \
                      MicroIntRegConstructor.subst(microSubUopIop) + \
+                     MicroIntXERegConstructor.subst(microAddXERegUopIop) + \
                      MicroIntMovConstructor.subst(microUopRegMovIop) + \
                      MicroIntMovConstructor.subst(microUopRegMovRetIop) + \
                      MicroSetPCCPSRConstructor.subst(microUopSetPCCPSRIop)
 
     exec_output = PredOpExecute.subst(microAddiUopIop) + \
+                  BasicExecute.subst(microAddXiUopIop) + \
+                  BasicExecute.subst(microAddXiSpAlignUopIop) + \
                   PredOpExecute.subst(microSubiUopIop) + \
+                  BasicExecute.subst(microSubXiUopIop) + \
                   PredOpExecute.subst(microAddUopIop) + \
                   PredOpExecute.subst(microSubUopIop) + \
+                  BasicExecute.subst(microAddXERegUopIop) + \
                   PredOpExecute.subst(microUopRegMovIop) + \
                   PredOpExecute.subst(microUopRegMovRetIop) + \
                   PredOpExecute.subst(microUopSetPCCPSRIop)
@@ -680,6 +718,25 @@ let {{
     iop = InstObjParams("ldmstm", "LdmStm", 'MacroMemOp', "", [])
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
+
+    iop = InstObjParams("ldpstp", "LdpStp", 'PairMemOp', "", [])
+    header_output += PairMemDeclare.subst(iop)
+    decoder_output += PairMemConstructor.subst(iop)
+
+    iopImm = InstObjParams("bigfpmemimm", "BigFpMemImm", "BigFpMemImmOp", "")
+    iopPre = InstObjParams("bigfpmempre", "BigFpMemPre", "BigFpMemPreOp", "")
+    iopPost = InstObjParams("bigfpmempost", "BigFpMemPost", "BigFpMemPostOp", "")
+    for iop in (iopImm, iopPre, iopPost):
+        header_output += BigFpMemImmDeclare.subst(iop)
+        decoder_output += BigFpMemImmConstructor.subst(iop)
+
+    iop = InstObjParams("bigfpmemreg", "BigFpMemReg", "BigFpMemRegOp", "")
+    header_output += BigFpMemRegDeclare.subst(iop)
+    decoder_output += BigFpMemRegConstructor.subst(iop)
+
+    iop = InstObjParams("bigfpmemlit", "BigFpMemLit", "BigFpMemLitOp", "")
+    header_output += BigFpMemLitDeclare.subst(iop)
+    decoder_output += BigFpMemLitConstructor.subst(iop)
 
     iop = InstObjParams("vldmult", "VldMult", 'VldMultOp', "", [])
     header_output += VMemMultDeclare.subst(iop)

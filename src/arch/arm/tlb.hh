@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,13 +43,13 @@
 #ifndef __ARCH_ARM_TLB_HH__
 #define __ARCH_ARM_TLB_HH__
 
-#include <map>
 
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
 #include "base/statistics.hh"
+#include "dev/dma_device.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/fault_fwd.hh"
@@ -60,36 +60,51 @@ class ThreadContext;
 namespace ArmISA {
 
 class TableWalker;
+class Stage2LookUp;
+class Stage2MMU;
 
 class TLB : public BaseTLB
 {
   public:
     enum ArmFlags {
-        AlignmentMask = 0x1f,
+        AlignmentMask = 0x7,
 
         AlignByte = 0x0,
         AlignHalfWord = 0x1,
-        AlignWord = 0x3,
-        AlignDoubleWord = 0x7,
-        AlignQuadWord = 0xf,
-        AlignOctWord = 0x1f,
+        AlignWord = 0x2,
+        AlignDoubleWord = 0x3,
+        AlignQuadWord = 0x4,
+        AlignOctWord = 0x5,
 
-        AllowUnaligned = 0x20,
+        AllowUnaligned = 0x8,
         // Priv code operating as if it wasn't
-        UserMode = 0x40,
+        UserMode = 0x10,
         // Because zero otherwise looks like a valid setting and may be used
         // accidentally, this bit must be non-zero to show it was used on
         // purpose.
-        MustBeOne = 0x80
+        MustBeOne = 0x40
+    };
+
+    enum ArmTranslationType {
+        NormalTran = 0,
+        S1CTran = 0x1,
+        HypMode = 0x2,
+        // Secure code operating as if it wasn't (required by some Address
+        // Translate operations)
+        S1S2NsTran = 0x4
     };
   protected:
-
-    TlbEntry *table;    // the Page Table
-    int size;           // TLB Size
-
-    uint32_t _attr;     // Memory attributes for last accessed TLB entry
+    TlbEntry* table;     // the Page Table
+    int size;            // TLB Size
+    bool isStage2;       // Indicates this TLB is part of the second stage MMU
+    bool stage2Req;      // Indicates whether a stage 2 lookup is also required
+    uint64_t _attr;      // Memory attributes for last accessed TLB entry
+    bool directToStage2; // Indicates whether all translation requests should
+                         // be routed directly to the stage 2 TLB
 
     TableWalker *tableWalker;
+    TLB *stage2Tlb;
+    Stage2MMU *stage2Mmu;
 
     // Access Stats
     mutable Stats::Scalar instHits;
@@ -121,51 +136,101 @@ class TLB : public BaseTLB
     bool bootUncacheability;
 
   public:
-    typedef ArmTLBParams Params;
-    TLB(const Params *p);
+    TLB(const ArmTLBParams *p);
+    TLB(const Params *p, int _size, TableWalker *_walker);
 
     /** Lookup an entry in the TLB
      * @param vpn virtual address
      * @param asn context id/address space id to use
+     * @param vmid The virtual machine ID used for stage 2 translation
+     * @param secure if the lookup is secure
+     * @param hyp if the lookup is done from hyp mode
      * @param functional if the lookup should modify state
-     * @return pointer to TLB entrry if it exists
+     * @param ignore_asn if on lookup asn should be ignored
+     * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(Addr vpn, uint8_t asn, bool functional = false);
+    TlbEntry *lookup(Addr vpn, uint16_t asn, uint8_t vmid, bool hyp,
+                     bool secure, bool functional,
+                     bool ignore_asn, uint8_t target_el);
 
     virtual ~TLB();
+
+    /// setup all the back pointers
+    virtual void init();
+
+    void setMMU(Stage2MMU *m);
+
     int getsize() const { return size; }
 
     void insert(Addr vaddr, TlbEntry &pte);
 
-    /** Reset the entire TLB */
-    void flushAll();
+    Fault getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
+                Translation *translation, bool timing, bool functional,
+                bool is_secure, ArmTranslationType tranType);
+
+    Fault getResultTe(TlbEntry **te, RequestPtr req, ThreadContext *tc,
+                      Mode mode, Translation *translation, bool timing,
+                      bool functional, TlbEntry *mergeTe);
+
+    Fault checkPermissions(TlbEntry *te, RequestPtr req, Mode mode);
+    Fault checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
+                             ThreadContext *tc);
+
+
+    /** Reset the entire TLB
+     * @param secure_lookup if the operation affects the secure world
+     */
+    void flushAllSecurity(bool secure_lookup, uint8_t target_el,
+                          bool ignore_el = false);
+
+    /** Remove all entries in the non secure world, depending on whether they
+     *  were allocated in hyp mode or not
+     * @param hyp if the opperation affects hyp mode
+     */
+    void flushAllNs(bool hyp, uint8_t target_el, bool ignore_el = false);
+
+
+    /** Reset the entire TLB. Used for CPU switching to prevent stale
+     * translations after multiple switches
+     */
+    void flushAll()
+    {
+        flushAllSecurity(false, 0, true);
+        flushAllSecurity(true, 0, true);
+    }
 
     /** Remove any entries that match both a va and asn
      * @param mva virtual address to flush
      * @param asn contextid/asn to flush on match
+     * @param secure_lookup if the operation affects the secure world
      */
-    void flushMvaAsid(Addr mva, uint64_t asn);
+    void flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
+                      uint8_t target_el);
 
     /** Remove any entries that match the asn
      * @param asn contextid/asn to flush on match
+     * @param secure_lookup if the operation affects the secure world
      */
-    void flushAsid(uint64_t asn);
+    void flushAsid(uint64_t asn, bool secure_lookup, uint8_t target_el);
 
     /** Remove all entries that match the va regardless of asn
      * @param mva address to flush from cache
+     * @param secure_lookup if the operation affects the secure world
+     * @param hyp if the operation affects hyp mode
      */
-    void flushMva(Addr mva);
+    void flushMva(Addr mva, bool secure_lookup, bool hyp, uint8_t target_el);
 
-    Fault trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp);
-    Fault walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec,
-            bool is_write, uint8_t domain, bool sNp);
+    Fault trickBoxCheck(RequestPtr req, Mode mode, TlbEntry::DomainType domain);
+    Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz, bool is_exec,
+            bool is_write, TlbEntry::DomainType domain, LookupLevel lookup_level);
 
-    void printTlb();
+    void printTlb() const;
 
     void allCpusCaching() { bootUncacheability = true; }
     void demapPage(Addr vaddr, uint64_t asn)
     {
-        flushMvaAsid(vaddr, asn);
+        // needed for x86 only
+        panic("demapPage() is not implemented.\n");
     }
 
     static bool validVirtualAddress(Addr vaddr);
@@ -184,16 +249,18 @@ class TLB : public BaseTLB
      * Do a functional lookup on the TLB (for checker cpu) that
      * behaves like a normal lookup without modifying any page table state.
      */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode,
+            ArmTranslationType tranType = NormalTran);
 
     /** Accessor functions for memory attributes for last accessed TLB entry
      */
     void
-    setAttr(uint32_t attr)
+    setAttr(uint64_t attr)
     {
         _attr = attr;
     }
-    uint32_t
+
+    uint64_t
     getAttr() const
     {
         return _attr;
@@ -201,12 +268,17 @@ class TLB : public BaseTLB
 
     Fault translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay,
-            bool timing, bool functional = false);
+            bool timing, ArmTranslationType tranType, bool functional = false);
     Fault translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay, bool timing);
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
+            ArmTranslationType tranType = NormalTran);
     Fault translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, Mode mode);
+            Translation *translation, Mode mode,
+            ArmTranslationType tranType = NormalTran);
+    Fault translateComplete(RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode, ArmTranslationType tranType,
+            bool callFromS2);
     Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
     void drainResume();
@@ -229,29 +301,45 @@ class TLB : public BaseTLB
      */
     virtual BaseMasterPort* getMasterPort();
 
+    /**
+     * Allow the MMU (overseeing both stage 1 and stage 2 TLBs) to
+     * access the table walker port of this TLB so that it can
+     * orchestrate staged translations.
+     *
+     * @return The table walker DMA port
+     */
+    DmaPort& getWalkerPort();
+
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.
     // translateFunctional/translateSe/translateFs checks if they are
     // invalid and call updateMiscReg if necessary.
 protected:
+    bool aarch64;
+    ExceptionLevel aarch64EL;
     SCTLR sctlr;
+    SCR scr;
     bool isPriv;
-    CONTEXTIDR contextId;
+    bool isSecure;
+    bool isHyp;
+    TTBCR ttbcr;
+    uint16_t asid;
+    uint8_t vmid;
     PRRR prrr;
     NMRR nmrr;
+    HCR hcr;
     uint32_t dacr;
     bool miscRegValid;
-    void updateMiscReg(ThreadContext *tc)
-    {
-        sctlr = tc->readMiscReg(MISCREG_SCTLR);
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        isPriv = cpsr.mode != MODE_USER;
-        contextId = tc->readMiscReg(MISCREG_CONTEXTIDR);
-        prrr = tc->readMiscReg(MISCREG_PRRR);
-        nmrr = tc->readMiscReg(MISCREG_NMRR);
-        dacr = tc->readMiscReg(MISCREG_DACR);
-        miscRegValid = true;
-    }
+    ArmTranslationType curTranType;
+
+    // Cached copies of system-level properties
+    bool haveLPAE;
+    bool haveVirtualization;
+    bool haveLargeAsid64;
+
+    void updateMiscReg(ThreadContext *tc,
+                       ArmTranslationType tranType = NormalTran);
+
 public:
     const Params *
     params() const
@@ -259,6 +347,19 @@ public:
         return dynamic_cast<const Params *>(_params);
     }
     inline void invalidateMiscReg() { miscRegValid = false; }
+
+private:
+    /** Remove any entries that match both a va and asn
+     * @param mva virtual address to flush
+     * @param asn contextid/asn to flush on match
+     * @param secure_lookup if the operation affects the secure world
+     * @param hyp if the operation affects hyp mode
+     * @param ignore_asn if the flush should ignore the asn
+     */
+    void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
+                   bool hyp, bool ignore_asn, uint8_t target_el);
+
+    bool checkELMatch(uint8_t target_el, uint8_t tentry_el, bool ignore_el);
 };
 
 } // namespace ArmISA

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -89,6 +89,42 @@ class MsrRegOp : public MsrBase
     MsrRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
              IntRegIndex _op1, uint8_t _byteMask) :
         MsrBase(mnem, _machInst, __opClass, _byteMask), op1(_op1)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class MrrcOp : public PredOp
+{
+  protected:
+    IntRegIndex op1;
+    IntRegIndex dest;
+    IntRegIndex dest2;
+    uint32_t    imm;
+
+    MrrcOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+           IntRegIndex _op1, IntRegIndex _dest, IntRegIndex _dest2,
+           uint32_t _imm) :
+        PredOp(mnem, _machInst, __opClass), op1(_op1), dest(_dest),
+        dest2(_dest2), imm(_imm)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class McrrOp : public PredOp
+{
+  protected:
+    IntRegIndex op1;
+    IntRegIndex op2;
+    IntRegIndex dest;
+    uint32_t    imm;
+
+    McrrOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+           IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _dest,
+           uint32_t _imm) :
+        PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2),
+        dest(_dest), imm(_imm)
     {}
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -215,6 +251,23 @@ class RegRegImmOp : public PredOp
                 uint64_t _imm) :
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class RegImmImmOp : public PredOp
+{
+  protected:
+    IntRegIndex dest;
+    IntRegIndex op1;
+    uint64_t imm1;
+    uint64_t imm2;
+
+    RegImmImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                IntRegIndex _dest, uint64_t _imm1, uint64_t _imm2) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), imm1(_imm1), imm2(_imm2)
     {}
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -126,6 +126,8 @@ class LinuxArmSystem : public ArmSystem
     Addr secDataPtrAddr;
     Addr secDataAddr;
     Addr penReleaseAddr;
+    Addr pen64ReleaseAddr;
+    Addr bootReleaseAddr;
 };
 
 class DumpStatsPCEvent : public PCEvent

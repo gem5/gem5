@@ -40,12 +40,6 @@
 let {{
     sdivCode = '''
     if (Op2_sw == 0) {
-        if (((SCTLR)Sctlr).dz) {
-            if (FullSystem)
-                return new UndefinedInstruction;
-            else
-                return new UndefinedInstruction(false, mnemonic);
-        }
         Dest_sw = 0;
     } else if (Op1_sw == INT_MIN && Op2_sw == -1) {
         Dest_sw = INT_MIN;
@@ -63,12 +57,6 @@ let {{
 
     udivCode = '''
     if (Op2_uw == 0) {
-        if (((SCTLR)Sctlr).dz) {
-            if (FullSystem)
-                return new UndefinedInstruction;
-            else
-                return new UndefinedInstruction(false, mnemonic);
-        }
         Dest_uw = 0;
     } else {
         Dest_uw = Op1_uw / Op2_uw;

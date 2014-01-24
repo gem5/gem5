@@ -1,0 +1,471 @@
+// -*- mode: c++ -*-
+
+// Copyright (c) 2012-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Mbou Eyole
+//          Giacomo Gabrielli
+
+let {{
+
+    header_output = ''
+    decoder_output = ''
+    exec_output = ''
+
+    def mkMemAccMicroOp(name):
+        global header_output, decoder_output, exec_output
+        SPAlignmentCheckCodeNeon = '''
+            if (baseIsSP && bits(XURa, 3, 0) &&
+                SPAlignmentCheckEnabled(xc->tcBase())) {
+                return new SPAlignmentFault();
+            }
+        '''
+        eaCode = SPAlignmentCheckCodeNeon + '''
+            EA = XURa + imm;
+        '''
+        memDecl = '''
+            const int MaxNumBytes = 16;
+            union MemUnion {
+                uint8_t bytes[MaxNumBytes];
+                uint32_t floatRegBits[MaxNumBytes / 4];
+            };
+        '''
+
+        # Do endian conversion for all the elements
+        convCode = '''
+            VReg x = {0, 0};
+
+            x.lo = (((XReg) memUnion.floatRegBits[1]) << 32) |
+                (XReg) memUnion.floatRegBits[0];
+            x.hi = (((XReg) memUnion.floatRegBits[3]) << 32) |
+                (XReg) memUnion.floatRegBits[2];
+
+            const unsigned eCount = 16 / (1 << eSize);
+
+            if (isBigEndian64(xc->tcBase())) {
+                for (unsigned i = 0; i < eCount; i++) {
+                    switch (eSize) {
+                      case 0x3:  // 64-bit
+                        writeVecElem(&x, (XReg) gtobe(
+                            (uint64_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      case 0x2:  // 32-bit
+                        writeVecElem(&x, (XReg) gtobe(
+                            (uint32_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      case 0x1:  // 16-bit
+                        writeVecElem(&x, (XReg) gtobe(
+                            (uint16_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      default:  // 8-bit
+                        break;  // Nothing to do here
+                    }
+                }
+            } else {
+                for (unsigned i = 0; i < eCount; i++) {
+                    switch (eSize) {
+                      case 0x3:  // 64-bit
+                        writeVecElem(&x, (XReg) gtole(
+                            (uint64_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      case 0x2:  // 32-bit
+                        writeVecElem(&x, (XReg) gtole(
+                            (uint32_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      case 0x1:  // 16-bit
+                        writeVecElem(&x, (XReg) gtole(
+                            (uint16_t) readVecElem(x, i, eSize)), i, eSize);
+                        break;
+                      default:  // 8-bit
+                        break;  // Nothing to do here
+                    }
+                }
+            }
+
+            memUnion.floatRegBits[0] = (uint32_t) x.lo;
+            memUnion.floatRegBits[1] = (uint32_t) (x.lo >> 32);
+            memUnion.floatRegBits[2] = (uint32_t) x.hi;
+            memUnion.floatRegBits[3] = (uint32_t) (x.hi >> 32);
+        '''
+
+        # Offload everything into registers
+        regSetCode = ''
+        for reg in range(4):
+            regSetCode += '''
+            AA64FpDestP%(reg)d_uw = gtoh(memUnion.floatRegBits[%(reg)d]);
+            ''' % { 'reg' : reg }
+
+        # Pull everything in from registers
+        regGetCode = ''
+        for reg in range(4):
+            regGetCode += '''
+            memUnion.floatRegBits[%(reg)d] = htog(AA64FpDestP%(reg)d_uw);
+            ''' % { 'reg' : reg }
+
+        loadMemAccCode = convCode + regSetCode
+        storeMemAccCode = regGetCode + convCode
+
+        loadIop = InstObjParams(name + 'ld',
+                'MicroNeonLoad64',
+                'MicroNeonMemOp',
+            {   'mem_decl' : memDecl,
+                'memacc_code' : loadMemAccCode,
+                'ea_code' : simd64EnabledCheckCode + eaCode,
+            },
+            [ 'IsMicroop', 'IsMemRef', 'IsLoad' ])
+        storeIop = InstObjParams(name + 'st',
+                'MicroNeonStore64',
+                'MicroNeonMemOp',
+            {   'mem_decl' : memDecl,
+                'memacc_code' : storeMemAccCode,
+                'ea_code' : simd64EnabledCheckCode + eaCode,
+            },
+            [ 'IsMicroop', 'IsMemRef', 'IsStore' ])
+
+        exec_output += NeonLoadExecute64.subst(loadIop) + \
+            NeonLoadInitiateAcc64.subst(loadIop) + \
+            NeonLoadCompleteAcc64.subst(loadIop) + \
+            NeonStoreExecute64.subst(storeIop) + \
+            NeonStoreInitiateAcc64.subst(storeIop) + \
+            NeonStoreCompleteAcc64.subst(storeIop)
+        header_output += MicroNeonMemDeclare64.subst(loadIop) + \
+            MicroNeonMemDeclare64.subst(storeIop)
+
+    def mkMarshalMicroOp(name, Name):
+        global header_output, decoder_output, exec_output
+
+        getInputCodeOp1L = ''
+        for v in range(4):
+            for p in range(4):
+                getInputCodeOp1L += '''
+            writeVecElem(&input[%(v)d], (XReg) AA64FpOp1P%(p)dV%(v)d_uw,
+                         %(p)d, 0x2);
+            ''' % { 'v' : v, 'p' : p }
+
+        getInputCodeOp1S = ''
+        for v in range(4):
+            for p in range(4):
+                getInputCodeOp1S += '''
+            writeVecElem(&input[%(v)d], (XReg) AA64FpOp1P%(p)dV%(v)dS_uw,
+                         %(p)d, 0x2);
+            ''' % { 'v' : v, 'p' : p }
+
+        if name == 'deint_neon_uop':
+
+            eCode = '''
+                VReg input[4];  // input data from scratch area
+                VReg output[2];  // output data to arch. SIMD regs
+                VReg temp;
+                temp.lo = 0;
+                temp.hi = 0;
+            '''
+            for p in range(4):
+                eCode += '''
+                writeVecElem(&temp, (XReg) AA64FpDestP%(p)dV1L_uw, %(p)d, 0x2);
+                ''' % { 'p' : p }
+            eCode += getInputCodeOp1L
+
+            # Note that numRegs is not always the same as numStructElems; in
+            # particular, for LD1/ST1, numStructElems is 1 but numRegs can be
+            # 1, 2, 3 or 4
+
+            eCode += '''
+                output[0].lo = 0;
+                output[0].hi = 0;
+                output[1].lo = 0;
+                output[1].hi = 0;
+
+                int eCount = dataSize / (8 << eSize);
+                int eSizeBytes = 1 << eSize;  // element size in bytes
+                int numBytes = step * dataSize / 4;
+                int totNumBytes = numRegs * dataSize / 8;
+
+                int structElemNo, pos, a, b;
+                XReg data;
+
+                for (int r = 0; r < 2; ++r) {
+                    for (int i = 0; i < eCount; ++i) {
+                        if (numBytes < totNumBytes) {
+                            structElemNo = r + (step * 2);
+                            if (numStructElems == 1) {
+                                pos = (eSizeBytes * i) +
+                                    (eCount * structElemNo * eSizeBytes);
+                            } else {
+                                pos = (numStructElems * eSizeBytes * i) +
+                                    (structElemNo * eSizeBytes);
+                            }
+                            a = pos / 16;
+                            b = (pos % 16) / eSizeBytes;
+                            data = (XReg) readVecElem(input[a], (XReg) b,
+                                                      eSize);
+                            writeVecElem(&output[r], data, i, eSize);
+                            numBytes += eSizeBytes;
+                        }
+                    }
+                }
+            '''
+            for p in range(4):
+                eCode += '''
+                AA64FpDestP%(p)dV0L_uw = (uint32_t) readVecElem(output[0],
+                    %(p)d, 0x2);
+                ''' % { 'p' : p }
+            eCode += '''
+                if ((numRegs % 2 == 0) || (numRegs == 3 && step == 0)) {
+            '''
+            for p in range(4):
+                eCode += '''
+                    AA64FpDestP%(p)dV1L_uw = (uint32_t) readVecElem(
+                        output[1], %(p)d, 0x2);
+                ''' % { 'p' : p }
+            eCode += '''
+                } else {
+            '''
+            for p in range(4):
+                eCode += '''
+                    AA64FpDestP%(p)dV1L_uw = (uint32_t) readVecElem(temp,
+                        %(p)d, 0x2);
+                ''' % { 'p' : p }
+            eCode += '''
+                }
+            '''
+
+            iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
+                                { 'code' : eCode }, ['IsMicroop'])
+            header_output += MicroNeonMixDeclare64.subst(iop)
+            exec_output += MicroNeonMixExecute64.subst(iop)
+
+        elif name == 'int_neon_uop':
+
+            eCode = '''
+                VReg input[4];  // input data from arch. SIMD regs
+                VReg output[2];  // output data to scratch area
+            '''
+
+            eCode += getInputCodeOp1S
+
+            # Note that numRegs is not always the same as numStructElems; in
+            # particular, for LD1/ST1, numStructElems is 1 but numRegs can be
+            # 1, 2, 3 or 4
+
+            eCode += '''
+                int eCount = dataSize / (8 << eSize);
+                int eSizeBytes = 1 << eSize;
+                int totNumBytes = numRegs * dataSize / 8;
+                int numOutputElems = 128 / (8 << eSize);
+                int stepOffset = step * 32;
+
+                for (int i = 0; i < 2; ++i) {
+                    output[i].lo = 0;
+                    output[i].hi = 0;
+                }
+
+                int r = 0, k = 0, i, j;
+                XReg data;
+
+                for (int pos = stepOffset; pos < 32 + stepOffset;
+                        pos += eSizeBytes) {
+                    if (pos < totNumBytes) {
+                        if (numStructElems == 1) {
+                            i = (pos / eSizeBytes) % eCount;
+                            j = pos / (eCount * eSizeBytes);
+                        } else {
+                            i = pos / (numStructElems * eSizeBytes);
+                            j = (pos % (numStructElems * eSizeBytes)) /
+                                eSizeBytes;
+                        }
+                        data = (XReg) readVecElem(input[j], (XReg) i, eSize);
+                        writeVecElem(&output[r], data, k, eSize);
+                        k++;
+                        if (k == numOutputElems){
+                            k = 0;
+                            ++r;
+                        }
+                    }
+                }
+                '''
+            for v in range(2):
+                for p in range(4):
+                    eCode += '''
+                AA64FpDestP%(p)dV%(v)d_uw = (uint32_t) readVecElem(
+                    output[%(v)d], %(p)d, 0x2);
+                ''' % { 'v': v, 'p': p}
+
+            iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
+                                { 'code' : eCode }, ['IsMicroop'])
+            header_output += MicroNeonMixDeclare64.subst(iop)
+            exec_output += MicroNeonMixExecute64.subst(iop)
+
+        elif name == 'unpack_neon_uop':
+
+            eCode = '''
+                VReg input[4];  //input data from scratch area
+                VReg output[2];  //output data to arch. SIMD regs
+            '''
+
+            eCode += getInputCodeOp1L
+
+            # Fill output regs with register data initially.  Note that
+            # elements in output register outside indexed lanes are left
+            # untouched
+            for v in range(2):
+                for p in range(4):
+                    eCode += '''
+                writeVecElem(&output[%(v)d], (XReg) AA64FpDestP%(p)dV%(v)dL_uw,
+                             %(p)d, 0x2);
+                ''' % { 'v': v, 'p': p}
+            eCode += '''
+                int eCount = dataSize / (8 << eSize);
+                int eCount128 = 128 / (8 << eSize);
+                int eSizeBytes = 1 << eSize;
+                int totNumBytes = numStructElems * eSizeBytes;
+                int numInputElems = eCount128;
+                int stepOffset = step * 2 * eSizeBytes;
+                int stepLimit = 2 * eSizeBytes;
+
+                int r = 0, i, j;
+                XReg data;
+
+                for (int pos = stepOffset; pos < stepLimit + stepOffset;
+                        pos += eSizeBytes) {
+                    if (pos < totNumBytes) {
+                        r = pos / eSizeBytes;
+                        j = r / numInputElems;
+                        i = r % numInputElems;
+                        data = (XReg) readVecElem(input[j], (XReg) i, eSize);
+
+                        if (replicate) {
+                            for (int i = 0; i < eCount128; ++i) {
+                                if (i < eCount) {
+                                    writeVecElem(&output[r % 2], data, i,
+                                                 eSize);
+                                } else {  // zero extend if necessary
+                                    writeVecElem(&output[r % 2], (XReg) 0, i,
+                                                 eSize);
+                                }
+                            }
+                        } else {
+                            writeVecElem(&output[r % 2], data, lane, eSize);
+                        }
+                    }
+                }
+            '''
+            for v in range(2):
+                for p in range(4):
+                    eCode += '''
+                AA64FpDestP%(p)dV%(v)dL_uw = (uint32_t) readVecElem(
+                    output[%(v)d], %(p)d, 0x2);
+                ''' % { 'v' : v, 'p' : p }
+
+            iop = InstObjParams(name, Name, 'MicroNeonMixLaneOp64',
+                                { 'code' : eCode }, ['IsMicroop'])
+            header_output += MicroNeonMixLaneDeclare64.subst(iop)
+            exec_output += MicroNeonMixExecute64.subst(iop)
+
+        elif name == 'pack_neon_uop':
+
+            eCode = '''
+                VReg input[4];  // input data from arch. SIMD regs
+                VReg output[2];  // output data to scratch area
+            '''
+
+            eCode += getInputCodeOp1S
+
+            eCode += '''
+                int eSizeBytes = 1 << eSize;
+                int numOutputElems = 128 / (8 << eSize);
+                int totNumBytes = numStructElems * eSizeBytes;
+                int stepOffset = step * 32;
+                int stepLimit = 32;
+
+                int r = 0, i, j;
+                XReg data;
+
+                for (int i = 0; i < 2; ++i) {
+                    output[i].lo = 0;
+                    output[i].hi = 0;
+                }
+
+                for (int pos = stepOffset; pos < stepLimit + stepOffset;
+                        pos += eSizeBytes) {
+                    if (pos < totNumBytes) {
+                        r = pos / 16;
+                        j = pos / eSizeBytes;
+                        i = (pos / eSizeBytes) %  numOutputElems;
+                        data = (XReg) readVecElem(input[j], lane, eSize);
+                        writeVecElem(&output[r % 2], data, i, eSize);
+                    }
+                }
+            '''
+
+            for v in range(2):
+                for p in range(4):
+                    eCode += '''
+                AA64FpDestP%(p)dV%(v)d_uw = (uint32_t) readVecElem(
+                    output[%(v)d], %(p)d, 0x2);
+                ''' % { 'v' : v, 'p' : p }
+
+            iop = InstObjParams(name, Name, 'MicroNeonMixLaneOp64',
+                                { 'code' : eCode }, ['IsMicroop'])
+            header_output += MicroNeonMixLaneDeclare64.subst(iop)
+            exec_output += MicroNeonMixExecute64.subst(iop)
+
+    # Generate instructions
+    mkMemAccMicroOp('mem_neon_uop')
+    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64')
+    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64')
+    mkMarshalMicroOp('unpack_neon_uop', 'MicroUnpackNeon64')
+    mkMarshalMicroOp('pack_neon_uop', 'MicroPackNeon64')
+
+}};
+
+let {{
+
+    iop = InstObjParams('vldmult64', 'VldMult64', 'VldMultOp64', '', [])
+    header_output += VMemMultDeclare64.subst(iop)
+    decoder_output += VMemMultConstructor64.subst(iop)
+
+    iop = InstObjParams('vstmult64', 'VstMult64', 'VstMultOp64', '', [])
+    header_output += VMemMultDeclare64.subst(iop)
+    decoder_output += VMemMultConstructor64.subst(iop)
+
+    iop = InstObjParams('vldsingle64', 'VldSingle64', 'VldSingleOp64', '', [])
+    header_output += VMemSingleDeclare64.subst(iop)
+    decoder_output += VMemSingleConstructor64.subst(iop)
+
+    iop = InstObjParams('vstsingle64', 'VstSingle64', 'VstSingleOp64', '', [])
+    header_output += VMemSingleDeclare64.subst(iop)
+    decoder_output += VMemSingleConstructor64.subst(iop)
+
+}};

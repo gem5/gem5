@@ -135,9 +135,14 @@ if options.bench:
     for app in apps:
         try:
             if buildEnv['TARGET_ISA'] == 'alpha':
-                exec("workload = %s('alpha', 'tru64', 'ref')" % app)
+                exec("workload = %s('alpha', 'tru64', '%s')" % (
+                        app, options.spec_input))
+            elif buildEnv['TARGET_ISA'] == 'arm':
+                exec("workload = %s('arm_%s', 'linux', '%s')" % (
+                        app, options.arm_iset, options.spec_input))
             else:
-                exec("workload = %s(buildEnv['TARGET_ISA'], 'linux', 'ref')" % app)
+                exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
+                        app, options.spec_input))
             multiprocesses.append(workload.makeLiveProcess())
         except:
             print >>sys.stderr, "Unable to find workload for %s: %s" % (buildEnv['TARGET_ISA'], app)

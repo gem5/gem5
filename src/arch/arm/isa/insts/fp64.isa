@@ -1,0 +1,811 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2012-2013 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Thomas Grocutt
+//          Edmund Grimley Evans
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    fmovImmSCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = bits(imm, 31, 0);
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovImmSIop = InstObjParams("fmov", "FmovImmS", "FpRegImmOp",
+                                { "code": fmovImmSCode,
+                                  "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegImmOpDeclare.subst(fmovImmSIop);
+    decoder_output += FpRegImmOpConstructor.subst(fmovImmSIop);
+    exec_output    += BasicExecute.subst(fmovImmSIop);
+
+    fmovImmDCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = bits(imm, 31, 0);
+        AA64FpDestP1_uw = bits(imm, 63, 32);
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovImmDIop = InstObjParams("fmov", "FmovImmD", "FpRegImmOp",
+                                { "code": fmovImmDCode,
+                                  "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegImmOpDeclare.subst(fmovImmDIop);
+    decoder_output += AA64FpRegImmOpConstructor.subst(fmovImmDIop);
+    exec_output    += BasicExecute.subst(fmovImmDIop);
+
+    fmovRegSCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = AA64FpOp1P0_uw;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovRegSIop = InstObjParams("fmov", "FmovRegS", "FpRegRegOp",
+                                { "code": fmovRegSCode,
+                                  "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovRegSIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegSIop);
+    exec_output    += BasicExecute.subst(fmovRegSIop);
+
+    fmovRegDCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = AA64FpOp1P0_uw;
+        AA64FpDestP1_uw = AA64FpOp1P1_uw;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovRegDIop = InstObjParams("fmov", "FmovRegD", "FpRegRegOp",
+                                { "code": fmovRegDCode,
+                                  "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovRegDIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegDIop);
+    exec_output    += BasicExecute.subst(fmovRegDIop);
+
+    fmovCoreRegWCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = WOp1_uw;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovCoreRegWIop = InstObjParams("fmov", "FmovCoreRegW", "FpRegRegOp",
+                                    { "code": fmovCoreRegWCode,
+                                      "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovCoreRegWIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovCoreRegWIop);
+    exec_output    += BasicExecute.subst(fmovCoreRegWIop);
+
+    fmovCoreRegXCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP0_uw = XOp1_ud;
+        AA64FpDestP1_uw = XOp1_ud >> 32;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+    '''
+    fmovCoreRegXIop = InstObjParams("fmov", "FmovCoreRegX", "FpRegRegOp",
+                                    { "code": fmovCoreRegXCode,
+                                      "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovCoreRegXIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovCoreRegXIop);
+    exec_output    += BasicExecute.subst(fmovCoreRegXIop);
+
+    fmovUCoreRegXCode = vfp64EnabledCheckCode + '''
+        AA64FpDestP2_uw = XOp1_ud;
+        AA64FpDestP3_uw = XOp1_ud >> 32;
+    '''
+    fmovUCoreRegXIop = InstObjParams("fmov", "FmovUCoreRegX", "FpRegRegOp",
+                                    { "code": fmovUCoreRegXCode,
+                                      "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovUCoreRegXIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovUCoreRegXIop);
+    exec_output    += BasicExecute.subst(fmovUCoreRegXIop);
+
+    fmovRegCoreWCode = vfp64EnabledCheckCode + '''
+        WDest = AA64FpOp1P0_uw;
+    '''
+    fmovRegCoreWIop = InstObjParams("fmov", "FmovRegCoreW", "FpRegRegOp",
+                                     { "code": fmovRegCoreWCode,
+                                       "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovRegCoreWIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegCoreWIop);
+    exec_output    += BasicExecute.subst(fmovRegCoreWIop);
+
+    fmovRegCoreXCode = vfp64EnabledCheckCode + '''
+        XDest = ( ((uint64_t) AA64FpOp1P1_uw) << 32) | AA64FpOp1P0_uw;
+    '''
+    fmovRegCoreXIop = InstObjParams("fmov", "FmovRegCoreX", "FpRegRegOp",
+                                     { "code": fmovRegCoreXCode,
+                                       "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovRegCoreXIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegCoreXIop);
+    exec_output    += BasicExecute.subst(fmovRegCoreXIop);
+
+    fmovURegCoreXCode = vfp64EnabledCheckCode + '''
+        XDest = ( ((uint64_t) AA64FpOp1P3_uw) << 32) | AA64FpOp1P2_uw;
+    '''
+    fmovURegCoreXIop = InstObjParams("fmov", "FmovURegCoreX", "FpRegRegOp",
+                                    { "code":     fmovURegCoreXCode,
+                                      "op_class": "SimdFloatMiscOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fmovURegCoreXIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fmovURegCoreXIop);
+    exec_output    += BasicExecute.subst(fmovURegCoreXIop);
+}};
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    singleIntConvCode = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t cOp1  = AA64FpOp1P0_uw;
+        uint32_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    singleIntConvCode2 = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t cOp1  = AA64FpOp1P0_uw;
+        uint32_t cOp2  = AA64FpOp2P0_uw;
+        uint32_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    singleBinOp = "binaryOp(fpscr, AA64FpOp1P0, AA64FpOp2P0," + \
+                "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
+    singleUnaryOp = "unaryOp(fpscr, AA64FpOp1P0, %(func)s, fpscr.fz, fpscr.rMode)"
+
+    doubleIntConvCode = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint64_t cOp1  = ((uint64_t) AA64FpOp1P1_uw) << 32 | AA64FpOp1P0_uw;
+        uint64_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest & 0xFFFFFFFF;
+        AA64FpDestP1_uw = cDest >> 32;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    doubleIntConvCode2 = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint64_t cOp1  = ((uint64_t) AA64FpOp1P1_uw) << 32 | AA64FpOp1P0_uw;
+        uint64_t cOp2  = ((uint64_t) AA64FpOp2P1_uw) << 32 | AA64FpOp2P0_uw;
+        uint64_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest & 0xFFFFFFFF;
+        AA64FpDestP1_uw = cDest >> 32;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    doubleBinOp = '''
+        binaryOp(fpscr, dbl(AA64FpOp1P0_uw, AA64FpOp1P1_uw),
+                        dbl(AA64FpOp2P0_uw, AA64FpOp2P1_uw),
+                        %(func)s, fpscr.fz, fpscr.dn, fpscr.rMode);
+    '''
+    doubleUnaryOp = '''
+        unaryOp(fpscr, dbl(AA64FpOp1P0_uw, AA64FpOp1P1_uw), %(func)s,
+                fpscr.fz, fpscr.rMode)
+    '''
+
+    def buildTernaryFpOp(name, opClass, sOp, dOp):
+        global header_output, decoder_output, exec_output
+        for isDouble in True, False:
+            code = vfp64EnabledCheckCode + '''
+                FPSCR fpscr = (FPSCR) FpscrExc;
+            '''
+            if isDouble:
+                code += '''
+                    uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+                    uint64_t cOp2 = AA64FpOp2P0_uw | (uint64_t)AA64FpOp2P1_uw << 32;
+                    uint64_t cOp3 = AA64FpOp3P0_uw | (uint64_t)AA64FpOp3P1_uw << 32;
+                    uint64_t cDest;
+                ''' "cDest = " + dOp + ";" + '''
+                    AA64FpDestP0_uw = cDest;
+                    AA64FpDestP1_uw = cDest >> 32;
+                '''
+            else:
+                code += '''
+                    uint32_t cOp1 = AA64FpOp1P0_uw;
+                    uint32_t cOp2 = AA64FpOp2P0_uw;
+                    uint32_t cOp3 = AA64FpOp3P0_uw;
+                    uint32_t cDest;
+                ''' "cDest = " + sOp + ";" + '''
+                    AA64FpDestP0_uw = cDest;
+                    AA64FpDestP1_uw = 0;
+                '''
+            code += '''
+                AA64FpDestP2_uw = 0;
+                AA64FpDestP3_uw = 0;
+                FpscrExc = fpscr;
+            '''
+
+            iop = InstObjParams(name.lower(), name + ("D" if isDouble else "S"),
+                                "FpRegRegRegRegOp",
+                                { "code": code, "op_class": opClass }, [])
+
+            header_output  += AA64FpRegRegRegRegOpDeclare.subst(iop)
+            decoder_output += AA64FpRegRegRegRegOpConstructor.subst(iop)
+            exec_output    += BasicExecute.subst(iop)
+
+    buildTernaryFpOp("FMAdd", "SimdFloatMultAccOp",
+                     "fplibMulAdd<uint32_t>(cOp3, cOp1, cOp2, fpscr)",
+                     "fplibMulAdd<uint64_t>(cOp3, cOp1, cOp2, fpscr)" )
+    buildTernaryFpOp("FMSub", "SimdFloatMultAccOp",
+                     "fplibMulAdd<uint32_t>(cOp3, fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
+                     "fplibMulAdd<uint64_t>(cOp3, fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
+    buildTernaryFpOp("FNMAdd", "SimdFloatMultAccOp",
+                     "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
+                     "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
+    buildTernaryFpOp("FNMSub", "SimdFloatMultAccOp",
+                     "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), cOp1, cOp2, fpscr)",
+                     "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), cOp1, cOp2, fpscr)" )
+
+    def buildBinFpOp(name, Name, base, opClass, singleOp, doubleOp):
+        global header_output, decoder_output, exec_output
+
+        code = singleIntConvCode2 % { "op": singleOp }
+        sIop = InstObjParams(name, Name + "S", base,
+                { "code": code,
+                  "op_class": opClass }, [])
+
+        code = doubleIntConvCode2 % { "op": doubleOp }
+        dIop = InstObjParams(name, Name + "D", base,
+                { "code": code,
+                  "op_class": opClass }, [])
+
+        declareTempl     = eval(         base + "Declare");
+        constructorTempl = eval("AA64" + base + "Constructor");
+
+        for iop in sIop, dIop:
+            header_output  += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output    += BasicExecute.subst(iop)
+
+    buildBinFpOp("fadd", "FAdd", "FpRegRegRegOp", "SimdFloatAddOp",
+                 "fplibAdd<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibAdd<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fsub", "FSub", "FpRegRegRegOp", "SimdFloatAddOp",
+                 "fplibSub<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibSub<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fdiv", "FDiv", "FpRegRegRegOp", "SimdFloatDivOp",
+                 "fplibDiv<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibDiv<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fmul", "FMul", "FpRegRegRegOp", "SimdFloatMultOp",
+                 "fplibMul<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibMul<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fnmul", "FNMul", "FpRegRegRegOp", "SimdFloatMultOp",
+                 "fplibNeg<uint32_t>(fplibMul<uint32_t>(cOp1, cOp2, fpscr))",
+                 "fplibNeg<uint64_t>(fplibMul<uint64_t>(cOp1, cOp2, fpscr))")
+    buildBinFpOp("fmin", "FMin", "FpRegRegRegOp", "SimdFloatCmpOp",
+                 "fplibMin<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibMin<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fmax", "FMax", "FpRegRegRegOp", "SimdFloatCmpOp",
+                 "fplibMax<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibMax<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fminnm", "FMinNM", "FpRegRegRegOp", "SimdFloatCmpOp",
+                 "fplibMinNum<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibMinNum<uint64_t>(cOp1, cOp2, fpscr)")
+    buildBinFpOp("fmaxnm", "FMaxNM", "FpRegRegRegOp", "SimdFloatCmpOp",
+                 "fplibMaxNum<uint32_t>(cOp1, cOp2, fpscr)",
+                 "fplibMaxNum<uint64_t>(cOp1, cOp2, fpscr)")
+
+    def buildUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp = None):
+        if doubleOp is None:
+            doubleOp = singleOp
+        global header_output, decoder_output, exec_output
+
+        code = singleIntConvCode % { "op": singleOp }
+        sIop = InstObjParams(name, Name + "S", base,
+                { "code": code,
+                  "op_class": opClass }, [])
+        code = doubleIntConvCode % { "op": doubleOp }
+        dIop = InstObjParams(name, Name + "D", base,
+                { "code": code,
+                  "op_class": opClass }, [])
+
+        declareTempl     = eval(         base + "Declare");
+        constructorTempl = eval("AA64" + base + "Constructor");
+
+        for iop in sIop, dIop:
+            header_output  += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output    += BasicExecute.subst(iop)
+
+    buildUnaryFpOp("fsqrt", "FSqrt", "FpRegRegOp", "SimdFloatSqrtOp",
+                   "fplibSqrt<uint32_t>(cOp1, fpscr)", "fplibSqrt<uint64_t>(cOp1, fpscr)")
+
+    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp,
+                             doubleOp = None, isIntConv = True):
+        if doubleOp is None:
+            doubleOp = singleOp
+        global header_output, decoder_output, exec_output
+
+        if isIntConv:
+            sCode = singleIntConvCode
+            dCode = doubleIntConvCode
+        else:
+            sCode = singleCode
+            dCode = doubleCode
+
+        for code, op, suffix in [[sCode, singleOp, "S"],
+                                 [dCode, doubleOp, "D"]]:
+            iop = InstObjParams(name, Name + suffix, base,
+                { "code": code % { "op": op },
+                  "op_class": opClass }, [])
+
+            declareTempl     = eval(         base + "Declare");
+            constructorTempl = eval("AA64" + base + "Constructor");
+
+            header_output  += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output    += BasicExecute.subst(iop)
+
+    buildSimpleUnaryFpOp("fneg", "FNeg", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibNeg<uint32_t>(cOp1)", "fplibNeg<uint64_t>(cOp1)")
+    buildSimpleUnaryFpOp("fabs", "FAbs", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibAbs<uint32_t>(cOp1)", "fplibAbs<uint64_t>(cOp1)")
+    buildSimpleUnaryFpOp("frintn", "FRIntN", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)")
+    buildSimpleUnaryFpOp("frintp", "FRIntP", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_POSINF, false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)")
+    buildSimpleUnaryFpOp("frintm", "FRIntM", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)")
+    buildSimpleUnaryFpOp("frintz", "FRIntZ", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_ZERO, false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_ZERO, false, fpscr)")
+    buildSimpleUnaryFpOp("frinta", "FRIntA", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)")
+    buildSimpleUnaryFpOp("frinti", "FRIntI", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), false, fpscr)")
+    buildSimpleUnaryFpOp("frintx", "FRIntX", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
+                         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), true, fpscr)")
+}};
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    # Creates the integer to floating point instructions, including variants for
+    # signed/unsigned, float/double, etc
+    for regL, regOpL, width in [["W", "w", 32],
+                                ["X", "d", 64]]:
+        for isDouble in True, False:
+            for us, usCode in [["U", "uint%d_t cSrc = %sOp1_u%s;" %(width, regL, regOpL)],
+                               ["S", "int%d_t  cSrc = %sOp1_u%s;" %(width, regL, regOpL)]]:
+                fcvtIntFpDCode = vfp64EnabledCheckCode + '''
+                    FPSCR fpscr = (FPSCR) FpscrExc;
+                    %s
+                ''' %(usCode)
+
+                if isDouble:
+                    fcvtIntFpDCode += '''
+                        uint64_t cDest = fplibFixedToFP<uint64_t>(cSrc, 0,
+                            %s, FPCRRounding(fpscr), fpscr);
+                        AA64FpDestP0_uw = cDest;
+                        AA64FpDestP1_uw = cDest >> 32;
+                    ''' % ("true" if us == "U" else "false")
+                else:
+                    fcvtIntFpDCode += '''
+                        uint32_t cDest = fplibFixedToFP<uint32_t>(cSrc, 0,
+                            %s, FPCRRounding(fpscr), fpscr);
+                        AA64FpDestP0_uw = cDest;
+                        AA64FpDestP1_uw = 0;
+                    ''' % ("true" if us == "U" else "false")
+                fcvtIntFpDCode += '''
+                    AA64FpDestP2_uw = 0;
+                    AA64FpDestP3_uw = 0;
+                    FpscrExc = fpscr;
+                '''
+
+                instName = "Fcvt%s%sIntFp%s" %(regL, us, "D" if isDouble else "S")
+                mnem     = "%scvtf" %(us.lower())
+                fcvtIntFpDIop = InstObjParams(mnem, instName, "FpRegRegOp",
+                                                { "code": fcvtIntFpDCode,
+                                                  "op_class": "SimdFloatCvtOp" }, [])
+                header_output  += FpRegRegOpDeclare.subst(fcvtIntFpDIop);
+                decoder_output += AA64FpRegRegOpConstructor.subst(fcvtIntFpDIop);
+                exec_output    += BasicExecute.subst(fcvtIntFpDIop);
+
+    # Generates the floating point to integer conversion instructions in various
+    # variants, eg signed/unsigned
+    def buildFpCvtIntOp(isDouble, isSigned, isXReg):
+        global header_output, decoder_output, exec_output
+
+        for rmode, roundingMode in [["N", "FPRounding_TIEEVEN"],
+                                    ["P", "FPRounding_POSINF"],
+                                    ["M", "FPRounding_NEGINF"],
+                                    ["Z", "FPRounding_ZERO"],
+                                    ["A", "FPRounding_TIEAWAY"]]:
+            fcvtFpIntCode = vfp64EnabledCheckCode + '''
+                FPSCR fpscr = (FPSCR) FpscrExc;'''
+            if isDouble:
+                fcvtFpIntCode += '''
+                uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+                '''
+            else:
+                fcvtFpIntCode += "uint32_t cOp1 = AA64FpOp1P0_uw;"
+
+            fcvtFpIntCode += '''
+                %sDest = fplibFPToFixed<uint%s_t, uint%s_t>(cOp1, 0, %s, %s, fpscr);
+                FpscrExc = fpscr;
+            ''' %("X"      if isXReg   else "W",
+                  "64"     if isDouble else "32",
+                  "64"     if isXReg   else "32",
+                  "false"  if isSigned else "true",
+                  roundingMode)
+
+            instName = "FcvtFp%sInt%s%s%s" %("S" if isSigned else "U",
+                                             "X" if isXReg   else "W",
+                                             "D" if isDouble else "S", rmode)
+            mnem     = "fcvt%s%s" %(rmode, "s" if isSigned else "u")
+            fcvtFpIntIop = InstObjParams(mnem, instName, "FpRegRegOp",
+                                        { "code": fcvtFpIntCode,
+                                        "op_class": "SimdFloatCvtOp" }, [])
+            header_output  += FpRegRegOpDeclare.subst(fcvtFpIntIop);
+            decoder_output += FpRegRegOpConstructor.subst(fcvtFpIntIop);
+            exec_output    += BasicExecute.subst(fcvtFpIntIop);
+
+    # Now actually do the building with the different variants
+    for isDouble in True, False:
+       for isSigned in True, False:
+           for isXReg in True, False:
+             buildFpCvtIntOp(isDouble, isSigned, isXReg)
+
+    fcvtFpSFpDCode = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint64_t cDest = fplibConvert<uint32_t, uint64_t>(AA64FpOp1P0_uw,
+            FPCRRounding(fpscr), fpscr);
+        AA64FpDestP0_uw = cDest;
+        AA64FpDestP1_uw = cDest >> 32;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+    fcvtFpSFpDIop = InstObjParams("fcvt", "FCvtFpSFpD", "FpRegRegOp",
+                                     { "code": fcvtFpSFpDCode,
+                                       "op_class": "SimdFloatCvtOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fcvtFpSFpDIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpSFpDIop);
+    exec_output    += BasicExecute.subst(fcvtFpSFpDIop);
+
+    fcvtFpDFpSCode = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+        AA64FpDestP0_uw = fplibConvert<uint64_t, uint32_t>(cOp1,
+            FPCRRounding(fpscr), fpscr);
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+    fcvtFpDFpSIop = InstObjParams("fcvt", "FcvtFpDFpS", "FpRegRegOp",
+                                 {"code":     fcvtFpDFpSCode,
+                                  "op_class": "SimdFloatCvtOp" }, [])
+    header_output  += FpRegRegOpDeclare.subst(fcvtFpDFpSIop);
+    decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpDFpSIop);
+    exec_output    += BasicExecute.subst(fcvtFpDFpSIop);
+
+    # Half precision to single or double precision conversion
+    for isDouble in True, False:
+        code = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            %s cDest = fplibConvert<uint16_t, uint%s_t>(AA64FpOp1P0_uw,
+                FPCRRounding(fpscr), fpscr);
+        ''' % ("uint64_t" if isDouble else "uint32_t",
+               "64" if isDouble else "32")
+        if isDouble:
+            code += '''
+                AA64FpDestP0_uw = cDest;
+                AA64FpDestP1_uw = cDest >> 32;
+            '''
+        else:
+            code += '''
+                AA64FpDestP0_uw = cDest;
+                AA64FpDestP1_uw = 0;
+            '''
+        code += '''
+            AA64FpDestP2_uw = 0;
+            AA64FpDestP3_uw = 0;
+            FpscrExc = fpscr;
+        '''
+
+        instName = "FcvtFpHFp%s" %("D" if isDouble else "S")
+        fcvtFpHFpIop = InstObjParams("fcvt", instName, "FpRegRegOp",
+                                     { "code": code,
+                                       "op_class": "SimdFloatCvtOp" }, [])
+        header_output  += FpRegRegOpDeclare.subst(fcvtFpHFpIop);
+        decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpHFpIop);
+        exec_output    += BasicExecute.subst(fcvtFpHFpIop);
+
+    # single or double precision to Half precision conversion
+    for isDouble in True, False:
+        code = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            %s;
+            AA64FpDestP0_uw = fplibConvert<uint%s_t, uint16_t>(cOp1,
+                FPCRRounding(fpscr), fpscr);
+            AA64FpDestP1_uw = 0;
+            AA64FpDestP2_uw = 0;
+            AA64FpDestP3_uw = 0;
+            FpscrExc = fpscr;
+        ''' % ("uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32"
+               if isDouble else "uint32_t cOp1 = AA64FpOp1P0_uw",
+               "64" if isDouble else "32")
+
+        instName = "FcvtFp%sFpH" %("D" if isDouble else "S")
+        fcvtFpFpHIop = InstObjParams("fcvt", instName, "FpRegRegOp",
+                                     { "code": code,
+                                       "op_class": "SimdFloatCvtOp" }, [])
+        header_output  += FpRegRegOpDeclare.subst(fcvtFpFpHIop);
+        decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpFpHIop);
+        exec_output    += BasicExecute.subst(fcvtFpFpHIop);
+
+    # Build the various versions of the floating point compare instructions
+    def buildFCmpOp(isQuiet, isDouble, isImm):
+        global header_output, decoder_output, exec_output
+
+        fcmpCode = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            %s cOp1 = %s;
+        ''' % ("uint64_t" if isDouble else "uint32_t",
+               "AA64FpDestP0_uw | (uint64_t)AA64FpDestP1_uw << 32"
+               if isDouble else "AA64FpDestP0_uw")
+        if isImm:
+            fcmpCode += '''
+                %s cOp2 = imm;
+            ''' % ("uint64_t" if isDouble else "uint32_t")
+        else:
+            fcmpCode += '''
+                %s cOp2  = %s;
+            ''' % ("uint64_t" if isDouble else "uint32_t",
+                   "AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32"
+                   if isDouble else "AA64FpOp1P0_uw")
+        fcmpCode += '''
+            int cc = fplibCompare<uint%s_t>(cOp1, cOp2, %s, fpscr);
+            CondCodesNZ = cc >> 2 & 3;
+            CondCodesC = cc >> 1 & 1;
+            CondCodesV = cc & 1;
+            FpCondCodes = fpscr & FpCondCodesMask;
+            FpscrExc    = fpscr;
+        ''' % ("64" if isDouble else "32", "false" if isQuiet else "true")
+
+        typeName = "Imm" if isImm else "Reg"
+        instName = "FCmp%s%s%s" %(""  if isQuiet  else "E", typeName,
+                                  "D" if isDouble else "S")
+        fcmpIop = InstObjParams("fcmp%s" %(""  if isQuiet else "e"), instName,
+                                "FpReg%sOp" %(typeName),
+                               {"code":     fcmpCode,
+                                "op_class": "SimdFloatCmpOp"}, [])
+
+        declareTemp     = eval("FpReg%sOpDeclare"         %(typeName));
+        constructorTemp = eval("AA64FpReg%sOpConstructor" %(typeName));
+        header_output  += declareTemp.subst(fcmpIop);
+        decoder_output += constructorTemp.subst(fcmpIop);
+        exec_output    += BasicExecute.subst(fcmpIop);
+
+    for isQuiet in True, False:
+        for isDouble in True, False:
+            for isImm in True, False:
+                buildFCmpOp(isQuiet, isDouble, isImm)
+
+    # Build the various versions of the conditional floating point compare
+    # instructions
+    def buildFCCmpOp(isQuiet, isDouble):
+        global header_output, decoder_output, exec_output
+
+        fccmpCode = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode)) {
+                %s cOp1 = %s;
+                %s cOp2 = %s;
+                int cc = fplibCompare<uint%s_t>(cOp1, cOp2, %s, fpscr);
+                CondCodesNZ = cc >> 2 & 3;
+                CondCodesC = cc >> 1 & 1;
+                CondCodesV = cc & 1;
+            } else {
+                CondCodesNZ = (defCc >> 2) & 0x3;
+                CondCodesC  = (defCc >> 1) & 0x1;
+                CondCodesV  = defCc & 0x1;
+            }
+            FpCondCodes = fpscr & FpCondCodesMask;
+            FpscrExc    = fpscr;
+        ''' % ("uint64_t" if isDouble else "uint32_t",
+               "AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32"
+               if isDouble else "AA64FpOp1P0_uw",
+               "uint64_t" if isDouble else "uint32_t",
+               "AA64FpOp2P0_uw | (uint64_t)AA64FpOp2P1_uw << 32"
+               if isDouble else "AA64FpOp2P0_uw",
+               "64" if isDouble else "32", "false" if isQuiet else "true")
+
+        instName = "FCCmp%sReg%s" %(""  if isQuiet  else "E",
+                                    "D" if isDouble else "S")
+        fccmpIop = InstObjParams("fccmp%s" %(""  if isQuiet  else "e"),
+                                 instName, "FpCondCompRegOp",
+                                {"code":           fccmpCode,
+                                 "op_class":       "SimdFloatCmpOp"}, [])
+        header_output  += DataXCondCompRegDeclare.subst(fccmpIop);
+        decoder_output += DataXCondCompRegConstructor.subst(fccmpIop);
+        exec_output    += BasicExecute.subst(fccmpIop);
+
+    for isQuiet in True, False:
+        for isDouble in True, False:
+            buildFCCmpOp(isQuiet, isDouble)
+
+}};
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    # Generates the variants of the floating to fixed point instructions
+    def buildFpCvtFixedOp(isSigned, isDouble, isXReg):
+        global header_output, decoder_output, exec_output
+
+        fcvtFpFixedCode = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+        '''
+        if isDouble:
+            fcvtFpFixedCode += '''
+                uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+            '''
+        else:
+            fcvtFpFixedCode += "uint32_t cOp1 = AA64FpOp1P0_uw;"
+        fcvtFpFixedCode += '''
+            %sDest = fplibFPToFixed<uint%s_t, uint%s_t>(cOp1, 64 - imm, %s,
+                FPRounding_ZERO, fpscr);
+            FpscrExc = fpscr;
+        ''' %("X"      if isXReg   else "W",
+              "64"     if isDouble else "32",
+              "64"     if isXReg   else "32",
+              "false"  if isSigned else "true")
+
+        instName = "FcvtFp%sFixed%s%s" %("S" if isSigned else "U",
+                                         "D" if isDouble else "S",
+                                         "X" if isXReg   else "W")
+        mnem = "fcvtz%s" %("s" if isSigned else "u")
+        fcvtFpFixedIop = InstObjParams(mnem, instName, "FpRegRegImmOp",
+                                       { "code": fcvtFpFixedCode,
+                                         "op_class": "SimdFloatCvtOp" }, [])
+        header_output  += FpRegRegImmOpDeclare.subst(fcvtFpFixedIop);
+        decoder_output += AA64FpRegRegImmOpConstructor.subst(fcvtFpFixedIop);
+        exec_output    += BasicExecute.subst(fcvtFpFixedIop);
+
+    # Generates the variants of the fixed to floating point instructions
+    def buildFixedCvtFpOp(isSigned, isDouble, isXReg):
+        global header_output, decoder_output, exec_output
+
+        srcRegType = "X" if isXReg   else "W"
+        fcvtFixedFpCode = vfp64EnabledCheckCode + '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            %s result = fplibFixedToFP<uint%s_t>((%s%s_t)%sOp1, 64 - imm,
+                %s, FPCRRounding(fpscr), fpscr);
+        ''' %("uint64_t" if isDouble else "uint32_t",
+              "64" if isDouble else "32",
+              "int" if isSigned else "uint", "64" if isXReg else "32",
+              srcRegType,
+              "false" if isSigned else "true")
+        if isDouble:
+            fcvtFixedFpCode += '''
+                AA64FpDestP0_uw = result;
+                AA64FpDestP1_uw = result >> 32;
+            '''
+        else:
+            fcvtFixedFpCode += '''
+                AA64FpDestP0_uw = result;
+                AA64FpDestP1_uw = 0;
+            '''
+        fcvtFixedFpCode += '''
+            AA64FpDestP2_uw = 0;
+            AA64FpDestP3_uw = 0;
+            FpscrExc = fpscr;
+        '''
+
+        instName = "Fcvt%sFixedFp%s%s" %("S" if isSigned else "U",
+                                         "D" if isDouble else "S",
+                                         srcRegType)
+        mnem = "%scvtf" %("s" if isSigned else "u")
+        fcvtFixedFpIop = InstObjParams(mnem, instName, "FpRegRegImmOp",
+                                       { "code":     fcvtFixedFpCode,
+                                         "op_class": "SimdFloatCvtOp" }, [])
+        header_output  += FpRegRegImmOpDeclare.subst(fcvtFixedFpIop);
+        decoder_output += FpRegRegImmOpConstructor.subst(fcvtFixedFpIop);
+        exec_output    += BasicExecute.subst(fcvtFixedFpIop);
+
+    # loop over the variants building the instructions for each
+    for isXReg in True, False:
+        for isDouble in True, False:
+            for isSigned in True, False:
+                buildFpCvtFixedOp(isSigned, isDouble, isXReg)
+                buildFixedCvtFpOp(isSigned, isDouble, isXReg)
+}};
+
+let {{
+
+    header_output  = ""
+    decoder_output = ""
+    exec_output    = ""
+
+    for isDouble in True, False:
+        code = '''
+            if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode)) {
+                AA64FpDestP0_uw = AA64FpOp1P0_uw;
+        '''
+        if isDouble:
+            code += '''
+                    AA64FpDestP1_uw = AA64FpOp1P1_uw;
+                } else {
+                    AA64FpDestP0_uw = AA64FpOp2P0_uw;
+                    AA64FpDestP1_uw = AA64FpOp2P1_uw;
+                }
+            '''
+        else:
+            code += '''
+                } else {
+                    AA64FpDestP0_uw = AA64FpOp2P0_uw;
+                }
+                AA64FpDestP1_uw = 0;
+            '''
+        code += '''
+            AA64FpDestP2_uw = 0;
+            AA64FpDestP3_uw = 0;
+        '''
+
+        iop = InstObjParams("fcsel", "FCSel%s" %("D" if isDouble else "S"),
+                            "FpCondSelOp", code)
+        header_output  += DataXCondSelDeclare.subst(iop)
+        decoder_output += DataXCondSelConstructor.subst(iop)
+        exec_output    += BasicExecute.subst(iop)
+}};

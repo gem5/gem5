@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,18 +48,45 @@
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
-    : System(p), bootldr(NULL), multiProc(p->multi_proc)
+    : System(p), bootldr(NULL), _haveSecurity(p->have_security),
+      _haveLPAE(p->have_lpae),
+      _haveVirtualization(p->have_virtualization),
+      _haveGenericTimer(p->have_generic_timer),
+      _highestELIs64(p->highest_el_is_64),
+      _resetAddr64(p->reset_addr_64),
+      _physAddrRange64(p->phys_addr_range_64),
+      _haveLargeAsid64(p->have_large_asid_64),
+      multiProc(p->multi_proc)
 {
+    // Check if the physical address range is valid
+    if (_highestELIs64 && (
+            _physAddrRange64 < 32 ||
+            _physAddrRange64 > 48 ||
+            (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42))) {
+        fatal("Invalid physical address range (%d)\n", _physAddrRange64);
+    }
+
     if (p->boot_loader != "") {
         bootldr = createObjectFile(p->boot_loader);
 
         if (!bootldr)
             fatal("Could not read bootloader: %s\n", p->boot_loader);
+
+        if ((bootldr->getArch() == ObjectFile::Arm64) && !_highestELIs64) {
+            warn("Highest ARM exception-level set to AArch32 but bootloader "
+                  "is for AArch64. Assuming you wanted these to match.\n");
+            _highestELIs64 = true;
+        } else if ((bootldr->getArch() == ObjectFile::Arm) && _highestELIs64) {
+            warn("Highest ARM exception-level set to AArch64 but bootloader "
+                  "is for AArch32. Assuming you wanted these to match.\n");
+            _highestELIs64 = false;
+        }
 
         bootldr->loadGlobalSymbols(debugSymbolTable);
 
@@ -81,11 +108,21 @@ ArmSystem::initState()
     if (bootldr) {
         bootldr->loadSections(physProxy);
 
-        uint8_t jump_to_bl[] =
+        uint8_t jump_to_bl_32[] =
         {
-            0x07, 0xf0, 0xa0, 0xe1  // branch to r7
+            0x07, 0xf0, 0xa0, 0xe1  // branch to r7 in aarch32
         };
-        physProxy.writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl));
+
+        uint8_t jump_to_bl_64[] =
+        {
+            0xe0, 0x00, 0x1f, 0xd6  // instruction "br x7" in aarch64
+        };
+
+        // write the jump to branch table into address 0
+        if (!_highestELIs64)
+            physProxy.writeBlob(0x0, jump_to_bl_32, sizeof(jump_to_bl_32));
+        else
+            physProxy.writeBlob(0x0, jump_to_bl_64, sizeof(jump_to_bl_64));
 
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
 
@@ -96,16 +133,52 @@ ArmSystem::initState()
             fatal("gic_cpu_addr && flags_addr must be set with bootloader\n");
 
         for (int i = 0; i < threadContexts.size(); i++) {
-            threadContexts[i]->setIntReg(3, kernelEntry & loadAddrMask);
+            if (!_highestELIs64)
+                threadContexts[i]->setIntReg(3, (kernelEntry & loadAddrMask) +
+                        loadAddrOffset);
             threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
             threadContexts[i]->setIntReg(5, params()->flags_addr);
             threadContexts[i]->setIntReg(7, bootldr->entryPoint());
         }
+        inform("Using kernel entry physical address at %#x\n",
+               (kernelEntry & loadAddrMask) + loadAddrOffset);
     } else {
         // Set the initial PC to be at start of the kernel code
-        threadContexts[0]->pcState(kernelEntry & loadAddrMask);
+        if (!_highestELIs64)
+            threadContexts[0]->pcState((kernelEntry & loadAddrMask) +
+                    loadAddrOffset);
     }
 }
+
+GenericTimer::ArchTimer *
+ArmSystem::getArchTimer(int cpu_id) const
+{
+    if (_genericTimer) {
+        return _genericTimer->getArchTimer(cpu_id);
+    }
+    return NULL;
+}
+
+GenericTimer::SystemCounter *
+ArmSystem::getSystemCounter() const
+{
+    if (_genericTimer) {
+        return _genericTimer->getSystemCounter();
+    }
+    return NULL;
+}
+
+bool
+ArmSystem::haveSecurity(ThreadContext *tc)
+{
+    if (!FullSystem)
+        return false;
+
+    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
+    assert(a_sys);
+    return a_sys->haveSecurity();
+}
+
 
 ArmSystem::~ArmSystem()
 {
@@ -113,7 +186,63 @@ ArmSystem::~ArmSystem()
         delete debugPrintkEvent;
 }
 
+bool
+ArmSystem::haveLPAE(ThreadContext *tc)
+{
+    if (!FullSystem)
+        return false;
 
+    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
+    assert(a_sys);
+    return a_sys->haveLPAE();
+}
+
+bool
+ArmSystem::haveVirtualization(ThreadContext *tc)
+{
+    if (!FullSystem)
+        return false;
+
+    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
+    assert(a_sys);
+    return a_sys->haveVirtualization();
+}
+
+bool
+ArmSystem::highestELIs64(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestELIs64();
+}
+
+ExceptionLevel
+ArmSystem::highestEL(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestEL();
+}
+
+Addr
+ArmSystem::resetAddr64(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->resetAddr64();
+}
+
+uint8_t
+ArmSystem::physAddrRange(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->physAddrRange();
+}
+
+Addr
+ArmSystem::physAddrMask(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->physAddrMask();
+}
+
+bool
+ArmSystem::haveLargeAsid64(ThreadContext *tc)
+{
+    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->haveLargeAsid64();
+}
 ArmSystem *
 ArmSystemParams::create()
 {

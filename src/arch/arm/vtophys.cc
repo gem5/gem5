@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 
 #include <string>
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/vtophys.hh"
@@ -65,66 +66,30 @@ ArmISA::vtophys(Addr vaddr)
 Addr
 ArmISA::vtophys(ThreadContext *tc, Addr addr)
 {
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    if (!sctlr.m) {
-        // Translation is currently disabled PA == VA
-        return addr;
-    }
-    bool success;
-    Addr pa;
+    Fault fault;
+    // Set up a functional memory Request to pass to the TLB
+    // to get it to translate the vaddr to a paddr
+    Request req(0, addr, 64, 0x40, -1, 0, 0, 0);
     ArmISA::TLB *tlb;
 
-    // Check the TLBs far a translation
-    // It's possible that there is a validy translation in the tlb
+    // Check the TLBs for a translation
+    // It's possible that there is a valid translation in the tlb
     // that is no loger valid in the page table in memory
     // so we need to check here first
+    //
+    // Calling translateFunctional invokes a table-walk if required
+    // so we should always succeed
     tlb = static_cast<ArmISA::TLB*>(tc->getDTBPtr());
-    success = tlb->translateFunctional(tc, addr, pa);
-    if (success)
-        return pa;
+    fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
+    if (fault == NoFault)
+        return req.getPaddr();
 
     tlb = static_cast<ArmISA::TLB*>(tc->getITBPtr());
-    success = tlb->translateFunctional(tc, addr, pa);
-    if (success)
-        return pa;
+    fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
+    if (fault == NoFault)
+        return req.getPaddr();
 
-    // We've failed everything, so we need to do a
-    // hardware tlb walk without messing with any
-    // state
-
-    uint32_t N = tc->readMiscReg(MISCREG_TTBCR);
-    Addr ttbr;
-    if (N == 0 || !mbits(addr, 31, 32-N)) {
-        ttbr = tc->readMiscReg(MISCREG_TTBR0);
-    } else {
-        ttbr = tc->readMiscReg(MISCREG_TTBR1);
-        N = 0;
-    }
-
-    PortProxy &port = tc->getPhysProxy();
-    Addr l1desc_addr = mbits(ttbr, 31, 14-N) | (bits(addr,31-N,20) << 2);
-
-    TableWalker::L1Descriptor l1desc;
-    l1desc.data = port.read<uint32_t>(l1desc_addr);
-    if (l1desc.type() == TableWalker::L1Descriptor::Ignore ||
-            l1desc.type() == TableWalker::L1Descriptor::Reserved) {
-        warn("Unable to translate virtual address: %#x\n", addr);
-        return -1;
-    }
-    if (l1desc.type() == TableWalker::L1Descriptor::Section)
-        return l1desc.paddr(addr);
-
-    // Didn't find it at the first level, try againt
-    Addr l2desc_addr = l1desc.l2Addr() | (bits(addr, 19, 12) << 2);
-    TableWalker::L2Descriptor l2desc;
-    l2desc.data = port.read<uint32_t>(l2desc_addr);
-
-    if (l2desc.invalid()) {
-        warn("Unable to translate virtual address: %#x\n", addr);
-        return -1;
-    }
-
-    return l2desc.paddr(addr);
+    panic("Table walkers support functional accesses. We should never get here\n");
 }
 
 bool

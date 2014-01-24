@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2012-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,10 +46,13 @@
 #include <string>
 #include <vector>
 
+#include "dev/arm/generic_timer.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
+
+class ThreadContext;
 
 class ArmSystem : public System
 {
@@ -64,6 +67,54 @@ class ArmSystem : public System
      * Pointer to the bootloader object
      */
     ObjectFile *bootldr;
+
+    /**
+     * True if this system implements the Security Extensions
+     */
+    const bool _haveSecurity;
+
+    /**
+     * True if this system implements the Large Physical Address Extension
+     */
+    const bool _haveLPAE;
+
+    /**
+     * True if this system implements the virtualization Extensions
+     */
+    const bool _haveVirtualization;
+
+    /**
+     * True if this system implements the Generic Timer extension
+     */
+    const bool _haveGenericTimer;
+
+    /**
+     * Pointer to the Generic Timer wrapper.
+     */
+    GenericTimer *_genericTimer;
+
+    /**
+     * True if the register width of the highest implemented exception level is
+     * 64 bits (ARMv8)
+     */
+    bool _highestELIs64;
+
+    /**
+     * Reset address if the highest implemented exception level is 64 bits
+     * (ARMv8)
+     */
+    const Addr _resetAddr64;
+
+    /**
+     * Supported physical address range in bits if the highest implemented
+     * exception level is 64 bits (ARMv8)
+     */
+    const uint8_t _physAddrRange64;
+
+    /**
+     * True if ASID is 16 bits in AArch64 (ARMv8)
+     */
+    const bool _haveLargeAsid64;
 
   public:
     typedef ArmSystemParams Params;
@@ -101,6 +152,120 @@ class ArmSystem : public System
 
     /** true if this a multiprocessor system */
     bool multiProc;
+
+    /** Returns true if this system implements the Security Extensions */
+    bool haveSecurity() const { return _haveSecurity; }
+
+    /** Returns true if this system implements the Large Physical Address
+     * Extension */
+    bool haveLPAE() const { return _haveLPAE; }
+
+    /** Returns true if this system implements the virtualization
+      * Extensions
+      */
+    bool haveVirtualization() const { return _haveVirtualization; }
+
+    /** Returns true if this system implements the Generic Timer extension. */
+    bool haveGenericTimer() const { return _haveGenericTimer; }
+
+    /** Sets the pointer to the Generic Timer. */
+    void setGenericTimer(GenericTimer *generic_timer)
+    {
+        _genericTimer = generic_timer;
+    }
+
+    /** Returns a pointer to the system counter. */
+    GenericTimer::SystemCounter *getSystemCounter() const;
+
+    /** Returns a pointer to the appropriate architected timer. */
+    GenericTimer::ArchTimer *getArchTimer(int cpu_id) const;
+
+    /** Returns true if the register width of the highest implemented exception
+     * level is 64 bits (ARMv8) */
+    bool highestELIs64() const { return _highestELIs64; }
+
+    /** Returns the highest implemented exception level */
+    ExceptionLevel highestEL() const
+    {
+        if (_haveSecurity)
+            return EL3;
+        // @todo: uncomment this to enable Virtualization
+        // if (_haveVirtualization)
+        //     return EL2;
+        return EL1;
+    }
+
+    /** Returns the reset address if the highest implemented exception level is
+     * 64 bits (ARMv8) */
+    Addr resetAddr64() const { return _resetAddr64; }
+
+    /** Returns true if ASID is 16 bits in AArch64 (ARMv8) */
+    bool haveLargeAsid64() const { return _haveLargeAsid64; }
+
+    /** Returns the supported physical address range in bits if the highest
+     * implemented exception level is 64 bits (ARMv8) */
+    uint8_t physAddrRange64() const { return _physAddrRange64; }
+
+    /** Returns the supported physical address range in bits */
+    uint8_t physAddrRange() const
+    {
+        if (_highestELIs64)
+            return _physAddrRange64;
+        if (_haveLPAE)
+            return 40;
+        return 32;
+    }
+
+    /** Returns the physical address mask */
+    Addr physAddrMask() const
+    {
+        return mask(physAddrRange());
+    }
+
+    /** Returns true if the system of a specific thread context implements the
+     * Security Extensions
+     */
+    static bool haveSecurity(ThreadContext *tc);
+
+    /** Returns true if the system of a specific thread context implements the
+     * virtualization Extensions
+     */
+    static bool haveVirtualization(ThreadContext *tc);
+
+    /** Returns true if the system of a specific thread context implements the
+     * Large Physical Address Extension
+     */
+    static bool haveLPAE(ThreadContext *tc);
+
+    /** Returns true if the register width of the highest implemented exception
+     * level for the system of a specific thread context is 64 bits (ARMv8)
+     */
+    static bool highestELIs64(ThreadContext *tc);
+
+    /** Returns the highest implemented exception level for the system of a
+     * specific thread context
+     */
+    static ExceptionLevel highestEL(ThreadContext *tc);
+
+    /** Returns the reset address if the highest implemented exception level for
+     * the system of a specific thread context is 64 bits (ARMv8)
+     */
+    static Addr resetAddr64(ThreadContext *tc);
+
+    /** Returns the supported physical address range in bits for the system of a
+     * specific thread context
+     */
+    static uint8_t physAddrRange(ThreadContext *tc);
+
+    /** Returns the physical address mask for the system of a specific thread
+     * context
+     */
+    static Addr physAddrMask(ThreadContext *tc);
+
+    /** Returns true if ASID is 16 bits for the system of a specific thread
+     * context while in AArch64 (ARMv8) */
+    static bool haveLargeAsid64(ThreadContext *tc);
+
 };
 
 #endif

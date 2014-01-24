@@ -1,4 +1,16 @@
 /*
+* Copyright (c) 2011-2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
@@ -31,39 +43,54 @@
 #ifndef __ARM_LINUX_PROCESS_HH__
 #define __ARM_LINUX_PROCESS_HH__
 
+#include <vector>
+
 #include "arch/arm/process.hh"
 
+class ArmLinuxProcessBits
+{
+  protected:
+    SyscallDesc* getLinuxDesc(int callnum);
+
+    struct SyscallTable
+    {
+        int base;
+        SyscallDesc *descs;
+        int size;
+
+        SyscallDesc *getDesc(int offset) const;
+    };
+
+    std::vector<SyscallTable> syscallTables;
+};
+
 /// A process with emulated Arm/Linux syscalls.
-class ArmLinuxProcess : public ArmLiveProcess
+class ArmLinuxProcess32 : public ArmLiveProcess32, public ArmLinuxProcessBits
 {
   public:
-    ArmLinuxProcess(LiveProcessParams * params, ObjectFile *objFile,
-                    ObjectFile::Arch _arch);
-
-    virtual SyscallDesc* getDesc(int callnum);
+    ArmLinuxProcess32(LiveProcessParams * params, ObjectFile *objFile,
+                      ObjectFile::Arch _arch);
 
     void initState();
 
-    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using ArmLiveProcess::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
-
-    /// The target system's hostname.
-    static const char *hostname;
 
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
 
-    /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    SyscallDesc* getDesc(int callnum);
+};
 
-    /// Array of "arm private" syscall descriptors.
-    static SyscallDesc privSyscallDescs[];
+/// A process with emulated Arm/Linux syscalls.
+class ArmLinuxProcess64 : public ArmLiveProcess64, public ArmLinuxProcessBits
+{
+  public:
+    ArmLinuxProcess64(LiveProcessParams * params, ObjectFile *objFile,
+                      ObjectFile::Arch _arch);
 
-    const int Num_Syscall_Descs;
-
-    const int Num_Priv_Syscall_Descs;
+    void initState();
+    SyscallDesc* getDesc(int callnum);
 };
 
 #endif // __ARM_LINUX_PROCESS_HH__

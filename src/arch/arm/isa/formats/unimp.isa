@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010, 2012 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -85,11 +85,24 @@ output header {{
       private:
         /// Have we warned on this instruction yet?
         mutable bool warned;
+        /// Full mnemonic for MRC and MCR instructions including the
+        /// coproc. register name
+        std::string fullMnemonic;
 
       public:
         /// Constructor
         WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
             : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+        {
+            // don't call execute() (which panics) if we're on a
+            // speculative path
+            flags[IsNonSpeculative] = true;
+        }
+
+        WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+                          const std::string& _fullMnemonic)
+            : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false),
+              fullMnemonic(_fullMnemonic)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -147,10 +160,7 @@ output exec {{
     FailUnimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-        if (FullSystem)
-            return new UndefinedInstruction;
-        else
-            return new UndefinedInstruction(machInst, false, mnemonic);
+        return new UndefinedInstruction(machInst, false, mnemonic);
     }
 
     Fault
@@ -158,7 +168,8 @@ output exec {{
                                Trace::InstRecord *traceData) const
     {
         if (!warned) {
-            warn("\tinstruction '%s' unimplemented\n", mnemonic);
+            warn("\tinstruction '%s' unimplemented\n",
+                 fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
             warned = true;
         }
 

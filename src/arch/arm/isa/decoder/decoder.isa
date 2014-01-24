@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2011 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -41,8 +41,12 @@
 // Authors: Gabe Black
 
 decode THUMB default Unknown::unknown() {
-0:
-##include "arm.isa"
+0: decode AARCH64 {
+    0:
+    ##include "arm.isa"
+    1:
+    ##include "aarch64.isa"
+}
 1:
 ##include "thumb.isa"
 }

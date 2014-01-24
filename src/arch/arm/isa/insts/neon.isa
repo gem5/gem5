@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010-2011 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -94,8 +94,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeNeonUThreeUSReg(unsigned size,
-                         ExtMachInst machInst, IntRegIndex dest,
-                         IntRegIndex op1, IntRegIndex op2)
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1, IntRegIndex op2)
     {
         switch (size) {
           case 0:
@@ -112,8 +112,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeNeonSThreeUSReg(unsigned size,
-                         ExtMachInst machInst, IntRegIndex dest,
-                         IntRegIndex op1, IntRegIndex op2)
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1, IntRegIndex op2)
     {
         switch (size) {
           case 0:
@@ -122,6 +122,38 @@ output header {{
             return new Base<int16_t>(machInst, dest, op1, op2);
           case 2:
             return new Base<int32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSThreeHAndWReg(unsigned size, ExtMachInst machInst,
+                             IntRegIndex dest, IntRegIndex op1,
+                             IntRegIndex op2)
+    {
+        switch (size) {
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSThreeImmHAndWReg(unsigned size, ExtMachInst machInst,
+                                IntRegIndex dest, IntRegIndex op1,
+                                IntRegIndex op2, uint64_t imm)
+    {
+        switch (size) {
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2, imm);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2, imm);
           default:
             return new Unknown(machInst);
         }
@@ -170,6 +202,38 @@ output header {{
                     size, machInst, dest, op1, op2);
         } else {
             return decodeNeonSThreeUSReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSThreeXReg(bool q, unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonSThreeUReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeUSReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeXReg(bool q, unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonUThreeUReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonUThreeUSReg<BaseD>(
                     size, machInst, dest, op1, op2);
         }
     }
@@ -235,6 +299,124 @@ output header {{
         } else {
             return decodeNeonSThreeReg<BaseD, BaseQ>(
                     q, size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeFpReg(bool q, unsigned size, ExtMachInst machInst,
+                          IntRegIndex dest, IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            if (size)
+                return new BaseQ<uint64_t>(machInst, dest, op1, op2);
+            else
+                return new BaseQ<uint32_t>(machInst, dest, op1, op2);
+        } else {
+            if (size)
+                return new Unknown(machInst);
+            else
+                return new BaseD<uint32_t>(machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUThreeScFpReg(bool size, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1, IntRegIndex op2)
+    {
+        if (size)
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+        else
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUThreeImmScFpReg(bool size, ExtMachInst machInst,
+                               IntRegIndex dest, IntRegIndex op1,
+                               IntRegIndex op2, uint64_t imm)
+    {
+        if (size)
+            return new Base<uint64_t>(machInst, dest, op1, op2, imm);
+        else
+            return new Base<uint32_t>(machInst, dest, op1, op2, imm);
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeImmHAndWReg(bool q, unsigned size, ExtMachInst machInst,
+                                IntRegIndex dest, IntRegIndex op1,
+                                IntRegIndex op2, uint64_t imm)
+    {
+        if (q) {
+            switch (size) {
+              case 1:
+                return new BaseQ<uint16_t>(machInst, dest, op1, op2, imm);
+              case 2:
+                return new BaseQ<uint32_t>(machInst, dest, op1, op2, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 1:
+                return new BaseD<uint16_t>(machInst, dest, op1, op2, imm);
+              case 2:
+                return new BaseD<uint32_t>(machInst, dest, op1, op2, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSThreeImmHAndWReg(bool q, unsigned size, ExtMachInst machInst,
+                                IntRegIndex dest, IntRegIndex op1,
+                                IntRegIndex op2, uint64_t imm)
+    {
+        if (q) {
+            switch (size) {
+              case 1:
+                return new BaseQ<int16_t>(machInst, dest, op1, op2, imm);
+              case 2:
+                return new BaseQ<int32_t>(machInst, dest, op1, op2, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 1:
+                return new BaseD<int16_t>(machInst, dest, op1, op2, imm);
+              case 2:
+                return new BaseD<int32_t>(machInst, dest, op1, op2, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeImmFpReg(bool q, unsigned size, ExtMachInst machInst,
+                             IntRegIndex dest, IntRegIndex op1,
+                             IntRegIndex op2, uint64_t imm)
+    {
+        if (q) {
+            if (size)
+                return new BaseQ<uint64_t>(machInst, dest, op1, op2, imm);
+            else
+                return new BaseQ<uint32_t>(machInst, dest, op1, op2, imm);
+        } else {
+            if (size)
+                return new Unknown(machInst);
+            else
+                return new BaseD<uint32_t>(machInst, dest, op1, op2, imm);
         }
     }
 
@@ -345,6 +527,46 @@ output header {{
         }
     }
 
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoShiftUReg(unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1, uint64_t imm)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, imm);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, imm);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, imm);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, imm);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSTwoShiftUReg(unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1, uint64_t imm)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, imm);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, imm);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, imm);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, imm);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
     template <template <typename T> class BaseD,
               template <typename T> class BaseQ>
     StaticInstPtr
@@ -411,6 +633,66 @@ output header {{
         }
     }
 
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoShiftXReg(bool q, unsigned size, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            return decodeNeonUTwoShiftUReg<BaseQ>(
+                size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonUTwoShiftUSReg<BaseD>(
+                size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoShiftXReg(bool q, unsigned size, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            return decodeNeonSTwoShiftUReg<BaseQ>(
+                size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonSTwoShiftUSReg<BaseD>(
+                size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoShiftUFpReg(unsigned size, ExtMachInst machInst,
+                              IntRegIndex dest, IntRegIndex op1, uint64_t imm)
+    {
+        if (size)
+            return new Base<uint64_t>(machInst, dest, op1, imm);
+        else
+            return new Base<uint32_t>(machInst, dest, op1, imm);
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoShiftFpReg(bool q, unsigned size, ExtMachInst machInst,
+                             IntRegIndex dest, IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            if (size)
+                return new BaseQ<uint64_t>(machInst, dest, op1, imm);
+            else
+                return new BaseQ<uint32_t>(machInst, dest, op1, imm);
+        } else {
+            if (size)
+                return new Unknown(machInst);
+            else
+                return new BaseD<uint32_t>(machInst, dest, op1, imm);
+        }
+    }
+
     template <template <typename T> class Base>
     StaticInstPtr
     decodeNeonUTwoMiscUSReg(unsigned size,
@@ -451,8 +733,8 @@ output header {{
               template <typename T> class BaseQ>
     StaticInstPtr
     decodeNeonUTwoMiscSReg(bool q, unsigned size,
-                          ExtMachInst machInst, IntRegIndex dest,
-                          IntRegIndex op1)
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1)
     {
         if (q) {
             return decodeNeonUTwoMiscUSReg<BaseQ>(size, machInst, dest, op1);
@@ -465,8 +747,8 @@ output header {{
               template <typename T> class BaseQ>
     StaticInstPtr
     decodeNeonSTwoMiscSReg(bool q, unsigned size,
-                          ExtMachInst machInst, IntRegIndex dest,
-                          IntRegIndex op1)
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1)
     {
         if (q) {
             return decodeNeonSTwoMiscUSReg<BaseQ>(size, machInst, dest, op1);
@@ -498,8 +780,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeNeonSTwoMiscUReg(unsigned size,
-                            ExtMachInst machInst, IntRegIndex dest,
-                            IntRegIndex op1)
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1)
     {
         switch (size) {
           case 0:
@@ -559,6 +841,221 @@ output header {{
         }
     }
 
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoMiscXReg(bool q, unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonUTwoMiscUReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonUTwoMiscUSReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoMiscXReg(bool q, unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonSTwoMiscUReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonSTwoMiscUSReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoMiscFpReg(bool q, unsigned size, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            if (size)
+                return new BaseQ<uint64_t>(machInst, dest, op1);
+            else
+                return new BaseQ<uint32_t>(machInst, dest, op1);
+        } else {
+            if (size)
+                return new Unknown(machInst);
+            else
+                return new BaseD<uint32_t>(machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoMiscPwiseScFpReg(unsigned size, ExtMachInst machInst,
+                                   IntRegIndex dest, IntRegIndex op1)
+    {
+        if (size)
+            return new BaseQ<uint64_t>(machInst, dest, op1);
+        else
+            return new BaseD<uint32_t>(machInst, dest, op1);
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoMiscScFpReg(unsigned size, ExtMachInst machInst,
+                              IntRegIndex dest, IntRegIndex op1)
+    {
+        if (size)
+            return new Base<uint64_t>(machInst, dest, op1);
+        else
+            return new Base<uint32_t>(machInst, dest, op1);
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUAcrossLanesReg(bool q, unsigned size, ExtMachInst machInst,
+                              IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            switch (size) {
+              case 0x0:
+                return new BaseQ<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseQ<uint16_t>(machInst, dest, op1);
+              case 0x2:
+                return new BaseQ<uint32_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0x0:
+                return new BaseD<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseD<uint16_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ,
+              template <typename T> class BaseBQ>
+    StaticInstPtr
+    decodeNeonUAcrossLanesReg(bool q, unsigned size, ExtMachInst machInst,
+                              IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            switch (size) {
+              case 0x0:
+                return new BaseQ<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseQ<uint16_t>(machInst, dest, op1);
+              case 0x2:
+                return new BaseBQ<uint32_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0x0:
+                return new BaseD<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseD<uint16_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSAcrossLanesReg(bool q, unsigned size, ExtMachInst machInst,
+                              IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            switch (size) {
+              case 0x0:
+                return new BaseQ<int8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseQ<int16_t>(machInst, dest, op1);
+              case 0x2:
+                return new BaseQ<int32_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0x0:
+                return new BaseD<int8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseD<int16_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ,
+              template <typename T> class BaseBQ>
+    StaticInstPtr
+    decodeNeonUAcrossLanesLongReg(bool q, unsigned size, ExtMachInst machInst,
+                                  IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            switch (size) {
+              case 0x0:
+                return new BaseQ<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseQ<uint16_t>(machInst, dest, op1);
+              case 0x2:
+                return new BaseBQ<uint32_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0x0:
+                return new BaseD<uint8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseD<uint16_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ,
+              template <typename T> class BaseBQ>
+    StaticInstPtr
+    decodeNeonSAcrossLanesLongReg(bool q, unsigned size, ExtMachInst machInst,
+                                  IntRegIndex dest, IntRegIndex op1)
+    {
+        if (q) {
+            switch (size) {
+              case 0x0:
+                return new BaseQ<int8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseQ<int16_t>(machInst, dest, op1);
+              case 0x2:
+                return new BaseBQ<int32_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0x0:
+                return new BaseD<int8_t>(machInst, dest, op1);
+              case 0x1:
+                return new BaseD<int16_t>(machInst, dest, op1);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
 }};
 
 output exec {{
@@ -872,10 +1369,7 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            if (FullSystem)
-                fault = new UndefinedInstruction;
-            else
-                fault = new UndefinedInstruction(false, mnemonic);
+            fault = new UndefinedInstruction(machInst, false, mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -926,10 +1420,7 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            if (FullSystem)
-                fault = new UndefinedInstruction;
-            else
-                fault = new UndefinedInstruction(false, mnemonic);
+            fault = new UndefinedInstruction(machInst, false, mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -978,10 +1469,7 @@ let {{
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            if (FullSystem)
-                fault = new UndefinedInstruction;
-            else
-                fault = new UndefinedInstruction(false, mnemonic);
+            fault = new UndefinedInstruction(machInst, false, mnemonic);
         } else {
             for (unsigned i = 0; i < rCount; i++) {
                 FloatReg srcReg1 = srcRegs1[i];
@@ -2156,7 +2644,7 @@ let {{
         bool done;
         destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
         if (!done) {
-            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMaxS,
+            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMax<float>,
                                true, true, VfpRoundNearest);
         } else if (flushToZero(srcReg1, srcReg2)) {
             fpscr.idc = 1;
@@ -2171,7 +2659,7 @@ let {{
         bool done;
         destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
         if (!done) {
-            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMinS,
+            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMin<float>,
                                true, true, VfpRoundNearest);
         } else if (flushToZero(srcReg1, srcReg2)) {
             fpscr.idc = 1;
@@ -2233,6 +2721,24 @@ let {{
     '''
     threeEqualRegInstFp("vmla", "NVmlaDFp", "SimdFloatMultAccOp", ("float",), 2, vmlafpCode, True)
     threeEqualRegInstFp("vmla", "NVmlaQFp", "SimdFloatMultAccOp", ("float",), 4, vmlafpCode, True)
+
+    vfmafpCode = '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        destReg = ternaryOp(fpscr, srcReg1, srcReg2, destReg, fpMulAdd<float>,
+                            true, true, VfpRoundNearest);
+        FpscrExc = fpscr;
+    '''
+    threeEqualRegInstFp("vfma", "NVfmaDFp", "SimdFloatMultAccOp", ("float",), 2, vfmafpCode, True)
+    threeEqualRegInstFp("vfma", "NVfmaQFp", "SimdFloatMultAccOp", ("float",), 4, vfmafpCode, True)
+
+    vfmsfpCode = '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        destReg = ternaryOp(fpscr, -srcReg1, srcReg2, destReg, fpMulAdd<float>,
+                            true, true, VfpRoundNearest);
+        FpscrExc = fpscr;
+    '''
+    threeEqualRegInstFp("vfms", "NVfmsDFp", "SimdFloatMultAccOp", ("float",), 2, vfmsfpCode, True)
+    threeEqualRegInstFp("vfms", "NVfmsQFp", "SimdFloatMultAccOp", ("float",), 4, vfmsfpCode, True)
 
     vmlsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -2765,7 +3271,7 @@ let {{
             fpscr.idc = 1;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
-        destReg = vfpFpSToFixed(srcElem1, false, false, imm);
+        destReg = vfpFpToFixed<float>(srcElem1, false, 32, imm);
         __asm__ __volatile__("" :: "m" (destReg));
         finishVfp(fpscr, state, true);
         FpscrExc = fpscr;
@@ -2781,7 +3287,7 @@ let {{
             fpscr.idc = 1;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
-        destReg = vfpFpSToFixed(srcElem1, true, false, imm);
+        destReg = vfpFpToFixed<float>(srcElem1, true, 32, imm);
         __asm__ __volatile__("" :: "m" (destReg));
         finishVfp(fpscr, state, true);
         FpscrExc = fpscr;
@@ -2795,7 +3301,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
-        destElem = vfpUFixedToFpS(true, true, srcReg1, false, imm);
+        destElem = vfpUFixedToFpS(true, true, srcReg1, 32, imm);
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
         FpscrExc = fpscr;
@@ -2809,7 +3315,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
-        destElem = vfpSFixedToFpS(true, true, srcReg1, false, imm);
+        destElem = vfpSFixedToFpS(true, true, srcReg1, 32, imm);
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
         FpscrExc = fpscr;
@@ -3296,10 +3802,7 @@ let {{
             } else {
                 index -= eCount;
                 if (index >= eCount) {
-                    if (FullSystem)
-                        fault = new UndefinedInstruction;
-                    else
-                        fault = new UndefinedInstruction(false, mnemonic);
+                    fault = new UndefinedInstruction(machInst, false, mnemonic);
                 } else {
                     destReg.elements[i] = srcReg2.elements[index];
                 }

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012-2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2012 Google
  * All rights reserved.
  *
@@ -47,9 +59,11 @@ Decoder::process()
 
     if (!emi.thumb) {
         emi.instBits = data;
-        emi.sevenAndFour = bits(data, 7) && bits(data, 4);
-        emi.isMisc = (bits(data, 24, 23) == 0x2 &&
-                      bits(data, 20) == 0);
+        if (!emi.aarch64) {
+            emi.sevenAndFour = bits(data, 7) && bits(data, 4);
+            emi.isMisc = (bits(data, 24, 23) == 0x2 &&
+                          bits(data, 20) == 0);
+        }
         consumeBytes(4);
         DPRINTF(Decoder, "Arm inst: %#x.\n", (uint64_t)emi);
     } else {
@@ -112,6 +126,7 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     data = inst;
     offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
     emi.thumb = pc.thumb();
+    emi.aarch64 = pc.aarch64();
     emi.fpscrLen = fpscrLen;
     emi.fpscrStride = fpscrStride;
 

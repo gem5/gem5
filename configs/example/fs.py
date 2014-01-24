@@ -140,6 +140,12 @@ if options.kernel is not None:
 if options.script is not None:
     test_sys.readfile = options.script
 
+if options.lpae:
+    test_sys.have_lpae = True
+
+if options.virtualisation:
+    test_sys.have_virtualization = True
+
 test_sys.init_param = options.init_param
 
 # For now, assign all the CPUs to the same clock domain
