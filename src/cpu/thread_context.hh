@@ -235,6 +235,7 @@ class ThreadContext
     virtual int flattenIntIndex(int reg) = 0;
     virtual int flattenFloatIndex(int reg) = 0;
     virtual int flattenCCIndex(int reg) = 0;
+    virtual int flattenMiscIndex(int reg) = 0;
 
     virtual uint64_t
     readRegOtherThread(int misc_reg, ThreadID tid)
@@ -450,6 +451,9 @@ class ProxyThreadContext : public ThreadContext
 
     int flattenCCIndex(int reg)
     { return actualTC->flattenCCIndex(reg); }
+
+    int flattenMiscIndex(int reg)
+    { return actualTC->flattenMiscIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

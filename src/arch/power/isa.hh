@@ -105,6 +105,12 @@ class ISA : public SimObject
         return reg;
     }
 
+    int
+    flattenMiscIndex(int reg)
+    {
+        return reg;
+    }
+
     void startup(ThreadContext *tc) {}
 
     /// Explicitly import the otherwise hidden startup

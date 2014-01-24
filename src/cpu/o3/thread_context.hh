@@ -244,6 +244,7 @@ class O3ThreadContext : public ThreadContext
     virtual int flattenIntIndex(int reg);
     virtual int flattenFloatIndex(int reg);
     virtual int flattenCCIndex(int reg);
+    virtual int flattenMiscIndex(int reg);
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.

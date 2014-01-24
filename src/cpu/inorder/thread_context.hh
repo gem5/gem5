@@ -273,6 +273,9 @@ class InOrderThreadContext : public ThreadContext
     int flattenCCIndex(int reg)
     { return cpu->isa[thread->threadId()]->flattenCCIndex(reg); }
 
+    int flattenMiscIndex(int reg)
+    { return cpu->isa[thread->threadId()]->flattenMiscIndex(reg); }
+
     void activateContext(Cycles delay)
     { cpu->activateContext(thread->threadId(), delay); }
 

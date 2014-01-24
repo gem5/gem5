@@ -89,8 +89,7 @@ ISA::miscRegNames[NumMiscRegs] =
 };
 
 ISA::ISA(Params *p)
-    : SimObject(p),
-      numThreads(p->num_threads), numVpes(p->num_vpes)
+    : SimObject(p), numThreads(p->num_threads), numVpes(p->num_vpes)
 {
     miscRegFile.resize(NumMiscRegs);
     bankType.resize(NumMiscRegs);

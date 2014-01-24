@@ -35,9 +35,13 @@
 #
 # Authors: Andreas Sandberg
 
+from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
 
 class AlphaISA(SimObject):
     type = 'AlphaISA'
     cxx_class = 'AlphaISA::ISA'
     cxx_header = "arch/alpha/isa.hh"
+
+    system = Param.System(Parent.any, "System this ISA object belongs to")

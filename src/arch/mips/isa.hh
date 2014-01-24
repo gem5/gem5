@@ -184,6 +184,13 @@ namespace MipsISA
         {
             return reg;
         }
+
+        int
+        flattenMiscIndex(int reg)
+        {
+            return reg;
+        }
+
     };
 }
 

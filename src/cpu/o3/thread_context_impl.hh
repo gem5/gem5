@@ -292,6 +292,13 @@ O3ThreadContext<Impl>::flattenCCIndex(int reg)
 }
 
 template <class Impl>
+int
+O3ThreadContext<Impl>::flattenMiscIndex(int reg)
+{
+    return cpu->isa[thread->threadId()]->flattenMiscIndex(reg);
+}
+
+template <class Impl>
 void
 O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {

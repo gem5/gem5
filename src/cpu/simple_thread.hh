@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -413,6 +413,12 @@ class SimpleThread : public ThreadState
     flattenCCIndex(int reg)
     {
         return isa->flattenCCIndex(reg);
+    }
+
+    int
+    flattenMiscIndex(int reg)
+    {
+        return isa->flattenMiscIndex(reg);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }

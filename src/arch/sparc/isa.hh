@@ -177,7 +177,6 @@ class ISA : public SimObject
     using SimObject::startup;
 
   protected:
-
     bool isHyperPriv() { return hpstate.hpriv; }
     bool isPriv() { return hpstate.hpriv || pstate.priv; }
     bool isNonPriv() { return !isPriv(); }
@@ -212,6 +211,13 @@ class ISA : public SimObject
     {
         return reg;
     }
+
+    int
+    flattenMiscIndex(int reg)
+    {
+        return reg;
+    }
+
 
     typedef SparcISAParams Params;
     const Params *params() const;

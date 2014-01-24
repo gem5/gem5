@@ -37,11 +37,14 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
 
 class MipsISA(SimObject):
     type = 'MipsISA'
     cxx_class = 'MipsISA::ISA'
     cxx_header = "arch/mips/isa.hh"
+
+    system = Param.System(Parent.any, "System this ISA object belongs to")
 
     num_threads = Param.UInt8(1, "Maximum number this ISA can handle")
     num_vpes = Param.UInt8(1, "Maximum number of vpes this ISA can handle")

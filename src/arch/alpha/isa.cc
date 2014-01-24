@@ -40,7 +40,7 @@ namespace AlphaISA
 {
 
 ISA::ISA(Params *p)
-    : SimObject(p)
+    : SimObject(p), system(p->system)
 {
     clear();
     initializeIprTable();

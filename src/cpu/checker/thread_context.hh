@@ -300,6 +300,7 @@ class CheckerThreadContext : public ThreadContext
     int flattenIntIndex(int reg) { return actualTC->flattenIntIndex(reg); }
     int flattenFloatIndex(int reg) { return actualTC->flattenFloatIndex(reg); }
     int flattenCCIndex(int reg) { return actualTC->flattenCCIndex(reg); }
+    int flattenMiscIndex(int reg) { return actualTC->flattenMiscIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }
