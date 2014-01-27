@@ -1,9 +1,6 @@
 warn: Sockets disabled, not accepting gdb connections
 warn: Prefetch instructions in Alpha do not do anything
 warn: Prefetch instructions in Alpha do not do anything
-hack: be nice to actually delete the event here
 
 gzip: stdout: Broken pipe
 stdout: Broken pipe
-
-gzip: stdout: Broken pipe
