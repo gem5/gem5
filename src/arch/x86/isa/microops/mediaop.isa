@@ -1506,6 +1506,6 @@ let {{
     class Emms(MediaOp):
         def __init__(self):
             super(Emms, self).__init__('InstRegIndex(MISCREG_FTW)',
-                    'InstRegIndex(0)', 'InstRegIndex(0)', 0)
+                    'InstRegIndex(0)', 'InstRegIndex(0)', 2)
         code = 'FTW = 0xFFFF;'
 }};
