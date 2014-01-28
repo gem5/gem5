@@ -59,7 +59,7 @@ format WarnUnimpl {
                 default: Inst::FLD(Md);
             }
             0x1: decode MODRM_MOD {
-                0x3: fxch();
+                0x3: Inst::FXCH(Eq);
                 default: Inst::UD2();
             }
             0x2: decode MODRM_MOD {
@@ -240,8 +240,14 @@ format WarnUnimpl {
                 0x3: Inst::UD2();
                 default: fisttp();
             }
-            0x2: Inst::FST(Eq);
-            0x3: Inst::FSTP(Eq);
+            0x2: decode MODRM_MOD {
+                0x3: Inst::FST(Eq);
+                default: Inst::FST(Mq);
+            }
+            0x3: decode MODRM_MOD {
+                0x3: Inst::FSTP(Eq);
+                default: Inst::FSTP(Mq);
+            }
             0x4: decode MODRM_MOD {
                 0x3: fucom();
                 default: frstor();
