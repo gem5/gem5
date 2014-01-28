@@ -41,7 +41,7 @@
 
 from m5.objects import *
 from Benchmarks import *
-from m5.util import convert
+from m5.util import *
 
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),
@@ -415,6 +415,10 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
     if excess_mem_size <= 0:
         self.mem_ranges = [AddrRange(mdesc.mem())]
     else:
+        warn("Physical memory size specified is %s which is greater than " \
+             "3GB.  Twice the number of memory controllers would be " \
+             "created."  % (mdesc.mem()))
+
         self.mem_ranges = [AddrRange('3GB'),
             AddrRange(Addr('4GB'), size = excess_mem_size)]
 
