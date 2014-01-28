@@ -36,7 +36,62 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FADD
-# FADDP
+def macroop FADD1_R
+{
+    addfp st(0), sti, st(0)
+};
+
+
+def macroop FADD1_M
+{
+    ldfp ufp1, seg, sib, disp
+    addfp st(0), st(0), ufp1
+};
+
+def macroop FADD1_P
+{
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    addfp st(0), st(0), ufp1
+};
+
+def macroop FADD2_R
+{
+    addfp sti, sti, st(0)
+};
+
+def macroop FADD2_M
+{
+    ldfp ufp1, seg, sib, disp
+    addfp st(0), st(0), ufp1
+};
+
+def macroop FADD2_P
+{
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    addfp st(0), st(0), ufp1
+};
+
+def macroop FADDP
+{
+    addfp st(1), st(0), st(1), spm=1
+};
+
+def macroop FADDP_R
+{
+    addfp sti, sti, st(0), spm=1
+};
+
+def macroop FADDP_M
+{
+    fault "new UnimpInstFault"
+};
+
+def macroop FADDP_P
+{
+   fault "new UnimpInstFault"
+};
+
 # FIADD
 '''

@@ -36,8 +36,63 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FSUB
-# FSUBP
+def macroop FSUB1_R
+{
+    subfp st(0), st(0), sti
+};
+
+
+def macroop FSUB1_M
+{
+    ldfp ufp1, seg, sib, disp
+    subfp st(0), st(0), ufp1
+};
+
+def macroop FSUB1_P
+{
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    subfp st(0), st(0), ufp1
+};
+
+def macroop FSUB2_R
+{
+    subfp sti, sti, st(0)
+};
+
+def macroop FSUB2_M
+{
+    ldfp ufp1, seg, sib, disp
+    subfp st(0), st(0), ufp1
+};
+
+def macroop FSUB2_P
+{
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    subfp st(0), st(0), ufp1
+};
+
+def macroop FSUBP
+{
+    subfp st(1), st(1), st(0), spm=1
+};
+
+def macroop FSUBP_R
+{
+    subfp sti, sti, st(0), spm=1
+};
+
+def macroop FSUBP_M
+{
+    fault "new UnimpInstFault"
+};
+
+def macroop FSUBP_P
+{
+   fault "new UnimpInstFault"
+};
+
 # FISUB
 # FSUBR
 # FSUBRP
