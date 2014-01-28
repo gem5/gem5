@@ -55,7 +55,7 @@ def macroop FSINCOS {
 
 def macroop FPTAN {
     tanfp st(0), st(0)
-    limm ufp1, "double(1)"
+    lfpimm ufp1, 1
     movfp st(-1), ufp1, spm=-1
 };
 
