@@ -103,11 +103,14 @@ ListenSocket::listen(int port, bool reuse)
         return false;
     }
 
-    if (::listen(fd, 1) == -1)
-        panic("ListenSocket(listen): listen() failed!");
+    if (::listen(fd, 1) == -1) {
+        if (errno != EADDRINUSE)
+            panic("ListenSocket(listen): listen() failed!");
+
+        return false;
+    }
 
     listening = true;
-
     anyListening = true;
     return true;
 }
