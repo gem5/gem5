@@ -506,8 +506,8 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
                     merged = true;
                     // the existing queue item needs to be adjusted with
                     // respect to both address and size
-                    (*w)->addr = addr;
                     (*w)->size = (*w)->addr + (*w)->size - addr;
+                    (*w)->addr = addr;
                 }
             } else {
                 // the new one starts after the current one, figure
