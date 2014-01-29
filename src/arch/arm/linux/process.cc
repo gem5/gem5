@@ -179,7 +179,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 57 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 58 */ SyscallDesc("unused#58", unimplementedFunc),
     /* 59 */ SyscallDesc("unused#59", unimplementedFunc),
-    /* 60 */ SyscallDesc("umask", unimplementedFunc),
+    /* 60 */ SyscallDesc("umask", umaskFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
     /* 62 */ SyscallDesc("ustat", unimplementedFunc),
     /* 63 */ SyscallDesc("dup2", unimplementedFunc),
