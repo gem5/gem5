@@ -1192,7 +1192,7 @@ typename Cache<TagStore>::BlkType*
 Cache<TagStore>::allocateBlock(Addr addr, bool is_secure,
                                PacketList &writebacks)
 {
-    BlkType *blk = tags->findVictim(addr, writebacks);
+    BlkType *blk = tags->findVictim(addr);
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);

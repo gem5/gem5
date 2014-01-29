@@ -169,10 +169,9 @@ public:
     /**
      * Find a block to evict for the address provided.
      * @param addr The addr to a find a replacement candidate for.
-     * @param writebacks List for any writebacks to be performed.
      * @return The candidate block.
      */
-    BlkType* findVictim(Addr addr, PacketList &writebacks);
+    BlkType* findVictim(Addr addr);
 
     /**
      * Insert the new block into the cache.  For LRU this means inserting into

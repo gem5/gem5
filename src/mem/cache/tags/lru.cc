@@ -172,7 +172,7 @@ LRU::findBlock(Addr addr, bool is_secure) const
 }
 
 LRU::BlkType*
-LRU::findVictim(Addr addr, PacketList &writebacks)
+LRU::findVictim(Addr addr)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate

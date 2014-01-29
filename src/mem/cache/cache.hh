@@ -195,9 +195,9 @@ class Cache : public BaseCache
     /**
      * Does all the processing necessary to perform the provided request.
      * @param pkt The memory request to perform.
+     * @param blk The cache block to be updated.
      * @param lat The latency of the access.
      * @param writebacks List for any writebacks that need to be performed.
-     * @param update True if the replacement data should be updated.
      * @return Boolean indicating whether the request was satisfied.
      */
     bool access(PacketPtr pkt, BlkType *&blk,

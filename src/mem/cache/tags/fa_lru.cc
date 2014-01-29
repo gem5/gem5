@@ -224,7 +224,7 @@ FALRU::findBlock(Addr addr, bool is_secure) const
 }
 
 FALRUBlk*
-FALRU::findVictim(Addr addr, PacketList &writebacks)
+FALRU::findVictim(Addr addr)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);

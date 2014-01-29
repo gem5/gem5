@@ -203,10 +203,9 @@ public:
     /**
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
-     * @param writebacks List for any writebacks to be performed.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findVictim(Addr addr, PacketList & writebacks);
+    FALRUBlk* findVictim(Addr addr);
 
     void insertBlock(PacketPtr pkt, BlkType *blk);
 
