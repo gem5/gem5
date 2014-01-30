@@ -52,7 +52,7 @@ main()
 {
     AddrRangeMap<int> r;
 
-    AddrRangeMap<int>::iterator i;
+    AddrRangeMap<int>::const_iterator i;
 
     i = r.insert(RangeIn(10, 40), 5);
     assert(i != r.end());
@@ -61,7 +61,7 @@ main()
 
     i = r.find(RangeIn(20, 30));
     assert(i != r.end());
-    cout << i->first << " " << i->second << endl;
+    cout << i->first.to_string() << " " << i->second << endl;
 
     i = r.find(RangeIn(55, 55));
     assert(i == r.end());
@@ -74,7 +74,7 @@ main()
 
     i = r.find(RangeIn(20, 30));
     assert(i != r.end());
-    cout << i->first << " " << i->second << endl;
+    cout << i->first.to_string() << " " << i->second << endl;
 
     return 0;
 }

@@ -49,6 +49,13 @@ const char *m5MainCommands[] = {
 using namespace std;
 using namespace Stats;
 
+double testfunc();
+struct StatTest;
+StatTest & __stattest();
+void stattest_init();
+void stattest_run();
+
+
 double
 testfunc()
 {
@@ -130,6 +137,9 @@ stattest_run()
 void
 StatTest::init()
 {
+    EventQueue *q = getEventQueue(0);
+    curEventQueue(q);
+
     cprintf("sizeof(Scalar) = %d\n", sizeof(Scalar));
     cprintf("sizeof(Vector) = %d\n", sizeof(Vector));
     cprintf("sizeof(Distribution) = %d\n", sizeof(Distribution));
@@ -419,7 +429,7 @@ StatTest::run()
     s15[9].sample(1234);
 
     s10.sample(1000000000);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s10.sample(100000);
     s10.sample(100000);
     s10.sample(100000);
@@ -494,50 +504,50 @@ StatTest::run()
 
     s15[0].sample(1234);
     s15[1].sample(4134);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[4].sample(1213);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[3].sample(1124);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[2].sample(1243);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[7].sample(1244);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[4].sample(7234);
     s15[2].sample(9234);
     s15[3].sample(1764);
     s15[7].sample(1564);
     s15[3].sample(3234);
     s15[1].sample(2234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[5].sample(1234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[9].sample(4334);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[2].sample(1234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[4].sample(4334);
     s15[6].sample(1234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[8].sample(8734);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[1].sample(5234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[3].sample(8234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[7].sample(5234);
     s15[4].sample(4434);
     s15[3].sample(7234);
     s15[2].sample(1934);
     s15[1].sample(9234);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[5].sample(5634);
     s15[3].sample(1264);
     s15[7].sample(5223);
     s15[0].sample(1234);
     s15[0].sample(5434);
     s15[3].sample(8634);
-    curTick(curTick() + ULL(1000000));
+    curEventQueue()->setCurTick(curTick() + ULL(1000000));
     s15[1].sample(1234);
 
     s4 = curTick();
@@ -546,7 +556,7 @@ StatTest::run()
 
     s3 = 12;
     s3++;
-    curTick(curTick() + 9);
+    curEventQueue()->setCurTick(curTick() + 9);
 
     s1 = 9;
     s1 += 9;
@@ -621,7 +631,7 @@ StatTest::run()
     s9.sample(10);
     s9.sample(10);
 
-    curTick(curTick() + 9);
+    curEventQueue()->setCurTick(curTick() + 9);
     s4 = curTick();
     s6.sample(100);
     s6.sample(100);

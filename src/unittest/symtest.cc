@@ -35,6 +35,8 @@
 
 using namespace std;
 
+void usage(const char *progname);
+
 void
 usage(const char *progname)
 {

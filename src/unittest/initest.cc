@@ -41,6 +41,8 @@ using namespace std;
 
 char *progname;
 
+void usage();
+
 void
 usage()
 {
