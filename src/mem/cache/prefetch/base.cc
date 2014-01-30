@@ -60,7 +60,9 @@ BasePrefetcher::BasePrefetcher(const Params *p)
     : ClockedObject(p), size(p->size), latency(p->latency), degree(p->degree),
       useMasterId(p->use_master_id), pageStop(!p->cross_pages),
       serialSquash(p->serial_squash), onlyData(p->data_accesses_only),
-      system(p->sys), masterId(system->getMasterId(name()))
+      onMissOnly(p->on_miss_only), onReadOnly(p->on_read_only),
+      onPrefetch(p->on_prefetch), system(p->sys),
+      masterId(system->getMasterId(name()))
 {
 }
 
@@ -185,7 +187,14 @@ BasePrefetcher::getPacket()
 Tick
 BasePrefetcher::notify(PacketPtr &pkt, Tick tick)
 {
-    if (!pkt->req->isUncacheable() && !(pkt->req->isInstFetch() && onlyData)) {
+    // Don't consult the prefetcher if any of the following conditons are true
+    // 1) The request is uncacheable
+    // 2) The request is a fetch, but we are only prefeching data
+    // 3) The request is a cache hit, but we are only training on misses
+    // 4) THe request is a write, but we are only training on reads
+    if (!pkt->req->isUncacheable() && !(pkt->req->isInstFetch() && onlyData) &&
+        !(onMissOnly && inCache(pkt->getAddr(), true)) &&
+        !(onReadOnly && !pkt->isRead())) {
         // Calculate the blk address
         Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
         bool is_secure = pkt->isSecure();
@@ -261,6 +270,11 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick tick)
             prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->contextId(),
                                             pkt->req->threadId());
+
+            // Tag orefetch reqeuests with corresponding PC to train lower
+            // cache-level prefetchers
+            if (onPrefetch && pkt->req->hasPC())
+                prefetch->req->setPC(pkt->req->getPC());
 
             // We just remove the head if we are full
             if (pf.size() == size) {

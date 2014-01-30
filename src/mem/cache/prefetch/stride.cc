@@ -59,7 +59,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         return;
     }
 
-    Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
+    Addr data_addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
     MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
     Addr pc = pkt->req->getPC();
@@ -77,7 +77,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
     if (iter != tab.end()) {
         // Hit in table
 
-        int new_stride = blk_addr - (*iter)->missAddr;
+        int new_stride = data_addr - (*iter)->missAddr;
         bool stride_match = (new_stride == (*iter)->stride);
 
         if (stride_match && new_stride != 0) {
@@ -89,20 +89,20 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                 (*iter)->confidence = 0;
         }
 
-        DPRINTF(HWPrefetch, "hit: PC %x blk_addr %x (%s) stride %d (%s), "
-                "conf %d\n", pc, blk_addr, is_secure ? "s" : "ns", new_stride,
+        DPRINTF(HWPrefetch, "hit: PC %x data_addr %x (%s) stride %d (%s), "
+                "conf %d\n", pc, data_addr, is_secure ? "s" : "ns", new_stride,
                 stride_match ? "match" : "change",
                 (*iter)->confidence);
 
-        (*iter)->missAddr = blk_addr;
+        (*iter)->missAddr = data_addr;
         (*iter)->isSecure = is_secure;
 
         if ((*iter)->confidence <= 0)
             return;
 
         for (int d = 1; d <= degree; d++) {
-            Addr new_addr = blk_addr + d * new_stride;
-            if (pageStop && !samePage(blk_addr, new_addr)) {
+            Addr new_addr = data_addr + d * new_stride;
+            if (pageStop && !samePage(data_addr, new_addr)) {
                 // Spanned the page, so now stop
                 pfSpanPage += degree - d + 1;
                 return;
@@ -117,7 +117,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         // Miss in table
         // Find lowest confidence and replace
 
-        DPRINTF(HWPrefetch, "miss: PC %x blk_addr %x (%s)\n", pc, blk_addr,
+        DPRINTF(HWPrefetch, "miss: PC %x data_addr %x (%s)\n", pc, data_addr,
                 is_secure ? "s" : "ns");
 
         if (tab.size() >= 256) { //set default table size is 256
@@ -139,7 +139,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
 
         StrideEntry *new_entry = new StrideEntry;
         new_entry->instAddr = pc;
-        new_entry->missAddr = blk_addr;
+        new_entry->missAddr = data_addr;
         new_entry->isSecure = is_secure;
         new_entry->stride = 0;
         new_entry->confidence = 0;

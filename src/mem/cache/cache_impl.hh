@@ -556,6 +556,17 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 // move it ahead of mshrs that are ready
                 // mshrQueue.moveToFront(mshr);
             }
+
+            // We should call the prefetcher reguardless if the request is
+            // satisfied or not, reguardless if the request is in the MSHR or
+            // not.  The request could be a ReadReq hit, but still not
+            // satisfied (potentially because of a prior write to the same
+            // cache line.  So, even when not satisfied, tehre is an MSHR
+            // already allocated for this, we need to let the prefetcher know
+            // about the request
+            if (prefetcher) {
+                next_pf_time = prefetcher->notify(pkt, time);
+            }
         } else {
             // no MSHR
             assert(pkt->req->masterId() < system->maxMasters());

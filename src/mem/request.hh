@@ -576,6 +576,13 @@ class Request
         return _threadId;
     }
 
+    void
+    setPC(Addr pc)
+    {
+        privateFlags.set(VALID_PC);
+        _pc = pc;
+    }
+
     bool
     hasPC() const
     {
