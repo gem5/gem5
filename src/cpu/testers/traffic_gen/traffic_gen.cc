@@ -119,6 +119,11 @@ TrafficGen::initState()
 unsigned int
 TrafficGen::drain(DrainManager *dm)
 {
+    if (!updateEvent.scheduled()) {
+        // no event has been scheduled yet (e.g. switched from atomic mode)
+        return 0;
+    }
+
     if (retryPkt == NULL) {
         // shut things down
         nextPacketTick = MaxTick;
