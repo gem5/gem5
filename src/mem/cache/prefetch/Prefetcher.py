@@ -65,6 +65,8 @@ class BasePrefetcher(ClockedObject):
          "Only prefetch on read requests (write requests ignored)")
     on_prefetch = Param.Bool(True,
          "Let lower cache prefetcher train on prefetch requests")
+    inst_tagged = Param.Bool(True,
+         "Perform a tagged prefetch for instruction fetches always")
     sys = Param.System(Parent.any, "System this device belongs to")
 
 class GHBPrefetcher(BasePrefetcher):

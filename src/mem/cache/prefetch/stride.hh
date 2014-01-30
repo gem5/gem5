@@ -76,10 +76,12 @@ class StridePrefetcher : public BasePrefetcher
 
     std::list<StrideEntry*> table[Max_Contexts];
 
+    bool instTagged;
+
   public:
 
     StridePrefetcher(const Params *p)
-        : BasePrefetcher(p)
+        : BasePrefetcher(p), instTagged(p->inst_tagged)
     {
     }
 

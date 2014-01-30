@@ -66,6 +66,23 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
     assert(master_id < Max_Contexts);
     std::list<StrideEntry*> &tab = table[master_id];
 
+    // Revert to simple N-block ahead prefetch for instruction fetches
+    if (instTagged && pkt->req->isInstFetch()) {
+        for (int d = 1; d <= degree; d++) {
+            Addr new_addr = data_addr + d * blkSize;
+            if (pageStop && !samePage(data_addr, new_addr)) {
+                // Spanned the page, so now stop
+                pfSpanPage += degree - d + 1;
+                return;
+            }
+            DPRINTF(HWPrefetch, "queuing prefetch to %x @ %d\n",
+                    new_addr, latency);
+            addresses.push_back(new_addr);
+            delays.push_back(latency);
+        }
+        return;
+    }
+
     /* Scan Table for instAddr Match */
     std::list<StrideEntry*>::iterator iter;
     for (iter = tab.begin(); iter != tab.end(); iter++) {
