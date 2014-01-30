@@ -98,12 +98,17 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         bool stride_match = (new_stride == (*iter)->stride);
 
         if (stride_match && new_stride != 0) {
+            (*iter)->tolerance = true;
             if ((*iter)->confidence < Max_Conf)
                 (*iter)->confidence++;
         } else {
-            (*iter)->stride = new_stride;
-            if ((*iter)->confidence > Min_Conf)
-                (*iter)->confidence = 0;
+            if (!((*iter)->tolerance)) {
+                (*iter)->stride = new_stride;
+                if ((*iter)->confidence > Min_Conf)
+                    (*iter)->confidence = 0;
+            } else {
+                (*iter)->tolerance = false;
+            }
         }
 
         DPRINTF(HWPrefetch, "hit: PC %x data_addr %x (%s) stride %d (%s), "
@@ -118,7 +123,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
             return;
 
         for (int d = 1; d <= degree; d++) {
-            Addr new_addr = data_addr + d * new_stride;
+            Addr new_addr = data_addr + d * (*iter)->stride;
             if (pageStop && !samePage(data_addr, new_addr)) {
                 // Spanned the page, so now stop
                 pfSpanPage += degree - d + 1;
@@ -160,6 +165,7 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         new_entry->isSecure = is_secure;
         new_entry->stride = 0;
         new_entry->confidence = 0;
+        new_entry->tolerance = false;
         tab.push_back(new_entry);
     }
 }

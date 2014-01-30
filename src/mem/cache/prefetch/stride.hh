@@ -72,6 +72,7 @@ class StridePrefetcher : public BasePrefetcher
         bool isSecure;
         int stride;
         int confidence;
+        bool tolerance;
     };
 
     std::list<StrideEntry*> table[Max_Contexts];
