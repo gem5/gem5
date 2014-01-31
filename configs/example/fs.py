@@ -191,7 +191,7 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'sparc':
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     elif buildEnv['TARGET_ISA'] == 'x86':
-        drive_sys = makeX86System(drive_mem_mode, np, bm[1])
+        drive_sys = makeLinuxX86System(drive_mem_mode, np, bm[1])
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
 
