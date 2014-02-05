@@ -569,6 +569,12 @@ def from_A(cpt):
         else:
             continue
 
+# The change between versions C and D is the addition of support for multiple
+# event queues, so for old checkpoints we must specify that there's only one.
+def from_B(cpt):
+    cpt.set('Globals', 'numMainEventQueues', '1')
+
+
 migrations = []
 migrations.append(from_0)
 migrations.append(from_1)
@@ -581,6 +587,7 @@ migrations.append(from_7)
 migrations.append(from_8)
 migrations.append(from_9)
 migrations.append(from_A)
+migrations.append(from_B)
 
 verbose_print = False
 
