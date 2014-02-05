@@ -240,13 +240,13 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     //copy int regs
     for (int i = 0; i < NumIntRegs; ++i)
-         dest->setIntReg(i, src->readIntReg(i));
+         dest->setIntRegFlat(i, src->readIntRegFlat(i));
     //copy float regs
     for (int i = 0; i < NumFloatRegs; ++i)
-         dest->setFloatRegBits(i, src->readFloatRegBits(i));
+         dest->setFloatRegBitsFlat(i, src->readFloatRegBitsFlat(i));
     //copy condition-code regs
     for (int i = 0; i < NumCCRegs; ++i)
-         dest->setCCReg(i, src->readCCReg(i));
+         dest->setCCRegFlat(i, src->readCCRegFlat(i));
     copyMiscRegs(src, dest);
     dest->pcState(src->pcState());
 }
