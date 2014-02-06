@@ -77,11 +77,10 @@ M5_PRAGMA_NORETURN(__exit_message)
 // This implements a cprintf based fatal() function.  fatal() should
 // be called when the simulation cannot continue due to some condition
 // that is the user's fault (bad configuration, invalid arguments,
-// etc.) and not a simulator bug.  fatal() calls exit(1), i.e., a
-// "normal" exit with an error code, as opposed to abort() like
+// etc.) and not a simulator bug.  fatal() calls  abort() like
 // panic() does.
 //
-#define fatal(...) exit_message("fatal", 1, __VA_ARGS__)
+#define fatal(...) exit_message("fatal", -1, __VA_ARGS__)
 
 void
 __base_message(std::ostream &stream, const char *prefix, bool verbose,
