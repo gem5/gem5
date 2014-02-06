@@ -73,10 +73,10 @@ class RubyMemoryControl : public MemoryControl
 
     // Called from the directory:
     void enqueue(const MsgPtr& message, Cycles latency);
-    void enqueueMemRef(MemoryNode& memRef);
+    void enqueueMemRef(MemoryNode *memRef);
     void dequeue();
     const Message* peek();
-    MemoryNode peekNode();
+    MemoryNode *peekNode();
     bool isReady();
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
@@ -99,7 +99,7 @@ class RubyMemoryControl : public MemoryControl
     uint32_t functionalWriteBuffers(Packet *pkt);
 
   private:
-    void enqueueToDirectory(MemoryNode req, Cycles latency);
+    void enqueueToDirectory(MemoryNode *req, Cycles latency);
     const int getRank(int bank) const;
     bool queueReady(int bank);
     void issueRequest(int bank);
@@ -138,9 +138,9 @@ class RubyMemoryControl : public MemoryControl
     int m_refresh_period_system;
 
     // queues where memory requests live
-    std::list<MemoryNode> m_response_queue;
-    std::list<MemoryNode> m_input_queue;
-    std::list<MemoryNode>* m_bankQueues;
+    std::list<MemoryNode *> m_response_queue;
+    std::list<MemoryNode *> m_input_queue;
+    std::list<MemoryNode *>* m_bankQueues;
 
     // Each entry indicates number of address-bus cycles until bank
     // is reschedulable:

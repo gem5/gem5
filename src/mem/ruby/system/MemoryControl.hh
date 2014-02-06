@@ -67,10 +67,10 @@ class MemoryControl : public ClockedObject, public Consumer
 
     // Called from the directory:
     virtual void enqueue(const MsgPtr& message, Cycles latency) = 0;
-    virtual void enqueueMemRef(MemoryNode& memRef) = 0;
+    virtual void enqueueMemRef(MemoryNode *memRef) = 0;
     virtual void dequeue() = 0;
     virtual const Message* peek() = 0;
-    virtual MemoryNode peekNode() = 0;
+    virtual MemoryNode *peekNode() = 0;
     virtual bool isReady() = 0;
     virtual bool areNSlotsAvailable(int n) = 0;  // infinite queue length
 

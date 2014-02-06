@@ -183,7 +183,7 @@ RubyMemoryControl::init()
     m_total_ranks = m_ranks_per_dimm * m_dimms_per_channel;
     m_refresh_period_system = m_refresh_period / m_total_banks;
 
-    m_bankQueues = new list<MemoryNode> [m_total_banks];
+    m_bankQueues = new list<MemoryNode *> [m_total_banks];
     assert(m_bankQueues);
 
     m_bankBusyCounter = new int [m_total_banks];
@@ -284,24 +284,25 @@ RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
     physical_address_t addr = memMess->getAddr().getAddress();
     MemoryRequestType type = memMess->getType();
     bool is_mem_read = (type == MemoryRequestType_MEMORY_READ);
-    MemoryNode thisReq(arrival_time, message, addr, is_mem_read, !is_mem_read);
+    MemoryNode *thisReq = new MemoryNode(arrival_time, message, addr,
+                                         is_mem_read, !is_mem_read);
     enqueueMemRef(thisReq);
 }
 
 // Alternate entry point used when we already have a MemoryNode
 // structure built.
 void
-RubyMemoryControl::enqueueMemRef(MemoryNode& memRef)
+RubyMemoryControl::enqueueMemRef(MemoryNode *memRef)
 {
     m_msg_counter++;
-    memRef.m_msg_counter = m_msg_counter;
-    physical_address_t addr = memRef.m_addr;
+    memRef->m_msg_counter = m_msg_counter;
+    physical_address_t addr = memRef->m_addr;
     int bank = getBank(addr);
 
     DPRINTF(RubyMemory,
             "New memory request%7d: %#08x %c arrived at %10d bank = %3x sched %c\n",
-            m_msg_counter, addr, memRef.m_is_mem_read ? 'R':'W',
-            memRef.m_time * g_system_ptr->clockPeriod(),
+            m_msg_counter, addr, memRef->m_is_mem_read ? 'R':'W',
+            memRef->m_time * g_system_ptr->clockPeriod(),
             bank, m_event.scheduled() ? 'Y':'N');
 
     m_profiler_ptr->profileMemReq(bank);
@@ -318,25 +319,27 @@ void
 RubyMemoryControl::dequeue()
 {
     assert(isReady());
+    MemoryNode *req = m_response_queue.front();
     m_response_queue.pop_front();
+    delete req;
 }
 
 const Message*
 RubyMemoryControl::peek()
 {
-    MemoryNode node = peekNode();
-    Message* msg_ptr = node.m_msgptr.get();
+    MemoryNode *node = peekNode();
+    Message* msg_ptr = node->m_msgptr.get();
     assert(msg_ptr != NULL);
     return msg_ptr;
 }
 
-MemoryNode
+MemoryNode *
 RubyMemoryControl::peekNode()
 {
     assert(isReady());
-    MemoryNode req = m_response_queue.front();
+    MemoryNode *req = m_response_queue.front();
     DPRINTF(RubyMemory, "Peek: memory request%7d: %#08x %c sched %c\n",
-            req.m_msg_counter, req.m_addr, req.m_is_mem_read ? 'R':'W',
+            req->m_msg_counter, req->m_addr, req->m_is_mem_read ? 'R':'W',
             m_event.scheduled() ? 'Y':'N');
 
     return req;
@@ -346,7 +349,7 @@ bool
 RubyMemoryControl::isReady()
 {
     return ((!m_response_queue.empty()) &&
-            (m_response_queue.front().m_time <= g_system_ptr->curCycle()));
+            (m_response_queue.front()->m_time <= g_system_ptr->curCycle()));
 }
 
 void
@@ -362,15 +365,15 @@ RubyMemoryControl::print(ostream& out) const
 
 // Queue up a completed request to send back to directory
 void
-RubyMemoryControl::enqueueToDirectory(MemoryNode req, Cycles latency)
+RubyMemoryControl::enqueueToDirectory(MemoryNode *req, Cycles latency)
 {
     Tick arrival_time = clockEdge(latency);
     Cycles ruby_arrival_time = g_system_ptr->ticksToCycles(arrival_time);
-    req.m_time = ruby_arrival_time;
+    req->m_time = ruby_arrival_time;
     m_response_queue.push_back(req);
 
     DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
-            req.m_addr, req.m_is_mem_read ? 'R':'W', arrival_time);
+            req->m_addr, req->m_is_mem_read ? 'R':'W', arrival_time);
 
     // schedule the wake up
     m_consumer_ptr->scheduleEventAbsolute(arrival_time);
@@ -472,7 +475,7 @@ RubyMemoryControl::queueReady(int bank)
         return false;
     }
 
-    bool write = !m_bankQueues[bank].front().m_is_mem_read;
+    bool write = !m_bankQueues[bank].front()->m_is_mem_read;
     if (write && (m_busBusyCounter_Write > 0)) {
         m_profiler_ptr->profileMemReadWriteBusy();
         return false;
@@ -537,22 +540,22 @@ void
 RubyMemoryControl::issueRequest(int bank)
 {
     int rank = getRank(bank);
-    MemoryNode req = m_bankQueues[bank].front();
+    MemoryNode *req = m_bankQueues[bank].front();
     m_bankQueues[bank].pop_front();
 
     DPRINTF(RubyMemory, "Mem issue request%7d: %#08x %c "
-            "bank=%3x sched %c\n", req.m_msg_counter, req.m_addr,
-            req.m_is_mem_read? 'R':'W',
+            "bank=%3x sched %c\n", req->m_msg_counter, req->m_addr,
+            req->m_is_mem_read? 'R':'W',
             bank, m_event.scheduled() ? 'Y':'N');
 
-    if (req.m_msgptr) {  // don't enqueue L3 writebacks
+    if (req->m_msgptr) {  // don't enqueue L3 writebacks
         enqueueToDirectory(req, Cycles(m_mem_ctl_latency + m_mem_fixed_delay));
     }
     m_oldRequest[bank] = 0;
     markTfaw(rank);
     m_bankBusyCounter[bank] = m_bank_busy_time;
     m_busBusy_WhichRank = rank;
-    if (req.m_is_mem_read) {
+    if (req->m_is_mem_read) {
         m_profiler_ptr->profileMemRead();
         m_busBusyCounter_Basic = m_basic_bus_busy_time;
         m_busBusyCounter_Write = m_basic_bus_busy_time + m_read_write_delay;
@@ -660,8 +663,8 @@ RubyMemoryControl::executeCycle()
     if (!m_input_queue.empty()) {
         // we're not idle if anything is pending
         m_idleCount = IDLECOUNT_MAX_VALUE;
-        MemoryNode req = m_input_queue.front();
-        int bank = getBank(req.m_addr);
+        MemoryNode *req = m_input_queue.front();
+        int bank = getBank(req->m_addr);
         if (m_bankQueues[bank].size() < m_bank_queue_size) {
             m_input_queue.pop_front();
             m_bankQueues[bank].push_back(req);
@@ -707,26 +710,26 @@ RubyMemoryControl::wakeup()
 bool
 RubyMemoryControl::functionalReadBuffers(Packet *pkt)
 {
-    for (std::list<MemoryNode>::iterator it = m_input_queue.begin();
+    for (std::list<MemoryNode *>::iterator it = m_input_queue.begin();
          it != m_input_queue.end(); ++it) {
-        Message* msg_ptr = (*it).m_msgptr.get();
+        Message* msg_ptr = (*it)->m_msgptr.get();
         if (msg_ptr->functionalRead(pkt)) {
             return true;
         }
     }
 
-    for (std::list<MemoryNode>::iterator it = m_response_queue.begin();
+    for (std::list<MemoryNode *>::iterator it = m_response_queue.begin();
          it != m_response_queue.end(); ++it) {
-        Message* msg_ptr = (*it).m_msgptr.get();
+        Message* msg_ptr = (*it)->m_msgptr.get();
         if (msg_ptr->functionalRead(pkt)) {
             return true;
         }
     }
 
     for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
-        for (std::list<MemoryNode>::iterator it = m_bankQueues[bank].begin();
+        for (std::list<MemoryNode *>::iterator it = m_bankQueues[bank].begin();
              it != m_bankQueues[bank].end(); ++it) {
-            Message* msg_ptr = (*it).m_msgptr.get();
+            Message* msg_ptr = (*it)->m_msgptr.get();
             if (msg_ptr->functionalRead(pkt)) {
                 return true;
             }
@@ -749,26 +752,26 @@ RubyMemoryControl::functionalWriteBuffers(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (std::list<MemoryNode>::iterator it = m_input_queue.begin();
+    for (std::list<MemoryNode *>::iterator it = m_input_queue.begin();
          it != m_input_queue.end(); ++it) {
-        Message* msg_ptr = (*it).m_msgptr.get();
+        Message* msg_ptr = (*it)->m_msgptr.get();
         if (msg_ptr->functionalWrite(pkt)) {
             num_functional_writes++;
         }
     }
 
-    for (std::list<MemoryNode>::iterator it = m_response_queue.begin();
+    for (std::list<MemoryNode *>::iterator it = m_response_queue.begin();
          it != m_response_queue.end(); ++it) {
-        Message* msg_ptr = (*it).m_msgptr.get();
+        Message* msg_ptr = (*it)->m_msgptr.get();
         if (msg_ptr->functionalWrite(pkt)) {
             num_functional_writes++;
         }
     }
 
     for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
-        for (std::list<MemoryNode>::iterator it = m_bankQueues[bank].begin();
+        for (std::list<MemoryNode *>::iterator it = m_bankQueues[bank].begin();
              it != m_bankQueues[bank].end(); ++it) {
-            Message* msg_ptr = (*it).m_msgptr.get();
+            Message* msg_ptr = (*it)->m_msgptr.get();
             if (msg_ptr->functionalWrite(pkt)) {
                 num_functional_writes++;
             }
