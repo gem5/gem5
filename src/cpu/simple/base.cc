@@ -60,6 +60,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/pred/bpred_unit.hh"
 #include "cpu/profile.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"
@@ -85,7 +86,9 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
-    : BaseCPU(p), traceData(NULL), thread(NULL)
+    : BaseCPU(p),
+      branchPred(p->branchPred),
+      traceData(NULL), thread(NULL)
 {
     if (FullSystem)
         thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb,
@@ -286,6 +289,21 @@ BaseSimpleCPU::regStats()
     idleFraction = constant(1.0) - notIdleFraction;
     numIdleCycles = idleFraction * numCycles;
     numBusyCycles = (notIdleFraction)*numCycles;
+
+    numBranches
+        .name(name() + ".Branches")
+        .desc("Number of branches fetched")
+        .prereq(numBranches);
+
+    numPredictedBranches
+        .name(name() + ".predictedBranches")
+        .desc("Number of branches predicted as taken")
+        .prereq(numPredictedBranches);
+
+    numBranchMispred
+        .name(name() + ".BranchMispred")
+        .desc("Number of branch mispredictions")
+        .prereq(numBranchMispred);
 }
 
 void
@@ -434,6 +452,19 @@ BaseSimpleCPU::preExecute()
                 curStaticInst->getName(), curStaticInst->machInst);
 #endif // TRACING_ON
     }
+
+    if (branchPred && curStaticInst && curStaticInst->isControl()) {
+        // Use a fake sequence number since we only have one
+        // instruction in flight at the same time.
+        const InstSeqNum cur_sn(0);
+        const ThreadID tid(0);
+        pred_pc = thread->pcState();
+        const bool predict_taken(
+            branchPred->predict(curStaticInst, cur_sn, pred_pc, tid));
+
+        if (predict_taken)
+            ++numPredictedBranches;
+    }
 }
 
 void
@@ -462,6 +493,10 @@ BaseSimpleCPU::postExecute()
 
     if (CPA::available()) {
         CPA::cpa()->swAutoBegin(tc, pc.nextInstAddr());
+    }
+
+    if (curStaticInst->isControl()) {
+        ++numBranches;
     }
 
     /* Power model statistics */
@@ -507,10 +542,11 @@ BaseSimpleCPU::postExecute()
     }
 }
 
-
 void
 BaseSimpleCPU::advancePC(Fault fault)
 {
+    const bool branching(thread->pcState().branching());
+
     //Since we're moving to a new pc, zero out the offset
     fetchOffset = 0;
     if (fault != NoFault) {
@@ -524,6 +560,23 @@ BaseSimpleCPU::advancePC(Fault fault)
             TheISA::PCState pcState = thread->pcState();
             TheISA::advancePC(pcState, curStaticInst);
             thread->pcState(pcState);
+        }
+    }
+
+    if (branchPred && curStaticInst && curStaticInst->isControl()) {
+        // Use a fake sequence number since we only have one
+        // instruction in flight at the same time.
+        const InstSeqNum cur_sn(0);
+        const ThreadID tid(0);
+
+        if (pred_pc == thread->pcState()) {
+            // Correctly predicted branch
+            branchPred->update(cur_sn, tid);
+        } else {
+            // Mis-predicted branch
+            branchPred->squash(cur_sn, pcState(),
+                               branching, tid);
+            ++numBranchMispred;
         }
     }
 }

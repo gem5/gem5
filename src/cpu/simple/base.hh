@@ -77,7 +77,7 @@ namespace Trace {
 }
 
 struct BaseSimpleCPUParams;
-
+class BPredUnit;
 
 class BaseSimpleCPU : public BaseCPU
 {
@@ -86,6 +86,8 @@ class BaseSimpleCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
+
+    BPredUnit *branchPred;
 
   protected:
     Trace::InstRecord *traceData;
@@ -272,6 +274,15 @@ class BaseSimpleCPU : public BaseCPU
     Stats::Scalar dcacheRetryCycles;
     Counter lastDcacheRetry;
 
+    /// @{
+    /// Total number of branches fetched
+    Stats::Scalar numBranches;
+    /// Number of branches predicted as taken
+    Stats::Scalar numPredictedBranches;
+    /// Number of misprediced branches
+    Stats::Scalar numBranchMispred;
+    /// @}
+
     void serializeThread(std::ostream &os, ThreadID tid);
     void unserializeThread(Checkpoint *cp, const std::string &section,
                            ThreadID tid);
@@ -446,6 +457,9 @@ class BaseSimpleCPU : public BaseCPU
 
     bool misspeculating() { return thread->misspeculating(); }
     ThreadContext *tcBase() { return tc; }
+
+  private:
+    TheISA::PCState pred_pc;
 };
 
 #endif // __CPU_SIMPLE_BASE_HH__
