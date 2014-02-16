@@ -4,11 +4,11 @@ sim_seconds                                  0.000003                       # Nu
 sim_ticks                                     2896000                       # Number of ticks simulated
 final_tick                                    2896000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  80864                       # Simulator instruction rate (inst/s)
-host_op_rate                                    80849                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               40410591                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 216708                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_inst_rate                                 139089                       # Simulator instruction rate (inst/s)
+host_op_rate                                   138996                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               69453756                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 265200                       # Number of bytes of host memory used
+host_seconds                                     0.04                       # Real time elapsed on the host
 sim_insts                                        5793                       # Number of instructions simulated
 sim_ops                                          5793                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -80,5 +80,6 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                       5793                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.Branches                              1037                       # Number of branches fetched
 
 ---------- End Simulation Statistics   ----------

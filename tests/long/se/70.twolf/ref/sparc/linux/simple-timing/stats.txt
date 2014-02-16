@@ -68,6 +68,7 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                  541126164                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.Branches                          15132745                       # Number of branches fetched
 system.cpu.icache.tags.replacements             10362                       # number of replacements
 system.cpu.icache.tags.tagsinuse          1591.579171                       # Cycle average of tags in use
 system.cpu.icache.tags.total_refs           193433248                       # Total number of references to valid blocks.

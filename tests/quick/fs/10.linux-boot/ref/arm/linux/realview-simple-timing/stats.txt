@@ -4,15 +4,27 @@ sim_seconds                                  2.616536                       # Nu
 sim_ticks                                2616536483000                       # Number of ticks simulated
 final_tick                               2616536483000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 506890                       # Simulator instruction rate (inst/s)
-host_op_rate                                   645039                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            22032386663                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 421264                       # Number of bytes of host memory used
-host_seconds                                   118.76                       # Real time elapsed on the host
+host_inst_rate                                 317845                       # Simulator instruction rate (inst/s)
+host_op_rate                                   404472                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            13815397020                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 476964                       # Number of bytes of host memory used
+host_seconds                                   189.39                       # Real time elapsed on the host
 sim_insts                                    60197590                       # Number of instructions simulated
 sim_ops                                      76603983                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.realview.nvmem.bytes_read::cpu.inst           20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu.inst           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu.inst            5                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu.inst             8                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total                8                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu.inst            8                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total            8                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu.inst            8                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total               8                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd    122683392                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.dtb.walker          320                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.itb.walker          128                       # Number of bytes read from this memory
@@ -639,18 +651,6 @@ system.physmem.writeRowHitRate                  85.22                       # Ro
 system.physmem.avgGap                       160458.16                       # Average gap between requests
 system.physmem.pageHitRate                      99.43                       # Row buffer hit rate, read and write combined
 system.physmem.prechargeAllPercent               2.19                       # Percentage of time for which DRAM has all the banks in precharge state
-system.realview.nvmem.bytes_read::cpu.inst           20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu.inst           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           20                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu.inst            5                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              5                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu.inst             8                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total                8                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu.inst            8                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total            8                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu.inst            8                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total               8                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                     54116538                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq            16546563                       # Transaction distribution
 system.membus.trans_dist::ReadResp           16546563                       # Transaction distribution
@@ -920,6 +920,7 @@ system.cpu.num_idle_cycles               4581527140.608249                      
 system.cpu.num_busy_cycles               651545825.391751                       # Number of busy cycles
 system.cpu.not_idle_fraction                 0.124505                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                     0.875495                       # Percentage of idle cycles
+system.cpu.Branches                          10308279                       # Number of branches fetched
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.quiesce                    83016                       # number of quiesce instructions executed
 system.cpu.icache.tags.replacements            856260                       # number of replacements

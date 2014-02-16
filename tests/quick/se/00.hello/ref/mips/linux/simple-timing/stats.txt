@@ -4,11 +4,11 @@ sim_seconds                                  0.000032                       # Nu
 sim_ticks                                    31633000                       # Number of ticks simulated
 final_tick                                   31633000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  65946                       # Simulator instruction rate (inst/s)
-host_op_rate                                    65935                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              358688094                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 230484                       # Number of bytes of host memory used
-host_seconds                                     0.09                       # Real time elapsed on the host
+host_inst_rate                                 119247                       # Simulator instruction rate (inst/s)
+host_op_rate                                   119199                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              648290000                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 277916                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                        5814                       # Number of instructions simulated
 sim_ops                                          5814                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -86,6 +86,7 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_busy_cycles                      63266                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.Branches                               915                       # Number of branches fetched
 system.cpu.icache.tags.replacements                13                       # number of replacements
 system.cpu.icache.tags.tagsinuse           132.545353                       # Cycle average of tags in use
 system.cpu.icache.tags.total_refs                5513                       # Total number of references to valid blocks.

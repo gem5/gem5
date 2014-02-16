@@ -365,6 +365,7 @@ system.cpu0.num_idle_cycles              4553702806.473283                      
 system.cpu0.num_busy_cycles              79951892.526717                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.017255                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.982745                       # Percentage of idle cycles
+system.cpu0.Branches                          5613939                       # Number of branches fetched
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                   82795                       # number of quiesce instructions executed
 system.cpu0.icache.tags.replacements           850590                       # number of replacements
@@ -632,6 +633,7 @@ system.cpu1.num_idle_cycles              4215699127.014197                      
 system.cpu1.num_busy_cycles              62272692.985803                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.014557                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.985443                       # Percentage of idle cycles
+system.cpu1.Branches                          4684784                       # Number of branches fetched
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.iocache.tags.replacements                    0                       # number of replacements

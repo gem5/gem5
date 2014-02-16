@@ -112,6 +112,7 @@ testsys.cpu.num_idle_cycles              380542207.362158                       
 testsys.cpu.num_busy_cycles              20262547.637842                       # Number of busy cycles
 testsys.cpu.not_idle_fraction                0.050555                       # Percentage of non-idle cycles
 testsys.cpu.idle_fraction                    0.949445                       # Percentage of idle cycles
+testsys.cpu.Branches                          2929848                       # Number of branches fetched
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                   19580                       # number of quiesce instructions executed
 testsys.cpu.kern.inst.hwrei                    153667                       # number of hwrei instructions executed
@@ -334,6 +335,7 @@ drivesys.cpu.num_idle_cycles             782579974.227931                       
 drivesys.cpu.num_busy_cycles             19051473.772069                       # Number of busy cycles
 drivesys.cpu.not_idle_fraction               0.023766                       # Percentage of non-idle cycles
 drivesys.cpu.idle_fraction                   0.976234                       # Percentage of idle cycles
+drivesys.cpu.Branches                         2793313                       # Number of branches fetched
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                  19876                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                   143591                       # number of hwrei instructions executed
@@ -453,11 +455,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321621592000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            11306223920                       # Simulator instruction rate (inst/s)
-host_op_rate                              11302970418                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8786485437                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 473604                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                             6913599452                       # Simulator instruction rate (inst/s)
+host_op_rate                               6911980937                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5373353780                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 524140                       # Number of bytes of host memory used
+host_seconds                                     0.08                       # Real time elapsed on the host
 sim_insts                                   523862353                       # Number of instructions simulated
 sim_ops                                     523862353                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
@@ -558,6 +560,7 @@ testsys.cpu.num_idle_cycles              784609.171892                       # N
 testsys.cpu.num_busy_cycles              36406.828108                       # Number of busy cycles
 testsys.cpu.not_idle_fraction                0.044344                       # Percentage of non-idle cycles
 testsys.cpu.idle_fraction                    0.955656                       # Percentage of idle cycles
+testsys.cpu.Branches                             5238                       # Number of branches fetched
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                      40                       # number of quiesce instructions executed
 testsys.cpu.kern.inst.hwrei                       295                       # number of hwrei instructions executed
@@ -731,6 +734,7 @@ drivesys.cpu.num_idle_cycles             1590157.359061                       # 
 drivesys.cpu.num_busy_cycles             36082.640939                       # Number of busy cycles
 drivesys.cpu.not_idle_fraction               0.022188                       # Percentage of non-idle cycles
 drivesys.cpu.idle_fraction                   0.977812                       # Percentage of idle cycles
+drivesys.cpu.Branches                            5243                       # Number of branches fetched
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                     41                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                      295                       # number of hwrei instructions executed

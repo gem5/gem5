@@ -596,6 +596,7 @@ system.cpu0.num_idle_cycles              10090453891.750097                     
 system.cpu0.num_busy_cycles              510417579.249904                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.048149                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.951851                       # Percentage of idle cycles
+system.cpu0.Branches                         11289261                       # Number of branches fetched
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.cpu1.apic_clk_domain.clock                8000                       # Clock period in ticks
@@ -623,6 +624,7 @@ system.cpu1.num_idle_cycles              10261752317.862694                     
 system.cpu1.num_busy_cycles              336287219.137307                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.031731                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.968269                       # Percentage of idle cycles
+system.cpu1.Branches                         10643857                       # Number of branches fetched
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.ruby.network.routers0.throttle0.link_utilization     0.038081                      

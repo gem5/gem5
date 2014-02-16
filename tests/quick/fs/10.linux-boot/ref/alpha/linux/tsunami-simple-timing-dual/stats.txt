@@ -890,6 +890,7 @@ system.cpu0.num_idle_cycles              3698209766.998114                      
 system.cpu0.num_busy_cycles              223609982.001886                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.057017                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.942983                       # Percentage of idle cycles
+system.cpu0.Branches                          7227606                       # Number of branches fetched
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                    6813                       # number of quiesce instructions executed
 system.cpu0.kern.inst.hwrei                    165343                       # number of hwrei instructions executed
@@ -1416,6 +1417,7 @@ system.cpu1.num_idle_cycles              3870487590.349789                      
 system.cpu1.num_busy_cycles              49440202.650211                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.012613                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.987387                       # Percentage of idle cycles
+system.cpu1.Branches                          1846576                       # Number of branches fetched
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                    2744                       # number of quiesce instructions executed
 system.cpu1.kern.inst.hwrei                     78268                       # number of hwrei instructions executed
