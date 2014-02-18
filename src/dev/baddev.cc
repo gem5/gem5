@@ -32,14 +32,10 @@
  * BadDevice implemenation
  */
 
-#include <deque>
 #include <string>
-#include <vector>
 
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "dev/baddev.hh"
-#include "mem/port.hh"
 #include "params/BadDevice.hh"
 #include "sim/system.hh"
 
