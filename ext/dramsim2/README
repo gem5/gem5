@@ -1,0 +1,11 @@
+Follow these steps to get DRAMSim2 as part of gem5
+
+1. Download DRAMSim2
+    1.1 Go to ext/dramsim2 (this directory)
+    1.2 Clone DRAMSim2: git clone git://github.com/dramninjasUMD/DRAMSim2.git
+
+2. Compile gem5
+    2.1 Business as usual
+
+3. Run gem5 with DRAMSim2
+    3.1 Use --mem-type=dramsim2 and set the device and system configuration

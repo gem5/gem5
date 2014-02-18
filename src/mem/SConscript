@@ -66,6 +66,11 @@ if env['TARGET_ISA'] != 'null':
     Source('se_translating_port_proxy.cc')
     Source('page_table.cc')
 
+    if env['HAVE_DRAMSIM']:
+        SimObject('DRAMSim2.py')
+        Source('dramsim2_wrapper.cc')
+        Source('dramsim2.cc')
+
 DebugFlag('BaseBus')
 DebugFlag('BusAddrRanges')
 DebugFlag('CoherentBus')
@@ -80,6 +85,8 @@ DebugFlag('LLSC')
 DebugFlag('MMU')
 DebugFlag('MemoryAccess')
 DebugFlag('PacketQueue')
+
+DebugFlag("DRAMSim2")
 
 DebugFlag('ProtocolTrace')
 DebugFlag('RubyCache')
