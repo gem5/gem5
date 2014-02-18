@@ -83,8 +83,8 @@ CommMonitor::CommMonitor(Params* params)
     samplePeriod.setTick(params->sample_period);
 
     DPRINTF(CommMonitor,
-            "Created monitor %s with sample period %d ticks (%f s)\n",
-            name(), samplePeriodTicks, samplePeriod);
+            "Created monitor %s with sample period %d ticks (%f ms)\n",
+            name(), samplePeriodTicks, samplePeriod.msec());
 }
 
 void
