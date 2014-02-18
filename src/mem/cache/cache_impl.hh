@@ -1475,10 +1475,23 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
+    // check if the packet is for an address range covered by this
+    // cache, partly to not waste time looking for it, but also to
+    // ensure that we only forward the snoop upwards if it is within
+    // our address ranges
+    bool in_range = false;
+    for (AddrRangeList::const_iterator r = addrRanges.begin();
+         r != addrRanges.end(); ++r) {
+        if (r->contains(pkt->getAddr())) {
+            in_range = true;
+            break;
+        }
+    }
+
     // Note that some deferred snoops don't have requests, since the
     // original access may have already completed
     if ((pkt->req && pkt->req->isUncacheable()) ||
-        pkt->cmd == MemCmd::Writeback) {
+        pkt->cmd == MemCmd::Writeback || !in_range) {
         //Can't get a hit on an uncacheable address
         //Revisit this for multi level coherence
         return;
