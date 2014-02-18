@@ -251,10 +251,13 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
     self.cf0 = CowIdeDisk(driveID='master')
     self.cf0.childImage(mdesc.disk())
     # default to an IDE controller rather than a CF one
-    # assuming we've got one
-    try:
-        self.realview.ide.disks = [self.cf0]
-    except:
+    # assuming we've got one; EMM64 is an exception for the moment
+    if machine_type != "VExpress_EMM64":
+        try:
+            self.realview.ide.disks = [self.cf0]
+        except:
+            self.realview.cf_ctrl.disks = [self.cf0]
+    else:
         self.realview.cf_ctrl.disks = [self.cf0]
 
     if bare_metal:
@@ -273,8 +276,11 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
             print " another platform"
             sys.exit(1)
 
-        boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
-                     'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
+        # Ensure that writes to the UART actually go out early in the boot
+        boot_flags = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
+                     'lpj=19988480 norandmaps rw loglevel=8 ' + \
+                     'mem=%s root=/dev/sda1' % mdesc.mem()
+
         self.mem_ranges = [AddrRange(self.realview.mem_start_addr,
                                      size = mdesc.mem())]
         self.realview.setupBootLoader(self.membus, self, binary)
