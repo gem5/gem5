@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2013 ARM Limited
+# Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -92,8 +92,15 @@ except:
     error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
                   'src/proto/packet.proto'])
     if not error:
-        import packet_pb2
         print "Generated packet proto definitions"
+
+        try:
+            import google.protobuf
+        except:
+            print "Please install Python protobuf module"
+            exit(-1)
+
+        import packet_pb2
     else:
         print "Failed to import packet proto definitions"
         exit(-1)
