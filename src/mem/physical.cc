@@ -95,10 +95,9 @@ PhysicalMemory::PhysicalMemory(const string& _name,
         }
     }
 
-    // iterate over the increasing addresses and chunks of contigous
-    // space to be mapped to backing store, also remember what
-    // memories constitute the range so we can go and find out if we
-    // have to init their parts to zero
+    // iterate over the increasing addresses and chunks of contiguous
+    // space to be mapped to backing store, create it and inform the
+    // memories
     vector<AddrRange> intlv_ranges;
     vector<AbstractMemory*> curr_memories;
     for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
@@ -162,8 +161,7 @@ PhysicalMemory::createBackingStore(AddrRange range,
     // it appropriately
     backingStore.push_back(make_pair(range, pmem));
 
-    // point the memories to their backing store, and if requested,
-    // initialize the memory range to 0
+    // point the memories to their backing store
     for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
          m != _memories.end(); ++m) {
         DPRINTF(BusAddrRanges, "Mapping memory %s to backing store\n",
@@ -393,13 +391,9 @@ PhysicalMemory::unserializeStore(Checkpoint* cp, const string& section)
         fatal("Insufficient memory to allocate compression state for %s\n",
               filename);
 
+    // we've already got the actual backing store mapped
     uint8_t* pmem = backingStore[store_id].second;
     AddrRange range = backingStore[store_id].first;
-
-    // unmap file that was mmapped in the constructor, this is
-    // done here to make sure that gzip and open don't muck with
-    // our nice large space of memory before we reallocate it
-    munmap((char*) pmem, range.size());
 
     long range_size;
     UNSERIALIZE_SCALAR(range_size);
@@ -410,14 +404,6 @@ PhysicalMemory::unserializeStore(Checkpoint* cp, const string& section)
     if (range_size != range.size())
         fatal("Memory range size has changed! Saw %lld, expected %lld\n",
               range_size, range.size());
-
-    pmem = (uint8_t*) mmap(NULL, range.size(), PROT_READ | PROT_WRITE,
-                           MAP_ANON | MAP_PRIVATE, -1, 0);
-
-    if (pmem == (void*) MAP_FAILED) {
-        perror("mmap");
-        fatal("Could not mmap physical memory!\n");
-    }
 
     uint64_t curr_size = 0;
     long* temp_page = new long[chunk_size];
