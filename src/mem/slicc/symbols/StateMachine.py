@@ -458,7 +458,8 @@ stringstream ${ident}_transitionComment;
 $c_ident::$c_ident(const Params *p)
     : AbstractController(p)
 {
-    m_name = "${ident}";
+    m_machineID.type = MachineType_${ident};
+    m_machineID.num = m_version;
 ''')
         num_in_ports = len(self.in_ports)
         code('    m_in_ports = $num_in_ports;')
@@ -544,9 +545,6 @@ $c_ident::init()
 {
     MachineType machine_type = string_to_MachineType("${{var.machine.ident}}");
     int base M5_VAR_USED = MachineType_base_number(machine_type);
-
-    m_machineID.type = MachineType_${ident};
-    m_machineID.num = m_version;
 
     // initialize objects
 

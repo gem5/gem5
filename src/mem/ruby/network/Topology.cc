@@ -89,8 +89,7 @@ Topology::Topology(uint32_t num_routers, vector<BasicExtLink *> ext_links,
         // Store the ExtLink pointers for later
         m_ext_link_vector.push_back(ext_link);
 
-        int machine_base_idx = MachineType_base_number(
-                string_to_MachineType(abs_cntrl->getName()));
+        int machine_base_idx = MachineType_base_number(abs_cntrl->getType());
         int ext_idx1 = machine_base_idx + abs_cntrl->getVersion();
         int ext_idx2 = ext_idx1 + m_nodes;
         int int_idx = router->params()->router_id + 2*m_nodes;

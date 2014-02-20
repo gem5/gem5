@@ -56,11 +56,12 @@ class AbstractController : public ClockedObject, public Consumer
     void init();
     const Params *params() const { return (const Params *)_params; }
 
-    const NodeID getVersion() const { return m_version; }
+    const NodeID getVersion() const { return m_machineID.getNum(); }
+    const MachineType getType() const { return m_machineID.getType(); }
+
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
 
     // return instance name
-    const std::string getName() const { return m_name; }
     void blockOnQueue(Address, MessageBuffer*);
     void unblock(Address);
 
@@ -129,7 +130,6 @@ class AbstractController : public ClockedObject, public Consumer
     void wakeUpAllBuffers();
 
   protected:
-    std::string m_name;
     NodeID m_version;
     MachineID m_machineID;
     NodeID m_clusterID;
