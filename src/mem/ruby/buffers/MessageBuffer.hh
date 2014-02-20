@@ -74,7 +74,7 @@ class MessageBuffer
         enqueue(node.m_msgptr, Cycles(1));
     }
 
-    bool areNSlotsAvailable(int n);
+    bool areNSlotsAvailable(unsigned int n);
     int getPriority() { return m_priority_rank; }
     void setPriority(int rank) { m_priority_rank = rank; }
     void setConsumer(Consumer* consumer)
@@ -104,8 +104,9 @@ class MessageBuffer
 
     Consumer* getConsumer() { return m_consumer; }
 
-    const Message* peekAtHeadOfQueue() const;
-    const Message* peek() const { return peekAtHeadOfQueue(); }
+    //! Function for extracting the message at the head of the
+    //! message queue.  The function assumes that the queue is nonempty.
+    const Message* peek() const;
     const MsgPtr getMsgPtrCopy() const;
 
     const MsgPtr&
@@ -115,23 +116,15 @@ class MessageBuffer
         return m_prio_heap.front().m_msgptr;
     }
 
-    const MsgPtr&
-    peekMsgPtrEvenIfNotReady() const
-    {
-        return m_prio_heap.front().m_msgptr;
-    }
-
     void enqueue(MsgPtr message) { enqueue(message, Cycles(1)); }
     void enqueue(MsgPtr message, Cycles delta);
 
-    //!  returns delay ticks of the message.
-    Cycles dequeue_getDelayCycles(MsgPtr& message);
-    void dequeue(MsgPtr& message);
-
-    //! returns delay cycles of the message
+    //! Updates the delay cycles of the message at the of the queue,
+    //! removes it from the queue and returns its total delay.
     Cycles dequeue_getDelayCycles();
-    void dequeue() { pop(); }
-    void pop();
+
+    void dequeue();
+
     void recycle();
     bool isEmpty() const { return m_prio_heap.size() == 0; }
 
@@ -141,12 +134,12 @@ class MessageBuffer
         m_strict_fifo = order;
         m_ordering_set = true;
     }
+
     void resize(int size) { m_max_size = size; }
     int getSize();
     void setRandomization(bool random_flag) { m_randomization = random_flag; }
 
     void clear();
-
     void print(std::ostream& out) const;
     void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
@@ -167,13 +160,6 @@ class MessageBuffer
   private:
     //added by SS
     Cycles m_recycle_latency;
-
-    // Private Methods
-    Cycles setAndReturnDelayCycles(MsgPtr message);
-
-    // Private copy constructor and assignment operator
-    MessageBuffer(const MessageBuffer& obj);
-    MessageBuffer& operator=(const MessageBuffer& obj);
 
     // Data Members (m_ prefix)
     //! The two ends of the buffer.

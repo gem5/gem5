@@ -160,7 +160,7 @@ Throttle::wakeup()
 
                 // Move the message
                 m_out[vnet]->enqueue(m_in[vnet]->peekMsgPtr(), m_link_latency);
-                m_in[vnet]->pop();
+                m_in[vnet]->dequeue();
 
                 // Count the message
                 m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;

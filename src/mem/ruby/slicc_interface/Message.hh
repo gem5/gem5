@@ -71,7 +71,13 @@ class Message : public RefCounted
     virtual bool functionalWrite(Packet *pkt) = 0;
     //{ fatal("Write functional access not implemented!"); }
 
-    void setDelayedTicks(const Tick ticks) { m_DelayedTicks = ticks; }
+    //! Update the delay this message has experienced so far.
+    void updateDelayedTicks(Tick curTime)
+    {
+        assert(m_LastEnqueueTime <= curTime);
+        Tick delta = curTime - m_LastEnqueueTime;
+        m_DelayedTicks += delta;
+    }
     const Tick getDelayedTicks() const {return m_DelayedTicks;}
 
     void setLastEnqueueTime(const Tick& time) { m_LastEnqueueTime = time; }

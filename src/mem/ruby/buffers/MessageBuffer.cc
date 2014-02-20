@@ -75,7 +75,7 @@ MessageBuffer::getSize()
 }
 
 bool
-MessageBuffer::areNSlotsAvailable(int n)
+MessageBuffer::areNSlotsAvailable(unsigned int n)
 {
 
     // fast path when message buffers have infinite size
@@ -124,7 +124,7 @@ MessageBuffer::getMsgPtrCopy() const
 }
 
 const Message*
-MessageBuffer::peekAtHeadOfQueue() const
+MessageBuffer::peek() const
 {
     DPRINTF(RubyQueue, "Peeking at head of queue.\n");
     assert(isReady());
@@ -160,9 +160,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     }
     m_msgs_this_cycle++;
 
-    if (!m_ordering_set) {
-        panic("Ordering property of %s has not been set", m_name);
-    }
+    assert(m_ordering_set);
 
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
@@ -211,9 +209,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     assert(m_sender->clockEdge() >= msg_ptr->getLastEnqueueTime() &&
            "ensure we aren't dequeued early");
 
-    msg_ptr->setDelayedTicks(m_sender->clockEdge() -
-                             msg_ptr->getLastEnqueueTime() +
-                             msg_ptr->getDelayedTicks());
+    msg_ptr->updateDelayedTicks(m_sender->clockEdge());
     msg_ptr->setLastEnqueueTime(arrival_time);
 
     // Insert the message into the priority heap
@@ -226,29 +222,9 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
             arrival_time, *(message.get()));
 
     // Schedule the wakeup
-    if (m_consumer != NULL) {
-        m_consumer->scheduleEventAbsolute(arrival_time);
-        m_consumer->storeEventInfo(m_vnet_id);
-    } else {
-        panic("No consumer: %s name: %s\n", *this, m_name);
-    }
-}
-
-Cycles
-MessageBuffer::dequeue_getDelayCycles(MsgPtr& message)
-{
-    dequeue(message);
-    return setAndReturnDelayCycles(message);
-}
-
-void
-MessageBuffer::dequeue(MsgPtr& message)
-{
-    DPRINTF(RubyQueue, "Dequeueing\n");
-    message = m_prio_heap.front().m_msgptr;
-
-    pop();
-    DPRINTF(RubyQueue, "Enqueue message is %s\n", (*(message.get())));
+    assert(m_consumer != NULL);
+    m_consumer->scheduleEventAbsolute(arrival_time);
+    m_consumer->storeEventInfo(m_vnet_id);
 }
 
 Cycles
@@ -258,14 +234,16 @@ MessageBuffer::dequeue_getDelayCycles()
     MsgPtr message = m_prio_heap.front().m_msgptr;
 
     // get the delay cycles
-    Cycles delayCycles = setAndReturnDelayCycles(message);
+    message->updateDelayedTicks(m_receiver->clockEdge());
+    Cycles delayCycles =
+        m_receiver->ticksToCycles(message->getDelayedTicks());
     dequeue();
 
     return delayCycles;
 }
 
 void
-MessageBuffer::pop()
+MessageBuffer::dequeue()
 {
     DPRINTF(RubyQueue, "Popping\n");
     assert(isReady());
@@ -375,7 +353,7 @@ MessageBuffer::stallMessage(const Address& addr)
     assert(addr.getOffset() == 0);
     MsgPtr message = m_prio_heap.front().m_msgptr;
 
-    pop();
+    dequeue();
 
     //
     // Note: no event is scheduled to analyze the map at a later time.
@@ -383,22 +361,6 @@ MessageBuffer::stallMessage(const Address& addr)
     // these addresses change state.
     //
     (m_stall_msg_map[addr]).push_back(message);
-}
-
-Cycles
-MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
-{
-    // get the delay cycles of the message at the top of the queue
-
-    // this function should only be called on dequeue
-    // ensure the msg hasn't been enqueued
-    assert(msg_ptr->getLastEnqueueTime() <= m_receiver->clockEdge());
-
-    msg_ptr->setDelayedTicks(m_receiver->clockEdge() -
-                             msg_ptr->getLastEnqueueTime() +
-                             msg_ptr->getDelayedTicks());
-
-    return m_receiver->ticksToCycles(msg_ptr->getDelayedTicks());
 }
 
 void

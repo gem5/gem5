@@ -253,7 +253,7 @@ NetworkInterface::wakeup()
         {
             msg_ptr = inNode_ptr[vnet]->peekMsgPtr();
             if (flitisizeMessage(msg_ptr, vnet)) {
-                inNode_ptr[vnet]->pop();
+                inNode_ptr[vnet]->dequeue();
             } else {
                 break;
             }

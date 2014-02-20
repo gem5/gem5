@@ -286,7 +286,7 @@ PerfectSwitch::wakeup()
                     }
 
                     // Dequeue msg
-                    m_in[incoming][vnet]->pop();
+                    m_in[incoming][vnet]->dequeue();
                     m_pending_message_count[vnet]--;
                 }
             }
