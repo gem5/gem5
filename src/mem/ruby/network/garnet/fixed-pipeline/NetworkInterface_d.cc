@@ -361,7 +361,7 @@ NetworkInterface_d::checkReschedule()
         }
     }
     for (int vc = 0; vc < m_num_vcs; vc++) {
-        if (m_ni_buffers[vc]->isReadyForNext(m_net_ptr->curCycle())) {
+        if (m_ni_buffers[vc]->isReady(m_net_ptr->curCycle() + Cycles(1))) {
             scheduleEvent(Cycles(1));
             return;
         }

@@ -125,16 +125,9 @@ class InputUnit_d : public Consumer
     }
 
     inline bool
-    need_stage(int vc, VC_state_type state, flit_stage stage, Cycles curTime)
+    need_stage(int vc, VC_state_type state, flit_stage stage, Cycles cTime)
     {
-        return m_vcs[vc]->need_stage(state, stage, curTime);
-    }
-
-    inline bool
-    need_stage_nextcycle(int vc, VC_state_type state, flit_stage stage,
-                         Cycles curTime)
-    {
-        return m_vcs[vc]->need_stage_nextcycle(state, stage, curTime);
+        return m_vcs[vc]->need_stage(state, stage, cTime);
     }
 
     inline bool

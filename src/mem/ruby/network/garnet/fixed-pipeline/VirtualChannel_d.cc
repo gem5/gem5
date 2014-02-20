@@ -62,25 +62,12 @@ VirtualChannel_d::grant_vc(int out_vc, Cycles curTime)
 
 bool
 VirtualChannel_d::need_stage(VC_state_type state, flit_stage stage,
-                             Cycles curTime)
+                             Cycles ct)
 {
-    if ((m_vc_state.first == state) && (curTime >= m_vc_state.second)) {
-        if (m_input_buffer->isReady(curTime)) {
+    if ((m_vc_state.first == state) && (ct >= m_vc_state.second)) {
+        if (m_input_buffer->isReady(ct)) {
             flit_d *t_flit = m_input_buffer->peekTopFlit();
-            return(t_flit->is_stage(stage, curTime)) ;
-        }
-    }
-    return false;
-}
-
-bool
-VirtualChannel_d::need_stage_nextcycle(VC_state_type state, flit_stage stage,
-                                       Cycles curTime)
-{
-    if ((m_vc_state.first == state) && ((curTime + 1) >= m_vc_state.second)) {
-        if (m_input_buffer->isReadyForNext(curTime)) {
-            flit_d *t_flit = m_input_buffer->peekTopFlit();
-            return(t_flit->is_next_stage(stage, curTime)) ;
+            return(t_flit->is_stage(stage, ct)) ;
         }
     }
     return false;

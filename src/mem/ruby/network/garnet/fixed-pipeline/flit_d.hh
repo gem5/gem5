@@ -65,13 +65,6 @@ class flit_d
                 curTime >= m_stage.second);
     }
 
-    bool
-    is_next_stage(flit_stage t_stage, Cycles curTime)
-    {
-        return (m_stage.first == t_stage &&
-                (curTime + 1) >= m_stage.second);
-    }
-
     void
     advance_stage(flit_stage t_stage, Cycles curTime)
     {

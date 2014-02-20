@@ -45,7 +45,6 @@ class flitBuffer_d
     flitBuffer_d(int maximum_size);
 
     bool isReady(Cycles curTime);
-    bool isReadyForNext(Cycles curTime);
     bool isEmpty();
     void print(std::ostream& out) const;
     bool isFull();

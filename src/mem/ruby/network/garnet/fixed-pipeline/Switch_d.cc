@@ -88,8 +88,10 @@ Switch_d::wakeup()
 void
 Switch_d::check_for_wakeup()
 {
+    Cycles nextCycle = m_router->curCycle() + Cycles(1);
+
     for (int inport = 0; inport < m_num_inports; inport++) {
-        if (m_switch_buffer[inport]->isReadyForNext(m_router->curCycle())) {
+        if (m_switch_buffer[inport]->isReady(nextCycle)) {
             scheduleEvent(Cycles(1));
             break;
         }

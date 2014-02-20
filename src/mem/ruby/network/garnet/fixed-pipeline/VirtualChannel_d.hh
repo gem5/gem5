@@ -43,8 +43,6 @@ class VirtualChannel_d
     ~VirtualChannel_d();
 
     bool need_stage(VC_state_type state, flit_stage stage, Cycles curTime);
-    bool need_stage_nextcycle(VC_state_type state, flit_stage stage,
-                              Cycles curTime);
     void set_outport(int outport);
     void grant_vc(int out_vc, Cycles curTime);
 

@@ -57,17 +57,6 @@ flitBuffer_d::isReady(Cycles curTime)
     return false;
 }
 
-bool
-flitBuffer_d::isReadyForNext(Cycles curTime)
-{
-    if (m_buffer.size() != 0 ) {
-        flit_d *t_flit = peekTopFlit();
-        if (t_flit->get_time() <= (curTime + 1))
-            return true;
-    }
-    return false;
-}
-
 void
 flitBuffer_d::print(std::ostream& out) const
 {
