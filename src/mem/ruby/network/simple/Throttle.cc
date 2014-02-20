@@ -39,8 +39,6 @@
 
 using namespace std;
 
-const int HIGH_RANGE = 256;
-const int ADJUST_INTERVAL = 50000;
 const int MESSAGE_SIZE_MULTIPLIER = 1000;
 //const int BROADCAST_SCALING = 4; // Have a 16p system act like a 64p systems
 const int BROADCAST_SCALING = 1;

@@ -98,9 +98,3 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
         break;
     }
 }
-
-const std::vector<Throttle*>*
-Network::getThrottles(NodeID id) const
-{
-    return NULL;
-}

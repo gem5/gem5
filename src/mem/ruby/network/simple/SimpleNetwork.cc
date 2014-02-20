@@ -196,15 +196,6 @@ SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
     return m_fromNetQueues[id][network_num];
 }
 
-const std::vector<Throttle*>*
-SimpleNetwork::getThrottles(NodeID id) const
-{
-    assert(id >= 0);
-    assert(id < m_nodes);
-    assert(m_endpoint_switches[id] != NULL);
-    return m_endpoint_switches[id]->getThrottles();
-}
-
 void
 SimpleNetwork::regStats()
 {

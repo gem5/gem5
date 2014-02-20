@@ -67,7 +67,6 @@ class Switch : public BasicRouter
         const NetDest& routing_table_entry, Cycles link_latency,
         int bw_multiplier);
     const Throttle* getThrottle(LinkID link_number) const;
-    const std::vector<Throttle*>* getThrottles() const;
 
     void resetStats();
     void collateStats();

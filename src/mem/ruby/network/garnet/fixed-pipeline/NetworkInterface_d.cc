@@ -343,7 +343,7 @@ NetworkInterface_d::scheduleOutputLink()
 int
 NetworkInterface_d::get_vnet(int vc)
 {
-    for (int i = 0; i < m_net_ptr->getNumberOfVirtualNetworks(); i++) {
+    for (int i = 0; i < m_virtual_networks; i++) {
         if (vc >= (i*m_vc_per_vnet) && vc < ((i+1)*m_vc_per_vnet)) {
             return i;
         }

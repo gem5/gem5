@@ -116,12 +116,6 @@ Switch::getThrottle(LinkID link_number) const
     return m_throttles[link_number];
 }
 
-const vector<Throttle*>*
-Switch::getThrottles() const
-{
-    return &m_throttles;
-}
-
 void
 Switch::regStats()
 {
