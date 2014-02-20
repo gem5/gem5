@@ -140,23 +140,21 @@ class MemberMethodCallExprAST(MethodCallExprAST):
 
                       implemented_paramTypes.append(implemented_paramType)
 
+                  implementedMethodId = ""
                   if implements_interface:
-                      implementedMethodId = obj_type.methodIdAbstract(self.proc_name,
-                                                                      implemented_paramTypes)
-                  else:
-                      implementedMethodId = ""
+                      implementedMethodId = obj_type.methodIdAbstract(
+                              self.proc_name, implemented_paramTypes)
 
                   if implementedMethodId not in obj_type.methods:
-                      self.error("Invalid method call: " \
-                                 "Type '%s' does not have a method %s, '%s' nor '%s'",
-                                 obj_type, self.proc_name, methodId, implementedMethodId)
-                  else:
-                      #
-                      # Replace the methodId with the implementedMethodId found in
-                      # the method list.
-                      #
-                      methodId = implementedMethodId
-                      return_type = obj_type.methods[methodId].return_type
+                      self.error("Invalid method call: Type '%s' " \
+                                 "does not have a method %s, '%s' nor '%s'",
+                                 obj_type, self.proc_name, methodId,
+                                 implementedMethodId)
+
+                  # Replace the methodId with the implementedMethodId
+                  # found in the method list.
+                  methodId = implementedMethodId
+                  return_type = obj_type.methods[methodId].return_type
 
         if return_type.isInterface:
             prefix = "static_cast<%s &>" % return_type.c_ident

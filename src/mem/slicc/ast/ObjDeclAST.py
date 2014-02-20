@@ -39,8 +39,6 @@ class ObjDeclAST(DeclAST):
         return "[ObjDecl: %r]" % self.ident
 
     def generate(self):
-        machineComponentSym = False
-
         if "network" in self and not ("virtual_network" in self or
                                       "physical_network" in self) :
             self.error("Network queues require a 'virtual_network' attribute")
@@ -84,7 +82,3 @@ class ObjDeclAST(DeclAST):
             machine.addObject(v)
 
         self.symtab.newSymbol(v)
-
-        # used to cheat-- that is, access components in other machines
-        if machineComponentSym:
-            self.symtab.newMachComponentSym(v)
