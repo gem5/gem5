@@ -618,6 +618,20 @@ class BaseKvmCPU : public BaseCPU
      */
     bool discardPendingSignal(int signum) const;
 
+    /**
+     * Thread-specific initialization.
+     *
+     * Some KVM-related initialization requires us to know the TID of
+     * the thread that is going to execute our event queue. For
+     * example, when setting up timers, we need to know the TID of the
+     * thread executing in KVM in order to deliver the timer signal to
+     * that thread. This method is called as the first event in this
+     * SimObject's event queue.
+     *
+     * @see startup
+     */
+    void startupThread();
+
     /** Try to drain the CPU if a drain is pending */
     bool tryDrain();
 

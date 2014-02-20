@@ -40,11 +40,29 @@
 #include <algorithm>
 #include <csignal>
 #include <ctime>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/kvm/timer.hh"
 #include "debug/KvmTimer.hh"
+
+/* According to timer_create(2), the value SIGEV_THREAD_ID can be used
+ * to specify which thread a timer signal gets delivered to. According
+ * to the man page, the member sigev_notify_thread is used to specify
+ * the TID. This member is currently not defined by default in
+ * siginfo.h on x86, so we define it here as a workaround.
+ */
+#ifndef sigev_notify_thread_id
+#define sigev_notify_thread_id     _sigev_un._tid
+#endif
+
+static pid_t
+gettid()
+{
+    return syscall(__NR_gettid);
+}
 
 /**
  * Minimum number of cycles that a host can spend in a KVM call (used
@@ -62,11 +80,9 @@ PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
 {
     struct sigevent sev;
 
-    // TODO: We should request signal delivery to thread instead of
-    // the process here. Unfortunately this seems to be broken, or at
-    // least not work as specified in the man page.
-    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_notify = SIGEV_THREAD_ID;
     sev.sigev_signo = signo;
+    sev.sigev_notify_thread_id = gettid();
     sev.sigev_value.sival_ptr = NULL;
 
     while (timer_create(clockID, &sev, &timer) == -1) {

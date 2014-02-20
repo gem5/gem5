@@ -63,7 +63,7 @@
 /* Used by some KVM macros */
 #define PAGE_SIZE pageSize
 
-volatile bool timerOverflowed = false;
+static volatile __thread bool timerOverflowed = false;
 
 BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
     : BaseCPU(params),
@@ -92,18 +92,6 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
     thread->setStatus(ThreadContext::Halted);
     tc = thread->getTC();
     threadContexts.push_back(tc);
-
-    setupCounters();
-
-    if (params->usePerfOverflow)
-        runTimer.reset(new PerfKvmTimer(hwCycles,
-                                        KVM_TIMER_SIGNAL,
-                                        params->hostFactor,
-                                        params->hostFreq));
-    else
-        runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
-                                         params->hostFactor,
-                                         params->hostFreq));
 }
 
 BaseKvmCPU::~BaseKvmCPU()
@@ -177,6 +165,35 @@ BaseKvmCPU::startup()
     }
 
     thread->startup();
+
+    Event *startupEvent(
+        new EventWrapper<BaseKvmCPU,
+                         &BaseKvmCPU::startupThread>(this, true));
+    schedule(startupEvent, curTick());
+}
+
+void
+BaseKvmCPU::startupThread()
+{
+    // Do thread-specific initialization. We need to setup signal
+    // delivery for counters and timers from within the thread that
+    // will execute the event queue to ensure that signals are
+    // delivered to the right threads.
+    const BaseKvmCPUParams * const p(
+        dynamic_cast<const BaseKvmCPUParams *>(params()));
+
+    setupCounters();
+
+    if (p->usePerfOverflow)
+        runTimer.reset(new PerfKvmTimer(hwCycles,
+                                        KVM_TIMER_SIGNAL,
+                                        p->hostFactor,
+                                        p->hostFreq));
+    else
+        runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
+                                         p->hostFactor,
+                                         p->hostFreq));
+
 }
 
 void
@@ -1044,6 +1061,13 @@ BaseKvmCPU::flushCoalescedMMIO()
 /**
  * Cycle timer overflow when running in KVM. Forces the KVM syscall to
  * exit with EINTR and allows us to run the event queue.
+ *
+ * @warn This function might not be called since some kernels don't
+ * seem to deliver signals when the signal is only unmasked when
+ * running in KVM. This doesn't matter though since we are only
+ * interested in getting KVM to exit, which happens as expected. See
+ * setupSignalHandler() and kvmRun() for details about KVM signal
+ * handling.
  */
 static void
 onTimerOverflow(int signo, siginfo_t *si, void *data)
@@ -1079,20 +1103,22 @@ BaseKvmCPU::setupSignalHandler()
         panic("KVM: Failed to setup vCPU instruction signal handler\n");
 
     sigset_t sigset;
-    if (sigprocmask(SIG_BLOCK, NULL, &sigset) == -1)
+    if (pthread_sigmask(SIG_BLOCK, NULL, &sigset) == -1)
         panic("KVM: Failed get signal mask\n");
 
     // Request KVM to setup the same signal mask as we're currently
-    // running with. We'll sometimes need to mask the KVM_TIMER_SIGNAL
-    // to cause immediate exits from KVM after servicing IO
-    // requests. See kvmRun().
+    // running with except for the KVM control signals. We'll
+    // sometimes need to raise the KVM_TIMER_SIGNAL to cause immediate
+    // exits from KVM after servicing IO requests. See kvmRun().
+    sigdelset(&sigset, KVM_TIMER_SIGNAL);
+    sigdelset(&sigset, KVM_INST_SIGNAL);
     setSignalMask(&sigset);
 
     // Mask our control signals so they aren't delivered unless we're
     // actually executing inside KVM.
     sigaddset(&sigset, KVM_TIMER_SIGNAL);
     sigaddset(&sigset, KVM_INST_SIGNAL);
-    if (sigprocmask(SIG_SETMASK, &sigset, NULL) == -1)
+    if (pthread_sigmask(SIG_SETMASK, &sigset, NULL) == -1)
         panic("KVM: Failed mask the KVM control signals\n");
 }
 
