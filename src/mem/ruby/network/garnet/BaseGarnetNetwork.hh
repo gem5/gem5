@@ -88,12 +88,6 @@ class BaseGarnetNetwork : public Network
     int m_vcs_per_vnet;
     bool m_enable_fault_model;
 
-    std::vector<bool> m_in_use;
-    std::vector<bool> m_ordered;
-
-    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
-
     // Statistical variables
     Stats::Vector m_flits_received;
     Stats::Vector m_flits_injected;

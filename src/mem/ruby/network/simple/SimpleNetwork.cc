@@ -33,12 +33,10 @@
 #include "base/stl_helpers.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/simple/SimpleLink.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
-#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 

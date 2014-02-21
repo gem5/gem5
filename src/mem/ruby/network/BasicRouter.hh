@@ -46,9 +46,6 @@ class BasicRouter : public ClockedObject
     void init();
 
     void print(std::ostream& out) const;
-
-    friend class Topology;
-
   protected:
     //
     // ID in relation to other routers in the system

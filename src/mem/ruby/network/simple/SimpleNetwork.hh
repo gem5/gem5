@@ -32,16 +32,13 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/SimpleNetwork.hh"
-#include "sim/sim_object.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
 class Switch;
-class Topology;
 
 class SimpleNetwork : public Network
 {
@@ -94,13 +91,6 @@ class SimpleNetwork : public Network
     // Private copy constructor and assignment operator
     SimpleNetwork(const SimpleNetwork& obj);
     SimpleNetwork& operator=(const SimpleNetwork& obj);
-
-    // vector of queues from the components
-    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
-
-    std::vector<bool> m_in_use;
-    std::vector<bool> m_ordered;
     std::vector<Switch*> m_switches;
     std::vector<MessageBuffer*> m_buffers_to_free;
     std::vector<Switch*> m_endpoint_switches;

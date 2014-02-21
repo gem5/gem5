@@ -54,7 +54,6 @@
 
 class NetDest;
 class MessageBuffer;
-class Throttle;
 
 class Network : public ClockedObject
 {
@@ -110,6 +109,13 @@ class Network : public ClockedObject
     Topology* m_topology_ptr;
     static uint32_t m_control_msg_size;
     static uint32_t m_data_msg_size;
+
+    // vector of queues from the components
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+
+    std::vector<bool> m_in_use;
+    std::vector<bool> m_ordered;
 
   private:
     //! Callback class used for collating statistics from all the

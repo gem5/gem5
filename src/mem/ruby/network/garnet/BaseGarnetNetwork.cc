@@ -29,8 +29,6 @@
  */
 
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 
 using namespace std;

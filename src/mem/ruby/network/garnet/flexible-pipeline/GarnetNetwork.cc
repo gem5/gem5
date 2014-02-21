@@ -33,7 +33,6 @@
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetLink.hh"
@@ -41,7 +40,6 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
-#include "mem/ruby/network/Topology.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
@@ -145,7 +143,6 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     m_routers[dest]->addInPort(net_link);
     m_routers[src]->addOutPort(net_link, routing_table_entry,
                                          link->m_weight);
-
 }
 
 void

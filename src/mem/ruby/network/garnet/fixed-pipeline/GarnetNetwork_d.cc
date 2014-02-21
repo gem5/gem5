@@ -33,16 +33,13 @@
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
-#include "mem/ruby/network/Topology.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

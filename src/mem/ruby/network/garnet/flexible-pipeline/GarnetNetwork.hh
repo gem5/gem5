@@ -36,13 +36,10 @@
 
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/Network.hh"
 #include "params/GarnetNetwork.hh"
 
 class NetworkInterface;
-class MessageBuffer;
 class Router;
-class Topology;
 class NetDest;
 class NetworkLink;
 
