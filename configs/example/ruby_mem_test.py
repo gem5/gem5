@@ -47,7 +47,7 @@ config_root = os.path.dirname(config_path)
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 
-parser.add_option("-l", "--maxloads", metavar="N", default=0,
+parser.add_option("--maxloads", metavar="N", default=0,
                   help="Stop after N loads")
 parser.add_option("--progress", type="int", default=1000,
                   metavar="NLOADS",

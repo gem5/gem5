@@ -48,8 +48,8 @@ m5_root = os.path.dirname(config_root)
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 
-parser.add_option("-l", "--checks", metavar="N", default=100,
-                  help="Stop after N checks (loads)")
+parser.add_option("--maxloads", metavar="N", default=100,
+                  help="Stop after N loads")
 parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
                   help="Wakeup every N cycles")
 
@@ -89,7 +89,7 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
     check_flush = True
 
 tester = RubyTester(check_flush = check_flush,
-                    checks_to_complete = options.checks,
+                    checks_to_complete = options.maxloads,
                     wakeup_frequency = options.wakeup_freq)
 
 #
