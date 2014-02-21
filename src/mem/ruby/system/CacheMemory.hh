@@ -144,7 +144,6 @@ class CacheMemory : public SimObject
     CacheMemory& operator=(const CacheMemory& obj);
 
   private:
-    const std::string m_cache_name;
     Cycles m_latency;
 
     // Data Members (m_prefix)

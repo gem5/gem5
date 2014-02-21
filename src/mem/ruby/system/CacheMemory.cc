@@ -364,7 +364,7 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 void
 CacheMemory::print(ostream& out) const
 {
-    out << "Cache dump: " << m_cache_name << endl;
+    out << "Cache dump: " << name() << endl;
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
             if (m_cache[i][j] != NULL) {
