@@ -90,13 +90,6 @@ GarnetNetwork_d::init()
     }
     m_topology_ptr->createLinks(this);
 
-    // initialize the link's network pointers
-   for (vector<NetworkLink_d*>::const_iterator i = m_links.begin();
-         i != m_links.end(); ++i) {
-        NetworkLink_d* net_link = safe_cast<NetworkLink_d*>(*i);
-        net_link->init_net_ptr(this);
-    }
-
     // FaultModel: declare each router to the fault model
     if(isFaultModelEnabled()){
         for (vector<Router_d*>::const_iterator i= m_routers.begin();
@@ -285,8 +278,9 @@ GarnetNetwork_d::collateLinkStats()
 void
 GarnetNetwork_d::collatePowerStats()
 {
+    double sim_cycles = (double)(curCycle() - g_ruby_start);
     for (int i = 0; i < m_links.size(); i++) {
-        m_links[i]->calculate_power();
+        m_links[i]->calculate_power(sim_cycles);
         m_dynamic_link_power += m_links[i]->get_dynamic_power();
         m_static_link_power += m_links[i]->get_static_power();
     }

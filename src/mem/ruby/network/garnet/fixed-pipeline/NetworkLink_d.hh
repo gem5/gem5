@@ -56,7 +56,7 @@ class NetworkLink_d : public ClockedObject, public Consumer
     int get_id(){return m_id;}
     void wakeup();
 
-    void calculate_power();
+    void calculate_power(double);
     double get_dynamic_power() const { return m_power_dyn; }
     double get_static_power()const { return m_power_sta; }
 
@@ -69,7 +69,6 @@ class NetworkLink_d : public ClockedObject, public Consumer
     inline flit_d* peekLink()       { return linkBuffer->peekTopFlit(); }
     inline flit_d* consumeLink()    { return linkBuffer->getTopFlit(); }
 
-    void init_net_ptr(GarnetNetwork_d* net_ptr) { m_net_ptr = net_ptr; }
     uint32_t functionalWrite(Packet *);
 
   private:
@@ -77,7 +76,6 @@ class NetworkLink_d : public ClockedObject, public Consumer
     Cycles m_latency;
     int channel_width;
 
-    GarnetNetwork_d *m_net_ptr;
     flitBuffer_d *linkBuffer;
     Consumer *link_consumer;
     flitBuffer_d *link_srcQueue;
