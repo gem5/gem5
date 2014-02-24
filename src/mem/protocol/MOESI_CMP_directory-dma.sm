@@ -245,11 +245,6 @@ machine(DMA, "DMA Controller")
     unset_tbe();
   }
 
-  action(z_stall, "z", desc="dma is busy..stall") {
-    // do nothing
-  }
-
-
 
   transition(READY, ReadRequest, BUSY_RD) {
     s_sendReadRequest;

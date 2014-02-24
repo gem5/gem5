@@ -1492,9 +1492,6 @@ machine(L2Cache, "Token protocol")
     localDirectory.deallocate(address);
   }
 
-  action(z_stall, "z", desc="Stall") {
-  }
-
   action(zz_recycleL1RequestQueue, "zz", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(L1requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);

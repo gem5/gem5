@@ -148,10 +148,6 @@ machine(DMA, "DMA Controller")
     dmaResponseQueue_in.dequeue();
   }
 
-  action(z_stall, "z", desc="dma is busy..stall") {
-    // do nothing
-  }
-
   transition(READY, ReadRequest, BUSY_RD) {
     s_sendReadRequest;
     p_popRequestQueue;

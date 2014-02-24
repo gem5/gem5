@@ -555,11 +555,6 @@ machine(Directory, "Directory protocol")
     }
   }
 
-
-  //  action(z_stall, "z", desc="Cannot be handled right now.") {
-    // Special name recognized as do nothing case
-  //  }
-
   action(zz_recycleRequest, "\z", desc="Recycle the request queue") {
     requestQueue_in.recycle();
   }
