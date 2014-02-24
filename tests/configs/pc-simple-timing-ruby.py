@@ -82,9 +82,9 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.dcache_port = system.ruby._cpu_ruby_ports[i].slave
     cpu.itb.walker.port = system.ruby._cpu_ruby_ports[i].slave
     cpu.dtb.walker.port = system.ruby._cpu_ruby_ports[i].slave
-    cpu.interrupts.pio = system.piobus.master
-    cpu.interrupts.int_master = system.piobus.slave
-    cpu.interrupts.int_slave = system.piobus.master
+    cpu.interrupts.pio = system.ruby._cpu_ruby_ports[i].master
+    cpu.interrupts.int_master = system.ruby._cpu_ruby_ports[i].slave
+    cpu.interrupts.int_slave = system.ruby._cpu_ruby_ports[i].master
 
     # Set access_phys_mem to True for ruby port
     system.ruby._cpu_ruby_ports[i].access_phys_mem = True

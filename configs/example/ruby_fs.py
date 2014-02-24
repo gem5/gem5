@@ -122,14 +122,17 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.clk_domain = system.cpu_clk_domain
     cpu.createThreads()
     cpu.createInterruptController()
+
     cpu.icache_port = system.ruby._cpu_ruby_ports[i].slave
     cpu.dcache_port = system.ruby._cpu_ruby_ports[i].slave
+
     if buildEnv['TARGET_ISA'] == "x86":
         cpu.itb.walker.port = system.ruby._cpu_ruby_ports[i].slave
         cpu.dtb.walker.port = system.ruby._cpu_ruby_ports[i].slave
-        cpu.interrupts.pio = system.piobus.master
-        cpu.interrupts.int_master = system.piobus.slave
-        cpu.interrupts.int_slave = system.piobus.master
+
+        cpu.interrupts.pio = system.ruby._cpu_ruby_ports[i].master
+        cpu.interrupts.int_master = system.ruby._cpu_ruby_ports[i].slave
+        cpu.interrupts.int_slave = system.ruby._cpu_ruby_ports[i].master
 
     system.ruby._cpu_ruby_ports[i].access_phys_mem = True
 

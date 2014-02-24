@@ -35,12 +35,16 @@ class RubyPort(MemObject):
     type = 'RubyPort'
     abstract = True
     cxx_header = "mem/ruby/system/RubyPort.hh"
+    version = Param.Int(0, "")
+
     slave = VectorSlavePort("CPU slave port")
     master = VectorMasterPort("CPU master port")
-    version = Param.Int(0, "")
-    pio_port = MasterPort("Ruby_pio_port")
+    pio_master_port = MasterPort("Ruby mem master port")
+    mem_master_port = MasterPort("Ruby mem master port")
+    pio_slave_port = SlavePort("Ruby pio slave port")
+    mem_slave_port = SlavePort("Ruby memory port")
+
     using_ruby_tester = Param.Bool(False, "")
-    using_network_tester = Param.Bool(False, "")
     access_phys_mem = Param.Bool(False,
         "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
@@ -58,12 +62,14 @@ class RubySequencer(RubyPort):
     type = 'RubySequencer'
     cxx_class = 'Sequencer'
     cxx_header = "mem/ruby/system/Sequencer.hh"
+
     icache = Param.RubyCache("")
     dcache = Param.RubyCache("")
     max_outstanding_requests = Param.Int(16,
         "max requests (incl. prefetches) outstanding")
     deadlock_threshold = Param.Cycles(500000,
         "max outstanding cycles for a request before deadlock/livelock declared")
+    using_network_tester = Param.Bool(False, "")
 
 class DMASequencer(RubyPort):
     type = 'DMASequencer'
