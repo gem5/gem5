@@ -157,6 +157,9 @@ class MessageBuffer
     uint32_t functionalWrite(Packet *pkt);
 
   private:
+    void reanalyzeList(std::list<MsgPtr> &, Tick);
+
+  private:
     //added by SS
     Cycles m_recycle_latency;
 
@@ -172,7 +175,6 @@ class MessageBuffer
     // use a std::map for the stalled messages as this container is
     // sorted and ensures a well-defined iteration order
     typedef std::map< Address, std::list<MsgPtr> > StallMsgMapType;
-    typedef std::vector<MsgPtr>::iterator MsgListIter;
 
     StallMsgMapType m_stall_msg_map;
     std::string m_name;

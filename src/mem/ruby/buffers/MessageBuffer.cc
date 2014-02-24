@@ -282,6 +282,22 @@ MessageBuffer::recycle()
 }
 
 void
+MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick nextTick)
+{
+    while(!lt.empty()) {
+        m_msg_counter++;
+        MessageBufferNode msgNode(nextTick, m_msg_counter, lt.front());
+
+        m_prio_heap.push_back(msgNode);
+        push_heap(m_prio_heap.begin(), m_prio_heap.end(),
+                  greater<MessageBufferNode>());
+
+        m_consumer->scheduleEventAbsolute(nextTick);
+        lt.pop_front();
+    }
+}
+
+void
 MessageBuffer::reanalyzeMessages(const Address& addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages\n");
@@ -292,18 +308,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
     // Put all stalled messages associated with this address back on the
     // prio heap
     //
-    while(!m_stall_msg_map[addr].empty()) {
-        m_msg_counter++;
-        MessageBufferNode msgNode(nextTick, m_msg_counter,
-                                  m_stall_msg_map[addr].front());
-
-        m_prio_heap.push_back(msgNode);
-        push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-                  greater<MessageBufferNode>());
-
-        m_consumer->scheduleEventAbsolute(nextTick);
-        m_stall_msg_map[addr].pop_front();
-    }
+    reanalyzeList(m_stall_msg_map[addr], nextTick);
     m_stall_msg_map.erase(addr);
 }
 
@@ -318,21 +323,8 @@ MessageBuffer::reanalyzeAllMessages()
     // prio heap
     //
     for (StallMsgMapType::iterator map_iter = m_stall_msg_map.begin();
-         map_iter != m_stall_msg_map.end();
-         ++map_iter) {
-
-        while(!(map_iter->second).empty()) {
-            m_msg_counter++;
-            MessageBufferNode msgNode(nextTick, m_msg_counter,
-                                      (map_iter->second).front());
-
-            m_prio_heap.push_back(msgNode);
-            push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-                      greater<MessageBufferNode>());
-
-            m_consumer->scheduleEventAbsolute(nextTick);
-            (map_iter->second).pop_front();
-        }
+         map_iter != m_stall_msg_map.end(); ++map_iter) {
+        reanalyzeList(map_iter->second, nextTick);
     }
     m_stall_msg_map.clear();
 }

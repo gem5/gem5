@@ -137,9 +137,11 @@ class AbstractController : public ClockedObject, public Consumer
     Network* m_net_ptr;
     bool m_is_blocking;
     std::map<Address, MessageBuffer*> m_block_map;
+
     typedef std::vector<MessageBuffer*> MsgVecType;
     typedef std::map< Address, MsgVecType* > WaitingBufType;
     WaitingBufType m_waiting_buffers;
+
     unsigned int m_in_ports;
     unsigned int m_cur_in_port;
     int m_number_of_TBEs;
