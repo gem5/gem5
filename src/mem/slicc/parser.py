@@ -112,7 +112,6 @@ class SLICC(Grammar):
         'peek' : 'PEEK',
         'stall_and_wait' : 'STALL_AND_WAIT',
         'enqueue' : 'ENQUEUE',
-        'copy_head' : 'COPY_HEAD',
         'check_allocate' : 'CHECK_ALLOCATE',
         'check_stop_slots' : 'CHECK_STOP_SLOTS',
         'static_cast' : 'STATIC_CAST',
@@ -568,10 +567,6 @@ class SLICC(Grammar):
     def p_statement__peek(self, p):
         "statement : PEEK '(' var ',' type pairs ')' statements"
         p[0] = ast.PeekStatementAST(self, p[3], p[5], p[6], p[8], "peek")
-
-    def p_statement__copy_head(self, p):
-        "statement : COPY_HEAD '(' var ',' var pairs ')' SEMI"
-        p[0] = ast.CopyHeadStatementAST(self, p[3], p[5], p[6])
 
     def p_statement__check_allocate(self, p):
         "statement : CHECK_ALLOCATE '(' var ')' SEMI"

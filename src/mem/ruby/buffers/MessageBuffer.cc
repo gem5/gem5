@@ -115,14 +115,6 @@ MessageBuffer::areNSlotsAvailable(unsigned int n)
     }
 }
 
-const MsgPtr
-MessageBuffer::getMsgPtrCopy() const
-{
-    assert(isReady());
-
-    return m_prio_heap.front().m_msgptr->clone();
-}
-
 const Message*
 MessageBuffer::peek() const
 {

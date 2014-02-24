@@ -107,7 +107,6 @@ class MessageBuffer
     //! Function for extracting the message at the head of the
     //! message queue.  The function assumes that the queue is nonempty.
     const Message* peek() const;
-    const MsgPtr getMsgPtrCopy() const;
 
     const MsgPtr&
     peekMsgPtr() const
