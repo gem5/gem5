@@ -42,7 +42,7 @@ CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
 CPU: L2 Cache: 1024K (64 bytes/line)
 Freeing SMP alternatives: 34k freed
 Using local APIC timer interrupts.
-result 7812500
+result 7812510
 Detected 7.812 MHz APIC timer.
 Booting processor 1/2 APIC 0x1
 Initializing CPU#1

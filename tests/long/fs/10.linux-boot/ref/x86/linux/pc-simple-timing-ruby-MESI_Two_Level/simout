@@ -1,12 +1,14 @@
+Redirecting stdout to build/X86_MESI_Two_Level/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_Two_Level/simout
+Redirecting stderr to build/X86_MESI_Two_Level/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_Two_Level/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:16:50
-gem5 started Jan 22 2014 22:26:32
-gem5 executing on u200540-lin
+gem5 compiled Feb 23 2014 18:53:44
+gem5 started Feb 23 2014 18:53:57
+gem5 executing on ribera.cs.wisc.edu
 command line: build/X86_MESI_Two_Level/gem5.opt -d build/X86_MESI_Two_Level/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_Two_Level -re tests/run.py build/X86_MESI_Two_Level/tests/opt/long/fs/10.linux-boot/x86/linux/pc-simple-timing-ruby-MESI_Two_Level
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/binaries/x86_64-vmlinux-2.6.22.9.smp
+info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9.smp
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5300435735500 because m5_exit instruction encountered
+Exiting @ tick 5304496750000 because m5_exit instruction encountered
