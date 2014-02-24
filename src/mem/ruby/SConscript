@@ -91,7 +91,6 @@ def MakeInclude(source):
 
 MakeInclude('slicc_interface/AbstractEntry.hh')
 MakeInclude('slicc_interface/AbstractCacheEntry.hh')
-MakeInclude('slicc_interface/AbstractProtocol.hh')
 MakeInclude('slicc_interface/Message.hh')
 MakeInclude('slicc_interface/NetworkMessage.hh')
 MakeInclude('slicc_interface/RubyRequest.hh')

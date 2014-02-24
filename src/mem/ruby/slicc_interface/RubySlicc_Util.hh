@@ -37,7 +37,7 @@
 
 #include "debug/RubySlicc.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/common/DataBlock.hh"
 #include "mem/packet.hh"
 
 inline int

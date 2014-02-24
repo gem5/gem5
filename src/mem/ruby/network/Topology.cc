@@ -30,7 +30,6 @@
 
 #include "base/trace.hh"
 #include "debug/RubyNetwork.hh"
-#include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Topology.hh"

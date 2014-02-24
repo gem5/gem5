@@ -32,7 +32,6 @@
 #include <iostream>
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 
 class AbstractBloomFilter
 {

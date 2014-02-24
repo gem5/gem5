@@ -34,7 +34,6 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
-#include "mem/ruby/common/Global.hh"
 
 class SubBlock
 {

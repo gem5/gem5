@@ -34,10 +34,7 @@
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
-#include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/system/System.hh"
 
 class H3BloomFilter : public AbstractBloomFilter
 {

@@ -29,6 +29,7 @@
  *          Tushar Krishna
  */
 
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/orion/NetworkPower.hh"
 #include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/OrionLink.hh"

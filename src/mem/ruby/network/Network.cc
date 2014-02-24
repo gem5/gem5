@@ -27,7 +27,6 @@
  */
 
 #include "base/misc.hh"
-#include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/System.hh"

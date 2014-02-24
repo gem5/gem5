@@ -32,7 +32,7 @@
 
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
-#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetLink_d.hh"

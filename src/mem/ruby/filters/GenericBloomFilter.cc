@@ -28,7 +28,6 @@
 
 #include "base/str.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/BlockBloomFilter.hh"
 #include "mem/ruby/filters/BulkBloomFilter.hh"
 #include "mem/ruby/filters/GenericBloomFilter.hh"

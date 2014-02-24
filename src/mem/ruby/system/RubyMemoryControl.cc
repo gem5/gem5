@@ -107,10 +107,9 @@
 
 #include "base/cast.hh"
 #include "base/cprintf.hh"
+#include "debug/RubyMemory.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
@@ -118,8 +117,6 @@
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
-
-class Consumer;
 
 // Value to reset watchdog timer to.
 // If we're idle for this many memory control cycles,
