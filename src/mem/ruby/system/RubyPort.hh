@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -65,54 +65,37 @@ class RubyPort : public MemObject
         SlavePacketQueue queue;
         RubyPort *ruby_port;
         RubySystem* ruby_system;
-        bool _onRetryList;
         bool access_phys_mem;
 
       public:
         M5Port(const std::string &_name, RubyPort *_port,
-               RubySystem*_system, bool _access_phys_mem);
+               RubySystem*_system, bool _access_phys_mem, PortID id);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
-        
-        bool onRetryList() 
-        { return _onRetryList; }
-        
-        void onRetryList(bool newVal)
-        { _onRetryList = newVal; }
 
       protected:
-        virtual bool recvTimingReq(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt);
-        virtual void recvFunctional(PacketPtr pkt);
-        virtual AddrRangeList getAddrRanges() const;
+        bool recvTimingReq(PacketPtr pkt);
+        Tick recvAtomic(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt);
+        AddrRangeList getAddrRanges() const;
 
       private:
-        bool isPhysMemAddress(Addr addr);
+        bool isPhysMemAddress(Addr addr) const;
     };
-
-    friend class M5Port;
 
     class PioPort : public QueuedMasterPort
     {
       private:
 
         MasterPacketQueue queue;
+        RubyPort *ruby_port;
 
       public:
         PioPort(const std::string &_name, RubyPort *_port);
 
       protected:
-        virtual bool recvTimingResp(PacketPtr pkt);
-    };
-
-    friend class PioPort;
-
-    struct SenderState : public Packet::SenderState
-    {
-        M5Port* port;
-
-        SenderState(M5Port* _port) : port(_port)
-        {}
+        bool recvTimingResp(PacketPtr pkt)
+        { return ruby_port->recvTimingResp(pkt, id); }
     };
 
     typedef RubyPortParams Params;
@@ -145,6 +128,16 @@ class RubyPort : public MemObject
     void testDrainComplete();
     void ruby_eviction_callback(const Address& address);
 
+    /**
+     * Called by the PIO port when receiving a timing response.
+     *
+     * @param pkt Response packet
+     * @param master_port_id Port id of the PIO port
+     *
+     * @return Whether successfully sent
+     */
+    bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
+
     uint32_t m_version;
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;
@@ -154,17 +147,12 @@ class RubyPort : public MemObject
   private:
     void addToRetryList(M5Port * port)
     {
-        if (!port->onRetryList()) {
-            port->onRetryList(true);
-            retryList.push_back(port);
-            waitingOnSequencer = true;
-        }
+        assert(std::find(retryList.begin(), retryList.end(), port) ==
+               retryList.end());
+        retryList.push_back(port);
     }
 
     unsigned int getChildDrainCount(DrainManager *dm);
-
-    uint16_t m_port_id;
-    uint64_t m_request_cnt;
 
     /** Vector of M5 Ports attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;
@@ -180,9 +168,8 @@ class RubyPort : public MemObject
     // Based on similar code in the M5 bus.  Stores pointers to those ports
     // that should be called when the Sequencer becomes available after a stall.
     //
-    std::list<M5Port*> retryList;
+    std::vector<M5Port*> retryList;
 
-    bool waitingOnSequencer;
     bool access_phys_mem;
 };
 

@@ -553,15 +553,10 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // If using the RubyTester, update the RubyTester sender state's
     // subBlock with the recieved data.  The tester will later access
     // this state.
-    // Note: RubyPort will access it's sender state before the
-    // RubyTester.
     if (m_usingRubyTester) {
-        RubyPort::SenderState *reqSenderState =
-            safe_cast<RubyPort::SenderState*>(pkt->senderState);
-        // @todo This is a dangerous assumption on nothing else
-        // modifying the senderState
         RubyTester::SenderState* testerSenderState =
-            safe_cast<RubyTester::SenderState*>(reqSenderState->predecessor);
+            pkt->findNextSenderState<RubyTester::SenderState>();
+        assert(testerSenderState);
         testerSenderState->subBlock.mergeFrom(data);
     }
 
