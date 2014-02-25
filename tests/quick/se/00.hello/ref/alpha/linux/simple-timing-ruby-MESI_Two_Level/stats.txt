@@ -4,15 +4,17 @@ sim_seconds                                  0.000139                       # Nu
 sim_ticks                                      138616                       # Number of ticks simulated
 final_tick                                     138616                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  22907                       # Simulator instruction rate (inst/s)
-host_op_rate                                    22905                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 496843                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 174712                       # Number of bytes of host memory used
-host_seconds                                     0.28                       # Real time elapsed on the host
+host_inst_rate                                  14698                       # Simulator instruction rate (inst/s)
+host_op_rate                                    14697                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 318804                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 174728                       # Number of bytes of host memory used
+host_seconds                                     0.43                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
+system.piobus.throughput                            0                       # Throughput (bytes/s)
+system.piobus.data_through_bus                      0                       # Total data (bytes)
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  1                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                   9                       # delay histogram for all message
