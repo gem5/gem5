@@ -115,7 +115,9 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
         l1_cntrl.sequencer = cpu_seq
 
         if piobus != None:
-            cpu_seq.pio_port = piobus.slave
+            cpu_seq.pio_master_port = piobus.slave
+            cpu_seq.mem_master_port = piobus.slave
+            cpu_seq.pio_slave_port = piobus.master
 
         if options.recycle_latency:
             l1_cntrl.recycle_latency = options.recycle_latency

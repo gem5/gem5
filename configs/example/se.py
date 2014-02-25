@@ -231,9 +231,10 @@ if options.ruby:
     # Set the option for physmem so that it is not allocated any space
     system.physmem = MemClass(range=AddrRange(options.mem_size),
                               null = True)
-
     options.use_map = True
-    Ruby.create_system(options, system)
+
+    system.piobus = NoncoherentBus()
+    Ruby.create_system(options, system, system.piobus)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
     for i in xrange(np):

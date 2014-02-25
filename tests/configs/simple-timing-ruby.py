@@ -79,8 +79,8 @@ system.cpu.clk_domain = SrcClockDomain(clock = '2GHz',
                                        voltage_domain = system.voltage_domain)
 
 system.mem_ranges = AddrRange('256MB')
-
-Ruby.create_system(options, system)
+system.piobus = NoncoherentBus()
+Ruby.create_system(options, system, system.piobus)
 
 # Create a separate clock for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,

@@ -117,7 +117,9 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                           cluster_id = i, ruby_system = ruby_system)
 
             if piobus != None:
-                cpu_seq.pio_port = piobus.slave
+                cpu_seq.pio_master_port = piobus.slave
+                cpu_seq.mem_master_port = piobus.slave
+                cpu_seq.pio_slave_port = piobus.master
 
             exec("ruby_system.l0_cntrl%d = l0_cntrl" % (
                         i*num_cpus_per_cluster+j))
