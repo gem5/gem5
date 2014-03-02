@@ -186,7 +186,9 @@ class MessageBuffer
     // variables used so enqueues appear to happen imediately, while
     // pop happen the next cycle
     Cycles m_time_last_time_enqueue;
-    Cycles m_time_last_time_pop;
+    Tick m_time_last_time_pop;
+    Tick m_last_arrival_time;
+
     unsigned int m_size_at_cycle_start;
     unsigned int m_msgs_this_cycle;
 
@@ -197,8 +199,6 @@ class MessageBuffer
     bool m_strict_fifo;
     bool m_ordering_set;
     bool m_randomization;
-
-    Tick m_last_arrival_time;
 
     int m_input_link_id;
     int m_vnet_id;

@@ -89,11 +89,11 @@ MessageBuffer::areNSlotsAvailable(unsigned int n)
     // size immediately
     unsigned int current_size = 0;
 
-    if (m_time_last_time_pop < m_receiver->curCycle()) {
+    if (m_time_last_time_pop < m_sender->clockEdge()) {
         // no pops this cycle - heap size is correct
         current_size = m_prio_heap.size();
     } else {
-        if (m_time_last_time_enqueue < m_receiver->curCycle()) {
+        if (m_time_last_time_enqueue < m_sender->curCycle()) {
             // no enqueues this cycle - m_size_at_cycle_start is correct
             current_size = m_size_at_cycle_start;
         } else {
@@ -242,9 +242,9 @@ MessageBuffer::dequeue()
 
     // record previous size and time so the current buffer size isn't
     // adjusted until next cycle
-    if (m_time_last_time_pop < m_receiver->curCycle()) {
+    if (m_time_last_time_pop < m_receiver->clockEdge()) {
         m_size_at_cycle_start = m_prio_heap.size();
-        m_time_last_time_pop = m_receiver->curCycle();
+        m_time_last_time_pop = m_receiver->clockEdge();
     }
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
@@ -259,7 +259,7 @@ MessageBuffer::clear()
 
     m_msg_counter = 0;
     m_time_last_time_enqueue = Cycles(0);
-    m_time_last_time_pop = Cycles(0);
+    m_time_last_time_pop = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
 }
