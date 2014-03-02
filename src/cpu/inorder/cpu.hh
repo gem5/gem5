@@ -866,6 +866,15 @@ class InOrderCPU : public BaseCPU
     Stats::Average instsPerCtxtSwitch;    
     Stats::Scalar numCtxtSwitches;
     
+    /** Resumes execution after a drain. */
+    void drainResume();
+
+    /** Switches out this CPU. */
+    virtual void switchOut();
+
+    /** Takes over from another CPU. */
+    virtual void takeOverFrom(BaseCPU *oldCPU);
+
     /** Update Thread , used for statistic purposes*/
     inline void tickThreadStats();
 

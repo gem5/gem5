@@ -241,7 +241,23 @@ initCPU(ThreadContext *tc, int cpuId)
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    panic("Copy Regs Not Implemented Yet\n");
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; i++)
+        dest->setIntRegFlat(i, src->readIntRegFlat(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; i++)
+        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
+
+    // Would need to add condition-code regs if implemented
+    assert(NumCCRegs == 0);
+
+    // Copy misc. registers
+    for (int i = 0; i < NumMiscRegs; i++)
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
+
+    // Copy over the PC State
+    dest->pcState(src->pcState());
 }
 
 void

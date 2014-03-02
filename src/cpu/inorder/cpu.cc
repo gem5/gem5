@@ -64,6 +64,7 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
+#include "debug/Drain.hh"
 #include "debug/InOrderCPU.hh"
 #include "debug/InOrderCachePort.hh"
 #include "debug/Interrupt.hh"
@@ -1488,6 +1489,67 @@ InOrderCPU::updateContextSwitchStats()
     // Set Average Stat Here, then reset to 0    
     instsPerCtxtSwitch = instsPerSwitch;
     instsPerSwitch = 0;
+}
+
+
+void
+InOrderCPU::drainResume()
+{
+    setDrainState(Drainable::Running);
+    if (switchedOut())
+        return;
+
+    DPRINTF(Drain, "Resuming...\n");
+    verifyMemoryMode();
+
+    assert(!tickEvent.scheduled());
+
+    // Activate threads and also signal the resource pool to activate
+    // the thread on all resources.
+    _status = Idle;
+    for (ThreadID i = 0; i < thread.size(); i++) {
+        if (thread[i]->status() == ThreadContext::Active) {
+            DPRINTF(Drain, "Activating thread: %i\n", i);
+            activateThread(i);
+            resPool->activateThread(i);
+            _status = Running;
+        }
+    }
+}
+
+void
+InOrderCPU::switchOut()
+{
+    DPRINTF(InOrderCPU, "Switching out\n");
+    BaseCPU::switchOut();
+
+    activityRec.reset();
+
+    _status = SwitchedOut;
+}
+
+void
+InOrderCPU::takeOverFrom(BaseCPU *oldCPU)
+{
+    BaseCPU::takeOverFrom(oldCPU);
+
+    // Call takeOverFrom() on each pipeline stage
+    for (int stNum=0; stNum < NumStages; stNum++) {
+        pipelineStage[stNum]->takeOverFrom();
+    }
+
+    assert(!tickEvent.scheduled());
+
+    // Copy over the current instruction sequence numbers if we are
+    // taking over from another InOrderCPU.
+    InOrderCPU *oldIOCPU = dynamic_cast<InOrderCPU*>(oldCPU);
+    if (oldIOCPU) {
+      for (ThreadID tid = 0; tid < numThreads; tid++)
+        globalSeqNum[tid] = oldIOCPU->globalSeqNum[tid];
+    }
+
+    lastRunningCycle = curCycle();
+    _status = Idle;
 }
 
     

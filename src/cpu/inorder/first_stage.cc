@@ -277,3 +277,13 @@ FirstStage::roundRobin()
 
     return InvalidThreadID;
 }
+
+void
+FirstStage::takeOverFrom()
+{
+    PipelineStage::takeOverFrom();
+
+    for(ThreadID tid = 0; tid < this->numThreads; tid++) {
+        stageStatus[tid] = Running;
+    }
+}

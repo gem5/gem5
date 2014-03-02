@@ -47,6 +47,10 @@ class InOrderCPU(BaseCPU):
     def require_caches(cls):
         return True
 
+    @classmethod
+    def support_take_over(cls):
+        return True
+
     threadModel = Param.ThreadModel('SMT', "Multithreading model (SE-MODE only)")
     
     cachePorts = Param.Unsigned(2, "Cache Ports")

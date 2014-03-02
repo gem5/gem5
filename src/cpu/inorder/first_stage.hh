@@ -88,6 +88,9 @@ class FirstStage : public PipelineStage {
 
     /** Return next thread given Round Robin Policy for Thread Fetching */
     ThreadID roundRobin();
+
+    /** Takes over from another CPU's thread. */
+    void takeOverFrom();
 };
 
 #endif // __CPU_INORDER_FIRST_STAGE_HH__

@@ -135,7 +135,7 @@ class PipelineStage
     void switchOut();
 
     /** Takes over from another CPU's thread. */
-    void takeOverFrom();
+    virtual void takeOverFrom();
 
     /** Ticks stage, processing all input signals and executing as many
      *  instructions as possible.
