@@ -125,7 +125,7 @@ class Profiler
     std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
     std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
-    std::vector<Stats::Scalar> m_IncompleteTimes;
+    Stats::Scalar m_IncompleteTimes[MachineType_NUM];
 
     //added by SS
     bool m_hot_lines;

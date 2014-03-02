@@ -62,7 +62,6 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams *p)
-    : m_IncompleteTimes(MachineType_NUM)
 {
     m_hot_lines = p->hot_lines;
     m_all_instructions = p->all_instructions;
