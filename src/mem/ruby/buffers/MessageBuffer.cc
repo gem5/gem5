@@ -49,7 +49,7 @@ MessageBuffer::MessageBuffer(const string &name)
 
     m_ordering_set = false;
     m_strict_fifo = true;
-    m_max_size = -1;
+    m_max_size = 0;
     m_randomization = true;
     m_size_last_time_size_checked = 0;
     m_size_at_cycle_start = 0;
@@ -63,7 +63,7 @@ MessageBuffer::MessageBuffer(const string &name)
     m_vnet_id = 0;
 }
 
-int
+unsigned int
 MessageBuffer::getSize()
 {
     if (m_time_last_time_size_checked != m_receiver->curCycle()) {
@@ -79,7 +79,7 @@ MessageBuffer::areNSlotsAvailable(unsigned int n)
 {
 
     // fast path when message buffers have infinite size
-    if (m_max_size == -1) {
+    if (m_max_size == 0) {
         return true;
     }
 

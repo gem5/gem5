@@ -134,8 +134,8 @@ class MessageBuffer
         m_ordering_set = true;
     }
 
-    void resize(int size) { m_max_size = size; }
-    int getSize();
+    void resize(unsigned int size) { m_max_size = size; }
+    unsigned int getSize();
     void setRandomization(bool random_flag) { m_randomization = random_flag; }
 
     void clear();

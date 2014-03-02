@@ -146,7 +146,7 @@ class AbstractController : public ClockedObject, public Consumer
     unsigned int m_cur_in_port;
     int m_number_of_TBEs;
     int m_transitions_per_cycle;
-    int m_buffer_size;
+    unsigned int m_buffer_size;
     Cycles m_recycle_latency;
 
     //! Map from physical network number to the Message Buffer.
