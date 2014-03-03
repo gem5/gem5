@@ -721,11 +721,11 @@ setKvmSegmentReg(ThreadContext *tc, struct kvm_segment &kvm_seg,
     kvm_seg.g = attr.granularity;
     kvm_seg.avl = attr.avl;
 
-    // A segment is unusable when the selector is zero. There is a
-    // attr.unusable flag in gem5, but it seems unused.
-    //
-    // TODO: Are there corner cases where this doesn't work?
-    kvm_seg.unusable = (kvm_seg.selector == 0);
+    // A segment is normally unusable when the selector is zero. There
+    // is a attr.unusable flag in gem5, but it seems unused. qemu
+    // seems to set this to 0 all the time, so we just do the same and
+    // hope for the best.
+    kvm_seg.unusable = 0;
 }
 
 static inline void
