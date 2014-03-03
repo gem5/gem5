@@ -138,10 +138,6 @@ BaseKvmCPU::startup()
     // point. Initialize virtual CPUs here instead.
     vcpuFD = vm.createVCPU(vcpuID);
 
-    // Setup signal handlers. This has to be done after the vCPU is
-    // created since it manipulates the vCPU signal mask.
-    setupSignalHandler();
-
     // Map the KVM run structure */
     vcpuMMapSize = kvm.getVCPUMMapSize();
     _kvmRun = (struct kvm_run *)mmap(0, vcpuMMapSize,
@@ -181,6 +177,10 @@ BaseKvmCPU::startupThread()
     // delivered to the right threads.
     const BaseKvmCPUParams * const p(
         dynamic_cast<const BaseKvmCPUParams *>(params()));
+
+    // Setup signal handlers. This has to be done after the vCPU is
+    // created since it manipulates the vCPU signal mask.
+    setupSignalHandler();
 
     setupCounters();
 
