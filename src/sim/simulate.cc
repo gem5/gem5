@@ -114,7 +114,7 @@ simulate(Tick num_cycles)
             fatal("Quantum for multi-eventq simulation not specified");
         }
 
-        quantum_event = new GlobalSyncEvent(simQuantum, simQuantum,
+        quantum_event = new GlobalSyncEvent(curTick() + simQuantum, simQuantum,
                             EventBase::Progress_Event_Pri, 0);
 
         inParallelMode = true;
