@@ -35,37 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Copyright 2008 Google Inc.  All rights reserved.
-# http://code.google.com/p/protobuf/
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#     * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-#     * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
 # Authors: Andreas Hansson
-#
 
 # This script is used to migrate ASCII packet traces to the protobuf
 # format currently used in gem5. It assumes that protoc has been
@@ -83,7 +53,7 @@
 # This script can of course also be used as a template to convert
 # other trace formats into the gem5 protobuf format
 
-import struct
+import protolib
 import sys
 
 # Import the packet proto definitions. If they are not found, attempt
@@ -109,28 +79,6 @@ except:
     else:
         print "Failed to import packet proto definitions"
         exit(-1)
-
-def EncodeVarint(out_file, value):
-  """
-  The encoding of the Varint32 is copied from
-  google.protobuf.internal.encoder and is only repeated here to
-  avoid depending on the internal functions in the library.
-  """
-  bits = value & 0x7f
-  value >>= 7
-  while value:
-    out_file.write(struct.pack('<B', 0x80|bits))
-    bits = value & 0x7f
-    value >>= 7
-  out_file.write(struct.pack('<B', bits))
-
-def encodeMessage(out_file, message):
-    """
-    Encoded a message with the length prepended as a 32-bit varint.
-    """
-    out = message.SerializeToString()
-    EncodeVarint(out_file, len(out))
-    out_file.write(out)
 
 def main():
     if len(sys.argv) != 3:
@@ -158,7 +106,7 @@ def main():
     header.obj_id = "Converted ASCII trace " + sys.argv[1]
     # Assume the default tick rate
     header.tick_freq = 1000000000
-    encodeMessage(proto_out, header)
+    protolib.encodeMessage(proto_out, header)
 
     # For each line in the ASCII trace, create a packet message and
     # write it to the encoded output
@@ -170,7 +118,7 @@ def main():
         packet.cmd = 1 if cmd == 'r' else 4
         packet.addr = long(addr)
         packet.size = int(size)
-        encodeMessage(proto_out, packet)
+        protolib.encodeMessage(proto_out, packet)
 
     # We're done
     ascii_in.close()
