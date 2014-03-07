@@ -608,7 +608,7 @@ elif main['CLANG']:
     # support similar features as gcc 4.4. See
     # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
-    clang_version_match = clang_version_re.match(CXX_version)
+    clang_version_match = clang_version_re.search(CXX_version)
     if (clang_version_match):
         clang_version = clang_version_match.groups()[0]
         if compareVersions(clang_version, "2.9") < 0:
