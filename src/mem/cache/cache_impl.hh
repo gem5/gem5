@@ -183,8 +183,8 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                     pkt->assertMemInhibit();
                 }
                 // on ReadExReq we give up our copy unconditionally
-                assert(blk != tempBlock);
-                tags->invalidate(blk);
+                if (blk != tempBlock)
+                    tags->invalidate(blk);
                 blk->invalidate();
             } else if (blk->isWritable() && !pending_downgrade
                       && !pkt->sharedAsserted() && !pkt->req->isInstFetch()) {
@@ -1456,8 +1456,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // Do this last in case it deallocates block data or something
     // like that
     if (invalidate) {
-        assert(blk != tempBlock);
-        tags->invalidate(blk);
+        if (blk != tempBlock)
+            tags->invalidate(blk);
         blk->invalidate();
     }
 
