@@ -2509,7 +2509,7 @@ fplibRecipEstimate(uint32_t op, FPSCR &fpscr)
         result = fp32_infinity(sgn);
         flags |= FPLIB_DZC;
     } else if (!((uint32_t)(op << 1) >> 22)) {
-        bool overflow_to_inf;
+        bool overflow_to_inf = false;
         switch (FPCRRounding(fpscr)) {
           case FPRounding_TIEEVEN:
             overflow_to_inf = true;
@@ -2570,7 +2570,7 @@ fplibRecipEstimate(uint64_t op, FPSCR &fpscr)
         result = fp64_infinity(sgn);
         flags |= FPLIB_DZC;
     } else if (!((uint64_t)(op << 1) >> 51)) {
-        bool overflow_to_inf;
+        bool overflow_to_inf = false;
         switch (FPCRRounding(fpscr)) {
           case FPRounding_TIEEVEN:
             overflow_to_inf = true;

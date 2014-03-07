@@ -72,7 +72,7 @@ class Scoreboard
      * the misc registers that come after the physical registers and
      * which are hardwired to be always considered ready.
      */
-    unsigned numTotalRegs;
+    unsigned M5_CLASS_VAR_USED numTotalRegs;
 
     /** The index of the zero register. */
     PhysRegIndex zeroRegIdx;

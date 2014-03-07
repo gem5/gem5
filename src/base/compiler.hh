@@ -50,6 +50,13 @@
 #define M5_PRAGMA_NORETURN(x)
 #define M5_DUMMY_RETURN
 #define M5_VAR_USED __attribute__((unused))
+
+#if defined(__clang__)
+#define M5_CLASS_VAR_USED M5_VAR_USED
+#else
+#define M5_CLASS_VAR_USED
+#endif
+
 #define M5_ATTR_PACKED __attribute__ ((__packed__))
 #define M5_NO_INLINE __attribute__ ((__noinline__))
 #else
