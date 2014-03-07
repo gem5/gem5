@@ -44,6 +44,8 @@
 
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
 #include "mem/abstract_mem.hh"
@@ -260,6 +262,12 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
             if (i->addr == paddr) {
                 DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
                         i->contextId, paddr);
+                // For ARM, a spinlock would typically include a Wait
+                // For Event (WFE) to conserve energy. The ARMv8
+                // architecture specifies that an event is
+                // automatically generated when clearing the exclusive
+                // monitor to wake up the processor in WFE.
+                system()->getThreadContext(i->contextId)->getCpuPtr()->wakeup();
                 i = lockedAddrList.erase(i);
             } else {
                 i++;
