@@ -149,7 +149,7 @@ class OzoneCPU : public BaseCPU
         void profileClear();
         void profileSample();
 
-        int threadId();
+        int threadId() const;
 
         void copyArchRegs(ThreadContext *tc);
 

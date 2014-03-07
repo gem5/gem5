@@ -704,7 +704,7 @@ OzoneCPU<Impl>::OzoneTC::profileSample()
 
 template <class Impl>
 int
-OzoneCPU<Impl>::OzoneTC::threadId()
+OzoneCPU<Impl>::OzoneTC::threadId() const
 {
     return thread->threadId();
 }

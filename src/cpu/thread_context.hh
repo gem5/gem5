@@ -121,13 +121,13 @@ class ThreadContext
 
     virtual BaseCPU *getCpuPtr() = 0;
 
-    virtual int cpuId() = 0;
+    virtual int cpuId() const = 0;
 
-    virtual int threadId() = 0;
+    virtual int threadId() const = 0;
 
     virtual void setThreadId(int id) = 0;
 
-    virtual int contextId() = 0;
+    virtual int contextId() const = 0;
 
     virtual void setContextId(int id) = 0;
 
@@ -321,13 +321,13 @@ class ProxyThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    int cpuId() { return actualTC->cpuId(); }
+    int cpuId() const { return actualTC->cpuId(); }
 
-    int threadId() { return actualTC->threadId(); }
+    int threadId() const { return actualTC->threadId(); }
 
-    void setThreadId(int id) { return actualTC->setThreadId(id); }
+    void setThreadId(int id) { actualTC->setThreadId(id); }
 
-    int contextId() { return actualTC->contextId(); }
+    int contextId() const { return actualTC->contextId(); }
 
     void setContextId(int id) { actualTC->setContextId(id); }
 

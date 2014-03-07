@@ -454,16 +454,16 @@ class BaseDynInst : public RefCounted
     void dump(std::string &outstring);
 
     /** Read this CPU's ID. */
-    int cpuId() { return cpu->cpuId(); }
+    int cpuId() const { return cpu->cpuId(); }
 
     /** Read this CPU's data requestor ID */
-    MasterID masterId() { return cpu->dataMasterId(); }
+    MasterID masterId() const { return cpu->dataMasterId(); }
 
     /** Read this context's system-wide ID **/
-    int contextId() { return thread->contextId(); }
+    int contextId() const { return thread->contextId(); }
 
     /** Returns the fault type. */
-    Fault getFault() { return fault; }
+    Fault getFault() const { return fault; }
 
     /** Checks whether or not this instruction has had its branch target
      *  calculated yet.  For now it is not utilized and is hacked to be

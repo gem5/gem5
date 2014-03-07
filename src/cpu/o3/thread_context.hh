@@ -96,14 +96,14 @@ class O3ThreadContext : public ThreadContext
     virtual BaseCPU *getCpuPtr() { return cpu; }
 
     /** Reads this CPU's ID. */
-    virtual int cpuId() { return cpu->cpuId(); }
+    virtual int cpuId() const { return cpu->cpuId(); }
 
-    virtual int contextId() { return thread->contextId(); }
+    virtual int contextId() const { return thread->contextId(); }
 
     virtual void setContextId(int id) { thread->setContextId(id); }
 
     /** Returns this thread's ID number. */
-    virtual int threadId() { return thread->threadId(); }
+    virtual int threadId() const { return thread->threadId(); }
     virtual void setThreadId(int id) { return thread->setThreadId(id); }
 
     /** Returns a pointer to the system. */

@@ -91,7 +91,7 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
 int InOrderDynInst::instcount = 0;
 
 int
-InOrderDynInst::cpuId()
+InOrderDynInst::cpuId() const
 {
     return cpu->cpuId();
 }

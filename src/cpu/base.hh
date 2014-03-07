@@ -143,7 +143,7 @@ class BaseCPU : public MemObject
     virtual MasterPort &getInstPort() = 0;
 
     /** Reads this CPU's ID. */
-    int cpuId() { return _cpuId; }
+    int cpuId() const { return _cpuId; }
 
     /** Reads this CPU's unique data requestor ID */
     MasterID dataMasterId() { return _dataMasterId; }

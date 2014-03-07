@@ -92,9 +92,9 @@ class CheckerThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    int cpuId() { return actualTC->cpuId(); }
+    int cpuId() const { return actualTC->cpuId(); }
 
-    int contextId() { return actualTC->contextId(); }
+    int contextId() const { return actualTC->contextId(); }
 
     void setContextId(int id)
     {
@@ -103,7 +103,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
     /** Returns this thread's ID number. */
-    int threadId() { return actualTC->threadId(); }
+    int threadId() const { return actualTC->threadId(); }
     void setThreadId(int id)
     {
         checkerTC->setThreadId(id);

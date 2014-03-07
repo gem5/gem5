@@ -111,14 +111,14 @@ class InOrderThreadContext : public ThreadContext
     std::string getCpuName() { return cpu->name(); }
 
     /** Reads this CPU's ID. */
-    int cpuId() { return cpu->cpuId(); }
+    int cpuId() const { return cpu->cpuId(); }
 
-    int contextId() { return thread->contextId(); }
+    int contextId() const { return thread->contextId(); }
 
     void setContextId(int id) { thread->setContextId(id); }
 
     /** Returns this thread's ID number. */
-    int threadId() { return thread->threadId(); }
+    int threadId() const { return thread->threadId(); }
     void setThreadId(int id) { return thread->setThreadId(id); }
 
     uint64_t readMicroPC()

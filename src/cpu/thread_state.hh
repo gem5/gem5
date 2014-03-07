@@ -67,19 +67,19 @@ struct ThreadState {
 
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    int cpuId() { return baseCpu->cpuId(); }
+    int cpuId() const { return baseCpu->cpuId(); }
 
-    int contextId() { return _contextId; }
+    int contextId() const { return _contextId; }
 
     void setContextId(int id) { _contextId = id; }
 
     void setThreadId(ThreadID id) { _threadId = id; }
 
-    ThreadID threadId() { return _threadId; }
+    ThreadID threadId() const { return _threadId; }
 
-    Tick readLastActivate() { return lastActivate; }
+    Tick readLastActivate() const { return lastActivate; }
 
-    Tick readLastSuspend() { return lastSuspend; }
+    Tick readLastSuspend() const { return lastSuspend; }
 
     /**
      * Initialise the physical and virtual port proxies and tie them to

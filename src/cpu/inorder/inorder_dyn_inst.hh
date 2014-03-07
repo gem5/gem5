@@ -357,10 +357,10 @@ class InOrderDynInst : public RefCounted
     Fault getFault() { return fault; }
 
     /** Read this CPU's ID. */
-    int cpuId();
+    int cpuId() const;
 
     /** Read this context's system-wide ID **/
-    int contextId() { return thread->contextId(); }
+    int contextId() const { return thread->contextId(); }
 
     ////////////////////////////////////////////////////////////
     //
