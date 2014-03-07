@@ -160,13 +160,22 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
                   bool secure, TLB::ArmTranslationType tranType)
 {
     assert(!(_functional && _timing));
+    WalkerState *savedCurrState = NULL;
 
-    if (!currState) {
+    if (!currState && !_functional) {
         // For atomic mode, a new WalkerState instance should be only created
         // once per TLB. For timing mode, a new instance is generated for every
         // TLB miss.
         DPRINTF(TLBVerbose, "creating new instance of WalkerState\n");
 
+        currState = new WalkerState();
+        currState->tableWalker = this;
+    } else if (_functional) {
+        // If we are mixing functional mode with timing (or even
+        // atomic), we need to to be careful and clean up after
+        // ourselves to not risk getting into an inconsistent state.
+        DPRINTF(TLBVerbose, "creating functional instance of WalkerState\n");
+        savedCurrState = currState;
         currState = new WalkerState();
         currState->tableWalker = this;
     } else if (_timing) {
@@ -264,12 +273,21 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     }
 
     if (!currState->timing) {
+        Fault fault = NoFault;
         if (currState->aarch64)
-            return processWalkAArch64();
+            fault = processWalkAArch64();
         else if (long_desc_format)
-            return processWalkLPAE();
+            fault = processWalkLPAE();
         else
-            return processWalk();
+            fault = processWalk();
+
+        // If this was a functional non-timing access restore state to
+        // how we found it.
+        if (currState->functional) {
+            delete currState;
+            currState = savedCurrState;
+        }
+        return fault;
     }
 
     if (pending || pendingQueue.size()) {
