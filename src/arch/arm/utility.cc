@@ -704,7 +704,7 @@ bool
 decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
                       CPSR cpsr, SCR scr, NSACR nsacr, bool checkSecurity)
 {
-    OperatingMode mode;
+    OperatingMode mode = MODE_UNDEFINED;
     bool          ok = true;
 
     // R mostly indicates if its a int register or a misc reg, we override
