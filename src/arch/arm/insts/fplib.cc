@@ -156,23 +156,6 @@ void mul64x32(uint64_t *x0, uint64_t *x1, uint64_t a, uint32_t b)
 }
 
 static inline void
-mul64x64(uint64_t *x0, uint64_t *x1, uint64_t a, uint64_t b)
-{
-    uint64_t a0 = (uint32_t)a;
-    uint64_t a1 = a >> 32;
-    uint64_t b0 = (uint32_t)b;
-    uint64_t b1 = b >> 32;
-    uint64_t t1 = (a0 * b0 >> 32) + a1 * b0;
-    uint64_t t2 = a0 * b1;
-    uint64_t x = ((uint64_t)(uint32_t)t1 + (uint32_t)t2) >> 32;
-    x += t1 >> 32;
-    x += t2 >> 32;
-    x += a1 * b1;
-    *x0 = a * b;
-    *x1 = x;
-}
-
-static inline void
 add128(uint64_t *x0, uint64_t *x1, uint64_t a0, uint64_t a1, uint64_t b0,
        uint64_t b1)
 {
