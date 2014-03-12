@@ -54,13 +54,6 @@
 
 class Packet;
 
-/**
- * Mostly implementation & ISA specific AlphaDynInst. As with most
- * other classes in the new CPU model, it is templated on the Impl to
- * allow for passing in of all types, such as the CPU type and the ISA
- * type. The AlphaDynInst serves as the primary interface to the CPU
- * for instructions that are executing.
- */
 template <class Impl>
 class BaseO3DynInst : public BaseDynInst<Impl>
 {

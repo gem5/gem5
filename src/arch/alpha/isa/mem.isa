@@ -465,27 +465,14 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
 
-    # Some CPU models execute the memory operation as an atomic unit,
-    # while others want to separate them into an effective address
-    # computation and a memory access operation.  As a result, we need
-    # to generate three StaticInst objects.  Note that the latter two
-    # are nested inside the larger "atomic" one.
-
-    # Generate InstObjParams for each of the three objects.  Note that
-    # they differ only in the set of code objects contained (which in
-    # turn affects the object's overall operand list).
     iop = InstObjParams(name, Name, base_class,
                         { 'ea_code':ea_code, 'memacc_code':memacc_code, 'postacc_code':postacc_code },
-                        inst_flags)
-    memacc_iop = InstObjParams(name, Name, base_class,
-                        { 'memacc_code':memacc_code, 'postacc_code':postacc_code },
                         inst_flags)
 
     if mem_flags:
         mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
         s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
         iop.constructor += s
-        memacc_iop.constructor += s
 
     # select templates
 
