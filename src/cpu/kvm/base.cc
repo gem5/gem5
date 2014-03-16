@@ -543,6 +543,12 @@ BaseKvmCPU::tick()
               delay = kvmRun(ticksToExecute);
           }
 
+          // The CPU might have been suspended before entering into
+          // KVM. Assume that the CPU was suspended /before/ entering
+          // into KVM and skip the exit handling.
+          if (_status == Idle)
+              break;
+
           // Entering into KVM implies that we'll have to reload the thread
           // context from KVM if we want to access it. Flag the KVM state as
           // dirty with respect to the cached thread context.

@@ -281,6 +281,12 @@ class Interrupts : public BasicPioDevice, IntDevice
      * @return true if there are interrupts pending.
      */
     bool checkInterruptsRaw() const;
+    /**
+     * Check if there are pending unmaskable interrupts.
+     *
+     * @return true there are unmaskable interrupts pending.
+     */
+    bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
     Fault getInterrupt(ThreadContext *tc);
     void updateIntrInfo(ThreadContext *tc);
 

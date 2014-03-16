@@ -1137,7 +1137,27 @@ X86KvmCPU::deliverInterrupts()
     interrupts->updateIntrInfo(tc);
 
     X86Interrupt *x86int(dynamic_cast<X86Interrupt *>(fault.get()));
-    if (x86int) {
+    if (dynamic_cast<NonMaskableInterrupt *>(fault.get())) {
+        DPRINTF(KvmInt, "Delivering NMI\n");
+        kvmNonMaskableInterrupt();
+    } else if (dynamic_cast<InitInterrupt *>(fault.get())) {
+        DPRINTF(KvmInt, "INIT interrupt\n");
+        fault.get()->invoke(tc);
+        // Delay the kvm state update since we won't enter KVM on this
+        // tick.
+        threadContextDirty = true;
+        // HACK: gem5 doesn't actually have any BIOS code, which means
+        // that we need to halt the thread and wait for a startup
+        // interrupt before restarting the thread. The simulated CPUs
+        // use the same kind of hack using a microcode routine.
+        thread->suspend();
+    } else if (dynamic_cast<StartupInterrupt *>(fault.get())) {
+        DPRINTF(KvmInt, "STARTUP interrupt\n");
+        fault.get()->invoke(tc);
+        // The kvm state is assumed to have been updated when entering
+        // kvmRun(), so we need to update manually it here.
+        updateKvmState();
+    } else if (x86int) {
         struct kvm_interrupt kvm_int;
         kvm_int.irq = x86int->getVector();
 
@@ -1145,9 +1165,6 @@ X86KvmCPU::deliverInterrupts()
                 fault->name(), kvm_int.irq);
 
         kvmInterrupt(kvm_int);
-    } else if (dynamic_cast<NonMaskableInterrupt *>(fault.get())) {
-        DPRINTF(KvmInt, "Delivering NMI\n");
-        kvmNonMaskableInterrupt();
     } else {
         panic("KVM: Unknown interrupt type\n");
     }
@@ -1160,7 +1177,12 @@ X86KvmCPU::kvmRun(Tick ticks)
     struct kvm_run &kvm_run(*getKvmRunState());
 
     if (interrupts->checkInterruptsRaw()) {
-        if (kvm_run.ready_for_interrupt_injection) {
+        if (interrupts->hasPendingUnmaskable()) {
+            DPRINTF(KvmInt,
+                    "Delivering unmaskable interrupt.\n");
+            syncThreadContext();
+            deliverInterrupts();
+        } else if (kvm_run.ready_for_interrupt_injection) {
             // KVM claims that it is ready for an interrupt. It might
             // be lying if we just updated rflags and disabled
             // interrupts (e.g., by doing a CPU handover). Let's sync
@@ -1187,7 +1209,12 @@ X86KvmCPU::kvmRun(Tick ticks)
         kvm_run.request_interrupt_window = 0;
     }
 
-    return kvmRunWrapper(ticks);
+    // The CPU might have been suspended as a result of the INIT
+    // interrupt delivery hack. In that case, don't enter into KVM.
+    if (_status == Idle)
+        return 0;
+    else
+        return kvmRunWrapper(ticks);
 }
 
 Tick

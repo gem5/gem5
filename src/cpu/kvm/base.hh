@@ -241,6 +241,11 @@ class BaseKvmCPU : public BaseCPU
      * make sure that the KVM state is synchronized and that the TC is
      * invalidated after entering KVM.
      *
+     * @note This method does not normally cause any state
+     * transitions. However, if it may suspend the CPU by suspending
+     * the thread, which leads to a transition to the Idle state. In
+     * such a case, kvm <i>must not</i> be entered.
+     *
      * @param ticks Number of ticks to execute, set to 0 to exit
      * immediately after finishing pending operations.
      * @return Number of ticks executed (see note)
