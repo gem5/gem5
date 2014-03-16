@@ -209,13 +209,14 @@ class X86KvmCPU : public BaseKvmCPU
      * @{
      */
     /** Update integer registers */
-    void updateThreadContextRegs();
+    void updateThreadContextRegs(const struct kvm_regs &regs,
+                                 const struct kvm_sregs &sregs);
     /** Update control registers (CRx, segments, etc.) */
-    void updateThreadContextSRegs();
+    void updateThreadContextSRegs(const struct kvm_sregs &sregs);
     /** Update FPU and SIMD registers using the legacy API */
-    void updateThreadContextFPU();
+    void updateThreadContextFPU(const struct kvm_fpu &fpu);
     /** Update FPU and SIMD registers using the XSave API */
-    void updateThreadContextXSave();
+    void updateThreadContextXSave(const struct kvm_xsave &kxsave);
     /** Update MSR registers */
     void updateThreadContextMSRs();
     /** @} */

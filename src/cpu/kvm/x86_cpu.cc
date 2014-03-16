@@ -690,7 +690,7 @@ X86KvmCPU::updateKvmStateRegs()
     FOREACH_IREG();
 #undef APPLY_IREG
 
-    regs.rip = tc->instAddr();
+    regs.rip = tc->instAddr() - tc->readMiscReg(MISCREG_CS_BASE);
 
     /* You might think that setting regs.rflags to the contents
      * MISCREG_RFLAGS here would suffice. In that case you're
@@ -936,16 +936,29 @@ X86KvmCPU::updateKvmStateMSRs()
 void
 X86KvmCPU::updateThreadContext()
 {
+    struct kvm_regs regs;
+    struct kvm_sregs sregs;
+
+    getRegisters(regs);
+    getSpecialRegisters(sregs);
+
     DPRINTF(KvmContext, "X86KvmCPU::updateThreadContext():\n");
     if (DTRACE(KvmContext))
         dump();
 
-    updateThreadContextRegs();
-    updateThreadContextSRegs();
-    if (useXSave)
-        updateThreadContextXSave();
-    else
-        updateThreadContextFPU();
+    updateThreadContextRegs(regs, sregs);
+    updateThreadContextSRegs(sregs);
+    if (useXSave) {
+        struct kvm_xsave xsave;
+        getXSave(xsave);
+
+       updateThreadContextXSave(xsave);
+    } else {
+        struct kvm_fpu fpu;
+        getFPUState(fpu);
+
+        updateThreadContextFPU(fpu);
+    }
     updateThreadContextMSRs();
 
     // The M5 misc reg caches some values from other
@@ -955,18 +968,16 @@ X86KvmCPU::updateThreadContext()
 }
 
 void
-X86KvmCPU::updateThreadContextRegs()
+X86KvmCPU::updateThreadContextRegs(const struct kvm_regs &regs,
+                                   const struct kvm_sregs &sregs)
 {
-    struct kvm_regs regs;
-    getRegisters(regs);
-
 #define APPLY_IREG(kreg, mreg) tc->setIntReg(mreg, regs.kreg)
 
     FOREACH_IREG();
 
 #undef APPLY_IREG
 
-    tc->pcState(PCState(regs.rip));
+    tc->pcState(PCState(regs.rip + sregs.cs.base));
 
     // Flags are spread out across multiple semi-magic registers so we
     // need some special care when updating them.
@@ -1011,11 +1022,8 @@ setContextSegment(ThreadContext *tc, const struct kvm_dtable &kvm_dtable,
 }
 
 void
-X86KvmCPU::updateThreadContextSRegs()
+X86KvmCPU::updateThreadContextSRegs(const struct kvm_sregs &sregs)
 {
-    struct kvm_sregs sregs;
-    getSpecialRegisters(sregs);
-
     assert(getKvmRunState()->apic_base == sregs.apic_base);
     assert(getKvmRunState()->cr8 == sregs.cr8);
 
@@ -1070,11 +1078,8 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
 }
 
 void
-X86KvmCPU::updateThreadContextFPU()
+X86KvmCPU::updateThreadContextFPU(const struct kvm_fpu &fpu)
 {
-    struct kvm_fpu fpu;
-    getFPUState(fpu);
-
     updateThreadContextFPUCommon(tc, fpu);
 
     tc->setMiscRegNoEffect(MISCREG_FISEG, 0);
@@ -1084,11 +1089,9 @@ X86KvmCPU::updateThreadContextFPU()
 }
 
 void
-X86KvmCPU::updateThreadContextXSave()
+X86KvmCPU::updateThreadContextXSave(const struct kvm_xsave &kxsave)
 {
-    struct kvm_xsave kxsave;
-    FXSave &xsave(*(FXSave *)kxsave.region);
-    getXSave(kxsave);
+    const FXSave &xsave(*(const FXSave *)kxsave.region);
 
     updateThreadContextFPUCommon(tc, xsave);
 
