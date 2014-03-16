@@ -63,8 +63,6 @@
 /* Used by some KVM macros */
 #define PAGE_SIZE pageSize
 
-static volatile __thread bool timerOverflowed = false;
-
 BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
     : BaseCPU(params),
       vm(*params->kvmVM),
@@ -178,6 +176,8 @@ BaseKvmCPU::startupThread()
     const BaseKvmCPUParams * const p(
         dynamic_cast<const BaseKvmCPUParams *>(params()));
 
+    vcpuThread = pthread_self();
+
     // Setup signal handlers. This has to be done after the vCPU is
     // created since it manipulates the vCPU signal mask.
     setupSignalHandler();
@@ -186,11 +186,11 @@ BaseKvmCPU::startupThread()
 
     if (p->usePerfOverflow)
         runTimer.reset(new PerfKvmTimer(hwCycles,
-                                        KVM_TIMER_SIGNAL,
+                                        KVM_KICK_SIGNAL,
                                         p->hostFactor,
                                         p->hostFreq));
     else
-        runTimer.reset(new PosixKvmTimer(KVM_TIMER_SIGNAL, CLOCK_MONOTONIC,
+        runTimer.reset(new PosixKvmTimer(KVM_KICK_SIGNAL, CLOCK_MONOTONIC,
                                          p->hostFactor,
                                          p->hostFreq));
 
@@ -607,7 +607,6 @@ BaseKvmCPU::kvmRun(Tick ticks)
 {
     Tick ticksExecuted;
     DPRINTF(KvmRun, "KVM: Executing for %i ticks\n", ticks);
-    timerOverflowed = false;
 
     if (ticks == 0) {
         // Settings ticks == 0 is a special case which causes an entry
@@ -617,16 +616,18 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
         ++numVMHalfEntries;
 
-        // This signal is always masked while we are executing in gem5
-        // and gets unmasked temporarily as soon as we enter into
+        // Send a KVM_KICK_SIGNAL to the vCPU thread (i.e., this
+        // thread). The KVM control signal is masked while executing
+        // in gem5 and gets unmasked temporarily as when entering
         // KVM. See setSignalMask() and setupSignalHandler().
-        raise(KVM_TIMER_SIGNAL);
+        kick();
 
-        // Enter into KVM. KVM will check for signals after completing
-        // pending operations (IO). Since the KVM_TIMER_SIGNAL is
-        // pending, this forces an immediate exit into gem5 again. We
+        // Start the vCPU. KVM will check for signals after completing
+        // pending operations (IO). Since the KVM_KICK_SIGNAL is
+        // pending, this forces an immediate exit to gem5 again. We
         // don't bother to setup timers since this shouldn't actually
-        // execute any code in the guest.
+        // execute any code (other than completing half-executed IO
+        // instructions) in the guest.
         ioctlRun();
 
         // We always execute at least one cycle to prevent the
@@ -659,26 +660,17 @@ BaseKvmCPU::kvmRun(Tick ticks)
         if (!perfControlledByTimer)
             hwCycles.stop();
 
-        // The timer signal may have been delivered after we exited
+        // The control signal may have been delivered after we exited
         // from KVM. It will be pending in that case since it is
         // masked when we aren't executing in KVM. Discard it to make
         // sure we don't deliver it immediately next time we try to
         // enter into KVM.
-        discardPendingSignal(KVM_TIMER_SIGNAL);
-        discardPendingSignal(KVM_INST_SIGNAL);
+        discardPendingSignal(KVM_KICK_SIGNAL);
 
         const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
         const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
         const uint64_t instsExecuted(hwInstructions.read() - baseInstrs);
         ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
-
-        if (ticksExecuted < ticks &&
-            timerOverflowed &&
-            _kvmRun->exit_reason == KVM_EXIT_INTR) {
-            // TODO: We should probably do something clever here...
-            warn("KVM: Early timer event, requested %i ticks but got %i ticks.\n",
-                 ticks, ticksExecuted);
-        }
 
         /* Update statistics */
         numCycles += simCyclesExecuted;;
@@ -1065,10 +1057,9 @@ BaseKvmCPU::flushCoalescedMMIO()
 }
 
 /**
- * Cycle timer overflow when running in KVM. Forces the KVM syscall to
- * exit with EINTR and allows us to run the event queue.
+ * Dummy handler for KVM kick signals.
  *
- * @warn This function might not be called since some kernels don't
+ * @note This function is usually not called since the kernel doesn't
  * seem to deliver signals when the signal is only unmasked when
  * running in KVM. This doesn't matter though since we are only
  * interested in getting KVM to exit, which happens as expected. See
@@ -1076,18 +1067,7 @@ BaseKvmCPU::flushCoalescedMMIO()
  * handling.
  */
 static void
-onTimerOverflow(int signo, siginfo_t *si, void *data)
-{
-    timerOverflowed = true;
-}
-
-/**
- * Instruction counter overflow when running in KVM. Forces the KVM
- * syscall to exit with EINTR and allows us to handle instruction
- * count events.
- */
-static void
-onInstEvent(int signo, siginfo_t *si, void *data)
+onKickSignal(int signo, siginfo_t *si, void *data)
 {
 }
 
@@ -1097,33 +1077,25 @@ BaseKvmCPU::setupSignalHandler()
     struct sigaction sa;
 
     memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = onTimerOverflow;
+    sa.sa_sigaction = onKickSignal;
     sa.sa_flags = SA_SIGINFO | SA_RESTART;
-    if (sigaction(KVM_TIMER_SIGNAL, &sa, NULL) == -1)
+    if (sigaction(KVM_KICK_SIGNAL, &sa, NULL) == -1)
         panic("KVM: Failed to setup vCPU timer signal handler\n");
-
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = onInstEvent;
-    sa.sa_flags = SA_SIGINFO | SA_RESTART;
-    if (sigaction(KVM_INST_SIGNAL, &sa, NULL) == -1)
-        panic("KVM: Failed to setup vCPU instruction signal handler\n");
 
     sigset_t sigset;
     if (pthread_sigmask(SIG_BLOCK, NULL, &sigset) == -1)
         panic("KVM: Failed get signal mask\n");
 
     // Request KVM to setup the same signal mask as we're currently
-    // running with except for the KVM control signals. We'll
-    // sometimes need to raise the KVM_TIMER_SIGNAL to cause immediate
-    // exits from KVM after servicing IO requests. See kvmRun().
-    sigdelset(&sigset, KVM_TIMER_SIGNAL);
-    sigdelset(&sigset, KVM_INST_SIGNAL);
+    // running with except for the KVM control signal. We'll sometimes
+    // need to raise the KVM_KICK_SIGNAL to cause immediate exits from
+    // KVM after servicing IO requests. See kvmRun().
+    sigdelset(&sigset, KVM_KICK_SIGNAL);
     setSignalMask(&sigset);
 
     // Mask our control signals so they aren't delivered unless we're
     // actually executing inside KVM.
-    sigaddset(&sigset, KVM_TIMER_SIGNAL);
-    sigaddset(&sigset, KVM_INST_SIGNAL);
+    sigaddset(&sigset, KVM_KICK_SIGNAL);
     if (pthread_sigmask(SIG_SETMASK, &sigset, NULL) == -1)
         panic("KVM: Failed mask the KVM control signals\n");
 }
@@ -1266,7 +1238,7 @@ BaseKvmCPU::setupInstCounter(uint64_t period)
                           hwCycles);
 
     if (period)
-        hwInstructions.enableSignals(KVM_INST_SIGNAL);
+        hwInstructions.enableSignals(KVM_KICK_SIGNAL);
 
     activeInstPeriod = period;
 }

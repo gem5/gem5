@@ -40,8 +40,10 @@
 #ifndef __CPU_KVM_BASE_HH__
 #define __CPU_KVM_BASE_HH__
 
-#include <memory>
+#include <pthread.h>
+
 #include <csignal>
+#include <memory>
 
 #include "base/statistics.hh"
 #include "cpu/kvm/perfevent.hh"
@@ -50,11 +52,8 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 
-/** Signal to use to trigger time-based exits from KVM */
-#define KVM_TIMER_SIGNAL SIGRTMIN
-
-/** Signal to use to trigger instruction-based exits from KVM */
-#define KVM_INST_SIGNAL (SIGRTMIN+1)
+/** Signal to use to trigger exits from KVM */
+#define KVM_KICK_SIGNAL SIGRTMIN
 
 // forward declarations
 class ThreadContext;
@@ -113,6 +112,14 @@ class BaseKvmCPU : public BaseCPU
 
     /** Dump the internal state to the terminal. */
     virtual void dump();
+
+    /**
+     * Force an exit from KVM.
+     *
+     * Send a signal to the thread owning this vCPU to get it to exit
+     * from KVM. Ignored if the vCPU is not executing.
+     */
+    void kick() const { pthread_kill(vcpuThread, KVM_KICK_SIGNAL); }
 
     /**
      * A cached copy of a thread's state in the form of a SimpleThread
@@ -584,6 +591,9 @@ class BaseKvmCPU : public BaseCPU
 
     /** KVM internal ID of the vCPU */
     const long vcpuID;
+
+    /** ID of the vCPU thread */
+    pthread_t vcpuThread;
 
   private:
     struct TickEvent : public Event
