@@ -49,7 +49,6 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/mem_object.hh"
-#include "mem/physical.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
 
@@ -206,8 +205,6 @@ class RubyPort : public MemObject
     std::vector<PioMasterPort *> master_ports;
 
     DrainManager *drainManager;
-
-    RubySystem* ruby_system;
     System* system;
 
     //

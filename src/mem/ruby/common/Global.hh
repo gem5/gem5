@@ -46,4 +46,3 @@ extern std::vector<std::map<uint32_t, AbstractController *> > g_abs_controls;
 extern Cycles g_ruby_start;
 
 #endif // __MEM_RUBY_COMMON_GLOBAL_HH__
-

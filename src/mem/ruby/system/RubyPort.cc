@@ -57,15 +57,14 @@ RubyPort::RubyPort(const Params *p)
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
           p->ruby_system, p->access_phys_mem, -1),
       gotAddrRanges(p->port_master_connection_count), drainManager(NULL),
-      ruby_system(p->ruby_system), system(p->system),
-      access_phys_mem(p->access_phys_mem)
+      system(p->system), access_phys_mem(p->access_phys_mem)
 {
     assert(m_version != -1);
 
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
         slave_ports.push_back(new MemSlavePort(csprintf("%s.slave%d", name(),
-            i), this, ruby_system, access_phys_mem, i));
+            i), this, p->ruby_system, access_phys_mem, i));
     }
 
     // create the master ports based on the number of connected ports

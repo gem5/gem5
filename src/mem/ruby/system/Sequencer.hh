@@ -40,8 +40,6 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
 
-class DataBlock;
-
 struct SequencerRequest
 {
     PacketPtr pkt;

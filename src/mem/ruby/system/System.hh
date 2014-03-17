@@ -38,7 +38,6 @@
 #include "base/callback.hh"
 #include "base/output.hh"
 #include "mem/packet.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -81,13 +80,6 @@ class RubySystem : public ClockedObject
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
 
     // Public Methods
-    Network*
-    getNetwork()
-    {
-        assert(m_network != NULL);
-        return m_network;
-    }
-
     Profiler*
     getProfiler()
     {
