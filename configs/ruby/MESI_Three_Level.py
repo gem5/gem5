@@ -56,7 +56,7 @@ def define_options(parser):
             caches private to clusters")
     return
 
-def create_system(options, system, piobus, dma_ports, ruby_system):
+def create_system(options, system, dma_ports, ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MESI_Three_Level':
         fatal("This script requires the MESI_Three_Level protocol to be built.")
@@ -115,11 +115,6 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
             l1_cntrl = L1Cache_Controller(version = i*num_cpus_per_cluster+j,
                           cache = l1_cache, l2_select_num_bits = l2_bits,
                           cluster_id = i, ruby_system = ruby_system)
-
-            if piobus != None:
-                cpu_seq.pio_master_port = piobus.slave
-                cpu_seq.mem_master_port = piobus.slave
-                cpu_seq.pio_slave_port = piobus.master
 
             exec("ruby_system.l0_cntrl%d = l0_cntrl" % (
                         i*num_cpus_per_cluster+j))

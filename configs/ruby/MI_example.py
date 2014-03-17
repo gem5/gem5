@@ -42,7 +42,7 @@ class Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, piobus, dma_ports, ruby_system):
+def create_system(options, system, dma_ports, ruby_system):
     
     if buildEnv['PROTOCOL'] != 'MI_example':
         panic("This script requires the MI_example protocol to be built.")
@@ -90,13 +90,8 @@ def create_system(options, system, piobus, dma_ports, ruby_system):
                                 ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
-
-        if piobus != None:
-            cpu_seq.pio_master_port = piobus.slave
-            cpu_seq.mem_master_port = piobus.slave
-            cpu_seq.pio_slave_port = piobus.master
-
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
+
         #
         # Add controllers and sequencers to the appropriate lists
         #

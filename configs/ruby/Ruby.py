@@ -107,7 +107,7 @@ def create_system(options, system, piobus = None, dma_ports = []):
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, topology) = \
-             eval("%s.create_system(options, system, piobus, dma_ports, ruby)"
+             eval("%s.create_system(options, system, dma_ports, ruby)"
                   % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol
@@ -187,6 +187,16 @@ def create_system(options, system, piobus = None, dma_ports = []):
 
     ruby.network = network
     ruby.mem_size = total_mem_size
+
+    # Connect the cpu sequencers and the piobus
+    if piobus != None:
+        for cpu_seq in cpu_sequencers:
+            cpu_seq.pio_master_port = piobus.slave
+            cpu_seq.mem_master_port = piobus.slave
+
+            if buildEnv['TARGET_ISA'] == "x86":
+                cpu_seq.pio_slave_port = piobus.master
+
     ruby._cpu_ruby_ports = cpu_sequencers
     ruby.num_of_sequencers = len(cpu_sequencers)
     ruby.random_seed    = options.random_seed
