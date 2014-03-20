@@ -53,7 +53,6 @@ from m5.util import addToPath, fatal
 
 addToPath('../common')
 addToPath('../ruby')
-addToPath('../topologies')
 
 import Options
 import Ruby
@@ -145,7 +144,8 @@ if options.bench:
                         app, options.spec_input))
             multiprocesses.append(workload.makeLiveProcess())
         except:
-            print >>sys.stderr, "Unable to find workload for %s: %s" % (buildEnv['TARGET_ISA'], app)
+            print >>sys.stderr, "Unable to find workload for %s: %s" % (
+                    buildEnv['TARGET_ISA'], app)
             sys.exit(1)
 elif options.cmd:
     multiprocesses, numThreads = get_processes(options)

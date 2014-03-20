@@ -68,7 +68,7 @@ system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
 system.cpu = [TimingSimpleCPU(cpu_id=i, clk_domain = system.cpu_clk_domain)
               for i in xrange(options.num_cpus)]
 
-Ruby.create_system(options, system, system.piobus, system._dma_ports)
+Ruby.create_system(options, system, system.iobus, system._dma_ports)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
@@ -92,7 +92,7 @@ for (i, cpu) in enumerate(system.cpu):
 system.physmem = [DDR3_1600_x64(range = r)
                   for r in system.mem_ranges]
 for i in xrange(len(system.physmem)):
-    system.physmem[i].port = system.piobus.master
+    system.physmem[i].port = system.iobus.master
 
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')

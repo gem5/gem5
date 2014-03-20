@@ -55,8 +55,8 @@ class MemBus(CoherentBus):
     default = Self.badaddr_responder.pio
 
 
-def makeLinuxAlphaSystem(mem_mode, mdesc = None):
-    IO_address_space_base = 0x80000000000
+def makeLinuxAlphaSystem(mem_mode, mdesc = None, ruby = False):
+
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
@@ -67,73 +67,44 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = NoncoherentBus()
-    self.membus = MemBus()
-    # By default the bridge responds to all addresses above the I/O
-    # base address (including the PCI config space)
-    self.bridge = Bridge(delay='50ns',
-                         ranges = [AddrRange(IO_address_space_base, Addr.max)])
-    self.mem_ranges = [AddrRange(mdesc.mem())]
-    self.bridge.master = self.iobus.slave
-    self.bridge.slave = self.membus.master
-    self.disk0 = CowIdeDisk(driveID='master')
-    self.disk2 = CowIdeDisk(driveID='master')
-    self.disk0.childImage(mdesc.disk())
-    self.disk2.childImage(disk('linux-bigswap2.img'))
+
     self.tsunami = BaseTsunami()
+
+    # Create the io bus to connect all device ports
+    self.iobus = NoncoherentBus()
     self.tsunami.attachIO(self.iobus)
+
     self.tsunami.ide.pio = self.iobus.master
     self.tsunami.ide.config = self.iobus.master
-    self.tsunami.ide.dma = self.iobus.slave
+
     self.tsunami.ethernet.pio = self.iobus.master
     self.tsunami.ethernet.config = self.iobus.master
-    self.tsunami.ethernet.dma = self.iobus.slave
-    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
-                                               read_only = True))
-    self.intrctrl = IntrControl()
-    self.mem_mode = mem_mode
-    self.terminal = Terminal()
-    self.kernel = binary('vmlinux')
-    self.pal = binary('ts_osfpal')
-    self.console = binary('console')
-    self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 
-    self.system_port = self.membus.slave
+    if ruby:
+        # Store the dma devices for later connection to dma ruby ports.
+        # Append an underscore to dma_ports to avoid the SimObjectVector check.
+        self._dma_ports = [self.tsunami.ide.dma, self.tsunami.ethernet.dma]
+    else:
+        self.membus = MemBus()
 
-    return self
+        # By default the bridge responds to all addresses above the I/O
+        # base address (including the PCI config space)
+        IO_address_space_base = 0x80000000000
+        self.bridge = Bridge(delay='50ns',
+                         ranges = [AddrRange(IO_address_space_base, Addr.max)])
+        self.bridge.master = self.iobus.slave
+        self.bridge.slave = self.membus.master
 
-def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
-    class BaseTsunami(Tsunami):
-        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
-        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
-                            pci_func=0, pci_dev=0, pci_bus=0)
-    self = LinuxAlphaSystem()
+        self.tsunami.ide.dma = self.iobus.slave
+        self.tsunami.ethernet.dma = self.iobus.slave
+
+        self.system_port = self.membus.slave
+
     self.mem_ranges = [AddrRange(mdesc.mem())]
-    if not mdesc:
-        # generic system
-        mdesc = SysConfig()
-    self.readfile = mdesc.script()
-
-    # Create pio bus to connect all device pio ports to rubymem's pio port
-    self.piobus = NoncoherentBus()
-
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
     self.disk2.childImage(disk('linux-bigswap2.img'))
-    self.tsunami = BaseTsunami()
-    self.tsunami.attachIO(self.piobus)
-    self.tsunami.ide.pio = self.piobus.master
-    self.tsunami.ide.config = self.piobus.master
-    self.tsunami.ethernet.pio = self.piobus.master
-    self.tsunami.ethernet.config = self.piobus.master
-
-    #
-    # Store the dma devices for later connection to dma ruby ports.
-    # Append an underscore to dma_devices to avoid the SimObjectVector check.
-    #
-    self._dma_ports = [self.tsunami.ide.dma, self.tsunami.ethernet.dma]
-
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
@@ -392,12 +363,12 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
 
 def connectX86RubySystem(x86_sys):
     # North Bridge
-    x86_sys.piobus = NoncoherentBus()
+    x86_sys.iobus = NoncoherentBus()
 
     # add the ide to the list of dma devices that later need to attach to
     # dma controllers
     x86_sys._dma_ports = [x86_sys.pc.south_bridge.ide.dma]
-    x86_sys.pc.attachIO(x86_sys.piobus, x86_sys._dma_ports)
+    x86_sys.pc.attachIO(x86_sys.iobus, x86_sys._dma_ports)
 
 
 def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,

@@ -10,6 +10,8 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
+# Copyright (c) 2012-2014 Mark D. Hill and David A. Wood
+# Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -37,6 +39,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Ali Saidi
+#          Brad Beckmann
 
 import optparse
 import sys
@@ -47,6 +50,9 @@ from m5.objects import *
 from m5.util import addToPath, fatal
 
 addToPath('../common')
+addToPath('../ruby')
+
+import Ruby
 
 from FSConfig import *
 from SysPaths import *
@@ -60,6 +66,10 @@ import Options
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
+
+# Add the ruby specific and protocol specific options
+if '--ruby' in sys.argv:
+    Ruby.define_options(parser)
 
 (options, args) = parser.parse_args()
 
@@ -104,13 +114,14 @@ else:
 np = options.num_cpus
 
 if buildEnv['TARGET_ISA'] == "alpha":
-    test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
+    test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0], options.ruby)
 elif buildEnv['TARGET_ISA'] == "mips":
     test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0])
 elif buildEnv['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
-    test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0])
+    test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0],
+            options.ruby)
 elif buildEnv['TARGET_ISA'] == "arm":
     test_sys = makeArmSystem(test_mem_mode, options.machine_type, bm[0],
                              options.dtb_filename,
@@ -119,6 +130,9 @@ elif buildEnv['TARGET_ISA'] == "arm":
         test_sys.enable_context_switch_stats_dump = True
 else:
     fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
+
+# Set the cache line size for the entire system
+test_sys.cache_line_size = options.cacheline_size
 
 # Create a top-level voltage domain
 test_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
@@ -156,32 +170,72 @@ test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
 if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
     test_sys.vm = KvmVM()
 
-if options.caches or options.l2cache:
-    # By default the IOCache runs at the system clock
-    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
-    test_sys.iocache.cpu_side = test_sys.iobus.master
-    test_sys.iocache.mem_side = test_sys.membus.slave
+if options.ruby:
+    # Check for timing mode because ruby does not support atomic accesses
+    if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
+        print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
+        sys.exit(1)
+
+    Ruby.create_system(options, test_sys, test_sys.iobus, test_sys._dma_ports)
+
+    # Create a seperate clock domain for Ruby
+    test_sys.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+                                    voltage_domain = test_sys.voltage_domain)
+
+    for (i, cpu) in enumerate(test_sys.cpu):
+        #
+        # Tie the cpu ports to the correct ruby system ports
+        #
+        cpu.clk_domain = test_sys.cpu_clk_domain
+        cpu.createThreads()
+        cpu.createInterruptController()
+
+        cpu.icache_port = test_sys.ruby._cpu_ruby_ports[i].slave
+        cpu.dcache_port = test_sys.ruby._cpu_ruby_ports[i].slave
+
+        if buildEnv['TARGET_ISA'] == "x86":
+            cpu.itb.walker.port = test_sys.ruby._cpu_ruby_ports[i].slave
+            cpu.dtb.walker.port = test_sys.ruby._cpu_ruby_ports[i].slave
+
+            cpu.interrupts.pio = test_sys.ruby._cpu_ruby_ports[i].master
+            cpu.interrupts.int_master = test_sys.ruby._cpu_ruby_ports[i].slave
+            cpu.interrupts.int_slave = test_sys.ruby._cpu_ruby_ports[i].master
+
+        test_sys.ruby._cpu_ruby_ports[i].access_phys_mem = True
+
+    # Create the appropriate memory controllers and connect them to the
+    # PIO bus
+    test_sys.mem_ctrls = [TestMemClass(range = r) for r in test_sys.mem_ranges]
+    for i in xrange(len(test_sys.mem_ctrls)):
+        test_sys.mem_ctrls[i].port = test_sys.iobus.master
+
 else:
-    test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
-    test_sys.iobridge.slave = test_sys.iobus.master
-    test_sys.iobridge.master = test_sys.membus.slave
+    if options.caches or options.l2cache:
+        # By default the IOCache runs at the system clock
+        test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
+        test_sys.iocache.cpu_side = test_sys.iobus.master
+        test_sys.iocache.mem_side = test_sys.membus.slave
+    else:
+        test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
+        test_sys.iobridge.slave = test_sys.iobus.master
+        test_sys.iobridge.master = test_sys.membus.slave
 
-# Sanity check
-if options.fastmem:
-    if TestCPUClass != AtomicSimpleCPU:
-        fatal("Fastmem can only be used with atomic CPU!")
-    if (options.caches or options.l2cache):
-        fatal("You cannot use fastmem in combination with caches!")
-
-for i in xrange(np):
+    # Sanity check
     if options.fastmem:
-        test_sys.cpu[i].fastmem = True
-    if options.checker:
-        test_sys.cpu[i].addCheckerCpu()
-    test_sys.cpu[i].createThreads()
+        if TestCPUClass != AtomicSimpleCPU:
+            fatal("Fastmem can only be used with atomic CPU!")
+        if (options.caches or options.l2cache):
+            fatal("You cannot use fastmem in combination with caches!")
 
-CacheConfig.config_cache(options, test_sys)
-MemConfig.config_mem(options, test_sys)
+    for i in xrange(np):
+        if options.fastmem:
+            test_sys.cpu[i].fastmem = True
+        if options.checker:
+            test_sys.cpu[i].addCheckerCpu()
+        test_sys.cpu[i].createThreads()
+
+    CacheConfig.config_cache(options, test_sys)
+    MemConfig.config_mem(options, test_sys)
 
 if len(bm) == 2:
     if buildEnv['TARGET_ISA'] == 'alpha':
