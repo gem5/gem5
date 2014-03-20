@@ -44,7 +44,7 @@ class Consumer
 {
   public:
     Consumer(ClockedObject *_em)
-        : m_last_scheduled_wakeup(0), em(_em)
+        : em(_em)
     {
     }
 
@@ -55,18 +55,6 @@ class Consumer
     virtual void wakeup() = 0;
     virtual void print(std::ostream& out) const = 0;
     virtual void storeEventInfo(int info) {}
-
-    const Tick&
-    getLastScheduledWakeup() const
-    {
-        return m_last_scheduled_wakeup;
-    }
-
-    void
-    setLastScheduledWakeup(const Tick& time)
-    {
-        m_last_scheduled_wakeup = time;
-    }
 
     bool
     alreadyScheduled(Tick time)
@@ -80,20 +68,12 @@ class Consumer
         m_scheduled_wakeups.insert(time);
     }
 
-    void
-    removeScheduledWakeupTime(Tick time)
-    {
-        assert(alreadyScheduled(time));
-        m_scheduled_wakeups.erase(time);
-    }
-
     void scheduleEventAbsolute(Tick timeAbs);
 
   protected:
     void scheduleEvent(Cycles timeDelta);
 
   private:
-    Tick m_last_scheduled_wakeup;
     std::set<Tick> m_scheduled_wakeups;
     ClockedObject *em;
 
@@ -105,11 +85,7 @@ class Consumer
           {
           }
 
-          void process()
-          {
-              m_consumer_ptr->wakeup();
-              m_consumer_ptr->removeScheduledWakeupTime(when());
-          }
+          void process() { m_consumer_ptr->wakeup(); }
 
       private:
           Consumer* m_consumer_ptr;

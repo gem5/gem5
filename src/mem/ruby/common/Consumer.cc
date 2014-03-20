@@ -28,6 +28,8 @@
 
 #include "mem/ruby/common/Consumer.hh"
 
+using namespace std;
+
 void
 Consumer::scheduleEvent(Cycles timeDelta)
 {
@@ -43,4 +45,9 @@ Consumer::scheduleEventAbsolute(Tick evt_time)
         em->schedule(evt, evt_time);
         insertScheduledWakeupTime(evt_time);
     }
+
+    Tick t = em->clockEdge();
+    set<Tick>::iterator bit = m_scheduled_wakeups.begin();
+    set<Tick>::iterator eit = m_scheduled_wakeups.lower_bound(t);
+    m_scheduled_wakeups.erase(bit,eit);
 }
