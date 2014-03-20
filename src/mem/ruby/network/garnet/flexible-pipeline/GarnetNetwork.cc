@@ -56,6 +56,11 @@ GarnetNetwork::GarnetNetwork(const Params *p)
         Router* router = safe_cast<Router*>(*i);
         m_routers.push_back(router);
     }
+
+    for (int i=0; i < m_nodes; i++) {
+        NetworkInterface *ni = safe_cast<NetworkInterface *>(p->netifs[i]);
+        m_nis.push_back(ni);
+    }
 }
 
 void
@@ -74,10 +79,8 @@ GarnetNetwork::init()
     }
 
     for (int i=0; i < m_nodes; i++) {
-        NetworkInterface *ni = new NetworkInterface(i, m_virtual_networks,
-                                                    this);
-        ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
-        m_nis.push_back(ni);
+        m_nis[i]->init_net_ptr(this);
+        m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
     }
 
     m_topology_ptr->createLinks(this);

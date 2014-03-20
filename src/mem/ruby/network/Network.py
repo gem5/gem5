@@ -45,5 +45,6 @@ class RubyNetwork(ClockedObject):
     ruby_system = Param.RubySystem("")
 
     routers = VectorParam.BasicRouter("Network routers")
+    netifs = VectorParam.ClockedObject("Network Interfaces")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")

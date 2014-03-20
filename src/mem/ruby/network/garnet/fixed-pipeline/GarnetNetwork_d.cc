@@ -60,6 +60,17 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
          i != p->routers.end(); ++i) {
         Router_d* router = safe_cast<Router_d*>(*i);
         m_routers.push_back(router);
+
+        // initialize the router's network pointers
+        router->init_net_ptr(this);
+    }
+
+    // record the network interfaces
+    for (vector<ClockedObject*>::const_iterator i = p->netifs.begin();
+         i != p->netifs.end(); ++i) {
+        NetworkInterface_d *ni = safe_cast<NetworkInterface_d *>(*i);
+        m_nis.push_back(ni);
+        ni->init_net_ptr(this);
     }
 }
 
@@ -68,23 +79,13 @@ GarnetNetwork_d::init()
 {
     BaseGarnetNetwork::init();
 
-    // initialize the router's network pointers
-    for (vector<Router_d*>::const_iterator i = m_routers.begin();
-         i != m_routers.end(); ++i) {
-        Router_d* router = safe_cast<Router_d*>(*i);
-        router->init_net_ptr(this);
+    for (int i=0; i < m_nodes; i++) {
+        m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
     }
 
     // The topology pointer should have already been initialized in the
     // parent network constructor
     assert(m_topology_ptr != NULL);
-
-    for (int i=0; i < m_nodes; i++) {
-        NetworkInterface_d *ni = new NetworkInterface_d(i, m_virtual_networks,
-                                                        this);
-        ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
-        m_nis.push_back(ni);
-    }
     m_topology_ptr->createLinks(this);
 
     // FaultModel: declare each router to the fault model

@@ -35,7 +35,6 @@ if env['PROTOCOL'] == 'None':
 
 SimObject('GarnetLink_d.py')
 SimObject('GarnetNetwork_d.py')
-SimObject('GarnetRouter_d.py')
 
 Source('GarnetLink_d.cc')
 Source('GarnetNetwork_d.cc')

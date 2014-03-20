@@ -40,16 +40,17 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "params/GarnetNetworkInterface.hh"
 
 class NetworkMessage;
 class MessageBuffer;
 class flitBuffer;
 
-class NetworkInterface : public FlexibleConsumer
+class NetworkInterface : public ClockedObject, public FlexibleConsumer
 {
   public:
-    NetworkInterface(int id, int virtual_networks,
-                     GarnetNetwork* network_ptr);
+    typedef GarnetNetworkInterfaceParams Params;
+    NetworkInterface(const Params *p);
 
     ~NetworkInterface();
 
@@ -62,11 +63,7 @@ class NetworkInterface : public FlexibleConsumer
     void grant_vc(int out_port, int vc, Cycles grant_time);
     void release_vc(int out_port, int vc, Cycles release_time);
 
-    bool
-    isBufferNotFull(int vc, int inport)
-    {
-        return true;
-    }
+    bool isBufferNotFull(int vc, int inport) { return true; }
     void request_vc(int in_vc, int in_port, NetDest destination,
                     Cycles request_time);
 
@@ -75,9 +72,11 @@ class NetworkInterface : public FlexibleConsumer
     bool functionalRead(Packet *);
     uint32_t functionalWrite(Packet *);
 
+    void init_net_ptr(GarnetNetwork* net_ptr) { m_net_ptr = net_ptr; }
+
   private:
     GarnetNetwork *m_net_ptr;
-    int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
+    uint32_t m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     NodeID m_id;
 
     std::vector<OutVcState *> m_out_vc_state;

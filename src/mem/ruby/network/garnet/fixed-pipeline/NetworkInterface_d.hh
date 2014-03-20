@@ -41,18 +41,20 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "params/GarnetNetworkInterface_d.hh"
 
 class NetworkMessage;
 class MessageBuffer;
 class flitBuffer_d;
 
-class NetworkInterface_d : public Consumer
+class NetworkInterface_d : public ClockedObject, public Consumer
 {
   public:
-    NetworkInterface_d(int id, int virtual_networks,
-                       GarnetNetwork_d* network_ptr);
-
+    typedef GarnetNetworkInterface_dParams Params;
+    NetworkInterface_d(const Params *p);
     ~NetworkInterface_d();
+
+    void init();
 
     void addInPort(NetworkLink_d *in_link, CreditLink_d *credit_link);
     void addOutPort(NetworkLink_d *out_link, CreditLink_d *credit_link);
@@ -62,6 +64,7 @@ class NetworkInterface_d : public Consumer
                  std::vector<MessageBuffer *> &outNode);
     void print(std::ostream& out) const;
     int get_vnet(int vc);
+    void init_net_ptr(GarnetNetwork_d *net_ptr) { m_net_ptr = net_ptr; }
 
     uint32_t functionalWrite(Packet *);
 

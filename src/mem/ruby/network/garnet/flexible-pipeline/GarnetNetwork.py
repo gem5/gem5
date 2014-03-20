@@ -29,11 +29,34 @@
 #          Brad Beckmann
 
 from m5.params import *
+from m5.proxy import *
 from BaseGarnetNetwork import BaseGarnetNetwork
+from BasicRouter import BasicRouter
+from ClockedObject import ClockedObject
+
+class GarnetRouter(BasicRouter):
+    type = 'GarnetRouter'
+    cxx_class = 'Router'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
+    vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
+                              "virtual channels per virtual network")
+    virt_nets = Param.Int(Parent.number_of_virtual_networks,
+                          "number of virtual networks")
+
+class GarnetNetworkInterface(ClockedObject):
+    type = 'GarnetNetworkInterface'
+    cxx_class = 'NetworkInterface'
+    cxx_header = "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
+
+    id = Param.UInt32("ID in relation to other network interfaces")
+    vcs_per_vnet = Param.UInt32(Parent.vcs_per_vnet,
+                             "virtual channels per virtual network")
+    virt_nets = Param.UInt32(Parent.number_of_virtual_networks,
+                          "number of virtual networks")
 
 class GarnetNetwork(BaseGarnetNetwork):
     type = 'GarnetNetwork'
     cxx_header = "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
-    buffer_size = Param.Int(0,
+    buffer_size = Param.UInt32(0,
         "default buffer size; 0 indicates infinite buffering");
-    number_of_pipe_stages = Param.Int(4, "router pipeline stages");
+    number_of_pipe_stages = Param.UInt32(4, "router pipeline stages");

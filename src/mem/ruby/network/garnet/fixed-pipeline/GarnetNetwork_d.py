@@ -29,10 +29,33 @@
 #          Brad Beckmann
 
 from m5.params import *
+from m5.proxy import *
 from BaseGarnetNetwork import BaseGarnetNetwork
+from BasicRouter import BasicRouter
+from ClockedObject import ClockedObject
+
+class GarnetRouter_d(BasicRouter):
+    type = 'GarnetRouter_d'
+    cxx_class = 'Router_d'
+    cxx_header = "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+    vcs_per_vnet = Param.UInt32(Parent.vcs_per_vnet,
+                              "virtual channels per virtual network")
+    virt_nets = Param.UInt32(Parent.number_of_virtual_networks,
+                          "number of virtual networks")
+
+class GarnetNetworkInterface_d(ClockedObject):
+    type = 'GarnetNetworkInterface_d'
+    cxx_class = 'NetworkInterface_d'
+    cxx_header = "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
+
+    id = Param.UInt32("ID in relation to other network interfaces")
+    vcs_per_vnet = Param.UInt32(Parent.vcs_per_vnet,
+                             "virtual channels per virtual network")
+    virt_nets = Param.UInt32(Parent.number_of_virtual_networks,
+                          "number of virtual networks")
 
 class GarnetNetwork_d(BaseGarnetNetwork):
     type = 'GarnetNetwork_d'
     cxx_header = "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-    buffers_per_data_vc = Param.Int(4, "buffers per data virtual channel");
-    buffers_per_ctrl_vc = Param.Int(1, "buffers per ctrl virtual channel");
+    buffers_per_data_vc = Param.UInt32(4, "buffers per data virtual channel");
+    buffers_per_ctrl_vc = Param.UInt32(1, "buffers per ctrl virtual channel");

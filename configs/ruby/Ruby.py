@@ -132,27 +132,36 @@ def create_system(options, system, piobus = None, dma_ports = []):
     # Set the network classes based on the command line options
     #
     if options.garnet_network == "fixed":
-        class NetworkClass(GarnetNetwork_d): pass
-        class IntLinkClass(GarnetIntLink_d): pass
-        class ExtLinkClass(GarnetExtLink_d): pass
-        class RouterClass(GarnetRouter_d): pass
+        NetworkClass = GarnetNetwork_d
+        IntLinkClass = GarnetIntLink_d
+        ExtLinkClass = GarnetExtLink_d
+        RouterClass = GarnetRouter_d
+        InterfaceClass = GarnetNetworkInterface_d
+
     elif options.garnet_network == "flexible":
-        class NetworkClass(GarnetNetwork): pass
-        class IntLinkClass(GarnetIntLink): pass
-        class ExtLinkClass(GarnetExtLink): pass
-        class RouterClass(GarnetRouter): pass
+        NetworkClass = GarnetNetwork
+        IntLinkClass = GarnetIntLink
+        ExtLinkClass = GarnetExtLink
+        RouterClass = GarnetRouter
+        InterfaceClass = GarnetNetworkInterface
+
     else:
-        class NetworkClass(SimpleNetwork): pass
-        class IntLinkClass(SimpleIntLink): pass
-        class ExtLinkClass(SimpleExtLink): pass
-        class RouterClass(Switch): pass
+        NetworkClass = SimpleNetwork
+        IntLinkClass = SimpleIntLink
+        ExtLinkClass = SimpleExtLink
+        RouterClass = Switch
+        InterfaceClass = None
 
 
     # Create the network topology
     network = NetworkClass(ruby_system = ruby, topology = topology.description,
-                           routers = [], ext_links = [], int_links = [])
+            routers = [], ext_links = [], int_links = [], netifs = [])
     topology.makeTopology(options, network, IntLinkClass, ExtLinkClass,
-                          RouterClass)
+            RouterClass)
+
+    if InterfaceClass != None:
+        netifs = [InterfaceClass(id=i) for (i,n) in enumerate(network.ext_links)]
+        network.netifs = netifs
 
     if options.network_fault_model:
         assert(options.garnet_network == "fixed")
