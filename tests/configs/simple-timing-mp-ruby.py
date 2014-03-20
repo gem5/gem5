@@ -83,7 +83,7 @@ Ruby.create_system(options, system)
 # Create a separate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
 
-assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
+assert(options.num_cpus == len(system.ruby._cpu_ports))
 
 for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller
@@ -92,7 +92,7 @@ for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the ruby cpu ports
     #
-    cpu.connectAllPorts(system.ruby._cpu_ruby_ports[i])
+    cpu.connectAllPorts(system.ruby._cpu_ports[i])
 
 # -----------------------
 # run simulation

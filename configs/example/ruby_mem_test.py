@@ -144,26 +144,26 @@ system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
 #
 system.ruby.randomization = True
  
-assert(len(cpus) == len(system.ruby._cpu_ruby_ports))
+assert(len(cpus) == len(system.ruby._cpu_ports))
 
 for (i, cpu) in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #
-    cpu.test = system.ruby._cpu_ruby_ports[i].slave
+    cpu.test = system.ruby._cpu_ports[i].slave
     cpu.functional = system.funcbus.slave
 
     #
     # Since the memtester is incredibly bursty, increase the deadlock
     # threshold to 5 million cycles
     #
-    system.ruby._cpu_ruby_ports[i].deadlock_threshold = 5000000
+    system.ruby._cpu_ports[i].deadlock_threshold = 5000000
 
     #
     # Ruby doesn't need the backing image of memory when running with
     # the tester.
     #
-    system.ruby._cpu_ruby_ports[i].access_phys_mem = False
+    system.ruby._cpu_ports[i].access_phys_mem = False
 
 for (i, dma) in enumerate(dmas):
     #

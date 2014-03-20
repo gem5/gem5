@@ -85,7 +85,7 @@ Ruby.create_system(options, system)
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
-assert(len(system.ruby._cpu_ruby_ports) == 1)
+assert(len(system.ruby._cpu_ports) == 1)
 
 # create the interrupt controller
 cpu.createInterruptController()
@@ -94,7 +94,7 @@ cpu.createInterruptController()
 # Tie the cpu cache ports to the ruby cpu ports and
 # physmem, respectively
 #
-cpu.connectAllPorts(system.ruby._cpu_ruby_ports[0])
+cpu.connectAllPorts(system.ruby._cpu_ports[0])
 
 # -----------------------
 # run simulation

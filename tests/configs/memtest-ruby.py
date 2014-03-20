@@ -104,9 +104,9 @@ Ruby.create_system(options, system)
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
-assert(len(cpus) == len(system.ruby._cpu_ruby_ports))
+assert(len(cpus) == len(system.ruby._cpu_ports))
 
-for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
+for (i, ruby_port) in enumerate(system.ruby._cpu_ports):
      #
      # Tie the cpu test and functional ports to the ruby cpu ports and
      # physmem, respectively

@@ -149,18 +149,18 @@ def build_test_system(np):
             cpu.createThreads()
             cpu.createInterruptController()
 
-            cpu.icache_port = test_sys.ruby._cpu_ruby_ports[i].slave
-            cpu.dcache_port = test_sys.ruby._cpu_ruby_ports[i].slave
+            cpu.icache_port = test_sys.ruby._cpu_ports[i].slave
+            cpu.dcache_port = test_sys.ruby._cpu_ports[i].slave
 
             if buildEnv['TARGET_ISA'] == "x86":
-                cpu.itb.walker.port = test_sys.ruby._cpu_ruby_ports[i].slave
-                cpu.dtb.walker.port = test_sys.ruby._cpu_ruby_ports[i].slave
+                cpu.itb.walker.port = test_sys.ruby._cpu_ports[i].slave
+                cpu.dtb.walker.port = test_sys.ruby._cpu_ports[i].slave
 
-                cpu.interrupts.pio = test_sys.ruby._cpu_ruby_ports[i].master
-                cpu.interrupts.int_master = test_sys.ruby._cpu_ruby_ports[i].slave
-                cpu.interrupts.int_slave = test_sys.ruby._cpu_ruby_ports[i].master
+                cpu.interrupts.pio = test_sys.ruby._cpu_ports[i].master
+                cpu.interrupts.int_master = test_sys.ruby._cpu_ports[i].slave
+                cpu.interrupts.int_slave = test_sys.ruby._cpu_ports[i].master
 
-            test_sys.ruby._cpu_ruby_ports[i].access_phys_mem = True
+            test_sys.ruby._cpu_ports[i].access_phys_mem = True
 
         # Create the appropriate memory controllers
         # and connect them to the IO bus

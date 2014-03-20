@@ -78,16 +78,16 @@ for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller
     cpu.createInterruptController()
     # Tie the cpu ports to the correct ruby system ports
-    cpu.icache_port = system.ruby._cpu_ruby_ports[i].slave
-    cpu.dcache_port = system.ruby._cpu_ruby_ports[i].slave
-    cpu.itb.walker.port = system.ruby._cpu_ruby_ports[i].slave
-    cpu.dtb.walker.port = system.ruby._cpu_ruby_ports[i].slave
-    cpu.interrupts.pio = system.ruby._cpu_ruby_ports[i].master
-    cpu.interrupts.int_master = system.ruby._cpu_ruby_ports[i].slave
-    cpu.interrupts.int_slave = system.ruby._cpu_ruby_ports[i].master
+    cpu.icache_port = system.ruby._cpu_ports[i].slave
+    cpu.dcache_port = system.ruby._cpu_ports[i].slave
+    cpu.itb.walker.port = system.ruby._cpu_ports[i].slave
+    cpu.dtb.walker.port = system.ruby._cpu_ports[i].slave
+    cpu.interrupts.pio = system.ruby._cpu_ports[i].master
+    cpu.interrupts.int_master = system.ruby._cpu_ports[i].slave
+    cpu.interrupts.int_slave = system.ruby._cpu_ports[i].master
 
     # Set access_phys_mem to True for ruby port
-    system.ruby._cpu_ruby_ports[i].access_phys_mem = True
+    system.ruby._cpu_ports[i].access_phys_mem = True
 
 system.physmem = [DDR3_1600_x64(range = r)
                   for r in system.mem_ranges]

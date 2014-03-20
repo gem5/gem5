@@ -233,10 +233,10 @@ if options.ruby:
                               null = True)
     options.use_map = True
     Ruby.create_system(options, system)
-    assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
+    assert(options.num_cpus == len(system.ruby._cpu_ports))
 
     for i in xrange(np):
-        ruby_port = system.ruby._cpu_ruby_ports[i]
+        ruby_port = system.ruby._cpu_ports[i]
 
         # Create the interrupt controller and connect its ports to Ruby
         # Note that the interrupt controller is always present but only
