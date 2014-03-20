@@ -13,8 +13,6 @@ sim_insts                                        2577                       # Nu
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
-system.piobus.throughput                            0                       # Throughput (bytes/s)
-system.piobus.data_through_bus                      0                       # Total data (bytes)
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.outstanding_req_hist::bucket_size            1                      
 system.ruby.outstanding_req_hist::max_bucket            9                      

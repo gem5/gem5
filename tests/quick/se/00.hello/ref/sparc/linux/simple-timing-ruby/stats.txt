@@ -13,8 +13,6 @@ sim_insts                                        5327                       # Nu
 sim_ops                                          5327                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
-system.piobus.throughput                            0                       # Throughput (bytes/s)
-system.piobus.data_through_bus                      0                       # Total data (bytes)
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                  1                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                   9                       # delay histogram for all message
