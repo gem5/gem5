@@ -351,6 +351,7 @@ void set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${ident}_TBE* m_new_tbe);
 void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 ''')
 
+        # Prototype the actions that the controller can take
         code('''
 
 // Actions
@@ -358,15 +359,19 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         if self.TBEType != None and self.EntryType != None:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
-                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr);')
+                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
+                     'm_tbe_ptr, ${{self.EntryType.c_ident}}*& '
+                     'm_cache_entry_ptr, const Address& addr);')
         elif self.TBEType != None:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
-                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address& addr);')
+                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
+                     'm_tbe_ptr, const Address& addr);')
         elif self.EntryType != None:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
-                code('void ${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr);')
+                code('void ${{action.ident}}(${{self.EntryType.c_ident}}*& '
+                     'm_cache_entry_ptr, const Address& addr);')
         else:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
@@ -434,6 +439,8 @@ using namespace std;
                 code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
             seen_types.add(var.type.ident)
 
+        num_in_ports = len(self.in_ports)
+
         code('''
 $c_ident *
 ${c_ident}Params::create()
@@ -460,52 +467,25 @@ $c_ident::$c_ident(const Params *p)
 {
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
+    m_num_controllers++;
+
+    m_in_ports = $num_in_ports;
 ''')
-        num_in_ports = len(self.in_ports)
-        code('    m_in_ports = $num_in_ports;')
         code.indent()
 
         #
         # After initializing the universal machine parameters, initialize the
-        # this machines config parameters.  Also detemine if these configuration
-        # params include a sequencer.  This information will be used later for
-        # contecting the sequencer back to the L1 cache controller.
+        # this machines config parameters.  Also if these configuration params
+        # include a sequencer, connect the it to the controller.
         #
-        contains_dma_sequencer = False
-        sequencers = []
         for param in self.config_parameters:
-            if param.name == "dma_sequencer":
-                contains_dma_sequencer = True
-            elif re.compile("sequencer").search(param.name):
-                sequencers.append(param.name)
             if param.pointer:
                 code('m_${{param.name}}_ptr = p->${{param.name}};')
             else:
                 code('m_${{param.name}} = p->${{param.name}};')
-
-        #
-        # For the l1 cache controller, add the special atomic support which 
-        # includes passing the sequencer a pointer to the controller.
-        #
-        for seq in sequencers:
-            code('''
-m_${{seq}}_ptr->setController(this);
-    ''')
-
-        #
-        # For the DMA controller, pass the sequencer a pointer to the
-        # controller.
-        #
-        if self.ident == "DMA":
-            if not contains_dma_sequencer:
-                self.error("The DMA controller must include the sequencer " \
-                           "configuration parameter")
-
-            code('''
-m_dma_sequencer_ptr->setController(this);
-''')
+            if re.compile("sequencer").search(param.name):
+                code('m_${{param.name}}_ptr->setController(this);')
             
-        code('m_num_controllers++;')
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:
                 code('''
@@ -692,15 +672,10 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 }
 ''')
 
-        has_mandatory_q = False
+        mq_ident = "NULL"
         for port in self.in_ports:
             if port.code.find("mandatoryQueue_ptr") >= 0:
-                has_mandatory_q = True
-
-        if has_mandatory_q:
-            mq_ident = "m_%s_mandatoryQueue_ptr" % self.ident
-        else:
-            mq_ident = "NULL"
+                mq_ident = "m_%s_mandatoryQueue_ptr" % self.ident
 
         seq_ident = "NULL"
         for param in self.config_parameters:
