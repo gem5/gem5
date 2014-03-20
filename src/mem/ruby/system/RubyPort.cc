@@ -46,6 +46,7 @@
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 RubyPort::RubyPort(const Params *p)
@@ -558,7 +559,7 @@ RubyPort::PioMasterPort::recvRangeChange()
 {
     RubyPort &r = static_cast<RubyPort &>(owner);
     r.gotAddrRanges--;
-    if (r.gotAddrRanges == 0) {
+    if (r.gotAddrRanges == 0 && FullSystem) {
         r.pioSlavePort.sendRangeChange();
     }
 }

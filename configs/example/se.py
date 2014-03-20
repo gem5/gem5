@@ -232,9 +232,7 @@ if options.ruby:
     system.physmem = MemClass(range=AddrRange(options.mem_size),
                               null = True)
     options.use_map = True
-
-    system.piobus = NoncoherentBus()
-    Ruby.create_system(options, system, system.piobus)
+    Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
     for i in xrange(np):
