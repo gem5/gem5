@@ -37,6 +37,7 @@
  * Authors: Thomas Grass
  *          Andreas Hansson
  *          Sascha Bischoff
+ *          Neha Agarwal
  */
 
 #include "base/random.hh"
@@ -171,6 +172,94 @@ RandomGen::getNextPacket()
     // create a new request packet
     return getPacket(addr, blocksize,
                      isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+}
+
+PacketPtr
+DramGen::getNextPacket()
+{
+    // if this is the first of the packets in series to be generated,
+    // start counting again
+    if (countNumSeqPkts == 0) {
+        countNumSeqPkts = numSeqPkts;
+
+        // choose if we generate a read or a write here
+        isRead = readPercent != 0 &&
+            (readPercent == 100 ||
+             random_mt.random<uint8_t>(0, 100) < readPercent);
+
+        assert((readPercent == 0 && !isRead) ||
+               (readPercent == 100 && isRead) ||
+               readPercent != 100);
+
+        // start by picking a random address in the range
+        addr = random_mt.random<Addr>(startAddr, endAddr - 1);
+
+        // round down to start address of a block, i.e. a DRAM burst
+        addr -= addr % blocksize;
+
+        // pick a random bank
+        unsigned int new_bank =
+            random_mt.random<unsigned int>(0, nbrOfBanksUtil - 1);
+
+        // next, inser the bank bits at the right spot, and align the
+        // address to achieve the required hit length, this involves
+        // finding the appropriate start address such that all
+        // sequential packets target successive columns in the same
+        // page
+
+        // for example, if we have a stride size of 192B, which means
+        // for LPDDR3 where burstsize = 32B we have numSeqPkts = 6,
+        // the address generated previously can be such that these
+        // 192B cross the page boundary, hence it needs to be aligned
+        // so that they all belong to the same page for page hit
+        unsigned int columns_per_page = pageSize / blocksize;
+
+        // pick a random column, but ensure that there is room for
+        // numSeqPkts sequential columns in the same page
+        unsigned int new_col =
+            random_mt.random<unsigned int>(0, columns_per_page - numSeqPkts);
+
+        if (addrMapping == 1) {
+            // assuming block bits, then page bits, then bank bits
+            replaceBits(addr, blockBits + pageBits + bankBits - 1,
+                        blockBits + pageBits, new_bank);
+            replaceBits(addr, blockBits + pageBits - 1, blockBits, new_col);
+        } else if (addrMapping == 0) {
+            // assuming bank bits in the bottom
+            replaceBits(addr, blockBits + bankBits - 1, blockBits, new_bank);
+            replaceBits(addr, blockBits + bankBits + pageBits - 1,
+                        blockBits + bankBits, new_col);
+        }
+    } else {
+        // increment the column by one
+        if (addrMapping == 1)
+            // column bits in the bottom, so just add a block
+            addr += blocksize;
+        else if (addrMapping == 0) {
+            // column bits are above the bank bits, so increment the column bits
+            unsigned int new_col = ((addr / blocksize / nbrOfBanksDRAM) %
+                                    (pageSize / blocksize)) + 1;
+            replaceBits(addr, blockBits + bankBits + pageBits - 1,
+                        blockBits + bankBits, new_col);
+        }
+    }
+
+    DPRINTF(TrafficGen, "DramGen::getNextPacket: %c to addr %x, "
+            "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
+            isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
+
+    // create a new request packet
+    PacketPtr pkt = getPacket(addr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+
+    // add the amount of data manipulated to the total
+    dataManipulated += blocksize;
+
+    // subtract the number of packets remained to be generated
+    --countNumSeqPkts;
+
+    // return the generated packet
+    return pkt;
 }
 
 Tick

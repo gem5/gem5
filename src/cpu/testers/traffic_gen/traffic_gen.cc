@@ -41,6 +41,7 @@
 
 #include <sstream>
 
+#include "base/intmath.hh"
 #include "base/random.hh"
 #include "cpu/testers/traffic_gen/traffic_gen.hh"
 #include "debug/Checkpoint.hh"
@@ -257,7 +258,8 @@ TrafficGen::parseConfig()
                 } else if (mode == "IDLE") {
                     states[id] = new IdleGen(name(), masterID, duration);
                     DPRINTF(TrafficGen, "State: %d IdleGen\n", id);
-                } else if (mode == "LINEAR" || mode == "RANDOM") {
+                } else if (mode == "LINEAR" || mode == "RANDOM" ||
+                           mode == "DRAM") {
                     uint32_t read_percent;
                     Addr start_addr;
                     Addr end_addr;
@@ -277,7 +279,7 @@ TrafficGen::parseConfig()
 
                     if (blocksize > system->cacheLineSize())
                         fatal("TrafficGen %s block size (%d) is larger than "
-                              "system block size (%d)\n", name(),
+                              "cache line size (%d)\n", name(),
                               blocksize, system->cacheLineSize());
 
                     if (read_percent > 100)
@@ -300,6 +302,54 @@ TrafficGen::parseConfig()
                                                    min_period, max_period,
                                                    read_percent, data_limit);
                         DPRINTF(TrafficGen, "State: %d RandomGen\n", id);
+                    } else if (mode == "DRAM") {
+                        // stride size (bytes) of the request for achieving
+                        // required hit length
+                        unsigned int stride_size;
+                        unsigned int page_size;
+                        unsigned int nbr_of_banks_DRAM;
+                        unsigned int nbr_of_banks_util;
+                        unsigned int addr_mapping;
+
+                        is >> stride_size >> page_size >> nbr_of_banks_DRAM >>
+                            nbr_of_banks_util >> addr_mapping;
+
+                        if (stride_size > page_size)
+                            warn("DRAM generator stride size (%d) is greater "
+                                 "than page size (%d)  of the memory\n",
+                                 blocksize, page_size);
+
+                        if (nbr_of_banks_util > nbr_of_banks_DRAM)
+                            fatal("Attempting to use more banks (%) than "
+                                  "what is available (%)\n",
+                                  nbr_of_banks_util, nbr_of_banks_DRAM);
+
+                        if (nbr_of_banks_util > nbr_of_banks_DRAM)
+                            fatal("Attempting to use more banks (%) than "
+                                  "what is available (%)\n",
+                                  nbr_of_banks_util, nbr_of_banks_DRAM);
+
+                        // count the number of sequential packets to
+                        // generate
+                        unsigned int num_seq_pkts = 1;
+
+                        if (stride_size > blocksize) {
+                            num_seq_pkts = divCeil(stride_size, blocksize);
+                            DPRINTF(TrafficGen, "stride size: %d "
+                                    "block size: %d, num_seq_pkts: %d\n",
+                                    stride_size, blocksize, num_seq_pkts);
+                        }
+
+                        states[id] = new DramGen(name(), masterID,
+                                                 duration, start_addr,
+                                                 end_addr, blocksize,
+                                                 min_period, max_period,
+                                                 read_percent, data_limit,
+                                                 num_seq_pkts, page_size,
+                                                 nbr_of_banks_DRAM,
+                                                 nbr_of_banks_util,
+                                                 addr_mapping);
+                        DPRINTF(TrafficGen, "State: %d DramGen\n", id);
                     }
                 } else {
                     fatal("%s: Unknown traffic generator mode: %s",
