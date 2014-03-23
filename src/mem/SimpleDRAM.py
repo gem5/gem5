@@ -205,6 +205,58 @@ class DDR3_1600_x64(SimpleDRAM):
     activation_limit = 4
 
 
+# A single DDR3 x64 interface (one command and address bus), with
+# default timings based on DDR3-1333 4 Gbit parts in an 8x8
+# configuration, which would amount to 4 GByte of memory.  This
+# configuration is primarily for comparing with DRAMSim2, and all the
+# parameters except ranks_per_channel are based on the DRAMSim2 config
+# file DDR3_micron_32M_8B_x8_sg15.ini. Note that ranks_per_channel has
+# to be manually set, depending on size of the memory to be
+# simulated. By default DRAMSim2 has 2048MB of memory with a single
+# rank. Therefore for 4 GByte memory, set ranks_per_channel = 2
+class DDR3_1333_x64_DRAMSim2(SimpleDRAM):
+    # 8x8 configuration, 8 devices each with an 8-bit interface
+    device_bus_width = 8
+
+    # DDR3 is a BL8 device
+    burst_length = 8
+
+    # Each device has a page (row buffer) size of 1KB
+    # (this depends on the memory density)
+    device_rowbuffer_size = '1kB'
+
+    # 8x8 configuration, so 8 devices
+    devices_per_rank = 8
+
+    # Use two ranks
+    ranks_per_channel = 2
+
+    # DDR3 has 8 banks in all configurations
+    banks_per_rank = 8
+
+    tRCD = '15ns'
+    tCL = '15ns'
+    tRP = '15ns'
+    tRAS = '36ns'
+
+    # 8 beats across an x64 interface translates to 4 clocks @ 666.66 MHz.
+    # Note this is a BL8 DDR device.
+    tBURST = '6ns'
+
+    tRFC = '160ns'
+
+    # DDR3, <=85C, half for >85C
+    tREFI = '7.8us'
+
+    # Greater of 4 CK or 7.5 ns, 4 CK @ 666.66 MHz = 6 ns
+    tWTR = '7.5ns'
+
+    tRRD = '6.0ns'
+
+    tXAW = '30ns'
+    activation_limit = 4
+
+
 # A single LPDDR2-S4 x32 interface (one command/address bus), with
 # default timings based on a LPDDR2-1066 4 Gbit part in a 1x32
 # configuration.
