@@ -80,8 +80,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     maxAccessesPerRow(p->max_accesses_per_row),
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
-    busBusyUntil(0), writeStartTime(0),
-    prevArrival(0), numReqs(0),
+    busBusyUntil(0),  prevArrival(0),
     newTime(0), startTickPrechargeAll(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
@@ -112,22 +111,22 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
 
     if (range.interleaved()) {
         if (channels != range.stripes())
-            panic("%s has %d interleaved address stripes but %d channel(s)\n",
+            fatal("%s has %d interleaved address stripes but %d channel(s)\n",
                   name(), range.stripes(), channels);
 
         if (addrMapping == Enums::RoRaBaChCo) {
             if (rowBufferSize != range.granularity()) {
-                panic("Interleaving of %s doesn't match RoRaBaChCo "
+                fatal("Interleaving of %s doesn't match RoRaBaChCo "
                       "address map\n", name());
             }
         } else if (addrMapping == Enums::RoRaBaCoCh) {
             if (system()->cacheLineSize() != range.granularity()) {
-                panic("Interleaving of %s doesn't match RoRaBaCoCh "
+                fatal("Interleaving of %s doesn't match RoRaBaCoCh "
                       "address map\n", name());
             }
         } else if (addrMapping == Enums::RoCoRaBaCh) {
             if (system()->cacheLineSize() != range.granularity())
-                panic("Interleaving of %s doesn't match RoCoRaBaCh "
+                fatal("Interleaving of %s doesn't match RoCoRaBaCh "
                       "address map\n", name());
         }
     }
@@ -146,6 +145,10 @@ SimpleDRAM::init()
 void
 SimpleDRAM::startup()
 {
+    // update the start tick for the precharge accounting to the
+    // current tick
+    startTickPrechargeAll = curTick();
+
     // print the configuration of the controller
     printParams();
 
@@ -190,7 +193,8 @@ SimpleDRAM::writeQueueFull(unsigned int neededEntries) const
 }
 
 SimpleDRAM::DRAMPacket*
-SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRead)
+SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
+                       bool isRead)
 {
     // decode the address based on the address mapping scheme, with
     // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and
@@ -400,9 +404,6 @@ SimpleDRAM::processWriteEvent()
     DPRINTF(DRAM, "Writing, bus busy for %lld ticks, banks busy "
             "for %lld ticks\n", busBusyUntil - temp1, maxBankFreeAt() - temp2);
 
-    // Update stats
-    avgWrQLen = writeQueue.size();
-
     // If we emptied the write queue, or got below the threshold and
     // are not draining, or we have reads waiting and have done enough
     // writes, then switch to reads. The retry above could already
@@ -444,13 +445,13 @@ SimpleDRAM::triggerWrites()
     // Flag variable to stop any more read scheduling
     stopReads = true;
 
-    writeStartTime = std::max(busBusyUntil, curTick()) + tWTR;
+    Tick write_start_time = std::max(busBusyUntil, curTick()) + tWTR;
 
-    DPRINTF(DRAM, "Writes scheduled at %lld\n", writeStartTime);
+    DPRINTF(DRAM, "Writes scheduled at %lld\n", write_start_time);
 
-    assert(writeStartTime >= curTick());
+    assert(write_start_time >= curTick());
     assert(!writeEvent.scheduled());
-    schedule(writeEvent, writeStartTime);
+    schedule(writeEvent, write_start_time);
 }
 
 void
@@ -573,13 +574,13 @@ SimpleDRAM::printParams() const
             "Memory controller %s physical organization\n"      \
             "Number of devices per rank   %d\n"                 \
             "Device bus width (in bits)   %d\n"                 \
-            "DRAM data bus burst          %d\n"                 \
-            "Row buffer size              %d\n"                 \
+            "DRAM data bus burst (bytes)  %d\n"                 \
+            "Row buffer size (bytes)      %d\n"                 \
             "Columns per row buffer       %d\n"                 \
             "Rows    per bank             %d\n"                 \
             "Banks   per rank             %d\n"                 \
             "Ranks   per channel          %d\n"                 \
-            "Total mem capacity           %u\n",
+            "Total mem capacity (bytes)   %u\n",
             name(), devicesPerRank, deviceBusWidth, burstSize, rowBufferSize,
             columnsPerRowBuffer, rowsPerBank, banksPerRank, ranksPerChannel,
             rowBufferSize * rowsPerBank * banksPerRank * ranksPerChannel);
@@ -646,14 +647,10 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
 
     // simply drop inhibited packets for now
     if (pkt->memInhibitAsserted()) {
-        DPRINTF(DRAM,"Inhibited packet -- Dropping it now\n");
+        DPRINTF(DRAM, "Inhibited packet -- Dropping it now\n");
         pendingDelete.push_back(pkt);
         return true;
     }
-
-   // Every million accesses, print the state of the queues
-   if (numReqs % 1000000 == 0)
-       printQs();
 
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -682,7 +679,6 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
         } else {
             addToReadQueue(pkt, dram_pkt_count);
             readReqs++;
-            numReqs++;
             bytesReadSys += size;
         }
     } else if (pkt->isWrite()) {
@@ -696,7 +692,6 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
         } else {
             addToWriteQueue(pkt, dram_pkt_count);
             writeReqs++;
-            numReqs++;
             bytesWrittenSys += size;
         }
     } else {
@@ -705,8 +700,6 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
         accessAndRespond(pkt, 1);
     }
 
-    retryRdReq = false;
-    retryWrReq = false;
     return true;
 }
 
@@ -722,7 +715,7 @@ SimpleDRAM::processRespondEvent()
         // it is a split packet
         dram_pkt->burstHelper->burstsServiced++;
         if (dram_pkt->burstHelper->burstsServiced ==
-                                  dram_pkt->burstHelper->burstCount) {
+            dram_pkt->burstHelper->burstCount) {
             // we have now serviced all children packets of a system packet
             // so we can now respond to the requester
             // @todo we probably want to have a different front end and back
@@ -738,9 +731,6 @@ SimpleDRAM::processRespondEvent()
 
     delete respQueue.front();
     respQueue.pop_front();
-
-    // Update stats
-    avgRdQLen = readQueue.size() + respQueue.size();
 
     if (!respQueue.empty()) {
         assert(respQueue.front()->readyTime >= curTick());
@@ -1223,7 +1213,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     moveToRespQ();
 
     // Schedule the next read event
-    if (!nextReqEvent.scheduled() && !stopReads){
+    if (!nextReqEvent.scheduled() && !stopReads) {
         schedule(nextReqEvent, newTime);
     } else {
         if (newTime < nextReqEvent.when())

@@ -353,7 +353,8 @@ class SimpleDRAM : public AbstractMemory
      * @param isRead Is the request for a read or a write to DRAM
      * @return A DRAMPacket pointer with the decoded information
      */
-    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size, bool isRead);
+    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size,
+                           bool isRead);
 
     /**
      * The memory schduler/arbiter - picks which read request needs to
@@ -430,6 +431,10 @@ class SimpleDRAM : public AbstractMemory
     void recordActivate(Tick act_tick, uint8_t rank, uint8_t bank);
 
     void printParams() const;
+
+    /**
+     * Used for debugging to observe the contents of the queues.
+     */
     void printQs() const;
 
     /**
@@ -533,9 +538,7 @@ class SimpleDRAM : public AbstractMemory
      */
     Tick busBusyUntil;
 
-    Tick writeStartTime;
     Tick prevArrival;
-    int numReqs;
 
     // The absolute soonest you have to start thinking about the
     // next request is the longest access time that can occur before
