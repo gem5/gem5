@@ -37,13 +37,17 @@
 #          Andreas Hansson
 
 from m5.params import *
+from m5.proxy import *
 from MemObject import MemObject
+from System import System
 
 # The communication monitor will most typically be used in combination
 # with periodic dumping and resetting of stats using schedStatEvent
 class CommMonitor(MemObject):
     type = 'CommMonitor'
     cxx_header = "mem/comm_monitor.hh"
+
+    system = Param.System(Parent.any, "System that the monitor belongs to.")
 
     # one port in each direction
     master = MasterPort("Master port")

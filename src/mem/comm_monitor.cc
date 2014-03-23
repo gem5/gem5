@@ -55,7 +55,8 @@ CommMonitor::CommMonitor(Params* params)
       readAddrMask(params->read_addr_mask),
       writeAddrMask(params->write_addr_mask),
       stats(params),
-      traceStream(NULL)
+      traceStream(NULL),
+      system(params->system)
 {
     // If we are using a trace file, then open the file,
     if (params->trace_file != "") {
@@ -106,6 +107,13 @@ CommMonitor::init()
     // make sure both sides of the monitor are connected
     if (!slavePort.isConnected() || !masterPort.isConnected())
         fatal("Communication monitor is not connected on both sides.\n");
+
+    if (traceStream != NULL) {
+        // Check the memory mode. We only record something when in
+        // timing mode. Warn accordingly.
+        if (!system->isTimingMode())
+            warn("%s: Not in timing mode. No trace will be recorded.", name());
+    }
 }
 
 BaseMasterPort&

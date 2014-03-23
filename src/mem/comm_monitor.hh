@@ -46,6 +46,7 @@
 #include "mem/mem_object.hh"
 #include "params/CommMonitor.hh"
 #include "proto/protoio.hh"
+#include "sim/system.hh"
 
 /**
  * The communication monitor is a MemObject which can monitor statistics of
@@ -418,6 +419,9 @@ class CommMonitor : public MemObject
 
     /** Output stream for a potential trace. */
     ProtoOutputStream* traceStream;
+
+    /** The system in which the monitor lives */
+    System *system;
 };
 
 #endif //__MEM_COMM_MONITOR_HH__
