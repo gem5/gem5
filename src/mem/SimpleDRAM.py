@@ -46,12 +46,13 @@ from AbstractMemory import *
 # First-Served and a First-Row Hit then First-Come First-Served
 class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 
-# Enum for the address mapping. With Ra, Co, Ba and Ch denoting rank,
-# column, bank and channel, respectively, and going from MSB to LSB.
-# Available are RaBaChCo and RaBaCoCh, that are suitable for an
-# open-page policy, optimising for sequential accesses hitting in the
-# open row. For a closed-page policy, CoRaBaCh maximises parallelism.
-class AddrMap(Enum): vals = ['RaBaChCo', 'RaBaCoCh', 'CoRaBaCh']
+# Enum for the address mapping. With Ch, Ra, Ba, Ro and Co denoting
+# channel, rank, bank, row and column, respectively, and going from
+# MSB to LSB.  Available are RoRaBaChCo and RoRaBaCoCh, that are
+# suitable for an open-page policy, optimising for sequential accesses
+# hitting in the open row. For a closed-page policy, RoCoRaBaCh
+# maximises parallelism.
+class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
 
 # Enum for the page policy, either open, open_adaptive or close.
 class PageManage(Enum): vals = ['open', 'open_adaptive', 'close']
@@ -84,7 +85,7 @@ class SimpleDRAM(AbstractMemory):
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
-    addr_mapping = Param.AddrMap('RaBaChCo', "Address mapping policy")
+    addr_mapping = Param.AddrMap('RoRaBaChCo', "Address mapping policy")
     page_policy = Param.PageManage('open', "Page closure management policy")
 
     # pipeline latency of the controller and PHY, split into a

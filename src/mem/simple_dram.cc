@@ -128,20 +128,20 @@ SimpleDRAM::init()
             panic("%s has %d interleaved address stripes but %d channel(s)\n",
                   name(), range.stripes(), channels);
 
-        if (addrMapping == Enums::RaBaChCo) {
+        if (addrMapping == Enums::RoRaBaChCo) {
             if (rowBufferSize != range.granularity()) {
-                panic("Interleaving of %s doesn't match RaBaChCo address map\n",
-                      name());
+                panic("Interleaving of %s doesn't match RoRaBaChCo "
+                      "address map\n", name());
             }
-        } else if (addrMapping == Enums::RaBaCoCh) {
-            if (burstSize != range.granularity()) {
-                panic("Interleaving of %s doesn't match RaBaCoCh address map\n",
-                      name());
+        } else if (addrMapping == Enums::RoRaBaCoCh) {
+            if (system()->cacheLineSize() != range.granularity()) {
+                panic("Interleaving of %s doesn't match RoRaBaCoCh "
+                      "address map\n", name());
             }
-        } else if (addrMapping == Enums::CoRaBaCh) {
-            if (burstSize != range.granularity())
-                panic("Interleaving of %s doesn't match CoRaBaCh address map\n",
-                      name());
+        } else if (addrMapping == Enums::RoCoRaBaCh) {
+            if (system()->cacheLineSize() != range.granularity())
+                panic("Interleaving of %s doesn't match RoCoRaBaCh "
+                      "address map\n", name());
         }
     }
 }
@@ -196,8 +196,8 @@ SimpleDRAM::DRAMPacket*
 SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRead)
 {
     // decode the address based on the address mapping scheme, with
-    // Ra, Co, Ba and Ch denoting rank, column, bank and channel,
-    // respectively
+    // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and
+    // channel, respectively
     uint8_t rank;
     uint8_t bank;
     uint16_t row;
@@ -207,7 +207,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRe
 
     // we have removed the lowest order address bits that denote the
     // position within the column
-    if (addrMapping == Enums::RaBaChCo) {
+    if (addrMapping == Enums::RoRaBaChCo) {
         // the lowest order bits denote the column to ensure that
         // sequential cache lines occupy the same row
         addr = addr / columnsPerRowBuffer;
@@ -228,7 +228,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRe
         // lastly, get the row bits
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
-    } else if (addrMapping == Enums::RaBaCoCh) {
+    } else if (addrMapping == Enums::RoRaBaCoCh) {
         // take out the channel part of the address
         addr = addr / channels;
 
@@ -248,7 +248,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size, bool isRe
         // lastly, get the row bits
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
-    } else if (addrMapping == Enums::CoRaBaCh) {
+    } else if (addrMapping == Enums::RoCoRaBaCh) {
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
 
@@ -591,8 +591,8 @@ SimpleDRAM::printParams() const
             rowBufferSize * rowsPerBank * banksPerRank * ranksPerChannel);
 
     string scheduler =  memSchedPolicy == Enums::fcfs ? "FCFS" : "FR-FCFS";
-    string address_mapping = addrMapping == Enums::RaBaChCo ? "RaBaChCo" :
-        (addrMapping == Enums::RaBaCoCh ? "RaBaCoCh" : "CoRaBaCh");
+    string address_mapping = addrMapping == Enums::RoRaBaChCo ? "RoRaBaChCo" :
+        (addrMapping == Enums::RoRaBaCoCh ? "RoRaBaCoCh" : "RoCoRaBaCh");
     string page_policy = pageMgmt == Enums::open ? "OPEN" :
         (pageMgmt == Enums::open_adaptive ? "OPEN (adaptive)" : "CLOSE");
 

@@ -168,7 +168,7 @@ def config_mem(options, system):
                 # If the channel bits are appearing after the column
                 # bits, we need to add the appropriate number of bits
                 # for the row buffer size
-                if ctrl.addr_mapping.value == 'RaBaChCo':
+                if ctrl.addr_mapping.value == 'RoRaBaChCo':
                     # This computation only really needs to happen
                     # once, but as we rely on having an instance we
                     # end up having to repeat it for each and every
