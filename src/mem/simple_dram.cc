@@ -589,7 +589,8 @@ SimpleDRAM::printParams() const
     string address_mapping = addrMapping == Enums::RoRaBaChCo ? "RoRaBaChCo" :
         (addrMapping == Enums::RoRaBaCoCh ? "RoRaBaCoCh" : "RoCoRaBaCh");
     string page_policy = pageMgmt == Enums::open ? "OPEN" :
-        (pageMgmt == Enums::open_adaptive ? "OPEN (adaptive)" : "CLOSE");
+        (pageMgmt == Enums::open_adaptive ? "OPEN (adaptive)" :
+        (pageMgmt == Enums::close_adaptive ? "CLOSE (adaptive)" : "CLOSE"));
 
     DPRINTF(DRAM,
             "Memory controller %s characteristics\n"    \
@@ -892,8 +893,9 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick potentialActTick;
 
     const Bank& bank = dram_pkt->bankRef;
-     // open-page policy
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
+     // open-page policy or close_adaptive policy
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
+        pageMgmt == Enums::close_adaptive) {
         if (bank.openRow == dram_pkt->row) {
             // When we have a row-buffer hit,
             // we don't care about tRAS having expired or not,
@@ -986,7 +988,8 @@ SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
     // No need to update number of active banks for closed-page policy as only 1
     // bank will be activated at any given point, which will be instatntly
     // precharged
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive)
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
+        pageMgmt == Enums::close_adaptive)
         ++numBanksActive;
 
     // start by enforcing tRRD
@@ -1055,7 +1058,8 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     Bank& bank = dram_pkt->bankRef;
 
     // Update bank state
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
+    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
+        pageMgmt == Enums::close_adaptive) {
         bank.freeAt = curTick() + addDelay + accessLat;
 
         // If you activated a new row do to this access, the next access
@@ -1091,10 +1095,17 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 
         // if we did not hit the limit, we might still want to
         // auto-precharge
-        if (!auto_precharge && pageMgmt == Enums::open_adaptive) {
-            // a twist on the open page policy is to not blindly keep the
+        if (!auto_precharge &&
+            (pageMgmt == Enums::open_adaptive ||
+             pageMgmt == Enums::close_adaptive)) {
+            // a twist on the open and close page policies:
+            // 1) open_adaptive page policy does not blindly keep the
             // page open, but close it if there are no row hits, and there
             // are bank conflicts in the queue
+            // 2) close_adaptive page policy does not blindly close the
+            // page, but closes it only if there are no row hits in the queue.
+            // In this case, only force an auto precharge when there
+            // are no same page hits in the queue
             bool got_more_hits = false;
             bool got_bank_conflict = false;
 
@@ -1106,9 +1117,10 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             // currently dealing with (which is the head of the queue)
             ++p;
 
-            // keep on looking until we have found both or reached
-            // the end
-            while (!(got_more_hits && got_bank_conflict) &&
+            // keep on looking until we have found required condition or
+            // reached the end
+            while (!(got_more_hits &&
+                    (got_bank_conflict || pageMgmt == Enums::close_adaptive)) &&
                    p != queue.end()) {
                 bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
                     (dram_pkt->bank == (*p)->bank);
@@ -1118,9 +1130,12 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
                 ++p;
             }
 
-            // auto pre-charge if we have not got any more hits, and
-            // have a bank conflict
-            auto_precharge = !got_more_hits && got_bank_conflict;
+            // auto pre-charge when either
+            // 1) open_adaptive policy, we have not got any more hits, and
+            //    have a bank conflict
+            // 2) close_adaptive policy and we have not got any more hits
+            auto_precharge = !got_more_hits &&
+                (got_bank_conflict || pageMgmt == Enums::close_adaptive);
         }
 
         // if this access should use auto-precharge, then we are

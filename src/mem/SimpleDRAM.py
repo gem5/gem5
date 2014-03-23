@@ -54,8 +54,10 @@ class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 # maximises parallelism.
 class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
 
-# Enum for the page policy, either open, open_adaptive or close.
-class PageManage(Enum): vals = ['open', 'open_adaptive', 'close']
+# Enum for the page policy, either open, open_adaptive, close, or
+# close_adaptive.
+class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
+                                'close_adaptive']
 
 # SimpleDRAM is a single-channel single-ported DRAM controller model
 # that aims to model the most important system-level performance
