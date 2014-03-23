@@ -72,7 +72,7 @@ class SimpleDRAM(AbstractMemory):
     port = SlavePort("Slave port")
 
     # the basic configuration of the controller architecture
-    write_buffer_size = Param.Unsigned(32, "Number of write queue entries")
+    write_buffer_size = Param.Unsigned(64, "Number of write queue entries")
     read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
 
     # threshold in percent for when to forcefully trigger writes and
@@ -90,7 +90,7 @@ class SimpleDRAM(AbstractMemory):
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
     addr_mapping = Param.AddrMap('RoRaBaChCo', "Address mapping policy")
-    page_policy = Param.PageManage('open', "Page closure management policy")
+    page_policy = Param.PageManage('open_adaptive', "Page management policy")
 
     # enforce a limit on the number of accesses per row
     max_accesses_per_row = Param.Unsigned(16, "Max accesses per row before "
