@@ -403,10 +403,10 @@ let {{
     '''
 
     m5readfileCode64 = '''
-    int n = 4;
+    int n = 2;
     uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
-    n = 6;
-    X0 = PseudoInst::readfile(xc->tcBase(), (uint32_t)X0, X1, offset);
+    n = 3;
+    X0 = PseudoInst::readfile(xc->tcBase(), X0, X1, offset);
     '''
 
     m5readfileIop = InstObjParams("m5readfile", "M5readfile", "PredOp",
@@ -435,11 +435,11 @@ let {{
     '''
 
     m5writefileCode64 = '''
-    int n = 4;
+    int n = 2;
     uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
-    n = 6;
+    n = 3;
     Addr filenameAddr = getArgument(xc->tcBase(), n, sizeof(Addr), false);
-    X0 = PseudoInst::writefile(xc->tcBase(), (uint32_t)X0, X1, offset,
+    X0 = PseudoInst::writefile(xc->tcBase(), X0, X1, offset,
                                 filenameAddr);
     '''
 
@@ -479,7 +479,7 @@ let {{
     PseudoInst::addsymbol(xc->tcBase(), join32to64(R1, R0), R2);
     '''
     m5addsymbolCode64 = '''
-    PseudoInst::addsymbol(xc->tcBase(), X0, (uint32_t)X1);
+    PseudoInst::addsymbol(xc->tcBase(), X0, X1);
     '''
     m5addsymbolIop = InstObjParams("m5addsymbol", "M5addsymbol", "PredOp",
                            { "code": m5addsymbolCode,
