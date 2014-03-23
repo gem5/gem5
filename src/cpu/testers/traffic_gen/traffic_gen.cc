@@ -221,6 +221,8 @@ TrafficGen::parseConfig()
               name(), configFile);
     }
 
+    bool init_state_set = false;
+
     // read line by line and determine the action based on the first
     // keyword
     string keyword;
@@ -316,10 +318,16 @@ TrafficGen::parseConfig()
                 // set the initial state as the active state
                 is >> currState;
 
+                init_state_set = true;
+
                 DPRINTF(TrafficGen, "Initial state: %d\n", currState);
             }
         }
     }
+
+    if (!init_state_set)
+        fatal("%s: initial state not specified (add 'INIT <id>' line "
+              "to the config file)\n", name());
 
     // resize and populate state transition matrix
     transitionMatrix.resize(states.size());
