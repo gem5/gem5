@@ -75,11 +75,15 @@ DRAMFile('Transaction.cpp')
 dramenv = main.Clone()
 dramenv.Append(CCFLAGS=['-Wno-unused-value'])
 
+# If we are using clang, there are more flags to disable
+if main['CLANG']:
+    dramenv.Append(CCFLAGS=['-Wno-unused-private-field'])
+
 # Tell DRAMSim2 to not store any data as this is already covered by
 # the wrapper
 dramenv.Append(CCFLAGS=['-DNO_STORAGE'])
 
-dramenv.Library('dramsim2', [main.SharedObject(f) for f in dram_files])
+dramenv.Library('dramsim2', [dramenv.SharedObject(f) for f in dram_files])
 
 main.Prepend(CPPPATH=Dir('.'))
 main.Append(LIBS=['dramsim2'])
