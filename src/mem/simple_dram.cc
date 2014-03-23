@@ -1066,7 +1066,6 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 
     // Update bank state
     if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
-        bank.openRow = dram_pkt->row;
         bank.freeAt = curTick() + addDelay + accessLat;
 
         // If you activated a new row do to this access, the next access
@@ -1077,9 +1076,18 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             bank.tRASDoneAt = actTick + tRAS;
             recordActivate(actTick, dram_pkt->rank, dram_pkt->bank);
 
-            // sample the number of bytes accessed and reset it as
-            // we are now closing this row
-            bytesPerActivate.sample(bank.bytesAccessed);
+            // if we closed an open row as a result of this access,
+            // then sample the number of bytes accessed before
+            // resetting it
+            if (bank.openRow != -1)
+                bytesPerActivate.sample(bank.bytesAccessed);
+
+            // update the open row
+            bank.openRow = dram_pkt->row;
+
+            // start counting anew, this covers both the case when we
+            // auto-precharged, and when this access is forced to
+            // precharge
             bank.bytesAccessed = 0;
             bank.rowAccesses = 0;
         }
@@ -1137,6 +1145,11 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
                 DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
                         startTickPrechargeAll);
             }
+
+            // sample the bytes per activate here since we are closing
+            // the page
+            bytesPerActivate.sample(bank.bytesAccessed);
+
             DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
         }
 
