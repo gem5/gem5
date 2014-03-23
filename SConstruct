@@ -1057,7 +1057,7 @@ Export('slicc_includes')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
-if not GetOption('verbose'):
+if GetOption('verbose'):
     print "Reading SConsopts"
 for bdir in [ base_dir ] + extras_dir_list:
     if not isdir(bdir):
@@ -1194,7 +1194,8 @@ Export('make_switching_dir')
 ###################################################
 
 for variant_path in variant_paths:
-    print "Building in", variant_path
+    if not GetOption('silent'):
+        print "Building in", variant_path
 
     # Make a copy of the build-root environment to use for this config.
     env = main.Clone()
@@ -1212,7 +1213,8 @@ for variant_path in variant_paths:
     current_vars_file = joinpath(build_root, 'variables', variant_dir)
     if isfile(current_vars_file):
         sticky_vars.files.append(current_vars_file)
-        print "Using saved variables file %s" % current_vars_file
+        if not GetOption('silent'):
+            print "Using saved variables file %s" % current_vars_file
     else:
         # Build dir-specific variables file doesn't exist.
 
