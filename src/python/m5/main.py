@@ -282,7 +282,7 @@ def main(*args):
         options.usage(2)
 
     verbose = options.verbose - options.quiet
-    if options.verbose >= 0:
+    if verbose >= 0:
         print "gem5 Simulator System.  http://gem5.org"
         print brief_copyright
         print
