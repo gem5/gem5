@@ -48,6 +48,7 @@
 # r,128,64,4000,0
 # w,232123,64,500000,0
 
+import gzip
 import protolib
 import sys
 
@@ -81,7 +82,18 @@ def main():
         exit(-1)
 
     try:
-       proto_in = open(sys.argv[1], 'rb')
+        # First see if this file is gzipped
+        try:
+            # Opening the file works even if it is not a gzip file
+            proto_in = gzip.open(sys.argv[1], 'rb')
+
+            # Force a check of the magic number by seeking in the
+            # file. If we do not do it here the error will occur when
+            # reading the first message.
+            proto_in.seek(1)
+            proto_in.seek(0)
+        except IOError:
+            proto_in = open(sys.argv[1], 'rb')
     except IOError:
         print "Failed to open ", sys.argv[1], " for reading"
         exit(-1)
@@ -96,7 +108,7 @@ def main():
     magic_number = proto_in.read(4)
 
     if magic_number != "gem5":
-        print "Unrecognized file"
+        print "Unrecognized file", sys.argv[1]
         exit(-1)
 
     print "Parsing packet header"
