@@ -63,12 +63,14 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     devicesPerRank(p->devices_per_rank),
     burstSize((devicesPerRank * burstLength * deviceBusWidth) / 8),
     rowBufferSize(devicesPerRank * deviceRowBufferSize),
+    columnsPerRowBuffer(rowBufferSize / burstSize),
     ranksPerChannel(p->ranks_per_channel),
     banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size),
-    writeHighThresholdPerc(p->write_high_thresh_perc),
-    writeLowThresholdPerc(p->write_low_thresh_perc),
+    writeHighThreshold(writeBufferSize * p->write_high_thresh_perc / 100.0),
+    writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
+    minWritesPerSwitch(p->min_writes_per_switch), writesThisTime(0),
     tWTR(p->tWTR), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
@@ -79,8 +81,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), writeStartTime(0),
     prevArrival(0), numReqs(0),
-    numWritesThisTime(0), newTime(0),
-    startTickPrechargeAll(0), numBanksActive(0)
+    newTime(0), startTickPrechargeAll(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -91,32 +92,17 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
         actTicks[c].resize(activationLimit, 0);
     }
 
-    // round the write thresholds percent to a whole number of entries
-    // in the buffer.
-    writeHighThreshold = writeBufferSize * writeHighThresholdPerc / 100.0;
-    writeLowThreshold = writeBufferSize * writeLowThresholdPerc / 100.0;
-}
-
-void
-SimpleDRAM::init()
-{
-    if (!port.isConnected()) {
-        fatal("SimpleDRAM %s is unconnected!\n", name());
-    } else {
-        port.sendRangeChange();
-    }
-
-    // we could deal with plenty options here, but for now do a quick
-    // sanity check
-    DPRINTF(DRAM, "Burst size %d bytes\n", burstSize);
+    // perform a basic check of the write thresholds
+    if (p->write_low_thresh_perc >= p->write_high_thresh_perc)
+        fatal("Write buffer low threshold %d must be smaller than the "
+              "high threshold %d\n", p->write_low_thresh_perc,
+              p->write_high_thresh_perc);
 
     // determine the rows per bank by looking at the total capacity
     uint64_t capacity = ULL(1) << ceilLog2(AbstractMemory::size());
 
     DPRINTF(DRAM, "Memory capacity %lld (%lld) bytes\n", capacity,
             AbstractMemory::size());
-
-    columnsPerRowBuffer = rowBufferSize / burstSize;
 
     DPRINTF(DRAM, "Row buffer size %d bytes with %d columns per row buffer\n",
             rowBufferSize, columnsPerRowBuffer);
@@ -143,6 +129,16 @@ SimpleDRAM::init()
                 panic("Interleaving of %s doesn't match RoCoRaBaCh "
                       "address map\n", name());
         }
+    }
+}
+
+void
+SimpleDRAM::init()
+{
+    if (!port.isConnected()) {
+        fatal("SimpleDRAM %s is unconnected!\n", name());
+    } else {
+        port.sendRangeChange();
     }
 }
 
@@ -397,29 +393,26 @@ SimpleDRAM::processWriteEvent()
 
     writeQueue.pop_front();
     delete dram_pkt;
-    numWritesThisTime++;
 
-    DPRINTF(DRAM, "Completed %d writes, bus busy for %lld ticks,"\
-            "banks busy for %lld ticks\n", numWritesThisTime,
-            busBusyUntil - temp1, maxBankFreeAt() - temp2);
+    ++writesThisTime;
+
+    DPRINTF(DRAM, "Writing, bus busy for %lld ticks, banks busy "
+            "for %lld ticks\n", busBusyUntil - temp1, maxBankFreeAt() - temp2);
 
     // Update stats
     avgWrQLen = writeQueue.size();
 
-    if (numWritesThisTime >= writeHighThreshold) {
-        DPRINTF(DRAM, "Hit write threshold %d\n", writeHighThreshold);
-    }
-
-    // If number of writes in the queue fall below the low thresholds and
-    // read queue is not empty then schedule a request event else continue
-    // with writes. The retry above could already have caused it to be
-    // scheduled, so first check
-    if (((writeQueue.size() <= writeLowThreshold) && !readQueue.empty()) ||
-        writeQueue.empty()) {
-        numWritesThisTime = 0;
+    // If we emptied the write queue, or got below the threshold and
+    // are not draining, or we have reads waiting and have done enough
+    // writes, then switch to reads. The retry above could already
+    // have caused it to be scheduled, so first check
+    if (writeQueue.empty() ||
+        (writeQueue.size() < writeLowThreshold && !drainManager) ||
+        (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
         // turn the bus back around for reads again
         busBusyUntil += tWTR;
         stopReads = false;
+        writesThisTime = 0;
 
         if (!nextReqEvent.scheduled())
             schedule(nextReqEvent, busBusyUntil);
@@ -600,12 +593,13 @@ SimpleDRAM::printParams() const
             "Memory controller %s characteristics\n"    \
             "Read buffer size     %d\n"                 \
             "Write buffer size    %d\n"                 \
-            "Write buffer thresh  %d\n"                 \
+            "Write high thresh    %d\n"                 \
+            "Write low thresh     %d\n"                 \
             "Scheduler            %s\n"                 \
             "Address mapping      %s\n"                 \
             "Page policy          %s\n",
             name(), readBufferSize, writeBufferSize, writeHighThreshold,
-            scheduler, address_mapping, page_policy);
+            writeLowThreshold, scheduler, address_mapping, page_policy);
 
     DPRINTF(DRAM, "Memory controller %s timing specs\n" \
             "tRCD      %d ticks\n"                        \
@@ -1258,11 +1252,11 @@ SimpleDRAM::scheduleNextReq()
     // Figure out which read request goes next, and move it to the
     // front of the read queue
     if (!chooseNextRead()) {
-        // In the case there is no read request to go next, see if we
-        // are asked to drain, and if so trigger writes, this also
-        // ensures that if we hit the write limit we will do this
-        // multiple times until we are completely drained
-        if (drainManager && !writeQueue.empty() && !writeEvent.scheduled())
+        // In the case there is no read request to go next, trigger
+        // writes if we have passed the low threshold (or if we are
+        // draining)
+        if (!writeQueue.empty() && !writeEvent.scheduled() &&
+            (writeQueue.size() > writeLowThreshold || drainManager))
             triggerWrites();
     } else {
         doDRAMAccess(readQueue.front());

@@ -471,17 +471,17 @@ class SimpleDRAM : public AbstractMemory
     const uint32_t devicesPerRank;
     const uint32_t burstSize;
     const uint32_t rowBufferSize;
+    const uint32_t columnsPerRowBuffer;
     const uint32_t ranksPerChannel;
     const uint32_t banksPerRank;
     const uint32_t channels;
     uint32_t rowsPerBank;
-    uint32_t columnsPerRowBuffer;
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
-    const double writeHighThresholdPerc;
-    uint32_t writeHighThreshold;
-    const double writeLowThresholdPerc;
-    uint32_t writeLowThreshold;
+    const uint32_t writeHighThreshold;
+    const uint32_t writeLowThreshold;
+    const uint32_t minWritesPerSwitch;
+    uint32_t writesThisTime;
 
     /**
      * Basic memory timing parameters initialized based on parameter
@@ -529,9 +529,6 @@ class SimpleDRAM : public AbstractMemory
     Tick writeStartTime;
     Tick prevArrival;
     int numReqs;
-
-    // Tracks number of writes done to meet the write threshold
-    uint32_t numWritesThisTime;
 
     // The absolute soonest you have to start thinking about the
     // next request is the longest access time that can occur before

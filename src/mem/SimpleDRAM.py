@@ -73,15 +73,17 @@ class SimpleDRAM(AbstractMemory):
     write_buffer_size = Param.Unsigned(32, "Number of write queue entries")
     read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
 
-    # threshold in percent for when to trigger writes and start
-    # emptying the write buffer as it starts to get full
-    write_high_thresh_perc = Param.Percent(70, "Threshold to trigger writes")
+    # threshold in percent for when to forcefully trigger writes and
+    # start emptying the write buffer
+    write_high_thresh_perc = Param.Percent(85, "Threshold to force writes")
 
-    # threshold in percentage for when to stop writes if the read
-    # queue has an entry. An optimisaton to give reads priority if
-    # sufficient number of writes are scheduled and write queue has
-    # sufficient number of free entries
-    write_low_thresh_perc = Param.Percent(0, "Threshold to stop writes")
+    # threshold in percentage for when to start writes if the read
+    # queue is empty
+    write_low_thresh_perc = Param.Percent(50, "Threshold to start writes")
+
+    # minimum write bursts to schedule before switching back to reads
+    min_writes_per_switch = Param.Unsigned(16, "Minimum write bursts before "
+                                           "switching to reads")
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
