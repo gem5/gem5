@@ -77,6 +77,7 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
+    maxAccessesPerRow(p->max_accesses_per_row),
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), writeStartTime(0),
@@ -1067,7 +1068,6 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
     if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive) {
         bank.openRow = dram_pkt->row;
         bank.freeAt = curTick() + addDelay + accessLat;
-        bank.bytesAccessed += burstSize;
 
         // If you activated a new row do to this access, the next access
         // will have to respect tRAS for this bank.
@@ -1081,9 +1081,19 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
             // we are now closing this row
             bytesPerActivate.sample(bank.bytesAccessed);
             bank.bytesAccessed = 0;
+            bank.rowAccesses = 0;
         }
 
-        if (pageMgmt == Enums::open_adaptive) {
+        // increment the bytes accessed and the accesses per row
+        bank.bytesAccessed += burstSize;
+        ++bank.rowAccesses;
+
+        // if we reached the max, then issue with an auto-precharge
+        bool auto_precharge = bank.rowAccesses == maxAccessesPerRow;
+
+        // if we did not hit the limit, we might still want to
+        // auto-precharge
+        if (!auto_precharge && pageMgmt == Enums::open_adaptive) {
             // a twist on the open page policy is to not blindly keep the
             // page open, but close it if there are no row hits, and there
             // are bank conflicts in the queue
@@ -1110,19 +1120,24 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
                 ++p;
             }
 
-            // auto pre-charge
-            if (!got_more_hits && got_bank_conflict) {
-                bank.openRow = -1;
-                bank.freeAt = std::max(bank.freeAt, bank.tRASDoneAt) + tRP;
-                --numBanksActive;
-                if (numBanksActive == 0) {
-                    startTickPrechargeAll = std::max(startTickPrechargeAll,
-                                                     bank.freeAt);
-                    DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
-                            startTickPrechargeAll);
-                }
-                DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
+            // auto pre-charge if we have not got any more hits, and
+            // have a bank conflict
+            auto_precharge = !got_more_hits && got_bank_conflict;
+        }
+
+        // if this access should use auto-precharge, then we are
+        // closing the row
+        if (auto_precharge) {
+            bank.openRow = -1;
+            bank.freeAt = std::max(bank.freeAt, bank.tRASDoneAt) + tRP;
+            --numBanksActive;
+            if (numBanksActive == 0) {
+                startTickPrechargeAll = std::max(startTickPrechargeAll,
+                                                 bank.freeAt);
+                DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
+                        startTickPrechargeAll);
             }
+            DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
         }
 
         DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
@@ -1480,7 +1495,7 @@ SimpleDRAM::regStats()
         .desc("What write queue length does an incoming req see");
 
      bytesPerActivate
-         .init(rowBufferSize)
+         .init(maxAccessesPerRow)
          .name(name() + ".bytesPerActivate")
          .desc("Bytes accessed per row activation")
          .flags(nozero);

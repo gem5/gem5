@@ -90,6 +90,10 @@ class SimpleDRAM(AbstractMemory):
     addr_mapping = Param.AddrMap('RoRaBaChCo', "Address mapping policy")
     page_policy = Param.PageManage('open', "Page closure management policy")
 
+    # enforce a limit on the number of accesses per row
+    max_accesses_per_row = Param.Unsigned(16, "Max accesses per row before "
+                                          "closing");
+
     # pipeline latency of the controller and PHY, split into a
     # frontend part and a backend part, with reads and writes serviced
     # by the queues only seeing the frontend contribution, and reads

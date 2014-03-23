@@ -155,11 +155,12 @@ class SimpleDRAM : public AbstractMemory
         Tick tRASDoneAt;
         Tick actAllowedAt;
 
+        uint32_t rowAccesses;
         uint32_t bytesAccessed;
 
         Bank() :
             openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0), actAllowedAt(0),
-            bytesAccessed(0)
+            rowAccesses(0), bytesAccessed(0)
         { }
     };
 
@@ -506,6 +507,12 @@ class SimpleDRAM : public AbstractMemory
     Enums::MemSched memSchedPolicy;
     Enums::AddrMap addrMapping;
     Enums::PageManage pageMgmt;
+
+    /**
+     * Max column accesses (read and write) per row, before forefully
+     * closing it.
+     */
+    const uint32_t maxAccessesPerRow;
 
     /**
      * Pipeline latency of the controller frontend. The frontend
