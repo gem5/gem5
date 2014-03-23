@@ -87,25 +87,3 @@ DebugFlag('MemoryAccess')
 DebugFlag('PacketQueue')
 
 DebugFlag("DRAMSim2")
-
-DebugFlag('ProtocolTrace')
-DebugFlag('RubyCache')
-DebugFlag('RubyCacheTrace')
-DebugFlag('RubyDma')
-DebugFlag('RubyGenerated')
-DebugFlag('RubyMemory')
-DebugFlag('RubyNetwork')
-DebugFlag('RubyPort')
-DebugFlag('RubyPrefetcher')
-DebugFlag('RubyQueue')
-DebugFlag('RubySequencer')
-DebugFlag('RubySlicc')
-DebugFlag('RubySystem')
-DebugFlag('RubyTester')
-DebugFlag('RubyStats')
-DebugFlag('RubyResourceStalls')
-
-CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
-    'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
-    'RubyMemory', 'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
-    'RubyPrefetcher'])
