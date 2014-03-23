@@ -42,16 +42,16 @@
  *          Neha Agarwal
  */
 
-#include "base/trace.hh"
 #include "base/bitfield.hh"
-#include "debug/Drain.hh"
+#include "base/trace.hh"
 #include "debug/DRAM.hh"
-#include "mem/simple_dram.hh"
+#include "debug/Drain.hh"
+#include "mem/dram_ctrl.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
+DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
@@ -133,17 +133,17 @@ SimpleDRAM::SimpleDRAM(const SimpleDRAMParams* p) :
 }
 
 void
-SimpleDRAM::init()
+DRAMCtrl::init()
 {
     if (!port.isConnected()) {
-        fatal("SimpleDRAM %s is unconnected!\n", name());
+        fatal("DRAMCtrl %s is unconnected!\n", name());
     } else {
         port.sendRangeChange();
     }
 }
 
 void
-SimpleDRAM::startup()
+DRAMCtrl::startup()
 {
     // update the start tick for the precharge accounting to the
     // current tick
@@ -157,7 +157,7 @@ SimpleDRAM::startup()
 }
 
 Tick
-SimpleDRAM::recvAtomic(PacketPtr pkt)
+DRAMCtrl::recvAtomic(PacketPtr pkt)
 {
     DPRINTF(DRAM, "recvAtomic: %s 0x%x\n", pkt->cmdString(), pkt->getAddr());
 
@@ -174,7 +174,7 @@ SimpleDRAM::recvAtomic(PacketPtr pkt)
 }
 
 bool
-SimpleDRAM::readQueueFull(unsigned int neededEntries) const
+DRAMCtrl::readQueueFull(unsigned int neededEntries) const
 {
     DPRINTF(DRAM, "Read queue limit %d, current size %d, entries needed %d\n",
             readBufferSize, readQueue.size() + respQueue.size(),
@@ -185,15 +185,15 @@ SimpleDRAM::readQueueFull(unsigned int neededEntries) const
 }
 
 bool
-SimpleDRAM::writeQueueFull(unsigned int neededEntries) const
+DRAMCtrl::writeQueueFull(unsigned int neededEntries) const
 {
     DPRINTF(DRAM, "Write queue limit %d, current size %d, entries needed %d\n",
             writeBufferSize, writeQueue.size(), neededEntries);
     return (writeQueue.size() + neededEntries) > writeBufferSize;
 }
 
-SimpleDRAM::DRAMPacket*
-SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
+DRAMCtrl::DRAMPacket*
+DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
                        bool isRead)
 {
     // decode the address based on the address mapping scheme, with
@@ -293,7 +293,7 @@ SimpleDRAM::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
 }
 
 void
-SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
+DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
 {
     // only add to the read queue here. whenever the request is
     // eventually done, set the readyTime, and call schedule()
@@ -382,7 +382,7 @@ SimpleDRAM::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
 }
 
 void
-SimpleDRAM::processWriteEvent()
+DRAMCtrl::processWriteEvent()
 {
     assert(!writeQueue.empty());
 
@@ -439,7 +439,7 @@ SimpleDRAM::processWriteEvent()
 
 
 void
-SimpleDRAM::triggerWrites()
+DRAMCtrl::triggerWrites()
 {
     DPRINTF(DRAM, "Writes triggered at %lld\n", curTick());
     // Flag variable to stop any more read scheduling
@@ -455,7 +455,7 @@ SimpleDRAM::triggerWrites()
 }
 
 void
-SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
+DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
 {
     // only add to the write queue here. whenever the request is
     // eventually done, set the readyTime, and call schedule()
@@ -567,7 +567,7 @@ SimpleDRAM::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
 }
 
 void
-SimpleDRAM::printParams() const
+DRAMCtrl::printParams() const
 {
     // Sanity check print of important parameters
     DPRINTF(DRAM,
@@ -618,7 +618,7 @@ SimpleDRAM::printParams() const
 }
 
 void
-SimpleDRAM::printQs() const {
+DRAMCtrl::printQs() const {
     DPRINTF(DRAM, "===READ QUEUE===\n\n");
     for (auto i = readQueue.begin() ;  i != readQueue.end() ; ++i) {
         DPRINTF(DRAM, "Read %lu\n", (*i)->addr);
@@ -634,7 +634,7 @@ SimpleDRAM::printQs() const {
 }
 
 bool
-SimpleDRAM::recvTimingReq(PacketPtr pkt)
+DRAMCtrl::recvTimingReq(PacketPtr pkt)
 {
     /// @todo temporary hack to deal with memory corruption issues until
     /// 4-phase transactions are complete
@@ -705,7 +705,7 @@ SimpleDRAM::recvTimingReq(PacketPtr pkt)
 }
 
 void
-SimpleDRAM::processRespondEvent()
+DRAMCtrl::processRespondEvent()
 {
     DPRINTF(DRAM,
             "processRespondEvent(): Some req has reached its readyTime\n");
@@ -755,7 +755,7 @@ SimpleDRAM::processRespondEvent()
 }
 
 void
-SimpleDRAM::chooseNextWrite()
+DRAMCtrl::chooseNextWrite()
 {
     // This method does the arbitration between write requests. The
     // chosen packet is simply moved to the head of the write
@@ -779,7 +779,7 @@ SimpleDRAM::chooseNextWrite()
 }
 
 bool
-SimpleDRAM::chooseNextRead()
+DRAMCtrl::chooseNextRead()
 {
     // This method does the arbitration between read requests. The
     // chosen packet is simply moved to the head of the queue. The
@@ -807,7 +807,7 @@ SimpleDRAM::chooseNextRead()
 }
 
 void
-SimpleDRAM::reorderQueue(std::deque<DRAMPacket*>& queue)
+DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue)
 {
     // Only determine this when needed
     uint64_t earliest_banks = 0;
@@ -847,7 +847,7 @@ SimpleDRAM::reorderQueue(std::deque<DRAMPacket*>& queue)
 }
 
 void
-SimpleDRAM::accessAndRespond(PacketPtr pkt, Tick static_latency)
+DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 {
     DPRINTF(DRAM, "Responding to Address %lld.. ",pkt->getAddr());
 
@@ -879,7 +879,7 @@ SimpleDRAM::accessAndRespond(PacketPtr pkt, Tick static_latency)
 }
 
 pair<Tick, Tick>
-SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
+DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
 {
     // If a request reaches a bank at tick 'inTime', how much time
     // *after* that does it take to finish the request, depending
@@ -963,13 +963,13 @@ SimpleDRAM::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
 }
 
 void
-SimpleDRAM::processNextReqEvent()
+DRAMCtrl::processNextReqEvent()
 {
     scheduleNextReq();
 }
 
 void
-SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
+DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
 {
     assert(0 <= rank && rank < ranksPerChannel);
     assert(actTicks[rank].size() == activationLimit);
@@ -1035,7 +1035,7 @@ SimpleDRAM::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
 }
 
 void
-SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
+DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 {
 
     DPRINTF(DRAM, "Timing access to addr %lld, rank/bank/row %d %d %d\n",
@@ -1237,7 +1237,7 @@ SimpleDRAM::doDRAMAccess(DRAMPacket* dram_pkt)
 }
 
 void
-SimpleDRAM::moveToRespQ()
+DRAMCtrl::moveToRespQ()
 {
     // Remove from read queue
     DRAMPacket* dram_pkt = readQueue.front();
@@ -1278,7 +1278,7 @@ SimpleDRAM::moveToRespQ()
 }
 
 void
-SimpleDRAM::scheduleNextReq()
+DRAMCtrl::scheduleNextReq()
 {
     DPRINTF(DRAM, "Reached scheduleNextReq()\n");
 
@@ -1297,7 +1297,7 @@ SimpleDRAM::scheduleNextReq()
 }
 
 Tick
-SimpleDRAM::maxBankFreeAt() const
+DRAMCtrl::maxBankFreeAt() const
 {
     Tick banksFree = 0;
 
@@ -1309,7 +1309,7 @@ SimpleDRAM::maxBankFreeAt() const
 }
 
 uint64_t
-SimpleDRAM::minBankFreeAt(const deque<DRAMPacket*>& queue) const
+DRAMCtrl::minBankFreeAt(const deque<DRAMPacket*>& queue) const
 {
     uint64_t bank_mask = 0;
     Tick freeAt = MaxTick;
@@ -1341,7 +1341,7 @@ SimpleDRAM::minBankFreeAt(const deque<DRAMPacket*>& queue) const
 }
 
 void
-SimpleDRAM::processRefreshEvent()
+DRAMCtrl::processRefreshEvent()
 {
     DPRINTF(DRAM, "Refreshing at tick %ld\n", curTick());
 
@@ -1361,7 +1361,7 @@ SimpleDRAM::processRefreshEvent()
 }
 
 void
-SimpleDRAM::regStats()
+DRAMCtrl::regStats()
 {
     using namespace Stats;
 
@@ -1624,14 +1624,14 @@ SimpleDRAM::regStats()
 }
 
 void
-SimpleDRAM::recvFunctional(PacketPtr pkt)
+DRAMCtrl::recvFunctional(PacketPtr pkt)
 {
     // rely on the abstract memory
     functionalAccess(pkt);
 }
 
 BaseSlavePort&
-SimpleDRAM::getSlavePort(const string &if_name, PortID idx)
+DRAMCtrl::getSlavePort(const string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return MemObject::getSlavePort(if_name, idx);
@@ -1641,7 +1641,7 @@ SimpleDRAM::getSlavePort(const string &if_name, PortID idx)
 }
 
 unsigned int
-SimpleDRAM::drain(DrainManager *dm)
+DRAMCtrl::drain(DrainManager *dm)
 {
     unsigned int count = port.drain(dm);
 
@@ -1670,13 +1670,13 @@ SimpleDRAM::drain(DrainManager *dm)
     return count;
 }
 
-SimpleDRAM::MemoryPort::MemoryPort(const std::string& name, SimpleDRAM& _memory)
+DRAMCtrl::MemoryPort::MemoryPort(const std::string& name, DRAMCtrl& _memory)
     : QueuedSlavePort(name, &_memory, queue), queue(_memory, *this),
       memory(_memory)
 { }
 
 AddrRangeList
-SimpleDRAM::MemoryPort::getAddrRanges() const
+DRAMCtrl::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
     ranges.push_back(memory.getAddrRange());
@@ -1684,7 +1684,7 @@ SimpleDRAM::MemoryPort::getAddrRanges() const
 }
 
 void
-SimpleDRAM::MemoryPort::recvFunctional(PacketPtr pkt)
+DRAMCtrl::MemoryPort::recvFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(memory.name());
 
@@ -1699,20 +1699,20 @@ SimpleDRAM::MemoryPort::recvFunctional(PacketPtr pkt)
 }
 
 Tick
-SimpleDRAM::MemoryPort::recvAtomic(PacketPtr pkt)
+DRAMCtrl::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     return memory.recvAtomic(pkt);
 }
 
 bool
-SimpleDRAM::MemoryPort::recvTimingReq(PacketPtr pkt)
+DRAMCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
     return memory.recvTimingReq(pkt);
 }
 
-SimpleDRAM*
-SimpleDRAMParams::create()
+DRAMCtrl*
+DRAMCtrlParams::create()
 {
-    return new SimpleDRAM(this);
+    return new DRAMCtrl(this);
 }

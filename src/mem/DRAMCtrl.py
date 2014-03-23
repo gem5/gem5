@@ -59,13 +59,13 @@ class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
 class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
                                 'close_adaptive']
 
-# SimpleDRAM is a single-channel single-ported DRAM controller model
+# DRAMCtrl is a single-channel single-ported DRAM controller model
 # that aims to model the most important system-level performance
 # effects of a DRAM without getting into too much detail of the DRAM
 # itself.
-class SimpleDRAM(AbstractMemory):
-    type = 'SimpleDRAM'
-    cxx_header = "mem/simple_dram.hh"
+class DRAMCtrl(AbstractMemory):
+    type = 'DRAMCtrl'
+    cxx_header = "mem/dram_ctrl.hh"
 
     # single-ported on the system interface side, instantiate with a
     # bus in front of the controller for multiple ports
@@ -137,7 +137,7 @@ class SimpleDRAM(AbstractMemory):
     # it is easier to also evaluate SDR memories like WideIO.
     # This parameter has to account for burst length.
     # Read/Write requests with data size larger than one full burst are broken
-    # down into multiple requests in the SimpleDRAM controller
+    # down into multiple requests in the controller
     tBURST = Param.Latency("Burst duration (for DDR burst length / 2 cycles)")
 
     # time taken to complete one refresh cycle (N rows in all banks)
@@ -166,7 +166,7 @@ class SimpleDRAM(AbstractMemory):
 # A single DDR3 x64 interface (one command and address bus), with
 # default timings based on DDR3-1600 4 Gbit parts in an 8x8
 # configuration, which would amount to 4 Gbyte of memory.
-class DDR3_1600_x64(SimpleDRAM):
+class DDR3_1600_x64(DRAMCtrl):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
@@ -222,7 +222,7 @@ class DDR3_1600_x64(SimpleDRAM):
 # to be manually set, depending on size of the memory to be
 # simulated. By default DRAMSim2 has 2048MB of memory with a single
 # rank. Therefore for 4 GByte memory, set ranks_per_channel = 2
-class DDR3_1333_x64_DRAMSim2(SimpleDRAM):
+class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
@@ -268,7 +268,7 @@ class DDR3_1333_x64_DRAMSim2(SimpleDRAM):
 # A single LPDDR2-S4 x32 interface (one command/address bus), with
 # default timings based on a LPDDR2-1066 4 Gbit part in a 1x32
 # configuration.
-class LPDDR2_S4_1066_x32(SimpleDRAM):
+class LPDDR2_S4_1066_x32(DRAMCtrl):
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
 
@@ -302,7 +302,7 @@ class LPDDR2_S4_1066_x32(SimpleDRAM):
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
-    # in the SimpleDRAM controller
+    # in the controller
     tBURST = '7.5ns'
 
     # LPDDR2-S4, 4 Gbit
@@ -321,7 +321,7 @@ class LPDDR2_S4_1066_x32(SimpleDRAM):
 
 # A single WideIO x128 interface (one command and address bus), with
 # default timings based on an estimated WIO-200 8 Gbit part.
-class WideIO_200_x128(SimpleDRAM):
+class WideIO_200_x128(DRAMCtrl):
     # 1x128 configuration, 1 device with a 128-bit interface
     device_bus_width = 128
 
@@ -370,7 +370,7 @@ class WideIO_200_x128(SimpleDRAM):
 # A single LPDDR3 x32 interface (one command/address bus), with
 # default timings based on a LPDDR3-1600 4 Gbit part in a 1x32
 # configuration
-class LPDDR3_1600_x32(SimpleDRAM):
+class LPDDR3_1600_x32(DRAMCtrl):
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
 
@@ -403,7 +403,7 @@ class LPDDR3_1600_x32(SimpleDRAM):
     # 8 beats across a x32 DDR interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
-    # in the SimpleDRAM controller
+    # in the controller
     tBURST = '5ns'
 
     # LPDDR3, 4 Gb

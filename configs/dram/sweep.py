@@ -86,8 +86,8 @@ MemConfig.config_mem(options, system)
 
 # the following assumes that we are using the native DRAM
 # controller, check to be sure
-if not isinstance(system.mem_ctrls[0], m5.objects.SimpleDRAM):
-    fatal("This script assumes the memory is a SimpleDRAM subclass")
+if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
+    fatal("This script assumes the memory is a DRAMCtrl subclass")
 
 # for now the generator assumes a single rank
 system.mem_ctrls[0].ranks_per_channel = 1

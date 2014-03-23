@@ -44,11 +44,11 @@
 
 /**
  * @file
- * SimpleDRAM declaration
+ * DRAMCtrl declaration
  */
 
-#ifndef __MEM_SIMPLE_DRAM_HH__
-#define __MEM_SIMPLE_DRAM_HH__
+#ifndef __MEM_DRAM_CTRL_HH__
+#define __MEM_DRAM_CTRL_HH__
 
 #include <deque>
 
@@ -58,13 +58,13 @@
 #include "enums/PageManage.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/qport.hh"
-#include "params/SimpleDRAM.hh"
+#include "params/DRAMCtrl.hh"
 #include "sim/eventq.hh"
 
 /**
- * The simple DRAM is a basic single-channel memory controller aiming
- * to mimic a high-level DRAM controller and the most important timing
- * constraints associated with the DRAM. The focus is really on
+ * The DRAM controller is a basic single-channel memory controller
+ * aiming to mimic a high-level DRAM controller and the most important
+ * timing constraints associated with the DRAM. The focus is really on
  * modelling the impact on the system rather than the DRAM itself,
  * hence the focus is on the controller model and not on the
  * memory. By adhering to the correct timing constraints, ultimately
@@ -80,7 +80,7 @@
  * wide range of memory technologies, and also collect statistics
  * about the use of the memory.
  */
-class SimpleDRAM : public AbstractMemory
+class DRAMCtrl : public AbstractMemory
 {
 
   private:
@@ -91,11 +91,11 @@ class SimpleDRAM : public AbstractMemory
     {
 
         SlavePacketQueue queue;
-        SimpleDRAM& memory;
+        DRAMCtrl& memory;
 
       public:
 
-        MemoryPort(const std::string& name, SimpleDRAM& _memory);
+        MemoryPort(const std::string& name, DRAMCtrl& _memory);
 
       protected:
 
@@ -255,16 +255,16 @@ class SimpleDRAM : public AbstractMemory
      * in these methods
      */
     void processWriteEvent();
-    EventWrapper<SimpleDRAM, &SimpleDRAM::processWriteEvent> writeEvent;
+    EventWrapper<DRAMCtrl, &DRAMCtrl::processWriteEvent> writeEvent;
 
     void processRespondEvent();
-    EventWrapper<SimpleDRAM, &SimpleDRAM::processRespondEvent> respondEvent;
+    EventWrapper<DRAMCtrl, &DRAMCtrl::processRespondEvent> respondEvent;
 
     void processRefreshEvent();
-    EventWrapper<SimpleDRAM, &SimpleDRAM::processRefreshEvent> refreshEvent;
+    EventWrapper<DRAMCtrl, &DRAMCtrl::processRefreshEvent> refreshEvent;
 
     void processNextReqEvent();
-    EventWrapper<SimpleDRAM,&SimpleDRAM::processNextReqEvent> nextReqEvent;
+    EventWrapper<DRAMCtrl,&DRAMCtrl::processNextReqEvent> nextReqEvent;
 
 
     /**
@@ -623,7 +623,7 @@ class SimpleDRAM : public AbstractMemory
 
     void regStats();
 
-    SimpleDRAM(const SimpleDRAMParams* p);
+    DRAMCtrl(const DRAMCtrlParams* p);
 
     unsigned int drain(DrainManager* dm);
 
@@ -641,4 +641,4 @@ class SimpleDRAM : public AbstractMemory
 
 };
 
-#endif //__MEM_SIMPLE_DRAM_HH__
+#endif //__MEM_DRAM_CTRL_HH__

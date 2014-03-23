@@ -160,7 +160,7 @@ def config_mem(options, system):
             ctrl = cls()
 
             # Only do this for DRAMs
-            if issubclass(cls, m5.objects.SimpleDRAM):
+            if issubclass(cls, m5.objects.DRAMCtrl):
                 # Inform each controller how many channels to account
                 # for
                 ctrl.channels = nbr_mem_ctrls
