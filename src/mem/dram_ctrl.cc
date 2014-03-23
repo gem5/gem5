@@ -70,7 +70,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     writeBufferSize(p->write_buffer_size),
     writeHighThreshold(writeBufferSize * p->write_high_thresh_perc / 100.0),
     writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
-    minWritesPerSwitch(p->min_writes_per_switch), writesThisTime(0),
+    minWritesPerSwitch(p->min_writes_per_switch),
+    writesThisTime(0), readsThisTime(0),
     tWTR(p->tWTR), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
@@ -399,21 +400,26 @@ DRAMCtrl::processWriteEvent()
     writeQueue.pop_front();
     delete dram_pkt;
 
-    ++writesThisTime;
-
     DPRINTF(DRAM, "Writing, bus busy for %lld ticks, banks busy "
             "for %lld ticks\n", busBusyUntil - temp1, maxBankFreeAt() - temp2);
 
-    // If we emptied the write queue, or got below the threshold and
+    // If we emptied the write queue, or got sufficiently below the
+    // threshold (using the minWritesPerSwitch as the hysteresis) and
     // are not draining, or we have reads waiting and have done enough
     // writes, then switch to reads. The retry above could already
     // have caused it to be scheduled, so first check
     if (writeQueue.empty() ||
-        (writeQueue.size() < writeLowThreshold && !drainManager) ||
+        (writeQueue.size() + minWritesPerSwitch < writeLowThreshold &&
+         !drainManager) ||
         (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
         // turn the bus back around for reads again
         busBusyUntil += tWTR;
         stopReads = false;
+
+        DPRINTF(DRAM, "Switching to reads after %d writes with %d writes "
+                "waiting\n", writesThisTime, writeQueue.size());
+
+        wrPerTurnAround.sample(writesThisTime);
         writesThisTime = 0;
 
         if (!nextReqEvent.scheduled())
@@ -441,13 +447,20 @@ DRAMCtrl::processWriteEvent()
 void
 DRAMCtrl::triggerWrites()
 {
-    DPRINTF(DRAM, "Writes triggered at %lld\n", curTick());
+    DPRINTF(DRAM, "Switching to writes after %d reads with %d reads "
+            "waiting\n", readsThisTime, readQueue.size());
+
     // Flag variable to stop any more read scheduling
     stopReads = true;
 
     Tick write_start_time = std::max(busBusyUntil, curTick()) + tWTR;
 
     DPRINTF(DRAM, "Writes scheduled at %lld\n", write_start_time);
+
+    // there is some danger here as there might still be reads
+    // happening before the switch actually takes place
+    rdPerTurnAround.sample(readsThisTime);
+    readsThisTime = 0;
 
     assert(write_start_time >= curTick());
     assert(!writeEvent.scheduled());
@@ -1198,11 +1211,13 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 
     // Update the access related stats
     if (dram_pkt->isRead) {
+        ++readsThisTime;
         if (rowHitFlag)
             readRowHits++;
         bytesReadDRAM += burstSize;
         perBankRdBursts[dram_pkt->bankId]++;
     } else {
+        ++writesThisTime;
         if (rowHitFlag)
             writeRowHits++;
         bytesWritten += burstSize;
@@ -1516,6 +1531,18 @@ DRAMCtrl::regStats()
          .init(maxAccessesPerRow)
          .name(name() + ".bytesPerActivate")
          .desc("Bytes accessed per row activation")
+         .flags(nozero);
+
+     rdPerTurnAround
+         .init(readBufferSize)
+         .name(name() + ".rdPerTurnAround")
+         .desc("Reads before turning the bus around for writes")
+         .flags(nozero);
+
+     wrPerTurnAround
+         .init(writeBufferSize)
+         .name(name() + ".wrPerTurnAround")
+         .desc("Writes before turning the bus around for reads")
          .flags(nozero);
 
     bytesReadDRAM

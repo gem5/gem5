@@ -488,6 +488,7 @@ class DRAMCtrl : public AbstractMemory
     const uint32_t writeLowThreshold;
     const uint32_t minWritesPerSwitch;
     uint32_t writesThisTime;
+    uint32_t readsThisTime;
 
     /**
      * Basic memory timing parameters initialized based on parameter
@@ -569,6 +570,8 @@ class DRAMCtrl : public AbstractMemory
     Stats::Vector rdQLenPdf;
     Stats::Vector wrQLenPdf;
     Stats::Histogram bytesPerActivate;
+    Stats::Histogram rdPerTurnAround;
+    Stats::Histogram wrPerTurnAround;
 
     // Latencies summed over all requests
     Stats::Scalar totQLat;
