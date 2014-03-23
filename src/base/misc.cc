@@ -69,7 +69,7 @@ __exit_message(const char *prefix, int code,
         format += "\n";
     }
 
-    format += " @ cycle %d\n[%s:%s, line %d]\n";
+    format += " @ tick %d\n[%s:%s, line %d]\n";
     format += "Memory Usage: %ld KBytes\n";
 
     args.push_back(curTick());
