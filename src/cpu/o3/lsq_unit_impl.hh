@@ -464,6 +464,8 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 
     incrLdIdx(load_idx);
 
+    bool force_squash = false;
+
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
 
@@ -476,8 +478,14 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
         DPRINTF(LSQUnit, "-- inst [sn:%lli] load_addr: %#x to pktAddr:%#x\n",
                     ld_inst->seqNum, load_addr, invalidate_addr);
 
-        if (load_addr == invalidate_addr) {
-            if (ld_inst->possibleLoadViolation()) {
+        if (load_addr == invalidate_addr || force_squash) {
+            if (needsTSO) {
+                // If we have a TSO system, as all loads must be ordered with
+                // all other loads, this load as well as *all* subsequent loads
+                // need to be squashed to prevent possible load reordering.
+                force_squash = true;
+            }
+            if (ld_inst->possibleLoadViolation() || force_squash) {
                 DPRINTF(LSQUnit, "Conflicting load at addr %#x [sn:%lli]\n",
                         pkt->getAddr(), ld_inst->seqNum);
 
