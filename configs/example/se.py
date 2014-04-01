@@ -157,8 +157,6 @@ else:
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 CPUClass.numThreads = numThreads
 
-MemClass = Simulation.setMemClass(options)
-
 # Check -- do not allow SMT with multiple CPUs
 if options.smt and options.num_cpus > 1:
     fatal("You cannot use SMT with multiple CPUs!")
@@ -228,8 +226,10 @@ if options.ruby:
         print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
         sys.exit(1)
 
-    # Set the option for physmem so that it is not allocated any space
-    system.physmem = MemClass(range=AddrRange(options.mem_size),
+    # Use SimpleMemory with the null option since this memory is only used
+    # for determining which addresses are within the range of the memory.
+    # No space allocation is required.
+    system.physmem = SimpleMemory(range=AddrRange(options.mem_size),
                               null = True)
     options.use_map = True
     Ruby.create_system(options, system)
@@ -253,6 +253,7 @@ if options.ruby:
             system.cpu[i].itb.walker.port = ruby_port.slave
             system.cpu[i].dtb.walker.port = ruby_port.slave
 else:
+    MemClass = Simulation.setMemClass(options)
     system.membus = CoherentBus()
     system.system_port = system.membus.slave
     CacheConfig.config_cache(options, system)
