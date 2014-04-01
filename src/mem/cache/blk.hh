@@ -339,8 +339,8 @@ class CacheBlk
           default:    s = 'T'; break; // @TODO add other types
         }
         return csprintf("state: %x (%c) valid: %d writable: %d readable: %d "
-                        "dirty: %d tag: %x data: %x", status, s, isValid(),
-                        isWritable(), isReadable(), isDirty(), tag, *data);
+                        "dirty: %d tag: %x", status, s, isValid(),
+                        isWritable(), isReadable(), isDirty(), tag);
     }
 
     /**
