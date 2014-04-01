@@ -155,11 +155,11 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     cpu = cpu_ptr;
     iewStage = iew_ptr;
 
-    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
-
     lsq = lsq_ptr;
 
     lsqID = id;
+
+    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     // Add 1 for the sentinel entry (they are circular queues).
     LQEntries = maxLQEntries + 1;

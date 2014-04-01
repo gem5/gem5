@@ -711,8 +711,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
                     storeQueue[store_idx].data + shift_amt, req->getSize());
 
             DPRINTF(LSQUnit, "Forwarding from store idx %i to load to "
-                    "addr %#x, data %#x\n",
-                    store_idx, req->getVaddr(), data);
+                    "addr %#x\n", store_idx, req->getVaddr());
 
             PacketPtr data_pkt = new Packet(req, MemCmd::ReadReq);
             data_pkt->dataStatic(load_inst->memData);
@@ -916,9 +915,9 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
 {
     assert(storeQueue[store_idx].inst);
 
-    DPRINTF(LSQUnit, "Doing write to store idx %i, addr %#x data %#x"
+    DPRINTF(LSQUnit, "Doing write to store idx %i, addr %#x"
             " | storeHead:%i [sn:%i]\n",
-            store_idx, req->getPaddr(), data, storeHead,
+            store_idx, req->getPaddr(), storeHead,
             storeQueue[store_idx].inst->seqNum);
 
     storeQueue[store_idx].req = req;
