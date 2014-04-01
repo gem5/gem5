@@ -55,7 +55,7 @@ JR=jar
 #JDK_PATH=/path/to/jdk/version_number
 
 CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux -march=armv7-a
-LDFLAGS=-L. -lm5
+LDFLAGS=-L. -lm5 -static
 
 LIB_OBJS=m5op_arm.o
 OBJS=m5.o
@@ -84,4 +84,5 @@ gem5OpJni.jar:
 	$(JR) cvf $@ jni/*.class
 
 clean:
-	rm -f *.o m5 libgemOpJni.so gem5OpJni.jar jni/*.class libm5.a
+	rm -f *.o m5 libgem5OpJni.so gem5OpJni.jar jni/*.class libm5.a \
+	jni_gem5Op.h
