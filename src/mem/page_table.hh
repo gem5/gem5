@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2014 Advanced Micro Devices, Inc.
  * Copyright (c) 2003 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -30,7 +31,7 @@
 
 /**
  * @file
- * Declaration of a non-full system Page Table.
+ * Declarations of a non-full system Page Table.
  */
 
 #ifndef __MEM_PAGE_TABLE_HH__
@@ -45,17 +46,16 @@
 #include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/serialize.hh"
+#include "sim/system.hh"
+
+class ThreadContext;
 
 /**
- * Page Table Declaration.
+ * Declaration of base class for page table
  */
-class PageTable
+class PageTableBase
 {
   protected:
-    typedef m5::hash_map<Addr, TheISA::TlbEntry> PTable;
-    typedef PTable::iterator PTableItr;
-    PTable pTable;
-
     struct cacheElement {
         bool valid;
         Addr vaddr;
@@ -72,10 +72,20 @@ class PageTable
 
   public:
 
-    PageTable(const std::string &__name, uint64_t _pid,
-              Addr _pageSize = TheISA::VMPageSize);
+    PageTableBase(const std::string &__name, uint64_t _pid,
+              Addr _pageSize = TheISA::VMPageSize)
+            : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
+              pid(_pid), _name(__name)
+    {
+        assert(isPowerOf2(pageSize));
+        pTableCache[0].valid = false;
+        pTableCache[1].valid = false;
+        pTableCache[2].valid = false;
+    }
 
-    ~PageTable();
+    virtual ~PageTableBase() {};
+
+    virtual void initState(ThreadContext* tc) = 0;
 
     // for DPRINTF compatibility
     const std::string name() const { return _name; }
@@ -83,9 +93,9 @@ class PageTable
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false);
-    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
-    void unmap(Addr vaddr, int64_t size);
+    virtual void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false) = 0;
+    virtual void remap(Addr vaddr, int64_t size, Addr new_vaddr) = 0;
+    virtual void unmap(Addr vaddr, int64_t size) = 0;
 
     /**
      * Check if any pages in a region are already allocated
@@ -93,14 +103,14 @@ class PageTable
      * @param size The length of the region.
      * @return True if no pages in the region are mapped.
      */
-    bool isUnmapped(Addr vaddr, int64_t size);
+    virtual bool isUnmapped(Addr vaddr, int64_t size) = 0;
 
     /**
      * Lookup function
      * @param vaddr The virtual address.
      * @return entry The page table entry corresponding to vaddr.
      */
-    bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
+    virtual bool lookup(Addr vaddr, TheISA::TlbEntry &entry) = 0;
 
     /**
      * Translate function
@@ -160,9 +170,69 @@ class PageTable
         }
     }
 
+    virtual void serialize(std::ostream &os) = 0;
+
+    virtual void unserialize(Checkpoint *cp, const std::string &section) = 0;
+};
+
+/**
+ * Declaration of functional page table.
+ */
+class FuncPageTable : public PageTableBase
+{
+  private:
+    typedef m5::hash_map<Addr, TheISA::TlbEntry> PTable;
+    typedef PTable::iterator PTableItr;
+    PTable pTable;
+
+  public:
+
+    FuncPageTable(const std::string &__name, uint64_t _pid,
+              Addr _pageSize = TheISA::VMPageSize);
+
+    ~FuncPageTable();
+
+    void initState(ThreadContext* tc)
+    {
+    }
+
+    void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false);
+    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
+    void unmap(Addr vaddr, int64_t size);
+
+    /**
+     * Check if any pages in a region are already allocated
+     * @param vaddr The starting virtual address of the region.
+     * @param size The length of the region.
+     * @return True if no pages in the region are mapped.
+     */
+    bool isUnmapped(Addr vaddr, int64_t size);
+
+    /**
+     * Lookup function
+     * @param vaddr The virtual address.
+     * @return entry The page table entry corresponding to vaddr.
+     */
+    bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
+
     void serialize(std::ostream &os);
 
     void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+/**
+ * Faux page table class indended to stop the usage of
+ * an architectural page table, when there is none defined
+ * for a particular ISA.
+ */
+class NoArchPageTable : public FuncPageTable
+{
+  public:
+    NoArchPageTable(const std::string &__name, uint64_t _pid, System *_sys,
+              Addr _pageSize = TheISA::VMPageSize) : FuncPageTable(__name, _pid)
+    {
+        fatal("No architectural page table defined for this ISA.\n");
+    }
 };
 
 #endif // __MEM_PAGE_TABLE_HH__

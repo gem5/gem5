@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2014 Advanced Micro Devices, Inc.
  * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
@@ -55,6 +56,7 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
+#include "mem/multi_level_page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "params/LiveProcess.hh"
 #include "params/Process.hh"
@@ -104,7 +106,7 @@ Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system),
       max_stack_size(params->max_stack_size),
       M5_pid(system->allocatePID()),
-      pTable(new PageTable(name(), M5_pid)),
+      pTable(new FuncPageTable(name(), M5_pid)),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always)
 {
@@ -246,6 +248,8 @@ Process::initState()
 
     // mark this context as active so it will start ticking.
     tc->activate(Cycles(0));
+
+    pTable->initState(tc);
 }
 
 // map simulator fd sim_fd to target fd tgt_fd

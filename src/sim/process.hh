@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2014 Advanced Micro Devices, Inc.
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -124,7 +125,7 @@ class Process : public SimObject
     //separated.
     uint64_t M5_pid;
 
-    PageTable* pTable;
+    PageTableBase* pTable;
 
     class FdMap
     {

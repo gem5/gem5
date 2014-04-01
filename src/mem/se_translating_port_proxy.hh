@@ -75,7 +75,7 @@ class SETranslatingPortProxy : public PortProxy
     };
 
   private:
-    PageTable *pTable;
+    PageTableBase *pTable;
     Process *process;
     AllocType allocating;
 
