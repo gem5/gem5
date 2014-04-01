@@ -1,0 +1,226 @@
+ __  __      ____   _  _____   ____       _         
+|  \/  | ___|  _ \ / \|_   _| | __ )  ___| |_  __ _ 
+| |\/| |/ __| |_) / _ \ | |   |  _ \ / _ \ __|/ _` |
+| |  | | (__|  __/ ___ \| |   | |_) |  __/ |_| (_| |
+|_|  |_|\___|_| /_/   \_\_|   |____/ \___|\__|\__,_|
+
+McPAT: Multicore Power, Area, and Timing
+Current version 0.8Beta 
+===============================
+
+McPAT is an architectural modeling tool for chip multiprocessors (CMP)
+The main focus of McPAT is accurate power and area
+modeling, and a target clock rate is used as a design constraint. 
+McPAT performs automatic extensive search to find optimal designs 
+that satisfy the target clock frequency.  
+
+For complete documentation of the McPAT, please refer McPAT 1.0
+technical report and the following paper,
+"McPAT: An Integrated Power, Area, and Timing Modeling
+ Framework for Multicore and Manycore Architectures", 
+that appears in MICRO 2009. Please cite the paper, if you use
+McPAT in your work. The bibtex entry is provided below for your convenience.
+
+ @inproceedings{mcpat:micro,
+ author = {Sheng Li and Jung Ho Ahn and Richard D. Strong and Jay B. Brockman and Dean M. Tullsen and Norman P. Jouppi},
+ title =  "{McPAT: An Integrated Power, Area, and Timing Modeling Framework for Multicore and Manycore Architectures}",
+ booktitle = {MICRO 42: Proceedings of the 42nd Annual IEEE/ACM International Symposium on Microarchitecture},
+ year = {2009},
+ pages = {469--480},
+ }
+
+Current McPAT is in its beta release. 
+List of features of beta release
+===============================
+The following are the list of features supported by the tool. 
+
+* Power, area, and timing models for CMPs with:
+      Inorder cores both single and multithreaded
+      OOO cores both single and multithreaded
+      Shared/coherent caches with directory hardware:
+      	including directory cache, shadowed tag directory
+      	and static bank mapped tag directory
+      Network-on-Chip
+      On-chip memory controllers
+    
+* Internal models are based on real modern processors:
+  Inorder models are based on Sun Niagara family
+  OOO models are based on Intel P6 for reservation 
+  station based OOO cores, and on Intel Netburst and 
+  Alpha 21264 for physical register file based OOO cores.     
+
+* Leakage power modeling considers both sub-threshold leakage 
+  and gate leakage power. The impact of operating temperature 
+  on both leakage power are considered. Longer channel devices 
+  that can reduce leakage significantly with modest performance 
+  penalty are also modeled.
+  
+* McPAT supports automatic extensive search to find optimal designs 
+  that satisfy the target clock frequency. The timing constraint 
+  include both throughput and latency.
+
+* Interconnect model with different delay, power, and area 
+  properties, as well as both the aggressive and conservative 
+  interconnect projections on wire technologies. 
+
+* All process specific values used by the McPAT are obtained
+  from ITRS and currently, the McPAT supports 90nm, 65nm, 45nm, 
+  32nm, and 22nm technology nodes. At 32nm and 22nm nodes, SOI 
+  and DG devices are used. After 45nm, Hi-K metal gates are used.
+
+How to use the tool?
+====================
+
+McPAT takes input parameters from an XML-based interface,
+then it computes area and peak power of the 
+Please note that the peak power is the absolute worst case power, 
+which could be even higher than TDP. 
+
+1. Steps to run McPAT:
+   -> define the target processor using inorder.xml or OOO.xml 
+   -> run the "mcpat" binary:
+      ./mcpat -infile <*.xml>  -print_level < level of detailed output>
+      ./mcpat -h (or mcpat --help) will show the quick help message.
+
+   Rather than being hardwired to certain simulators, McPAT 
+   uses an XML-based interface to enable easy integration
+   with various performance simulators. Our collaborator, 
+   Richard Strong, at University of California, San Diego, 
+   designed an experimental parser for the M5 simulator, aiming for 
+   streamlining the integration of McPAT and M5. Please check the M5 
+   repository/ for the latest version of the parser.
+   
+2. Optimize:
+   McPAT will try its best to satisfy the target clock rate. 
+   When it cannot find a valid solution, it gives out warnings, 
+   while still giving a solution that is closest to the timing 
+   constraints and calculate power based on it. The optimization 
+   will lead to larger power/area numbers for target higher clock
+   rate. McPAT also provides the option "-opt_for_clk" to turn on 
+   ("-opt_for_clk 1") and off this strict optimization for the 
+   timing constraint. When it is off, McPAT always optimize 
+   component for ED^2P without worrying about meeting the 
+   target clock frequency. By turning it off, the computation time 
+   can be reduced, which suites for situations where target clock rate
+   is conservative.
+  
+3. The output:
+   McPAT outputs results in a hierarchical manner. Increasing 
+   the "-print_level" will show detailed results inside each 
+   component. For each component, major parts are shown, and associated 
+   pipeline registers/control logic are added up in total area/power of each 
+   components. In general, McPAT does not model the area/overhead of the pad 
+   frame used in a processor die.
+   
+4. How to use the XML interface for McPAT 
+   4.1 Set up the parameters
+   		Parameters of target designs need to be set in the *.xml file for 
+   		entries taged as "param". McPAT have very detailed parameter settings. 
+   		please remove the structure parameter from the file if you want 
+   		to use the default values. Otherwise, the parameters in the xml file 
+   		will override the default values. 
+   
+   4.2 Pass the statistics
+   		There are two options to get the correct stats: a) the performance 
+   		simulator can capture all the stats in detail and pass them to McPAT;
+   		b). Performance simulator can only capture partial stats and pass 
+   		them to McPAT, while McPAT can reason about the complete stats using 
+        the partial information and the configuration. Therefore, there are 
+        some overlap for the stats. 
+   
+   4.3 Interface XML file structures (PLEASE READ!)
+   			The XML is hierarchical from processor level to micro-architecture 
+   		level. McPAT support both heterogeneous and homogeneous manycore processors. 
+   		
+   			1). For heterogeneous processor setup, each component (core, NoC, cache, 
+   		and etc) must have its own instantiations (core0, core1, ..., coreN). 
+   		Each instantiation will have different parameters as well as its stats.
+   		Thus, the XML file must have multiple "instantiation" of each type of 
+   		heterogeneous components and the corresponding hetero flags must be set 
+   		in the XML file. Then state in the XML should be the stats of "a" instantiation 
+   		(e.g. "a" cores). The reported runtime dynamic is of a single instantiation 
+   		(e.g. "a" cores). Since the stats for each (e.g. "a" cores) may be different,
+   		we will see a whole list of (e.g. "a" cores) with different dynamic power,
+   		and total power is just a sum of them.  
+   		
+   			2). For homogeneous processors, the same method for heterogeneous can 
+   		also be used by treating all homogeneous instantiations as heterogeneous. 
+   		However, a preferred approach is to use a single representative for all 
+   		the same components (e.g. core0 to represent all cores) and set the 
+   		processor to have homogeneous components (e.g. <param name="homogeneous_cores
+   		" value="1"/> ). Thus, the XML file only has one instantiation to represent 
+   		all others with the same architectural parameters. The corresponding homo 
+   		flags must be set in the XML file.  Then, the stats in the XML should be 
+   		the aggregated stats of the sum of all instantiations (e.g. aggregated stats 
+   		of all cores). In the final results, McPAT will only report a single 
+   		instantiation of each type of component, and the reported runtime dynamic power
+   		is the sum of all instantiations of the same type. This approach can run fast 
+   		and use much less memory.        
+
+5. Guide for integrating McPAT into performance simulators and bypassing the XML interface
+   		The detailed work flow of McPAT has two phases: the initialization phase and
+   the computation phase. Specifically, in order to start the initialization phase a 
+   user specifies static configurations, including parameters at all three levels, 
+   namely, architectural, circuit, and technology levels. During the initialization 
+   phase, McPAT will generate the internal chip representation using the configurations 
+   set by the user. 
+   		The computation phase of McPAT is called by McPAT or the performance simulator 
+   during simulation to generate runtime power numbers. Before calling McPAT to 
+   compute runtime power numbers, the performance simulator needs to pass the 
+   statistics, namely, the activity factors of each individual components to McPAT 
+   via the XML interface. 
+   		The initialization phase is very time-consuming, since it will repeat many 
+   times until valid configurations are found or the possible configurations are 
+   exhausted. To reduce the overhead, a user can let the simulator to call McPAT 
+   directly for computation phase and only call initialization phase once at the 
+   beginning of simulation. In this case, the XML interface file is bypassed, 
+   please refer to processor.cc to see how the two phases are called.
+   
+6. Sample input files:
+   This package provide sample XML files for validating target processors. Please find the 
+   enclosed Niagara1.xml (for the Sun Niagara1 processor), Niagara2.xml (for the Sun Niagara2 
+   processor), Alpha21364.xml (for the Alpha21364 processor), and Xeon.xml (for the Intel 
+   Xeon Tulsa processor). 
+   
+   Special instructions for using Xeon.xml:
+   McPAT uses ITRS device types including HP, LSTP, and LOP. Although most 
+   designs follow ITRS projections, there are designs with special technologies. 
+   For example, the 65nm Xeon Tulsa processor uses 1.25 V rather than 1.1V 
+   for the core voltage domain, which results in the changes in threshold voltage,
+   leakage current density, saturation current, and etc, besides the different 
+   supply voltage. We use MASTAR to match the special technology as used in Xeon 
+   core domain. Therefore, in order to generate accurate results of Xeon 
+   Tulsa cores, users need to do make TAR=mcpatXeonCore and use the generated 
+   special executable. The L3 cache and buses must be computed using standard 
+   ITRS technology.    
+    
+
+====================
+McPAT is in its beginning stage. We are still improving 
+the tool and refining the code. Please come back to its website 
+for newer versions. If you have any comments, 
+questions, or suggestions, please write to us.
+
+Version history and roadmap
+
+McPAT Alpha:      released Sep. 2009 Experimental release
+McPAT Beta (0.6): released Nov. 2009 New code base and technology base
+McPAT Beta (0.7): released May. 2010 Added various new models, 
+                  including long channel devices, buses model; together
+                  with bug fixes and extensive code optimization to reduce 
+                  memory usage.  
+McPAT Beta (0.8): released Aug. 2010 Added various new models, 
+                  including on-chip 10Gb ethernet units, PCIe, and flash controllers.
+Next major release:     
+McPAT 1.0:        including advance power-saving states
+
+Future releases may include the modeling of embedded low-power 
+processors as well as vector processors and GPGPUs.             
+                  
+
+Sheng Li             
+sheng.li@hp.com 
+
+
+
+
