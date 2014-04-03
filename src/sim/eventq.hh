@@ -398,8 +398,43 @@ operator!=(const Event &l, const Event &r)
 }
 #endif
 
-/*
+/**
  * Queue of events sorted in time order
+ *
+ * Events are scheduled (inserted into the event queue) using the
+ * schedule() method. This method either inserts a <i>synchronous</i>
+ * or <i>asynchronous</i> event.
+ *
+ * Synchronous events are scheduled using schedule() method with the
+ * argument 'global' set to false (default). This should only be done
+ * from a thread holding the event queue lock
+ * (EventQueue::service_mutex). The lock is always held when an event
+ * handler is called, it can therefore always insert events into its
+ * own event queue unless it voluntarily releases the lock.
+ *
+ * Events can be scheduled across thread (and event queue borders) by
+ * either scheduling asynchronous events or taking the target event
+ * queue's lock. However, the lock should <i>never</i> be taken
+ * directly since this is likely to cause deadlocks. Instead, code
+ * that needs to schedule events in other event queues should
+ * temporarily release its own queue and lock the new queue. This
+ * prevents deadlocks since a single thread never owns more than one
+ * event queue lock. This functionality is provided by the
+ * ScopedMigration helper class. Note that temporarily migrating
+ * between event queues can make the simulation non-deterministic, it
+ * should therefore be limited to cases where that can be tolerated
+ * (e.g., handling asynchronous IO or fast-forwarding in KVM).
+ *
+ * Asynchronous events can also be scheduled using the normal
+ * schedule() method with the 'global' parameter set to true. Unlike
+ * the previous queue migration strategy, this strategy is fully
+ * deterministic. This causes the event to be inserted in a separate
+ * queue of asynchronous events (async_queue), which is merged main
+ * event queue at the end of each simulation quantum (by calling the
+ * handleAsyncInsertions() method). Note that this implies that such
+ * events must happen at least one simulation quantum into the future,
+ * otherwise they risk being scheduled in the past by
+ * handleAsyncInsertions().
  */
 class EventQueue : public Serializable
 {
@@ -414,6 +449,28 @@ class EventQueue : public Serializable
     //! List of events added by other threads to this event queue.
     std::list<Event*> async_queue;
 
+    /**
+     * Lock protecting event handling.
+     *
+     * This lock is always taken when servicing events. It is assumed
+     * that the thread scheduling new events (not asynchronous events
+     * though) have taken this lock. This is normally done by
+     * serviceOne() since new events are typically scheduled as a
+     * response to an earlier event.
+     *
+     * This lock is intended to be used to temporarily steal an event
+     * queue to support inter-thread communication when some
+     * deterministic timing can be sacrificed for speed. For example,
+     * the KVM CPU can use this support to access devices running in a
+     * different thread.
+     *
+     * @see EventQueue::ScopedMigration.
+     * @see EventQueue::ScopedRelease
+     * @see EventQueue::lock()
+     * @see EventQueue::unlock()
+     */
+    std::mutex service_mutex;
+
     //! Insert / remove event from the queue. Should only be called
     //! by thread operating this queue.
     void insert(Event *event);
@@ -427,6 +484,68 @@ class EventQueue : public Serializable
     EventQueue(const EventQueue &);
 
   public:
+#ifndef SWIG
+    /**
+     * Temporarily migrate execution to a different event queue.
+     *
+     * An instance of this class temporarily migrates execution to a
+     * different event queue by releasing the current queue, locking
+     * the new queue, and updating curEventQueue(). This can, for
+     * example, be useful when performing IO across thread event
+     * queues when timing is not crucial (e.g., during fast
+     * forwarding).
+     */
+    class ScopedMigration
+    {
+      public:
+        ScopedMigration(EventQueue *_new_eq)
+            :  new_eq(*_new_eq), old_eq(*curEventQueue())
+        {
+            old_eq.unlock();
+            new_eq.lock();
+            curEventQueue(&new_eq);
+        }
+
+        ~ScopedMigration()
+        {
+            new_eq.unlock();
+            old_eq.lock();
+            curEventQueue(&old_eq);
+        }
+
+      private:
+        EventQueue &new_eq;
+        EventQueue &old_eq;
+    };
+
+    /**
+     * Temporarily release the event queue service lock.
+     *
+     * There are cases where it is desirable to temporarily release
+     * the event queue lock to prevent deadlocks. For example, when
+     * waiting on the global barrier, we need to release the lock to
+     * prevent deadlocks from happening when another thread tries to
+     * temporarily take over the event queue waiting on the barrier.
+     */
+    class ScopedRelease
+    {
+      public:
+        ScopedRelease(EventQueue *_eq)
+            :  eq(*_eq)
+        {
+            eq.unlock();
+        }
+
+        ~ScopedRelease()
+        {
+            eq.lock();
+        }
+
+      private:
+        EventQueue &eq;
+    };
+#endif
+
     EventQueue(const std::string &n);
 
     virtual const std::string name() const { return objName; }
@@ -490,6 +609,22 @@ class EventQueue : public Serializable
      *  NOT RECOMMENDED FOR USE.
      */
     Event* replaceHead(Event* s);
+
+    /**@{*/
+    /**
+     * Provide an interface for locking/unlocking the event queue.
+     *
+     * @warn Do NOT use these methods directly unless you really know
+     * what you are doing. Incorrect use can easily lead to simulator
+     * deadlocks.
+     *
+     * @see EventQueue::ScopedMigration.
+     * @see EventQueue::ScopedRelease
+     * @see EventQueue
+     */
+    void lock() { service_mutex.lock(); }
+    void unlock() { service_mutex.unlock(); }
+    /**@}*/
 
 #ifndef SWIG
     virtual void serialize(std::ostream &os);

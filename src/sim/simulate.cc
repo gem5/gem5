@@ -198,6 +198,9 @@ doSimLoop(EventQueue *eventq)
         }
 
         if (async_event && testAndClearAsyncEvent()) {
+            // Take the event queue lock in case any of the service
+            // routines want to schedule new events.
+            std::lock_guard<EventQueue> lock(*eventq);
             async_event = false;
             if (async_statdump || async_statreset) {
                 Stats::schedStatEvent(async_statdump, async_statreset);
