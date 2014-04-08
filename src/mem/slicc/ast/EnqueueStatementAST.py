@@ -29,11 +29,12 @@ from slicc.ast.StatementAST import StatementAST
 from slicc.symbols import Var
 
 class EnqueueStatementAST(StatementAST):
-    def __init__(self, slicc, queue_name, type_ast, pairs, statements):
-        super(EnqueueStatementAST, self).__init__(slicc, pairs)
+    def __init__(self, slicc, queue_name, type_ast, lexpr, statements):
+        super(EnqueueStatementAST, self).__init__(slicc)
 
         self.queue_name = queue_name
         self.type_ast = type_ast
+        self.latexpr = lexpr
         self.statements = statements
 
     def __repr__(self):
@@ -58,23 +59,14 @@ class EnqueueStatementAST(StatementAST):
 
         # The other statements
         t = self.statements.generate(code, None)
-
         self.queue_name.assertType("OutPort")
 
-        args = [ "out_msg" ]
-        if "latency" in self:
-            latency = self["latency"]
-            try:
-                # see if this is an integer
-                latency = int(latency)
-                args.append("Cycles(%s)" % latency)
-            except ValueError:
-                # if not, it should be a member
-                args.append("m_%s" % latency)
-
-        args = ", ".join(args)
-        code('(${{self.queue_name.var.code}}).enqueue($args);')
-
+        if self.latexpr != None:
+            ret_type, rcode = self.latexpr.inline(True)
+            code("(${{self.queue_name.var.code}}).enqueue(" \
+                 "out_msg, Cycles($rcode));")
+        else:
+            code("(${{self.queue_name.var.code}}).enqueue(out_msg);")
 
         # End scope
         self.symtab.popFrame()

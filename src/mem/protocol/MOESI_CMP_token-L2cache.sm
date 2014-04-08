@@ -482,9 +482,7 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
 
      // if this is a retry or no local sharers, broadcast normally
-
-     // if (in_msg.RetryNum > 0 || (in_msg.Type == CoherenceRequestType:GETX && exclusiveExists(in_msg.Addr) == false) || (in_msg.Type == CoherenceRequestType:GETS && sharersExist(in_msg.Addr) == false)) {
-        enqueue(globalRequestNetwork_out, RequestMsg, latency=l2_request_latency) {
+        enqueue(globalRequestNetwork_out, RequestMsg, l2_request_latency) {
            out_msg.Addr := in_msg.Addr;
            out_msg.Type := in_msg.Type;
            out_msg.Requestor := in_msg.Requestor;
@@ -513,7 +511,7 @@ machine(L2Cache, "Token protocol")
   action(bb_bounceResponse, "\b", desc="Bounce tokens and data to memory") {
     peek(responseNetwork_in, ResponseMsg) {
       // FIXME, should use a 3rd vnet
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
@@ -529,7 +527,7 @@ machine(L2Cache, "Token protocol")
   action(c_cleanReplacement, "c", desc="Issue clean writeback") {
     assert(is_valid(cache_entry));
     if (cache_entry.Tokens > 0) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -543,7 +541,7 @@ machine(L2Cache, "Token protocol")
 
   action(cc_dirtyReplacement, "\c", desc="Issue dirty writeback") {
     assert(is_valid(cache_entry));
-    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
       out_msg.Addr := address;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -566,7 +564,7 @@ machine(L2Cache, "Token protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (cache_entry.Tokens > (N_tokens + (max_tokens() / 2))) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
@@ -579,7 +577,7 @@ machine(L2Cache, "Token protocol")
         cache_entry.Tokens := cache_entry.Tokens - N_tokens;
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
@@ -597,7 +595,7 @@ machine(L2Cache, "Token protocol")
   action(dd_sendDataWithAllTokens, "\d", desc="Send data and all tokens from cache to requestor") {
     assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -615,7 +613,7 @@ machine(L2Cache, "Token protocol")
   action(e_sendAckWithCollectedTokens, "e", desc="Send ack with the tokens we've collected thus far.") {
     assert(is_valid(cache_entry));
     if (cache_entry.Tokens > 0) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -630,7 +628,7 @@ machine(L2Cache, "Token protocol")
 
   action(ee_sendDataWithAllTokens, "\e", desc="Send data and all tokens from cache to starver") {
     assert(is_valid(cache_entry));
-    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA_OWNER;
       out_msg.Sender := machineID;
@@ -649,7 +647,7 @@ machine(L2Cache, "Token protocol")
     assert(is_valid(cache_entry));
     assert(cache_entry.Tokens > 0);
     if (cache_entry.Tokens > 1) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -666,7 +664,7 @@ machine(L2Cache, "Token protocol")
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     assert(is_valid(cache_entry));
     assert(cache_entry.Tokens > (max_tokens() / 2) + 1);
-    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -683,7 +681,7 @@ machine(L2Cache, "Token protocol")
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     assert(is_valid(cache_entry));
     assert(cache_entry.Tokens == (max_tokens() / 2) + 1);
-    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -702,7 +700,7 @@ machine(L2Cache, "Token protocol")
     // assert(persistentTable.isLocked(address));
     peek(responseNetwork_in, ResponseMsg) {
       // FIXME, should use a 3rd vnet in some cases
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
@@ -719,7 +717,7 @@ machine(L2Cache, "Token protocol")
     //assert(persistentTable.isLocked(address));
     peek(responseNetwork_in, ResponseMsg) {
       // FIXME, should use a 3rd vnet in some cases
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.Addr := address;
         if (in_msg.Type == CoherenceResponseType:WB_SHARED_DATA) {
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
@@ -741,7 +739,7 @@ machine(L2Cache, "Token protocol")
     // assert(persistentTable.isLocked(address));
     peek(responseNetwork_in, ResponseMsg) {
       // FIXME, should use a 3rd vnet in some cases
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -769,7 +767,7 @@ machine(L2Cache, "Token protocol")
                 in_msg.RetryNum);
       }
       else {
-        enqueue(localRequestNetwork_out, RequestMsg, latency=l2_response_latency ) {
+        enqueue(localRequestNetwork_out, RequestMsg, l2_response_latency ) {
            out_msg.Addr := in_msg.Addr;
            out_msg.Requestor := in_msg.Requestor;
 
@@ -795,8 +793,7 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       assert(cache_entry.Tokens > 0);
-      //enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_to_L1_RESPONSE_LATENCY") {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
@@ -814,7 +811,7 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       assert(cache_entry.Tokens == (max_tokens() / 2) + 1);
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -832,8 +829,7 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
 //      assert(cache_entry.Tokens == max_tokens());
-      //enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_to_L1_RESPONSE_LATENCY") {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -908,7 +904,7 @@ machine(L2Cache, "Token protocol")
     assert(is_valid(cache_entry));
     if (cache_entry.Tokens > 0) {
       peek(requestNetwork_in, RequestMsg) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -926,7 +922,7 @@ machine(L2Cache, "Token protocol")
     assert(is_valid(cache_entry));
     if (cache_entry.Tokens > 0) {
       peek(L1requestNetwork_in, RequestMsg) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;

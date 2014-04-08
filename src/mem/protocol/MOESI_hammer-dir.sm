@@ -492,7 +492,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -505,7 +505,7 @@ machine(Directory, "AMD Hammer-like protocol")
   action(oc_sendBlockAck, "oc", desc="Send block ack to the owner") {
     peek(requestQueue_in, RequestMsg) {
         if (((probe_filter_enabled || full_bit_dir_enabled) && (in_msg.Requestor == cache_entry.Owner)) || machineCount(MachineType:L1Cache) == 1) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceRequestType:BLOCK_ACK;
           out_msg.Requestor := in_msg.Requestor;
@@ -518,7 +518,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -727,7 +727,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := tbe.ResponseType;
@@ -747,7 +747,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(dr_sendDmaData, "dr", desc="Send Data to DMA controller from memory") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
@@ -765,7 +765,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(dt_sendDmaDataFromTbe, "dt", desc="Send Data to DMA controller from tbe") {
     peek(triggerQueue_in, TriggerMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
@@ -782,7 +782,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(da_sendDmaAck, "da", desc="Send Ack to DMA controller") {
-    enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+    enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
       assert(is_valid(tbe));
       out_msg.PhysicalAddress := address;
       out_msg.LineAddress := address;
@@ -836,7 +836,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -850,7 +850,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(qd_queueMemoryRequestFromDmaRead, "qd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -871,7 +871,7 @@ machine(Directory, "AMD Hammer-like protocol")
           fwd_set := cache_entry.Sharers;
           fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
           if (fwd_set.count() > 0) {
-            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
               out_msg.Addr := address;
               out_msg.Type := in_msg.Type;
               out_msg.Requestor := in_msg.Requestor;
@@ -886,7 +886,7 @@ machine(Directory, "AMD Hammer-like protocol")
         }
       } else {
         peek(requestQueue_in, RequestMsg) {
-          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
             out_msg.Addr := address;
             out_msg.Type := in_msg.Type;
             out_msg.Requestor := in_msg.Requestor;
@@ -906,7 +906,7 @@ machine(Directory, "AMD Hammer-like protocol")
       if (full_bit_dir_enabled) {
         assert(cache_entry.Sharers.count() > 0);
         peek(requestQueue_in, RequestMsg) {
-          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
             out_msg.Addr := address;
             out_msg.Type := CoherenceRequestType:INV;
             out_msg.Requestor := machineID;
@@ -915,7 +915,7 @@ machine(Directory, "AMD Hammer-like protocol")
           }
         }
       } else {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceRequestType:INV;
           out_msg.Requestor := machineID;
@@ -928,7 +928,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(io_invalidateOwnerRequest, "io", desc="invalidate all copies") {
     if (machineCount(MachineType:L1Cache) > 1) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
         assert(is_valid(cache_entry)); 
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:INV;
@@ -947,7 +947,7 @@ machine(Directory, "AMD Hammer-like protocol")
           fwd_set := cache_entry.Sharers;
           fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
           if (fwd_set.count() > 0) {
-            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
                   out_msg.Addr := address;
                   out_msg.Type := in_msg.Type;
                   out_msg.Requestor := in_msg.Requestor;
@@ -960,7 +960,7 @@ machine(Directory, "AMD Hammer-like protocol")
               }
           }
         } else {
-            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
                 out_msg.Addr := address;
                 out_msg.Type := in_msg.Type;
                 out_msg.Requestor := in_msg.Requestor;
@@ -974,7 +974,7 @@ machine(Directory, "AMD Hammer-like protocol")
       }
     } else {
       peek(requestQueue_in, RequestMsg) {
-          enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+          enqueue(responseNetwork_out, ResponseMsg, 1) {
             out_msg.Addr := address;
             out_msg.Type := CoherenceResponseType:ACK;
             out_msg.Sender := machineID;
@@ -996,7 +996,7 @@ machine(Directory, "AMD Hammer-like protocol")
     // decouple the two.
     //
     peek(unblockNetwork_in, ResponseMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:MERGED_GETS;
@@ -1017,7 +1017,7 @@ machine(Directory, "AMD Hammer-like protocol")
     assert(machineCount(MachineType:L1Cache) > 1);
     if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           assert(is_valid(cache_entry)); 
           out_msg.Addr := address;
           out_msg.Type := in_msg.Type;
@@ -1031,7 +1031,7 @@ machine(Directory, "AMD Hammer-like protocol")
       }      
     } else {
       peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := in_msg.Type;
           out_msg.Requestor := in_msg.Requestor;
@@ -1051,7 +1051,7 @@ machine(Directory, "AMD Hammer-like protocol")
      if (probe_filter_enabled || full_bit_dir_enabled) {
        peek(requestQueue_in, RequestMsg) {
         if (in_msg.Requestor != cache_entry.Owner) {
-          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
             assert(is_valid(cache_entry));
             out_msg.Addr := address;
             out_msg.Type := in_msg.Type;
@@ -1066,7 +1066,7 @@ machine(Directory, "AMD Hammer-like protocol")
        }
      } else {
       peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := in_msg.Type;
           out_msg.Requestor := in_msg.Requestor;
@@ -1085,7 +1085,7 @@ machine(Directory, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     if (tbe.NumPendingMsgs > 0) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceRequestType:GETX;
           //
@@ -1104,7 +1104,7 @@ machine(Directory, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     if (tbe.NumPendingMsgs > 0) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        enqueue(forwardNetwork_out, RequestMsg, memory_controller_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceRequestType:GETS;
           //
@@ -1244,7 +1244,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(unblockNetwork_in, ResponseMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         assert(in_msg.Dirty);
         assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
         out_msg.Addr := address;
@@ -1256,7 +1256,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(ld_queueMemoryDmaWrite, "ld", desc="Write DMA data to memory") {
-    enqueue(memQueue_out, MemoryMsg, latency="1") {
+    enqueue(memQueue_out, MemoryMsg, 1) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := MemoryRequestType:MEMORY_WB;

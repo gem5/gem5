@@ -151,7 +151,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
+      enqueue(reqToDirectory_out, RequestMsg, request_latency) {
         out_msg.Addr := in_msg.PhysicalAddress;
         out_msg.Type := CoherenceRequestType:DMA_READ;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -166,7 +166,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
+      enqueue(reqToDirectory_out, RequestMsg, request_latency) {
           out_msg.Addr := in_msg.PhysicalAddress;
           out_msg.Type := CoherenceRequestType:DMA_WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
@@ -201,7 +201,7 @@ machine(DMA, "DMA Controller")
   }
 
   action( u_sendExclusiveUnblockToDir, "\u", desc="send exclusive unblock to directory") {
-    enqueue(respToDirectory_out, ResponseMsg, latency=response_latency) {
+    enqueue(respToDirectory_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Destination.add(map_Address_to_Directory(address));

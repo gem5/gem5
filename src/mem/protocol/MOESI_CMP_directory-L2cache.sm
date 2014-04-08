@@ -683,7 +683,7 @@ machine(L2Cache, "Token protocol")
 
   action(a_issueGETS, "a", desc="issue local request globally") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue(globalRequestNetwork_out, RequestMsg, latency=request_latency) {
+      enqueue(globalRequestNetwork_out, RequestMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.RequestorMachine := MachineType:L2Cache;
@@ -696,7 +696,7 @@ machine(L2Cache, "Token protocol")
 
   action(a_issueGETX, "\a", desc="issue local request globally") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue(globalRequestNetwork_out, RequestMsg, latency=request_latency) {
+      enqueue(globalRequestNetwork_out, RequestMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.RequestorMachine := MachineType:L2Cache;
@@ -708,7 +708,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(b_issuePUTX, "b", desc="Issue PUTX") {
-    enqueue(globalRequestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(globalRequestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.RequestorMachine := MachineType:L2Cache;
@@ -719,7 +719,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(b_issuePUTO, "\b", desc="Issue PUTO") {
-    enqueue(globalRequestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(globalRequestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
@@ -731,7 +731,7 @@ machine(L2Cache, "Token protocol")
 
   /* PUTO, but local sharers exist */
   action(b_issuePUTO_ls, "\bb", desc="Issue PUTO") {
-    enqueue(globalRequestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(globalRequestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTO_SHARERS;
       out_msg.Requestor := machineID;
@@ -743,7 +743,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendDataFromTBEToL1GETS, "c", desc="Send data from TBE to L1 requestors in TBE") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
@@ -761,7 +761,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendDataFromTBEToL1GETX, "\c", desc="Send data from TBE to L1 requestors in TBE") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -778,7 +778,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendExclusiveDataFromTBEToL1GETS, "\cc", desc="Send data from TBE to L1 requestors in TBE") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -792,7 +792,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendDataFromTBEToFwdGETX, "cc", desc="Send data from TBE to external GETX") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -808,7 +808,7 @@ machine(L2Cache, "Token protocol")
   action(cd_sendDataFromTBEToFwdDma, "cd", desc="Send data from TBE to external GETX") {
     assert(is_valid(tbe));
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -828,7 +828,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendDataFromTBEToFwdGETS, "ccc", desc="Send data from TBE to external GETX") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
@@ -847,7 +847,7 @@ machine(L2Cache, "Token protocol")
 
   action(c_sendExclusiveDataFromTBEToFwdGETS, "\ccc", desc="Send data from TBE to external GETX") {
     assert(is_valid(tbe));
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -865,7 +865,7 @@ machine(L2Cache, "Token protocol")
   action(d_sendDataToL1GETS, "d", desc="Send data directly to L1 requestor") {
     assert(is_valid(cache_entry));
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -885,7 +885,7 @@ machine(L2Cache, "Token protocol")
   action(d_sendDataToL1GETX, "\d", desc="Send data and a token from TBE to L1 requestor") {
     assert(is_valid(cache_entry));
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
@@ -905,7 +905,7 @@ machine(L2Cache, "Token protocol")
   action(dd_sendDataToFwdGETX, "dd", desc="send data") {
     assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
@@ -925,7 +925,7 @@ machine(L2Cache, "Token protocol")
   action(dd_sendDataToFwdGETS, "\dd", desc="send data") {
     assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -945,7 +945,7 @@ machine(L2Cache, "Token protocol")
   action(dd_sendExclusiveDataToFwdGETS, "\d\d", desc="send data") {
     assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
@@ -959,7 +959,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(e_sendAck, "e", desc="Send ack with the tokens we've collected thus far.") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:ACK;
@@ -974,7 +974,7 @@ machine(L2Cache, "Token protocol")
 
   action(e_sendAckToL1Requestor, "\e", desc="Send ack with the tokens we've collected thus far.") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -987,7 +987,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(e_sendAckToL1RequestorFromTBE, "eee", desc="Send ack with the tokens we've collected thus far.") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:ACK;
@@ -1010,7 +1010,7 @@ machine(L2Cache, "Token protocol")
       DPRINTF(RubySlicc, "%s\n", getLocalOwner(cache_entry, address));
     }
 
-    enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+    enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:INV;
       out_msg.Requestor := machineID;
@@ -1031,7 +1031,7 @@ machine(L2Cache, "Token protocol")
     tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
 
     if (countLocalSharers(cache_entry, address) > 0) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
@@ -1063,7 +1063,7 @@ machine(L2Cache, "Token protocol")
             tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
           }
 
-          enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+          enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
             out_msg.Addr := address;
             out_msg.Type := CoherenceRequestType:INV;
             out_msg.Requestor := in_msg.Requestor;
@@ -1089,7 +1089,7 @@ machine(L2Cache, "Token protocol")
         tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
       }
     }
-    enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+    enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := tbe.L1_GetX_ID;
@@ -1102,7 +1102,7 @@ machine(L2Cache, "Token protocol")
 
 
   action(f_sendUnblock, "f", desc="Send unblock to global directory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -1114,7 +1114,7 @@ machine(L2Cache, "Token protocol")
 
 
   action(f_sendExclusiveUnblock, "\f", desc="Send unblock to global directory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -1197,7 +1197,7 @@ machine(L2Cache, "Token protocol")
 
   action(j_forwardGlobalRequestToLocalOwner, "j", desc="Forward external request to local owner") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := machineID;
@@ -1212,7 +1212,7 @@ machine(L2Cache, "Token protocol")
 
   action(jd_forwardDmaRequestToLocalOwner, "jd", desc="Forward dma request to local owner") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
@@ -1228,7 +1228,7 @@ machine(L2Cache, "Token protocol")
 
   action(k_forwardLocalGETSToLocalSharer, "k", desc="Forward local request to local sharer/owner") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := in_msg.Requestor;
@@ -1241,7 +1241,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(k_forwardLocalGETXToLocalOwner, "\k", desc="Forward local request to local owner") {
-    enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+    enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:GETX;
@@ -1256,7 +1256,7 @@ machine(L2Cache, "Token protocol")
   // same as previous except that it assumes to TBE is present to get number of acks
   action(kk_forwardLocalGETXToLocalExclusive, "kk", desc="Forward local request to local owner") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := in_msg.Requestor;
@@ -1270,7 +1270,7 @@ machine(L2Cache, "Token protocol")
 
   action(kk_forwardLocalGETSToLocalOwner, "\kk", desc="Forward local request to local owner") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := in_msg.Requestor;
@@ -1284,7 +1284,7 @@ machine(L2Cache, "Token protocol")
 
   action(l_writebackAckNeedData, "l", desc="Send writeback ack to L1 requesting data") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         // out_msg.Type := CoherenceResponseType:WRITEBACK_SEND_DATA;
         out_msg.Type := CoherenceRequestType:WB_ACK_DATA;
@@ -1298,7 +1298,7 @@ machine(L2Cache, "Token protocol")
 
   action(l_writebackAckDropData, "\l", desc="Send writeback ack to L1 indicating to drop data") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         // out_msg.Type := CoherenceResponseType:WRITEBACK_ACK;
         out_msg.Type := CoherenceRequestType:WB_ACK;
@@ -1312,7 +1312,7 @@ machine(L2Cache, "Token protocol")
 
   action(ll_writebackNack, "\ll", desc="Send writeback nack to L1") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
         out_msg.Addr := in_msg.Addr;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := machineID;
@@ -1383,7 +1383,7 @@ machine(L2Cache, "Token protocol")
 
 
   action( qq_sendDataFromTBEToMemory, "qq", desc="Send data from TBE to directory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Sender := machineID;
@@ -1514,7 +1514,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(da_sendDmaAckUnblock, "da", desc="Send dma ack to global directory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DMA_ACK;
       out_msg.Destination.add(map_Address_to_Directory(address));

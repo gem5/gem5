@@ -248,7 +248,7 @@ machine(Directory, "Directory protocol")
 
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -260,7 +260,7 @@ machine(Directory, "Directory protocol")
 
   action(l_sendWriteBackAck, "la", desc="Send writeback ack to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="1") {
+      enqueue(forwardNetwork_out, RequestMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.OriginalRequestorMachId;
@@ -272,7 +272,7 @@ machine(Directory, "Directory protocol")
 
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -288,7 +288,7 @@ machine(Directory, "Directory protocol")
 
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -301,7 +301,7 @@ machine(Directory, "Directory protocol")
 
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
@@ -317,7 +317,7 @@ machine(Directory, "Directory protocol")
 
   action(drp_sendDMAData, "drp", desc="Send Data to DMA controller from incoming PUTX") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
@@ -330,7 +330,7 @@ machine(Directory, "Directory protocol")
   }
 
   action(da_sendDMAAck, "da", desc="Send Ack to DMA controller") {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, 1) {
         assert(is_valid(tbe));
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
@@ -353,7 +353,7 @@ machine(Directory, "Directory protocol")
       APPEND_TRANSITION_COMMENT(getDirectoryEntry(in_msg.Addr).Owner);
       APPEND_TRANSITION_COMMENT("Req: ");
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
-      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
         out_msg.Addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
@@ -365,7 +365,7 @@ machine(Directory, "Directory protocol")
 
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
+      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
@@ -440,7 +440,7 @@ machine(Directory, "Directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -454,7 +454,7 @@ machine(Directory, "Directory protocol")
 
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -468,7 +468,7 @@ machine(Directory, "Directory protocol")
 
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         //out_msg.OriginalRequestorMachId := machineID;
@@ -484,7 +484,7 @@ machine(Directory, "Directory protocol")
 
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
@@ -504,7 +504,7 @@ machine(Directory, "Directory protocol")
 
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="1") {
+      enqueue(memQueue_out, MemoryMsg, 1) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;

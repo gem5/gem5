@@ -485,7 +485,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   void enqueuePrefetch(Address address, RubyRequestType type) {
-      enqueue(optionalQueue_out, RubyRequest, latency=1) {
+      enqueue(optionalQueue_out, RubyRequest, 1) {
           out_msg.LineAddress := address;
           out_msg.Type := type;
           out_msg.AccessMode := RubyAccessMode:Supervisor;
@@ -495,7 +495,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   // ACTIONS
   action(a_issueGETS, "a", desc="Issue GETS") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg, latency=l1_request_latency) {
+      enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
@@ -512,8 +512,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(pa_issuePfGETS, "pa", desc="Issue prefetch GETS") {
     peek(optionalQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg,
-              latency=l1_request_latency) {
+      enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
@@ -530,7 +529,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(ai_issueGETINSTR, "ai", desc="Issue GETINSTR") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg, latency=l1_request_latency) {
+      enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GET_INSTR;
         out_msg.Requestor := machineID;
@@ -548,8 +547,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   action(pai_issuePfGETINSTR, "pai",
          desc="Issue GETINSTR for prefetch request") {
       peek(optionalQueue_in, RubyRequest) {
-          enqueue(requestL1Network_out, RequestMsg,
-                  latency=l1_request_latency) {
+          enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
               out_msg.Addr := address;
               out_msg.Type := CoherenceRequestType:GET_INSTR;
               out_msg.Requestor := machineID;
@@ -568,7 +566,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg, latency=l1_request_latency) {
+      enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
@@ -586,8 +584,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(pb_issuePfGETX, "pb", desc="Issue prefetch GETX") {
       peek(optionalQueue_in, RubyRequest) {
-          enqueue(requestL1Network_out, RequestMsg,
-                  latency=l1_request_latency) {
+          enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
               out_msg.Addr := address;
               out_msg.Type := CoherenceRequestType:GETX;
               out_msg.Requestor := machineID;
@@ -607,7 +604,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(c_issueUPGRADE, "c", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg, latency= l1_request_latency) {
+      enqueue(requestL1Network_out, RequestMsg,  l1_request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:UPGRADE;
         out_msg.Requestor := machineID;
@@ -624,7 +621,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(d_sendDataToRequestor, "d", desc="send data to requestor") {
     peek(requestL1Network_in, RequestMsg) {
-      enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
         assert(is_valid(cache_entry));
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
@@ -638,7 +635,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(d2_sendDataToL2, "d2", desc="send data to the L2 cache because of M downgrade") {
-    enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+    enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -653,7 +650,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(dt_sendDataToRequestor_fromTBE, "dt", desc="send data to requestor") {
     peek(requestL1Network_in, RequestMsg) {
-      enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
@@ -667,7 +664,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(d2t_sendDataToL2_fromTBE, "d2t", desc="send data to the L2 cache") {
-    enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+    enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -682,7 +679,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(e_sendAckToRequestor, "e", desc="send invalidate ack to requestor (could be L2 or L1)") {
     peek(requestL1Network_in, RequestMsg) {
-      enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -693,7 +690,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(f_sendDataToL2, "f", desc="send data to the L2 cache") {
-    enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+    enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -707,7 +704,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(ft_sendDataToL2_fromTBE, "ft", desc="send data to the L2 cache") {
-    enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+    enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -722,7 +719,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
     peek(requestL1Network_in, RequestMsg) {
-      enqueue(responseL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      enqueue(responseL1Network_out, ResponseMsg, l1_response_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -741,7 +738,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(g_issuePUTX, "g", desc="send data to the L2 cache") {
-    enqueue(requestL1Network_out, RequestMsg, latency=l1_response_latency) {
+    enqueue(requestL1Network_out, RequestMsg, l1_response_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTX;
@@ -759,7 +756,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency=to_l2_latency) {
+    enqueue(unblockNetwork_out, ResponseMsg, to_l2_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
@@ -771,7 +768,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(jj_sendExclusiveUnblock, "\j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency=to_l2_latency) {
+    enqueue(unblockNetwork_out, ResponseMsg, to_l2_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:EXCLUSIVE_UNBLOCK;
       out_msg.Sender := machineID;

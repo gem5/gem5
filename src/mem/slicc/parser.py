@@ -557,8 +557,12 @@ class SLICC(Grammar):
         p[0] = ast.AssignStatementAST(self, p[1], p[3])
 
     def p_statement__enqueue(self, p):
-        "statement : ENQUEUE '(' var ',' type pairs ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[6], p[8])
+        "statement : ENQUEUE '(' var ',' type ')' statements"
+        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], None, p[7])
+
+    def p_statement__enqueue_latency(self, p):
+        "statement : ENQUEUE '(' var ',' type ',' expr ')' statements"
+        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], p[9])
 
     def p_statement__stall_and_wait(self, p):
         "statement : STALL_AND_WAIT '(' var ',' var ')' SEMI"
@@ -575,14 +579,6 @@ class SLICC(Grammar):
     def p_statement__check_stop(self, p):
         "statement : CHECK_STOP_SLOTS '(' var ',' STRING ',' STRING ')' SEMI"
         p[0] = ast.CheckStopStatementAST(self, p[3], p[5], p[7])
-
-    def p_statement__static_cast(self, p):
-        "aexpr : STATIC_CAST '(' type ',' expr ')'"
-        p[0] = ast.StaticCastAST(self, p[3], "ref", p[5])
-
-    def p_statement__static_cast_ptr(self, p):
-        "aexpr : STATIC_CAST '(' type ',' STRING ',' expr ')'"
-        p[0] = ast.StaticCastAST(self, p[3], p[5], p[7])
 
     def p_statement__return(self, p):
         "statement : RETURN expr SEMI"
@@ -604,6 +600,14 @@ class SLICC(Grammar):
         "if_statement : IF '(' expr ')' statements ELSE if_statement"
         p[0] = ast.IfStatementAST(self, p[3], p[5],
                                   ast.StatementListAST(self, p[7]))
+
+    def p_expr__static_cast(self, p):
+        "aexpr : STATIC_CAST '(' type ',' expr ')'"
+        p[0] = ast.StaticCastAST(self, p[3], "ref", p[5])
+
+    def p_expr__static_cast_ptr(self, p):
+        "aexpr : STATIC_CAST '(' type ',' STRING ',' expr ')'"
+        p[0] = ast.StaticCastAST(self, p[3], p[5], p[7])
 
     def p_expr__var(self, p):
         "aexpr : var"

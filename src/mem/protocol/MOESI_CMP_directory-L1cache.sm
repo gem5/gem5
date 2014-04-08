@@ -414,7 +414,7 @@ machine(L1Cache, "Directory protocol")
 
   action(a_issueGETS, "a", desc="Issue GETS") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestNetwork_out, RequestMsg, latency= request_latency) {
+      enqueue(requestNetwork_out, RequestMsg,  request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
@@ -430,7 +430,7 @@ machine(L1Cache, "Directory protocol")
 
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
+      enqueue(requestNetwork_out, RequestMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
@@ -445,8 +445,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(d_issuePUTX, "d", desc="Issue PUTX") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
-    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
@@ -458,8 +457,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(dd_issuePUTO, "\d", desc="Issue PUTO") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
-    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
@@ -471,8 +469,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(dd_issuePUTS, "\ds", desc="Issue PUTS") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
-    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTS;
       out_msg.Requestor := machineID;
@@ -487,7 +484,7 @@ machine(L1Cache, "Directory protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -503,7 +500,7 @@ machine(L1Cache, "Directory protocol")
         DPRINTF(RubySlicc, "Sending data to L2: %s\n", in_msg.Addr);
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -521,7 +518,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(e_sendDataToL2, "ee", desc="Send data from cache to requestor") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -540,7 +537,7 @@ machine(L1Cache, "Directory protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -555,7 +552,7 @@ machine(L1Cache, "Directory protocol")
         DPRINTF(RubySlicc, "Sending exclusive data to L2\n");
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -574,7 +571,7 @@ machine(L1Cache, "Directory protocol")
   action(f_sendAck, "f", desc="Send ack from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -585,7 +582,7 @@ machine(L1Cache, "Directory protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -600,7 +597,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(g_sendUnblock, "g", desc="Send unblock to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
@@ -612,7 +609,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(gg_sendUnblockExclusive, "\g", desc="Send unblock exclusive to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -709,7 +706,7 @@ machine(L1Cache, "Directory protocol")
 
   action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DMA_ACK;
         out_msg.Sender := machineID;
@@ -728,7 +725,7 @@ machine(L1Cache, "Directory protocol")
       assert(is_valid(tbe));
       if (in_msg.RequestorMachine == MachineType:L1Cache ||
           in_msg.RequestorMachine == MachineType:DMA) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -742,7 +739,7 @@ machine(L1Cache, "Directory protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -763,7 +760,7 @@ machine(L1Cache, "Directory protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(tbe));
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -776,7 +773,7 @@ machine(L1Cache, "Directory protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
           out_msg.Addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -794,7 +791,7 @@ machine(L1Cache, "Directory protocol")
 
   // L2 will usually request data for a writeback
   action(qq_sendWBDataFromTBEToL2, "\q", desc="Send data from TBE to L2") {
-    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
       assert(is_valid(tbe));
       out_msg.Addr := address;
       out_msg.Sender := machineID;

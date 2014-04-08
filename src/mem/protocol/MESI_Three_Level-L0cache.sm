@@ -350,7 +350,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   // ACTIONS
   action(a_issueGETS, "a", desc="Issue GETS") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestNetwork_out, CoherenceMsg, latency=request_latency) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:GETS;
         out_msg.Sender := machineID;
@@ -365,7 +365,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestNetwork_out, CoherenceMsg, latency=request_latency) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:GETX;
         out_msg.Sender := machineID;
@@ -382,7 +382,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   action(c_issueUPGRADE, "c", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestNetwork_out, CoherenceMsg, latency= request_latency) {
+      enqueue(requestNetwork_out, CoherenceMsg, request_latency) {
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:UPGRADE;
         out_msg.Sender := machineID;
@@ -397,7 +397,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   action(f_sendDataToL1, "f", desc="send data to the L2 cache") {
-    enqueue(requestNetwork_out, CoherenceMsg, latency=response_latency) {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Class := CoherenceClass:INV_DATA;
@@ -411,7 +411,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
     peek(messgeBuffer_in, CoherenceMsg) {
-      enqueue(requestNetwork_out, CoherenceMsg, latency=response_latency) {
+      enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:INV_ACK;
         out_msg.Sender := machineID;
@@ -429,7 +429,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   action(g_issuePUTX, "g", desc="send data to the L2 cache") {
-    enqueue(requestNetwork_out, CoherenceMsg, latency=response_latency) {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Class := CoherenceClass:PUTX;

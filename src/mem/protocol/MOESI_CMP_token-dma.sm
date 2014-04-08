@@ -106,7 +106,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+      enqueue(reqToDirectory_out, DMARequestMsg, request_latency) {
         out_msg.PhysicalAddress := in_msg.PhysicalAddress;
         out_msg.LineAddress := in_msg.LineAddress;
         out_msg.Type := DMARequestType:READ;
@@ -121,7 +121,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+      enqueue(reqToDirectory_out, DMARequestMsg, request_latency) {
           out_msg.PhysicalAddress := in_msg.PhysicalAddress;
           out_msg.LineAddress := in_msg.LineAddress;
           out_msg.Type := DMARequestType:WRITE;

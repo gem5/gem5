@@ -138,7 +138,7 @@ machine(L1Cache, "Network_test L1 Cache")
   // map_Address_to_Directory is used to retrieve it.
 
   action(a_issueRequest, "a", desc="Issue a request") {
-    enqueue(requestNetwork_out, RequestMsg, latency=issue_latency) {
+    enqueue(requestNetwork_out, RequestMsg, issue_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
@@ -149,7 +149,7 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
   action(b_issueForward, "b", desc="Issue a forward") {
-    enqueue(forwardNetwork_out, RequestMsg, latency=issue_latency) {
+    enqueue(forwardNetwork_out, RequestMsg, issue_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
@@ -159,7 +159,7 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
   action(c_issueResponse, "c", desc="Issue a response") {
-    enqueue(responseNetwork_out, RequestMsg, latency=issue_latency) {
+    enqueue(responseNetwork_out, RequestMsg, issue_latency) {
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;

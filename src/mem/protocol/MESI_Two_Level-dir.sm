@@ -240,7 +240,7 @@ machine(Directory, "MESI Two Level directory protocol")
   // Actions
   action(a_sendAck, "a", desc="Send ack to L2") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:MEMORY_ACK;
         out_msg.Sender := machineID;
@@ -252,7 +252,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:MEMORY_DATA;
         out_msg.Sender := machineID;
@@ -270,7 +270,7 @@ machine(Directory, "MESI Two Level directory protocol")
   // Actions
   action(aa_sendAck, "aa", desc="Send ack to L2") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:MEMORY_ACK;
         out_msg.Sender := machineID;
@@ -298,7 +298,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -314,7 +314,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
@@ -338,7 +338,7 @@ machine(Directory, "MESI Two Level directory protocol")
 //added by SS for dma
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -356,7 +356,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
@@ -374,7 +374,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(requestNetwork_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := machineID;
@@ -391,7 +391,7 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   action(da_sendDMAAck, "da", desc="Send Ack to DMA controller") {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Destination.add(map_Address_to_DMA(address));
@@ -409,7 +409,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=directory_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, directory_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:INV;
         out_msg.Sender := machineID;
@@ -422,7 +422,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(drp_sendDMAData, "drp", desc="Send Data to DMA controller from incoming PUTX") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
@@ -453,7 +453,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         assert(is_valid(tbe));
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
