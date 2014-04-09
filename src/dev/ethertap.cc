@@ -106,6 +106,11 @@ TapListener::listen()
 void
 TapListener::accept()
 {
+    // As a consequence of being called from the PollQueue, we might
+    // have been called from a different thread. Migrate to "our"
+    // thread.
+    EventQueue::ScopedMigration migrate(tap->eventQueue());
+
     if (!listener.islistening())
         panic("TapListener(accept): cannot accept if we're not listening!");
 

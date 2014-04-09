@@ -84,6 +84,11 @@ Terminal::DataEvent::DataEvent(Terminal *t, int fd, int e)
 void
 Terminal::DataEvent::process(int revent)
 {
+    // As a consequence of being called from the PollQueue, we might
+    // have been called from a different thread. Migrate to "our"
+    // thread.
+    EventQueue::ScopedMigration migrate(term->eventQueue());
+
     if (revent & POLLIN)
         term->data();
     else if (revent & POLLNVAL)

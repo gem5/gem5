@@ -174,6 +174,11 @@ VncServer::listen(int port)
 void
 VncServer::accept()
 {
+    // As a consequence of being called from the PollQueue, we might
+    // have been called from a different thread. Migrate to "our"
+    // thread.
+    EventQueue::ScopedMigration migrate(eventQueue());
+
     if (!listener.islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
