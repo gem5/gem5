@@ -415,6 +415,13 @@ void
 BaseKvmCPU::wakeup()
 {
     DPRINTF(Kvm, "wakeup()\n");
+    // This method might have been called from another
+    // context. Migrate to this SimObject's event queue when
+    // delivering the wakeup signal.
+    EventQueue::ScopedMigration migrate(eventQueue());
+
+    // Kick the vCPU to get it to come out of KVM.
+    kick();
 
     if (thread->status() != ThreadContext::Suspended)
         return;
@@ -635,6 +642,14 @@ BaseKvmCPU::kvmRun(Tick ticks)
         // twice.
         ticksExecuted = clockPeriod();
     } else {
+        // This method is executed as a result of a tick event. That
+        // means that the event queue will be locked when entering the
+        // method. We temporarily unlock the event queue to allow
+        // other threads to steal control of this thread to inject
+        // interrupts. They will typically lock the queue and then
+        // force an exit from KVM by kicking the vCPU.
+        EventQueue::ScopedRelease release(curEventQueue());
+
         if (ticks < runTimer->resolution()) {
             DPRINTF(KvmRun, "KVM: Adjusting tick count (%i -> %i)\n",
                     ticks, runTimer->resolution());
@@ -990,11 +1005,19 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     pkt.dataStatic(data);
 
     if (mmio_req.isMmappedIpr()) {
+        // We currently assume that there is no need to migrate to a
+        // different event queue when doing IPRs. Currently, IPRs are
+        // only used for m5ops, so it should be a valid assumption.
         const Cycles ipr_delay(write ?
                              TheISA::handleIprWrite(tc, &pkt) :
                              TheISA::handleIprRead(tc, &pkt));
         return clockPeriod() * ipr_delay;
     } else {
+        // Temporarily lock and migrate to the event queue of the
+        // VM. This queue is assumed to "own" all devices we need to
+        // access if running in multi-core mode.
+        EventQueue::ScopedMigration migrate(vm.eventQueue());
+
         return dataPort.sendAtomic(&pkt);
     }
 }

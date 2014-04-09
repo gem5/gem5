@@ -1134,10 +1134,20 @@ X86KvmCPU::updateThreadContextMSRs()
 void
 X86KvmCPU::deliverInterrupts()
 {
+    Fault fault;
+
     syncThreadContext();
 
-    Fault fault(interrupts->getInterrupt(tc));
-    interrupts->updateIntrInfo(tc);
+    {
+        // Migrate to the interrupt controller's thread to get the
+        // interrupt. Even though the individual methods are safe to
+        // call across threads, we might still lose interrupts unless
+        // they are getInterrupt() and updateIntrInfo() are called
+        // atomically.
+        EventQueue::ScopedMigration migrate(interrupts->eventQueue());
+        fault = interrupts->getInterrupt(tc);
+        interrupts->updateIntrInfo(tc);
+    }
 
     X86Interrupt *x86int(dynamic_cast<X86Interrupt *>(fault.get()));
     if (dynamic_cast<NonMaskableInterrupt *>(fault.get())) {
@@ -1340,6 +1350,10 @@ X86KvmCPU::handleKvmExitIO()
                    dataMasterId());
 
     const MemCmd cmd(isWrite ? MemCmd::WriteReq : MemCmd::ReadReq);
+    // Temporarily lock and migrate to the event queue of the
+    // VM. This queue is assumed to "own" all devices we need to
+    // access if running in multi-core mode.
+    EventQueue::ScopedMigration migrate(vm.eventQueue());
     for (int i = 0; i < count; ++i) {
         Packet pkt(&io_req, cmd);
 
