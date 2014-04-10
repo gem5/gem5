@@ -872,7 +872,12 @@ if main['M5_BUILD_CACHE']:
 # we add them explicitly below. If you want to link in an alternate
 # version of python, see above for instructions on how to invoke
 # scons with the appropriate PATH set.
-py_includes = readCommand(['python-config', '--includes'],
+#
+# First we check if python2-config exists, else we use python-config
+python_config = readCommand(['which', 'python2-config'], exception='').strip()
+if not os.path.exists(python_config):
+    python_config = readCommand(['which', 'python-config'], exception='')
+py_includes = readCommand([python_config, '--includes'],
                           exception='').split()
 # Strip the -I from the include folders before adding them to the
 # CPPPATH
@@ -880,7 +885,7 @@ main.Append(CPPPATH=map(lambda inc: inc[2:], py_includes))
 
 # Read the linker flags and split them into libraries and other link
 # flags. The libraries are added later through the call the CheckLib.
-py_ld_flags = readCommand(['python-config', '--ldflags'], exception='').split()
+py_ld_flags = readCommand([python_config, '--ldflags'], exception='').split()
 py_libs = []
 for lib in py_ld_flags:
      if not lib.startswith('-l'):
