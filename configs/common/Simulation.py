@@ -93,6 +93,8 @@ def setMemClass(options):
 def setWorkCountOptions(system, options):
     if options.work_item_id != None:
         system.work_item_id = options.work_item_id
+    if options.num_work_ids != None:
+        system.num_work_ids = options.num_work_ids
     if options.work_begin_cpu_id_exit != None:
         system.work_begin_cpu_id_exit = options.work_begin_cpu_id_exit
     if options.work_end_exit_count != None:

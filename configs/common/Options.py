@@ -133,6 +133,8 @@ def addCommonOptions(parser):
                                             simulate (default: run forever)""")
     parser.add_option("--work-item-id", action="store", type="int",
                       help="the specific work id for exit & checkpointing")
+    parser.add_option("--num-work-ids", action="store", type="int",
+                      help="Number of distinct work item types")
     parser.add_option("--work-begin-cpu-id-exit", action="store", type="int",
                       help="exit when work starts on the specified cpu")
     parser.add_option("--work-end-exit-count", action="store", type="int",
