@@ -876,7 +876,8 @@ if main['M5_BUILD_CACHE']:
 # First we check if python2-config exists, else we use python-config
 python_config = readCommand(['which', 'python2-config'], exception='').strip()
 if not os.path.exists(python_config):
-    python_config = readCommand(['which', 'python-config'], exception='')
+    python_config = readCommand(['which', 'python-config'],
+                                exception='').strip()
 py_includes = readCommand([python_config, '--includes'],
                           exception='').split()
 # Strip the -I from the include folders before adding them to the
