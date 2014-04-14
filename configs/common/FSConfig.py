@@ -237,7 +237,13 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
         self.mem_ranges = [AddrRange(self.realview.mem_start_addr,
                                      size = mdesc.mem())]
     else:
-        self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
+        if machine_type == "VExpress_EMM64":
+            self.kernel = binary('vmlinux-3.14-aarch64-vexpress-emm64')
+        elif machine_type == "VExpress_EMM":
+            self.kernel = binary('vmlinux-3.3-arm-vexpress-emm-pcie')
+        else:
+            self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
+
         if dtb_filename:
             self.dtb_filename = binary(dtb_filename)
         self.machine_type = machine_type
