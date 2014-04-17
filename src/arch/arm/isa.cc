@@ -200,6 +200,8 @@ ISA::clear()
     sctlr.rao2 = 1;
     sctlr.rao3 = 1;
     sctlr.rao4 = 0xf;  // SCTLR[6:3]
+    sctlr.uci = 1;
+    sctlr.dze = 1;
     miscRegs[MISCREG_SCTLR_NS] = sctlr;
     miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
     miscRegs[MISCREG_HCPTR] = 0;
