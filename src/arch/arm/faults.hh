@@ -257,9 +257,9 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
 {
   protected:
     bool unknown;
-    const char *mnemonic;
     bool disabled;
     ExceptionClass overrideEc;
+    const char *mnemonic;
 
   public:
     UndefinedInstruction(ExtMachInst _machInst,
@@ -267,12 +267,14 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
                          const char *_mnemonic = NULL,
                          bool _disabled = false) :
         ArmFaultVals<UndefinedInstruction>(_machInst),
-        unknown(_unknown), mnemonic(_mnemonic), disabled(_disabled),
-        overrideEc(EC_INVALID)
+        unknown(_unknown), disabled(_disabled),
+        overrideEc(EC_INVALID), mnemonic(_mnemonic)
     {}
-    UndefinedInstruction(ExtMachInst _machInst, uint32_t _iss, ExceptionClass _overrideEc) :
+    UndefinedInstruction(ExtMachInst _machInst, uint32_t _iss,
+            ExceptionClass _overrideEc, const char *_mnemonic = NULL) :
         ArmFaultVals<UndefinedInstruction>(_machInst, _iss),
-        overrideEc(_overrideEc)
+        unknown(false), disabled(true), overrideEc(_overrideEc),
+        mnemonic(_mnemonic)
     {}
 
     void invoke(ThreadContext *tc,

@@ -294,7 +294,8 @@ let {{
                 flat_idx == MISCREG_DC_CVAC_Xt ||
                 flat_idx == MISCREG_DC_CIVAC_Xt
                 )
-                return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64);
+                return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                                    mnemonic);
             return new UndefinedInstruction(machInst, false, mnemonic);
         }
 
@@ -396,7 +397,8 @@ let {{
         if (!canWriteAArch64SysReg(
                 (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
                 Scr64, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64);
+            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                            mnemonic);
         }
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif | imm;
@@ -407,7 +409,8 @@ let {{
         if (!canWriteAArch64SysReg(
                 (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
                 Scr64, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64);
+            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                                mnemonic);
         }
         CPSR cpsr = Cpsr;
         cpsr.daif = cpsr.daif & ~imm;
