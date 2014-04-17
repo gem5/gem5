@@ -253,7 +253,10 @@ SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
 SyscallReturn getcwdFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
 
-/// Target unlink() handler.
+/// Target readlink() handler.
+SyscallReturn readlinkFunc(SyscallDesc *desc, int num,
+                           LiveProcess *p, ThreadContext *tc,
+                           int index = 0);
 SyscallReturn readlinkFunc(SyscallDesc *desc, int num,
                            LiveProcess *p, ThreadContext *tc);
 
@@ -350,6 +353,9 @@ SyscallReturn cloneFunc(SyscallDesc *desc, int num,
 /// Target access() handler
 SyscallReturn accessFunc(SyscallDesc *desc, int num,
                                LiveProcess *p, ThreadContext *tc);
+SyscallReturn accessFunc(SyscallDesc *desc, int num,
+                               LiveProcess *p, ThreadContext *tc,
+                               int index);
 
 /// Futex system call
 ///  Implemented by Daniel Sanchez
@@ -694,6 +700,32 @@ openatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
     return openFunc<OS>(desc, callnum, process, tc, 1);
+}
+
+/// Target facessat() handler
+template <class OS>
+SyscallReturn
+faccessatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+        ThreadContext *tc)
+{
+    int index = 0;
+    int dirfd = process->getSyscallArg(tc, index);
+    if (dirfd != OS::TGT_AT_FDCWD)
+        warn("faccessat: first argument not AT_FDCWD; unlikely to work");
+    return accessFunc(desc, callnum, process, tc, 1);
+}
+
+/// Target readlinkat() handler
+template <class OS>
+SyscallReturn
+readlinkatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+        ThreadContext *tc)
+{
+    int index = 0;
+    int dirfd = process->getSyscallArg(tc, index);
+    if (dirfd != OS::TGT_AT_FDCWD)
+        warn("openat: first argument not AT_FDCWD; unlikely to work");
+    return readlinkFunc(desc, callnum, process, tc, 1);
 }
 
 /// Target sysinfo() handler.

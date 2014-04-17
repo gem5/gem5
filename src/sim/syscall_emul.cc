@@ -351,13 +351,20 @@ getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     return (result == -1) ? -errno : result;
 }
 
+/// Target open() handler.
+SyscallReturn
+readlinkFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+         ThreadContext *tc)
+{
+    return readlinkFunc(desc, callnum, process, tc, 0);
+}
 
 SyscallReturn
-readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
+        int index)
 {
     string path;
 
-    int index = 0;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return (TheISA::IntReg)-EFAULT;
 
@@ -852,10 +859,9 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 SyscallReturn
-accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc)
+accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc,
+        int index)
 {
-    int index = 0;
-
     string path;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return (TheISA::IntReg)-EFAULT;
@@ -868,3 +874,10 @@ accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc)
     int result = access(path.c_str(), mode);
     return (result == -1) ? -errno : result;
 }
+
+SyscallReturn
+accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc)
+{
+    return accessFunc(desc, callnum, p, tc, 0);
+}
+
