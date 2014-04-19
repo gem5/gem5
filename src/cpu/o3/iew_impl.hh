@@ -1598,7 +1598,7 @@ DefaultIEW<Impl>::tick()
 
             toRename->iewInfo[tid].usedIQ = true;
             toRename->iewInfo[tid].freeIQEntries =
-                instQueue.numFreeEntries();
+                instQueue.numFreeEntries(tid);
             toRename->iewInfo[tid].usedLSQ = true;
             toRename->iewInfo[tid].freeLSQEntries =
                 ldstQueue.numFreeEntries(tid);

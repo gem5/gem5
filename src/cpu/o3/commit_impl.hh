@@ -561,7 +561,7 @@ DefaultCommit<Impl>::squashAll(ThreadID tid)
     // then use one older sequence number.
     // Hopefully this doesn't mess things up.  Basically I want to squash
     // all instructions of this thread.
-    InstSeqNum squashed_inst = rob->isEmpty() ?
+    InstSeqNum squashed_inst = rob->isEmpty(tid) ?
         lastCommitedSeqNum[tid] : rob->readHeadInst(tid)->seqNum - 1;
 
     // All younger instructions will be squashed. Set the sequence
