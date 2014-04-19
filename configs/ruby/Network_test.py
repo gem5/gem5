@@ -101,23 +101,7 @@ def create_system(options, system, dma_ports, ruby_system):
     assert(phys_mem_size % options.num_dirs == 0)
     mem_module_size = phys_mem_size / options.num_dirs
 
-    # Run each of the ruby memory controllers at a ratio of the frequency of
-    # the ruby system.
-    # clk_divider value is a fix to pass regression.
-    ruby_system.memctrl_clk_domain = DerivedClockDomain(
-                                          clk_domain=ruby_system.clk_domain,
-                                          clk_divider=3)
-
     for i in xrange(options.num_dirs):
-        #
-        # Create the Ruby objects associated with the directory controller
-        #
-
-        mem_cntrl = RubyMemoryControl(
-                              clk_domain = ruby_system.memctrl_clk_domain,
-                              version = i,
-                              ruby_system = ruby_system)
-
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size
 
@@ -125,7 +109,6 @@ def create_system(options, system, dma_ports, ruby_system):
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                                              size = dir_size),
-                                         memBuffer = mem_cntrl,
                                          ruby_system = ruby_system)
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
