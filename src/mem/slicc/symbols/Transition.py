@@ -29,9 +29,9 @@ from slicc.symbols.Symbol import Symbol
 
 class Transition(Symbol):
     def __init__(self, table, machine, state, event, nextState, actions,
-                 request_types, location, pairs):
+                 request_types, location):
         ident = "%s|%s" % (state, event)
-        super(Transition, self).__init__(table, ident, location, pairs)
+        super(Transition, self).__init__(table, ident, location)
 
         self.state = machine.states[state]
         self.event = machine.events[event]

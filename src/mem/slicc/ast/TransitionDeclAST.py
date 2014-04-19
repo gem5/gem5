@@ -29,9 +29,9 @@ from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Transition
 
 class TransitionDeclAST(DeclAST):
-    def __init__(self, slicc, request_types, states, events, next_state, pairs,
+    def __init__(self, slicc, request_types, states, events, next_state,
                  actions):
-        super(TransitionDeclAST, self).__init__(slicc, pairs)
+        super(TransitionDeclAST, self).__init__(slicc)
 
         self.request_types = request_types
         self.states = states
@@ -69,6 +69,5 @@ class TransitionDeclAST(DeclAST):
                     self.error("Invalid event: %s is not part of machine: %s" % \
                                (event, machine))
                 t = Transition(self.symtab, machine, state, event, next_state,
-                               self.actions, self.request_types, self.location,
-                               self.pairs)
+                               self.actions, self.request_types, self.location)
                 machine.addTransition(t)

@@ -278,20 +278,20 @@ class SLICC(Grammar):
         p[0] = ast.OutPortDeclAST(self, p[3], p[5], p[7], p[8])
 
     def p_decl__trans0(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident pairs ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[8], p[10])
+        "decl : TRANS '(' idents ',' idents ',' ident ')' idents"
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9])
 
     def p_decl__trans1(self, p):
-        "decl : TRANS '(' idents ',' idents           pairs ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[6], p[8])
+        "decl : TRANS '(' idents ',' idents ')' idents"
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7])
 
     def p_decl__trans2(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident pairs ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[10], p[3], p[5], p[7], p[8], p[11])
+        "decl : TRANS '(' idents ',' idents ',' ident ')' idents idents"
+        p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10])
 
     def p_decl__trans3(self, p):
-        "decl : TRANS '(' idents ',' idents           pairs ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[8], p[3], p[5], None, p[6], p[9])
+        "decl : TRANS '(' idents ',' idents ')' idents idents"
+        p[0] = ast.TransitionDeclAST(self, p[7], p[3], p[5], None, p[8])
 
     def p_decl__extern0(self, p):
         "decl : EXTERN_TYPE '(' type pairs ')' SEMI"
