@@ -1595,8 +1595,8 @@ system.cpu2.iew.iewIQFullEvents                633068                       # Nu
 system.cpu2.iew.iewLSQFullEvents                 3849                       # Number of times the LSQ has become full, causing a stall
 system.cpu2.iew.memOrderViolationEvents          4440                       # Number of memory order violations
 system.cpu2.iew.predictedTakenIncorrect        176570                       # Number of branches that were predicted taken incorrectly
-system.cpu2.iew.predictedNotTakenIncorrect       182317                       # Number of branches that were predicted not taken incorrectly
-system.cpu2.iew.branchMispredicts              358887                       # Number of branch mispredicts detected at execute
+system.cpu2.iew.predictedNotTakenIncorrect       182318                       # Number of branches that were predicted not taken incorrectly
+system.cpu2.iew.branchMispredicts              358888                       # Number of branch mispredicts detected at execute
 system.cpu2.iew.iewExecutedInsts            273973436                       # Number of executed instructions
 system.cpu2.iew.iewExecLoadInsts              6342946                       # Number of load instructions executed
 system.cpu2.iew.iewExecSquashedInsts           503814                       # Number of squashed instructions skipped in execute
