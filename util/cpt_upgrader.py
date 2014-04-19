@@ -545,6 +545,13 @@ def from_8(cpt):
             cpt.set(new_sec, 'bootUncacheability', 'false')
             cpt.set(new_sec, 'num_entries', '0')
 
+# Version 10 adds block_size_bytes to system.ruby
+def from_9(cpt):
+    for sec in cpt.sections():
+        if sec == 'system.ruby':
+            # Use Gem5's default of 64; this should be changed if the to be
+            # upgraded checkpoints were not taken with block-size 64!
+            cpt.set(sec, 'block_size_bytes', '64')
 
 migrations = []
 migrations.append(from_0)
@@ -556,6 +563,7 @@ migrations.append(from_5)
 migrations.append(from_6)
 migrations.append(from_7)
 migrations.append(from_8)
+migrations.append(from_9)
 
 verbose_print = False
 

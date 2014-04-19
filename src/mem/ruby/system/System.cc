@@ -182,9 +182,16 @@ RubySystem::serialize(std::ostream &os)
         }
     }
 
+    // Store the cache-block size, so we are able to restore on systems with a
+    // different cache-block size. CacheRecorder depends on the correct
+    // cache-block size upon unserializing.
+    uint64 block_size_bytes = getBlockSizeBytes();
+    SERIALIZE_SCALAR(block_size_bytes);
+
     DPRINTF(RubyCacheTrace, "Recording Cache Trace\n");
     // Create the CacheRecorder and record the cache trace
-    m_cache_recorder = new CacheRecorder(NULL, 0, sequencer_map);
+    m_cache_recorder = new CacheRecorder(NULL, 0, sequencer_map,
+                                         block_size_bytes);
 
     for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
         m_abs_cntrl_vec[cntrl]->recordCacheTrace(cntrl, m_cache_recorder);
@@ -277,6 +284,12 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
 {
     uint8_t *uncompressed_trace = NULL;
 
+    // This value should be set to the checkpoint-system's block-size.
+    // Optional, as checkpoints without it can be run if the
+    // checkpoint-system's block-size == current block-size.
+    uint64 block_size_bytes = getBlockSizeBytes();
+    UNSERIALIZE_OPT_SCALAR(block_size_bytes);
+
     if (m_mem_vec != NULL) {
         string memory_trace_file;
         uint64 memory_trace_size = 0;
@@ -320,7 +333,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     }
 
     m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
-                                         sequencer_map);
+                                         sequencer_map, block_size_bytes);
 }
 
 void

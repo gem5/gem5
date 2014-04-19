@@ -71,7 +71,8 @@ class CacheRecorder
 
     CacheRecorder(uint8_t* uncompressed_trace,
                   uint64_t uncompressed_trace_size,
-                  std::vector<Sequencer*>& SequencerMap);
+                  std::vector<Sequencer*>& SequencerMap,
+                  uint64_t block_size_bytes);
     void addRecord(int cntrl, const physical_address_t data_addr,
                    const physical_address_t pc_addr,  RubyRequestType type,
                    Time time, DataBlock& data);
@@ -109,6 +110,7 @@ class CacheRecorder
     uint64_t m_bytes_read;
     uint64_t m_records_read;
     uint64_t m_records_flushed;
+    uint64_t m_block_size_bytes;
 };
 
 inline bool
