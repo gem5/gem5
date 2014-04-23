@@ -58,6 +58,7 @@
 
 import m5, os, re
 from m5.SimObject import isRoot, isSimObjectVector
+from m5.params import PortRef
 from m5.util import warn
 try:
     import pydot
@@ -106,7 +107,7 @@ def dot_create_edges(simNode, callgraph):
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
             # create edges
-            if type(port) is m5.params.PortRef:
+            if isinstance(port, PortRef):
                 dot_add_edge(simNode, callgraph, full_port_name, port)
             else:
                 for p in port.elements:
