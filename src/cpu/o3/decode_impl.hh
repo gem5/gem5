@@ -68,6 +68,11 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
       decodeWidth(params->decodeWidth),
       numThreads(params->numThreads)
 {
+    if (decodeWidth > Impl::MaxWidth)
+        fatal("decodeWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             decodeWidth, static_cast<int>(Impl::MaxWidth));
+
     // @todo: Make into a parameter
     skidBufferMax = (fetchToDecodeDelay + 1) *  params->fetchWidth;
 }

@@ -108,6 +108,11 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       canHandleInterrupts(true),
       avoidQuiesceLiveLock(false)
 {
+    if (commitWidth > Impl::MaxWidth)
+        fatal("commitWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             commitWidth, static_cast<int>(Impl::MaxWidth));
+
     _status = Active;
     _nextStatus = Inactive;
     std::string policy = params->smtCommitPolicy;

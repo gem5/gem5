@@ -79,6 +79,19 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
       wbWidth(params->wbWidth),
       numThreads(params->numThreads)
 {
+    if (dispatchWidth > Impl::MaxWidth)
+        fatal("dispatchWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             dispatchWidth, static_cast<int>(Impl::MaxWidth));
+    if (issueWidth > Impl::MaxWidth)
+        fatal("issueWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             issueWidth, static_cast<int>(Impl::MaxWidth));
+    if (wbWidth > Impl::MaxWidth)
+        fatal("wbWidth (%d) is larger than compiled limit (%d),\n"
+             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
+             wbWidth, static_cast<int>(Impl::MaxWidth));
+
     _status = Active;
     exeStatus = Running;
     wbStatus = Idle;
