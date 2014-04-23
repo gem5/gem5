@@ -56,9 +56,23 @@ output header {{
     class FailUnimplemented : public ArmStaticInst
     {
       public:
+        /// Full mnemonic for MRC and MCR instructions including the
+        /// coproc. register name
+        std::string fullMnemonic;
+
         /// Constructor
         FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
             : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+        {
+            // don't call execute() (which panics) if we're on a
+            // speculative path
+            flags[IsNonSpeculative] = true;
+        }
+
+        FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+                          const std::string& _fullMnemonic)
+            : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
+              fullMnemonic(_fullMnemonic)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -137,14 +151,16 @@ output decoder {{
     FailUnimplemented::generateDisassembly(Addr pc,
                                            const SymbolTable *symtab) const
     {
-        return csprintf("%-10s (unimplemented)", mnemonic);
+        return csprintf("%-10s (unimplemented)",
+                        fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
     }
 
     std::string
     WarnUnimplemented::generateDisassembly(Addr pc,
                                            const SymbolTable *symtab) const
     {
-        return csprintf("%-10s (unimplemented)", mnemonic);
+        return csprintf("%-10s (unimplemented)",
+                        fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
     }
 
     std::string

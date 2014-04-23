@@ -139,10 +139,10 @@ let {{
           case MISCREG_NOP:
             return new NopInst(machInst);
           case MISCREG_CP14_UNIMPL:
-            return new FailUnimplemented(
+            return new FailUnimplemented(isRead ? "mrc unknown" : "mcr unknown",
+                    machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
-                    crn, opc1, crm, opc2, isRead ? "read" : "write").c_str(),
-                    machInst);
+                    crn, opc1, crm, opc2, isRead ? "read" : "write"));
           default:
             uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
             if (isRead) {
@@ -183,10 +183,10 @@ let {{
           case MISCREG_NOP:
             return new NopInst(machInst);
           case MISCREG_CP15_UNIMPL:
-            return new FailUnimplemented(
+            return new FailUnimplemented(isRead ? "mrc unkown" : "mcr unkown",
+                    machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
-                    crn, opc1, crm, opc2, isRead ? "read" : "write").c_str(),
-                    machInst);
+                    crn, opc1, crm, opc2, isRead ? "read" : "write"));
           case MISCREG_DCCMVAC:
             return new FlushPipeInst(
                     isRead ? "mrc dccmvac" : "mcr dccmvac", machInst);
@@ -217,9 +217,9 @@ let {{
                     return new Mrc15(machInst, rt, (IntRegIndex)miscReg, iss);
                 return new Mcr15(machInst, (IntRegIndex)miscReg, rt, iss);
             } else {
-                return new FailUnimplemented(csprintf("%s %s",
-                    isRead ? "mrc" : "mcr", miscRegName[miscReg]).c_str(),
-                    machInst);
+                return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
+                    csprintf("%s %s", isRead ? "mrc" : "mcr",
+                        miscRegName[miscReg]));
             }
         }
     }
@@ -251,10 +251,9 @@ let {{
 
         switch (miscReg) {
           case MISCREG_CP15_UNIMPL:
-            return new FailUnimplemented(
+            return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
                     csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
-                    crm, opc1, isRead ? "read" : "write").c_str(),
-                    machInst);
+                    crm, opc1, isRead ? "read" : "write"));
           default:
             if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                 std::string full_mnem = csprintf("%s %s",
@@ -278,9 +277,9 @@ let {{
                     return new Mrrc15(machInst, (IntRegIndex) miscReg, rt2, rt, iss);
                 return new Mcrr15(machInst, rt2, rt, (IntRegIndex) miscReg, iss);
             } else {
-                return new FailUnimplemented(csprintf("%s %s",
-                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]).c_str(),
-                    machInst);
+                return new FailUnimplemented(isRead ? "mrrc" : "mcrr", machInst,
+                    csprintf("%s %s",
+                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]));
             }
         }
     }

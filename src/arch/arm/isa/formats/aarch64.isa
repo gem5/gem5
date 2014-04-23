@@ -374,9 +374,11 @@ namespace Aarch64
                         return new WarnUnimplemented(read ? "mrs" : "msr",
                                                      machInst, full_mnem);
                     } else {
-                        return new FailUnimplemented(csprintf("%s %s",
-                            read ? "mrs" : "msr", miscRegName[miscReg]).c_str(),
-                            machInst);
+                        return new FailUnimplemented(read ? "mrs" : "msr",
+                                    machInst,
+                                    csprintf("%s %s",
+                                      read ? "mrs" : "msr",
+                                      miscRegName[miscReg]));
                     }
                   }
                   break;
