@@ -1483,7 +1483,10 @@ MicroMemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printReg(ss, ura);
+    if (isFloating())
+        printReg(ss, ura + FP_Reg_Base);
+    else
+        printReg(ss, ura);
     ss << ", [";
     printReg(ss, urb);
     ss << ", ";
