@@ -116,6 +116,8 @@ FlagsMap &allFlags();
 
 Flag *findFlag(const std::string &name);
 
+extern Flag *const All;
+
 bool changeFlag(const char *s, bool value);
 
 } // namespace Debug
