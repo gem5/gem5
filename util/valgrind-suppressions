@@ -109,5 +109,9 @@
    Memcheck:Value16
    fun:PyObject_Realloc
 }
-
+{
+   zlib error
+   Memcheck:Cond
+   fun:inflateReset2
+}
 
