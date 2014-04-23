@@ -255,8 +255,11 @@ class DataTranslation : public BaseTLB::Translation
         assert(state);
         assert(mode == state->mode);
         if (state->finish(fault, index)) {
+            if (state->getFault() == NoFault) {
+                // Don't access the request if faulted (due to squash)
+                req->setTranslateLatency();
+            }
             xc->finishTranslation(state);
-            req->setTranslateLatency();
         }
         delete this;
     }
