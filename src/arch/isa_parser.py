@@ -2089,28 +2089,13 @@ StaticInstPtr
         else:
             return s
 
-    def update_if_needed(self, file, contents):
-        '''Update the output file only if the new contents are
-        different from the current contents.  Minimizes the files that
-        need to be rebuilt after minor changes.'''
-
+    def update(self, file, contents):
+        '''Update the output file.  If the contents are unchanged,
+           the scons hash feature will avoid recompilation.'''
         file = os.path.join(self.output_dir, file)
-        update = False
-        if os.access(file, os.R_OK):
-            f = open(file, 'r')
-            old_contents = f.read()
-            f.close()
-            if contents != old_contents:
-                os.remove(file) # in case it's write-protected
-                update = True
-            else:
-                print 'File', file, 'is unchanged'
-        else:
-            update = True
-        if update:
-            f = open(file, 'w')
-            f.write(contents)
-            f.close()
+        f = open(file, 'w')
+        f.write(contents)
+        f.close()
 
     # This regular expression matches '##include' directives
     includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[^"]*)".*$',
@@ -2172,7 +2157,7 @@ StaticInstPtr
         global_output = global_code.header_output
         namespace_output = namespace_code.header_output
         decode_function = ''
-        self.update_if_needed('decoder.hh', file_template % vars())
+        self.update('decoder.hh', file_template % vars())
 
         # generate decoder.cc
         includes = '#include "decoder.hh"'
@@ -2180,7 +2165,7 @@ StaticInstPtr
         namespace_output = namespace_code.decoder_output
         # namespace_output += namespace_code.decode_block
         decode_function = namespace_code.decode_block
-        self.update_if_needed('decoder.cc', file_template % vars())
+        self.update('decoder.cc', file_template % vars())
 
         # generate per-cpu exec files
         for cpu in self.cpuModels:
@@ -2189,7 +2174,7 @@ StaticInstPtr
             global_output = global_code.exec_output[cpu.name]
             namespace_output = namespace_code.exec_output[cpu.name]
             decode_function = ''
-            self.update_if_needed(cpu.filename, file_template % vars())
+            self.update(cpu.filename, file_template % vars())
 
         # The variable names here are hacky, but this will creat local
         # variables which will be referenced in vars() which have the
@@ -2198,8 +2183,8 @@ StaticInstPtr
         MaxInstDestRegs = self.maxInstDestRegs
         MaxMiscDestRegs = self.maxMiscDestRegs
         # max_inst_regs.hh
-        self.update_if_needed('max_inst_regs.hh',
-                              max_inst_regs_template % vars())
+        self.update('max_inst_regs.hh',
+                    max_inst_regs_template % vars())
 
     def parse_isa_desc(self, *args, **kwargs):
         try:
