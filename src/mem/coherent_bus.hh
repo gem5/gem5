@@ -341,6 +341,8 @@ class CoherentBus : public BaseBus
 
     Stats::Scalar dataThroughBus;
     Stats::Scalar snoopDataThroughBus;
+    Stats::Scalar snoopsThroughBus;
+    Stats::Distribution snoopFanout;
 
   public:
 

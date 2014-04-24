@@ -197,6 +197,7 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     if (is_express_snoop) {
         assert(success);
         snoopDataThroughBus += pkt_size;
+        snoopsThroughBus++;
     } else {
         // for normal requests, check if successful
         if (!success)  {
@@ -297,6 +298,7 @@ CoherentBus::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // update stats here as we know the forwarding will succeed
     transDist[pkt->cmdToIndex()]++;
     snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+    snoopsThroughBus++;
 
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
@@ -411,6 +413,7 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // stats updates
     transDist[pkt_cmd]++;
     snoopDataThroughBus += pkt_size;
+    snoopsThroughBus++;
 
     return true;
 }
@@ -425,6 +428,8 @@ CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
     // snoops should only happen if the system isn't bypassing caches
     assert(!system->bypassCaches());
 
+    unsigned fanout = 0;
+
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
@@ -435,8 +440,12 @@ CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
             p->getId() != exclude_slave_port_id) {
             // cache is not allowed to refuse snoop
             p->sendTimingSnoopReq(pkt);
+            fanout++;
         }
     }
+
+    // Stats for fanout of this forward operation
+    snoopFanout.sample(fanout);
 }
 
 void
@@ -503,6 +512,7 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
 
     // add the request snoop data
     snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+    snoopsThroughBus++;
 
     // forward to all snoopers
     std::pair<MemCmd, Tick> snoop_result =
@@ -514,8 +524,10 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
         pkt->cmd = snoop_response_cmd;
 
     // add the response snoop data
-    if (pkt->isResponse())
+    if (pkt->isResponse()) {
         snoopDataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+        snoopsThroughBus++;
+    }
 
     // @todo: Not setting first-word time
     pkt->busLastWordDelay = snoop_response_latency;
@@ -535,6 +547,8 @@ CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
     // snoops should only happen if the system isn't bypassing caches
     assert(!system->bypassCaches());
 
+    unsigned fanout = 0;
+
     for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
@@ -544,6 +558,8 @@ CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
         if (exclude_slave_port_id == InvalidPortID ||
             p->getId() != exclude_slave_port_id) {
             Tick latency = p->sendAtomicSnoop(pkt);
+            fanout++;
+
             // in contrast to a functional access, we have to keep on
             // going as all snoopers must be updated even if we get a
             // response
@@ -561,6 +577,9 @@ CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
             }
         }
     }
+
+    // Stats for fanout
+    snoopFanout.sample(fanout);
 
     // the packet is restored as part of the loop and any potential
     // snoop response is part of the returned pair
@@ -665,6 +684,17 @@ CoherentBus::regStats()
     snoopDataThroughBus
         .name(name() + ".snoop_data_through_bus")
         .desc("Total snoop data (bytes)")
+    ;
+
+    snoopsThroughBus
+        .name(name() + ".snoops_through_bus")
+        .desc("Total snoops (count)")
+    ;
+
+    snoopFanout
+        .init(0, snoopPorts.size(), 1)
+        .name(name() + ".snoop_fanout")
+        .desc("Request fanout histogram")
     ;
 
     throughput
