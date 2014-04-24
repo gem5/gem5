@@ -178,4 +178,37 @@ findLsbSet(uint64_t val) {
     return lsb;
 }
 
+/**
+ * Checks if a number is a power of two, or zero.
+ */
+template <class T>
+inline bool
+isPow2(T v) {
+   return (v & (v - 1)) == (T)0;
+}
+
+/**
+ * Returns the number of set ones in the provided value.
+ * PD algorithm from
+ * http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+ */
+inline int
+popCount(uint64_t val) {
+#ifndef __has_builtin
+    #define __has_builtin(foo) 0
+#endif
+#if defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_popcountl))
+    return __builtin_popcountl(val);
+#else
+    const uint64_t m1 = 0x5555555555555555;  // ..010101b
+    const uint64_t m2 = 0x3333333333333333;  // ..110011b
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;  // ..001111b
+    const uint64_t sum = 0x0101010101010101;
+
+    val -= (val >> 1) & m1;               // 2 bits count -> 2 bits
+    val = (val & m2) + ((val >> 2) & m2); // 4 bits count -> 4 bits
+    val = (val + (val >> 4)) & m4;        // 8 bits count -> 8 bits
+    return (val * sum) >> 56;             // horizontal sum
+#endif // defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_popcountl))
+}
 #endif // __BASE_BITFIELD_HH__
