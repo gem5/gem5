@@ -188,6 +188,8 @@ class SnoopFilter : public SimObject {
         return std::make_pair(empty , latency);
     }
 
+    virtual void regStats();
+
   protected:
     typedef uint64_t SnoopMask;
    /**
@@ -227,6 +229,15 @@ class SnoopFilter : public SimObject {
     const unsigned linesize;
     /** Latency for doing a lookup in the filter */
     const Cycles lookupLatency;
+
+    /** Statistics */
+    Stats::Scalar totRequests;
+    Stats::Scalar hitSingleRequests;
+    Stats::Scalar hitMultiRequests;
+
+    Stats::Scalar totSnoops;
+    Stats::Scalar hitSingleSnoops;
+    Stats::Scalar hitMultiSnoops;
 };
 
 inline SnoopFilter::SnoopMask

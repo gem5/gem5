@@ -56,7 +56,20 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
 
     Addr line_addr = cpkt->getAddr() & ~(linesize - 1);
     SnoopMask req_port = portToMask(slave_port);
-    SnoopItem& sf_item  = cachedLocations[line_addr];
+    auto sf_it = cachedLocations.find(line_addr);
+    bool is_hit = (sf_it != cachedLocations.end());
+    // Create a new element through operator[] and modify in-place
+    SnoopItem& sf_item = is_hit ? sf_it->second : cachedLocations[line_addr];
+    SnoopMask interested = sf_item.holder | sf_item.requested;
+
+    totRequests++;
+    if (is_hit) {
+        // Single bit set -> value is a power of two
+        if (isPow2(interested))
+            hitSingleRequests++;
+        else
+            hitMultiRequests++;
+    }
 
     DPRINTF(SnoopFilter, "%s:   SF value %x.%x\n",
             __func__, sf_item.requested, sf_item.holder);
@@ -81,8 +94,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
         DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
                 __func__,  sf_item.requested, sf_item.holder);
     }
-    SnoopMask interested = (sf_item.holder | sf_item.requested) & ~req_port;
-    return snoopSelected(maskToPortList(interested), lookupLatency);
+    return snoopSelected(maskToPortList(interested & ~req_port), lookupLatency);
 }
 
 void
@@ -141,12 +153,25 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
         return snoopAll(lookupLatency);
 
     Addr line_addr = cpkt->getAddr() & ~(linesize - 1);
-    SnoopItem& sf_item = cachedLocations[line_addr];
+    auto sf_it = cachedLocations.find(line_addr);
+    bool is_hit = (sf_it != cachedLocations.end());
+    // Create a new element through operator[] and modify in-place
+    SnoopItem& sf_item = is_hit ? sf_it->second : cachedLocations[line_addr];
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
             __func__, sf_item.requested, sf_item.holder);
 
     SnoopMask interested = (sf_item.holder | sf_item.requested);
+
+    totSnoops++;
+    if (is_hit) {
+        // Single bit set -> value is a power of two
+        if (isPow2(interested))
+            hitSingleSnoops++;
+        else
+            hitMultiSnoops++;
+    }
+
     assert(cpkt->isInvalidate() == cpkt->needsExclusive());
     if (cpkt->isInvalidate() && !sf_item.requested) {
         // Early clear of the holder, if no other request is currently going on
@@ -265,6 +290,38 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
     sf_item.requested &= ~slave_mask;
     DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
             __func__, sf_item.requested, sf_item.holder);
+}
+
+void
+SnoopFilter::regStats()
+{
+    totRequests
+        .name(name() + ".tot_requests")
+        .desc("Total number of requests made to the snoop filter.");
+
+    hitSingleRequests
+        .name(name() + ".hit_single_requests")
+        .desc("Number of requests hitting in the snoop filter with a single "\
+              "holder of the requested data.");
+
+    hitMultiRequests
+        .name(name() + ".hit_multi_requests")
+        .desc("Number of requests hitting in the snoop filter with multiple "\
+              "(>1) holders of the requested data.");
+
+    totSnoops
+        .name(name() + ".tot_snoops")
+        .desc("Total number of snoops made to the snoop filter.");
+
+    hitSingleSnoops
+        .name(name() + ".hit_single_snoops")
+        .desc("Number of snoops hitting in the snoop filter with a single "\
+              "holder of the requested data.");
+
+    hitMultiSnoops
+        .name(name() + ".hit_multi_snoops")
+        .desc("Number of snoops hitting in the snoop filter with multiple "\
+              "(>1) holders of the requested data.");
 }
 
 SnoopFilter *
