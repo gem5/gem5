@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2011, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -116,10 +116,10 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     //CPSR
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    cpsr.nz = tc->readIntReg(INTREG_CONDCODES_NZ);
-    cpsr.c = tc->readIntReg(INTREG_CONDCODES_C);
-    cpsr.v = tc->readIntReg(INTREG_CONDCODES_V);
-    cpsr.ge = tc->readIntReg(INTREG_CONDCODES_GE);
+    cpsr.nz = tc->readCCReg(CCREG_NZ);
+    cpsr.c = tc->readCCReg(CCREG_C);
+    cpsr.v = tc->readCCReg(CCREG_V);
+    cpsr.ge = tc->readCCReg(CCREG_GE);
 
     newState[STATE_CPSR] = cpsr;
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
@@ -130,7 +130,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
             tc->readFloatRegBits(i);
     }
     newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
-                            tc->readIntReg(INTREG_FPCONDCODES);
+                            tc->readCCReg(CCREG_FP);
 }
 
 void

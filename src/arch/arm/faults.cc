@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -466,10 +466,10 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     SCR scr = tc->readMiscReg(MISCREG_SCR);
     CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR);
-    saved_cpsr.nz = tc->readIntReg(INTREG_CONDCODES_NZ);
-    saved_cpsr.c = tc->readIntReg(INTREG_CONDCODES_C);
-    saved_cpsr.v = tc->readIntReg(INTREG_CONDCODES_V);
-    saved_cpsr.ge = tc->readIntReg(INTREG_CONDCODES_GE);
+    saved_cpsr.nz = tc->readCCReg(CCREG_NZ);
+    saved_cpsr.c = tc->readCCReg(CCREG_C);
+    saved_cpsr.v = tc->readCCReg(CCREG_V);
+    saved_cpsr.ge = tc->readCCReg(CCREG_GE);
 
     Addr curPc M5_VAR_USED = tc->pcState().pc();
     ITSTATE it = tc->pcState().itstate();
@@ -615,9 +615,9 @@ ArmFault::invoke64(ThreadContext *tc, StaticInstPtr inst)
     // Save process state into SPSR_ELx
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     CPSR spsr = cpsr;
-    spsr.nz = tc->readIntReg(INTREG_CONDCODES_NZ);
-    spsr.c = tc->readIntReg(INTREG_CONDCODES_C);
-    spsr.v = tc->readIntReg(INTREG_CONDCODES_V);
+    spsr.nz = tc->readCCReg(CCREG_NZ);
+    spsr.c = tc->readCCReg(CCREG_C);
+    spsr.v = tc->readCCReg(CCREG_V);
     if (from64) {
         // Force some bitfields to 0
         spsr.q = 0;
@@ -628,7 +628,7 @@ ArmFault::invoke64(ThreadContext *tc, StaticInstPtr inst)
         spsr.it2 = 0;
         spsr.t = 0;
     } else {
-        spsr.ge = tc->readIntReg(INTREG_CONDCODES_GE);
+        spsr.ge = tc->readCCReg(CCREG_GE);
         ITSTATE it = tc->pcState().itstate();
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -335,7 +335,8 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
         ccprintf(os, "%s", ArmISA::miscRegName[rel_reg]);
         break;
       case CCRegClass:
-        panic("printReg: CCRegClass but ARM has no CC regs\n");
+        ccprintf(os, "cc_%s", ArmISA::ccRegName[rel_reg]);
+        break;
     }
 }
 

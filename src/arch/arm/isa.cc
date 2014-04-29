@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -599,9 +599,9 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_NZCV:
         {
             CPSR cpsr = 0;
-            cpsr.nz   = tc->readIntReg(INTREG_CONDCODES_NZ);
-            cpsr.c    = tc->readIntReg(INTREG_CONDCODES_C);
-            cpsr.v    = tc->readIntReg(INTREG_CONDCODES_V);
+            cpsr.nz   = tc->readCCReg(CCREG_NZ);
+            cpsr.c    = tc->readCCReg(CCREG_C);
+            cpsr.v    = tc->readCCReg(CCREG_V);
             return cpsr;
         }
       case MISCREG_DAIF:
@@ -1688,9 +1688,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             {
                 CPSR cpsr = val;
 
-                tc->setIntReg(INTREG_CONDCODES_NZ, cpsr.nz);
-                tc->setIntReg(INTREG_CONDCODES_C,  cpsr.c);
-                tc->setIntReg(INTREG_CONDCODES_V,  cpsr.v);
+                tc->setCCReg(CCREG_NZ, cpsr.nz);
+                tc->setCCReg(CCREG_C,  cpsr.c);
+                tc->setCCReg(CCREG_V,  cpsr.v);
             }
             break;
           case MISCREG_DAIF:

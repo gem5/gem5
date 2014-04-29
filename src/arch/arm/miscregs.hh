@@ -53,25 +53,6 @@ class ThreadContext;
 
 namespace ArmISA
 {
-    enum ConditionCode {
-        COND_EQ  =   0,
-        COND_NE, //  1
-        COND_CS, //  2
-        COND_CC, //  3
-        COND_MI, //  4
-        COND_PL, //  5
-        COND_VS, //  6
-        COND_VC, //  7
-        COND_HI, //  8
-        COND_LS, //  9
-        COND_GE, // 10
-        COND_LT, // 11
-        COND_GT, // 12
-        COND_LE, // 13
-        COND_AL, // 14
-        COND_UC  // 15
-    };
-
     enum MiscRegIndex {
         MISCREG_CPSR = 0,               //   0
         MISCREG_SPSR,                   //   1

@@ -574,6 +574,33 @@ def from_A(cpt):
 def from_B(cpt):
     cpt.set('Globals', 'numMainEventQueues', '1')
 
+# Checkpoint version D uses condition code registers for the ARM
+# architecture; previously the integer register file was used for these
+# registers. To upgrade, we move those 5 integer registers to the ccRegs
+# register file.
+def from_C(cpt):
+    if cpt.get('root','isa') == 'arm':
+        for sec in cpt.sections():
+            import re
+
+            re_cpu_match = re.match('^(.*sys.*\.cpu[^.]*)\.xc\.(.+)$', sec)
+            # Search for all the execution contexts
+            if not re_cpu_match:
+                continue
+
+            items = []
+            for (item,value) in cpt.items(sec):
+                items.append(item)
+            if 'ccRegs' not in items:
+                intRegs = cpt.get(sec, 'intRegs').split()
+
+                ccRegs = intRegs[38:43]
+                del      intRegs[38:43]
+
+                ccRegs.append('0') # CCREG_ZERO
+
+                cpt.set(sec, 'intRegs', ' '.join(intRegs))
+                cpt.set(sec, 'ccRegs',  ' '.join(ccRegs))
 
 migrations = []
 migrations.append(from_0)
@@ -588,6 +615,7 @@ migrations.append(from_8)
 migrations.append(from_9)
 migrations.append(from_A)
 migrations.append(from_B)
+migrations.append(from_C)
 
 verbose_print = False
 

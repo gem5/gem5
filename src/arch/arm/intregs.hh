@@ -115,11 +115,6 @@ enum IntRegIndex
     INTREG_UREG0,
     INTREG_UREG1,
     INTREG_UREG2,
-    INTREG_CONDCODES_NZ,
-    INTREG_CONDCODES_C,
-    INTREG_CONDCODES_V,
-    INTREG_CONDCODES_GE,
-    INTREG_FPCONDCODES,
     INTREG_DUMMY, // Dummy reg used to throw away int reg results
 
     INTREG_SP0,

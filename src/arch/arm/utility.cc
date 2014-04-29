@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 ARM Limited
+ * Copyright (c) 2009-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -152,8 +152,8 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumFloatRegs; i++)
         dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
 
-    // Would need to add condition-code regs if implemented
-    assert(NumCCRegs == 0);
+    for (int i = 0; i < NumCCRegs; i++)
+        dest->setCCReg(i, src->readCCReg(i));
 
     for (int i = 0; i < NumMiscRegs; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));

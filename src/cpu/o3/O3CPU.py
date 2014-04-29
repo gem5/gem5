@@ -116,7 +116,7 @@ class DerivO3CPU(BaseCPU):
                                       "registers")
     # most ISAs don't use condition-code regs, so default is 0
     _defaultNumPhysCCRegs = 0
-    if buildEnv['TARGET_ISA'] == 'x86':
+    if buildEnv['TARGET_ISA'] in ('arm','x86'):
         # For x86, each CC reg is used to hold only a subset of the
         # flags, so we need 4-5 times the number of CC regs as
         # physical integer regs to be sure we don't run out.  In

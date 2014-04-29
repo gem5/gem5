@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2013 ARM Limited
+// Copyright (c) 2010-2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -151,8 +151,8 @@ let {{
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
                 maybePCRead, maybeAIWPCWrite)
 
-    def intRegCC(idx):
-        return ('IntReg', 'uw', idx, None, srtNormal)
+    def ccReg(idx):
+        return ('CCReg', 'uw', idx, None, srtNormal)
 
     def cntrlReg(idx, id = srtNormal, type = 'uw'):
         return ('ControlReg', type, idx, None, id)
@@ -221,31 +221,31 @@ def operands {{
     'X2': intRegX64('2'),
     'X3': intRegX64('3'),
 
-    #Pseudo integer condition code registers
-    'CondCodesNZ': intRegCC('INTREG_CONDCODES_NZ'),
-    'CondCodesC': intRegCC('INTREG_CONDCODES_C'),
-    'CondCodesV': intRegCC('INTREG_CONDCODES_V'),
-    'CondCodesGE': intRegCC('INTREG_CONDCODES_GE'),
-    'OptCondCodesNZ': intRegCC(
-            '''(condCode == COND_AL || condCode == COND_UC ||
-                condCode == COND_CC || condCode == COND_CS ||
-                condCode == COND_VS || condCode == COND_VC) ?
-               INTREG_ZERO : INTREG_CONDCODES_NZ'''),
-    'OptCondCodesC': intRegCC(
-            '''(condCode == COND_HI || condCode == COND_LS ||
+    # Condition code registers
+    'CondCodesNZ': ccReg('CCREG_NZ'),
+    'CondCodesC': ccReg('CCREG_C'),
+    'CondCodesV': ccReg('CCREG_V'),
+    'CondCodesGE': ccReg('CCREG_GE'),
+    'OptCondCodesNZ': ccReg(
+            '''((condCode == COND_AL || condCode == COND_UC ||
+                 condCode == COND_CC || condCode == COND_CS ||
+                 condCode == COND_VS || condCode == COND_VC) ?
+                CCREG_ZERO : CCREG_NZ)'''),
+    'OptCondCodesC': ccReg(
+             '''((condCode == COND_HI || condCode == COND_LS ||
                 condCode == COND_CS || condCode == COND_CC) ?
-               INTREG_CONDCODES_C : INTREG_ZERO'''),
-    'OptShiftRmCondCodesC': intRegCC(
-            '''(condCode == COND_HI || condCode == COND_LS ||
-                condCode == COND_CS || condCode == COND_CC ||
-                shiftType == ROR) ?
-               INTREG_CONDCODES_C : INTREG_ZERO'''),
-    'OptCondCodesV': intRegCC(
-            '''(condCode == COND_VS || condCode == COND_VC ||
-                condCode == COND_GE || condCode == COND_LT ||
-                condCode == COND_GT || condCode == COND_LE) ?
-               INTREG_CONDCODES_V : INTREG_ZERO'''),
-    'FpCondCodes': intRegCC('INTREG_FPCONDCODES'),
+               CCREG_C : CCREG_ZERO)'''),
+    'OptShiftRmCondCodesC': ccReg(
+            '''((condCode == COND_HI || condCode == COND_LS ||
+                 condCode == COND_CS || condCode == COND_CC ||
+                 shiftType == ROR) ?
+                CCREG_C : CCREG_ZERO)'''),
+    'OptCondCodesV': ccReg(
+            '''((condCode == COND_VS || condCode == COND_VC ||
+                 condCode == COND_GE || condCode == COND_LT ||
+                 condCode == COND_GT || condCode == COND_LE) ?
+                CCREG_V : CCREG_ZERO)'''),
+    'FpCondCodes': ccReg('CCREG_FP'),
 
     #Abstracted floating point reg operands
     'FpDest': floatReg('(dest + 0)'),

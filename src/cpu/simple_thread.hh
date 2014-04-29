@@ -273,6 +273,7 @@ class SimpleThread : public ThreadState
     {
 #ifdef ISA_HAS_CC_REGS
         int flatIndex = isa->flattenCCIndex(reg_idx);
+        assert(0 <= flatIndex);
         assert(flatIndex < TheISA::NumCCRegs);
         uint64_t regVal(readCCRegFlat(flatIndex));
         DPRINTF(CCRegs, "Reading CC reg %d (%d) as %#x.\n",

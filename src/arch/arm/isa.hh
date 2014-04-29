@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -268,19 +268,21 @@ namespace ArmISA
         int
         flattenFloatIndex(int reg) const
         {
+            assert(reg >= 0);
             return reg;
         }
 
-        // dummy
         int
         flattenCCIndex(int reg) const
         {
+            assert(reg >= 0);
             return reg;
         }
 
         int
         flattenMiscIndex(int reg) const
         {
+            assert(reg >= 0);
             int flat_idx = reg;
 
             if (reg == MISCREG_SPSR) {

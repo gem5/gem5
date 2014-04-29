@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2011, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 
 #include "arch/arm/generated/max_inst_regs.hh"
 #include "arch/arm/intregs.hh"
+#include "arch/arm/ccregs.hh"
 #include "arch/arm/miscregs.hh"
 
 namespace ArmISA {
@@ -68,8 +69,8 @@ typedef float FloatReg;
 // cop-0/cop-1 system control register
 typedef uint64_t MiscReg;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
+// condition code register; must be at least 32 bits for FpCondCodes
+typedef uint64_t CCReg;
 
 // Constants Related to the number of registers
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
@@ -80,8 +81,10 @@ const int NumFloatSpecialRegs = 32;
 
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
-const int NumCCRegs = 0;
+const int NumCCRegs = NUM_CCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
+
+#define ISA_HAS_CC_REGS
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
@@ -109,12 +112,13 @@ const int SyscallSuccessReg = ReturnValueReg;
 // These help enumerate all the registers for dependence tracking.
 const int FP_Reg_Base = NumIntRegs * (MODE_MAXMODE + 1);
 const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs; // NumCCRegs == 0
+const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
 const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;
     FloatReg fpreg;
+    CCReg    ccreg;
     MiscReg  ctrlreg;
 } AnyReg;
 
