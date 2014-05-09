@@ -71,8 +71,14 @@ class ActivityRecorder
     /** Deactivates a stage. */
     void deactivateStage(const int idx);
 
+    /** Returns the activity status of a stage. */
+    bool getStageActive(const int idx) const { return stageActive[idx]; }
+
+    /** Returns the number of stages. */
+    int getNumStages() const { return numStages; }
+
     /** Returns how many things are active within the recorder. */
-    int getActivityCount() { return activityCount; }
+    int getActivityCount() const { return activityCount; }
 
     /** Sets the count to a starting value.  Can be used to disable
      * the idling option.
@@ -94,10 +100,11 @@ class ActivityRecorder
      */
     void validate();
 
+    const std::string &name() const { return _name; }
+
   private:
     // provide name() for DPRINTF.
     std::string _name;
-    const std::string &name() { return _name; }
 
     /** Time buffer that tracks if any cycles has active communication
      *  in them.  It should be as long as the longest communication
