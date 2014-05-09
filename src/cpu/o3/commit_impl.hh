@@ -273,6 +273,14 @@ DefaultCommit<Impl>::regStats()
         .flags(total)
         ;
 
+    statCommittedInstType
+        .init(numThreads,Enums::Num_OpClass)
+        .name(name() + ".op_class")
+        .desc("Class of committed instruction")
+        .flags(total | pdf | dist)
+        ;
+    statCommittedInstType.ysubnames(Enums::OpClassStrings);
+
     commitEligible
         .init(cpu->numThreads)
         .name(name() + ".bw_limited")
@@ -1032,6 +1040,7 @@ DefaultCommit<Impl>::commitInsts()
 
             if (commit_success) {
                 ++num_committed;
+                statCommittedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
 
                 changedROBNumEntries[tid] = true;

@@ -283,6 +283,9 @@ class BaseSimpleCPU : public BaseCPU
     Stats::Scalar numBranchMispred;
     /// @}
 
+    // instruction mix histogram by OpClass
+    Stats::Vector statExecutedInstType;
+
     void serializeThread(std::ostream &os, ThreadID tid);
     void unserializeThread(Checkpoint *cp, const std::string &section,
                            ThreadID tid);

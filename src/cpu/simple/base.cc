@@ -286,6 +286,16 @@ BaseSimpleCPU::regStats()
         .prereq(dcacheRetryCycles)
         ;
 
+    statExecutedInstType
+        .init(Enums::Num_OpClass)
+        .name(name() + ".op_class")
+        .desc("Class of executed instruction")
+        .flags(total | pdf | dist)
+        ;
+    for (unsigned i = 0; i < Num_OpClasses; ++i) {
+        statExecutedInstType.subname(i, Enums::OpClassStrings[i]);
+    }
+
     idleFraction = constant(1.0) - notIdleFraction;
     numIdleCycles = idleFraction * numCycles;
     numBusyCycles = (notIdleFraction)*numCycles;
@@ -531,6 +541,8 @@ BaseSimpleCPU::postExecute()
         numStoreInsts++;
     }
     /* End power model statistics */
+
+    statExecutedInstType[curStaticInst->opClass()]++;
 
     if (FullSystem)
         traceFunctions(instAddr);

@@ -532,6 +532,8 @@ class DefaultCommit
     Stats::Vector statComInteger;
     /** Total number of function calls */
     Stats::Vector statComFunctionCalls;
+    /** Committed instructions by instruction type (OpClass) */
+    Stats::Vector2d statCommittedInstType;
 
     /** Number of cycles where the commit bandwidth limit is reached. */
     Stats::Scalar commitEligibleSamples;
