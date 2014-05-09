@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2012 ARM Limited
+// Copyright (c) 2012, 2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -36,20 +36,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Thomas Grocutt
-
-def template AA64FpRegRegOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest, IntRegIndex _op1,
-                                          VfpMicroMode mode)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _op1, mode)
-    {
-        %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
-    }
-}};
 
 def template AA64FpRegRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
