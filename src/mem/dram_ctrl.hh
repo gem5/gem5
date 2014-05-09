@@ -122,11 +122,6 @@ class DRAMCtrl : public AbstractMemory
     bool retryWrReq;
 
     /**
-     * Remember that a row buffer hit occured
-     */
-    bool rowHitFlag;
-
-    /**
      * Bus state used to control the read/write switching and drive
      * the scheduling of the next request.
      */
@@ -145,8 +140,8 @@ class DRAMCtrl : public AbstractMemory
     /**
      * A basic class to track the bank state, i.e. what row is
      * currently open (if any), when is the bank free to accept a new
-     * command, when can it be precharged, and when can it be
-     * activated.
+     * column (read/write) command, when can it be precharged, and
+     * when can it be activated.
      *
      * The bank also keeps track of how many bytes have been accessed
      * in the open row since it was opened.
@@ -160,7 +155,7 @@ class DRAMCtrl : public AbstractMemory
 
         uint32_t openRow;
 
-        Tick freeAt;
+        Tick colAllowedAt;
         Tick preAllowedAt;
         Tick actAllowedAt;
 
@@ -168,7 +163,7 @@ class DRAMCtrl : public AbstractMemory
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(NO_ROW), freeAt(0), preAllowedAt(0), actAllowedAt(0),
+            openRow(NO_ROW), colAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
     };
@@ -372,20 +367,6 @@ class DRAMCtrl : public AbstractMemory
     void chooseNext(std::deque<DRAMPacket*>& queue);
 
     /**
-     *Looks at the state of the banks, channels, row buffer hits etc
-     * to estimate how long a request will take to complete.
-     *
-     * @param dram_pkt The request for which we want to estimate latency
-     * @param inTime The tick at which you want to probe the memory
-     *
-     * @return A pair of ticks, one indicating how many ticks *after*
-     *         inTime the request require, and the other indicating how
-     *         much of that was just the bank access time, ignoring the
-     *         ticks spent simply waiting for resources to become free
-     */
-    std::pair<Tick, Tick> estimateLatency(DRAMPacket* dram_pkt, Tick inTime);
-
-    /**
      * Move the request at the head of the read queue to the response
      * queue, sorting by readyTime.\ If it is the only packet in the
      * response queue, schedule a respond event to send it back to the
@@ -400,13 +381,13 @@ class DRAMCtrl : public AbstractMemory
     void reorderQueue(std::deque<DRAMPacket*>& queue);
 
     /**
-     * Find which are the earliest available banks for the enqueued
-     * requests. Assumes maximum of 64 banks per DIMM
+     * Find which are the earliest banks ready to issue an activate
+     * for the enqueued requests. Assumes maximum of 64 banks per DIMM
      *
      * @param Queued requests to consider
      * @return One-hot encoded mask of bank indices
      */
-    uint64_t minBankFreeAt(const std::deque<DRAMPacket*>& queue) const;
+    uint64_t minBankActAt(const std::deque<DRAMPacket*>& queue) const;
 
     /**
      * Keep track of when row activations happen, in order to enforce
@@ -429,9 +410,9 @@ class DRAMCtrl : public AbstractMemory
      * accesses to the open page.
      *
      * @param bank The bank to precharge
-     * @param pre_done_at Time when the precharge is done
+     * @param pre_at Time when the precharge takes place
      */
-    void prechargeBank(Bank& bank, Tick pre_done_at);
+    void prechargeBank(Bank& bank, Tick pre_at);
 
     void printParams() const;
 
@@ -650,11 +631,9 @@ class DRAMCtrl : public AbstractMemory
     Stats::Scalar totQLat;
     Stats::Scalar totMemAccLat;
     Stats::Scalar totBusLat;
-    Stats::Scalar totBankLat;
 
     // Average latencies per request
     Stats::Formula avgQLat;
-    Stats::Formula avgBankLat;
     Stats::Formula avgBusLat;
     Stats::Formula avgMemAccLat;
 
