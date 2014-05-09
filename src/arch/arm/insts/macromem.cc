@@ -171,6 +171,16 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
 
     (*uop)->setLastMicroop();
 
+    /* Take the control flags from the last microop for the macroop */
+    if ((*uop)->isControl())
+        setFlag(StaticInst::IsControl);
+    if ((*uop)->isCondCtrl())
+        setFlag(StaticInst::IsCondControl);
+    if ((*uop)->isIndirectCtrl())
+        setFlag(StaticInst::IsIndirectControl);
+    if ((*uop)->isReturn())
+        setFlag(StaticInst::IsReturn);
+
     for (StaticInstPtr *curUop = microOps;
             !(*curUop)->isLastMicroop(); curUop++) {
         MicroOp * uopPtr = dynamic_cast<MicroOp *>(curUop->get());

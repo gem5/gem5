@@ -1214,12 +1214,21 @@ def template LoadImmConstructor {{
             uops[2] = new MicroUopRegMov(machInst, INTREG_PC, INTREG_UREG0);
             uops[2]->setFlag(StaticInst::IsControl);
             uops[2]->setFlag(StaticInst::IsIndirectControl);
-            if (conditional)
+            /* Also set flags on the macroop so that pre-microop decomposition
+                branch prediction can work */
+            setFlag(StaticInst::IsControl);
+            setFlag(StaticInst::IsIndirectControl);
+            if (conditional) {
                 uops[2]->setFlag(StaticInst::IsCondControl);
-            else
+                setFlag(StaticInst::IsCondControl);
+            } else {
                 uops[2]->setFlag(StaticInst::IsUncondControl);
-            if (_base == INTREG_SP && _add && _imm == 4 && %(is_ras_pop)s)
+                setFlag(StaticInst::IsUncondControl);
+            }
+            if (_base == INTREG_SP && _add && _imm == 4 && %(is_ras_pop)s) {
                 uops[2]->setFlag(StaticInst::IsReturn);
+                setFlag(StaticInst::IsReturn);
+            }
             uops[2]->setLastMicroop();
         } else {
             uops[0] = new %(acc_name)s(machInst, _dest, _base, _add, _imm);
