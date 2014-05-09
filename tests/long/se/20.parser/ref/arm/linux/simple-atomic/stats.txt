@@ -4,11 +4,11 @@ sim_seconds                                  0.290499                       # Nu
 sim_ticks                                290498967000                       # Number of ticks simulated
 final_tick                               290498967000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2103217                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2370536                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1206088561                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 262216                       # Number of bytes of host memory used
-host_seconds                                   240.86                       # Real time elapsed on the host
+host_inst_rate                                1775828                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2001536                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1018347697                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 304924                       # Number of bytes of host memory used
+host_seconds                                   285.27                       # Real time elapsed on the host
 sim_insts                                   506581607                       # Number of instructions simulated
 sim_ops                                     570968167                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -147,5 +147,40 @@ system.cpu.num_busy_cycles                  580997935                       # Nu
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                         121548301                       # Number of branches fetched
+system.cpu.op_class::No_OpClass                     0      0.00%      0.00% # Class of executed instruction
+system.cpu.op_class::IntAlu                 387739461     67.91%     67.91% # Class of executed instruction
+system.cpu.op_class::IntMult                   339219      0.06%     67.97% # Class of executed instruction
+system.cpu.op_class::IntDiv                         0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatAdd                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatCmp                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatCvt                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatMult                      0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatDiv                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::FloatSqrt                      0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdAdd                        0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdAddAcc                     0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdAlu                        0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdCmp                        0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdCvt                        0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdMisc                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdMult                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdMultAcc                    0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdShift                      0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdShiftAcc                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdSqrt                       0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatAdd                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatAlu                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatCmp                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatCvt                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatDiv                   0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatMisc                  3      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatMult                  0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatMultAcc               0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::SimdFloatSqrt                  0      0.00%     67.97% # Class of executed instruction
+system.cpu.op_class::MemRead                126029555     22.07%     90.04% # Class of executed instruction
+system.cpu.op_class::MemWrite                56860479      9.96%    100.00% # Class of executed instruction
+system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::total                  570968717                       # Class of executed instruction
 
 ---------- End Simulation Statistics   ----------

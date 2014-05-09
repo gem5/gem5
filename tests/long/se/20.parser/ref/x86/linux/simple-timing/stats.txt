@@ -4,11 +4,11 @@ sim_seconds                                  1.647873                       # Nu
 sim_ticks                                1647872849000                       # Number of ticks simulated
 final_tick                               1647872849000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 782951                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1447764                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1560332529                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 260992                       # Number of bytes of host memory used
-host_seconds                                  1056.10                       # Real time elapsed on the host
+host_inst_rate                                 654522                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1210285                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1304389188                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 297832                       # Number of bytes of host memory used
+host_seconds                                  1263.33                       # Real time elapsed on the host
 sim_insts                                   826877110                       # Number of instructions simulated
 sim_ops                                    1528988702                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -82,6 +82,41 @@ system.cpu.num_busy_cycles                 3295745698                       # Nu
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                         149758583                       # Number of branches fetched
+system.cpu.op_class::No_OpClass               1819099      0.12%      0.12% # Class of executed instruction
+system.cpu.op_class::IntAlu                 989721890     64.73%     64.85% # Class of executed instruction
+system.cpu.op_class::IntMult                   306834      0.02%     64.87% # Class of executed instruction
+system.cpu.op_class::IntDiv                   3878536      0.25%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatAdd                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatCmp                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatCvt                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatMult                      0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatDiv                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::FloatSqrt                      0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdAdd                        0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdAddAcc                     0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdAlu                        0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdCmp                        0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdCvt                        0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdMisc                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdMult                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdMultAcc                    0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdShift                      0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdShiftAcc                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdSqrt                       0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatAdd                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatAlu                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatCmp                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatCvt                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatDiv                   0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatMisc                  0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatMult                  0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatMultAcc               0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::SimdFloatSqrt                  0      0.00%     65.12% # Class of executed instruction
+system.cpu.op_class::MemRead                384102157     25.12%     90.24% # Class of executed instruction
+system.cpu.op_class::MemWrite               149160186      9.76%    100.00% # Class of executed instruction
+system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::total                 1528988702                       # Class of executed instruction
 system.cpu.icache.tags.replacements              1253                       # number of replacements
 system.cpu.icache.tags.tagsinuse           881.356491                       # Cycle average of tags in use
 system.cpu.icache.tags.total_refs          1068344252                       # Total number of references to valid blocks.

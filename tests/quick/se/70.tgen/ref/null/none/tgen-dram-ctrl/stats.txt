@@ -4,93 +4,99 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            24940417343                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 228644                       # Number of bytes of host memory used
-host_seconds                                     4.01                       # Real time elapsed on the host
+host_tick_rate                            14337554787                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 228672                       # Number of bytes of host memory used
+host_seconds                                     6.97                       # Real time elapsed on the host
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
-system.physmem.bytes_read::cpu              213331136                       # Number of bytes read from this memory
-system.physmem.bytes_read::total            213331136                       # Number of bytes read from this memory
-system.physmem.num_reads::cpu                 3333299                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total               3333299                       # Number of read requests responded to by this memory
-system.physmem.bw_read::cpu                2133311360                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total              2133311360                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_total::cpu               2133311360                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total             2133311360                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.readReqs                       3333300                       # Number of read requests accepted
-system.physmem.writeReqs                            0                       # Number of write requests accepted
-system.physmem.readBursts                     3333300                       # Number of DRAM read bursts, including those serviced by the write queue
-system.physmem.writeBursts                          0                       # Number of DRAM write bursts, including those merged in the write queue
-system.physmem.bytesReadDRAM                213331200                       # Total number of bytes read from DRAM
-system.physmem.bytesReadWrQ                         0                       # Total number of bytes read from write queue
-system.physmem.bytesWritten                         0                       # Total number of bytes written to DRAM
-system.physmem.bytesReadSys                 213331200                       # Total read bytes from the system interface side
-system.physmem.bytesWrittenSys                      0                       # Total written bytes from the system interface side
-system.physmem.servicedByWrQ                        0                       # Number of DRAM read bursts serviced by the write queue
-system.physmem.mergedWrBursts                       0                       # Number of DRAM write bursts merged with an existing one
+system.physmem.bytes_read::cpu              106798016                       # Number of bytes read from this memory
+system.physmem.bytes_read::total            106798016                       # Number of bytes read from this memory
+system.physmem.bytes_written::cpu           106535680                       # Number of bytes written to this memory
+system.physmem.bytes_written::total         106535680                       # Number of bytes written to this memory
+system.physmem.num_reads::cpu                 1668719                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total               1668719                       # Number of read requests responded to by this memory
+system.physmem.num_writes::cpu                1664620                       # Number of write requests responded to by this memory
+system.physmem.num_writes::total              1664620                       # Number of write requests responded to by this memory
+system.physmem.bw_read::cpu                1067980160                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total              1067980160                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu               1065356800                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total             1065356800                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu               2133336960                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total             2133336960                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.readReqs                       1668720                       # Number of read requests accepted
+system.physmem.writeReqs                      1664620                       # Number of write requests accepted
+system.physmem.readBursts                     1668720                       # Number of DRAM read bursts, including those serviced by the write queue
+system.physmem.writeBursts                    1664620                       # Number of DRAM write bursts, including those merged in the write queue
+system.physmem.bytesReadDRAM                106797184                       # Total number of bytes read from DRAM
+system.physmem.bytesReadWrQ                       896                       # Total number of bytes read from write queue
+system.physmem.bytesWritten                 106533952                       # Total number of bytes written to DRAM
+system.physmem.bytesReadSys                 106798080                       # Total read bytes from the system interface side
+system.physmem.bytesWrittenSys              106535680                       # Total written bytes from the system interface side
+system.physmem.servicedByWrQ                       14                       # Number of DRAM read bursts serviced by the write queue
+system.physmem.mergedWrBursts                       8                       # Number of DRAM write bursts merged with an existing one
 system.physmem.neitherReadNorWriteReqs              0                       # Number of requests that are neither read nor write
-system.physmem.perBankRdBursts::0              217600                       # Per bank write bursts
-system.physmem.perBankRdBursts::1              217600                       # Per bank write bursts
-system.physmem.perBankRdBursts::2              217600                       # Per bank write bursts
-system.physmem.perBankRdBursts::3              217600                       # Per bank write bursts
-system.physmem.perBankRdBursts::4              210100                       # Per bank write bursts
-system.physmem.perBankRdBursts::5              204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::6              204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::7              204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::8              204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::9              204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::10             204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::11             204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::12             204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::13             204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::14             204800                       # Per bank write bursts
-system.physmem.perBankRdBursts::15             204800                       # Per bank write bursts
-system.physmem.perBankWrBursts::0                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::1                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::2                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::3                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::4                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::5                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::6                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::7                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::8                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::9                   0                       # Per bank write bursts
-system.physmem.perBankWrBursts::10                  0                       # Per bank write bursts
-system.physmem.perBankWrBursts::11                  0                       # Per bank write bursts
-system.physmem.perBankWrBursts::12                  0                       # Per bank write bursts
-system.physmem.perBankWrBursts::13                  0                       # Per bank write bursts
-system.physmem.perBankWrBursts::14                  0                       # Per bank write bursts
-system.physmem.perBankWrBursts::15                  0                       # Per bank write bursts
+system.physmem.perBankRdBursts::0              104195                       # Per bank write bursts
+system.physmem.perBankRdBursts::1              104188                       # Per bank write bursts
+system.physmem.perBankRdBursts::2              104541                       # Per bank write bursts
+system.physmem.perBankRdBursts::3              104589                       # Per bank write bursts
+system.physmem.perBankRdBursts::4              103994                       # Per bank write bursts
+system.physmem.perBankRdBursts::5              104203                       # Per bank write bursts
+system.physmem.perBankRdBursts::6              104803                       # Per bank write bursts
+system.physmem.perBankRdBursts::7              104557                       # Per bank write bursts
+system.physmem.perBankRdBursts::8              104630                       # Per bank write bursts
+system.physmem.perBankRdBursts::9              104040                       # Per bank write bursts
+system.physmem.perBankRdBursts::10             104372                       # Per bank write bursts
+system.physmem.perBankRdBursts::11             104177                       # Per bank write bursts
+system.physmem.perBankRdBursts::12             103805                       # Per bank write bursts
+system.physmem.perBankRdBursts::13             104138                       # Per bank write bursts
+system.physmem.perBankRdBursts::14             103922                       # Per bank write bursts
+system.physmem.perBankRdBursts::15             104552                       # Per bank write bursts
+system.physmem.perBankWrBursts::0              103587                       # Per bank write bursts
+system.physmem.perBankWrBursts::1              104082                       # Per bank write bursts
+system.physmem.perBankWrBursts::2              103950                       # Per bank write bursts
+system.physmem.perBankWrBursts::3              104334                       # Per bank write bursts
+system.physmem.perBankWrBursts::4              104264                       # Per bank write bursts
+system.physmem.perBankWrBursts::5              104509                       # Per bank write bursts
+system.physmem.perBankWrBursts::6              103927                       # Per bank write bursts
+system.physmem.perBankWrBursts::7              104060                       # Per bank write bursts
+system.physmem.perBankWrBursts::8              104076                       # Per bank write bursts
+system.physmem.perBankWrBursts::9              104072                       # Per bank write bursts
+system.physmem.perBankWrBursts::10             104151                       # Per bank write bursts
+system.physmem.perBankWrBursts::11             104328                       # Per bank write bursts
+system.physmem.perBankWrBursts::12             103712                       # Per bank write bursts
+system.physmem.perBankWrBursts::13             103871                       # Per bank write bursts
+system.physmem.perBankWrBursts::14             103773                       # Per bank write bursts
+system.physmem.perBankWrBursts::15             103897                       # Per bank write bursts
 system.physmem.numRdRetry                           0                       # Number of times read queue was full causing retry
 system.physmem.numWrRetry                           0                       # Number of times write queue was full causing retry
-system.physmem.totGap                     99999960000                       # Total gap between requests
+system.physmem.totGap                     99999960227                       # Total gap between requests
 system.physmem.readPktSize::0                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::1                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::2                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::3                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::4                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::5                       0                       # Read request sizes (log2)
-system.physmem.readPktSize::6                 3333300                       # Read request sizes (log2)
+system.physmem.readPktSize::6                 1668720                       # Read request sizes (log2)
 system.physmem.writePktSize::0                      0                       # Write request sizes (log2)
 system.physmem.writePktSize::1                      0                       # Write request sizes (log2)
 system.physmem.writePktSize::2                      0                       # Write request sizes (log2)
 system.physmem.writePktSize::3                      0                       # Write request sizes (log2)
 system.physmem.writePktSize::4                      0                       # Write request sizes (log2)
 system.physmem.writePktSize::5                      0                       # Write request sizes (log2)
-system.physmem.writePktSize::6                      0                       # Write request sizes (log2)
-system.physmem.rdQLenPdf::0                   2967921                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::1                    224361                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::2                     12823                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::3                     15990                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::4                     17049                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::5                     13879                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::6                     17179                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::7                     12823                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::8                     15990                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::9                     17049                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::10                    12820                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::11                     5416                       # What read queue length does an incoming req see
-system.physmem.rdQLenPdf::12                        0                       # What read queue length does an incoming req see
+system.physmem.writePktSize::6                1664620                       # Write request sizes (log2)
+system.physmem.rdQLenPdf::0                    766507                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::1                    779035                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::2                     72986                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::3                     24510                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::4                     10942                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::5                      7167                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::6                      4128                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::7                      2045                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::8                       890                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::9                       388                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::10                       97                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::11                        9                       # What read queue length does an incoming req see
+system.physmem.rdQLenPdf::12                        2                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::13                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::14                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::15                        0                       # What read queue length does an incoming req see
@@ -110,48 +116,48 @@ system.physmem.rdQLenPdf::28                        0                       # Wh
 system.physmem.rdQLenPdf::29                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::30                        0                       # What read queue length does an incoming req see
 system.physmem.rdQLenPdf::31                        0                       # What read queue length does an incoming req see
-system.physmem.wrQLenPdf::0                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::1                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::2                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::3                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::4                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::5                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::6                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::7                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::8                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::9                         0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::10                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::11                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::12                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::13                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::14                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::15                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::16                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::17                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::18                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::19                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::20                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::21                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::22                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::23                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::24                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::25                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::26                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::27                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::28                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::29                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::30                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::31                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::32                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::33                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::34                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::35                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::36                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::37                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::38                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::39                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::40                        0                       # What write queue length does an incoming req see
-system.physmem.wrQLenPdf::41                        0                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::0                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::1                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::2                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::3                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::4                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::5                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::6                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::7                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::8                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::9                         1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::10                        1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::11                        1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::12                        1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::13                        1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::14                        1                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::15                    21583                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::16                    26179                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::17                    48990                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::18                   101142                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::19                   110031                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::20                   109380                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::21                   103714                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::22                   100305                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::23                   100049                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::24                   122199                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::25                   111635                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::26                   105240                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::27                   100495                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::28                    98624                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::29                    98614                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::30                    98524                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::31                    98476                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::32                    98391                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::33                     3802                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::34                     2853                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::35                     2040                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::36                     1283                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::37                      674                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::38                      285                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::39                       72                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::40                       16                       # What write queue length does an incoming req see
+system.physmem.wrQLenPdf::41                        1                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::42                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::43                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::44                        0                       # What write queue length does an incoming req see
@@ -174,49 +180,89 @@ system.physmem.wrQLenPdf::60                        0                       # Wh
 system.physmem.wrQLenPdf::61                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::62                        0                       # What write queue length does an incoming req see
 system.physmem.wrQLenPdf::63                        0                       # What write queue length does an incoming req see
-system.physmem.bytesPerActivate::samples       195487                       # Bytes accessed per row activation
-system.physmem.bytesPerActivate::mean            1024                       # Bytes accessed per row activation
-system.physmem.bytesPerActivate::gmean    1024.000000                       # Bytes accessed per row activation
-system.physmem.bytesPerActivate::1024-1151       195487    100.00%    100.00% # Bytes accessed per row activation
-system.physmem.bytesPerActivate::total         195487                       # Bytes accessed per row activation
-system.physmem.totQLat                    27932046800                       # Total ticks spent queuing
-system.physmem.totMemAccLat               91374259300                       # Total ticks spent from burst creation until serviced by the DRAM
-system.physmem.totBusLat                  16666500000                       # Total ticks spent in databus transfers
-system.physmem.totBankLat                 46775712500                       # Total ticks spent accessing banks
-system.physmem.avgQLat                        8379.70                       # Average queueing delay per DRAM burst
-system.physmem.avgBankLat                    14032.85                       # Average bank access latency per DRAM burst
+system.physmem.bytesPerActivate::samples      3296563                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::mean       64.713043                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::gmean      64.189923                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::stdev      23.988602                       # Bytes accessed per row activation
+system.physmem.bytesPerActivate::0-127        3288788     99.76%     99.76% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::128-255         5620      0.17%     99.93% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::256-383           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::384-511           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::512-639           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::640-767           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::768-895           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::896-1023           32      0.00%     99.94% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::1024-1151         1963      0.06%    100.00% # Bytes accessed per row activation
+system.physmem.bytesPerActivate::total        3296563                       # Bytes accessed per row activation
+system.physmem.rdPerTurnAround::samples         97746                       # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::mean        17.071819                       # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::gmean       15.727304                       # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::stdev      106.831001                       # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::0-2047          97745    100.00%    100.00% # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::32768-34815            1      0.00%    100.00% # Reads before turning the bus around for writes
+system.physmem.rdPerTurnAround::total           97746                       # Reads before turning the bus around for writes
+system.physmem.wrPerTurnAround::samples         97746                       # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::mean        17.029781                       # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::gmean       16.939241                       # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::stdev        1.836351                       # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::16              73134     74.82%     74.82% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::17                545      0.56%     75.38% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::18                655      0.67%     76.05% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::19               1612      1.65%     77.70% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::20              16208     16.58%     94.28% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::21               5168      5.29%     99.57% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::22                147      0.15%     99.72% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::23                 85      0.09%     99.80% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::24                 66      0.07%     99.87% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::25                 49      0.05%     99.92% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::26                 29      0.03%     99.95% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::27                 26      0.03%     99.98% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::28                 16      0.02%     99.99% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::29                  4      0.00%    100.00% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::30                  2      0.00%    100.00% # Writes before turning the bus around for reads
+system.physmem.wrPerTurnAround::total           97746                       # Writes before turning the bus around for reads
+system.physmem.totQLat                    58049969454                       # Total ticks spent queuing
+system.physmem.totMemAccLat               89338206954                       # Total ticks spent from burst creation until serviced by the DRAM
+system.physmem.totBusLat                   8343530000                       # Total ticks spent in databus transfers
+system.physmem.avgQLat                       34787.42                       # Average queueing delay per DRAM burst
 system.physmem.avgBusLat                      5000.00                       # Average bus latency per DRAM burst
-system.physmem.avgMemAccLat                  27412.55                       # Average memory access latency per DRAM burst
-system.physmem.avgRdBW                        2133.31                       # Average DRAM read bandwidth in MiByte/s
-system.physmem.avgWrBW                           0.00                       # Average achieved write bandwidth in MiByte/s
-system.physmem.avgRdBWSys                     2133.31                       # Average system read bandwidth in MiByte/s
-system.physmem.avgWrBWSys                        0.00                       # Average system write bandwidth in MiByte/s
+system.physmem.avgMemAccLat                  53537.42                       # Average memory access latency per DRAM burst
+system.physmem.avgRdBW                        1067.97                       # Average DRAM read bandwidth in MiByte/s
+system.physmem.avgWrBW                        1065.34                       # Average achieved write bandwidth in MiByte/s
+system.physmem.avgRdBWSys                     1067.98                       # Average system read bandwidth in MiByte/s
+system.physmem.avgWrBWSys                     1065.36                       # Average system write bandwidth in MiByte/s
 system.physmem.peakBW                        12800.00                       # Theoretical peak bandwidth in MiByte/s
 system.physmem.busUtil                          16.67                       # Data bus utilization in percentage
-system.physmem.busUtilRead                      16.67                       # Data bus utilization in percentage for reads
-system.physmem.busUtilWrite                      0.00                       # Data bus utilization in percentage for writes
-system.physmem.avgRdQLen                         1.33                       # Average read queue length when enqueuing
-system.physmem.avgWrQLen                         0.00                       # Average write queue length when enqueuing
-system.physmem.readRowHits                    3112095                       # Number of row buffer hits during reads
-system.physmem.writeRowHits                         0                       # Number of row buffer hits during writes
-system.physmem.readRowHitRate                   93.36                       # Row buffer hit rate for reads
-system.physmem.writeRowHitRate                    nan                       # Row buffer hit rate for writes
-system.physmem.avgGap                        30000.29                       # Average gap between requests
-system.physmem.pageHitRate                      93.36                       # Row buffer hit rate, read and write combined
-system.physmem.prechargeAllPercent               0.11                       # Percentage of time for which DRAM has all the banks in precharge state
-system.membus.throughput                   2133311360                       # Throughput (bytes/s)
-system.membus.trans_dist::ReadReq             3333300                       # Transaction distribution
-system.membus.trans_dist::ReadResp            3333299                       # Transaction distribution
-system.membus.pkt_count_system.monitor-master::system.physmem.port      6666599                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::total                6666599                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.monitor-master::system.physmem.port    213331136                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::total           213331136                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.data_through_bus              213331136                       # Total data (bytes)
-system.membus.reqLayer0.occupancy          6333270000                       # Layer occupancy (ticks)
-system.membus.reqLayer0.utilization               6.3                       # Layer utilization (%)
-system.membus.respLayer0.occupancy        17200626050                       # Layer occupancy (ticks)
-system.membus.respLayer0.utilization             17.2                       # Layer utilization (%)
-system.monitor.readBurstLengthHist::samples      3333300                       # Histogram of burst lengths of transmitted packets
+system.physmem.busUtilRead                       8.34                       # Data bus utilization in percentage for reads
+system.physmem.busUtilWrite                      8.32                       # Data bus utilization in percentage for writes
+system.physmem.avgRdQLen                         1.68                       # Average read queue length when enqueuing
+system.physmem.avgWrQLen                        25.19                       # Average write queue length when enqueuing
+system.physmem.readRowHits                      32203                       # Number of row buffer hits during reads
+system.physmem.writeRowHits                      4525                       # Number of row buffer hits during writes
+system.physmem.readRowHitRate                    1.93                       # Row buffer hit rate for reads
+system.physmem.writeRowHitRate                   0.27                       # Row buffer hit rate for writes
+system.physmem.avgGap                        29999.93                       # Average gap between requests
+system.physmem.pageHitRate                       1.10                       # Row buffer hit rate, read and write combined
+system.physmem.memoryStateTime::IDLE          5508849                       # Time in different power states
+system.physmem.memoryStateTime::REF        3339180000                       # Time in different power states
+system.physmem.memoryStateTime::PRE_PDN             0                       # Time in different power states
+system.physmem.memoryStateTime::ACT       96654451752                       # Time in different power states
+system.physmem.memoryStateTime::ACT_PDN             0                       # Time in different power states
+system.membus.throughput                   2133336960                       # Throughput (bytes/s)
+system.membus.trans_dist::ReadReq             1668720                       # Transaction distribution
+system.membus.trans_dist::ReadResp            1668719                       # Transaction distribution
+system.membus.trans_dist::WriteReq            1664620                       # Transaction distribution
+system.membus.trans_dist::WriteResp           1664620                       # Transaction distribution
+system.membus.pkt_count_system.monitor-master::system.physmem.port      6666679                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                6666679                       # Packet count per connected master and slave (bytes)
+system.membus.tot_pkt_size_system.monitor-master::system.physmem.port    213333696                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.tot_pkt_size::total           213333696                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.data_through_bus              213333696                       # Total data (bytes)
+system.membus.reqLayer0.occupancy         11669983278                       # Layer occupancy (ticks)
+system.membus.reqLayer0.utilization              11.7                       # Layer utilization (%)
+system.membus.respLayer0.occupancy        11409038076                       # Layer occupancy (ticks)
+system.membus.respLayer0.utilization             11.4                       # Layer utilization (%)
+system.monitor.readBurstLengthHist::samples      1668720                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::stdev            0                       # Histogram of burst lengths of transmitted packets
@@ -236,40 +282,40 @@ system.monitor.readBurstLengthHist::48-51            0      0.00%      0.00% # H
 system.monitor.readBurstLengthHist::52-55            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::56-59            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::60-63            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
-system.monitor.readBurstLengthHist::64-67      3333300    100.00%    100.00% # Histogram of burst lengths of transmitted packets
+system.monitor.readBurstLengthHist::64-67      1668720    100.00%    100.00% # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::68-71            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::72-75            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::76-79            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
-system.monitor.readBurstLengthHist::total      3333300                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::samples            0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::mean          nan                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::gmean          nan                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::stdev          nan                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::0              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::1              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::2              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::3              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::4              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::5              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::6              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::7              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::8              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::9              0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::10             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::11             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::12             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::13             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::14             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::15             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::16             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::17             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::18             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::19             0                       # Histogram of burst lengths of transmitted packets
-system.monitor.writeBurstLengthHist::total            0                       # Histogram of burst lengths of transmitted packets
+system.monitor.readBurstLengthHist::total      1668720                       # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::samples      1664620                       # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::stdev            0                       # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::0-3            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::4-7            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::8-11            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::12-15            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::16-19            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::20-23            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::24-27            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::28-31            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::32-35            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::36-39            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::40-43            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::44-47            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::48-51            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::52-55            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::56-59            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::60-63            0      0.00%      0.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::64-67      1664620    100.00%    100.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::68-71            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::72-75            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::76-79            0      0.00%    100.00% # Histogram of burst lengths of transmitted packets
+system.monitor.writeBurstLengthHist::total      1664620                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBandwidthHist::samples          100                       # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::mean     2133311360                       # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::gmean  2133311357.360062                       # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::stdev  106664.726883                       # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::mean     1067980160                       # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::gmean  1064651766.271052                       # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::stdev  107759819.009425                       # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::0-1.34218e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::1.34218e+08-2.68435e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::2.68435e+08-4.02653e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
@@ -277,172 +323,172 @@ system.monitor.readBandwidthHist::4.02653e+08-5.36871e+08            0      0.00
 system.monitor.readBandwidthHist::5.36871e+08-6.71089e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::6.71089e+08-8.05306e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::8.05306e+08-9.39524e+08            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::9.39524e+08-1.07374e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.07374e+09-1.20796e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.20796e+09-1.34218e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.34218e+09-1.4764e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.4764e+09-1.61061e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.61061e+09-1.74483e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.74483e+09-1.87905e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::1.87905e+09-2.01327e+09            0      0.00%      0.00% # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.readBandwidthHist::2.01327e+09-2.14748e+09          100    100.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::9.39524e+08-1.07374e+09           99     99.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.07374e+09-1.20796e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.20796e+09-1.34218e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.34218e+09-1.4764e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.4764e+09-1.61061e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.61061e+09-1.74483e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.74483e+09-1.87905e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::1.87905e+09-2.01327e+09            0      0.00%     99.00% # Histogram of read bandwidth per sample period (bytes/s)
+system.monitor.readBandwidthHist::2.01327e+09-2.14748e+09            1      1.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::2.14748e+09-2.2817e+09            0      0.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::2.2817e+09-2.41592e+09            0      0.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::2.41592e+09-2.55014e+09            0      0.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::2.55014e+09-2.68435e+09            0      0.00%    100.00% # Histogram of read bandwidth per sample period (bytes/s)
 system.monitor.readBandwidthHist::total           100                       # Histogram of read bandwidth per sample period (bytes/s)
-system.monitor.averageReadBandwidth        2133311360      0.00%      0.00% # Average read bandwidth (bytes/s)
-system.monitor.totalReadBytes               213331136                       # Number of bytes read
+system.monitor.averageReadBandwidth        1067980160      0.00%      0.00% # Average read bandwidth (bytes/s)
+system.monitor.totalReadBytes               106798016                       # Number of bytes read
 system.monitor.writeBandwidthHist::samples          100                       # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::mean             0                       # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::mean    1065356800                       # Histogram of write bandwidth (bytes/s)
 system.monitor.writeBandwidthHist::gmean            0                       # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::stdev            0                       # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::0              100    100.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::1                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::2                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::3                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::4                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::5                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::6                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::7                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::8                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::9                0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::10               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::11               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::12               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::13               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::14               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::15               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::16               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::17               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::18               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
-system.monitor.writeBandwidthHist::19               0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::stdev 107770982.104450                       # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::0-6.71089e+07            1      1.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::6.71089e+07-1.34218e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.34218e+08-2.01327e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::2.01327e+08-2.68435e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::2.68435e+08-3.35544e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::3.35544e+08-4.02653e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::4.02653e+08-4.69762e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::4.69762e+08-5.36871e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::5.36871e+08-6.0398e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::6.0398e+08-6.71089e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::6.71089e+08-7.38198e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::7.38198e+08-8.05306e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::8.05306e+08-8.72415e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::8.72415e+08-9.39524e+08            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::9.39524e+08-1.00663e+09            0      0.00%      1.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.00663e+09-1.07374e+09           29     29.00%     30.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.07374e+09-1.14085e+09           70     70.00%    100.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.14085e+09-1.20796e+09            0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.20796e+09-1.27507e+09            0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
+system.monitor.writeBandwidthHist::1.27507e+09-1.34218e+09            0      0.00%    100.00% # Histogram of write bandwidth (bytes/s)
 system.monitor.writeBandwidthHist::total          100                       # Histogram of write bandwidth (bytes/s)
-system.monitor.averageWriteBandwidth                0                       # Average write bandwidth (bytes/s)
-system.monitor.totalWrittenBytes                    0                       # Number of bytes written
-system.monitor.readLatencyHist::samples       3333299                       # Read request-response latency
-system.monitor.readLatencyHist::mean     47438.751234                       # Read request-response latency
-system.monitor.readLatencyHist::gmean    42490.722724                       # Read request-response latency
-system.monitor.readLatencyHist::stdev    40033.411924                       # Read request-response latency
-system.monitor.readLatencyHist::0-32767             0      0.00%      0.00% # Read request-response latency
-system.monitor.readLatencyHist::32768-65535      3182634     95.48%     95.48% # Read request-response latency
-system.monitor.readLatencyHist::65536-98303        17049      0.51%     95.99% # Read request-response latency
-system.monitor.readLatencyHist::98304-131071        18238      0.55%     96.54% # Read request-response latency
-system.monitor.readLatencyHist::131072-163839        15993      0.48%     97.02% # Read request-response latency
-system.monitor.readLatencyHist::163840-196607        17049      0.51%     97.53% # Read request-response latency
-system.monitor.readLatencyHist::196608-229375        18238      0.55%     98.08% # Read request-response latency
-system.monitor.readLatencyHist::229376-262143        15990      0.48%     98.56% # Read request-response latency
-system.monitor.readLatencyHist::262144-294911        17052      0.51%     99.07% # Read request-response latency
-system.monitor.readLatencyHist::294912-327679        13881      0.42%     99.48% # Read request-response latency
-system.monitor.readLatencyHist::327680-360447        17175      0.52%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::360448-393215            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::393216-425983            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::425984-458751            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::458752-491519            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::491520-524287            0      0.00%    100.00% # Read request-response latency
+system.monitor.averageWriteBandwidth       1065356800      0.00%      0.00% # Average write bandwidth (bytes/s)
+system.monitor.totalWrittenBytes            106535680                       # Number of bytes written
+system.monitor.readLatencyHist::samples       1668719                       # Read request-response latency
+system.monitor.readLatencyHist::mean     73576.537902                       # Read request-response latency
+system.monitor.readLatencyHist::gmean    68507.812375                       # Read request-response latency
+system.monitor.readLatencyHist::stdev    39270.153648                       # Read request-response latency
+system.monitor.readLatencyHist::0-32767            14      0.00%      0.00% # Read request-response latency
+system.monitor.readLatencyHist::32768-65535       454232     27.22%     27.22% # Read request-response latency
+system.monitor.readLatencyHist::65536-98303      1043171     62.51%     89.73% # Read request-response latency
+system.monitor.readLatencyHist::98304-131071        73085      4.38%     94.11% # Read request-response latency
+system.monitor.readLatencyHist::131072-163839        46931      2.81%     96.93% # Read request-response latency
+system.monitor.readLatencyHist::163840-196607        12458      0.75%     97.67% # Read request-response latency
+system.monitor.readLatencyHist::196608-229375         7854      0.47%     98.14% # Read request-response latency
+system.monitor.readLatencyHist::229376-262143         7990      0.48%     98.62% # Read request-response latency
+system.monitor.readLatencyHist::262144-294911         8124      0.49%     99.11% # Read request-response latency
+system.monitor.readLatencyHist::294912-327679         7849      0.47%     99.58% # Read request-response latency
+system.monitor.readLatencyHist::327680-360447         4246      0.25%     99.83% # Read request-response latency
+system.monitor.readLatencyHist::360448-393215         1108      0.07%     99.90% # Read request-response latency
+system.monitor.readLatencyHist::393216-425983          866      0.05%     99.95% # Read request-response latency
+system.monitor.readLatencyHist::425984-458751          601      0.04%     99.99% # Read request-response latency
+system.monitor.readLatencyHist::458752-491519          183      0.01%    100.00% # Read request-response latency
+system.monitor.readLatencyHist::491520-524287            7      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::524288-557055            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::557056-589823            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::589824-622591            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::622592-655359            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::total         3333299                       # Read request-response latency
-system.monitor.writeLatencyHist::samples            0                       # Write request-response latency
-system.monitor.writeLatencyHist::mean             nan                       # Write request-response latency
-system.monitor.writeLatencyHist::gmean            nan                       # Write request-response latency
-system.monitor.writeLatencyHist::stdev            nan                       # Write request-response latency
-system.monitor.writeLatencyHist::0                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::1                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::2                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::3                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::4                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::5                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::6                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::7                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::8                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::9                  0                       # Write request-response latency
-system.monitor.writeLatencyHist::10                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::11                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::12                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::13                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::14                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::15                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::16                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::17                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::18                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::19                 0                       # Write request-response latency
-system.monitor.writeLatencyHist::total              0                       # Write request-response latency
-system.monitor.ittReadRead::samples           3333299                       # Read-to-read inter transaction time
-system.monitor.ittReadRead::mean         30000.297003                       # Read-to-read inter transaction time
-system.monitor.ittReadRead::stdev           54.497186                       # Read-to-read inter transaction time
+system.monitor.readLatencyHist::total         1668719                       # Read request-response latency
+system.monitor.writeLatencyHist::samples      1664620                       # Write request-response latency
+system.monitor.writeLatencyHist::mean    10570.968616                       # Write request-response latency
+system.monitor.writeLatencyHist::gmean   10511.906115                       # Write request-response latency
+system.monitor.writeLatencyHist::stdev    1198.829619                       # Write request-response latency
+system.monitor.writeLatencyHist::0-1023             0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::1024-2047            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::2048-3071            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::3072-4095            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::4096-5119            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::5120-6143            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::6144-7167            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::7168-8191            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::8192-9215            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::9216-10239      1266039     76.06%     76.06% # Write request-response latency
+system.monitor.writeLatencyHist::10240-11263        92649      5.57%     81.62% # Write request-response latency
+system.monitor.writeLatencyHist::11264-12287       113174      6.80%     88.42% # Write request-response latency
+system.monitor.writeLatencyHist::12288-13311        92637      5.57%     93.99% # Write request-response latency
+system.monitor.writeLatencyHist::13312-14335        63204      3.80%     97.78% # Write request-response latency
+system.monitor.writeLatencyHist::14336-15359        32757      1.97%     99.75% # Write request-response latency
+system.monitor.writeLatencyHist::15360-16383         4158      0.25%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::16384-17407            2      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::17408-18431            0      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::18432-19455            0      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::19456-20479            0      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::total        1664620                       # Write request-response latency
+system.monitor.ittReadRead::samples           1668719                       # Read-to-read inter transaction time
+system.monitor.ittReadRead::mean         59926.183034                       # Read-to-read inter transaction time
+system.monitor.ittReadRead::stdev        42757.593151                       # Read-to-read inter transaction time
 system.monitor.ittReadRead::underflows              0      0.00%      0.00% # Read-to-read inter transaction time
 system.monitor.ittReadRead::1-5000                  0      0.00%      0.00% # Read-to-read inter transaction time
 system.monitor.ittReadRead::5001-10000              0      0.00%      0.00% # Read-to-read inter transaction time
 system.monitor.ittReadRead::10001-15000             0      0.00%      0.00% # Read-to-read inter transaction time
 system.monitor.ittReadRead::15001-20000             0      0.00%      0.00% # Read-to-read inter transaction time
 system.monitor.ittReadRead::20001-25000             0      0.00%      0.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::25001-30000       3333200    100.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::30001-35000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::35001-40000            99      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::40001-45000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::45001-50000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::50001-55000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::55001-60000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::60001-65000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::65001-70000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::70001-75000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::75001-80000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::80001-85000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::85001-90000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::90001-95000             0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::95001-100000            0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::overflows               0      0.00%    100.00% # Read-to-read inter transaction time
-system.monitor.ittReadRead::min_value           30000                       # Read-to-read inter transaction time
-system.monitor.ittReadRead::max_value           40000                       # Read-to-read inter transaction time
-system.monitor.ittReadRead::total             3333299                       # Read-to-read inter transaction time
-system.monitor.ittWriteWrite::samples               0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::mean                nan                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::stdev               nan                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::underflows            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::1-5000                0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::5001-10000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::10001-15000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::15001-20000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::20001-25000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::25001-30000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::30001-35000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::35001-40000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::40001-45000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::45001-50000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::50001-55000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::55001-60000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::60001-65000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::65001-70000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::70001-75000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::75001-80000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::80001-85000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::85001-90000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::90001-95000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::95001-100000            0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::overflows             0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::min_value             0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::max_value             0                       # Write-to-write inter transaction time
-system.monitor.ittWriteWrite::total                 0                       # Write-to-write inter transaction time
-system.monitor.ittReqReq::samples             3333299                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::mean           30000.297003                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::stdev             54.497186                       # Request-to-request inter transaction time
+system.monitor.ittReadRead::25001-30000        438300     26.27%     26.27% # Read-to-read inter transaction time
+system.monitor.ittReadRead::30001-35000        404751     24.26%     50.52% # Read-to-read inter transaction time
+system.monitor.ittReadRead::35001-40000             3      0.00%     50.52% # Read-to-read inter transaction time
+system.monitor.ittReadRead::40001-45000             3      0.00%     50.52% # Read-to-read inter transaction time
+system.monitor.ittReadRead::45001-50000             0      0.00%     50.52% # Read-to-read inter transaction time
+system.monitor.ittReadRead::50001-55000             3      0.00%     50.52% # Read-to-read inter transaction time
+system.monitor.ittReadRead::55001-60000        204975     12.28%     62.80% # Read-to-read inter transaction time
+system.monitor.ittReadRead::60001-65000        204546     12.26%     75.06% # Read-to-read inter transaction time
+system.monitor.ittReadRead::65001-70000             3      0.00%     75.06% # Read-to-read inter transaction time
+system.monitor.ittReadRead::70001-75000             3      0.00%     75.06% # Read-to-read inter transaction time
+system.monitor.ittReadRead::75001-80000             2      0.00%     75.06% # Read-to-read inter transaction time
+system.monitor.ittReadRead::80001-85000           527      0.03%     75.09% # Read-to-read inter transaction time
+system.monitor.ittReadRead::85001-90000        102490      6.14%     81.24% # Read-to-read inter transaction time
+system.monitor.ittReadRead::90001-95000        102495      6.14%     87.38% # Read-to-read inter transaction time
+system.monitor.ittReadRead::95001-100000          551      0.03%     87.41% # Read-to-read inter transaction time
+system.monitor.ittReadRead::overflows          210067     12.59%    100.00% # Read-to-read inter transaction time
+system.monitor.ittReadRead::min_value           28000                       # Read-to-read inter transaction time
+system.monitor.ittReadRead::max_value         1041420                       # Read-to-read inter transaction time
+system.monitor.ittReadRead::total             1668719                       # Read-to-read inter transaction time
+system.monitor.ittWriteWrite::samples         1664619                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::mean       59472.389997                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::stdev      41840.398153                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::underflows            0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::1-5000                0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::5001-10000            0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::10001-15000            0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::15001-20000            0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::20001-25000            0      0.00%      0.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::25001-30000       419825     25.22%     25.22% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::30001-35000       419112     25.18%     50.40% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::35001-40000            4      0.00%     50.40% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::40001-45000            6      0.00%     50.40% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::45001-50000            6      0.00%     50.40% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::50001-55000            6      0.00%     50.40% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::55001-60000       208578     12.53%     62.93% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::60001-65000       207985     12.49%     75.42% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::65001-70000            3      0.00%     75.42% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::70001-75000            3      0.00%     75.42% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::75001-80000            3      0.00%     75.42% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::80001-85000          552      0.03%     75.46% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::85001-90000       102802      6.18%     81.63% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::90001-95000       102817      6.18%     87.81% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::95001-100000          552      0.03%     87.84% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::overflows        202365     12.16%    100.00% # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::min_value         28000                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::max_value        598079                       # Write-to-write inter transaction time
+system.monitor.ittWriteWrite::total           1664619                       # Write-to-write inter transaction time
+system.monitor.ittReqReq::samples             3333339                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::mean           29999.937068                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::stdev           1278.967916                       # Request-to-request inter transaction time
 system.monitor.ittReqReq::underflows                0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::1-5000                    0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::5001-10000                0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::10001-15000               0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::15001-20000               0      0.00%      0.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::20001-25000               0      0.00%      0.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::25001-30000         3333200    100.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::30001-35000               0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::35001-40000              99      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::40001-45000               0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::45001-50000               0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::50001-55000               0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::55001-60000               0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::60001-65000               0      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::25001-30000         1684541     50.54%     50.54% # Request-to-request inter transaction time
+system.monitor.ittReqReq::30001-35000         1648718     49.46%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::35001-40000              18      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::40001-45000              15      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::45001-50000              11      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::50001-55000              20      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::55001-60000              13      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::60001-65000               2      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::65001-70000               0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::70001-75000               0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::75001-80000               0      0.00%    100.00% # Request-to-request inter transaction time
@@ -450,22 +496,22 @@ system.monitor.ittReqReq::80001-85000               0      0.00%    100.00% # Re
 system.monitor.ittReqReq::85001-90000               0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::90001-95000               0      0.00%    100.00% # Request-to-request inter transaction time
 system.monitor.ittReqReq::95001-100000              0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::overflows                 0      0.00%    100.00% # Request-to-request inter transaction time
-system.monitor.ittReqReq::min_value             30000                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::max_value             40000                       # Request-to-request inter transaction time
-system.monitor.ittReqReq::total               3333299                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::overflows                 1      0.00%    100.00% # Request-to-request inter transaction time
+system.monitor.ittReqReq::min_value             28000                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::max_value           1041420                       # Request-to-request inter transaction time
+system.monitor.ittReqReq::total               3333339                       # Request-to-request inter transaction time
 system.monitor.outstandingReadsHist::samples          100                       # Outstanding read transactions
-system.monitor.outstandingReadsHist::mean     1.290000                       # Outstanding read transactions
-system.monitor.outstandingReadsHist::gmean     1.120561                       # Outstanding read transactions
-system.monitor.outstandingReadsHist::stdev     1.139688                       # Outstanding read transactions
-system.monitor.outstandingReadsHist::0              0      0.00%      0.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::1             92     92.00%     92.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::2              2      2.00%     94.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::3              0      0.00%     94.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::4              3      3.00%     97.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::5              0      0.00%     97.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::6              0      0.00%     97.00% # Outstanding read transactions
-system.monitor.outstandingReadsHist::7              3      3.00%    100.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::mean     1.030000                       # Outstanding read transactions
+system.monitor.outstandingReadsHist::gmean            0                       # Outstanding read transactions
+system.monitor.outstandingReadsHist::stdev     0.881402                       # Outstanding read transactions
+system.monitor.outstandingReadsHist::0             28     28.00%     28.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::1             47     47.00%     75.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::2             21     21.00%     96.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::3              3      3.00%     99.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::4              0      0.00%     99.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::5              1      1.00%    100.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::6              0      0.00%    100.00% # Outstanding read transactions
+system.monitor.outstandingReadsHist::7              0      0.00%    100.00% # Outstanding read transactions
 system.monitor.outstandingReadsHist::8              0      0.00%    100.00% # Outstanding read transactions
 system.monitor.outstandingReadsHist::9              0      0.00%    100.00% # Outstanding read transactions
 system.monitor.outstandingReadsHist::10             0      0.00%    100.00% # Outstanding read transactions
@@ -480,11 +526,11 @@ system.monitor.outstandingReadsHist::18             0      0.00%    100.00% # Ou
 system.monitor.outstandingReadsHist::19             0      0.00%    100.00% # Outstanding read transactions
 system.monitor.outstandingReadsHist::total          100                       # Outstanding read transactions
 system.monitor.outstandingWritesHist::samples          100                       # Outstanding write transactions
-system.monitor.outstandingWritesHist::mean            0                       # Outstanding write transactions
+system.monitor.outstandingWritesHist::mean     0.150000                       # Outstanding write transactions
 system.monitor.outstandingWritesHist::gmean            0                       # Outstanding write transactions
-system.monitor.outstandingWritesHist::stdev            0                       # Outstanding write transactions
-system.monitor.outstandingWritesHist::0           100    100.00%    100.00% # Outstanding write transactions
-system.monitor.outstandingWritesHist::1             0      0.00%    100.00% # Outstanding write transactions
+system.monitor.outstandingWritesHist::stdev     0.358870                       # Outstanding write transactions
+system.monitor.outstandingWritesHist::0            85     85.00%     85.00% # Outstanding write transactions
+system.monitor.outstandingWritesHist::1            15     15.00%    100.00% # Outstanding write transactions
 system.monitor.outstandingWritesHist::2             0      0.00%    100.00% # Outstanding write transactions
 system.monitor.outstandingWritesHist::3             0      0.00%    100.00% # Outstanding write transactions
 system.monitor.outstandingWritesHist::4             0      0.00%    100.00% # Outstanding write transactions
@@ -505,9 +551,9 @@ system.monitor.outstandingWritesHist::18            0      0.00%    100.00% # Ou
 system.monitor.outstandingWritesHist::19            0      0.00%    100.00% # Outstanding write transactions
 system.monitor.outstandingWritesHist::total          100                       # Outstanding write transactions
 system.monitor.readTransHist::samples             100                       # Histogram of read transactions per sample period
-system.monitor.readTransHist::mean              33333                       # Histogram of read transactions per sample period
-system.monitor.readTransHist::gmean      33333.000000                       # Histogram of read transactions per sample period
-system.monitor.readTransHist::stdev                 0                       # Histogram of read transactions per sample period
+system.monitor.readTransHist::mean       16687.200000                       # Histogram of read transactions per sample period
+system.monitor.readTransHist::gmean      16635.188141                       # Histogram of read transactions per sample period
+system.monitor.readTransHist::stdev       1683.853859                       # Histogram of read transactions per sample period
 system.monitor.readTransHist::0-2047                0      0.00%      0.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::2048-4095             0      0.00%      0.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::4096-6143             0      0.00%      0.00% # Histogram of read transactions per sample period
@@ -515,46 +561,46 @@ system.monitor.readTransHist::6144-8191             0      0.00%      0.00% # Hi
 system.monitor.readTransHist::8192-10239            0      0.00%      0.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::10240-12287            0      0.00%      0.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::12288-14335            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::14336-16383            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::16384-18431            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::18432-20479            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::20480-22527            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::22528-24575            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::24576-26623            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::26624-28671            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::28672-30719            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::30720-32767            0      0.00%      0.00% # Histogram of read transactions per sample period
-system.monitor.readTransHist::32768-34815          100    100.00%    100.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::14336-16383            5      5.00%      5.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::16384-18431           94     94.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::18432-20479            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::20480-22527            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::22528-24575            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::24576-26623            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::26624-28671            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::28672-30719            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::30720-32767            0      0.00%     99.00% # Histogram of read transactions per sample period
+system.monitor.readTransHist::32768-34815            1      1.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::34816-36863            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::36864-38911            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::38912-40959            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.readTransHist::total               100                       # Histogram of read transactions per sample period
 system.monitor.writeTransHist::samples            100                       # Histogram of read transactions per sample period
-system.monitor.writeTransHist::mean                 0                       # Histogram of read transactions per sample period
+system.monitor.writeTransHist::mean      16646.200000                       # Histogram of read transactions per sample period
 system.monitor.writeTransHist::gmean                0                       # Histogram of read transactions per sample period
-system.monitor.writeTransHist::stdev                0                       # Histogram of read transactions per sample period
-system.monitor.writeTransHist::0                  100    100.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::1                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::2                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::3                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::4                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::5                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::6                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::7                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::8                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::9                    0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::10                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::11                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::12                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::13                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::14                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::15                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::16                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::17                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::18                   0      0.00%    100.00% # Histogram of read transactions per sample period
-system.monitor.writeTransHist::19                   0      0.00%    100.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::stdev      1683.921595                       # Histogram of read transactions per sample period
+system.monitor.writeTransHist::0-1023               1      1.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::1024-2047            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::2048-3071            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::3072-4095            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::4096-5119            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::5120-6143            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::6144-7167            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::7168-8191            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::8192-9215            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::9216-10239            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::10240-11263            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::11264-12287            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::12288-13311            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::13312-14335            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::14336-15359            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::15360-16383            0      0.00%      1.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::16384-17407           99     99.00%    100.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::17408-18431            0      0.00%    100.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::18432-19455            0      0.00%    100.00% # Histogram of read transactions per sample period
+system.monitor.writeTransHist::19456-20479            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::total              100                       # Histogram of read transactions per sample period
-system.cpu.numPackets                         3333300                       # Number of packets generated
+system.cpu.numPackets                         3333340                       # Number of packets generated
 system.cpu.numRetries                               0                       # Number of retries
 system.cpu.retryTicks                               0                       # Time spent waiting due to back-pressure (ticks)
 

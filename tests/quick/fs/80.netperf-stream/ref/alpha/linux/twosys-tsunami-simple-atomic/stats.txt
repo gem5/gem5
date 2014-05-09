@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409284500                       # Number of ticks simulated
 final_tick                               4321214250500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               22333008                       # Simulator instruction rate (inst/s)
-host_op_rate                                 22332995                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8544906534                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 473604                       # Number of bytes of host memory used
-host_seconds                                    23.45                       # Real time elapsed on the host
+host_inst_rate                               14275836                       # Simulator instruction rate (inst/s)
+host_op_rate                                 14275831                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5462126987                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 513712                       # Number of bytes of host memory used
+host_seconds                                    36.69                       # Real time elapsed on the host
 sim_insts                                   523790075                       # Number of instructions simulated
 sim_ops                                     523790075                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
@@ -113,6 +113,41 @@ testsys.cpu.num_busy_cycles              20262547.637842                       #
 testsys.cpu.not_idle_fraction                0.050555                       # Percentage of non-idle cycles
 testsys.cpu.idle_fraction                    0.949445                       # Percentage of idle cycles
 testsys.cpu.Branches                          2929848                       # Number of branches fetched
+testsys.cpu.op_class::No_OpClass               712819      3.52%      3.52% # Class of executed instruction
+testsys.cpu.op_class::IntAlu                 12147340     59.95%     63.47% # Class of executed instruction
+testsys.cpu.op_class::IntMult                   21654      0.11%     63.58% # Class of executed instruction
+testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatAdd                   4653      0.02%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatCmp                      1      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatCvt                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatMult                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatDiv                    922      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAdd                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAlu                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdCmp                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdCvt                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMisc                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMult                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMultAcc                   0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdShift                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdShiftAcc                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdSqrt                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAdd                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAlu                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCmp                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCvt                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatDiv                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::MemRead                 4230637     20.88%     84.48% # Class of executed instruction
+testsys.cpu.op_class::MemWrite                2319552     11.45%     95.93% # Class of executed instruction
+testsys.cpu.op_class::IprAccess                824102      4.07%    100.00% # Class of executed instruction
+testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
+testsys.cpu.op_class::total                  20261680                       # Class of executed instruction
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                   19580                       # number of quiesce instructions executed
 testsys.cpu.kern.inst.hwrei                    153667                       # number of hwrei instructions executed
@@ -336,6 +371,41 @@ drivesys.cpu.num_busy_cycles             19051473.772069                       #
 drivesys.cpu.not_idle_fraction               0.023766                       # Percentage of non-idle cycles
 drivesys.cpu.idle_fraction                   0.976234                       # Percentage of idle cycles
 drivesys.cpu.Branches                         2793313                       # Number of branches fetched
+drivesys.cpu.op_class::No_OpClass              623554      3.27%      3.27% # Class of executed instruction
+drivesys.cpu.op_class::IntAlu                11538630     60.57%     63.84% # Class of executed instruction
+drivesys.cpu.op_class::IntMult                  20663      0.11%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::IntDiv                       0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatAdd                   138      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatMult                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatDiv                    23      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAlu                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdCmp                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdCvt                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMisc                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMult                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMultAcc                  0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdShift                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdShiftAcc                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdSqrt                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAdd                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAlu                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCmp                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCvt                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatDiv                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMisc                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMult                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::MemRead                4026028     21.13%     85.08% # Class of executed instruction
+drivesys.cpu.op_class::MemWrite               2085021     10.94%     96.02% # Class of executed instruction
+drivesys.cpu.op_class::IprAccess               757336      3.98%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::total                 19051393                       # Class of executed instruction
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                  19876                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                   143591                       # number of hwrei instructions executed
@@ -455,11 +525,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321621592000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             6913599452                       # Simulator instruction rate (inst/s)
-host_op_rate                               6911980937                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             5373353780                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 524140                       # Number of bytes of host memory used
-host_seconds                                     0.08                       # Real time elapsed on the host
+host_inst_rate                             7312019890                       # Simulator instruction rate (inst/s)
+host_op_rate                               7310591323                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5683411932                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 513712                       # Number of bytes of host memory used
+host_seconds                                     0.07                       # Real time elapsed on the host
 sim_insts                                   523862353                       # Number of instructions simulated
 sim_ops                                     523862353                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
@@ -561,6 +631,41 @@ testsys.cpu.num_busy_cycles              36406.828108                       # Nu
 testsys.cpu.not_idle_fraction                0.044344                       # Percentage of non-idle cycles
 testsys.cpu.idle_fraction                    0.955656                       # Percentage of idle cycles
 testsys.cpu.Branches                             5238                       # Number of branches fetched
+testsys.cpu.op_class::No_OpClass                 1261      3.49%      3.49% # Class of executed instruction
+testsys.cpu.op_class::IntAlu                    21664     59.97%     63.46% # Class of executed instruction
+testsys.cpu.op_class::IntMult                      44      0.12%     63.58% # Class of executed instruction
+testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatAdd                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatCmp                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatCvt                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatMult                     0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatDiv                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdAdd                       0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdAlu                       0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdCmp                       0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdCvt                       0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdMisc                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdMult                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdMultAcc                   0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdShift                     0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdShiftAcc                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdSqrt                      0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAdd                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAlu                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCmp                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCvt                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatDiv                  0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::MemRead                    7674     21.24%     84.82% # Class of executed instruction
+testsys.cpu.op_class::MemWrite                   3938     10.90%     95.72% # Class of executed instruction
+testsys.cpu.op_class::IprAccess                  1545      4.28%    100.00% # Class of executed instruction
+testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
+testsys.cpu.op_class::total                     36126                       # Class of executed instruction
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                      40                       # number of quiesce instructions executed
 testsys.cpu.kern.inst.hwrei                       295                       # number of hwrei instructions executed
@@ -735,6 +840,41 @@ drivesys.cpu.num_busy_cycles             36082.640939                       # Nu
 drivesys.cpu.not_idle_fraction               0.022188                       # Percentage of non-idle cycles
 drivesys.cpu.idle_fraction                   0.977812                       # Percentage of idle cycles
 drivesys.cpu.Branches                            5243                       # Number of branches fetched
+drivesys.cpu.op_class::No_OpClass                1262      3.49%      3.49% # Class of executed instruction
+drivesys.cpu.op_class::IntAlu                   21687     59.99%     63.48% # Class of executed instruction
+drivesys.cpu.op_class::IntMult                     44      0.12%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::IntDiv                       0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatAdd                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatMult                    0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatDiv                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdAlu                      0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdCmp                      0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdCvt                      0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdMisc                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdMult                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdMultAcc                  0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdShift                    0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdShiftAcc                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdSqrt                     0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAdd                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAlu                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCmp                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCvt                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatDiv                 0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMisc                0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMult                0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.60% # Class of executed instruction
+drivesys.cpu.op_class::MemRead                   7678     21.24%     84.84% # Class of executed instruction
+drivesys.cpu.op_class::MemWrite                  3936     10.89%     95.73% # Class of executed instruction
+drivesys.cpu.op_class::IprAccess                 1545      4.27%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::total                    36152                       # Class of executed instruction
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                     41                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                      295                       # number of hwrei instructions executed
