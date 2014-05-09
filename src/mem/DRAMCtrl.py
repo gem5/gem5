@@ -135,6 +135,9 @@ class DRAMCtrl(AbstractMemory):
     # minimum time between a write data transfer and a precharge
     tWR = Param.Latency("Write recovery time")
 
+    # minimum time between a read and precharge command
+    tRTP = Param.Latency("Read to precharge")
+
     # time to complete a burst transfer, typically the burst length
     # divided by two due to the DDR bus, but by making it a parameter
     # it is easier to also evaluate SDR memories like WideIO.
@@ -198,6 +201,7 @@ class DDR3_1600_x64(DRAMCtrl):
     tRP = '13.75ns'
     tRAS = '35ns'
     tWR = '15ns'
+    tRTP = '7.5ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
@@ -257,6 +261,7 @@ class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     tRP = '15ns'
     tRAS = '36ns'
     tWR = '15ns'
+    tRTP = '7.5ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 666.66 MHz.
     # Note this is a BL8 DDR device.
@@ -314,6 +319,9 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     tRAS = '42ns'
     tWR = '15ns'
 
+    # 6 CK read to precharge delay
+    tRTP = '11.256ns'
+
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
@@ -365,6 +373,8 @@ class WideIO_200_x128(DRAMCtrl):
     tRP = '18ns'
     tRAS = '42ns'
     tWR = '15ns'
+    # Read to precharge is same as the burst
+    tRTP = '20ns'
 
     # 4 beats across an x128 SDR interface translates to 4 clocks @ 200 MHz.
     # Note this is a BL4 SDR device.
@@ -419,6 +429,9 @@ class LPDDR3_1600_x32(DRAMCtrl):
 
     tRAS = '42ns'
     tWR = '15ns'
+
+    # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
+    tRTP = '7.5ns'
 
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'

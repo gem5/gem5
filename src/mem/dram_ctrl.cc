@@ -76,7 +76,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     writesThisTime(0), readsThisTime(0),
     tWTR(p->tWTR), tRTW(p->tRTW), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS), tWR(p->tWR),
-    tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
+    tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
@@ -560,9 +560,10 @@ DRAMCtrl::printParams() const
             "tWTR      %d ticks\n"                        \
             "tRTW      %d ticks\n"                        \
             "tWR       %d ticks\n"                        \
+            "tRTP      %d ticks\n"                        \
             "tXAW (%d) %d ticks\n",
             name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR,
-            tRTW, tWR, activationLimit, tXAW);
+            tRTW, tWR, tRTP, activationLimit, tXAW);
 }
 
 void
@@ -993,12 +994,12 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // read/write (add a max with tCCD here)
     bank.colAllowedAt = cmd_at + tBURST;
 
-    // If this is a write, we also need to respect the write
-    // recovery time before a precharge
-    if (!dram_pkt->isRead) {
-        bank.preAllowedAt = std::max(bank.preAllowedAt,
-                                     dram_pkt->readyTime + tWR);
-    }
+    // If this is a write, we also need to respect the write recovery
+    // time before a precharge, in the case of a read, respect the
+    // read to precharge constraint
+    bank.preAllowedAt = std::max(bank.preAllowedAt,
+                                 dram_pkt->isRead ? cmd_at + tRTP :
+                                 dram_pkt->readyTime + tWR);
 
     // increment the bytes accessed and the accesses per row
     bank.bytesAccessed += burstSize;

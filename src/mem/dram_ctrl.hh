@@ -486,6 +486,7 @@ class DRAMCtrl : public AbstractMemory
     const Tick tRP;
     const Tick tRAS;
     const Tick tWR;
+    const Tick tRTP;
     const Tick tRFC;
     const Tick tREFI;
     const Tick tRRD;
