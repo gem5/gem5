@@ -851,7 +851,7 @@ let {{
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
-    if (!canRead & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+    if (!canRead && !(hypTrap && !inUserMode(Cpsr) && !inSecureState(Scr, Cpsr))) {
         return new UndefinedInstruction(machInst, false, mnemonic);
     }
     if (hypTrap) {
@@ -906,7 +906,7 @@ let {{
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
-    if (!canRead & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
+    if (!canRead && !(hypTrap && !inUserMode(Cpsr) && !inSecureState(Scr, Cpsr))) {
         return new UndefinedInstruction(machInst, false, mnemonic);
     }
     if (hypTrap) {

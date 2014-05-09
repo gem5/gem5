@@ -729,30 +729,30 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         return getArchTimer(tc, tc->cpuId())->control();
       // PL1 phys. timer, secure
       //   AArch64
-      case MISCREG_CNTPS_CVAL_EL1:
-      case MISCREG_CNTPS_TVAL_EL1:
-      case MISCREG_CNTPS_CTL_EL1:
+      // case MISCREG_CNTPS_CVAL_EL1:
+      // case MISCREG_CNTPS_TVAL_EL1:
+      // case MISCREG_CNTPS_CTL_EL1:
       // PL2 phys. timer, non-secure
       //   AArch32
-      case MISCREG_CNTHCTL:
-      case MISCREG_CNTHP_CVAL:
-      case MISCREG_CNTHP_TVAL:
-      case MISCREG_CNTHP_CTL:
+      // case MISCREG_CNTHCTL:
+      // case MISCREG_CNTHP_CVAL:
+      // case MISCREG_CNTHP_TVAL:
+      // case MISCREG_CNTHP_CTL:
       //   AArch64
-      case MISCREG_CNTHCTL_EL2:
-      case MISCREG_CNTHP_CVAL_EL2:
-      case MISCREG_CNTHP_TVAL_EL2:
-      case MISCREG_CNTHP_CTL_EL2:
+      // case MISCREG_CNTHCTL_EL2:
+      // case MISCREG_CNTHP_CVAL_EL2:
+      // case MISCREG_CNTHP_TVAL_EL2:
+      // case MISCREG_CNTHP_CTL_EL2:
       // Virtual timer
       //   AArch32
-      case MISCREG_CNTV_CVAL:
-      case MISCREG_CNTV_TVAL:
-      case MISCREG_CNTV_CTL:
+      // case MISCREG_CNTV_CVAL:
+      // case MISCREG_CNTV_TVAL:
+      // case MISCREG_CNTV_CTL:
       //   AArch64
       // case MISCREG_CNTV_CVAL_EL2:
       // case MISCREG_CNTV_TVAL_EL2:
       // case MISCREG_CNTV_CTL_EL2:
-        panic("Generic Timer register not implemented\n");
+      default:
         break;
 
     }
@@ -1902,7 +1902,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           // case MISCREG_CNTV_CVAL_EL2:
           // case MISCREG_CNTV_TVAL_EL2:
           // case MISCREG_CNTV_CTL_EL2:
-            panic("Generic Timer register not implemented\n");
             break;
         }
     }
