@@ -165,9 +165,12 @@ class Pl111(AmbaDmaDevice):
 class HDLcd(AmbaDmaDevice):
     type = 'HDLcd'
     cxx_header = "dev/arm/hdlcd.hh"
-    pixel_clock = Param.Clock('65MHz', "Clock frequency of the pixel clock "
-                                       "(i.e. PXLREFCLK / OSCCLK 5; 23.75MHz "
-                                       "default up to 165MHz)")
+    # For reference, 1024x768MR-16@60  ~= 56 MHz
+    #                1920x1080MR-16@60 ~= 137 MHz
+    #                3840x2160MR-16@60 ~= 533 MHz
+    # Match against the resolution selected in the Linux DTS/DTB file.
+    pixel_clock = Param.Clock('137MHz', "Clock frequency of the pixel clock "
+                                        "(i.e. PXLREFCLK / OSCCLK 5")
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
