@@ -414,8 +414,6 @@ class DRAMCtrl : public AbstractMemory
      */
     void prechargeBank(Bank& bank, Tick pre_at);
 
-    void printParams() const;
-
     /**
      * Used for debugging to observe the contents of the queues.
      */

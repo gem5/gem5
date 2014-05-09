@@ -165,9 +165,6 @@ DRAMCtrl::startup()
     // start of simulation
     busBusyUntil = curTick() + tRP + tRCD + tCL;
 
-    // print the configuration of the controller
-    printParams();
-
     // kick off the refresh, and give ourselves enough time to
     // precharge
     schedule(refreshEvent, curTick() + tREFI - tRP);
@@ -510,60 +507,6 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         DPRINTF(DRAM, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
-}
-
-void
-DRAMCtrl::printParams() const
-{
-    // Sanity check print of important parameters
-    DPRINTF(DRAM,
-            "Memory controller %s physical organization\n"      \
-            "Number of devices per rank   %d\n"                 \
-            "Device bus width (in bits)   %d\n"                 \
-            "DRAM data bus burst (bytes)  %d\n"                 \
-            "Row buffer size (bytes)      %d\n"                 \
-            "Columns per row buffer       %d\n"                 \
-            "Rows    per bank             %d\n"                 \
-            "Banks   per rank             %d\n"                 \
-            "Ranks   per channel          %d\n"                 \
-            "Total mem capacity (bytes)   %u\n",
-            name(), devicesPerRank, deviceBusWidth, burstSize, rowBufferSize,
-            columnsPerRowBuffer, rowsPerBank, banksPerRank, ranksPerChannel,
-            rowBufferSize * rowsPerBank * banksPerRank * ranksPerChannel);
-
-    string scheduler =  memSchedPolicy == Enums::fcfs ? "FCFS" : "FR-FCFS";
-    string address_mapping = addrMapping == Enums::RoRaBaChCo ? "RoRaBaChCo" :
-        (addrMapping == Enums::RoRaBaCoCh ? "RoRaBaCoCh" : "RoCoRaBaCh");
-    string page_policy = pageMgmt == Enums::open ? "OPEN" :
-        (pageMgmt == Enums::open_adaptive ? "OPEN (adaptive)" :
-        (pageMgmt == Enums::close_adaptive ? "CLOSE (adaptive)" : "CLOSE"));
-
-    DPRINTF(DRAM,
-            "Memory controller %s characteristics\n"    \
-            "Read buffer size     %d\n"                 \
-            "Write buffer size    %d\n"                 \
-            "Write high thresh    %d\n"                 \
-            "Write low thresh     %d\n"                 \
-            "Scheduler            %s\n"                 \
-            "Address mapping      %s\n"                 \
-            "Page policy          %s\n",
-            name(), readBufferSize, writeBufferSize, writeHighThreshold,
-            writeLowThreshold, scheduler, address_mapping, page_policy);
-
-    DPRINTF(DRAM, "Memory controller %s timing specs\n" \
-            "tRCD      %d ticks\n"                        \
-            "tCL       %d ticks\n"                        \
-            "tRP       %d ticks\n"                        \
-            "tBURST    %d ticks\n"                        \
-            "tRFC      %d ticks\n"                        \
-            "tREFI     %d ticks\n"                        \
-            "tWTR      %d ticks\n"                        \
-            "tRTW      %d ticks\n"                        \
-            "tWR       %d ticks\n"                        \
-            "tRTP      %d ticks\n"                        \
-            "tXAW (%d) %d ticks\n",
-            name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR,
-            tRTW, tWR, tRTP, activationLimit, tXAW);
 }
 
 void
