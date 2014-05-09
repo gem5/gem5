@@ -58,7 +58,7 @@ output decoder {{
 }};
 
 def template TlbOpExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 //Write the resulting state to the execution context
                 %(op_wb)s;

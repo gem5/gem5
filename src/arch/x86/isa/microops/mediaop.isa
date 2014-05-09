@@ -27,7 +27,7 @@
 // Authors: Gabe Black
 
 def template MediaOpExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;

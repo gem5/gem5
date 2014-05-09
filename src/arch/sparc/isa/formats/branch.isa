@@ -186,7 +186,7 @@ output decoder {{
 }};
 
 def template JumpExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             // Attempt to execute the instruction
@@ -208,7 +208,7 @@ def template JumpExecute {{
 
 def template BranchExecute {{
         Fault
-        %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             // Attempt to execute the instruction

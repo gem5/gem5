@@ -111,7 +111,7 @@ output decoder {{
 
 output exec {{
     Fault
-    FailUnimplemented::execute(%(CPU_exec_context)s *xc,
+    FailUnimplemented::execute(CPU_EXEC_CONTEXT *xc,
                                Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unimplemented instruction '%s' "
@@ -121,7 +121,7 @@ output exec {{
     }
 
     Fault
-    WarnUnimplemented::execute(%(CPU_exec_context)s *xc,
+    WarnUnimplemented::execute(CPU_EXEC_CONTEXT *xc,
                                Trace::InstRecord *traceData) const
     {
         if (!warned) {

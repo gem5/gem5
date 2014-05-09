@@ -69,7 +69,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Unknown::execute(%(CPU_exec_context)s *xc,
+    Unknown::execute(CPU_EXEC_CONTEXT *xc,
                      Trace::InstRecord *traceData) const
     {
         return new ReservedInstructionFault;

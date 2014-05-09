@@ -47,7 +47,7 @@ let {{
 }};
 
 def template Load64Execute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -71,7 +71,7 @@ def template Load64Execute {{
 }};
 
 def template Store64Execute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -99,7 +99,7 @@ def template Store64Execute {{
 }};
 
 def template Store64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -123,7 +123,7 @@ def template Store64InitiateAcc {{
 }};
 
 def template StoreEx64Execute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -156,7 +156,7 @@ def template StoreEx64Execute {{
 }};
 
 def template StoreEx64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -180,7 +180,7 @@ def template StoreEx64InitiateAcc {{
 }};
 
 def template Load64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -200,7 +200,7 @@ def template Load64InitiateAcc {{
 
 def template Load64CompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
+                                      CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -225,7 +225,7 @@ def template Load64CompleteAcc {{
 
 def template Store64CompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
+                                      CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -234,7 +234,7 @@ def template Store64CompleteAcc {{
 
 def template StoreEx64CompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
+                                      CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -283,7 +283,7 @@ def template DCStore64Constructor {{
 }};
 
 def template DCStore64Execute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -311,7 +311,7 @@ def template DCStore64Execute {{
 }};
 
 def template DCStore64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;

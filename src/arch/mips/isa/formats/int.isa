@@ -133,7 +133,7 @@ output header {{
 
 // HiLo instruction class execute method template.
 def template HiLoExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -152,7 +152,7 @@ def template HiLoExecute {{
 
 // HiLoRsSel instruction class execute method template.
 def template HiLoRsSelExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -178,7 +178,7 @@ def template HiLoRsSelExecute {{
 
 // HiLoRdSel instruction class execute method template.
 def template HiLoRdSelExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 

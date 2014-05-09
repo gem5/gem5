@@ -113,7 +113,7 @@ def template BasicConstructorWithMnemonic {{
 // Basic instruction class execute method template.
 def template BasicExecute {{
         Fault
-        %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -132,7 +132,7 @@ def template BasicExecute {{
 
 def template DoFpOpExecute {{
         Fault
-        %(class_name)s::doFpOp(%(CPU_exec_context)s *xc,
+        %(class_name)s::doFpOp(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;

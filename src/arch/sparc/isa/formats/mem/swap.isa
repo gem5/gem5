@@ -29,7 +29,7 @@
 
 // This template provides the execute functions for a swap
 def template SwapExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -68,7 +68,7 @@ def template SwapExecute {{
 
 
 def template SwapInitiateAcc {{
-        Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+        Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
@@ -97,7 +97,7 @@ def template SwapInitiateAcc {{
 
 
 def template SwapCompleteAcc {{
-        Fault %(class_name)s::completeAcc(PacketPtr pkt, %(CPU_exec_context)s * xc,
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;

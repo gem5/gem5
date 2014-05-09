@@ -72,7 +72,7 @@ output decoder {{
 }};
 
 def template NopExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         return NoFault;

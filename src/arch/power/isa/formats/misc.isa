@@ -34,7 +34,7 @@
 //
 
 def template MiscOpExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;

@@ -47,7 +47,7 @@
 // LEA template
 
 def template MicroLeaExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
           Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -87,7 +87,7 @@ def template MicroLeaDeclare {{
 // Load templates
 
 def template MicroLoadExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
           Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -116,7 +116,7 @@ def template MicroLoadExecute {{
 }};
 
 def template MicroLoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
             Trace::InstRecord * traceData) const
     {
         Fault fault = NoFault;
@@ -135,7 +135,7 @@ def template MicroLoadInitiateAcc {{
 
 def template MicroLoadCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-            %(CPU_exec_context)s * xc,
+            CPU_EXEC_CONTEXT * xc,
             Trace::InstRecord * traceData) const
     {
         Fault fault = NoFault;
@@ -159,7 +159,7 @@ def template MicroLoadCompleteAcc {{
 // Store templates
 
 def template MicroStoreExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s * xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT * xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -187,7 +187,7 @@ def template MicroStoreExecute {{
 }};
 
 def template MicroStoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
             Trace::InstRecord * traceData) const
     {
         Fault fault = NoFault;
@@ -211,7 +211,7 @@ def template MicroStoreInitiateAcc {{
 
 def template MicroStoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-            %(CPU_exec_context)s * xc, Trace::InstRecord * traceData) const
+            CPU_EXEC_CONTEXT * xc, Trace::InstRecord * traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;

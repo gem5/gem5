@@ -109,6 +109,7 @@ For more details, see:
     raise
 
 # Global Python includes
+import itertools
 import os
 import re
 import subprocess
@@ -1160,16 +1161,21 @@ main.SConscript('ext/dramsim2/SConscript',
 ###################################################
 
 main['ALL_ISA_LIST'] = all_isa_list
+all_isa_deps = {}
 def make_switching_dir(dname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
     # header to generate.  'source' is a dummy variable, since we get the
     # list of ISAs from env['ALL_ISA_LIST'].
     def gen_switch_hdr(target, source, env):
         fname = str(target[0])
-        f = open(fname, 'w')
         isa = env['TARGET_ISA'].lower()
-        print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
-        f.close()
+        try:
+            f = open(fname, 'w')
+            print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
+            f.close()
+        except IOError:
+            print "Failed to create %s" % fname
+            raise
 
     # Build SCons Action object. 'varlist' specifies env vars that this
     # action depends on; when env['ALL_ISA_LIST'] changes these actions
@@ -1180,7 +1186,36 @@ def make_switching_dir(dname, switch_headers, env):
     # Instantiate actions for each header
     for hdr in switch_headers:
         env.Command(hdr, [], switch_hdr_action)
+
+    isa_target = Dir('.').up().name.lower().replace('_', '-')
+    env['PHONY_BASE'] = '#'+isa_target
+    all_isa_deps[isa_target] = None
+
 Export('make_switching_dir')
+
+# all-isas -> all-deps -> all-environs -> all_targets
+main.Alias('#all-isas', [])
+main.Alias('#all-deps', '#all-isas')
+
+# Dummy target to ensure all environments are created before telling
+# SCons what to actually make (the command line arguments).  We attach
+# them to the dependence graph after the environments are complete.
+ORIG_BUILD_TARGETS = list(BUILD_TARGETS) # force a copy; gets closure to work.
+def environsComplete(target, source, env):
+    for t in ORIG_BUILD_TARGETS:
+        main.Depends('#all-targets', t)
+
+# Each build/* switching_dir attaches its *-environs target to #all-environs.
+main.Append(BUILDERS = {'CompleteEnvirons' :
+                        Builder(action=MakeAction(environsComplete, None))})
+main.CompleteEnvirons('#all-environs', [])
+
+def doNothing(**ignored): pass
+main.Append(BUILDERS = {'Dummy': Builder(action=MakeAction(doNothing, None))})
+
+# The final target to which all the original targets ultimately get attached.
+main.Dummy('#all-targets', '#all-environs')
+BUILD_TARGETS[:] = ['#all-targets']
 
 ###################################################
 #
@@ -1290,14 +1325,25 @@ for variant_path in variant_paths:
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
-    envList = SConscript('src/SConscript', variant_dir = variant_path,
-                         exports = 'env')
+    SConscript('src/SConscript', variant_dir = variant_path, exports = 'env')
 
-    # Set up the regression tests for each build.
-    for e in envList:
-        SConscript('tests/SConscript',
-                   variant_dir = joinpath(variant_path, 'tests', e.Label),
-                   exports = { 'env' : e }, duplicate = False)
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = itertools.tee(iterable)
+    b.next()
+    return itertools.izip(a, b)
+
+# Create false dependencies so SCons will parse ISAs, establish
+# dependencies, and setup the build Environments serially. Either
+# SCons (likely) and/or our SConscripts (possibly) cannot cope with -j
+# greater than 1. It appears to be standard race condition stuff; it
+# doesn't always fail, but usually, and the behaviors are different.
+# Every time I tried to remove this, builds would fail in some
+# creative new way. So, don't do that. You'll want to, though, because
+# tests/SConscript takes a long time to make its Environments.
+for t1, t2 in pairwise(sorted(all_isa_deps.iterkeys())):
+    main.Depends('#%s-deps'     % t2, '#%s-deps'     % t1)
+    main.Depends('#%s-environs' % t2, '#%s-environs' % t1)
 
 # base help text
 Help('''

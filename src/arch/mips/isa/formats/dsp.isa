@@ -64,7 +64,7 @@ output header {{
 
 // Dsp instruction class execute method template.
 def template DspExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -97,7 +97,7 @@ def template DspExecute {{
 
 // DspHiLo instruction class execute method template.
 def template DspHiLoExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -147,7 +147,7 @@ output decoder {{
 
 output exec {{
     bool
-    isDspEnabled(%(CPU_exec_context)s *xc)
+    isDspEnabled(CPU_EXEC_CONTEXT *xc)
     {
         return !FullSystem || bits(xc->readMiscReg(MISCREG_STATUS), 24);
     }
@@ -155,7 +155,7 @@ output exec {{
 
 output exec {{
     bool
-    isDspPresent(%(CPU_exec_context)s *xc)
+    isDspPresent(CPU_EXEC_CONTEXT *xc)
     {
         return !FullSystem || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
     }

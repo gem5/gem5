@@ -42,7 +42,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroLimmOpExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
             %(op_decl)s;

@@ -42,7 +42,7 @@ output exec {{
     /// instruction in full-system mode.
     /// @retval Full-system mode: NoFault if FP is enabled, FenFault
     /// if not.  Non-full-system mode: always returns NoFault.
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    inline Fault checkFpEnableFault(CPU_EXEC_CONTEXT *xc)
     {
         Fault fault = NoFault;  // dummy... this ipr access should not fault
         if (FullSystem && !ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
@@ -203,7 +203,7 @@ output decoder {{
 // FP instruction class execute method template.  Handles non-standard
 // rounding modes.
 def template FloatingPointExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         if (trappingMode != Imprecise && !warnedOnTrapping) {
@@ -247,7 +247,7 @@ def template FloatingPointExecute {{
 // rounding mode control is needed.  Like BasicExecute, but includes
 // check & warning for non-standard trapping mode.
 def template FPFixedRoundingExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         if (trappingMode != Imprecise && !warnedOnTrapping) {

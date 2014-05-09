@@ -73,7 +73,7 @@ def template LoadStoreConstructor {{
 
 
 def template LoadExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -98,7 +98,7 @@ def template LoadExecute {{
 
 
 def template LoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -120,7 +120,7 @@ def template LoadInitiateAcc {{
 
 def template LoadCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
+                                      CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr M5_VAR_USED EA;
@@ -147,7 +147,7 @@ def template LoadCompleteAcc {{
 
 
 def template StoreExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -176,7 +176,7 @@ def template StoreExecute {{
 
 
 def template StoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -207,7 +207,7 @@ def template StoreInitiateAcc {{
 
 def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
+                                      CPU_EXEC_CONTEXT *xc,
                                       Trace::InstRecord *traceData) const
     {
         return NoFault;

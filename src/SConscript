@@ -149,6 +149,14 @@ class SourceFile(object):
     def __eq__(self, other): return self.filename == other.filename
     def __ne__(self, other): return self.filename != other.filename
 
+    @staticmethod
+    def done():
+        def disabled(cls, name, *ignored):
+            raise RuntimeError("Additional SourceFile '%s'" % name,\
+                  "declared, but targets deps are already fixed.")
+        SourceFile.__init__ = disabled
+
+
 class Source(SourceFile):
     '''Add a c/c++ source file to the build'''
     def __init__(self, source, Werror=True, swig=False, **guards):
@@ -877,20 +885,26 @@ for source in PySource.all:
 #
 
 # List of constructed environments to pass back to SConstruct
-envList = []
-
 date_source = Source('base/date.cc', skip_lib=True)
+
+# Capture this directory for the closure makeEnv, otherwise when it is
+# called, it won't know what directory it should use.
+variant_dir = Dir('.').path
+def variant(*path):
+    return os.path.join(variant_dir, *path)
+def variantd(*path):
+    return variant(*path)+'/'
 
 # Function to create a new build environment as clone of current
 # environment 'env' with modified object suffix and optional stripped
 # binary.  Additional keyword arguments are appended to corresponding
 # build environment vars.
-def makeEnv(label, objsfx, strip = False, **kwargs):
+def makeEnv(env, label, objsfx, strip = False, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
-    libname = 'gem5_' + label
-    exename = 'gem5.' + label
-    secondary_exename = 'm5.' + label
+    libname = variant('gem5_' + label)
+    exename = variant('gem5.' + label)
+    secondary_exename = variant('m5.' + label)
 
     new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
     new_env.Label = label
@@ -978,8 +992,8 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         test_objs = [ make_obj(s, static=True) for s in test_sources ]
         if test.main:
             test_objs += main_objs
-        testname = "unittest/%s.%s" % (test.target, label)
-        new_env.Program(testname, test_objs + static_objs)
+        path = variant('unittest/%s.%s' % (test.target, label))
+        new_env.Program(path, test_objs + static_objs)
 
     progname = exename
     if strip:
@@ -999,7 +1013,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
             MakeAction('ln $SOURCE $TARGET', Transform("HARDLINK")))
 
     new_env.M5Binary = targets[0]
-    envList.append(new_env)
+    return new_env
 
 # Start out with the compiler flags common to all compilers,
 # i.e. they all use -g for opt and -g -pg for prof
@@ -1065,39 +1079,77 @@ needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
 if 'all' in needed_envs:
     needed_envs += target_types
 
-# Debug binary
-if 'debug' in needed_envs:
-    makeEnv('debug', '.do',
-            CCFLAGS = Split(ccflags['debug']),
-            CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['debug']))
+gem5_root = Dir('.').up().up().abspath
+def makeEnvirons(target, source, env):
+    # cause any later Source() calls to be fatal, as a diagnostic.
+    Source.done()
 
-# Optimized binary
-if 'opt' in needed_envs:
-    makeEnv('opt', '.o',
-            CCFLAGS = Split(ccflags['opt']),
-            CPPDEFINES = ['TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['opt']))
+    envList = []
 
-# "Fast" binary
-if 'fast' in needed_envs:
-    makeEnv('fast', '.fo', strip = True,
-            CCFLAGS = Split(ccflags['fast']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['fast']))
+    # Debug binary
+    if 'debug' in needed_envs:
+        envList.append(
+            makeEnv(env, 'debug', '.do',
+                    CCFLAGS = Split(ccflags['debug']),
+                    CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
+                    LINKFLAGS = Split(ldflags['debug'])))
 
-# Profiled binary using gprof
-if 'prof' in needed_envs:
-    makeEnv('prof', '.po',
-            CCFLAGS = Split(ccflags['prof']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['prof']))
+    # Optimized binary
+    if 'opt' in needed_envs:
+        envList.append(
+            makeEnv(env, 'opt', '.o',
+                    CCFLAGS = Split(ccflags['opt']),
+                    CPPDEFINES = ['TRACING_ON=1'],
+                    LINKFLAGS = Split(ldflags['opt'])))
 
-# Profiled binary using google-pprof
-if 'perf' in needed_envs:
-    makeEnv('perf', '.gpo',
-            CCFLAGS = Split(ccflags['perf']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['perf']))
+    # "Fast" binary
+    if 'fast' in needed_envs:
+        envList.append(
+            makeEnv(env, 'fast', '.fo', strip = True,
+                    CCFLAGS = Split(ccflags['fast']),
+                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                    LINKFLAGS = Split(ldflags['fast'])))
 
-Return('envList')
+    # Profiled binary using gprof
+    if 'prof' in needed_envs:
+        envList.append(
+            makeEnv(env, 'prof', '.po',
+                    CCFLAGS = Split(ccflags['prof']),
+                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                    LINKFLAGS = Split(ldflags['prof'])))
+
+    # Profiled binary using google-pprof
+    if 'perf' in needed_envs:
+        envList.append(
+            makeEnv(env, 'perf', '.gpo',
+                    CCFLAGS = Split(ccflags['perf']),
+                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                    LINKFLAGS = Split(ldflags['perf'])))
+
+    # Set up the regression tests for each build.
+    for e in envList:
+        SConscript(os.path.join(gem5_root, 'tests', 'SConscript'),
+                   variant_dir = variantd('tests', e.Label),
+                   exports = { 'env' : e }, duplicate = False)
+
+# The MakeEnvirons Builder defers the full dependency collection until
+# after processing the ISA definition (due to dynamically generated
+# source files).  Add this dependency to all targets so they will wait
+# until the environments are completely set up.  Otherwise, a second
+# process (e.g. -j2 or higher) will try to compile the requested target,
+# not know how, and fail.
+env.Append(BUILDERS = {'MakeEnvirons' :
+                        Builder(action=MakeAction(makeEnvirons,
+                                                  Transform("ENVIRONS", 1)))})
+
+isa_target = env['PHONY_BASE'] + '-deps'
+environs   = env['PHONY_BASE'] + '-environs'
+env.Depends('#all-deps',     isa_target)
+env.Depends('#all-environs', environs)
+env.ScanISA(isa_target, File('arch/%s/generated/inc.d' % env['TARGET_ISA']))
+envSetup = env.MakeEnvirons(environs, isa_target)
+
+# make sure no -deps targets occur before all ISAs are complete
+env.Depends(isa_target, '#all-isas')
+# likewise for -environs targets and all the -deps targets
+env.Depends(environs, '#all-deps')

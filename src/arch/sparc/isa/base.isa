@@ -564,7 +564,7 @@ output exec {{
     /// @retval Full-system mode: NoFault if FP is enabled, FpDisabled
     /// if not.  Non-full-system mode: always returns NoFault.
     static inline Fault
-    checkFpEnableFault(%(CPU_exec_context)s *xc)
+    checkFpEnableFault(CPU_EXEC_CONTEXT *xc)
     {
         if (FullSystem) {
             PSTATE pstate = xc->readMiscReg(MISCREG_PSTATE);

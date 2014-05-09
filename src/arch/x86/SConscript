@@ -312,6 +312,3 @@ if env['TARGET_ISA'] == 'x86':
         # Add in python file dependencies that won't be caught otherwise
         for pyfile in python_files:
             env.Depends(f, "isa/insts/%s" % pyfile)
-        # Only non-header files need to be compiled.
-        if not f.path.endswith('.hh'):
-            Source(f)

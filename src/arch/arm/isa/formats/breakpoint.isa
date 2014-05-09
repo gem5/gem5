@@ -80,7 +80,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Breakpoint::execute(%(CPU_exec_context)s *xc,
+    Breakpoint::execute(CPU_EXEC_CONTEXT *xc,
                      Trace::InstRecord *traceData) const
     {
         return new PrefetchAbort(xc->pcState().pc(), ArmFault::DebugEvent);

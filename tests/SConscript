@@ -267,14 +267,14 @@ updateAction = env.Action(update_test, update_test_string)
 def test_builder(env, ref_dir):
     """Define a test."""
 
-    (category, mode, name, _ref, isa, opsys, config) = ref_dir.split('/')
-    assert(_ref == 'ref')
+    path = list(ref_dir.split('/'))
 
-    # target path (where test output goes) is the same except without
-    # the 'ref' component
-    tgt_dir = os.path.join(category, mode, name, isa, opsys, config)
+    # target path (where test output goes) consists of category, mode,
+    # name, isa, opsys, and config (skips the 'ref' component)
+    assert(path.pop(-4) == 'ref')
+    tgt_dir = os.path.join(*path[-6:])
 
-    # prepend file name with tgt_dir
+    # local closure for prepending target path to filename
     def tgt(f):
         return os.path.join(tgt_dir, f)
 
@@ -342,11 +342,10 @@ if env['PROTOCOL'] != 'None':
     else:
         configs = [c + "-ruby-" + env['PROTOCOL'] for c in configs]
 
-cwd = os.getcwd()
-os.chdir(str(Dir('.').srcdir))
+src = Dir('.').srcdir
 for config in configs:
-    dirs = glob.glob('*/*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
+    dirs = src.glob('*/*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
     for d in dirs:
+        d = str(d)
         if not os.path.exists(os.path.join(d, 'skip')):
             test_builder(env, d)
-os.chdir(cwd)

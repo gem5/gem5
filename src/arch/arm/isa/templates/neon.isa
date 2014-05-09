@@ -190,7 +190,7 @@ class %(class_name)s : public %(base_class)s
 def template NeonExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
 }};
 
 output header {{
@@ -221,7 +221,7 @@ output header {{
 
 def template NeonEqualRegExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s<Element>::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -266,7 +266,7 @@ output header {{
 
 def template NeonUnequalRegExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s<Element>::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         typedef typename bigger_type_t<Element>::type BigElement;

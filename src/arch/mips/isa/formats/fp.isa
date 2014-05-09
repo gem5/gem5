@@ -92,7 +92,7 @@ output header {{
 }};
 
 output exec {{
-        inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+        inline Fault checkFpEnableFault(CPU_EXEC_CONTEXT *xc)
         {
             //@TODO: Implement correct CP0 checks to see if the CP1
             // unit is enable or not
@@ -105,7 +105,7 @@ output exec {{
         //If any operand is Nan return the appropriate QNaN
         template <class T>
         bool
-        fpNanOperands(FPOp *inst, %(CPU_exec_context)s *xc, const T &src_type,
+        fpNanOperands(FPOp *inst, CPU_EXEC_CONTEXT *xc, const T &src_type,
                       Trace::InstRecord *traceData)
         {
             uint64_t mips_nan = 0;
@@ -126,7 +126,7 @@ output exec {{
 
         template <class T>
         bool
-        fpInvalidOp(FPOp *inst, %(CPU_exec_context)s *cpu, const T dest_val,
+        fpInvalidOp(FPOp *inst, CPU_EXEC_CONTEXT *cpu, const T dest_val,
                     Trace::InstRecord *traceData)
         {
             uint64_t mips_nan = 0;
@@ -156,7 +156,7 @@ output exec {{
         }
 
         void
-        fpResetCauseBits(%(CPU_exec_context)s *cpu)
+        fpResetCauseBits(CPU_EXEC_CONTEXT *cpu)
         {
             //Read FCSR from FloatRegFile
             uint32_t fcsr = cpu->tcBase()->readFloatRegBits(FLOATREG_FCSR);
@@ -170,7 +170,7 @@ output exec {{
 }};
 
 def template FloatingPointExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 

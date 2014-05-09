@@ -167,12 +167,12 @@ class %(class_name)s : public %(base_class)s
 def template NeonXExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
 }};
 
 def template NeonXEqualRegOpExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s<Element>::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -205,7 +205,7 @@ def template NeonXEqualRegOpExecute {{
 
 def template NeonXUnequalRegOpExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s<Element>::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         typedef typename bigger_type_t<Element>::type BigElement;
@@ -275,7 +275,7 @@ def template MicroNeonMemDeclare64 {{
 
 def template NeonLoadExecute64 {{
     Fault %(class_name)s::execute(
-        %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -303,7 +303,7 @@ def template NeonLoadExecute64 {{
 
 def template NeonLoadInitiateAcc64 {{
     Fault %(class_name)s::initiateAcc(
-        %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -326,7 +326,7 @@ def template NeonLoadInitiateAcc64 {{
 
 def template NeonLoadCompleteAcc64 {{
     Fault %(class_name)s::completeAcc(
-        PacketPtr pkt, %(CPU_exec_context)s *xc,
+        PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
         Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -351,7 +351,7 @@ def template NeonLoadCompleteAcc64 {{
 
 def template NeonStoreExecute64 {{
     Fault %(class_name)s::execute(
-        %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -383,7 +383,7 @@ def template NeonStoreExecute64 {{
 
 def template NeonStoreInitiateAcc64 {{
     Fault %(class_name)s::initiateAcc(
-        %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -409,7 +409,7 @@ def template NeonStoreInitiateAcc64 {{
 
 def template NeonStoreCompleteAcc64 {{
     Fault %(class_name)s::completeAcc(
-        PacketPtr pkt, %(CPU_exec_context)s *xc,
+        PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
         Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -507,7 +507,7 @@ def template MicroNeonMixLaneDeclare64 {{
 }};
 
 def template MicroNeonMixExecute64 {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
