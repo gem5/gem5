@@ -726,22 +726,11 @@ if len(swig_version) < 3 or \
     print 'Error determining SWIG version.'
     Exit(1)
 
-min_swig_version = '1.3.34'
+min_swig_version = '2.0.4'
 if compareVersions(swig_version[2], min_swig_version) < 0:
     print 'Error: SWIG version', min_swig_version, 'or newer required.'
     print '       Installed version:', swig_version[2]
     Exit(1)
-
-# Older versions of swig do not play well with more recent versions of
-# gcc due to assumptions on implicit includes (cstddef) and use of
-# namespaces
-if main['GCC'] and compareVersions(gcc_version, '4.6') > 0 and \
-        compareVersions(swig_version[2], '2') < 0:
-    print '\n' + termcap.Yellow + termcap.Bold + \
-        'Warning: SWIG 1.x cause issues with gcc 4.6 and later.\n' + \
-        termcap.Normal + \
-        'Use SWIG 2.x to avoid assumptions on implicit includes\n' + \
-        'and use of namespaces\n'
 
 # Set up SWIG flags & scanner
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')

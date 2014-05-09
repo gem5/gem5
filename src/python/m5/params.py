@@ -299,26 +299,6 @@ class VectorParamDesc(ParamDesc):
         ptype = self.ptype_str
         cxx_type = self.ptype.cxx_type
 
-        code('''\
-%typemap(in) std::vector< $cxx_type >::value_type {
-    if (SWIG_ConvertPtr($$input, (void **)&$$1, $$1_descriptor, 0) == -1) {
-        if (SWIG_ConvertPtr($$input, (void **)&$$1,
-                            $$descriptor($cxx_type), 0) == -1) {
-            return NULL;
-        }
-    }
-}
-
-%typemap(in) std::vector< $cxx_type >::value_type * {
-    if (SWIG_ConvertPtr($$input, (void **)&$$1, $$1_descriptor, 0) == -1) {
-        if (SWIG_ConvertPtr($$input, (void **)&$$1,
-                            $$descriptor($cxx_type *), 0) == -1) {
-            return NULL;
-        }
-    }
-}
-''')
-
         code('%template(vector_$ptype) std::vector< $cxx_type >;')
 
     def cxx_predecls(self, code):
