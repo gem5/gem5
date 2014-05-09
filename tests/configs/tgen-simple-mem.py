@@ -55,7 +55,8 @@ system = System(cpu = cpu, physmem = SimpleMemory(),
                                             VoltageDomain()))
 
 # add a communication monitor, and also trace all the packets
-system.monitor = CommMonitor(trace_file = "monitor.ptrc.gz")
+system.monitor = CommMonitor(trace_file = "monitor.ptrc.gz",
+                             trace_enable = True)
 
 # connect the traffic generator to the bus via a communication monitor
 system.cpu.port = system.monitor.slave

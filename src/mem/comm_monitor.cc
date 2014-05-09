@@ -58,11 +58,28 @@ CommMonitor::CommMonitor(Params* params)
       traceStream(NULL),
       system(params->system)
 {
-    // If we are using a trace file, then open the file,
-    if (params->trace_file != "") {
-        // If the trace file is not specified as an absolute path,
-        // append the current simulation output directory
-        std::string filename = simout.resolve(params->trace_file);
+    // If we are using a trace file, then open the file
+    if (params->trace_enable) {
+        std::string filename;
+        if (params->trace_file != "") {
+            // If the trace file is not specified as an absolute path,
+            // append the current simulation output directory
+            filename = simout.resolve(params->trace_file);
+
+            std::string suffix = ".gz";
+            // If trace_compress has been set, check the suffix. Append
+            // accordingly.
+            if (params->trace_compress &&
+                filename.compare(filename.size() - suffix.size(), suffix.size(),
+                                 suffix) != 0)
+                    filename = filename + suffix;
+        } else {
+            // Generate a filename from the name of the SimObject. Append .trc
+            // and .gz if we want compression enabled.
+            filename = simout.resolve(name() + ".trc" +
+                                      (params->trace_compress ? ".gz" : ""));
+        }
+
         traceStream = new ProtoOutputStream(filename);
 
         // Create a protobuf message for the header and write it to
