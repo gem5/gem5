@@ -810,68 +810,48 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick potentialActTick;
 
     const Bank& bank = dram_pkt->bankRef;
-     // open-page policy or close_adaptive policy
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
-        pageMgmt == Enums::close_adaptive) {
-        if (bank.openRow == dram_pkt->row) {
-            // When we have a row-buffer hit,
-            // we don't care about tRAS having expired or not,
-            // but do care about bank being free for access
-            rowHitFlag = true;
 
-            // When a series of requests arrive to the same row,
-            // DDR systems are capable of streaming data continuously
-            // at maximum bandwidth (subject to tCCD). Here, we approximate
-            // this condition, and assume that if whenever a bank is already
-            // busy and a new request comes in, it can be completed with no
-            // penalty beyond waiting for the existing read to complete.
-            if (bank.freeAt > inTime) {
-                accLat += bank.freeAt - inTime;
-                bankLat += 0;
-            } else {
-               // CAS latency only
-               accLat += tCL;
-               bankLat += tCL;
-            }
+    if (bank.openRow == dram_pkt->row) {
+        // When we have a row-buffer hit,
+        // we don't care about tRAS having expired or not,
+        // but do care about bank being free for access
+        rowHitFlag = true;
 
-        } else {
-            // Row-buffer miss, need to close existing row
-            // once tRAS has expired, then open the new one,
-            // then add cas latency.
-            Tick freeTime = std::max(bank.tRASDoneAt, bank.freeAt);
-
-            if (freeTime > inTime)
-               accLat += freeTime - inTime;
-
-            // If the there is no open row (open adaptive), then there
-            // is no precharge delay, otherwise go with tRP
-            Tick precharge_delay = bank.openRow == Bank::NO_ROW ? 0 : tRP;
-
-            //The bank is free, and you may be able to activate
-            potentialActTick = inTime + accLat + precharge_delay;
-            if (potentialActTick < bank.actAllowedAt)
-                accLat += bank.actAllowedAt - potentialActTick;
-
-            accLat += precharge_delay + tRCD + tCL;
-            bankLat += precharge_delay + tRCD + tCL;
-        }
-    } else if (pageMgmt == Enums::close) {
-        // With a close page policy, no notion of
-        // bank.tRASDoneAt
-        if (bank.freeAt > inTime)
+        // When a series of requests arrive to the same row,
+        // DDR systems are capable of streaming data continuously
+        // at maximum bandwidth (subject to tCCD). Here, we approximate
+        // this condition, and assume that if whenever a bank is already
+        // busy and a new request comes in, it can be completed with no
+        // penalty beyond waiting for the existing read to complete.
+        if (bank.freeAt > inTime) {
             accLat += bank.freeAt - inTime;
+            bankLat += 0;
+        } else {
+            // CAS latency only
+            accLat += tCL;
+            bankLat += tCL;
+        }
+    } else {
+        // Row-buffer miss, need to close existing row
+        // once tRAS has expired, then open the new one,
+        // then add cas latency.
+        Tick freeTime = std::max(bank.tRASDoneAt, bank.freeAt);
+
+        if (freeTime > inTime)
+            accLat += freeTime - inTime;
+
+        // If the there is no open row, then there is no precharge
+        // delay, otherwise go with tRP
+        Tick precharge_delay = bank.openRow == Bank::NO_ROW ? 0 : tRP;
 
         //The bank is free, and you may be able to activate
-        potentialActTick = inTime + accLat;
+        potentialActTick = inTime + accLat + precharge_delay;
         if (potentialActTick < bank.actAllowedAt)
             accLat += bank.actAllowedAt - potentialActTick;
 
-        // page already closed, simply open the row, and
-        // add cas latency
-        accLat += tRCD + tCL;
-        bankLat += tRCD + tCL;
-    } else
-        panic("No page management policy chosen\n");
+        accLat += precharge_delay + tRCD + tCL;
+        bankLat += precharge_delay + tRCD + tCL;
+    }
 
     DPRINTF(DRAM, "Returning < %lld, %lld > from estimateLatency()\n",
             bankLat, accLat);
@@ -1033,114 +1013,96 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     Bank& bank = dram_pkt->bankRef;
 
     // Update bank state
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
-        pageMgmt == Enums::close_adaptive) {
-
-        if (rowHitFlag) {
-            bank.freeAt = curTick() + addDelay + accessLat;
-        } else {
-            // If there is a page open, precharge it.
-            if (bank.openRow != Bank::NO_ROW) {
-                prechargeBank(bank, std::max(std::max(bank.freeAt,
-                                                      bank.tRASDoneAt),
-                                             curTick()) + tRP);
-            }
-
-            // Any precharge is already part of the latency
-            // estimation, so update the bank free time
-            bank.freeAt = curTick() + addDelay + accessLat;
-
-            // any waiting for banks account for in freeAt
-            actTick = bank.freeAt - tCL - tRCD;
-
-            // If you activated a new row do to this access, the next access
-            // will have to respect tRAS for this bank
-            bank.tRASDoneAt = actTick + tRAS;
-
-            recordActivate(actTick, dram_pkt->rank, dram_pkt->bank,
-                           dram_pkt->row);
+    if (rowHitFlag) {
+        bank.freeAt = curTick() + addDelay + accessLat;
+    } else {
+        // If there is a page open, precharge it.
+        if (bank.openRow != Bank::NO_ROW) {
+            prechargeBank(bank, std::max(std::max(bank.freeAt,
+                                                  bank.tRASDoneAt),
+                                         curTick()) + tRP);
         }
 
-        // increment the bytes accessed and the accesses per row
-        bank.bytesAccessed += burstSize;
-        ++bank.rowAccesses;
+        // Any precharge is already part of the latency
+        // estimation, so update the bank free time
+        bank.freeAt = curTick() + addDelay + accessLat;
 
-        // if we reached the max, then issue with an auto-precharge
-        bool auto_precharge = bank.rowAccesses == maxAccessesPerRow;
+        // any waiting for banks account for in freeAt
+        actTick = bank.freeAt - tCL - tRCD;
 
-        // if we did not hit the limit, we might still want to
-        // auto-precharge
-        if (!auto_precharge &&
-            (pageMgmt == Enums::open_adaptive ||
-             pageMgmt == Enums::close_adaptive)) {
-            // a twist on the open and close page policies:
-            // 1) open_adaptive page policy does not blindly keep the
-            // page open, but close it if there are no row hits, and there
-            // are bank conflicts in the queue
-            // 2) close_adaptive page policy does not blindly close the
-            // page, but closes it only if there are no row hits in the queue.
-            // In this case, only force an auto precharge when there
-            // are no same page hits in the queue
-            bool got_more_hits = false;
-            bool got_bank_conflict = false;
-
-            // either look at the read queue or write queue
-            const deque<DRAMPacket*>& queue = dram_pkt->isRead ? readQueue :
-                writeQueue;
-            auto p = queue.begin();
-            // make sure we are not considering the packet that we are
-            // currently dealing with (which is the head of the queue)
-            ++p;
-
-            // keep on looking until we have found required condition or
-            // reached the end
-            while (!(got_more_hits &&
-                    (got_bank_conflict || pageMgmt == Enums::close_adaptive)) &&
-                   p != queue.end()) {
-                bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
-                    (dram_pkt->bank == (*p)->bank);
-                bool same_row = dram_pkt->row == (*p)->row;
-                got_more_hits |= same_rank_bank && same_row;
-                got_bank_conflict |= same_rank_bank && !same_row;
-                ++p;
-            }
-
-            // auto pre-charge when either
-            // 1) open_adaptive policy, we have not got any more hits, and
-            //    have a bank conflict
-            // 2) close_adaptive policy and we have not got any more hits
-            auto_precharge = !got_more_hits &&
-                (got_bank_conflict || pageMgmt == Enums::close_adaptive);
-        }
-
-        // if this access should use auto-precharge, then we are
-        // closing the row
-        if (auto_precharge) {
-            prechargeBank(bank, std::max(bank.freeAt, bank.tRASDoneAt) + tRP);
-
-            DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
-        }
-
-        DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
-    } else if (pageMgmt == Enums::close) {
-        actTick = curTick() + addDelay + accessLat - tRCD - tCL;
-        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank, dram_pkt->row);
-
-        bank.freeAt = actTick + tRCD + tCL;
+        // If you activated a new row do to this access, the next access
+        // will have to respect tRAS for this bank
         bank.tRASDoneAt = actTick + tRAS;
 
-        // sample the relevant values when precharging
-        bank.bytesAccessed = burstSize;
-        bank.rowAccesses = 1;
+        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank,
+                       dram_pkt->row);
+    }
 
+    // increment the bytes accessed and the accesses per row
+    bank.bytesAccessed += burstSize;
+    ++bank.rowAccesses;
+
+    // if we reached the max, then issue with an auto-precharge
+    bool auto_precharge = pageMgmt == Enums::close ||
+        bank.rowAccesses == maxAccessesPerRow;
+
+    // if we did not hit the limit, we might still want to
+    // auto-precharge
+    if (!auto_precharge &&
+        (pageMgmt == Enums::open_adaptive ||
+         pageMgmt == Enums::close_adaptive)) {
+        // a twist on the open and close page policies:
+        // 1) open_adaptive page policy does not blindly keep the
+        // page open, but close it if there are no row hits, and there
+        // are bank conflicts in the queue
+        // 2) close_adaptive page policy does not blindly close the
+        // page, but closes it only if there are no row hits in the queue.
+        // In this case, only force an auto precharge when there
+        // are no same page hits in the queue
+        bool got_more_hits = false;
+        bool got_bank_conflict = false;
+
+        // either look at the read queue or write queue
+        const deque<DRAMPacket*>& queue = dram_pkt->isRead ? readQueue :
+            writeQueue;
+        auto p = queue.begin();
+        // make sure we are not considering the packet that we are
+        // currently dealing with (which is the head of the queue)
+        ++p;
+
+        // keep on looking until we have found required condition or
+        // reached the end
+        while (!(got_more_hits &&
+                 (got_bank_conflict || pageMgmt == Enums::close_adaptive)) &&
+               p != queue.end()) {
+            bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
+                (dram_pkt->bank == (*p)->bank);
+            bool same_row = dram_pkt->row == (*p)->row;
+            got_more_hits |= same_rank_bank && same_row;
+            got_bank_conflict |= same_rank_bank && !same_row;
+            ++p;
+        }
+
+        // auto pre-charge when either
+        // 1) open_adaptive policy, we have not got any more hits, and
+        //    have a bank conflict
+        // 2) close_adaptive policy and we have not got any more hits
+        auto_precharge = !got_more_hits &&
+            (got_bank_conflict || pageMgmt == Enums::close_adaptive);
+    }
+
+    // if this access should use auto-precharge, then we are
+    // closing the row
+    if (auto_precharge) {
         prechargeBank(bank, std::max(bank.freeAt, bank.tRASDoneAt) + tRP);
-        DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
-    } else
-        panic("No page management policy chosen\n");
+
+        DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
+    }
+
+    DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
 
     // Update request parameters
     dram_pkt->readyTime = curTick() + addDelay + accessLat + tBURST;
-
 
     DPRINTF(DRAM, "Req %lld: curtick is %lld accessLat is %d " \
                   "readytime is %lld busbusyuntil is %lld. " \
