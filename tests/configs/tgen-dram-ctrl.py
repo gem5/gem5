@@ -45,7 +45,7 @@ require_sim_object("CommMonitor")
 
 # even if this is only a traffic generator, call it cpu to make sure
 # the scripts are happy
-cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-simple-dram.cfg")
+cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-dram-ctrl.cfg")
 
 # system simulated
 system = System(cpu = cpu, physmem = DDR3_1600_x64(),

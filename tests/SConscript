@@ -334,7 +334,7 @@ if env['TARGET_ISA'] == 'x86':
 configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
             'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
             'inorder-timing', 'rubytest', 'tgen-simple-mem',
-            'tgen-simple-dram']
+            'tgen-dram-ctrl']
 
 if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':
