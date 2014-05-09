@@ -69,6 +69,8 @@ struct ThreadState {
 
     int cpuId() const { return baseCpu->cpuId(); }
 
+    uint32_t socketId() const { return baseCpu->socketId(); }
+
     int contextId() const { return _contextId; }
 
     void setContextId(int id) { _contextId = id; }

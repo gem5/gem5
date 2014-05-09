@@ -195,13 +195,26 @@ longDescFormatInUse(ThreadContext *tc)
 uint32_t
 getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
+    // Multiprocessor Affinity Register MPIDR from Cortex(tm)-A15 Technical
+    // Reference Manual
+    //
+    // bit   31 - Multi-processor extensions available
+    // bit   30 - Uni-processor system
+    // bit   24 - Multi-threaded cores
+    // bit 11-8 - Cluster ID
+    // bit  1-0 - CPU ID
+    //
+    // We deliberately extend both the Cluster ID and CPU ID fields to allow
+    // for simulation of larger systems
+    assert((0 <= tc->cpuId()) && (tc->cpuId() < 256));
+    assert((0 <= tc->socketId()) && (tc->socketId() < 65536));
     if (arm_sys->multiProc) {
        return 0x80000000 | // multiprocessor extensions available
-              tc->cpuId();
+              tc->cpuId() | tc->socketId() << 8;
     } else {
        return 0x80000000 |  // multiprocessor extensions available
               0x40000000 |  // in up system
-              tc->cpuId();
+              tc->cpuId() | tc->socketId() << 8;
     }
 }
 

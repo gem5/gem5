@@ -128,6 +128,7 @@ class BaseCPU(MemObject):
 
     system = Param.System(Parent.any, "system object")
     cpu_id = Param.Int(-1, "CPU identifier")
+    socket_id = Param.Unsigned(0, "Physical Socket identifier")
     numThreads = Param.Unsigned(1, "number of HW thread contexts")
 
     function_trace = Param.Bool(False, "Enable function trace")

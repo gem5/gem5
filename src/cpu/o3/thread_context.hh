@@ -98,6 +98,9 @@ class O3ThreadContext : public ThreadContext
     /** Reads this CPU's ID. */
     virtual int cpuId() const { return cpu->cpuId(); }
 
+    /** Reads this CPU's Socket ID. */
+    virtual uint32_t socketId() const { return cpu->socketId(); }
+
     virtual int contextId() const { return thread->contextId(); }
 
     virtual void setContextId(int id) { thread->setContextId(id); }

@@ -456,6 +456,9 @@ class BaseDynInst : public RefCounted
     /** Read this CPU's ID. */
     int cpuId() const { return cpu->cpuId(); }
 
+    /** Read this CPU's Socket ID. */
+    uint32_t socketId() const { return cpu->socketId(); }
+
     /** Read this CPU's data requestor ID */
     MasterID masterId() const { return cpu->dataMasterId(); }
 

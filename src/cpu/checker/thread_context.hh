@@ -92,6 +92,8 @@ class CheckerThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
+    uint32_t socketId() const { return actualTC->socketId(); }
+
     int cpuId() const { return actualTC->cpuId(); }
 
     int contextId() const { return actualTC->contextId(); }

@@ -101,6 +101,13 @@ class BaseCPU : public MemObject
     // therefore no setCpuId() method is provided
     int _cpuId;
 
+    /** Each cpu will have a socket ID that corresponds to its physical location
+     * in the system. This is usually used to bucket cpu cores under single DVFS
+     * domain. This information may also be required by the OS to identify the
+     * cpu core grouping (as in the case of ARM via MPIDR register)
+     */
+    const uint32_t _socketId;
+
     /** instruction side request id that must be placed in all requests */
     MasterID _instMasterId;
 
@@ -144,6 +151,9 @@ class BaseCPU : public MemObject
 
     /** Reads this CPU's ID. */
     int cpuId() const { return _cpuId; }
+
+    /** Reads this CPU's Socket ID. */
+    uint32_t socketId() const { return _socketId; }
 
     /** Reads this CPU's unique data requestor ID */
     MasterID dataMasterId() { return _dataMasterId; }

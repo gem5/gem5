@@ -123,6 +123,8 @@ class ThreadContext
 
     virtual int cpuId() const = 0;
 
+    virtual uint32_t socketId() const = 0;
+
     virtual int threadId() const = 0;
 
     virtual void setThreadId(int id) = 0;
@@ -322,6 +324,8 @@ class ProxyThreadContext : public ThreadContext
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
     int cpuId() const { return actualTC->cpuId(); }
+
+    uint32_t socketId() const { return actualTC->socketId(); }
 
     int threadId() const { return actualTC->threadId(); }
 
