@@ -105,6 +105,8 @@ class InstRecord
 
     virtual ~InstRecord() { }
 
+    void setWhen(Tick new_when) { when = new_when; }
+
     void setAddr(Addr a) { addr = a; addr_valid = true; }
 
     void setData(Twin64_t d) { data.as_int = d.a; data_status = DataInt64; }
