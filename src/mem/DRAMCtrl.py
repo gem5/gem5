@@ -175,9 +175,9 @@ class DRAMCtrl(AbstractMemory):
 
     # tRC  - assumed to be tRAS + tRP
 
-# A single DDR3 x64 interface (one command and address bus), with
-# default timings based on DDR3-1600 4 Gbit parts in an 8x8
-# configuration, which would amount to 4 Gbyte of memory.
+# A single DDR3-1600 x64 channel (one command and address bus), with
+# timings based on a DDR3-1600 4 Gbit datasheet (Micron MT41J512M8) in
+# an 8x8 configuration, amounting to 4 Gbyte of memory.
 class DDR3_1600_x64(DRAMCtrl):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
@@ -185,8 +185,7 @@ class DDR3_1600_x64(DRAMCtrl):
     # DDR3 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1KB
-    # (this depends on the memory density)
+    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
     device_rowbuffer_size = '1kB'
 
     # 8x8 configuration, so 8 devices
@@ -201,37 +200,107 @@ class DDR3_1600_x64(DRAMCtrl):
     # 800 MHz
     tCK = '1.25ns'
 
-    # DDR3-1600 11-11-11-28
+    # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz
+    tBURST = '5ns'
+
+    # DDR3-1600 11-11-11
     tRCD = '13.75ns'
     tCL = '13.75ns'
     tRP = '13.75ns'
     tRAS = '35ns'
+    tRRD = '6ns'
+    tXAW = '30ns'
+    activation_limit = 4
+    tRFC = '260ns'
+
     tWR = '15ns'
-    tRTP = '7.5ns'
 
-    # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz.
-    # Note this is a BL8 DDR device.
-    tBURST = '5ns'
-
-    # DDR3, 4 Gbit has a tRFC of 240 CK and tCK = 1.25 ns
-    tRFC = '300ns'
-
-    # DDR3, <=85C, half for >85C
-    tREFI = '7.8us'
-
-    # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
+    # Greater of 4 CK or 7.5 ns
     tWTR = '7.5ns'
+
+    # Greater of 4 CK or 7.5 ns
+    tRTP = '7.5ns'
 
     # Default read-to-write bus around to 2 CK, @800 MHz = 2.5 ns
     tRTW = '2.5ns'
 
-    # Assume 5 CK for activate to activate for different banks
-    tRRD = '6.25ns'
+    # <=85C, half for >85C
+    tREFI = '7.8us'
 
-    # With a 2kbyte page size, DDR3-1600 lands around 40 ns
-    tXAW = '40ns'
+# A single DDR3-2133 x64 channel refining a selected subset of the
+# options for the DDR-1600 configuration, based on the same DDR3-1600
+# 4 Gbit datasheet (Micron MT41J512M8). Most parameters are kept
+# consistent across the two configurations.
+class DDR3_2133_x64(DDR3_1600_x64):
+    # 1066 MHz
+    tCK = '0.938ns'
+
+    # 8 beats across an x64 interface translates to 4 clocks @ 1066 MHz
+    tBURST = '3.752ns'
+
+    # DDR3-2133 14-14-14
+    tRCD = '13.09ns'
+    tCL = '13.09ns'
+    tRP = '13.09ns'
+    tRAS = '33ns'
+    tRRD = '5ns'
+    tXAW = '25ns'
+
+# A single DDR4-2400 x64 channel (one command and address bus), with
+# timings based on a DDR4-2400 4 Gbit datasheet (Samsung K4A4G085WD)
+# in an 8x8 configuration, amounting to 4 Gbyte of memory.
+class DDR4_2400_x64(DRAMCtrl):
+    # 8x8 configuration, 8 devices each with an 8-bit interface
+    device_bus_width = 8
+
+    # DDR4 is a BL8 device
+    burst_length = 8
+
+    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
+    device_rowbuffer_size = '1kB'
+
+    # 8x8 configuration, so 8 devices
+    devices_per_rank = 8
+
+    # Use a single rank
+    ranks_per_channel = 1
+
+    # DDR4 has 16 banks (4 bank groups) in all
+    # configurations. Currently we do not capture the additional
+    # constraints incurred by the bank groups
+    banks_per_rank = 16
+
+    # 1200 MHz
+    tCK = '0.833ns'
+
+    # 8 beats across an x64 interface translates to 4 clocks @ 1200 MHz
+    tBURST = '3.333ns'
+
+    # DDR4-2400 17-17-17
+    tRCD = '14.16ns'
+    tCL = '14.16ns'
+    tRP = '14.16ns'
+    tRAS = '32ns'
+
+    # Here using the average of RRD_S and RRD_L
+    tRRD = '4.1ns'
+    tXAW = '21ns'
     activation_limit = 4
+    tRFC = '260ns'
 
+    tWR = '15ns'
+
+    # Here using the average of WTR_S and WTR_L
+    tWTR = '5ns'
+
+    # Greater of 4 CK or 7.5 ns
+    tRTP = '7.5ns'
+
+    # Default read-to-write bus around to 2 CK, @1200 MHz = 1.666 ns
+    tRTW = '1.666ns'
+
+    # <=85C, half for >85C
+    tREFI = '7.8us'
 
 # A single DDR3 x64 interface (one command and address bus), with
 # default timings based on DDR3-1333 4 Gbit parts in an 8x8
