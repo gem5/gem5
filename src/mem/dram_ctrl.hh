@@ -260,15 +260,23 @@ class DRAMCtrl : public AbstractMemory
      * processRespondEvent is called; no parameters are allowed
      * in these methods
      */
+    void processNextReqEvent();
+    EventWrapper<DRAMCtrl,&DRAMCtrl::processNextReqEvent> nextReqEvent;
+
     void processRespondEvent();
     EventWrapper<DRAMCtrl, &DRAMCtrl::processRespondEvent> respondEvent;
+
+    void processActivateEvent();
+    EventWrapper<DRAMCtrl, &DRAMCtrl::processActivateEvent> activateEvent;
+
+    void processPrechargeEvent();
+    EventWrapper<DRAMCtrl, &DRAMCtrl::processPrechargeEvent> prechargeEvent;
 
     void processRefreshEvent();
     EventWrapper<DRAMCtrl, &DRAMCtrl::processRefreshEvent> refreshEvent;
 
-    void processNextReqEvent();
-    EventWrapper<DRAMCtrl,&DRAMCtrl::processNextReqEvent> nextReqEvent;
-
+    void processPowerEvent();
+    EventWrapper<DRAMCtrl,&DRAMCtrl::processPowerEvent> powerEvent;
 
     /**
      * Check if the read queue has room for more entries
@@ -549,6 +557,49 @@ class DRAMCtrl : public AbstractMemory
 
     RefreshState refreshState;
 
+    /**
+     * The power state captures the different operational states of
+     * the DRAM and interacts with the bus read/write state machine,
+     * and the refresh state machine. In the idle state all banks are
+     * precharged. From there we either go to an auto refresh (as
+     * determined by the refresh state machine), or to a precharge
+     * power down mode. From idle the memory can also go to the active
+     * state (with one or more banks active), and in turn from there
+     * to active power down. At the moment we do not capture the deep
+     * power down and self-refresh state.
+     */
+    enum PowerState {
+        PWR_IDLE = 0,
+        PWR_REF,
+        PWR_PRE_PDN,
+        PWR_ACT,
+        PWR_ACT_PDN
+    };
+
+    /**
+     * Since we are taking decisions out of order, we need to keep
+     * track of what power transition is happening at what time, such
+     * that we can go back in time and change history. For example, if
+     * we precharge all banks and schedule going to the idle state, we
+     * might at a later point decide to activate a bank before the
+     * transition to idle would have taken place.
+     */
+    PowerState pwrStateTrans;
+
+    /**
+     * Current power state.
+     */
+    PowerState pwrState;
+
+    /**
+     * Schedule a power state transition in the future, and
+     * potentially override an already scheduled transition.
+     *
+     * @param pwr_state Power state to transition to
+     * @param tick Tick when transition should take place
+     */
+    void schedulePowerEvent(PowerState pwr_state, Tick tick);
+
     Tick prevArrival;
 
     /**
@@ -620,12 +671,10 @@ class DRAMCtrl : public AbstractMemory
 
     // DRAM Power Calculation
     Stats::Formula pageHitRate;
-    Stats::Formula prechargeAllPercent;
-    Stats::Scalar prechargeAllTime;
+    Stats::Vector pwrStateTime;
 
-    // To track number of cycles the DRAM is idle, i.e. all the banks
-    // are precharged
-    Tick idleStartTick;
+    // Track when we transitioned to the current power state
+    Tick pwrStateTick;
 
     // To track number of banks which are currently active
     unsigned int numBanksActive;

@@ -45,6 +45,7 @@
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "debug/DRAM.hh"
+#include "debug/DRAMState.hh"
 #include "debug/Drain.hh"
 #include "mem/dram_ctrl.hh"
 #include "sim/system.hh"
@@ -56,8 +57,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
     rowHitFlag(false), busState(READ),
-    respondEvent(this), refreshEvent(this),
-    nextReqEvent(this), drainManager(NULL),
+    nextReqEvent(this), respondEvent(this), activateEvent(this),
+    prechargeEvent(this), refreshEvent(this), powerEvent(this),
+    drainManager(NULL),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
     deviceRowBufferSize(p->device_rowbuffer_size),
     devicesPerRank(p->devices_per_rank),
@@ -81,8 +83,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     maxAccessesPerRow(p->max_accesses_per_row),
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
-    busBusyUntil(0), refreshDueAt(0), refreshState(REF_IDLE), prevArrival(0),
-    nextReqTime(0), idleStartTick(0), numBanksActive(0)
+    busBusyUntil(0), refreshDueAt(0), refreshState(REF_IDLE),
+    pwrStateTrans(PWR_IDLE), pwrState(PWR_IDLE), prevArrival(0),
+    nextReqTime(0), pwrStateTick(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -154,7 +157,7 @@ DRAMCtrl::startup()
 {
     // update the start tick for the precharge accounting to the
     // current tick
-    idleStartTick = curTick();
+    pwrStateTick = curTick();
 
     // shift the bus busy time sufficiently far ahead that we never
     // have to worry about negative values when computing the time for
@@ -885,16 +888,6 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
-    // idleStartTick is the tick when all the banks were
-    // precharged. Thus, the difference between act_tick and
-    // idleStartTick gives the time for which the DRAM is in an idle
-    // state with all banks precharged. Note that we may end up
-    // "changing history" by scheduling an activation before an
-    // already scheduled precharge, effectively canceling it out.
-    if (numBanksActive == 0 && act_tick > idleStartTick) {
-        prechargeAllTime += act_tick - idleStartTick;
-    }
-
     // update the open row
     assert(banks[rank][bank].openRow == Bank::NO_ROW);
     banks[rank][bank].openRow = row;
@@ -916,6 +909,7 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
         // next activate must not happen before tRRD
         banks[rank][i].actAllowedAt = act_tick + tRRD;
     }
+
     // tRC should be added to activation tick of the bank currently accessed,
     // where tRC = tRAS + tRP, this is just for a check as actAllowedAt for same
     // bank is already captured by bank.freeAt and bank.tRASDoneAt
@@ -951,6 +945,24 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
                 // next activate must not happen before end of window
                 banks[rank][j].actAllowedAt = actTicks[rank].back() + tXAW;
     }
+
+    // at the point when this activate takes place, make sure we
+    // transition to the active power state
+    if (!activateEvent.scheduled())
+        schedule(activateEvent, act_tick);
+    else if (activateEvent.when() > act_tick)
+        // move it sooner in time
+        reschedule(activateEvent, act_tick);
+}
+
+void
+DRAMCtrl::processActivateEvent()
+{
+    // we should transition to the active state as soon as any bank is active
+    if (pwrState != PWR_ACT)
+        // note that at this point numBanksActive could be back at
+        // zero again due to a precharge scheduled in the future
+        schedulePowerEvent(PWR_ACT, curTick());
 }
 
 void
@@ -973,12 +985,27 @@ DRAMCtrl::prechargeBank(Bank& bank, Tick free_at)
     DPRINTF(DRAM, "Precharged bank, done at tick %lld, now got %d active\n",
             bank.freeAt, numBanksActive);
 
+    // if we look at the current number of active banks we might be
+    // tempted to think the DRAM is now idle, however this can be
+    // undone by an activate that is scheduled to happen before we
+    // would have reached the idle state, so schedule an event and
+    // rather check once we actually make it to the point in time when
+    // the (last) precharge takes place
+    if (!prechargeEvent.scheduled())
+        schedule(prechargeEvent, free_at);
+    else if (prechargeEvent.when() < free_at)
+        reschedule(prechargeEvent, free_at);
+}
+
+void
+DRAMCtrl::processPrechargeEvent()
+{
     // if we reached zero, then special conditions apply as we track
     // if all banks are precharged for the power models
     if (numBanksActive == 0) {
-        idleStartTick = std::max(idleStartTick, bank.freeAt);
-        DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
-                idleStartTick);
+        // we should transition to the idle state when the last bank
+        // is precharged
+        schedulePowerEvent(PWR_IDLE, curTick());
     }
 }
 
@@ -1412,31 +1439,39 @@ DRAMCtrl::processRefreshEvent()
 
     // at this point, ensure that all banks are precharged
     if (refreshState == REF_PRE) {
-        DPRINTF(DRAM, "Precharging all\n");
+        // precharge any active bank if we are not already in the idle
+        // state
+        if (pwrState != PWR_IDLE) {
+            DPRINTF(DRAM, "Precharging all\n");
+            for (int i = 0; i < ranksPerChannel; i++) {
+                for (int j = 0; j < banksPerRank; j++) {
+                    if (banks[i][j].openRow != Bank::NO_ROW) {
+                        // respect both causality and any existing bank
+                        // constraints
+                        Tick free_at =
+                            std::max(std::max(banks[i][j].freeAt,
+                                              banks[i][j].tRASDoneAt),
+                                     curTick()) + tRP;
 
-        // precharge any active bank
-        for (int i = 0; i < ranksPerChannel; i++) {
-            for (int j = 0; j < banksPerRank; j++) {
-                if (banks[i][j].openRow != Bank::NO_ROW) {
-                    // respect both causality and any existing bank
-                    // constraints
-                    Tick free_at = std::max(std::max(banks[i][j].freeAt,
-                                                     banks[i][j].tRASDoneAt),
-                                            curTick()) + tRP;
-
-                    prechargeBank(banks[i][j], free_at);
+                        prechargeBank(banks[i][j], free_at);
+                    }
                 }
             }
+        } else {
+            DPRINTF(DRAM, "All banks already precharged, starting refresh\n");
+
+            // go ahead and kick the power state machine into gear if
+            // we are already idle
+            schedulePowerEvent(PWR_REF, curTick());
         }
 
-        if (numBanksActive != 0)
-            panic("Refresh scheduled with %d active banks\n", numBanksActive);
-
-        // advance the state
         refreshState = REF_RUN;
+        assert(numBanksActive == 0);
 
-        // call ourselves in the future
-        schedule(refreshEvent, std::max(curTick(), idleStartTick));
+        // wait for all banks to be precharged, at which point the
+        // power state machine will transition to the idle state, and
+        // automatically move to a refresh, at that point it will also
+        // call this method to get the refresh event loop going again
         return;
     }
 
@@ -1444,6 +1479,7 @@ DRAMCtrl::processRefreshEvent()
     if (refreshState == REF_RUN) {
         // should never get here with any banks active
         assert(numBanksActive == 0);
+        assert(pwrState == PWR_REF);
 
         Tick banksFree = curTick() + tRFC;
 
@@ -1463,18 +1499,90 @@ DRAMCtrl::processRefreshEvent()
         // when scheduling the next one
         schedule(refreshEvent, refreshDueAt + tREFI - tRP);
 
-        // back to business as usual
-        refreshState = REF_IDLE;
+        assert(!powerEvent.scheduled());
 
-        // we are now refreshing until tRFC is done
-        idleStartTick = banksFree;
+        // move to the idle power state once the refresh is done, this
+        // will also move the refresh state machine to the refresh
+        // idle state
+        schedulePowerEvent(PWR_IDLE, banksFree);
 
-        // kick the normal request processing loop into action again
-        // as early as possible, i.e. when the request is done, the
-        // scheduling of this event also prevents any new requests
-        // from going ahead before the scheduled point in time
-        nextReqTime = banksFree;
-        schedule(nextReqEvent, nextReqTime);
+        DPRINTF(DRAMState, "Refresh done at %llu and next refresh at %llu\n",
+                banksFree, refreshDueAt + tREFI);
+    }
+}
+
+void
+DRAMCtrl::schedulePowerEvent(PowerState pwr_state, Tick tick)
+{
+    // respect causality
+    assert(tick >= curTick());
+
+    if (!powerEvent.scheduled()) {
+        DPRINTF(DRAMState, "Scheduling power event at %llu to state %d\n",
+                tick, pwr_state);
+
+        // insert the new transition
+        pwrStateTrans = pwr_state;
+
+        schedule(powerEvent, tick);
+    } else {
+        panic("Scheduled power event at %llu to state %d, "
+              "with scheduled event at %llu to %d\n", tick, pwr_state,
+              powerEvent.when(), pwrStateTrans);
+    }
+}
+
+void
+DRAMCtrl::processPowerEvent()
+{
+    // remember where we were, and for how long
+    Tick duration = curTick() - pwrStateTick;
+    PowerState prev_state = pwrState;
+
+    // update the accounting
+    pwrStateTime[prev_state] += duration;
+
+    pwrState = pwrStateTrans;
+    pwrStateTick = curTick();
+
+    if (pwrState == PWR_IDLE) {
+        DPRINTF(DRAMState, "All banks precharged\n");
+
+        // if we were refreshing, make sure we start scheduling requests again
+        if (prev_state == PWR_REF) {
+            DPRINTF(DRAMState, "Was refreshing for %llu ticks\n", duration);
+            assert(pwrState == PWR_IDLE);
+
+            // kick things into action again
+            refreshState = REF_IDLE;
+            assert(!nextReqEvent.scheduled());
+            schedule(nextReqEvent, curTick());
+        } else {
+            assert(prev_state == PWR_ACT);
+
+            // if we have a pending refresh, and are now moving to
+            // the idle state, direclty transition to a refresh
+            if (refreshState == REF_RUN) {
+                // there should be nothing waiting at this point
+                assert(!powerEvent.scheduled());
+
+                // update the state in zero time and proceed below
+                pwrState = PWR_REF;
+            }
+        }
+    }
+
+    // we transition to the refresh state, let the refresh state
+    // machine know of this state update and let it deal with the
+    // scheduling of the next power state transition as well as the
+    // following refresh
+    if (pwrState == PWR_REF) {
+        DPRINTF(DRAMState, "Refreshing\n");
+        // kick the refresh event loop into action again, and that
+        // in turn will schedule a transition to the idle power
+        // state once the refresh is done
+        assert(refreshState == REF_RUN);
+        processRefreshEvent();
     }
 }
 
@@ -1744,13 +1852,15 @@ DRAMCtrl::regStats()
     pageHitRate = (writeRowHits + readRowHits) /
         (writeBursts - mergedWrBursts + readBursts - servicedByWrQ) * 100;
 
-    prechargeAllPercent
-        .name(name() + ".prechargeAllPercent")
-        .desc("Percentage of time for which DRAM has all the banks in "
-              "precharge state")
-        .precision(2);
-
-    prechargeAllPercent = prechargeAllTime / simTicks * 100;
+    pwrStateTime
+        .init(5)
+        .name(name() + ".memoryStateTime")
+        .desc("Time in different power states");
+    pwrStateTime.subname(0, "IDLE");
+    pwrStateTime.subname(1, "REF");
+    pwrStateTime.subname(2, "PRE_PDN");
+    pwrStateTime.subname(3, "ACT");
+    pwrStateTime.subname(4, "ACT_PDN");
 }
 
 void
