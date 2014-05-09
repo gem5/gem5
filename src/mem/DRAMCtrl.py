@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -147,8 +147,11 @@ class DRAMCtrl(AbstractMemory):
     # to be sent. It is 7.8 us for a 64ms refresh requirement
     tREFI = Param.Latency("Refresh command interval")
 
-    # write-to-read turn around penalty, assumed same as read-to-write
+    # write-to-read turn around penalty
     tWTR = Param.Latency("Write to read switching time")
+
+    # read-to-write turn around penalty, bus turnaround delay
+    tRTW = Param.Latency("Read to write switching time")
 
     # minimum row activate to row activate delay time
     tRRD = Param.Latency("ACT to ACT delay")
@@ -205,6 +208,9 @@ class DDR3_1600_x64(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
     tWTR = '7.5ns'
 
+    # Default read-to-write bus around to 2 CK, @800 MHz = 2.5 ns
+    tRTW = '2.5ns'
+
     # Assume 5 CK for activate to activate for different banks
     tRRD = '6.25ns'
 
@@ -259,6 +265,9 @@ class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns, 4 CK @ 666.66 MHz = 6 ns
     tWTR = '7.5ns'
 
+    # Default read-to-write bus around to 2 CK, @666.66 MHz = 3 ns
+    tRTW = '3ns'
+
     tRRD = '6.0ns'
 
     tXAW = '30ns'
@@ -312,6 +321,9 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
 
+    # Default read-to-write bus around to 2 CK, @533 MHz = 3.75 ns
+    tRTW = '3.75ns'
+
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'
 
@@ -359,6 +371,9 @@ class WideIO_200_x128(DRAMCtrl):
 
     # Greater of 2 CK or 15 ns, 2 CK @ 200 MHz = 10 ns
     tWTR = '15ns'
+
+    # Default read-to-write bus around to 2 CK, @200 MHz = 10 ns
+    tRTW = '10ns'
 
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'
@@ -412,6 +427,9 @@ class LPDDR3_1600_x32(DRAMCtrl):
 
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
+
+    # Default read-to-write bus around to 2 CK, @800 MHz = 2.5 ns
+    tRTW = '2.5ns'
 
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'

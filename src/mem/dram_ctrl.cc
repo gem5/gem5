@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,8 +55,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
-    rowHitFlag(false), stopReads(false),
-    writeEvent(this), respondEvent(this),
+    rowHitFlag(false), busState(READ),
+    respondEvent(this),
     refreshEvent(this), nextReqEvent(this), drainManager(NULL),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
     deviceRowBufferSize(p->device_rowbuffer_size),
@@ -72,7 +72,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
-    tWTR(p->tWTR), tBURST(p->tBURST),
+    tWTR(p->tWTR), tRTW(p->tRTW), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
@@ -82,7 +82,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
     busBusyUntil(0),  prevArrival(0),
-    newTime(0), startTickPrechargeAll(0), numBanksActive(0)
+    nextReqTime(0), startTickPrechargeAll(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -149,6 +149,12 @@ DRAMCtrl::startup()
     // update the start tick for the precharge accounting to the
     // current tick
     startTickPrechargeAll = curTick();
+
+    // shift the bus busy time sufficiently far ahead that we never
+    // have to worry about negative values when computing the time for
+    // the next request, this will add an insignificant bubble at the
+    // start of simulation
+    busBusyUntil = curTick() + tRP + tRCD + tCL;
 
     // print the configuration of the controller
     printParams();
@@ -374,97 +380,12 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
     if (burst_helper != NULL)
         burst_helper->burstsServiced = pktsServicedByWrQ;
 
-    // If we are not already scheduled to get the read request out of
-    // the queue, do so now
-    if (!nextReqEvent.scheduled() && !stopReads) {
+    // If we are not already scheduled to get a request out of the
+    // queue, do so now
+    if (!nextReqEvent.scheduled()) {
         DPRINTF(DRAM, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
-}
-
-void
-DRAMCtrl::processWriteEvent()
-{
-    assert(!writeQueue.empty());
-
-    DPRINTF(DRAM, "Beginning DRAM Write\n");
-    Tick temp1 M5_VAR_USED = std::max(curTick(), busBusyUntil);
-    Tick temp2 M5_VAR_USED = std::max(curTick(), maxBankFreeAt());
-
-    chooseNextWrite();
-    DRAMPacket* dram_pkt = writeQueue.front();
-    // sanity check
-    assert(dram_pkt->size <= burstSize);
-    doDRAMAccess(dram_pkt);
-
-    writeQueue.pop_front();
-    delete dram_pkt;
-
-    DPRINTF(DRAM, "Writing, bus busy for %lld ticks, banks busy "
-            "for %lld ticks\n", busBusyUntil - temp1, maxBankFreeAt() - temp2);
-
-    // If we emptied the write queue, or got sufficiently below the
-    // threshold (using the minWritesPerSwitch as the hysteresis) and
-    // are not draining, or we have reads waiting and have done enough
-    // writes, then switch to reads. The retry above could already
-    // have caused it to be scheduled, so first check
-    if (writeQueue.empty() ||
-        (writeQueue.size() + minWritesPerSwitch < writeLowThreshold &&
-         !drainManager) ||
-        (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
-        // turn the bus back around for reads again
-        busBusyUntil += tWTR;
-        stopReads = false;
-
-        DPRINTF(DRAM, "Switching to reads after %d writes with %d writes "
-                "waiting\n", writesThisTime, writeQueue.size());
-
-        wrPerTurnAround.sample(writesThisTime);
-        writesThisTime = 0;
-
-        if (!nextReqEvent.scheduled())
-            schedule(nextReqEvent, busBusyUntil);
-    } else {
-        assert(!writeEvent.scheduled());
-        DPRINTF(DRAM, "Next write scheduled at %lld\n", newTime);
-        schedule(writeEvent, newTime);
-    }
-
-    if (retryWrReq) {
-        retryWrReq = false;
-        port.sendRetry();
-    }
-
-    // if there is nothing left in any queue, signal a drain
-    if (writeQueue.empty() && readQueue.empty() &&
-        respQueue.empty () && drainManager) {
-        drainManager->signalDrainDone();
-        drainManager = NULL;
-    }
-}
-
-
-void
-DRAMCtrl::triggerWrites()
-{
-    DPRINTF(DRAM, "Switching to writes after %d reads with %d reads "
-            "waiting\n", readsThisTime, readQueue.size());
-
-    // Flag variable to stop any more read scheduling
-    stopReads = true;
-
-    Tick write_start_time = std::max(busBusyUntil, curTick()) + tWTR;
-
-    DPRINTF(DRAM, "Writes scheduled at %lld\n", write_start_time);
-
-    // there is some danger here as there might still be reads
-    // happening before the switch actually takes place
-    rdPerTurnAround.sample(readsThisTime);
-    readsThisTime = 0;
-
-    assert(write_start_time >= curTick());
-    assert(!writeEvent.scheduled());
-    schedule(writeEvent, write_start_time);
 }
 
 void
@@ -573,9 +494,11 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
     // different front end latency
     accessAndRespond(pkt, frontendLatency);
 
-    // If your write buffer is starting to fill up, drain it!
-    if (writeQueue.size() >= writeHighThreshold && !stopReads){
-        triggerWrites();
+    // If we are not already scheduled to get a request out of the
+    // queue, do so now
+    if (!nextReqEvent.scheduled()) {
+        DPRINTF(DRAM, "Request scheduled immediately\n");
+        schedule(nextReqEvent, curTick());
     }
 }
 
@@ -625,9 +548,10 @@ DRAMCtrl::printParams() const
             "tRFC      %d ticks\n"                        \
             "tREFI     %d ticks\n"                        \
             "tWTR      %d ticks\n"                        \
+            "tRTW      %d ticks\n"                        \
             "tXAW (%d) %d ticks\n",
             name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR,
-            activationLimit, tXAW);
+            tRTW, activationLimit, tXAW);
 }
 
 void
@@ -768,55 +692,25 @@ DRAMCtrl::processRespondEvent()
 }
 
 void
-DRAMCtrl::chooseNextWrite()
+DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue)
 {
-    // This method does the arbitration between write requests. The
-    // chosen packet is simply moved to the head of the write
-    // queue. The other methods know that this is the place to
-    // look. For example, with FCFS, this method does nothing
-    assert(!writeQueue.empty());
+    // This method does the arbitration between requests. The chosen
+    // packet is simply moved to the head of the queue. The other
+    // methods know that this is the place to look. For example, with
+    // FCFS, this method does nothing
+    assert(!queue.empty());
 
-    if (writeQueue.size() == 1) {
-        DPRINTF(DRAM, "Single write request, nothing to do\n");
+    if (queue.size() == 1) {
+        DPRINTF(DRAM, "Single request, nothing to do\n");
         return;
     }
 
     if (memSchedPolicy == Enums::fcfs) {
         // Do nothing, since the correct request is already head
     } else if (memSchedPolicy == Enums::frfcfs) {
-        reorderQueue(writeQueue);
+        reorderQueue(queue);
     } else
         panic("No scheduling policy chosen\n");
-
-    DPRINTF(DRAM, "Selected next write request\n");
-}
-
-bool
-DRAMCtrl::chooseNextRead()
-{
-    // This method does the arbitration between read requests. The
-    // chosen packet is simply moved to the head of the queue. The
-    // other methods know that this is the place to look. For example,
-    // with FCFS, this method does nothing
-    if (readQueue.empty()) {
-        DPRINTF(DRAM, "No read request to select\n");
-        return false;
-    }
-
-    // If there is only one request then there is nothing left to do
-    if (readQueue.size() == 1)
-        return true;
-
-    if (memSchedPolicy == Enums::fcfs) {
-        // Do nothing, since the request to serve is already the first
-        // one in the read queue
-    } else if (memSchedPolicy == Enums::frfcfs) {
-        reorderQueue(readQueue);
-    } else
-        panic("No scheduling policy chosen!\n");
-
-    DPRINTF(DRAM, "Selected next read request\n");
-    return true;
 }
 
 void
@@ -973,12 +867,6 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             bankLat, accLat);
 
     return make_pair(bankLat, accLat);
-}
-
-void
-DRAMCtrl::processNextReqEvent()
-{
-    scheduleNextReq();
 }
 
 void
@@ -1197,7 +1085,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
                    curTick(), accessLat, dram_pkt->readyTime, busBusyUntil);
 
     // Make sure requests are not overlapping on the databus
-    assert (dram_pkt->readyTime - busBusyUntil >= tBURST);
+    assert(dram_pkt->readyTime - busBusyUntil >= tBURST);
 
     // Update bus state
     busBusyUntil = dram_pkt->readyTime;
@@ -1205,49 +1093,32 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     DPRINTF(DRAM,"Access time is %lld\n",
             dram_pkt->readyTime - dram_pkt->entryTime);
 
-    // Update the minimum timing between the requests
-    newTime = (busBusyUntil > tRP + tRCD + tCL) ?
-        std::max(busBusyUntil - (tRP + tRCD + tCL), curTick()) : curTick();
+    // Update the minimum timing between the requests, this is a
+    // conservative estimate of when we have to schedule the next
+    // request to not introduce any unecessary bubbles. In most cases
+    // we will wake up sooner than we have to.
+    nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
 
-    // Update the access related stats
+    // Update the stats and schedule the next request
     if (dram_pkt->isRead) {
         ++readsThisTime;
         if (rowHitFlag)
             readRowHits++;
         bytesReadDRAM += burstSize;
         perBankRdBursts[dram_pkt->bankId]++;
+
+        // Update latency stats
+        totMemAccLat += dram_pkt->readyTime - dram_pkt->entryTime;
+        totBankLat += bankLat;
+        totBusLat += tBURST;
+        totQLat += dram_pkt->readyTime - dram_pkt->entryTime - bankLat -
+            tBURST;
     } else {
         ++writesThisTime;
         if (rowHitFlag)
             writeRowHits++;
         bytesWritten += burstSize;
         perBankWrBursts[dram_pkt->bankId]++;
-
-        // At this point, commonality between reads and writes ends.
-        // For writes, we are done since we long ago responded to the
-        // requestor.
-        return;
-    }
-
-    // Update latency stats
-    totMemAccLat += dram_pkt->readyTime - dram_pkt->entryTime;
-    totBankLat += bankLat;
-    totBusLat += tBURST;
-    totQLat += dram_pkt->readyTime - dram_pkt->entryTime - bankLat - tBURST;
-
-
-    // At this point we're done dealing with the request
-    // It will be moved to a separate response queue with a
-    // correct readyTime, and eventually be sent back at that
-    //time
-    moveToRespQ();
-
-    // Schedule the next read event
-    if (!nextReqEvent.scheduled() && !stopReads) {
-        schedule(nextReqEvent, newTime);
-    } else {
-        if (newTime < nextReqEvent.when())
-            reschedule(nextReqEvent, newTime);
     }
 }
 
@@ -1293,21 +1164,137 @@ DRAMCtrl::moveToRespQ()
 }
 
 void
-DRAMCtrl::scheduleNextReq()
+DRAMCtrl::processNextReqEvent()
 {
-    DPRINTF(DRAM, "Reached scheduleNextReq()\n");
+    if (busState == READ_TO_WRITE) {
+        DPRINTF(DRAM, "Switching to writes after %d reads with %d reads "
+                "waiting\n", readsThisTime, readQueue.size());
 
-    // Figure out which read request goes next, and move it to the
-    // front of the read queue
-    if (!chooseNextRead()) {
-        // In the case there is no read request to go next, trigger
-        // writes if we have passed the low threshold (or if we are
-        // draining)
-        if (!writeQueue.empty() && !writeEvent.scheduled() &&
-            (writeQueue.size() > writeLowThreshold || drainManager))
-            triggerWrites();
+        // sample and reset the read-related stats as we are now
+        // transitioning to writes, and all reads are done
+        rdPerTurnAround.sample(readsThisTime);
+        readsThisTime = 0;
+
+        // now proceed to do the actual writes
+        busState = WRITE;
+    } else if (busState == WRITE_TO_READ) {
+        DPRINTF(DRAM, "Switching to reads after %d writes with %d writes "
+                "waiting\n", writesThisTime, writeQueue.size());
+
+        wrPerTurnAround.sample(writesThisTime);
+        writesThisTime = 0;
+
+        busState = READ;
+    }
+
+    // when we get here it is either a read or a write
+    if (busState == READ) {
+
+        // track if we should switch or not
+        bool switch_to_writes = false;
+
+        if (readQueue.empty()) {
+            // In the case there is no read request to go next,
+            // trigger writes if we have passed the low threshold (or
+            // if we are draining)
+            if (!writeQueue.empty() &&
+                (drainManager || writeQueue.size() > writeLowThreshold)) {
+
+                switch_to_writes = true;
+            } else {
+                // check if we are drained
+                if (respQueue.empty () && drainManager) {
+                    drainManager->signalDrainDone();
+                    drainManager = NULL;
+                }
+
+                // nothing to do, not even any point in scheduling an
+                // event for the next request
+                return;
+            }
+        } else {
+            // Figure out which read request goes next, and move it to the
+            // front of the read queue
+            chooseNext(readQueue);
+
+            doDRAMAccess(readQueue.front());
+
+            // At this point we're done dealing with the request
+            // It will be moved to a separate response queue with a
+            // correct readyTime, and eventually be sent back at that
+            // time
+            moveToRespQ();
+
+            // we have so many writes that we have to transition
+            if (writeQueue.size() > writeHighThreshold) {
+                switch_to_writes = true;
+            }
+        }
+
+        // switching to writes, either because the read queue is empty
+        // and the writes have passed the low threshold (or we are
+        // draining), or because the writes hit the hight threshold
+        if (switch_to_writes) {
+            // transition to writing
+            busState = READ_TO_WRITE;
+
+            // add a bubble to the data bus, as defined by the
+            // tRTW parameter
+            busBusyUntil += tRTW;
+
+            // update the minimum timing between the requests,
+            // this shifts us back in time far enough to do any
+            // bank preparation
+            nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
+        }
     } else {
-        doDRAMAccess(readQueue.front());
+        chooseNext(writeQueue);
+        DRAMPacket* dram_pkt = writeQueue.front();
+        // sanity check
+        assert(dram_pkt->size <= burstSize);
+        doDRAMAccess(dram_pkt);
+
+        writeQueue.pop_front();
+        delete dram_pkt;
+
+        // If we emptied the write queue, or got sufficiently below the
+        // threshold (using the minWritesPerSwitch as the hysteresis) and
+        // are not draining, or we have reads waiting and have done enough
+        // writes, then switch to reads.
+        if (writeQueue.empty() ||
+            (writeQueue.size() + minWritesPerSwitch < writeLowThreshold &&
+             !drainManager) ||
+            (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
+            // turn the bus back around for reads again
+            busState = WRITE_TO_READ;
+
+            // note that the we switch back to reads also in the idle
+            // case, which eventually will check for any draining and
+            // also pause any further scheduling if there is really
+            // nothing to do
+
+            // here we get a bit creative and shift the bus busy time not
+            // just the tWTR, but also a CAS latency to capture the fact
+            // that we are allowed to prepare a new bank, but not issue a
+            // read command until after tWTR, in essence we capture a
+            // bubble on the data bus that is tWTR + tCL
+            busBusyUntil += tWTR + tCL;
+
+            // update the minimum timing between the requests, this shifts
+            // us back in time far enough to do any bank preparation
+            nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
+        }
+    }
+
+    schedule(nextReqEvent, std::max(nextReqTime, curTick()));
+
+    // If there is space available and we have writes waiting then let
+    // them retry. This is done here to ensure that the retry does not
+    // cause a nextReqEvent to be scheduled before we do so as part of
+    // the next request processing
+    if (retryWrReq && writeQueue.size() < writeBufferSize) {
+        retryWrReq = false;
+        port.sendRetry();
     }
 }
 
@@ -1681,13 +1668,12 @@ DRAMCtrl::drain(DrainManager *dm)
                 respQueue.size());
         ++count;
         drainManager = dm;
+
         // the only part that is not drained automatically over time
-        // is the write queue, thus trigger writes if there are any
-        // waiting and no reads waiting, otherwise wait until the
-        // reads are done
-        if (readQueue.empty() && !writeQueue.empty() &&
-            !writeEvent.scheduled())
-            triggerWrites();
+        // is the write queue, thus kick things into action if needed
+        if (!writeQueue.empty() && !nextReqEvent.scheduled()) {
+            schedule(nextReqEvent, curTick());
+        }
     }
 
     if (count)

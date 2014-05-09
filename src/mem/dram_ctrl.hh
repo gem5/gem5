@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -127,11 +127,17 @@ class DRAMCtrl : public AbstractMemory
     bool rowHitFlag;
 
     /**
-     * Use this flag to shutoff reads, i.e. do not schedule any reads
-     * beyond those already done so that we can turn the bus around
-     * and do a few writes, or refresh, or whatever
+     * Bus state used to control the read/write switching and drive
+     * the scheduling of the next request.
      */
-    bool stopReads;
+    enum BusState {
+        READ = 0,
+        READ_TO_WRITE,
+        WRITE,
+        WRITE_TO_READ
+    };
+
+    BusState busState;
 
     /** List to keep track of activate ticks */
     std::vector<std::deque<Tick>> actTicks;
@@ -250,13 +256,10 @@ class DRAMCtrl : public AbstractMemory
 
     /**
      * Bunch of things requires to setup "events" in gem5
-     * When event "writeEvent" occurs for example, the method
-     * processWriteEvent is called; no parameters are allowed
+     * When event "respondEvent" occurs for example, the method
+     * processRespondEvent is called; no parameters are allowed
      * in these methods
      */
-    void processWriteEvent();
-    EventWrapper<DRAMCtrl, &DRAMCtrl::processWriteEvent> writeEvent;
-
     void processRespondEvent();
     EventWrapper<DRAMCtrl, &DRAMCtrl::processRespondEvent> respondEvent;
 
@@ -325,12 +328,6 @@ class DRAMCtrl : public AbstractMemory
     void doDRAMAccess(DRAMPacket* dram_pkt);
 
     /**
-     * Check when the channel is free to turnaround, add turnaround
-     * delay and schedule a whole bunch of writes.
-     */
-    void triggerWrites();
-
-    /**
      * When a packet reaches its "readyTime" in the response Q,
      * use the "access()" method in AbstractMemory to actually
      * create the response packet, and send it back to the outside
@@ -357,20 +354,11 @@ class DRAMCtrl : public AbstractMemory
                            bool isRead);
 
     /**
-     * The memory schduler/arbiter - picks which read request needs to
+     * The memory schduler/arbiter - picks which request needs to
      * go next, based on the specified policy such as FCFS or FR-FCFS
-     * and moves it to the head of the read queue.
-     *
-     * @return True if a request was chosen and false if queue is empty
+     * and moves it to the head of the queue.
      */
-    bool chooseNextRead();
-
-    /**
-     * Calls chooseNextReq() to pick the right request, then calls
-     * doDRAMAccess on that request in order to actually service
-     * that request
-     */
-    void scheduleNextReq();
+    void chooseNext(std::deque<DRAMPacket*>& queue);
 
     /**
      *Looks at the state of the banks, channels, row buffer hits etc
@@ -393,11 +381,6 @@ class DRAMCtrl : public AbstractMemory
      * outside world
      */
     void moveToRespQ();
-
-    /**
-     * Scheduling policy within the write queue
-     */
-    void chooseNextWrite();
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
@@ -495,6 +478,7 @@ class DRAMCtrl : public AbstractMemory
      * values.
      */
     const Tick tWTR;
+    const Tick tRTW;
     const Tick tBURST;
     const Tick tRCD;
     const Tick tCL;
@@ -541,11 +525,13 @@ class DRAMCtrl : public AbstractMemory
 
     Tick prevArrival;
 
-    // The absolute soonest you have to start thinking about the
-    // next request is the longest access time that can occur before
-    // busBusyUntil. Assuming you need to precharge,
-    // open a new row, and access, it is tRP + tRCD + tCL
-    Tick newTime;
+    /**
+     * The soonest you have to start thinking about the next request
+     * is the longest access time that can occur before
+     * busBusyUntil. Assuming you need to precharge, open a new row,
+     * and access, it is tRP + tRCD + tCL.
+     */
+    Tick nextReqTime;
 
     // All statistics that the model needs to capture
     Stats::Scalar readReqs;
