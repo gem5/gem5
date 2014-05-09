@@ -49,7 +49,7 @@ class TimeBuffer
     std::vector<char *> index;
     unsigned base;
 
-    void valid(int idx)
+    void valid(int idx) const
     {
         assert (idx >= -past && idx <= future);
     }
@@ -189,7 +189,10 @@ class TimeBuffer
         new (index[ptr]) T;
     }
 
-    T *access(int idx)
+  protected:
+    //Calculate the index into this->index for element at position idx
+    //relative to now
+    inline int calculateVectorIndex(int idx) const
     {
         //Need more complex math here to calculate index.
         valid(idx);
@@ -200,23 +203,30 @@ class TimeBuffer
         } else if (vector_index < 0) {
             vector_index += size;
         }
+
+        return vector_index;
+    }
+
+  public:
+    T *access(int idx)
+    {
+        int vector_index = calculateVectorIndex(idx);
 
         return reinterpret_cast<T *>(index[vector_index]);
     }
 
     T &operator[](int idx)
     {
-        //Need more complex math here to calculate index.
-        valid(idx);
-
-        int vector_index = idx + base;
-        if (vector_index >= (int)size) {
-            vector_index -= size;
-        } else if (vector_index < 0) {
-            vector_index += size;
-        }
+        int vector_index = calculateVectorIndex(idx);
 
         return reinterpret_cast<T &>(*index[vector_index]);
+    }
+
+    const T &operator[] (int idx) const
+    {
+        int vector_index = calculateVectorIndex(idx);
+
+        return reinterpret_cast<const T &>(*index[vector_index]);
     }
 
     wire getWire(int idx)
