@@ -1058,7 +1058,11 @@ output header {{
     }
 }};
 
-output exec {{
+let {{
+    header_output = ""
+    exec_output = ""
+
+    vcompares = '''
     static float
     vcgtFunc(float op1, float op2)
     {
@@ -1082,7 +1086,8 @@ output exec {{
             return 2.0;
         return (op1 == op2) ? 0.0 : 1.0;
     }
-
+'''
+    vcomparesL = '''
     static float
     vcleFunc(float op1, float op2)
     {
@@ -1098,7 +1103,8 @@ output exec {{
             return 2.0;
         return (op1 < op2) ? 0.0 : 1.0;
     }
-
+'''
+    vacomparesG = '''
     static float
     vacgtFunc(float op1, float op2)
     {
@@ -1114,12 +1120,9 @@ output exec {{
             return 2.0;
         return (fabsf(op1) >= fabsf(op2)) ? 0.0 : 1.0;
     }
-}};
+'''
 
-let {{
-
-    header_output = ""
-    exec_output = ""
+    exec_output += vcompares + vacomparesG
 
     smallUnsignedTypes = ("uint8_t", "uint16_t", "uint32_t")
     unsignedTypes = smallUnsignedTypes + ("uint64_t",)
@@ -3413,6 +3416,9 @@ let {{
     '''
     twoRegMiscInst("vrev64", "NVrev64D", "SimdAluOp", smallUnsignedTypes, 2, vrev64Code)
     twoRegMiscInst("vrev64", "NVrev64Q", "SimdAluOp", smallUnsignedTypes, 4, vrev64Code)
+
+    split('exec')
+    exec_output += vcompares + vcomparesL
 
     vpaddlCode = '''
         destElem = (BigElement)srcElem1 + (BigElement)srcElem2;

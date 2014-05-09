@@ -53,6 +53,9 @@
 ##include "misc.isa"
 ##include "misc64.isa"
 
+split exec;
+split decoder;
+
 //Stores of a single item, AArch64
 ##include "str64.isa"
 
@@ -64,6 +67,8 @@
 
 //Load/store multiple
 ##include "macromem.isa"
+
+split exec;
 
 //Data processing instructions
 ##include "data.isa"
@@ -85,12 +90,15 @@
 ##include "fp.isa"
 ##include "fp64.isa"
 
+split exec;
+
 //Neon
 ##include "neon.isa"
 
 //AArch64 Neon
 ##include "neon64.isa"
+split decoder;
 ##include "neon64_mem.isa"
 
-//m5 Psuedo-ops
+//m5 Pseudo-ops
 ##include "m5ops.isa"

@@ -1959,6 +1959,9 @@ let {{
                       2, minAcrossCode)
     twoRegAcrossInstX("sminv", "SminvQX", "SimdCmpOp", smallSignedTypes, 4,
                       minAcrossCode)
+
+    split('exec')
+
     # SMLAL, SMLAL2 (by element)
     mlalCode = "destElem += (BigElement)srcElem1 * (BigElement)srcElem2;"
     threeRegLongInstX("smlal", "SmlalElemX", "SimdMultAccOp",
