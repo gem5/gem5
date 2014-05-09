@@ -232,6 +232,22 @@ MSHRQueue::markPending(MSHR *mshr)
     mshr->readyIter = addToReadyList(mshr);
 }
 
+bool
+MSHRQueue::forceDeallocateTarget(MSHR *mshr)
+{
+    bool was_full = isFull();
+    assert(mshr->hasTargets());
+    // Pop the prefetch off of the target list
+    mshr->popTarget();
+    // Delete mshr if no remaining targets
+    if (!mshr->hasTargets() && !mshr->promoteDeferredTargets()) {
+        deallocateOne(mshr);
+    }
+
+    // Notify if MSHR queue no longer full
+    return was_full && !isFull();
+}
+
 void
 MSHRQueue::squash(int threadNum)
 {

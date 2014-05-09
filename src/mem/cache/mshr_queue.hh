@@ -194,6 +194,12 @@ class MSHRQueue : public Drainable
     void squash(int threadNum);
 
     /**
+     * Deallocate top target, possibly freeing the MSHR
+     * @return if MSHR queue is no longer full
+     */
+    bool forceDeallocateTarget(MSHR *mshr);
+
+    /**
      * Returns true if the pending list is not empty.
      * @return True if there are outstanding requests.
      */

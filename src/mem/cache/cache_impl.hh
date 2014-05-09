@@ -1394,6 +1394,12 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();
             }
+            // If this request is a prefetch and an
+            // upper level squashes the prefetch request,
+            // make sure to propogate the squash to the requester.
+            if (snoopPkt.prefetchSquashed()) {
+                pkt->setPrefetchSquashed();
+            }
         } else {
             cpuSidePort->sendAtomicSnoop(pkt);
             if (!alreadyResponded && pkt->memInhibitAsserted()) {
@@ -1419,6 +1425,17 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // and then do it later
     bool respond = blk->isDirty() && pkt->needsResponse();
     bool have_exclusive = blk->isWritable();
+
+    // Invalidate any prefetch's from below that would strip write permissions
+    // MemCmd::HardPFReq is only observed by upstream caches.  After missing
+    // above and in it's own cache, a new MemCmd::ReadReq is created that
+    // downstream caches observe.
+    if (pkt->cmd == MemCmd::HardPFReq) {
+        DPRINTF(Cache, "Squashing prefetch from lower cache %#x\n",
+                pkt->getAddr());
+        pkt->setPrefetchSquashed();
+        return;
+    }
 
     if (pkt->isRead() && !invalidate) {
         assert(!needs_exclusive);
@@ -1502,6 +1519,14 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 
     Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
+
+    // Squash any prefetch requests from below on MSHR hits
+    if (mshr && pkt->cmd == MemCmd::HardPFReq) {
+        DPRINTF(Cache, "Squashing prefetch from lower cache on mshr hit %#x\n",
+                pkt->getAddr());
+        pkt->setPrefetchSquashed();
+        return;
+    }
 
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
@@ -1729,6 +1754,20 @@ Cache<TagStore>::getTimingPacket()
             snoop_pkt.setExpressSnoop();
             snoop_pkt.senderState = mshr;
             cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
+
+            // Check to see if the prefetch was squashed by an upper cache
+            if (snoop_pkt.prefetchSquashed()) {
+                DPRINTF(Cache, "Prefetch squashed by upper cache.  "
+                               "Deallocating mshr target %#x.\n", mshr->addr);
+
+                // Deallocate the mshr target
+                if (mshr->queue->forceDeallocateTarget(mshr)) {
+                    // Clear block if this deallocation resulted freed an
+                    // mshr when all had previously been utilized
+                    clearBlocked((BlockedCause)(mshr->queue->index));
+                }
+                return NULL;
+            }
 
             if (snoop_pkt.memInhibitAsserted()) {
                 markInService(mshr, &snoop_pkt);
