@@ -67,11 +67,11 @@ if args:
 # at the moment we stay with the default open-adaptive page policy,
 # and address mapping
 
-# start with the system itself, using a multi-layer 1 GHz
+# start with the system itself, using a multi-layer 1.5 GHz
 # bus/crossbar, delivering 64 bytes / 5 cycles (one header cycle)
-# which amounts to 12.8 GByte/s per layer and thus per port
+# which amounts to 19.2 GByte/s per layer and thus per port
 system = System(membus = NoncoherentBus(width = 16))
-system.clk_domain = SrcClockDomain(clock = '1GHz',
+system.clk_domain = SrcClockDomain(clock = '1.5GHz',
                                    voltage_domain =
                                    VoltageDomain(voltage = '1V'))
 
