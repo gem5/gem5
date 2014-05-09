@@ -777,6 +777,25 @@ class FunctorProxy : public ProxyInfo
     Result total() const { return (*functor)(); }
 };
 
+/**
+ * A proxy similar to the FunctorProxy, but allows calling a method of a bound
+ * object, instead of a global free-standing function.
+ */
+template <class T, class V>
+class MethodProxy : public ProxyInfo
+{
+  private:
+    T *object;
+    typedef V (T::*MethodPointer) () const;
+    MethodPointer method;
+
+  public:
+    MethodProxy(T *obj, MethodPointer meth) : object(obj), method(meth) {}
+    Counter value() const { return (object->*method)(); }
+    Result result() const { return (object->*method)(); }
+    Result total() const { return (object->*method)(); }
+};
+
 template <class Derived>
 class ValueBase : public DataWrap<Derived, ScalarInfoProxy>
 {
@@ -801,6 +820,22 @@ class ValueBase : public DataWrap<Derived, ScalarInfoProxy>
     functor(T &func)
     {
         proxy = new FunctorProxy<T>(func);
+        this->setInit();
+        return this->self();
+    }
+
+    /**
+     * Extended functor that calls the specified method of the provided object.
+     *
+     * @param obj Pointer to the object whose method should be called.
+     * @param method Pointer of the function / method of the object.
+     * @return Updated stats item.
+     */
+    template <class T, class V>
+    Derived &
+    method(T *obj,  V (T::*method)() const)
+    {
+        proxy = new MethodProxy<T,V>(obj, method);
         this->setInit();
         return this->self();
     }
