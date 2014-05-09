@@ -75,7 +75,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
     tWTR(p->tWTR), tRTW(p->tRTW), tBURST(p->tBURST),
-    tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
+    tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS), tWR(p->tWR),
     tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
@@ -559,9 +559,10 @@ DRAMCtrl::printParams() const
             "tREFI     %d ticks\n"                        \
             "tWTR      %d ticks\n"                        \
             "tRTW      %d ticks\n"                        \
+            "tWR       %d ticks\n"                        \
             "tXAW (%d) %d ticks\n",
             name(), tRCD, tCL, tRP, tBURST, tRFC, tREFI, tWTR,
-            tRTW, activationLimit, tXAW);
+            tRTW, tWR, activationLimit, tXAW);
 }
 
 void
@@ -807,7 +808,6 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
     Tick accLat = 0;
     Tick bankLat = 0;
     rowHitFlag = false;
-    Tick potentialActTick;
 
     const Bank& bank = dram_pkt->bankRef;
 
@@ -832,22 +832,27 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
             bankLat += tCL;
         }
     } else {
-        // Row-buffer miss, need to close existing row
-        // once tRAS has expired, then open the new one,
-        // then add cas latency.
-        Tick freeTime = std::max(bank.tRASDoneAt, bank.freeAt);
+        // Row-buffer miss, need to potentially close an existing row,
+        // then open the new one, then add CAS latency
+        Tick free_at = bank.freeAt;
+        Tick precharge_delay = 0;
 
-        if (freeTime > inTime)
-            accLat += freeTime - inTime;
+        // Check if we first need to precharge
+        if (bank.openRow != Bank::NO_ROW) {
+            free_at = std::max(bank.preAllowedAt, free_at);
+            precharge_delay = tRP;
+        }
 
-        // If the there is no open row, then there is no precharge
-        // delay, otherwise go with tRP
-        Tick precharge_delay = bank.openRow == Bank::NO_ROW ? 0 : tRP;
+        // If the earliest time to issue the command is in the future,
+        // add it to the access latency
+        if (free_at > inTime)
+            accLat += free_at - inTime;
 
-        //The bank is free, and you may be able to activate
-        potentialActTick = inTime + accLat + precharge_delay;
-        if (potentialActTick < bank.actAllowedAt)
-            accLat += bank.actAllowedAt - potentialActTick;
+        // We also need to account for the earliest activation time,
+        // and potentially add that as well to the access latency
+        Tick act_at = inTime + accLat + precharge_delay;
+        if (act_at < bank.actAllowedAt)
+            accLat += bank.actAllowedAt - act_at;
 
         accLat += precharge_delay + tRCD + tCL;
         bankLat += precharge_delay + tRCD + tCL;
@@ -860,8 +865,8 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
 }
 
 void
-DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
-                         uint16_t row)
+DRAMCtrl::activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
+                       uint16_t row, Bank& bank_ref)
 {
     assert(0 <= rank && rank < ranksPerChannel);
     assert(actTicks[rank].size() == activationLimit);
@@ -869,14 +874,14 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
     // update the open row
-    assert(banks[rank][bank].openRow == Bank::NO_ROW);
-    banks[rank][bank].openRow = row;
+    assert(bank_ref.openRow == Bank::NO_ROW);
+    bank_ref.openRow = row;
 
     // start counting anew, this covers both the case when we
     // auto-precharged, and when this access is forced to
     // precharge
-    banks[rank][bank].bytesAccessed = 0;
-    banks[rank][bank].rowAccesses = 0;
+    bank_ref.bytesAccessed = 0;
+    bank_ref.rowAccesses = 0;
 
     ++numBanksActive;
     assert(numBanksActive <= banksPerRank * ranksPerChannel);
@@ -886,14 +891,11 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
 
     // start by enforcing tRRD
     for(int i = 0; i < banksPerRank; i++) {
-        // next activate must not happen before tRRD
-        banks[rank][i].actAllowedAt = act_tick + tRRD;
+        // next activate to any bank in this rank must not happen
+        // before tRRD
+        banks[rank][i].actAllowedAt = std::max(act_tick + tRRD,
+                                               banks[rank][i].actAllowedAt);
     }
-
-    // tRC should be added to activation tick of the bank currently accessed,
-    // where tRC = tRAS + tRP, this is just for a check as actAllowedAt for same
-    // bank is already captured by bank.freeAt and bank.tRASDoneAt
-    banks[rank][bank].actAllowedAt = act_tick + tRAS + tRP;
 
     // next, we deal with tXAW, if the activation limit is disabled
     // then we are done
@@ -902,10 +904,9 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
 
     // sanity check
     if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
-        // @todo For now, stick with a warning
-        warn("Got %d activates in window %d (%d - %d) which is smaller "
-             "than %d\n", activationLimit, act_tick - actTicks[rank].back(),
-             act_tick, actTicks[rank].back(), tXAW);
+        panic("Got %d activates in window %d (%llu - %llu) which is smaller "
+              "than %llu\n", activationLimit, act_tick - actTicks[rank].back(),
+              act_tick, actTicks[rank].back(), tXAW);
     }
 
     // shift the times used for the book keeping, the last element
@@ -920,10 +921,12 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
     // oldest in our window of X
     if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
         DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate no earlier "
-                "than %d\n", activationLimit, actTicks[rank].back() + tXAW);
+                "than %llu\n", activationLimit, actTicks[rank].back() + tXAW);
             for(int j = 0; j < banksPerRank; j++)
                 // next activate must not happen before end of window
-                banks[rank][j].actAllowedAt = actTicks[rank].back() + tXAW;
+                banks[rank][j].actAllowedAt =
+                    std::max(actTicks[rank].back() + tXAW,
+                             banks[rank][j].actAllowedAt);
     }
 
     // at the point when this activate takes place, make sure we
@@ -1006,9 +1009,19 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // to estimateLatency(). However, between then and now, both the
     // accessLatency and/or busBusyUntil may have changed. We need
     // to correct for that.
-
     Tick addDelay = (curTick() + accessLat < busBusyUntil) ?
         busBusyUntil - (curTick() + accessLat) : 0;
+
+    // Update request parameters
+    dram_pkt->readyTime = curTick() + addDelay + accessLat + tBURST;
+
+    DPRINTF(DRAM, "Req %lld: curtick is %lld accessLat is %d " \
+                  "readytime is %lld busbusyuntil is %lld. " \
+                  "Scheduling at readyTime\n", dram_pkt->addr,
+                   curTick(), accessLat, dram_pkt->readyTime, busBusyUntil);
+
+    // Make sure requests are not overlapping on the databus
+    assert(dram_pkt->readyTime - busBusyUntil >= tBURST);
 
     Bank& bank = dram_pkt->bankRef;
 
@@ -1019,7 +1032,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         // If there is a page open, precharge it.
         if (bank.openRow != Bank::NO_ROW) {
             prechargeBank(bank, std::max(std::max(bank.freeAt,
-                                                  bank.tRASDoneAt),
+                                                  bank.preAllowedAt),
                                          curTick()) + tRP);
         }
 
@@ -1030,13 +1043,29 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         // any waiting for banks account for in freeAt
         actTick = bank.freeAt - tCL - tRCD;
 
-        // If you activated a new row do to this access, the next access
-        // will have to respect tRAS for this bank
-        bank.tRASDoneAt = actTick + tRAS;
+        // The next access has to respect tRAS for this bank
+        bank.preAllowedAt = actTick + tRAS;
 
-        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank,
-                       dram_pkt->row);
+        // Record the activation and deal with all the global timing
+        // constraints caused be a new activation (tRRD and tXAW)
+        activateBank(actTick, dram_pkt->rank, dram_pkt->bank,
+                     dram_pkt->row, bank);
+
     }
+
+    // If this is a write, we also need to respect the write
+    // recovery time before a precharge
+    if (!dram_pkt->isRead) {
+        bank.preAllowedAt = std::max(bank.preAllowedAt,
+                                     dram_pkt->readyTime + tWR);
+    }
+
+    // We also have to respect tRP, and any constraints on when we may
+    // precharge the bank, in the case of reads this is really only
+    // going to cause any change if we did not have a row hit and are
+    // now forced to respect tRAS
+    bank.actAllowedAt = std::max(bank.actAllowedAt,
+                                 bank.preAllowedAt + tRP);
 
     // increment the bytes accessed and the accesses per row
     bank.bytesAccessed += burstSize;
@@ -1094,23 +1123,12 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // if this access should use auto-precharge, then we are
     // closing the row
     if (auto_precharge) {
-        prechargeBank(bank, std::max(bank.freeAt, bank.tRASDoneAt) + tRP);
+        prechargeBank(bank, std::max(bank.freeAt, bank.preAllowedAt) + tRP);
 
         DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
     }
 
     DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
-
-    // Update request parameters
-    dram_pkt->readyTime = curTick() + addDelay + accessLat + tBURST;
-
-    DPRINTF(DRAM, "Req %lld: curtick is %lld accessLat is %d " \
-                  "readytime is %lld busbusyuntil is %lld. " \
-                  "Scheduling at readyTime\n", dram_pkt->addr,
-                   curTick(), accessLat, dram_pkt->readyTime, busBusyUntil);
-
-    // Make sure requests are not overlapping on the databus
-    assert(dram_pkt->readyTime - busBusyUntil >= tBURST);
 
     // Update bus state
     busBusyUntil = dram_pkt->readyTime;
@@ -1412,7 +1430,7 @@ DRAMCtrl::processRefreshEvent()
                         // constraints
                         Tick free_at =
                             std::max(std::max(banks[i][j].freeAt,
-                                              banks[i][j].tRASDoneAt),
+                                              banks[i][j].preAllowedAt),
                                      curTick()) + tRP;
 
                         prechargeBank(banks[i][j], free_at);

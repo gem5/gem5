@@ -132,6 +132,9 @@ class DRAMCtrl(AbstractMemory):
     # minimum time between an activate and a precharge to the same row
     tRAS = Param.Latency("ACT to PRE delay")
 
+    # minimum time between a write data transfer and a precharge
+    tWR = Param.Latency("Write recovery time")
+
     # time to complete a burst transfer, typically the burst length
     # divided by two due to the DDR bus, but by making it a parameter
     # it is easier to also evaluate SDR memories like WideIO.
@@ -194,6 +197,7 @@ class DDR3_1600_x64(DRAMCtrl):
     tCL = '13.75ns'
     tRP = '13.75ns'
     tRAS = '35ns'
+    tWR = '15ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
@@ -252,6 +256,7 @@ class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     tCL = '15ns'
     tRP = '15ns'
     tRAS = '36ns'
+    tWR = '15ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 666.66 MHz.
     # Note this is a BL8 DDR device.
@@ -307,6 +312,7 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     tRP = '15ns'
 
     tRAS = '42ns'
+    tWR = '15ns'
 
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
@@ -358,6 +364,7 @@ class WideIO_200_x128(DRAMCtrl):
     tCL = '18ns'
     tRP = '18ns'
     tRAS = '42ns'
+    tWR = '15ns'
 
     # 4 beats across an x128 SDR interface translates to 4 clocks @ 200 MHz.
     # Note this is a BL4 SDR device.
@@ -411,6 +418,7 @@ class LPDDR3_1600_x32(DRAMCtrl):
     tCL = '15ns'
 
     tRAS = '42ns'
+    tWR = '15ns'
 
     # Pre-charge one bank 15 ns (all banks 18 ns)
     tRP = '15ns'

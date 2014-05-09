@@ -143,10 +143,13 @@ class DRAMCtrl : public AbstractMemory
     std::vector<std::deque<Tick>> actTicks;
 
     /**
-     * A basic class to track the bank state indirectly via times
-     * "freeAt" and "tRASDoneAt" and what page is currently open. The
-     * bank also keeps track of how many bytes have been accessed in
-     * the open row since it was opened.
+     * A basic class to track the bank state, i.e. what row is
+     * currently open (if any), when is the bank free to accept a new
+     * command, when can it be precharged, and when can it be
+     * activated.
+     *
+     * The bank also keeps track of how many bytes have been accessed
+     * in the open row since it was opened.
      */
     class Bank
     {
@@ -158,14 +161,14 @@ class DRAMCtrl : public AbstractMemory
         uint32_t openRow;
 
         Tick freeAt;
-        Tick tRASDoneAt;
+        Tick preAllowedAt;
         Tick actAllowedAt;
 
         uint32_t rowAccesses;
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(NO_ROW), freeAt(0), tRASDoneAt(0), actAllowedAt(0),
+            openRow(NO_ROW), freeAt(0), preAllowedAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
     };
@@ -410,9 +413,15 @@ class DRAMCtrl : public AbstractMemory
      * the maximum number of activations in the activation window. The
      * method updates the time that the banks become available based
      * on the current limits.
+     *
+     * @param act_tick Time when the activation takes place
+     * @param rank Index of the rank
+     * @param bank Index of the bank
+     * @param row Index of the row
+     * @param bank_ref Reference to the bank
      */
-    void recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
-                        uint16_t row);
+    void activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
+                      uint16_t row, Bank& bank_ref);
 
     /**
      * Precharge a given bank and also update when the precharge is
@@ -420,9 +429,9 @@ class DRAMCtrl : public AbstractMemory
      * accesses to the open page.
      *
      * @param bank The bank to precharge
-     * @param free_at Time when the precharge is done
+     * @param pre_done_at Time when the precharge is done
      */
-    void prechargeBank(Bank& bank, Tick free_at);
+    void prechargeBank(Bank& bank, Tick pre_done_at);
 
     void printParams() const;
 
@@ -495,6 +504,7 @@ class DRAMCtrl : public AbstractMemory
     const Tick tCL;
     const Tick tRP;
     const Tick tRAS;
+    const Tick tWR;
     const Tick tRFC;
     const Tick tREFI;
     const Tick tRRD;
