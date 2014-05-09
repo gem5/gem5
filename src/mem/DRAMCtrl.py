@@ -119,6 +119,9 @@ class DRAMCtrl(AbstractMemory):
 
     # timing behaviour and constraints - all in nanoseconds
 
+    # the base clock period of the DRAM
+    tCK = Param.Latency("Clock period")
+
     # the amount of time in nanoseconds from issuing an activate command
     # to the data being available in the row buffer for a read/write
     tRCD = Param.Latency("RAS to CAS delay")
@@ -195,6 +198,9 @@ class DDR3_1600_x64(DRAMCtrl):
     # DDR3 has 8 banks in all configurations
     banks_per_rank = 8
 
+    # 800 MHz
+    tCK = '1.25ns'
+
     # DDR3-1600 11-11-11-28
     tRCD = '13.75ns'
     tCL = '13.75ns'
@@ -256,6 +262,9 @@ class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     # DDR3 has 8 banks in all configurations
     banks_per_rank = 8
 
+    # 666 MHs
+    tCK = '1.5ns'
+
     tRCD = '15ns'
     tCL = '15ns'
     tRP = '15ns'
@@ -306,6 +315,9 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
 
     # LPDDR2-S4 has 8 banks in all configurations
     banks_per_rank = 8
+
+    # 533 MHz
+    tCK = '1.876ns'
 
     # Fixed at 15 ns
     tRCD = '15ns'
@@ -367,6 +379,9 @@ class WideIO_200_x128(DRAMCtrl):
     # WideIO has 4 banks in all configurations
     banks_per_rank = 4
 
+    # 200 MHz
+    tCK = '5ns'
+
     # WIO-200
     tRCD = '18ns'
     tCL = '18ns'
@@ -420,6 +435,9 @@ class LPDDR3_1600_x32(DRAMCtrl):
 
     # LPDDR3 has 8 banks in all configurations
     banks_per_rank = 8
+
+    # 800 MHz
+    tCK = '1.25ns'
 
     # Fixed at 15 ns
     tRCD = '15ns'

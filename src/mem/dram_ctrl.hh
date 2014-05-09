@@ -468,6 +468,7 @@ class DRAMCtrl : public AbstractMemory
      * Basic memory timing parameters initialized based on parameter
      * values.
      */
+    const Tick tCK;
     const Tick tWTR;
     const Tick tRTW;
     const Tick tBURST;
