@@ -56,8 +56,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     port(name() + ".port", *this),
     retryRdReq(false), retryWrReq(false),
     rowHitFlag(false), busState(READ),
-    respondEvent(this),
-    refreshEvent(this), nextReqEvent(this), drainManager(NULL),
+    respondEvent(this), refreshEvent(this),
+    nextReqEvent(this), drainManager(NULL),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
     deviceRowBufferSize(p->device_rowbuffer_size),
     devicesPerRank(p->devices_per_rank),
@@ -81,8 +81,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     maxAccessesPerRow(p->max_accesses_per_row),
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
-    busBusyUntil(0),  prevArrival(0),
-    nextReqTime(0), startTickPrechargeAll(0), numBanksActive(0)
+    busBusyUntil(0), refreshDueAt(0), refreshState(REF_IDLE), prevArrival(0),
+    nextReqTime(0), idleStartTick(0), numBanksActive(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -131,6 +131,12 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
                       "address map\n", name());
         }
     }
+
+    // some basic sanity checks
+    if (tREFI <= tRP || tREFI <= tRFC) {
+        fatal("tREFI (%d) must be larger than tRP (%d) and tRFC (%d)\n",
+              tREFI, tRP, tRFC);
+    }
 }
 
 void
@@ -148,7 +154,7 @@ DRAMCtrl::startup()
 {
     // update the start tick for the precharge accounting to the
     // current tick
-    startTickPrechargeAll = curTick();
+    idleStartTick = curTick();
 
     // shift the bus busy time sufficiently far ahead that we never
     // have to worry about negative values when computing the time for
@@ -159,8 +165,9 @@ DRAMCtrl::startup()
     // print the configuration of the controller
     printParams();
 
-    // kick off the refresh
-    schedule(refreshEvent, curTick() + tREFI);
+    // kick off the refresh, and give ourselves enough time to
+    // precharge
+    schedule(refreshEvent, curTick() + tREFI - tRP);
 }
 
 Tick
@@ -835,7 +842,7 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
 
             // If the there is no open row (open adaptive), then there
             // is no precharge delay, otherwise go with tRP
-            Tick precharge_delay = bank.openRow == -1 ? 0 : tRP;
+            Tick precharge_delay = bank.openRow == Bank::NO_ROW ? 0 : tRP;
 
             //The bank is free, and you may be able to activate
             potentialActTick = inTime + accLat + precharge_delay;
@@ -870,28 +877,39 @@ DRAMCtrl::estimateLatency(DRAMPacket* dram_pkt, Tick inTime)
 }
 
 void
-DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
+DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
+                         uint16_t row)
 {
     assert(0 <= rank && rank < ranksPerChannel);
     assert(actTicks[rank].size() == activationLimit);
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
-    // Tracking accesses after all banks are precharged.
-    // startTickPrechargeAll: is the tick when all the banks were again
-    // precharged. The difference between act_tick and startTickPrechargeAll
-    // gives the time for which DRAM doesn't get any accesses after refreshing
-    // or after a page is closed in closed-page or open-adaptive-page policy.
-    if ((numBanksActive == 0) && (act_tick > startTickPrechargeAll)) {
-        prechargeAllTime += act_tick - startTickPrechargeAll;
+    // idleStartTick is the tick when all the banks were
+    // precharged. Thus, the difference between act_tick and
+    // idleStartTick gives the time for which the DRAM is in an idle
+    // state with all banks precharged. Note that we may end up
+    // "changing history" by scheduling an activation before an
+    // already scheduled precharge, effectively canceling it out.
+    if (numBanksActive == 0 && act_tick > idleStartTick) {
+        prechargeAllTime += act_tick - idleStartTick;
     }
 
-    // No need to update number of active banks for closed-page policy as only 1
-    // bank will be activated at any given point, which will be instatntly
-    // precharged
-    if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
-        pageMgmt == Enums::close_adaptive)
-        ++numBanksActive;
+    // update the open row
+    assert(banks[rank][bank].openRow == Bank::NO_ROW);
+    banks[rank][bank].openRow = row;
+
+    // start counting anew, this covers both the case when we
+    // auto-precharged, and when this access is forced to
+    // precharge
+    banks[rank][bank].bytesAccessed = 0;
+    banks[rank][bank].rowAccesses = 0;
+
+    ++numBanksActive;
+    assert(numBanksActive <= banksPerRank * ranksPerChannel);
+
+    DPRINTF(DRAM, "Activate bank at tick %lld, now got %d active\n",
+            act_tick, numBanksActive);
 
     // start by enforcing tRRD
     for(int i = 0; i < banksPerRank; i++) {
@@ -936,6 +954,35 @@ DRAMCtrl::recordActivate(Tick act_tick, uint8_t rank, uint8_t bank)
 }
 
 void
+DRAMCtrl::prechargeBank(Bank& bank, Tick free_at)
+{
+    // make sure the bank has an open row
+    assert(bank.openRow != Bank::NO_ROW);
+
+    // sample the bytes per activate here since we are closing
+    // the page
+    bytesPerActivate.sample(bank.bytesAccessed);
+
+    bank.openRow = Bank::NO_ROW;
+
+    bank.freeAt = free_at;
+
+    assert(numBanksActive != 0);
+    --numBanksActive;
+
+    DPRINTF(DRAM, "Precharged bank, done at tick %lld, now got %d active\n",
+            bank.freeAt, numBanksActive);
+
+    // if we reached zero, then special conditions apply as we track
+    // if all banks are precharged for the power models
+    if (numBanksActive == 0) {
+        idleStartTick = std::max(idleStartTick, bank.freeAt);
+        DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
+                idleStartTick);
+    }
+}
+
+void
 DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 {
 
@@ -961,30 +1008,30 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // Update bank state
     if (pageMgmt == Enums::open || pageMgmt == Enums::open_adaptive ||
         pageMgmt == Enums::close_adaptive) {
-        bank.freeAt = curTick() + addDelay + accessLat;
 
-        // If you activated a new row do to this access, the next access
-        // will have to respect tRAS for this bank.
-        if (!rowHitFlag) {
+        if (rowHitFlag) {
+            bank.freeAt = curTick() + addDelay + accessLat;
+        } else {
+            // If there is a page open, precharge it.
+            if (bank.openRow != Bank::NO_ROW) {
+                prechargeBank(bank, std::max(std::max(bank.freeAt,
+                                                      bank.tRASDoneAt),
+                                             curTick()) + tRP);
+            }
+
+            // Any precharge is already part of the latency
+            // estimation, so update the bank free time
+            bank.freeAt = curTick() + addDelay + accessLat;
+
             // any waiting for banks account for in freeAt
             actTick = bank.freeAt - tCL - tRCD;
+
+            // If you activated a new row do to this access, the next access
+            // will have to respect tRAS for this bank
             bank.tRASDoneAt = actTick + tRAS;
-            recordActivate(actTick, dram_pkt->rank, dram_pkt->bank);
 
-            // if we closed an open row as a result of this access,
-            // then sample the number of bytes accessed before
-            // resetting it
-            if (bank.openRow != -1)
-                bytesPerActivate.sample(bank.bytesAccessed);
-
-            // update the open row
-            bank.openRow = dram_pkt->row;
-
-            // start counting anew, this covers both the case when we
-            // auto-precharged, and when this access is forced to
-            // precharge
-            bank.bytesAccessed = 0;
-            bank.rowAccesses = 0;
+            recordActivate(actTick, dram_pkt->rank, dram_pkt->bank,
+                           dram_pkt->row);
         }
 
         // increment the bytes accessed and the accesses per row
@@ -1042,19 +1089,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         // if this access should use auto-precharge, then we are
         // closing the row
         if (auto_precharge) {
-            bank.openRow = -1;
-            bank.freeAt = std::max(bank.freeAt, bank.tRASDoneAt) + tRP;
-            --numBanksActive;
-            if (numBanksActive == 0) {
-                startTickPrechargeAll = std::max(startTickPrechargeAll,
-                                                 bank.freeAt);
-                DPRINTF(DRAM, "All banks precharged at tick: %ld\n",
-                        startTickPrechargeAll);
-            }
-
-            // sample the bytes per activate here since we are closing
-            // the page
-            bytesPerActivate.sample(bank.bytesAccessed);
+            prechargeBank(bank, std::max(bank.freeAt, bank.tRASDoneAt) + tRP);
 
             DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
         }
@@ -1062,16 +1097,17 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
     } else if (pageMgmt == Enums::close) {
         actTick = curTick() + addDelay + accessLat - tRCD - tCL;
-        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank);
+        recordActivate(actTick, dram_pkt->rank, dram_pkt->bank, dram_pkt->row);
 
-        // If the DRAM has a very quick tRAS, bank can be made free
-        // after consecutive tCL,tRCD,tRP times. In general, however,
-        // an additional wait is required to respect tRAS.
-        bank.freeAt = std::max(actTick + tRAS + tRP,
-                actTick + tRCD + tCL + tRP);
+        bank.freeAt = actTick + tRCD + tCL;
+        bank.tRASDoneAt = actTick + tRAS;
+
+        // sample the relevant values when precharging
+        bank.bytesAccessed = burstSize;
+        bank.rowAccesses = 1;
+
+        prechargeBank(bank, std::max(bank.freeAt, bank.tRASDoneAt) + tRP);
         DPRINTF(DRAM, "doDRAMAccess::bank.freeAt is %lld\n", bank.freeAt);
-        bytesPerActivate.sample(burstSize);
-        startTickPrechargeAll = std::max(startTickPrechargeAll, bank.freeAt);
     } else
         panic("No page management policy chosen\n");
 
@@ -1187,6 +1223,22 @@ DRAMCtrl::processNextReqEvent()
         busState = READ;
     }
 
+    if (refreshState != REF_IDLE) {
+        // if a refresh waiting for this event loop to finish, then hand
+        // over now, and do not schedule a new nextReqEvent
+        if (refreshState == REF_DRAIN) {
+            DPRINTF(DRAM, "Refresh drain done, now precharging\n");
+
+            refreshState = REF_PRE;
+
+            // hand control back to the refresh event loop
+            schedule(refreshEvent, curTick());
+        }
+
+        // let the refresh finish before issuing any further requests
+        return;
+    }
+
     // when we get here it is either a read or a write
     if (busState == READ) {
 
@@ -1298,18 +1350,6 @@ DRAMCtrl::processNextReqEvent()
     }
 }
 
-Tick
-DRAMCtrl::maxBankFreeAt() const
-{
-    Tick banksFree = 0;
-
-    for(int i = 0; i < ranksPerChannel; i++)
-        for(int j = 0; j < banksPerRank; j++)
-            banksFree = std::max(banks[i][j].freeAt, banksFree);
-
-    return banksFree;
-}
-
 uint64_t
 DRAMCtrl::minBankFreeAt(const deque<DRAMPacket*>& queue) const
 {
@@ -1345,21 +1385,97 @@ DRAMCtrl::minBankFreeAt(const deque<DRAMPacket*>& queue) const
 void
 DRAMCtrl::processRefreshEvent()
 {
-    DPRINTF(DRAM, "Refreshing at tick %ld\n", curTick());
+    // when first preparing the refresh, remember when it was due
+    if (refreshState == REF_IDLE) {
+        // remember when the refresh is due
+        refreshDueAt = curTick();
 
-    Tick banksFree = std::max(curTick(), maxBankFreeAt()) + tRFC;
+        // proceed to drain
+        refreshState = REF_DRAIN;
 
-    for(int i = 0; i < ranksPerChannel; i++)
-        for(int j = 0; j < banksPerRank; j++) {
-            banks[i][j].freeAt = banksFree;
-            banks[i][j].openRow = -1;
+        DPRINTF(DRAM, "Refresh due\n");
+    }
+
+    // let any scheduled read or write go ahead, after which it will
+    // hand control back to this event loop
+    if (refreshState == REF_DRAIN) {
+        if (nextReqEvent.scheduled()) {
+            // hand control over to the request loop until it is
+            // evaluated next
+            DPRINTF(DRAM, "Refresh awaiting draining\n");
+
+            return;
+        } else {
+            refreshState = REF_PRE;
+        }
+    }
+
+    // at this point, ensure that all banks are precharged
+    if (refreshState == REF_PRE) {
+        DPRINTF(DRAM, "Precharging all\n");
+
+        // precharge any active bank
+        for (int i = 0; i < ranksPerChannel; i++) {
+            for (int j = 0; j < banksPerRank; j++) {
+                if (banks[i][j].openRow != Bank::NO_ROW) {
+                    // respect both causality and any existing bank
+                    // constraints
+                    Tick free_at = std::max(std::max(banks[i][j].freeAt,
+                                                     banks[i][j].tRASDoneAt),
+                                            curTick()) + tRP;
+
+                    prechargeBank(banks[i][j], free_at);
+                }
+            }
         }
 
-    // updating startTickPrechargeAll, isprechargeAll
-    numBanksActive = 0;
-    startTickPrechargeAll = banksFree;
+        if (numBanksActive != 0)
+            panic("Refresh scheduled with %d active banks\n", numBanksActive);
 
-    schedule(refreshEvent, curTick() + tREFI);
+        // advance the state
+        refreshState = REF_RUN;
+
+        // call ourselves in the future
+        schedule(refreshEvent, std::max(curTick(), idleStartTick));
+        return;
+    }
+
+    // last but not least we perform the actual refresh
+    if (refreshState == REF_RUN) {
+        // should never get here with any banks active
+        assert(numBanksActive == 0);
+
+        Tick banksFree = curTick() + tRFC;
+
+        for (int i = 0; i < ranksPerChannel; i++) {
+            for (int j = 0; j < banksPerRank; j++) {
+                banks[i][j].freeAt = banksFree;
+            }
+        }
+
+        // make sure we did not wait so long that we cannot make up
+        // for it
+        if (refreshDueAt + tREFI < banksFree) {
+            fatal("Refresh was delayed so long we cannot catch up\n");
+        }
+
+        // compensate for the delay in actually performing the refresh
+        // when scheduling the next one
+        schedule(refreshEvent, refreshDueAt + tREFI - tRP);
+
+        // back to business as usual
+        refreshState = REF_IDLE;
+
+        // we are now refreshing until tRFC is done
+        idleStartTick = banksFree;
+
+        // kick the normal request processing loop into action again
+        // as early as possible, i.e. when the request is done, the
+        // scheduling of this event also prevents any new requests
+        // from going ahead before the scheduled point in time
+        nextReqTime = banksFree;
+        schedule(nextReqEvent, nextReqTime);
+    }
 }
 
 void

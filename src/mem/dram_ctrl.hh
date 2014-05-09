@@ -153,7 +153,7 @@ class DRAMCtrl : public AbstractMemory
 
       public:
 
-        static const uint32_t INVALID_ROW = -1;
+        static const uint32_t NO_ROW = -1;
 
         uint32_t openRow;
 
@@ -165,7 +165,7 @@ class DRAMCtrl : public AbstractMemory
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(INVALID_ROW), freeAt(0), tRASDoneAt(0), actAllowedAt(0),
+            openRow(NO_ROW), freeAt(0), tRASDoneAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
     };
@@ -389,14 +389,6 @@ class DRAMCtrl : public AbstractMemory
     void reorderQueue(std::deque<DRAMPacket*>& queue);
 
     /**
-     * Looking at all banks, determine the moment in time when they
-     * are all free.
-     *
-     * @return The tick when all banks are free
-     */
-    Tick maxBankFreeAt() const;
-
-    /**
      * Find which are the earliest available banks for the enqueued
      * requests. Assumes maximum of 64 banks per DIMM
      *
@@ -411,7 +403,18 @@ class DRAMCtrl : public AbstractMemory
      * method updates the time that the banks become available based
      * on the current limits.
      */
-    void recordActivate(Tick act_tick, uint8_t rank, uint8_t bank);
+    void recordActivate(Tick act_tick, uint8_t rank, uint8_t bank,
+                        uint16_t row);
+
+    /**
+     * Precharge a given bank and also update when the precharge is
+     * done. This will also deal with any stats related to the
+     * accesses to the open page.
+     *
+     * @param bank The bank to precharge
+     * @param free_at Time when the precharge is done
+     */
+    void prechargeBank(Bank& bank, Tick free_at);
 
     void printParams() const;
 
@@ -523,6 +526,29 @@ class DRAMCtrl : public AbstractMemory
      */
     Tick busBusyUntil;
 
+    /**
+     * Keep track of when a refresh is due.
+     */
+    Tick refreshDueAt;
+
+    /**
+     * The refresh state is used to control the progress of the
+     * refresh scheduling. When normal operation is in progress the
+     * refresh state is idle. From there, it progresses to the refresh
+     * drain state once tREFI has passed. The refresh drain state
+     * captures the DRAM row active state, as it will stay there until
+     * all ongoing accesses complete. Thereafter all banks are
+     * precharged, and lastly, the DRAM is refreshed.
+     */
+    enum RefreshState {
+        REF_IDLE = 0,
+        REF_DRAIN,
+        REF_PRE,
+        REF_RUN
+    };
+
+    RefreshState refreshState;
+
     Tick prevArrival;
 
     /**
@@ -597,8 +623,10 @@ class DRAMCtrl : public AbstractMemory
     Stats::Formula prechargeAllPercent;
     Stats::Scalar prechargeAllTime;
 
-    // To track number of cycles all the banks are precharged
-    Tick startTickPrechargeAll;
+    // To track number of cycles the DRAM is idle, i.e. all the banks
+    // are precharged
+    Tick idleStartTick;
+
     // To track number of banks which are currently active
     unsigned int numBanksActive;
 
