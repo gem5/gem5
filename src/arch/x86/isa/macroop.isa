@@ -110,7 +110,7 @@ def template MacroDisassembly {{
 
 // Basic instruction class constructor template.
 def template MacroConstructor {{
-        inline X86Macroop::%(class_name)s::%(class_name)s(
+        X86Macroop::%(class_name)s::%(class_name)s(
                 ExtMachInst machInst, EmulEnv _env)
             : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s, _env)
         {

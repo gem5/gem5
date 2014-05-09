@@ -254,7 +254,7 @@ def template MicroLdStOpDeclare {{
 }};
 
 def template MicroLdStOpConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
             uint64_t _disp, InstRegIndex _segment,

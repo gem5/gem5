@@ -84,7 +84,7 @@ def template SeqOpExecute {{
 }};
 
 output decoder {{
-    inline SeqOpBase::SeqOpBase(
+    SeqOpBase::SeqOpBase(
             ExtMachInst machInst, const char * mnemonic, const char * instMnem,
             uint64_t setFlags, uint16_t _target, uint8_t _cc) :
         X86MicroopBase(machInst, mnemonic, instMnem, setFlags, No_OpClass),
@@ -94,7 +94,7 @@ output decoder {{
 }};
 
 def template SeqOpConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             uint64_t setFlags, uint16_t _target, uint8_t _cc) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,

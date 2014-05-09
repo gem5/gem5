@@ -74,7 +74,7 @@ def template MediaOpImmDeclare {{
 }};
 
 def template MediaOpRegConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
@@ -87,7 +87,7 @@ def template MediaOpRegConstructor {{
 }};
 
 def template MediaOpImmConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :

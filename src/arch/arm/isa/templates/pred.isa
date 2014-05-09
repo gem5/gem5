@@ -62,7 +62,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           uint32_t _imm,
@@ -101,7 +101,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -146,7 +146,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataRegRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,

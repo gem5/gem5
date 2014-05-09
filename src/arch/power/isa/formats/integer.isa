@@ -36,7 +36,7 @@
 
 // Instruction class constructor template when Rc is set.
 def template IntRcConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
                 rcSet = true;
@@ -46,7 +46,7 @@ def template IntRcConstructor {{
 
 // Instruction class constructor template when OE is set.
 def template IntOeConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
                 oeSet = true;
@@ -56,7 +56,7 @@ def template IntOeConstructor {{
 
 // Instruction class constructor template when both Rc and OE are set.
 def template IntRcOeConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
                 rcSet = true;

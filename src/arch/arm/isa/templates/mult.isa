@@ -49,7 +49,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template Mult3Constructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _reg0,
                                           IntRegIndex _reg1,
                                           IntRegIndex _reg2)
@@ -78,7 +78,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template Mult4Constructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _reg0,
                                           IntRegIndex _reg1,
                                           IntRegIndex _reg2,

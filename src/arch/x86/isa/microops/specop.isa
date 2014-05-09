@@ -112,7 +112,7 @@ output exec {{
 }};
 
 output decoder {{
-    inline MicroFaultBase::MicroFaultBase(
+    MicroFaultBase::MicroFaultBase(
             ExtMachInst machInst, const char * instMnem,
             uint64_t setFlags, Fault _fault, uint8_t _cc) :
         X86MicroopBase(machInst, "fault", instMnem, setFlags, No_OpClass),
@@ -122,7 +122,7 @@ output decoder {{
 }};
 
 def template MicroFaultConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             Fault _fault, uint8_t _cc) :
         %(base_class)s(machInst, instMnem, setFlags, _fault, _cc)
@@ -219,7 +219,7 @@ def template MicroFenceOpDeclare {{
 }};
 
 def template MicroFenceOpConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 setFlags, %(op_class)s)

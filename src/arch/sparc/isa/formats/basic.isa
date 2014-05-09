@@ -93,7 +93,7 @@ def template BasicDeclareWithMnemonic {{
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
@@ -102,7 +102,7 @@ def template BasicConstructor {{
 
 // Basic instruction class constructor template.
 def template BasicConstructorWithMnemonic {{
-        inline %(class_name)s::%(class_name)s(const char * mnemonic,
+        %(class_name)s::%(class_name)s(const char * mnemonic,
                 ExtMachInst machInst)
             : %(base_class)s(mnemonic, machInst, %(op_class)s)
         {

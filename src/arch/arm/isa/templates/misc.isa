@@ -49,7 +49,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MrsConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
@@ -78,7 +78,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MrsBankedRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           uint8_t     _sysM,
                                           bool        _r)
@@ -109,7 +109,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MsrBankedRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           uint8_t     _sysM,
                                           bool        _r)
@@ -137,7 +137,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MsrRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           uint8_t mask)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, mask)
@@ -163,7 +163,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MsrImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           uint32_t imm,
                                           uint8_t mask)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm, mask)
@@ -190,7 +190,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MrrcOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex op1,
                                           IntRegIndex dest,
                                           IntRegIndex dest2,
@@ -220,7 +220,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template McrrOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex op1,
                                           IntRegIndex op2,
                                           IntRegIndex dest,
@@ -249,7 +249,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template ImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
@@ -273,7 +273,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, uint64_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
@@ -299,7 +299,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest, IntRegIndex _op1)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
@@ -326,7 +326,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegRegImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -357,7 +357,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegRegRegOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -387,7 +387,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegRegOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2)
@@ -417,7 +417,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           uint64_t _imm)
@@ -446,7 +446,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegImmImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           uint64_t _imm1,
                                           uint64_t _imm2)
@@ -476,7 +476,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegRegImmImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           uint64_t _imm1,
@@ -506,7 +506,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegImmRegOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           uint64_t _imm,
                                           IntRegIndex _op1)
@@ -536,7 +536,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template RegImmRegShiftOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           uint64_t _imm,
                                           IntRegIndex _op1,

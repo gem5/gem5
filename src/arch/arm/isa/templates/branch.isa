@@ -48,7 +48,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template BranchImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           int32_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
@@ -81,7 +81,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template BranchImmCondConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           int32_t _imm,
                                           ConditionCode _condCode)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
@@ -110,7 +110,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template BranchRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
     {
@@ -140,7 +140,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template BranchRegCondConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           ConditionCode _condCode)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
@@ -187,7 +187,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template BranchRegRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
@@ -218,7 +218,7 @@ class %(class_name)s : public %(base_class)s
 // Only used by CBNZ, CBZ which is conditional based on
 // a register value even though the instruction is always unconditional.
 def template BranchImmRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           int32_t _imm,
                                           IntRegIndex _op1)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _op1)

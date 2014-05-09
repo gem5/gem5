@@ -186,7 +186,7 @@ output decoder {{
 }};
 
 def template ControlRegConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)
             : %(base_class)s("%(mnemonic)s", machInst,
                     %(op_class)s, "%(reg_name)s")
         {

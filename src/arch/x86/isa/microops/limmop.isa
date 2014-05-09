@@ -90,7 +90,7 @@ def template MicroLimmOpDisassembly {{
 }};
 
 def template MicroLimmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,

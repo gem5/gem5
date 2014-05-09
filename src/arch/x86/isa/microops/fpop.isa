@@ -88,7 +88,7 @@ def template MicroFpOpDeclare {{
 }};
 
 def template MicroFpOpConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, int8_t _spm) :

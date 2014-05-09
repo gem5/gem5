@@ -589,7 +589,7 @@ def template LoadStoreImmDU64Constructor {{
 }};
 
 def template StoreImmDEx64Constructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
             IntRegIndex _base, int64_t _imm)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,

@@ -49,7 +49,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           uint64_t _imm)
@@ -73,7 +73,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXSRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -99,7 +99,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXERegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -124,7 +124,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataX1RegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
@@ -145,7 +145,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataX2RegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2)
@@ -168,7 +168,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataX2RegImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -192,7 +192,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataX3RegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
@@ -216,7 +216,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXCondCompImmConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           uint64_t _imm,
                                           ConditionCode _condCode,
@@ -241,7 +241,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXCondCompRegConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
                                           ConditionCode _condCode,
@@ -266,7 +266,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template DataXCondSelConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,

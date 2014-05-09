@@ -240,7 +240,7 @@ def template BlockMemDeclare {{
 
 // Basic instruction class constructor template.
 def template BlockMemConstructor {{
-        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        %(class_name)s::%(class_name)s(ExtMachInst machInst)
             : %(base_class)s("%(mnemonic)s", machInst)
         {
             %(constructor)s;
@@ -256,7 +256,7 @@ def template BlockMemConstructor {{
 }};
 
 def template BlockMemMicroConstructor {{
-        inline %(class_name)s::
+        %(class_name)s::
             %(class_name)s_%(micro_pc)s::
             %(class_name)s_%(micro_pc)s(ExtMachInst machInst) :
                 %(base_class)sMicro("%(mnemonic)s[%(micro_pc)s]",
