@@ -1040,12 +1040,16 @@ class MetaEnum(MetaParamValue):
     # Note that we wrap the enum in a class/struct to act as a namespace,
     # so that the enum strings can be brief w/o worrying about collisions.
     def cxx_decl(cls, code):
-        name = cls.__name__
-        code('''\
-#ifndef __ENUM__${name}__
-#define __ENUM__${name}__
+        wrapper_name = cls.wrapper_name
+        wrapper = 'struct' if cls.wrapper_is_struct else 'namespace'
+        name = cls.__name__ if cls.enum_name is None else cls.enum_name
+        idem_macro = '__ENUM__%s__%s__' % (wrapper_name, name)
 
-namespace Enums {
+        code('''\
+#ifndef $idem_macro
+#define $idem_macro
+
+$wrapper $wrapper_name {
     enum $name {
 ''')
         code.indent(2)
@@ -1053,30 +1057,42 @@ namespace Enums {
             code('$val = ${{cls.map[val]}},')
         code('Num_$name = ${{len(cls.vals)}}')
         code.dedent(2)
-        code('''\
-    };
-extern const char *${name}Strings[Num_${name}];
-}
+        code('    };')
 
-#endif // __ENUM__${name}__
-''')
+        if cls.wrapper_is_struct:
+            code('    static const char *${name}Strings[Num_${name}];')
+            code('};')
+        else:
+            code('extern const char *${name}Strings[Num_${name}];')
+            code('}')
+
+        code()
+        code('#endif // $idem_macro')
 
     def cxx_def(cls, code):
-        name = cls.__name__
-        code('''\
-#include "enums/$name.hh"
-namespace Enums {
-    const char *${name}Strings[Num_${name}] =
-    {
-''')
-        code.indent(2)
+        wrapper_name = cls.wrapper_name
+        file_name = cls.__name__
+        name = cls.__name__ if cls.enum_name is None else cls.enum_name
+
+        code('#include "enums/$file_name.hh"')
+        if cls.wrapper_is_struct:
+            code('const char *${wrapper_name}::${name}Strings'
+                '[Num_${name}] =')
+        else:
+            code('namespace Enums {')
+            code.indent(1)
+            code(' const char *${name}Strings[Num_${name}] =')
+
+        code('{')
+        code.indent(1)
         for val in cls.vals:
             code('"$val",')
-        code.dedent(2)
-        code('''
-    };
-} // namespace Enums
-''')
+        code.dedent(1)
+        code('};')
+
+        if not cls.wrapper_is_struct:
+            code('} // namespace $wrapper_name')
+            code.dedent(1)
 
     def swig_decl(cls, code):
         name = cls.__name__
@@ -1095,6 +1111,15 @@ namespace Enums {
 class Enum(ParamValue):
     __metaclass__ = MetaEnum
     vals = []
+
+    # The name of the wrapping namespace or struct
+    wrapper_name = 'Enums'
+
+    # If true, the enum is wrapped in a struct rather than a namespace
+    wrapper_is_struct = False
+
+    # If not None, use this as the enum name rather than this class name
+    enum_name = None
 
     def __init__(self, value):
         if value not in self.map:

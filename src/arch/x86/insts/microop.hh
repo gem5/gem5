@@ -107,7 +107,7 @@ namespace X86ISA
             // sized chunks, feed it those one at a time while oring them in.
             for (int i = 0; i < Chunks; i++) {
                 unsigned shift = i * ChunkSize * 8;
-                flags |= (std::bitset<NumFlags>(setFlags >> shift) << shift);
+                flags |= (std::bitset<Num_Flags>(setFlags >> shift) << shift);
             }
         }
 

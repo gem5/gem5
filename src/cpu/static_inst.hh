@@ -44,6 +44,7 @@
 #include "cpu/op_class.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
+#include "enums/StaticInstFlags.hh"
 #include "sim/fault_fwd.hh"
 
 // forward declarations
@@ -72,7 +73,7 @@ namespace Trace {
  * solely on these flags can process instructions without being
  * recompiled for multiple ISAs.
  */
-class StaticInst : public RefCounted
+class StaticInst : public RefCounted, public StaticInstFlags
 {
   public:
     /// Binary extended machine instruction type.
@@ -85,89 +86,10 @@ class StaticInst : public RefCounted
         MaxInstDestRegs = TheISA::MaxInstDestRegs       //< Max dest regs
     };
 
-    /// Set of boolean static instruction properties.
-    ///
-    /// Notes:
-    /// - The IsInteger and IsFloating flags are based on the class of
-    /// registers accessed by the instruction.  Although most
-    /// instructions will have exactly one of these two flags set, it
-    /// is possible for an instruction to have neither (e.g., direct
-    /// unconditional branches, memory barriers) or both (e.g., an
-    /// FP/int conversion).
-    /// - If IsMemRef is set, then exactly one of IsLoad or IsStore
-    /// will be set.
-    /// - If IsControl is set, then exactly one of IsDirectControl or
-    /// IsIndirect Control will be set, and exactly one of
-    /// IsCondControl or IsUncondControl will be set.
-    /// - IsSerializing, IsMemBarrier, and IsWriteBarrier are
-    /// implemented as flags since in the current model there's no
-    /// other way for instructions to inject behavior into the
-    /// pipeline outside of fetch.  Once we go to an exec-in-exec CPU
-    /// model we should be able to get rid of these flags and
-    /// implement this behavior via the execute() methods.
-    ///
-    enum Flags {
-        IsNop,          ///< Is a no-op (no effect at all).
-
-        IsInteger,      ///< References integer regs.
-        IsFloating,     ///< References FP regs.
-        IsCC,           ///< References CC regs.
-
-        IsMemRef,       ///< References memory (load, store, or prefetch).
-        IsLoad,         ///< Reads from memory (load or prefetch).
-        IsStore,        ///< Writes to memory.
-        IsStoreConditional,    ///< Store conditional instruction.
-        IsIndexed,      ///< Accesses memory with an indexed address computation
-        IsInstPrefetch, ///< Instruction-cache prefetch.
-        IsDataPrefetch, ///< Data-cache prefetch.
-
-        IsControl,              ///< Control transfer instruction.
-        IsDirectControl,        ///< PC relative control transfer.
-        IsIndirectControl,      ///< Register indirect control transfer.
-        IsCondControl,          ///< Conditional control transfer.
-        IsUncondControl,        ///< Unconditional control transfer.
-        IsCall,                 ///< Subroutine call.
-        IsReturn,               ///< Subroutine return.
-
-        IsCondDelaySlot,///< Conditional Delay-Slot Instruction
-
-        IsThreadSync,   ///< Thread synchronization operation.
-
-        IsSerializing,  ///< Serializes pipeline: won't execute until all
-                        /// older instructions have committed.
-        IsSerializeBefore,
-        IsSerializeAfter,
-        IsMemBarrier,   ///< Is a memory barrier
-        IsWriteBarrier, ///< Is a write barrier
-        IsReadBarrier,  ///< Is a read barrier
-        IsERET, /// <- Causes the IFU to stall (MIPS ISA)
-
-        IsNonSpeculative, ///< Should not be executed speculatively
-        IsQuiesce,      ///< Is a quiesce instruction
-
-        IsIprAccess,    ///< Accesses IPRs
-        IsUnverifiable, ///< Can't be verified by a checker
-
-        IsSyscall,      ///< Causes a system call to be emulated in syscall
-                        /// emulation mode.
-
-        //Flags for microcode
-        IsMacroop,      ///< Is a macroop containing microops
-        IsMicroop,      ///< Is a microop
-        IsDelayedCommit,        ///< This microop doesn't commit right away
-        IsLastMicroop,  ///< This microop ends a microop sequence
-        IsFirstMicroop, ///< This microop begins a microop sequence
-        //This flag doesn't do anything yet
-        IsMicroBranch,  ///< This microop branches within the microcode for a macroop
-        IsDspOp,
-        IsSquashAfter, ///< Squash all uncommitted state after executed
-        NumFlags
-    };
-
   protected:
 
     /// Flag values for this instruction.
-    std::bitset<NumFlags> flags;
+    std::bitset<Num_Flags> flags;
 
     /// See opClass().
     OpClass _opClass;
@@ -386,6 +308,12 @@ class StaticInst : public RefCounted
      */
     virtual const std::string &disassemble(Addr pc,
         const SymbolTable *symtab = 0) const;
+
+    /**
+     * Print a separator separated list of this instruction's set flag
+     * names on the given stream.
+     */
+    void printFlags(std::ostream &outs, const std::string &separator) const;
 
     /// Return name of machine instruction
     std::string getName() { return mnemonic; }

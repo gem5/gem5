@@ -92,3 +92,20 @@ StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
 
     return *cachedDisassembly;
 }
+
+void
+StaticInst::printFlags(std::ostream &outs,
+    const std::string &separator) const
+{
+    bool printed_a_flag = false;
+
+    for (unsigned int flag = IsNop; flag < Num_Flags; flag++) {
+        if (flags[flag]) {
+            if (printed_a_flag)
+                outs << separator;
+
+            outs << FlagsStrings[flag];
+            printed_a_flag = true;
+        }
+    }
+}

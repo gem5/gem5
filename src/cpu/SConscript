@@ -129,6 +129,7 @@ if env['TARGET_ISA'] == 'sparc':
     Source('legiontrace.cc')
 
 SimObject('DummyChecker.py')
+SimObject('StaticInstFlags.py')
 Source('checker/cpu.cc')
 Source('dummy_checker.cc')
 DebugFlag('Checker')
