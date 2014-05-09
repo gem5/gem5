@@ -70,6 +70,11 @@ class BaseTLB : public SimObject
     virtual void flushAll() = 0;
 
     /**
+     * Take over from an old tlb context
+     */
+    virtual void takeOverFrom(BaseTLB *otlb) = 0;
+
+    /**
      * Get the table walker master port if present. This is used for
      * migrating port connections during a CPU takeOverFrom()
      * call. For architectures that do not have a table walker, NULL

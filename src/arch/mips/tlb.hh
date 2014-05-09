@@ -87,6 +87,9 @@ class TLB : public BaseTLB
     int probeEntry(Addr vpn,uint8_t) const;
     MipsISA::PTE *getEntry(unsigned) const;
     virtual ~TLB();
+
+    void takeOverFrom(BaseTLB *otlb) {}
+
     int smallPages;
     int getsize() const { return size; }
 

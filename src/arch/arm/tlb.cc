@@ -354,6 +354,30 @@ TLB::drainResume()
 }
 
 void
+TLB::takeOverFrom(BaseTLB *_otlb)
+{
+    TLB *otlb = dynamic_cast<TLB*>(_otlb);
+    /* Make sure we actually have a valid type */
+    if (otlb) {
+        _attr = otlb->_attr;
+        haveLPAE = otlb->haveLPAE;
+        directToStage2 = otlb->directToStage2;
+        stage2Req = otlb->stage2Req;
+        bootUncacheability = otlb->bootUncacheability;
+
+        /* Sync the stage2 MMU if they exist in both
+         * the old CPU and the new
+         */
+        if (!isStage2 &&
+            stage2Tlb && otlb->stage2Tlb) {
+            stage2Tlb->takeOverFrom(otlb->stage2Tlb);
+        }
+    } else {
+        panic("Incompatible TLB type!");
+    }
+}
+
+void
 TLB::serialize(ostream &os)
 {
     DPRINTF(Checkpoint, "Serializing Arm TLB\n");

@@ -432,6 +432,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
             old_dtb_port->unbind();
             new_dtb_port->bind(slavePort);
         }
+        newTC->getITBPtr()->takeOverFrom(oldTC->getITBPtr());
+        newTC->getDTBPtr()->takeOverFrom(oldTC->getDTBPtr());
 
         // Checker whether or not we have to transfer CheckerCPU
         // objects over in the switch
@@ -446,6 +448,9 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
                 newChecker->getITBPtr()->getMasterPort();
             BaseMasterPort *new_checker_dtb_port =
                 newChecker->getDTBPtr()->getMasterPort();
+
+            newChecker->getITBPtr()->takeOverFrom(oldChecker->getITBPtr());
+            newChecker->getDTBPtr()->takeOverFrom(oldChecker->getDTBPtr());
 
             // Move over any table walker ports if they exist for checker
             if (new_checker_itb_port) {

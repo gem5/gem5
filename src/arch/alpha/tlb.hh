@@ -87,6 +87,8 @@ class TLB : public BaseTLB
     TLB(const Params *p);
     virtual ~TLB();
 
+    void takeOverFrom(BaseTLB *otlb) {}
+
     virtual void regStats();
 
     int getsize() const { return size; }
