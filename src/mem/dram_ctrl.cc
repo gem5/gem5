@@ -1042,47 +1042,6 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 }
 
 void
-DRAMCtrl::moveToRespQ()
-{
-    // Remove from read queue
-    DRAMPacket* dram_pkt = readQueue.front();
-    readQueue.pop_front();
-
-    // sanity check
-    assert(dram_pkt->size <= burstSize);
-
-    // Insert into response queue sorted by readyTime
-    // It will be sent back to the requestor at its
-    // readyTime
-    if (respQueue.empty()) {
-        respQueue.push_front(dram_pkt);
-        assert(!respondEvent.scheduled());
-        assert(dram_pkt->readyTime >= curTick());
-        schedule(respondEvent, dram_pkt->readyTime);
-    } else {
-        bool done = false;
-        auto i = respQueue.begin();
-        while (!done && i != respQueue.end()) {
-            if ((*i)->readyTime > dram_pkt->readyTime) {
-                respQueue.insert(i, dram_pkt);
-                done = true;
-            }
-            ++i;
-        }
-
-        if (!done)
-            respQueue.push_back(dram_pkt);
-
-        assert(respondEvent.scheduled());
-
-        if (respQueue.front()->readyTime < respondEvent.when()) {
-            assert(respQueue.front()->readyTime >= curTick());
-            reschedule(respondEvent, respQueue.front()->readyTime);
-        }
-    }
-}
-
-void
 DRAMCtrl::processNextReqEvent()
 {
     if (busState == READ_TO_WRITE) {
@@ -1152,13 +1111,28 @@ DRAMCtrl::processNextReqEvent()
             // front of the read queue
             chooseNext(readQueue);
 
-            doDRAMAccess(readQueue.front());
+            DRAMPacket* dram_pkt = readQueue.front();
+
+            doDRAMAccess(dram_pkt);
 
             // At this point we're done dealing with the request
-            // It will be moved to a separate response queue with a
-            // correct readyTime, and eventually be sent back at that
-            // time
-            moveToRespQ();
+            readQueue.pop_front();
+
+            // sanity check
+            assert(dram_pkt->size <= burstSize);
+            assert(dram_pkt->readyTime >= curTick());
+
+            // Insert into response queue. It will be sent back to the
+            // requestor at its readyTime
+            if (respQueue.empty()) {
+                assert(!respondEvent.scheduled());
+                schedule(respondEvent, dram_pkt->readyTime);
+            } else {
+                assert(respQueue.back()->readyTime <= dram_pkt->readyTime);
+                assert(respondEvent.scheduled());
+            }
+
+            respQueue.push_back(dram_pkt);
 
             // we have so many writes that we have to transition
             if (writeQueue.size() > writeHighThreshold) {

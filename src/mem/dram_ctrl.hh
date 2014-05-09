@@ -367,14 +367,6 @@ class DRAMCtrl : public AbstractMemory
     void chooseNext(std::deque<DRAMPacket*>& queue);
 
     /**
-     * Move the request at the head of the read queue to the response
-     * queue, sorting by readyTime.\ If it is the only packet in the
-     * response queue, schedule a respond event to send it back to the
-     * outside world
-     */
-    void moveToRespQ();
-
-    /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
      * hits and earliest banks available in DRAM
      */
