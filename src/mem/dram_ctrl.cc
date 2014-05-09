@@ -850,6 +850,9 @@ DRAMCtrl::prechargeBank(Bank& bank, Tick pre_at)
 
     bank.openRow = Bank::NO_ROW;
 
+    // no precharge allowed before this one
+    bank.preAllowedAt = pre_at;
+
     Tick pre_done_at = pre_at + tRP;
 
     bank.actAllowedAt = std::max(bank.actAllowedAt, pre_done_at);
@@ -1305,16 +1308,34 @@ DRAMCtrl::processRefreshEvent()
         // precharge any active bank if we are not already in the idle
         // state
         if (pwrState != PWR_IDLE) {
+            // at the moment, we use a precharge all even if there is
+            // only a single bank open
             DPRINTF(DRAM, "Precharging all\n");
+
+            // first determine when we can precharge
+            Tick pre_at = curTick();
+            for (int i = 0; i < ranksPerChannel; i++) {
+                for (int j = 0; j < banksPerRank; j++) {
+                    // respect both causality and any existing bank
+                    // constraints, some banks could already have a
+                    // (auto) precharge scheduled
+                    pre_at = std::max(banks[i][j].preAllowedAt, pre_at);
+                }
+            }
+
+            // make sure all banks are precharged, and for those that
+            // already are, update their availability
+            Tick act_allowed_at = pre_at + tRP;
+
             for (int i = 0; i < ranksPerChannel; i++) {
                 for (int j = 0; j < banksPerRank; j++) {
                     if (banks[i][j].openRow != Bank::NO_ROW) {
-                        // respect both causality and any existing bank
-                        // constraints
-                        Tick pre_at = std::max(banks[i][j].preAllowedAt,
-                                                curTick());
-
                         prechargeBank(banks[i][j], pre_at);
+                    } else {
+                        banks[i][j].actAllowedAt =
+                            std::max(banks[i][j].actAllowedAt, act_allowed_at);
+                        banks[i][j].preAllowedAt =
+                            std::max(banks[i][j].preAllowedAt, pre_at);
                     }
                 }
             }
