@@ -82,11 +82,18 @@ class BaseProxy(object):
             result, done = self.find(obj)
 
         if self._search_up:
+            # Search up the tree but mark ourself
+            # as visited to avoid a self-reference
+            self._visited = True
+            obj._visited = True
             while not done:
                 obj = obj._parent
                 if not obj:
                     break
                 result, done = self.find(obj)
+
+            self._visited = False
+            base._visited = False
 
         if not done:
             raise AttributeError, \
@@ -151,10 +158,17 @@ class AttrProxy(BaseProxy):
     def find(self, obj):
         try:
             val = getattr(obj, self._attr)
-            # for any additional unproxying to be done, pass the
-            # current, rather than the original object so that proxy
-            # has the right context
-            obj = val
+            visited = False
+            if hasattr(val, '_visited'):
+                visited = getattr(val, '_visited')
+
+            if not visited:
+                # for any additional unproxying to be done, pass the
+                # current, rather than the original object so that proxy
+                # has the right context
+                obj = val
+            else:
+                return None, False
         except:
             return None, False
         while isproxy(val):

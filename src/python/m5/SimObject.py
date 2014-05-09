@@ -861,7 +861,11 @@ class SimObject(object):
 
         found_obj = None
         for child in self._children.itervalues():
-            if isinstance(child, ptype):
+            visited = False
+            if hasattr(child, '_visited'):
+              visited = getattr(child, '_visited')
+
+            if isinstance(child, ptype) and not visited:
                 if found_obj != None and child != found_obj:
                     raise AttributeError, \
                           'parent.any matched more than one: %s %s' % \
