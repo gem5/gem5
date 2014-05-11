@@ -1,0 +1,186 @@
+{
+    "name": null, 
+    "sim_quantum": 0, 
+    "system": {
+        "membus": {
+            "slave": {
+                "peer": [
+                    "system.system_port", 
+                    "system.cpu.icache_port", 
+                    "system.cpu.dcache_port"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "membus", 
+            "header_cycles": 1, 
+            "width": 8, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.physmem.port"
+                ], 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "CoherentBus", 
+            "path": "system.membus", 
+            "type": "CoherentBus", 
+            "use_default_range": false
+        }, 
+        "voltage_domain": {
+            "eventq_index": 0, 
+            "path": "system.voltage_domain", 
+            "type": "VoltageDomain", 
+            "name": "voltage_domain", 
+            "cxx_class": "VoltageDomain"
+        }, 
+        "physmem": {
+            "latency": 3.0000000000000004e-08, 
+            "name": "physmem", 
+            "eventq_index": 0, 
+            "latency_var": 0.0, 
+            "conf_table_reported": true, 
+            "cxx_class": "SimpleMemory", 
+            "path": "system.physmem", 
+            "null": false, 
+            "type": "SimpleMemory", 
+            "port": {
+                "peer": "system.membus.master[0]", 
+                "role": "SLAVE"
+            }, 
+            "in_addr_map": true
+        }, 
+        "cxx_class": "System", 
+        "load_offset": 0, 
+        "work_end_ckpt_count": 0, 
+        "work_begin_ckpt_count": 0, 
+        "clk_domain": {
+            "name": "clk_domain", 
+            "clock": 1e-09, 
+            "eventq_index": 0, 
+            "cxx_class": "SrcClockDomain", 
+            "path": "system.clk_domain", 
+            "type": "SrcClockDomain"
+        }, 
+        "eventq_index": 0, 
+        "work_end_exit_count": 0, 
+        "type": "System", 
+        "cache_line_size": 64, 
+        "work_cpus_ckpt_count": 0, 
+        "work_begin_exit_count": 0, 
+        "path": "system", 
+        "cpu_clk_domain": {
+            "name": "cpu_clk_domain", 
+            "clock": 5e-10, 
+            "eventq_index": 0, 
+            "cxx_class": "SrcClockDomain", 
+            "path": "system.cpu_clk_domain", 
+            "type": "SrcClockDomain"
+        }, 
+        "mem_mode": "atomic", 
+        "name": "system", 
+        "init_param": 0, 
+        "system_port": {
+            "peer": "system.membus.slave[0]", 
+            "role": "MASTER"
+        }, 
+        "load_addr_mask": 1099511627775, 
+        "work_item_id": -1, 
+        "num_work_ids": 16, 
+        "cpu": [
+            {
+                "simpoint_interval": 100000000, 
+                "do_statistics_insts": true, 
+                "numThreads": 1, 
+                "itb": {
+                    "name": "itb", 
+                    "eventq_index": 0, 
+                    "cxx_class": "AlphaISA::TLB", 
+                    "path": "system.cpu.itb", 
+                    "type": "AlphaTLB", 
+                    "size": 48
+                }, 
+                "function_trace": false, 
+                "do_checkpoint_insts": true, 
+                "cxx_class": "AtomicSimpleCPU", 
+                "max_loads_all_threads": 0, 
+                "simpoint_profile": false, 
+                "simulate_data_stalls": false, 
+                "function_trace_start": 0, 
+                "cpu_id": 0, 
+                "width": 1, 
+                "eventq_index": 0, 
+                "do_quiesce": true, 
+                "type": "AtomicSimpleCPU", 
+                "fastmem": false, 
+                "profile": 0.0, 
+                "icache_port": {
+                    "peer": "system.membus.slave[1]", 
+                    "role": "MASTER"
+                }, 
+                "interrupts": {
+                    "eventq_index": 0, 
+                    "path": "system.cpu.interrupts", 
+                    "type": "AlphaInterrupts", 
+                    "name": "interrupts", 
+                    "cxx_class": "AlphaISA::Interrupts"
+                }, 
+                "socket_id": 0, 
+                "max_insts_all_threads": 0, 
+                "path": "system.cpu", 
+                "isa": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu.isa", 
+                        "type": "AlphaISA", 
+                        "name": "isa", 
+                        "cxx_class": "AlphaISA::ISA"
+                    }
+                ], 
+                "switched_out": false, 
+                "workload": [
+                    {
+                        "name": "workload", 
+                        "eventq_index": 0, 
+                        "cxx_class": "EioProcess", 
+                        "path": "system.cpu.workload", 
+                        "max_stack_size": 67108864, 
+                        "type": "EioProcess"
+                    }
+                ], 
+                "name": "cpu", 
+                "dtb": {
+                    "name": "dtb", 
+                    "eventq_index": 0, 
+                    "cxx_class": "AlphaISA::TLB", 
+                    "path": "system.cpu.dtb", 
+                    "type": "AlphaTLB", 
+                    "size": 64
+                }, 
+                "max_insts_any_thread": 500000, 
+                "simulate_inst_stalls": false, 
+                "progress_interval": 0.0, 
+                "dcache_port": {
+                    "peer": "system.membus.slave[2]", 
+                    "role": "MASTER"
+                }, 
+                "max_loads_any_thread": 0, 
+                "tracer": {
+                    "eventq_index": 0, 
+                    "path": "system.cpu.tracer", 
+                    "type": "ExeTracer", 
+                    "name": "tracer", 
+                    "cxx_class": "Trace::ExeTracer"
+                }
+            }
+        ], 
+        "work_begin_cpu_id_exit": -1
+    }, 
+    "time_sync_period": 0.1, 
+    "eventq_index": 0, 
+    "time_sync_spin_threshold": 9.999999999999999e-05, 
+    "cxx_class": "Root", 
+    "path": "root", 
+    "time_sync_enable": false, 
+    "type": "Root", 
+    "full_system": false
+}
