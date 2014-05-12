@@ -532,26 +532,25 @@ Sparc64LiveProcess::setSyscallArg(ThreadContext *tc, int i, IntReg val)
 }
 
 void
-SparcLiveProcess::setSyscallReturn(ThreadContext *tc,
-        SyscallReturn return_value)
+SparcLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     // check for error condition.  SPARC syscall convention is to
     // indicate success/failure in reg the carry bit of the ccr
     // and put the return value itself in the standard return value reg ().
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    if (return_value.successful()) {
+    if (sysret.successful()) {
         // no error, clear XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
-                tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
-        IntReg val = return_value.value();
+                      tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
+        IntReg val = sysret.returnValue();
         if (pstate.am)
             val = bits(val, 31, 0);
         tc->setIntReg(ReturnValueReg, val);
     } else {
         // got an error, set XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
-                tc->readIntReg(NumIntArchRegs + 2) | 0x11);
-        IntReg val = -return_value.value();
+                      tc->readIntReg(NumIntArchRegs + 2) | 0x11);
+        IntReg val = sysret.errnoValue();
         if (pstate.am)
             val = bits(val, 31, 0);
         tc->setIntReg(ReturnValueReg, val);

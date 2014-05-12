@@ -33,38 +33,71 @@
 
 #include "base/types.hh"
 
+/**
+ * This class represents the return value from an emulated system call,
+ * including any errno setting.
+ *
+ * On some platforms, the return value and errno are encoded in a
+ * single signed integer.  A value less than zero but greater than
+ * -4096 indicates an error, and the value is the negation of the
+ * errno value.  Otherwise, the call was successful and the integer is
+ * the return value.  (Large negative numbers are considered
+ * successful to allow syscalls to return pointers to high memory,
+ * e.g., stack addresses.)  See, for example, Appendix A of the AMD64
+ * ABI spec at http://www.x86-64.org/documentation/abi.pdf.
+ *
+ * Other platforms use a more complex interface, returning a value and
+ * an error code in separate registers.
+ *
+ * This class is designed to support both types of interfaces.
+ */
 class SyscallReturn
 {
   public:
-    template <class T>
-    SyscallReturn(T v, bool s)
-    {
-        retval = (uint64_t)v;
-        success = s;
-    }
 
-    template <class T>
-    SyscallReturn(T v)
-    {
-        success = (v >= 0);
-        retval = (uint64_t)v;
-    }
+    /// For simplicity, allow the object to be initialized with a
+    /// single signed integer using the same positive=success,
+    /// negative=-errno convention described above.
+    ///
+    /// Typically this constructor is used as a default type
+    /// conversion, so a bare integer is used where a SyscallReturn
+    /// value is expected, e.g., as the return value from a system
+    /// call emulation function ('return 0;' or 'return -EFAULT;').
+    SyscallReturn(int64_t v)
+        : value(v)
+    {}
 
     ~SyscallReturn() {}
 
-    SyscallReturn& operator=(const SyscallReturn& s)
+    /// Was the system call successful?
+    bool successful() const
     {
-        retval = s.retval;
-        success = s.success;
-        return *this;
+        return (value >= 0 || value <= -4096);
     }
 
-    bool successful() { return success; }
-    uint64_t value() { return retval; }
+    /// The return value
+    int64_t returnValue() const
+    {
+        assert(successful());
+        return value;
+    }
 
-    private:
-    uint64_t retval;
-    bool success;
+    /// The errno value
+    int errnoValue() const
+    {
+        assert(!successful());
+        return -value;
+    }
+
+    /// The encoded value (as described above)
+    int64_t encodedValue() const
+    {
+        return value;
+    }
+
+  private:
+
+    int64_t value;
 };
 
 #endif

@@ -454,15 +454,13 @@ ArmLiveProcess64::setSyscallArg(ThreadContext *tc,
 }
 
 void
-ArmLiveProcess32::setSyscallReturn(ThreadContext *tc,
-        SyscallReturn return_value)
+ArmLiveProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
-    tc->setIntReg(ReturnValueReg, return_value.value());
+    tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }
 
 void
-ArmLiveProcess64::setSyscallReturn(ThreadContext *tc,
-        SyscallReturn return_value)
+ArmLiveProcess64::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
-    tc->setIntReg(ReturnValueReg, return_value.value());
+    tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }

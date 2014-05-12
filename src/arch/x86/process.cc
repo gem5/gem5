@@ -678,9 +678,9 @@ I386LiveProcess::argsInit(int intSize, int pageSize)
 }
 
 void
-X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn return_value)
+X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
 {
-    tc->setIntReg(INTREG_RAX, return_value.value());
+    tc->setIntReg(INTREG_RAX, retval.encodedValue());
 }
 
 X86ISA::IntReg

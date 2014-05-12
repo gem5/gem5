@@ -69,7 +69,7 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
     DPRINTFR(SyscallVerbose, "%d: %s: syscall %s returns %d\n",
-             curTick(),tc->getCpuPtr()->name(), name, retval.value());
+             curTick(), tc->getCpuPtr()->name(), name, retval.encodedValue());
 
     if (!(flags & SyscallDesc::SuppressReturnValue))
         process->setSyscallReturn(tc, retval);
@@ -366,7 +366,7 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
     string path;
 
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
-        return (TheISA::IntReg)-EFAULT;
+        return -EFAULT;
 
     // Adjust path for current working directory
     path = p->fullPath(path);
@@ -390,7 +390,7 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
-        return (TheISA::IntReg)-EFAULT;
+        return -EFAULT;
 
     // Adjust path for current working directory
     path = p->fullPath(path);
@@ -407,7 +407,7 @@ mkdirFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
-        return (TheISA::IntReg)-EFAULT;
+        return -EFAULT;
 
     // Adjust path for current working directory
     path = p->fullPath(path);
@@ -864,7 +864,7 @@ accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc,
 {
     string path;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
-        return (TheISA::IntReg)-EFAULT;
+        return -EFAULT;
 
     // Adjust path for current working directory
     path = p->fullPath(path);

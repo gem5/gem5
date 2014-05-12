@@ -277,15 +277,14 @@ PowerLiveProcess::setSyscallArg(ThreadContext *tc,
 }
 
 void
-PowerLiveProcess::setSyscallReturn(ThreadContext *tc,
-        SyscallReturn return_value)
+PowerLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     Cr cr = tc->readIntReg(INTREG_CR);
-    if (return_value.successful()) {
+    if (sysret.successful()) {
         cr.cr0.so = 0;
     } else {
         cr.cr0.so = 1;
     }
     tc->setIntReg(INTREG_CR, cr);
-    tc->setIntReg(ReturnValueReg, return_value.value());
+    tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }

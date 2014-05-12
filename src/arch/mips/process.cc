@@ -197,16 +197,15 @@ MipsLiveProcess::setSyscallArg(ThreadContext *tc,
 }
 
 void
-MipsLiveProcess::setSyscallReturn(ThreadContext *tc,
-        SyscallReturn return_value)
+MipsLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
-    if (return_value.successful()) {
+    if (sysret.successful()) {
         // no error
         tc->setIntReg(SyscallSuccessReg, 0);
-        tc->setIntReg(ReturnValueReg, return_value.value());
+        tc->setIntReg(ReturnValueReg, sysret.returnValue());
     } else {
         // got an error, return details
         tc->setIntReg(SyscallSuccessReg, (IntReg) -1);
-        tc->setIntReg(ReturnValueReg, -return_value.value());
+        tc->setIntReg(ReturnValueReg, sysret.errnoValue());
     }
 }
