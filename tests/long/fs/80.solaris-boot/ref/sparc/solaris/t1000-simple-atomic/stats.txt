@@ -4,11 +4,11 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                1895600                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1896345                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                3800545                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 576292                       # Number of bytes of host memory used
-host_seconds                                  1175.50                       # Real time elapsed on the host
+host_inst_rate                                2578014                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2579027                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                5168737                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 527944                       # Number of bytes of host memory used
+host_seconds                                   864.34                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -35,38 +35,6 @@ system.nvram.bw_write::cpu.data                    41                       # Wr
 system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
 system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
 system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem1.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
-system.physmem1.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
-system.physmem1.bytes_read::total          9813991967                       # Number of bytes read from this memory
-system.physmem1.bytes_inst_read::cpu.inst   8318106840                       # Number of instructions bytes read from this memory
-system.physmem1.bytes_inst_read::total     8318106840                       # Number of instructions bytes read from this memory
-system.physmem1.bytes_written::cpu.data     897268422                       # Number of bytes written to this memory
-system.physmem1.bytes_written::total        897268422                       # Number of bytes written to this memory
-system.physmem1.num_reads::cpu.inst        2079526710                       # Number of read requests responded to by this memory
-system.physmem1.num_reads::cpu.data         323962420                       # Number of read requests responded to by this memory
-system.physmem1.num_reads::total           2403489130                       # Number of read requests responded to by this memory
-system.physmem1.num_writes::cpu.data        187387796                       # Number of write requests responded to by this memory
-system.physmem1.num_writes::total           187387796                       # Number of write requests responded to by this memory
-system.physmem1.num_other::cpu.data           5403067                       # Number of other requests responded to by this memory
-system.physmem1.num_other::total              5403067                       # Number of other requests responded to by this memory
-system.physmem1.bw_read::cpu.inst          3723784842                       # Total read bandwidth from this memory (bytes/s)
-system.physmem1.bw_read::cpu.data           669666123                       # Total read bandwidth from this memory (bytes/s)
-system.physmem1.bw_read::total             4393450966                       # Total read bandwidth from this memory (bytes/s)
-system.physmem1.bw_inst_read::cpu.inst     3723784842                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem1.bw_inst_read::total        3723784842                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem1.bw_write::cpu.data          401682091                       # Write bandwidth from this memory (bytes/s)
-system.physmem1.bw_write::total             401682091                       # Write bandwidth from this memory (bytes/s)
-system.physmem1.bw_total::cpu.inst         3723784842                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem1.bw_total::cpu.data         1071348214                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem1.bw_total::total            4795133057                       # Total bandwidth to/from this memory (bytes/s)
-system.partition_desc.bytes_read::cpu.data         4846                       # Number of bytes read from this memory
-system.partition_desc.bytes_read::total          4846                       # Number of bytes read from this memory
-system.partition_desc.num_reads::cpu.data          608                       # Number of read requests responded to by this memory
-system.partition_desc.num_reads::total            608                       # Number of read requests responded to by this memory
-system.partition_desc.bw_read::cpu.data          2169                       # Total read bandwidth from this memory (bytes/s)
-system.partition_desc.bw_read::total             2169                       # Total read bandwidth from this memory (bytes/s)
-system.partition_desc.bw_total::cpu.data         2169                       # Total bandwidth to/from this memory (bytes/s)
-system.partition_desc.bw_total::total            2169                       # Total bandwidth to/from this memory (bytes/s)
 system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
 system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
 system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
@@ -107,6 +75,38 @@ system.physmem0.bw_write::total               6894251                       # Wr
 system.physmem0.bw_total::cpu.inst          274105779                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem0.bw_total::cpu.data           50557518                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem0.bw_total::total             324663297                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem1.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
+system.physmem1.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
+system.physmem1.bytes_read::total          9813991967                       # Number of bytes read from this memory
+system.physmem1.bytes_inst_read::cpu.inst   8318106840                       # Number of instructions bytes read from this memory
+system.physmem1.bytes_inst_read::total     8318106840                       # Number of instructions bytes read from this memory
+system.physmem1.bytes_written::cpu.data     897268422                       # Number of bytes written to this memory
+system.physmem1.bytes_written::total        897268422                       # Number of bytes written to this memory
+system.physmem1.num_reads::cpu.inst        2079526710                       # Number of read requests responded to by this memory
+system.physmem1.num_reads::cpu.data         323962420                       # Number of read requests responded to by this memory
+system.physmem1.num_reads::total           2403489130                       # Number of read requests responded to by this memory
+system.physmem1.num_writes::cpu.data        187387796                       # Number of write requests responded to by this memory
+system.physmem1.num_writes::total           187387796                       # Number of write requests responded to by this memory
+system.physmem1.num_other::cpu.data           5403067                       # Number of other requests responded to by this memory
+system.physmem1.num_other::total              5403067                       # Number of other requests responded to by this memory
+system.physmem1.bw_read::cpu.inst          3723784842                       # Total read bandwidth from this memory (bytes/s)
+system.physmem1.bw_read::cpu.data           669666123                       # Total read bandwidth from this memory (bytes/s)
+system.physmem1.bw_read::total             4393450966                       # Total read bandwidth from this memory (bytes/s)
+system.physmem1.bw_inst_read::cpu.inst     3723784842                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem1.bw_inst_read::total        3723784842                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem1.bw_write::cpu.data          401682091                       # Write bandwidth from this memory (bytes/s)
+system.physmem1.bw_write::total             401682091                       # Write bandwidth from this memory (bytes/s)
+system.physmem1.bw_total::cpu.inst         3723784842                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem1.bw_total::cpu.data         1071348214                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem1.bw_total::total            4795133057                       # Total bandwidth to/from this memory (bytes/s)
+system.partition_desc.bytes_read::cpu.data         4846                       # Number of bytes read from this memory
+system.partition_desc.bytes_read::total          4846                       # Number of bytes read from this memory
+system.partition_desc.num_reads::cpu.data          608                       # Number of read requests responded to by this memory
+system.partition_desc.num_reads::total            608                       # Number of read requests responded to by this memory
+system.partition_desc.bw_read::cpu.data          2169                       # Total read bandwidth from this memory (bytes/s)
+system.partition_desc.bw_read::total             2169                       # Total read bandwidth from this memory (bytes/s)
+system.partition_desc.bw_total::cpu.data         2169                       # Total bandwidth to/from this memory (bytes/s)
+system.partition_desc.bw_total::total            2169                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                   5163367605                       # Throughput (bytes/s)
 system.membus.data_through_bus            11533814443                       # Total data (bytes)
 system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
@@ -136,6 +136,41 @@ system.cpu.num_busy_cycles                 2233777513                       # Nu
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                         441057355                       # Number of branches fetched
+system.cpu.op_class::No_OpClass              49673656      2.22%      2.22% # Class of executed instruction
+system.cpu.op_class::IntAlu                1619015933     72.49%     74.71% # Class of executed instruction
+system.cpu.op_class::IntMult                        0      0.00%     74.71% # Class of executed instruction
+system.cpu.op_class::IntDiv                         0      0.00%     74.71% # Class of executed instruction
+system.cpu.op_class::FloatAdd                 8419779      0.38%     75.09% # Class of executed instruction
+system.cpu.op_class::FloatCmp                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::FloatCvt                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::FloatMult                      0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::FloatDiv                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::FloatSqrt                      0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdAdd                        0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdAddAcc                     0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdAlu                        0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdCmp                        0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdCvt                        0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdMisc                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdMult                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdMultAcc                    0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdShift                      0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdShiftAcc                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdSqrt                       0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatAdd                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatAlu                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatCmp                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatCvt                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatDiv                   0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatMisc                  0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatMult                  0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatMultAcc               0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::SimdFloatSqrt                  0      0.00%     75.09% # Class of executed instruction
+system.cpu.op_class::MemRead                356274529     15.95%     91.04% # Class of executed instruction
+system.cpu.op_class::MemWrite               200199782      8.96%    100.00% # Class of executed instruction
+system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
+system.cpu.op_class::total                 2233583679                       # Class of executed instruction
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.quiesce                        0                       # number of quiesce instructions executed
 

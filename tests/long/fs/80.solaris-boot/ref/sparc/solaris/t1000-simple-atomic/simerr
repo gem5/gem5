@@ -23,7 +23,5 @@ warn: rounding error > tolerance
 warn: rounding error > tolerance
     0.145519 rounded to 0
 warn: Sockets disabled, not accepting terminal connections
-warn: CoherentBus system.membus has no snooping ports attached!
 warn: Sockets disabled, not accepting gdb connections
 warn: Don't know what interrupt to clear for console.
-hack: be nice to actually delete the event here

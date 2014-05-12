@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:10:34
-gem5 started Jan 22 2014 22:25:31
-gem5 executing on u200540-lin
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full -re tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full
+gem5 compiled May 12 2014 12:50:47
+gem5 started May 12 2014 15:35:34
+gem5 executing on zizzer
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full -re /z/stever/hg/gem5/tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-switcheroo-full
 Global frequency set at 1000000000000 ticks per second
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
