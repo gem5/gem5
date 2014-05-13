@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -666,7 +666,46 @@ class Packet : public Printable
 
         flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
         flags.set(pkt->flags & STATIC_DATA);
+    }
 
+    /**
+     * Change the packet type based on request type.
+     */
+    void
+    refineCommand()
+    {
+        if (cmd == MemCmd::ReadReq) {
+            if (req->isLLSC()) {
+                cmd = MemCmd::LoadLockedReq;
+            }
+        } else if (cmd == MemCmd::WriteReq) {
+            if (req->isLLSC()) {
+                cmd = MemCmd::StoreCondReq;
+            } else if (req->isSwap()) {
+                cmd = MemCmd::SwapReq;
+            }
+        }
+    }
+
+    /**
+     * Constructor-like methods that return Packets based on Request objects.
+     * Will call refineCommand() to fine-tune the Packet type if it's not a
+     * vanilla read or write.
+     */
+    static PacketPtr
+    createRead(Request *req)
+    {
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+        pkt->refineCommand();
+        return pkt;
+    }
+
+    static PacketPtr
+    createWrite(Request *req)
+    {
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
+        pkt->refineCommand();
+        return pkt;
     }
 
     /**

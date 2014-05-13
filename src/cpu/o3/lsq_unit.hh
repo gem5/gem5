@@ -776,8 +776,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
     // if we the cache is not blocked, do cache access
     bool completedFirst = false;
-    MemCmd command = req->isLLSC() ? MemCmd::LoadLockedReq : MemCmd::ReadReq;
-    PacketPtr data_pkt = new Packet(req, command);
+    PacketPtr data_pkt = Packet::createRead(req);
     PacketPtr fst_data_pkt = NULL;
     PacketPtr snd_data_pkt = NULL;
 
@@ -794,8 +793,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         fst_data_pkt = data_pkt;
     } else {
         // Create the split packets.
-        fst_data_pkt = new Packet(sreqLow, command);
-        snd_data_pkt = new Packet(sreqHigh, command);
+        fst_data_pkt = Packet::createRead(sreqLow);
+        snd_data_pkt = Packet::createRead(sreqHigh);
 
         fst_data_pkt->dataStatic(load_inst->memData);
         snd_data_pkt->dataStatic(load_inst->memData + sreqLow->getSize());

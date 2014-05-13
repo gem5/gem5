@@ -812,21 +812,11 @@ CacheUnit::finishCacheUnitReq(DynInstPtr inst, CacheRequest *cache_req)
 void
 CacheUnit::buildDataPacket(CacheRequest *cache_req)
 {
-    // Check for LL/SC and if so change command
-    if (cache_req->memReq->isLLSC() && cache_req->pktCmd == MemCmd::ReadReq) {
-        cache_req->pktCmd = MemCmd::LoadLockedReq;
-    }
-
-    if (cache_req->pktCmd == MemCmd::WriteReq) {
-        cache_req->pktCmd =
-            cache_req->memReq->isSwap() ? MemCmd::SwapReq :
-            (cache_req->memReq->isLLSC() ? MemCmd::StoreCondReq 
-             : MemCmd::WriteReq);
-    }
-
     cache_req->dataPkt = new CacheReqPacket(cache_req,
                                             cache_req->pktCmd,
                                             cache_req->instIdx);
+    cache_req->dataPkt->refineCommand(); // handle LL/SC, etc.
+
     DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x\n",
             cache_req->getSlot(),
             cache_req->dataPkt->getAddr());

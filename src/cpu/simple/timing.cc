@@ -349,20 +349,7 @@ TimingSimpleCPU::translationFault(Fault fault)
 void
 TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr req, bool read)
 {
-    MemCmd cmd;
-    if (read) {
-        cmd = MemCmd::ReadReq;
-        if (req->isLLSC())
-            cmd = MemCmd::LoadLockedReq;
-    } else {
-        cmd = MemCmd::WriteReq;
-        if (req->isLLSC()) {
-            cmd = MemCmd::StoreCondReq;
-        } else if (req->isSwap()) {
-            cmd = MemCmd::SwapReq;
-        }
-    }
-    pkt = new Packet(req, cmd);
+    pkt = read ? Packet::createRead(req) : Packet::createWrite(req);
 }
 
 void
