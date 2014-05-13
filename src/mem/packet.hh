@@ -196,6 +196,10 @@ class MemCmd
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isReadWrite() const    { return isRead() && isWrite(); }
     bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
+    bool isSWPrefetch() const   { return testCmdAttrib(IsSWPrefetch); }
+    bool isHWPrefetch() const   { return testCmdAttrib(IsHWPrefetch); }
+    bool isPrefetch() const     { return testCmdAttrib(IsSWPrefetch) ||
+                                         testCmdAttrib(IsHWPrefetch); }
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
@@ -677,6 +681,8 @@ class Packet : public Printable
         if (cmd == MemCmd::ReadReq) {
             if (req->isLLSC()) {
                 cmd = MemCmd::LoadLockedReq;
+            } else if (req->isPrefetch()) {
+                cmd = MemCmd::SoftPFReq;
             }
         } else if (cmd == MemCmd::WriteReq) {
             if (req->isLLSC()) {

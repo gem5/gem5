@@ -473,8 +473,15 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // @todo: someone should pay for this
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
-        // writes go in write buffer, reads use MSHR
-        if (pkt->isWrite() && !pkt->isRead()) {
+        // writes go in write buffer, reads use MSHR,
+        // prefetches are acknowledged (responded to) and dropped
+        if (pkt->cmd.isPrefetch()) {
+            // prefetching (cache loading) uncacheable data is nonsensical
+            pkt->makeTimingResponse();
+            std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
+            cpuSidePort->schedTimingResp(pkt, clockEdge(hitLatency));
+            return true;
+        } else if (pkt->isWrite() && !pkt->isRead()) {
             allocateWriteBuffer(pkt, time, true);
         } else {
             allocateUncachedReadBuffer(pkt, time, true);
@@ -521,7 +528,10 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
             if (blk)
                 blk->status &= ~BlkHWPrefetched;
-            next_pf_time = prefetcher->notify(pkt, time);
+
+            // Don't notify on SWPrefetch
+            if (!pkt->cmd.isSWPrefetch())
+                next_pf_time = prefetcher->notify(pkt, time);
         }
 
         if (needsResponse) {
@@ -544,36 +554,80 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr, pkt->isSecure());
 
+        // Software prefetch handling:
+        // To keep the core from waiting on data it won't look at
+        // anyway, send back a response with dummy data. Miss handling
+        // will continue asynchronously. Unfortunately, the core will
+        // insist upon freeing original Packet/Request, so we have to
+        // create a new pair with a different lifecycle. Note that this
+        // processing happens before any MSHR munging on the behalf of
+        // this request because this new Request will be the one stored
+        // into the MSHRs, not the original.
+        if (pkt->cmd.isSWPrefetch() && isTopLevel) {
+            assert(needsResponse);
+            assert(pkt->req->hasPaddr());
+
+            // There's no reason to add a prefetch as an additional target
+            // to an existing MSHR.  If an outstanding request is already
+            // in progress, there is nothing for the prefetch to do.
+            // If this is the case, we don't even create a request at all.
+            PacketPtr pf = mshr ? NULL : new Packet(pkt);
+
+            if (pf) {
+                pf->req = new Request(pkt->req->getPaddr(),
+                                      pkt->req->getSize(),
+                                      pkt->req->getFlags(),
+                                      pkt->req->masterId());
+                // The core will clean up prior senderState; we need our own.
+                pf->senderState = NULL;
+            }
+
+            pkt->makeTimingResponse();
+            // for debugging, set all the bits in the response data
+            // (also keeps valgrind from complaining when debugging settings
+            //  print out instruction results)
+            std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
+            cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
+
+            pkt = pf;
+        }
+
         if (mshr) {
             /// MSHR hit
             /// @note writebacks will be checked in getNextMSHR()
             /// for any conflicting requests to the same block
 
             //@todo remove hw_pf here
-            assert(pkt->req->masterId() < system->maxMasters());
-            mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
-            if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
-                mshr->threadNum = -1;
-            }
-            mshr->allocateTarget(pkt, time, order++);
-            if (mshr->getNumTargets() == numTarget) {
-                noTargetMSHR = mshr;
-                setBlocked(Blocked_NoTargets);
-                // need to be careful with this... if this mshr isn't
-                // ready yet (i.e. time > curTick()_, we don't want to
-                // move it ahead of mshrs that are ready
-                // mshrQueue.moveToFront(mshr);
-            }
 
-            // We should call the prefetcher reguardless if the request is
-            // satisfied or not, reguardless if the request is in the MSHR or
-            // not.  The request could be a ReadReq hit, but still not
-            // satisfied (potentially because of a prior write to the same
-            // cache line.  So, even when not satisfied, tehre is an MSHR
-            // already allocated for this, we need to let the prefetcher know
-            // about the request
-            if (prefetcher) {
-                next_pf_time = prefetcher->notify(pkt, time);
+            // Coalesce unless it was a software prefetch (see above).
+            if (pkt) {
+                assert(pkt->req->masterId() < system->maxMasters());
+                mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
+                if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
+                    mshr->threadNum = -1;
+                }
+                mshr->allocateTarget(pkt, time, order++);
+                if (mshr->getNumTargets() == numTarget) {
+                    noTargetMSHR = mshr;
+                    setBlocked(Blocked_NoTargets);
+                    // need to be careful with this... if this mshr isn't
+                    // ready yet (i.e. time > curTick()), we don't want to
+                    // move it ahead of mshrs that are ready
+                    // mshrQueue.moveToFront(mshr);
+                }
+
+                // We should call the prefetcher reguardless if the request is
+                // satisfied or not, reguardless if the request is in the MSHR or
+                // not.  The request could be a ReadReq hit, but still not
+                // satisfied (potentially because of a prior write to the same
+                // cache line.  So, even when not satisfied, tehre is an MSHR
+                // already allocated for this, we need to let the prefetcher know
+                // about the request
+                if (prefetcher) {
+                    // Don't notify on SWPrefetch
+                    if (!pkt->cmd.isSWPrefetch())
+                        next_pf_time = prefetcher->notify(pkt, time);
+                }
             }
         } else {
             // no MSHR
@@ -609,7 +663,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             }
 
             if (prefetcher) {
-                next_pf_time = prefetcher->notify(pkt, time);
+                // Don't notify on SWPrefetch
+                if (!pkt->cmd.isSWPrefetch())
+                    next_pf_time = prefetcher->notify(pkt, time);
             }
         }
     }
@@ -963,6 +1019,17 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         switch (target->source) {
           case MSHR::Target::FromCPU:
             Tick completion_time;
+
+            // Software prefetch handling for cache closest to core
+            if (target->pkt->cmd.isSWPrefetch() && isTopLevel) {
+                // a software prefetch would have already been ack'd immediately
+                // with dummy data so the core would be able to retire it.
+                // this request completes right here, so we deallocate it.
+                delete target->pkt->req;
+                delete target->pkt;
+                break; // skip response
+            }
+
             if (is_fill) {
                 satisfyCpuSideRequest(target->pkt, blk,
                                       true, mshr->hasPostDowngrade());
