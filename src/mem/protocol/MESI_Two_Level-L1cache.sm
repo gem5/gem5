@@ -833,12 +833,14 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     mandatoryQueue_in.dequeue();
   }
 
-  action(l_popRequestQueue, "l", desc="Pop incoming request queue and profile the delay within this virtual network") {
-    profileMsgDelay(2, requestL1Network_in.dequeue_getDelayCycles());
+  action(l_popRequestQueue, "l",
+    desc="Pop incoming request queue and profile the delay within this virtual network") {
+    profileMsgDelay(2, requestL1Network_in.dequeue());
   }
 
-  action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(1, responseL1Network_in.dequeue_getDelayCycles());
+  action(o_popIncomingResponseQueue, "o",
+    desc="Pop Incoming Response queue and profile the delay within this virtual network") {
+    profileMsgDelay(1, responseL1Network_in.dequeue());
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {

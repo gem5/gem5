@@ -220,8 +220,11 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 }
 
 Cycles
-MessageBuffer::dequeue_getDelayCycles()
+MessageBuffer::dequeue()
 {
+    DPRINTF(RubyQueue, "Popping\n");
+    assert(isReady());
+
     // get MsgPtr of the message about to be dequeued
     MsgPtr message = m_prio_heap.front().m_msgptr;
 
@@ -229,16 +232,6 @@ MessageBuffer::dequeue_getDelayCycles()
     message->updateDelayedTicks(m_receiver->clockEdge());
     Cycles delayCycles =
         m_receiver->ticksToCycles(message->getDelayedTicks());
-    dequeue();
-
-    return delayCycles;
-}
-
-void
-MessageBuffer::dequeue()
-{
-    DPRINTF(RubyQueue, "Popping\n");
-    assert(isReady());
 
     // record previous size and time so the current buffer size isn't
     // adjusted until next cycle
@@ -250,6 +243,8 @@ MessageBuffer::dequeue()
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
     m_prio_heap.pop_back();
+
+    return delayCycles;
 }
 
 void

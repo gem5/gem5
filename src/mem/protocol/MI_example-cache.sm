@@ -317,11 +317,11 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(n_popResponseQueue, "n", desc="Pop the response queue") {
-    profileMsgDelay(1, responseNetwork_in.dequeue_getDelayCycles());
+    profileMsgDelay(1, responseNetwork_in.dequeue());
   }
 
   action(o_popForwardedRequestQueue, "o", desc="Pop the forwarded request queue") {
-    profileMsgDelay(2, forwardRequestNetwork_in.dequeue_getDelayCycles());
+    profileMsgDelay(2, forwardRequestNetwork_in.dequeue());
   }
 
   action(p_profileMiss, "pi", desc="Profile cache miss") {

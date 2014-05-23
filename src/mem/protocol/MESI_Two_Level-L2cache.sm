@@ -590,15 +590,15 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(jj_popL1RequestQueue, "\j", desc="Pop incoming L1 request queue") {
-    profileMsgDelay(0, L1RequestL2Network_in.dequeue_getDelayCycles());
+    profileMsgDelay(0, L1RequestL2Network_in.dequeue());
   }
 
   action(k_popUnblockQueue, "k", desc="Pop incoming unblock queue") {
-    profileMsgDelay(0, L1unblockNetwork_in.dequeue_getDelayCycles());
+    profileMsgDelay(0, L1unblockNetwork_in.dequeue());
   }
 
   action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue") {
-    profileMsgDelay(1, responseL2Network_in.dequeue_getDelayCycles());
+    profileMsgDelay(1, responseL2Network_in.dequeue());
   }
 
   action(m_writeDataToCache, "m", desc="Write data from response queue to cache") {

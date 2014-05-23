@@ -260,6 +260,10 @@ PerfectSwitch::wakeup()
                         unmodified_msg_ptr = msg_ptr->clone();
                     }
 
+                    // Dequeue msg
+                    m_in[incoming][vnet]->dequeue();
+                    m_pending_message_count[vnet]--;
+
                     // Enqueue it - for all outgoing queues
                     for (int i=0; i<output_links.size(); i++) {
                         int outgoing = output_links[i];
@@ -284,10 +288,6 @@ PerfectSwitch::wakeup()
 
                         m_out[outgoing][vnet]->enqueue(msg_ptr);
                     }
-
-                    // Dequeue msg
-                    m_in[incoming][vnet]->dequeue();
-                    m_pending_message_count[vnet]--;
                 }
             }
         }

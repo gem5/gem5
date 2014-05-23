@@ -474,12 +474,12 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   action(l_popRequestQueue, "l",
          desc="Pop incoming request queue and profile the delay within this virtual network") {
-    profileMsgDelay(2, messgeBuffer_in.dequeue_getDelayCycles());
+    profileMsgDelay(2, messgeBuffer_in.dequeue());
   }
 
   action(o_popIncomingResponseQueue, "o",
          desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(1, messgeBuffer_in.dequeue_getDelayCycles());
+    profileMsgDelay(1, messgeBuffer_in.dequeue());
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {

@@ -118,11 +118,9 @@ class MessageBuffer
     void enqueue(MsgPtr message) { enqueue(message, Cycles(1)); }
     void enqueue(MsgPtr message, Cycles delta);
 
-    //! Updates the delay cycles of the message at the of the queue,
+    //! Updates the delay cycles of the message at the head of the queue,
     //! removes it from the queue and returns its total delay.
-    Cycles dequeue_getDelayCycles();
-
-    void dequeue();
+    Cycles dequeue();
 
     void recycle();
     bool isEmpty() const { return m_prio_heap.size() == 0; }

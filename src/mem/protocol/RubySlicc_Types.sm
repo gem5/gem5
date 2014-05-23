@@ -41,8 +41,7 @@ external_type(Scalar, primitive="yes");
 
 structure(InPort, external = "yes", primitive="yes") {
   bool isReady();
-  void dequeue();
-  Cycles dequeue_getDelayCycles();
+  Cycles dequeue();
   void recycle();
   bool isEmpty();
 }

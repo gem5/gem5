@@ -42,8 +42,8 @@ class ExprStatementAST(StatementAST):
 
         # The return type must be void
         if actual_type != self.symtab.find("void", Type):
-            self.expr.error("Non-void return must not be ignored, " + \
-                            "return type is '%s'", actual_type.ident)
+            self.expr.warning("Non-void return ignored, " + \
+                "return type is '%s'", actual_type.ident)
 
     def findResources(self, resources):
         self.expr.findResources(resources)
