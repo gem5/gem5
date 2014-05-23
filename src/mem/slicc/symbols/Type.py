@@ -72,17 +72,11 @@ class Type(Symbol):
                 self["networkmessage"] = "yes"
 
         # FIXME - all of the following id comparisons are fragile hacks
-        if self.ident in ("CacheMemory", "NewCacheMemory",
-                          "TLCCacheMemory", "DNUCACacheMemory",
-                          "DNUCABankCacheMemory", "L2BankCacheMemory",
-                          "CompressedCacheMemory", "PrefetchCacheMemory"):
+        if self.ident in ("CacheMemory"):
             self["cache"] = "yes"
 
-        if self.ident in ("TBETable", "DNUCATBETable", "DNUCAStopTable"):
+        if self.ident in ("TBETable"):
             self["tbe"] = "yes"
-
-        if self.ident == "NewTBETable":
-            self["newtbe"] = "yes"
 
         if self.ident == "TimerTable":
             self["timer"] = "yes"
@@ -95,9 +89,6 @@ class Type(Symbol):
 
         if self.ident == "Prefetcher":
             self["prefetcher"] = "yes"
-
-        if self.ident == "DNUCA_Movement":
-            self["mover"] = "yes"
 
         self.isMachineType = (ident == "MachineType")
 

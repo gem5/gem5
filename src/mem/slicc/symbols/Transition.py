@@ -42,13 +42,10 @@ class Transition(Symbol):
 
         for action in self.actions:
             for var,value in action.resources.iteritems():
-                if var.type.ident != "DNUCAStopTable":
-                    num = int(value)
-                    if var in self.resources:
-                        num += int(value)
-                    self.resources[var] = str(num)
-                else:
-                    self.resources[var] = value
+                num = int(value)
+                if var in self.resources:
+                    num += int(value)
+                self.resources[var] = str(num)
 
     def __repr__(self):
       return "[Transition: (%r, %r) -> %r, %r]" % \

@@ -1253,8 +1253,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
             case_sorter = []
             res = trans.resources
             for key,val in res.iteritems():
-                if key.type.ident != "DNUCAStopTable":
-                    val = '''
+                val = '''
 if (!%s.areNSlotsAvailable(%s))
     return TransitionResult_ResourceStall;
 ''' % (key.code, val)
