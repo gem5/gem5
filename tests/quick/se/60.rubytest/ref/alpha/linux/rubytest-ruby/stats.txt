@@ -4,17 +4,17 @@ sim_seconds                                  0.000222                       # Nu
 sim_ticks                                      221941                       # Number of ticks simulated
 final_tick                                     221941                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                3307860                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 122180                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_tick_rate                                2110232                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 170916                       # Number of bytes of host memory used
+host_seconds                                     0.11                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
-system.ruby.delayHist::bucket_size                  2                       # delay histogram for all message
-system.ruby.delayHist::max_bucket                  19                       # delay histogram for all message
+system.ruby.delayHist::bucket_size                  4                       # delay histogram for all message
+system.ruby.delayHist::max_bucket                  39                       # delay histogram for all message
 system.ruby.delayHist::samples                   1828                       # delay histogram for all message
-system.ruby.delayHist::mean                  0.280088                       # delay histogram for all message
-system.ruby.delayHist::stdev                 1.032741                       # delay histogram for all message
+system.ruby.delayHist::mean                  0.560175                       # delay histogram for all message
+system.ruby.delayHist::stdev                 2.065483                       # delay histogram for all message
 system.ruby.delayHist                    |        1690     92.45%     92.45% |          89      4.87%     97.32% |          33      1.81%     99.12% |          11      0.60%     99.73% |           4      0.22%     99.95% |           0      0.00%     99.95% |           1      0.05%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for all message
 system.ruby.delayHist::total                     1828                       # delay histogram for all message
 system.ruby.outstanding_req_hist::bucket_size            2                      
@@ -139,18 +139,18 @@ system.ruby.network.routers2.throttle1.msg_count.Control::2          916
 system.ruby.network.routers2.throttle1.msg_count.Data::2          914                      
 system.ruby.network.routers2.throttle1.msg_bytes.Control::2         7328                      
 system.ruby.network.routers2.throttle1.msg_bytes.Data::2        65808                      
-system.ruby.delayVCHist.vnet_1::bucket_size            1                       # delay histogram for vnet_1
-system.ruby.delayVCHist.vnet_1::max_bucket            9                       # delay histogram for vnet_1
+system.ruby.delayVCHist.vnet_1::bucket_size            2                       # delay histogram for vnet_1
+system.ruby.delayVCHist.vnet_1::max_bucket           19                       # delay histogram for vnet_1
 system.ruby.delayVCHist.vnet_1::samples           916                       # delay histogram for vnet_1
-system.ruby.delayVCHist.vnet_1::mean         0.265284                       # delay histogram for vnet_1
-system.ruby.delayVCHist.vnet_1::stdev        0.915284                       # delay histogram for vnet_1
+system.ruby.delayVCHist.vnet_1::mean         0.530568                       # delay histogram for vnet_1
+system.ruby.delayVCHist.vnet_1::stdev        1.830567                       # delay histogram for vnet_1
 system.ruby.delayVCHist.vnet_1           |         824     89.96%     89.96% |          19      2.07%     92.03% |          30      3.28%     95.31% |          28      3.06%     98.36% |           3      0.33%     98.69% |           6      0.66%     99.34% |           4      0.44%     99.78% |           2      0.22%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for vnet_1
 system.ruby.delayVCHist.vnet_1::total             916                       # delay histogram for vnet_1
-system.ruby.delayVCHist.vnet_2::bucket_size            2                       # delay histogram for vnet_2
-system.ruby.delayVCHist.vnet_2::max_bucket           19                       # delay histogram for vnet_2
+system.ruby.delayVCHist.vnet_2::bucket_size            4                       # delay histogram for vnet_2
+system.ruby.delayVCHist.vnet_2::max_bucket           39                       # delay histogram for vnet_2
 system.ruby.delayVCHist.vnet_2::samples           912                       # delay histogram for vnet_2
-system.ruby.delayVCHist.vnet_2::mean         0.294956                       # delay histogram for vnet_2
-system.ruby.delayVCHist.vnet_2::stdev        1.138902                       # delay histogram for vnet_2
+system.ruby.delayVCHist.vnet_2::mean         0.589912                       # delay histogram for vnet_2
+system.ruby.delayVCHist.vnet_2::stdev        2.277805                       # delay histogram for vnet_2
 system.ruby.delayVCHist.vnet_2           |         847     92.87%     92.87% |          31      3.40%     96.27% |          24      2.63%     98.90% |           5      0.55%     99.45% |           4      0.44%     99.89% |           0      0.00%     99.89% |           1      0.11%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for vnet_2
 system.ruby.delayVCHist.vnet_2::total             912                       # delay histogram for vnet_2
 system.ruby.LD.latency_hist::bucket_size          512                      

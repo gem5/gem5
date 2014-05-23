@@ -2007,7 +2007,6 @@ system.cpu2.idleCycles                       50897008                       # To
 system.cpu2.quiesceCycles                  3546076715                       # Total number of cycles that CPU has spent quiesced or waiting for an interrupt
 system.cpu2.committedInsts                   20499567                       # Number of Instructions Simulated
 system.cpu2.committedOps                     25336997                       # Number of Ops (including micro ops) Simulated
-system.cpu2.committedInsts_total             20499567                       # Number of Instructions Simulated
 system.cpu2.cpi                              4.308205                       # CPI: Cycles Per Instruction
 system.cpu2.cpi_total                        4.308205                       # CPI: Total CPI of All Threads
 system.cpu2.ipc                              0.232115                       # IPC: Instructions Per Cycle
