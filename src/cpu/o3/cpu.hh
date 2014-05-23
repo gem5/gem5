@@ -843,8 +843,6 @@ class FullO3CPU : public BaseO3CPU
     Stats::Vector committedInsts;
     /** Stat for the number of committed ops (including micro ops) per thread. */
     Stats::Vector committedOps;
-    /** Stat for the total number of committed instructions. */
-    Stats::Scalar totalCommittedInsts;
     /** Stat for the CPI per thread. */
     Stats::Formula cpi;
     /** Stat for the total CPI. */

@@ -509,16 +509,14 @@ FullO3CPU<Impl>::regStats()
     committedInsts
         .init(numThreads)
         .name(name() + ".committedInsts")
-        .desc("Number of Instructions Simulated");
+        .desc("Number of Instructions Simulated")
+        .flags(Stats::total);
 
     committedOps
         .init(numThreads)
         .name(name() + ".committedOps")
-        .desc("Number of Ops (including micro ops) Simulated");
-
-    totalCommittedInsts
-        .name(name() + ".committedInsts_total")
-        .desc("Number of Instructions Simulated");
+        .desc("Number of Ops (including micro ops) Simulated")
+        .flags(Stats::total);
 
     cpi
         .name(name() + ".cpi")
@@ -530,7 +528,7 @@ FullO3CPU<Impl>::regStats()
         .name(name() + ".cpi_total")
         .desc("CPI: Total CPI of All Threads")
         .precision(6);
-    totalCpi = numCycles / totalCommittedInsts;
+    totalCpi = numCycles / sum(committedInsts);
 
     ipc
         .name(name() + ".ipc")
@@ -542,7 +540,7 @@ FullO3CPU<Impl>::regStats()
         .name(name() + ".ipc_total")
         .desc("IPC: Total IPC of All Threads")
         .precision(6);
-    totalIpc =  totalCommittedInsts / numCycles;
+    totalIpc =  sum(committedInsts) / numCycles;
 
     this->fetch.regStats();
     this->decode.regStats();
@@ -1601,7 +1599,6 @@ FullO3CPU<Impl>::instDone(ThreadID tid, DynInstPtr &inst)
         thread[tid]->numInst++;
         thread[tid]->numInsts++;
         committedInsts[tid]++;
-        totalCommittedInsts++;
     }
     thread[tid]->numOp++;
     thread[tid]->numOps++;
