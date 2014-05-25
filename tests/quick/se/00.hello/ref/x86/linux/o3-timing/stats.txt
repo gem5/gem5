@@ -536,7 +536,6 @@ system.cpu.timesIdled                             165                       # Nu
 system.cpu.idleCycles                           18124                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.committedInsts                        5380                       # Number of Instructions Simulated
 system.cpu.committedOps                          9747                       # Number of Ops (including micro ops) Simulated
-system.cpu.committedInsts_total                  5380                       # Number of Instructions Simulated
 system.cpu.cpi                               7.439405                       # CPI: Cycles Per Instruction
 system.cpu.cpi_total                         7.439405                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               0.134419                       # IPC: Instructions Per Cycle
