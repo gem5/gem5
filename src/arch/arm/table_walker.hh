@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -362,6 +362,14 @@ class TableWalker : public MemObject
 
     };
 
+    // Granule sizes for AArch64 long descriptors
+    enum GrainSize {
+        Grain4KB  = 12,
+        Grain16KB = 14,
+        Grain64KB = 16,
+        ReservedGrain = 0
+    };
+
     /** Long-descriptor format (LPAE) */
     class LongDescriptor : public DescriptorBase {
       public:
@@ -409,11 +417,8 @@ class TableWalker : public MemObject
         /** True if the current lookup is performed in AArch64 state */
         bool aarch64;
 
-        /** True if the granule size is 64 KB (AArch64 only) */
-        bool largeGrain;
-
         /** Width of the granule size in bits */
-        int grainSize;
+        GrainSize grainSize;
 
         /** Return the descriptor type */
         EntryType type() const
@@ -421,8 +426,8 @@ class TableWalker : public MemObject
             switch (bits(data, 1, 0)) {
               case 0x1:
                 // In AArch64 blocks are not allowed at L0 for the 4 KB granule
-                // and at L1 for the 64 KB granule
-                if (largeGrain)
+                // and at L1 for 16/64 KB granules
+                if (grainSize > Grain4KB)
                     return lookupLevel == L2 ? Block : Invalid;
                 return lookupLevel == L0 || lookupLevel == L3 ? Invalid : Block;
               case 0x3:
@@ -435,15 +440,29 @@ class TableWalker : public MemObject
         /** Return the bit width of the page/block offset */
         uint8_t offsetBits() const
         {
-            assert(type() == Block || type() == Page);
-            if (largeGrain) {
-                if (type() == Block)
-                    return 29 /* 512 MB */;
-                return 16 /* 64 KB */;  // type() == Page
+            if (type() == Block) {
+                switch (grainSize) {
+                    case Grain4KB:
+                        return lookupLevel == L1 ? 30 /* 1 GB */
+                                                 : 21 /* 2 MB */;
+                    case Grain16KB:
+                        return 25  /* 32 MB */;
+                    case Grain64KB:
+                        return 29 /* 512 MB */;
+                    default:
+                        panic("Invalid AArch64 VM granule size\n");
+                }
+            } else if (type() == Page) {
+                switch (grainSize) {
+                    case Grain4KB:
+                    case Grain16KB:
+                    case Grain64KB:
+                        return grainSize; /* enum -> uint okay */
+                    default:
+                        panic("Invalid AArch64 VM granule size\n");
+                }
             } else {
-                if (type() == Block)
-                    return lookupLevel == L1 ? 30 /* 1 GB */ : 21 /* 2 MB */;
-                return 12 /* 4 KB */;  // type() == Page
+                panic("AArch64 page table entry must be block or page\n");
             }
         }
 
@@ -707,8 +726,11 @@ class TableWalker : public MemObject
         /** Cached copy of the cpsr as it existed when translation began */
         CPSR cpsr;
 
-        /** Cached copy of the ttbcr as it existed when translation began. */
-        TTBCR ttbcr;
+        /** Cached copy of ttbcr/tcr as it existed when translation began */
+        union {
+            TTBCR ttbcr; // AArch32 translations
+            TCR tcr;     // AArch64 translations
+        };
 
         /** Cached copy of the htcr as it existed when translation began. */
         HTCR htcr;

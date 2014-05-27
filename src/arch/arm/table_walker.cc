@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -220,18 +220,18 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
           case EL0:
           case EL1:
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
-            currState->ttbcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
+            currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
             break;
           // @todo: uncomment this to enable Virtualization
           // case EL2:
           //   assert(haveVirtualization);
           //   currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
-          //   currState->ttbcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
+          //   currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
           //   break;
           case EL3:
             assert(haveSecurity);
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL3);
-            currState->ttbcr = currState->tc->readMiscReg(MISCREG_TCR_EL3);
+            currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL3);
             break;
           default:
             panic("Invalid exception level");
@@ -625,8 +625,7 @@ TableWalker::processWalkLPAE()
 
     currState->longDesc.lookupLevel = start_lookup_level;
     currState->longDesc.aarch64 = false;
-    currState->longDesc.largeGrain = false;
-    currState->longDesc.grainSize = 12;
+    currState->longDesc.grainSize = Grain4KB;
 
     Event *event = start_lookup_level == L1 ? (Event *) &doL1LongDescEvent
                                             : (Event *) &doL2LongDescEvent;
@@ -663,13 +662,18 @@ TableWalker::processWalkAArch64()
 {
     assert(currState->aarch64);
 
-    DPRINTF(TLB, "Beginning table walk for address %#llx, TTBCR: %#llx\n",
-            currState->vaddr_tainted, currState->ttbcr);
+    DPRINTF(TLB, "Beginning table walk for address %#llx, TCR: %#llx\n",
+            currState->vaddr_tainted, currState->tcr);
+
+    static const GrainSize GrainMapDefault[] =
+      { Grain4KB, Grain64KB, Grain16KB, ReservedGrain };
+    static const GrainSize GrainMap_EL1_tg1[] =
+      { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
 
     // Determine TTBR, table size, granule size and phys. address range
     Addr ttbr = 0;
     int tsz = 0, ps = 0;
-    bool large_grain = false;
+    GrainSize tg = Grain4KB; // grain size computed from tg* field
     bool fault = false;
     switch (currState->el) {
       case EL0:
@@ -678,44 +682,44 @@ TableWalker::processWalkAArch64()
           case 0:
             DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
-            tsz = adjustTableSizeAArch64(64 - currState->ttbcr.t0sz);
-            large_grain = currState->ttbcr.tg0;
+            tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+            tg = GrainMapDefault[currState->tcr.tg0];
             if (bits(currState->vaddr, 63, tsz) != 0x0 ||
-                currState->ttbcr.epd0)
+                currState->tcr.epd0)
               fault = true;
             break;
           case 0xffff:
             DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL1);
-            tsz = adjustTableSizeAArch64(64 - currState->ttbcr.t1sz);
-            large_grain = currState->ttbcr.tg1;
+            tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+            tg = GrainMap_EL1_tg1[currState->tcr.tg1];
             if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
-                currState->ttbcr.epd1)
+                currState->tcr.epd1)
               fault = true;
             break;
           default:
             // top two bytes must be all 0s or all 1s, else invalid addr
             fault = true;
         }
-        ps = currState->ttbcr.ips;
+        ps = currState->tcr.ips;
         break;
       case EL2:
       case EL3:
         switch(bits(currState->vaddr, 63,48)) {
             case 0:
-        DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
-        if (currState->el == EL2)
-            ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
-        else
-            ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
-        tsz = adjustTableSizeAArch64(64 - currState->ttbcr.t0sz);
-        large_grain = currState->ttbcr.tg0;
+                DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+                if (currState->el == EL2)
+                    ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
+                else
+                    ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
+                tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+                tg = GrainMapDefault[currState->tcr.tg0];
                 break;
             default:
                 // invalid addr if top two bytes are not all 0s
-            fault = true;
+                fault = true;
         }
-        ps = currState->ttbcr.ps;
+        ps = currState->tcr.ips;
         break;
     }
 
@@ -744,32 +748,54 @@ TableWalker::processWalkAArch64()
 
     }
 
+    if (tg == ReservedGrain) {
+        warn_once("Reserved granule size requested; gem5's IMPLEMENTATION "
+                  "DEFINED behavior takes this to mean 4KB granules\n");
+        tg = Grain4KB;
+    }
+
+    int stride = tg - 3;
+    LookupLevel start_lookup_level = MAX_LOOKUP_LEVELS;
+
     // Determine starting lookup level
-    LookupLevel start_lookup_level;
-    int grain_size, stride;
-    if (large_grain) {  // 64 KB granule
-        grain_size = 16;
-        stride = grain_size - 3;
-        if (tsz > grain_size + 2 * stride)
-            start_lookup_level = L1;
-        else if (tsz > grain_size + stride)
-            start_lookup_level = L2;
-        else
-            start_lookup_level = L3;
-    } else {  // 4 KB granule
-        grain_size = 12;
-        stride = grain_size - 3;
-        if (tsz > grain_size + 3 * stride)
-            start_lookup_level = L0;
-        else if (tsz > grain_size + 2 * stride)
-            start_lookup_level = L1;
-        else
-            start_lookup_level = L2;
+    // See aarch64/translation/walk in Appendix G: ARMv8 Pseudocode Library
+    // in ARM DDI 0487A.  These table values correspond to the cascading tests
+    // to compute the lookup level and are of the form
+    // (grain_size + N*stride), for N = {1, 2, 3}.
+    // A value of 64 will never succeed and a value of 0 will always succeed.
+    {
+        struct GrainMap {
+            GrainSize grain_size;
+            unsigned lookup_level_cutoff[MAX_LOOKUP_LEVELS];
+        };
+        static const GrainMap GM[] = {
+            { Grain4KB,  { 39, 30,  0, 0 } },
+            { Grain16KB, { 47, 36, 25, 0 } },
+            { Grain64KB, { 64, 42, 29, 0 } }
+        };
+
+        const unsigned *lookup = NULL; // points to a lookup_level_cutoff
+
+        for (unsigned i = 0; i < 3; ++i) { // choose entry of GM[]
+            if (tg == GM[i].grain_size) {
+                lookup = GM[i].lookup_level_cutoff;
+                break;
+            }
+        }
+        assert(lookup);
+
+        for (int L = L0; L != MAX_LOOKUP_LEVELS; ++L) {
+            if (tsz > lookup[L]) {
+                start_lookup_level = (LookupLevel) L;
+                break;
+            }
+        }
+        panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
+                 "Table walker couldn't find lookup level\n");
     }
 
     // Determine table base address
-    int base_addr_lo = 3 + tsz - stride * (3 - start_lookup_level) -
-        grain_size;
+    int base_addr_lo = 3 + tsz - stride * (3 - start_lookup_level) - tg;
     Addr base_addr = mbits(ttbr, 47, base_addr_lo);
 
     // Determine physical address size and raise an Address Size Fault if
@@ -812,7 +838,7 @@ TableWalker::processWalkAArch64()
     // Determine descriptor address
     Addr desc_addr = base_addr |
         (bits(currState->vaddr, tsz - 1,
-              stride * (3 - start_lookup_level) + grain_size) << 3);
+              stride * (3 - start_lookup_level) + tg) << 3);
 
     // Trickbox address check
     Fault f = tlb->walkTrickBoxCheck(desc_addr, currState->isSecure,
@@ -839,8 +865,7 @@ TableWalker::processWalkAArch64()
 
     currState->longDesc.lookupLevel = start_lookup_level;
     currState->longDesc.aarch64 = true;
-    currState->longDesc.largeGrain = large_grain;
-    currState->longDesc.grainSize = grain_size;
+    currState->longDesc.grainSize = tg;
 
     if (currState->timing) {
         Event *event;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1714,6 +1714,30 @@ namespace ArmISA
         Bitfield<18, 16> ps;
         Bitfield<20> tbi;
     EndBitUnion(TTBCR)
+
+    // Fields of TCR_EL{1,2,3} (mostly overlapping)
+    // TCR_EL1 is natively 64 bits, the others are 32 bits
+    BitUnion64(TCR)
+        Bitfield<5, 0> t0sz;
+        Bitfield<7> epd0; // EL1
+        Bitfield<9, 8> irgn0;
+        Bitfield<11, 10> orgn0;
+        Bitfield<13, 12> sh0;
+        Bitfield<15, 14> tg0;
+        Bitfield<18, 16> ps;
+        Bitfield<20> tbi; // EL2/EL3
+        Bitfield<21, 16> t1sz; // EL1
+        Bitfield<22> a1; // EL1
+        Bitfield<23> epd1; // EL1
+        Bitfield<25, 24> irgn1; // EL1
+        Bitfield<27, 26> orgn1; // EL1
+        Bitfield<29, 28> sh1; // EL1
+        Bitfield<31, 30> tg1; // EL1
+        Bitfield<34, 32> ips; // EL1
+        Bitfield<36> as; // EL1
+        Bitfield<37> tbi0; // EL1
+        Bitfield<38> tbi1; // EL1
+    EndBitUnion(TCR)
 
     BitUnion32(HTCR)
         Bitfield<2, 0> t0sz;
