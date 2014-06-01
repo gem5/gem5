@@ -290,7 +290,7 @@ TLB::demapContext(int partition_id, int context_id)
     for (int x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
             tlb[x].range.partitionId == partition_id) {
-            if (tlb[x].valid == true) {
+            if (tlb[x].valid) {
                 freeList.push_front(&tlb[x]);
             }
             tlb[x].valid = false;
@@ -329,7 +329,7 @@ TLB::flushAll()
     lookupTable.clear();
 
     for (int x = 0; x < size; x++) {
-        if (tlb[x].valid == true)
+        if (tlb[x].valid)
             freeList.push_back(&tlb[x]);
         tlb[x].valid = false;
         tlb[x].used = false;

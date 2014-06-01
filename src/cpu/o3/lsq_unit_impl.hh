@@ -612,12 +612,12 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
 
     // If the instruction faulted or predicated false, then we need to send it
     // along to commit without the instruction completing.
-    if (load_fault != NoFault || inst->readPredicate() == false) {
+    if (load_fault != NoFault || !inst->readPredicate()) {
         // Send this instruction to commit, also make sure iew stage
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
-        if (inst->readPredicate() == false)
+        if (!inst->readPredicate())
             inst->forwardOldRegs();
         DPRINTF(LSQUnit, "Load [sn:%lli] not executed from %s\n",
                 inst->seqNum,
@@ -665,7 +665,7 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
         store_fault == NoFault)
         return store_fault;
 
-    if (store_inst->readPredicate() == false)
+    if (!store_inst->readPredicate())
         store_inst->forwardOldRegs();
 
     if (storeQueue[store_idx].size == 0) {
@@ -673,7 +673,7 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
                 store_inst->pcState(), store_inst->seqNum);
 
         return store_fault;
-    } else if (store_inst->readPredicate() == false) {
+    } else if (!store_inst->readPredicate()) {
         DPRINTF(LSQUnit, "Store [sn:%lli] not executed from predication\n",
                 store_inst->seqNum);
         return store_fault;

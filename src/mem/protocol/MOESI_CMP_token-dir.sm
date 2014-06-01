@@ -708,7 +708,7 @@ machine(Directory, "Token protocol")
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
 
     if (tbe.WentPersistent) {
-      assert(starving == true);
+      assert(starving);
 
       enqueue(persistentNetwork_out, PersistentMsg, 1) {
         out_msg.Addr := address;

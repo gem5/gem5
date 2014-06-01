@@ -165,7 +165,7 @@ machine(L2Cache, "Token protocol")
   State getState(Entry cache_entry, Address addr) {
     if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
-    } else if (persistentTable.isLocked(addr) == true) {
+    } else if (persistentTable.isLocked(addr)) {
       return State:I_L;
     } else {
       return State:NP;
@@ -250,7 +250,7 @@ machine(L2Cache, "Token protocol")
 
   bool exclusiveExists(Address addr) {
     if (localDirectory.isTagPresent(addr)) {
-      if (localDirectory[addr].exclusive == true) {
+      if (localDirectory[addr].exclusive) {
         return true;
       }
       else {
@@ -285,7 +285,7 @@ machine(L2Cache, "Token protocol")
   }
 
   void clearExclusiveBitIfExists(Address addr) {
-    if (localDirectory.isTagPresent(addr) == true) {
+    if (localDirectory.isTagPresent(addr)) {
       localDirectory[addr].exclusive := false;
     }
   }
@@ -761,7 +761,7 @@ machine(L2Cache, "Token protocol")
 
   action(j_forwardTransientRequestToLocalSharers, "j", desc="Forward external transient request to local sharers") {
     peek(requestNetwork_in, RequestMsg) {
-      if (filtering_enabled == true && in_msg.RetryNum == 0 && sharersExist(in_msg.Addr) == false) {
+      if (filtering_enabled && in_msg.RetryNum == 0 && sharersExist(in_msg.Addr) == false) {
         //profile_filter_action(1);
         DPRINTF(RubySlicc, "filtered message, Retry Num: %d\n",
                 in_msg.RetryNum);

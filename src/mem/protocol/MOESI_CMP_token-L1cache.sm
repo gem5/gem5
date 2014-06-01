@@ -261,7 +261,7 @@ machine(L1Cache, "Token protocol")
     } else if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
     } else {
-      if ((persistentTable.isLocked(addr) == true) && (persistentTable.findSmallest(addr) != machineID)) {
+      if (persistentTable.isLocked(addr) && (persistentTable.findSmallest(addr) != machineID)) {
       // Not in cache, in persistent table, but this processor isn't highest priority
       return State:I_L;
       } else {
@@ -1401,7 +1401,7 @@ machine(L1Cache, "Token protocol")
 
     assert(is_valid(tbe));
     if (tbe.WentPersistent) {
-      // assert(starving == true);
+      // assert(starving);
       outstandingRequests := outstandingRequests - 1;
       enqueue(persistentNetwork_out, PersistentMsg, l1_request_latency) {
         out_msg.Addr := address;
@@ -1428,7 +1428,7 @@ machine(L1Cache, "Token protocol")
 
     // Update average latency
     if (tbe.IssueCount <= 1) {
-      if (tbe.ExternalResponse == true) {
+      if (tbe.ExternalResponse) {
         updateAverageLatencyEstimate(curCycle() - tbe.IssueTime);
       }
     }

@@ -1101,7 +1101,7 @@ InstQueue<Impl>::addToDependents(DynInstPtr &new_inst)
             // it be added to the dependency graph.
             if (src_reg >= numPhysRegs) {
                 continue;
-            } else if (regScoreboard[src_reg] == false) {
+            } else if (!regScoreboard[src_reg]) {
                 DPRINTF(IQ, "Instruction PC %#x has src reg %i that "
                         "is being added to the dependency chain.\n",
                         new_inst->readPC(), src_reg);

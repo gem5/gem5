@@ -160,7 +160,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     Tick current_time = m_sender->clockEdge();
     Tick arrival_time = 0;
 
-    if (!RubySystem::getRandomization() || (m_randomization == false)) {
+    if (!RubySystem::getRandomization() || !m_randomization) {
         // No randomization
         arrival_time = current_time + delta * m_sender->clockPeriod();
     } else {

@@ -519,7 +519,7 @@ ROB<Impl>::readHeadInst(ThreadID tid)
     if (threadEntries[tid] != 0) {
         InstIt head_thread = instList[tid].begin();
 
-        assert((*head_thread)->isInROB()==true);
+        assert((*head_thread)->isInROB());
 
         return *head_thread;
     } else {

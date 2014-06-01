@@ -248,19 +248,19 @@ void
 PipelineStage::removeStalls(ThreadID tid)
 {
     for (int st_num = 0; st_num < NumStages; st_num++) {
-        if (stalls[tid].stage[st_num] == true) {
+        if (stalls[tid].stage[st_num]) {
             DPRINTF(InOrderStage, "Removing stall from stage %i.\n",
                     st_num);
             stalls[tid].stage[st_num] = false;
         }
 
-        if (toPrevStages->stageBlock[st_num][tid] == true) {
+        if (toPrevStages->stageBlock[st_num][tid]) {
             DPRINTF(InOrderStage, "Removing pending block from stage %i.\n",
                     st_num);
             toPrevStages->stageBlock[st_num][tid] = false;
         }
 
-        if (fromNextStages->stageBlock[st_num][tid] == true) {
+        if (fromNextStages->stageBlock[st_num][tid]) {
             DPRINTF(InOrderStage, "Removing pending block from stage %i.\n",
                     st_num);
             fromNextStages->stageBlock[st_num][tid] = false;

@@ -487,7 +487,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %s "
             "[sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
-    if (toCommit->squash[tid] == false ||
+    if (!toCommit->squash[tid] ||
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
         toCommit->squashedSeqNum[tid] = inst->seqNum;
@@ -517,7 +517,7 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
     // case the memory violator should take precedence over the branch
     // misprediction because it requires the violator itself to be included in
     // the squash.
-    if (toCommit->squash[tid] == false ||
+    if (!toCommit->squash[tid] ||
             inst->seqNum <= toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
 
@@ -538,7 +538,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Memory blocked, squashing load and younger insts, "
             "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
-    if (toCommit->squash[tid] == false ||
+    if (!toCommit->squash[tid] ||
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
 
@@ -1314,7 +1314,7 @@ DefaultIEW<Impl>::executeInsts()
                 }
 
                 // If the store had a fault then it may not have a mem req
-                if (fault != NoFault || inst->readPredicate() == false ||
+                if (fault != NoFault || !inst->readPredicate() ||
                         !inst->isStoreConditional()) {
                     // If the instruction faulted, then we need to send it along
                     // to commit without the instruction completing.
@@ -1339,7 +1339,7 @@ DefaultIEW<Impl>::executeInsts()
             // will be replaced and we will lose it.
             if (inst->getFault() == NoFault) {
                 inst->execute();
-                if (inst->readPredicate() == false)
+                if (!inst->readPredicate())
                     inst->forwardOldRegs();
             }
 

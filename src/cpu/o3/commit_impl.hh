@@ -843,10 +843,10 @@ DefaultCommit<Impl>::commit()
 
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
-        if (trapSquash[tid] == true) {
+        if (trapSquash[tid]) {
             assert(!tcSquash[tid]);
             squashFromTrap(tid);
-        } else if (tcSquash[tid] == true) {
+        } else if (tcSquash[tid]) {
             assert(commitStatus[tid] != TrapPending);
             squashFromTC(tid);
         } else if (commitStatus[tid] == SquashAfterPending) {
@@ -885,7 +885,7 @@ DefaultCommit<Impl>::commit()
             // then use one older sequence number.
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
-            if (fromIEW->includeSquashInst[tid] == true) {
+            if (fromIEW->includeSquashInst[tid]) {
                 squashed_inst--;
             }
 

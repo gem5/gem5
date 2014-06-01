@@ -104,7 +104,7 @@ HexFile::parseLine(char *Str, Addr *A, uint32_t *D)
         } else if (Str[i] == ' ' || Str[i] == '\n') {
             if (Number == 0)
                 return;
-            if (Flag == false) {
+            if (!Flag) {
                 *A = Number;
                 Number = 0;
                 Flag = true;
@@ -125,7 +125,7 @@ HexFile::parseLine(char *Str, Addr *A, uint32_t *D)
         i++;
     }
 
-    if (Flag != true) {
+    if (!Flag) {
         *A = 0;
         *D = 0;
     } else {

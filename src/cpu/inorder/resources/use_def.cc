@@ -191,7 +191,7 @@ UseDefUnit::execute(int slot_idx)
     // If there is a non-speculative instruction
     // in the pipeline then stall instructions here
     // ---
-    if (*nonSpecInstActive[tid] == true && seq_num > *nonSpecSeqNum[tid]) {
+    if (*nonSpecInstActive[tid] && seq_num > *nonSpecSeqNum[tid]) {
         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i] cannot execute because"
                 "there is non-speculative instruction [sn:%i] has not "
                 "graduated.\n", tid, seq_num, *nonSpecSeqNum[tid]);

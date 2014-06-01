@@ -1763,7 +1763,7 @@ InOrderCPU::cleanUpRemovedInsts()
         // Clear if Non-Speculative
         if (inst->staticInst &&
             inst->seqNum == nonSpecSeqNum[tid] &&
-            nonSpecInstActive[tid] == true) {
+            nonSpecInstActive[tid]) {
             nonSpecInstActive[tid] = false;
         }
 

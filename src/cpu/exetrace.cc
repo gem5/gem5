@@ -115,7 +115,7 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
             outs << Enums::OpClassStrings[inst->opClass()] << " : ";
         }
 
-        if (Debug::ExecResult && predicate == false) {
+        if (Debug::ExecResult && !predicate) {
             outs << "Predicated False";
         }
 

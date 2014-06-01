@@ -184,7 +184,7 @@ TLB::insertAt(PTE &pte, unsigned Index, int _smallPages)
                  (pte.D0 << 2) | (pte.V0 <<1) | pte.G),
                 ((pte.PFN1 <<6) | (pte.C1 << 3) |
                  (pte.D1 << 2) | (pte.V1 <<1) | pte.G));
-        if (table[Index].V0 == true || table[Index].V1 == true) {
+        if (table[Index].V0 || table[Index].V1) {
             // Previous entry is valid
             PageTable::iterator i = lookupTable.find(table[Index].VPN);
             lookupTable.erase(i);

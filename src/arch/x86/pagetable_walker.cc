@@ -233,7 +233,7 @@ Fault
 Walker::WalkerState::startWalk()
 {
     Fault fault = NoFault;
-    assert(started == false);
+    assert(!started);
     started = true;
     setupWalk(req->getVaddr());
     if (timing) {
@@ -262,7 +262,7 @@ Fault
 Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
 {
     Fault fault = NoFault;
-    assert(started == false);
+    assert(!started);
     started = true;
     setupWalk(addr);
 

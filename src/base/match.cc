@@ -89,7 +89,7 @@ ObjectMatch::domatch(const string &name) const
             }
         }
 
-        if (match == true)
+        if (match)
             return true;
     }
 

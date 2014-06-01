@@ -68,12 +68,11 @@ class PeekStatementAST(StatementAST):
         if self.pairs.has_key("block_on"):
             address_field = self.pairs['block_on']
             code('''
-    if ( (m_is_blocking == true) &&
-         (m_block_map.count(in_msg_ptr->m_$address_field) == 1) ) {
-         if (m_block_map[in_msg_ptr->m_$address_field] != &$qcode) {
+    if (m_is_blocking &&
+        (m_block_map.count(in_msg_ptr->m_$address_field) == 1) &&
+        (m_block_map[in_msg_ptr->m_$address_field] != &$qcode)) {
             $qcode.delayHead();
             continue;
-         }
     }
             ''')
 

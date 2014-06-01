@@ -430,8 +430,8 @@ DefaultFetch<Impl>::drainSanityCheck() const
     assert(isDrained());
     assert(retryPkt == NULL);
     assert(retryTid == InvalidThreadID);
-    assert(cacheBlocked == false);
-    assert(interruptPending == false);
+    assert(!cacheBlocked);
+    assert(!interruptPending);
 
     for (ThreadID i = 0; i < numThreads; ++i) {
         assert(!memReq[i]);

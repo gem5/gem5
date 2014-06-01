@@ -165,7 +165,7 @@ TLB::insertAt(PowerISA::PTE &pte, unsigned Index, int _smallPages)
     } else {
 
         // Update TLB
-        if (table[Index].V0 == true || table[Index].V1 == true) {
+        if (table[Index].V0 || table[Index].V1) {
 
             // Previous entry is valid
             PageTable::iterator i = lookupTable.find(table[Index].VPN);

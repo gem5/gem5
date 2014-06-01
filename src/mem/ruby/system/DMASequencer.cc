@@ -94,7 +94,7 @@ DMASequencer::makeRequest(PacketPtr pkt)
 void
 DMASequencer::issueNext()
 {
-    assert(m_is_busy == true);
+    assert(m_is_busy);
     active_request.bytes_completed = active_request.bytes_issued;
     if (active_request.len == active_request.bytes_completed) {
         //
@@ -144,12 +144,12 @@ DMASequencer::issueNext()
 void
 DMASequencer::dataCallback(const DataBlock & dblk)
 {
-    assert(m_is_busy == true);
+    assert(m_is_busy);
     int len = active_request.bytes_issued - active_request.bytes_completed;
     int offset = 0;
     if (active_request.bytes_completed == 0)
         offset = active_request.start_paddr & m_data_block_mask;
-    assert(active_request.write == false);
+    assert(!active_request.write);
     if (active_request.data != NULL) {
         memcpy(&active_request.data[active_request.bytes_completed],
                dblk.getData(offset, len), len);
