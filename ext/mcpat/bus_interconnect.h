@@ -1,7 +1,7 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,65 +25,71 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Joel Hestness
  *
  ***************************************************************************/
 
-#ifndef SHAREDCACHE_H_
-#define SHAREDCACHE_H_
-#include <vector>
+#ifndef BUS_INTERCONNECT_H_
+#define BUS_INTERCONNECT_H_
 
-#include "XML_Parse.h"
-#include "area.h"
 #include "array.h"
 #include "basic_components.h"
+#include "interconnect.h"
 #include "logic.h"
 #include "parameter.h"
 
-class SharedCache :public Component{
-  public:
-    ParseXML * XML;
-    int ithCache;
-        InputParameter interface_ip;
-        enum cache_level cacheL;
-    DataCache unicache;//Shared cache
-    CacheDynParam cachep;
-    statsDef   homenode_tdp_stats;
-    statsDef   homenode_rtp_stats;
-    statsDef   homenode_stats_t;
-    double	   dir_overhead;
-    //	cache_processor llCache,directory, directory1, inv_dir;
-
-    //pipeline pipeLogicCache, pipeLogicDirectory;
-    //clock_network				clockNetwork;
-    double scktRatio, executionTime;
-    //   Component L2Tot, cc, cc1, ccTot;
-
-    SharedCache(ParseXML *XML_interface, int ithCache_, InputParameter* interface_ip_,enum cache_level cacheL_ =L2);
-    void set_cache_param();
-        void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,bool is_tdp=true);
-    ~SharedCache(){};
+class BusInterconnectParameters {
+public:
+    double clockRate;
+    int flit_size;
+    int input_ports;
+    int output_ports;
+    int min_ports;
+    int global_linked_ports;
+    int virtual_channel_per_port;
+    int input_buffer_entries_per_vc;
+    int total_nodes;
+    double link_throughput;
+    double link_latency;
+    double chip_coverage;
+    bool pipelinable;
+    double route_over_perc;
+    bool has_global_link;
+    bool type;
+    double M_traffic_pattern;
+    double link_base_width;
+    double link_base_height;
+    int link_start_wiring_level;
 };
 
-class CCdir :public Component{
-  public:
-    ParseXML * XML;
-    int ithCache;
-        InputParameter interface_ip;
-    DataCache dc;//Shared cache
-    ArrayST * shadow_dir;
-//	cache_processor llCache,directory, directory1, inv_dir;
-
-    //pipeline pipeLogicCache, pipeLogicDirectory;
-    //clock_network				clockNetwork;
-    double scktRatio, clockRate, executionTime;
-    Component L2Tot, cc, cc1, ccTot;
-
-    CCdir(ParseXML *XML_interface, int ithCache_, InputParameter* interface_ip_);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,bool is_tdp=true);
-    ~CCdir();
+class BusInterconnectStatistics {
+public:
+    double duty_cycle;
+    double total_access;
 };
 
-#endif /* SHAREDCACHE_H_ */
+class BusInterconnect : public McPATComponent {
+public:
+    Interconnect* link_bus;
+
+    int ithNoC;
+    InputParameter interface_ip;
+    double link_len;
+    double scktRatio, chip_PR_overhead, macro_PR_overhead;
+    BusInterconnectParameters bus_params;
+    BusInterconnectStatistics bus_stats;
+    uca_org_t local_result;
+    statsDef stats_t;
+    double M_traffic_pattern;
+
+    BusInterconnect(XMLNode* _xml_data, InputParameter* interface_ip_);
+    void set_param_stats();
+    void set_duty_cycle(double duty_cycle);
+    void set_number_of_accesses(double total_accesses);
+    void computeEnergy();
+    ~BusInterconnect();
+};
+
+#endif /* BUS_INTERCONNECT_H_ */

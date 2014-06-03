@@ -29,13 +29,16 @@ VPATH = cacti
 
 SRCS  = \
   Ucache.cc \
-  XML_Parse.cc \
   arbiter.cc \
   area.cc \
   array.cc \
   bank.cc \
   basic_circuit.cc \
   basic_components.cc \
+  bus_interconnect.cc \
+  cachearray.cc \
+  cachecontroller.cc \
+  cacheunit.cc \
   cacti_interface.cc \
   component.cc \
   core.cc \
@@ -52,14 +55,13 @@ SRCS  = \
   noc.cc \
   nuca.cc \
   parameter.cc \
-  processor.cc \
   router.cc \
-  sharedcache.cc \
   subarray.cc \
+  system.cc \
   technology.cc \
   uca.cc \
   wire.cc \
-  xmlParser.cc 
+  xmlParser.cc
 
 OBJS = $(patsubst %.cc,$(ODIR)/obj_$(TAG)/%.o,$(SRCS))
 

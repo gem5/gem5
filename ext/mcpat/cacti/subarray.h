@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -41,9 +42,8 @@
 using namespace std;
 
 
-class Subarray : public Component
-{
-  public:
+class Subarray : public Component {
+public:
     Subarray(const DynamicParameter & dp, bool is_fa_);
     ~Subarray();
 
@@ -59,7 +59,7 @@ class Subarray : public Component
     double  C_wl, C_wl_cam, C_wl_ram;
     double  R_wl, R_wl_cam, R_wl_ram;
     double  C_bl, C_bl_cam;
-  private:
+private:
 
     void compute_C();  // compute bitline and wordline capacitance
 };

@@ -1,7 +1,6 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
  *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
@@ -28,83 +27,74 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Authors: Joel Hestness
+ *          Yasuko Eckert
+ *
  ***************************************************************************/
 
+#include <cmath>
 #include <iostream>
-#include <math.h>
 
 #include "area.h"
-#include "array.h"
+#include "cachearray.h"
 #include "common.h"
 #include "decoder.h"
 #include "parameter.h"
 
 using namespace std;
 
-double ArrayST::area_efficiency_threshold = 20.0;
-int ArrayST::ed = 0;
+double CacheArray::area_efficiency_threshold = 20.0;
+int CacheArray::ed = 0;
 //Fixed number, make sure timing can be satisfied.
-int ArrayST::delay_wt = 100;
-int ArrayST::cycle_time_wt = 1000;
+int CacheArray::delay_wt = 100;
+int CacheArray::cycle_time_wt = 1000;
 //Fixed number, This is used to exhaustive search for individual components.
-int ArrayST::area_wt = 10;
+int CacheArray::area_wt = 10;
 //Fixed number, This is used to exhaustive search for individual components.
-int ArrayST::dynamic_power_wt = 10;
-int ArrayST::leakage_power_wt = 10;
+int CacheArray::dynamic_power_wt = 10;
+int CacheArray::leakage_power_wt = 10;
 //Fixed number, make sure timing can be satisfied.
-int ArrayST::delay_dev = 1000000;
-int ArrayST::cycle_time_dev = 100;
+int CacheArray::delay_dev = 1000000;
+int CacheArray::cycle_time_dev = 100;
 //Fixed number, This is used to exhaustive search for individual components.
-int ArrayST::area_dev = 1000000;
+int CacheArray::area_dev = 1000000;
 //Fixed number, This is used to exhaustive search for individual components.
-int ArrayST::dynamic_power_dev = 1000000;
-int ArrayST::leakage_power_dev = 1000000;
-int ArrayST::cycle_time_dev_threshold = 10;
+int CacheArray::dynamic_power_dev = 1000000;
+int CacheArray::leakage_power_dev = 1000000;
+int CacheArray::cycle_time_dev_threshold = 10;
 
-
-ArrayST::ArrayST(XMLNode* _xml_data,
+CacheArray::CacheArray(XMLNode* _xml_data,
                  const InputParameter *configure_interface, string _name,
                  enum Device_ty device_ty_, double _clockRate,
                  bool opt_local_, enum Core_type core_ty_, bool _is_default)
         : McPATComponent(_xml_data), l_ip(*configure_interface),
         device_ty(device_ty_), opt_local(opt_local_), core_ty(core_ty_),
-        is_default(_is_default) {
+        is_default(_is_default), sbt_dir_overhead(0) {
     name = _name;
     clockRate = _clockRate;
-    if (l_ip.cache_sz < MIN_BUFFER_SIZE)
+    if (l_ip.cache_sz < MIN_BUFFER_SIZE) {
         l_ip.cache_sz = MIN_BUFFER_SIZE;
+    }
 
     if (!l_ip.error_checking(name)) {
         exit(1);
     }
 
-    output_data.reset();
+    sbt_tdp_stats.reset();
+    sbt_rtp_stats.reset();
 
-    computeEnergy();
-    computeArea();
-}
+    // Compute initial search point
+    local_result.valid = false;
+    compute_base_power();
 
-void ArrayST::compute_base_power() {
-    local_result = cacti_interface(&l_ip);
-}
-
-void ArrayST::computeArea() {
-    area.set_area(local_result.area);
-    output_data.area = local_result.area / 1e6;
-}
-
-void ArrayST::computeEnergy() {
+    // Set up the cache by searching design space with cacti
     list<uca_org_t > candidate_solutions(0);
     list<uca_org_t >::iterator candidate_iter, min_dynamic_energy_iter;
-
     uca_org_t* temp_res = NULL;
-    local_result.valid = false;
-
     double throughput = l_ip.throughput;
     double latency = l_ip.latency;
     bool throughput_overflow = true;
     bool latency_overflow = true;
-    compute_base_power();
 
     if ((local_result.cycle_time - throughput) <= 1e-10 )
         throughput_overflow = false;
@@ -146,7 +136,7 @@ void ArrayST::computeEnergy() {
             //This is the time_dev to be used for next iteration
             l_ip.cycle_time_dev -= cycle_time_dev_threshold;
 
-            //		from best area to worst area -->worst timing to best timing
+            //      from best area to worst area -->worst timing to best timing
             if ((((local_result.cycle_time - throughput) <= 1e-10 ) &&
                  (local_result.access_time - latency) <= 1e-10) ||
                 (local_result.data_array2->area_efficiency <
@@ -204,6 +194,7 @@ void ArrayST::computeEnergy() {
                         (candidate_iter)->power.readOp.dynamic;
                     min_dynamic_energy_iter = candidate_iter;
                     local_result = *(min_dynamic_energy_iter);
+
                 } else {
                     candidate_iter->cleanup() ;
                 }
@@ -224,7 +215,7 @@ void ArrayST::computeEnergy() {
     local_result.area *= total_overhead;
 
     //maintain constant power density
-    double pppm_t[4] = {total_overhead, 1, 1, total_overhead};
+    double pppm_t[4]    = {total_overhead, 1, 1, total_overhead};
 
     double sckRation = g_tp.sckt_co_eff;
     local_result.power.readOp.dynamic *= sckRation;
@@ -256,57 +247,75 @@ void ArrayST::computeEnergy() {
         local_result.tag_array2->power =
             local_result.tag_array2->power * pppm_t;
     }
-
-    power = local_result.power;
-
-    output_data.peak_dynamic_power = power.readOp.dynamic * clockRate;
-    output_data.subthreshold_leakage_power = power.readOp.leakage;
-    output_data.gate_leakage_power = power.readOp.gate_leakage;
 }
 
-void ArrayST::leakage_feedback(double temperature)
-{
-  // Update the temperature. l_ip is already set and error-checked in the creator function.
-  l_ip.temp = (unsigned int)round(temperature/10.0)*10;
-
-  // This corresponds to cacti_interface() in the initialization process. Leakage power is updated here.
-  reconfigure(&l_ip,&local_result);
-
-  // Scale the power values. This is part of ArrayST::optimize_array().
-  double long_channel_device_reduction = longer_channel_device_reduction(device_ty,core_ty);
-
-  double macro_layout_overhead   = g_tp.macro_layout_overhead;
-  double chip_PR_overhead        = g_tp.chip_layout_overhead;
-  double total_overhead          = macro_layout_overhead*chip_PR_overhead;
-
-  double pppm_t[4]    = {total_overhead,1,1,total_overhead};
-
-  double sckRation = g_tp.sckt_co_eff;
-  local_result.power.readOp.dynamic *= sckRation;
-  local_result.power.writeOp.dynamic *= sckRation;
-  local_result.power.searchOp.dynamic *= sckRation;
-  local_result.power.readOp.leakage *= l_ip.nbanks;
-  local_result.power.readOp.longer_channel_leakage = local_result.power.readOp.leakage*long_channel_device_reduction;
-  local_result.power = local_result.power* pppm_t;
-
-  local_result.data_array2->power.readOp.dynamic *= sckRation;
-  local_result.data_array2->power.writeOp.dynamic *= sckRation;
-  local_result.data_array2->power.searchOp.dynamic *= sckRation;
-  local_result.data_array2->power.readOp.leakage *= l_ip.nbanks;
-  local_result.data_array2->power.readOp.longer_channel_leakage = local_result.data_array2->power.readOp.leakage*long_channel_device_reduction;
-  local_result.data_array2->power = local_result.data_array2->power* pppm_t;
-
-  if (!(l_ip.pure_cam || l_ip.pure_ram || l_ip.fully_assoc) && l_ip.is_cache)
-  {
-    local_result.tag_array2->power.readOp.dynamic *= sckRation;
-    local_result.tag_array2->power.writeOp.dynamic *= sckRation;
-    local_result.tag_array2->power.searchOp.dynamic *= sckRation;
-    local_result.tag_array2->power.readOp.leakage *= l_ip.nbanks;
-    local_result.tag_array2->power.readOp.longer_channel_leakage = local_result.tag_array2->power.readOp.leakage*long_channel_device_reduction;
-    local_result.tag_array2->power = local_result.tag_array2->power* pppm_t;
-  }
+void CacheArray::compute_base_power() {
+    local_result = cacti_interface(&l_ip);
 }
 
-ArrayST::~ArrayST() {
+void CacheArray::computeArea() {
+    area.set_area(local_result.area);
+    output_data.area = local_result.area / 1e6;
+}
+
+void CacheArray::computeEnergy() {
+    // Set the leakage power numbers
+    output_data.subthreshold_leakage_power = local_result.power.readOp.leakage;
+    output_data.gate_leakage_power = local_result.power.readOp.gate_leakage;
+
+    if (l_ip.assoc && l_ip.is_cache) {
+        // This is a standard cache array with data and tags
+        // Calculate peak dynamic power
+        output_data.peak_dynamic_power =
+            (local_result.tag_array2->power.readOp.dynamic +
+             local_result.data_array2->power.readOp.dynamic) *
+            tdp_stats.readAc.hit +
+            (local_result.tag_array2->power.readOp.dynamic) *
+            tdp_stats.readAc.miss +
+            (local_result.tag_array2->power.readOp.dynamic +
+             local_result.data_array2->power.writeOp.dynamic) *
+            tdp_stats.writeAc.hit +
+            (local_result.tag_array2->power.readOp.dynamic) *
+            tdp_stats.writeAc.miss;
+        output_data.peak_dynamic_power *= clockRate;
+
+        // Calculate the runtime dynamic power
+        output_data.runtime_dynamic_energy =
+            local_result.data_array2->power.readOp.dynamic *
+            rtp_stats.dataReadAc.access +
+            local_result.data_array2->power.writeOp.dynamic *
+            rtp_stats.dataWriteAc.access +
+            (local_result.tag_array2->power.readOp.dynamic *
+             rtp_stats.tagReadAc.access +
+             local_result.tag_array2->power.writeOp.dynamic *
+             rtp_stats.tagWriteAc.access) * l_ip.assoc;
+    } else {
+        // Calculate peak dynamic power
+        output_data.peak_dynamic_power =
+                local_result.power.readOp.dynamic * tdp_stats.readAc.access +
+                local_result.power.writeOp.dynamic * tdp_stats.writeAc.access +
+                local_result.power.searchOp.dynamic * tdp_stats.searchAc.access;
+        output_data.peak_dynamic_power *= clockRate;
+
+        // Calculate the runtime dynamic power
+        output_data.runtime_dynamic_energy =
+                local_result.power.readOp.dynamic * rtp_stats.readAc.access +
+                local_result.power.writeOp.dynamic * rtp_stats.writeAc.access +
+                local_result.power.searchOp.dynamic * rtp_stats.searchAc.access;
+    }
+
+    // An SBT directory has more dynamic power
+    if (sbt_dir_overhead > 0) {
+        // Calculate peak dynamic power
+        output_data.peak_dynamic_power +=
+            (computeSBTDynEnergy(&sbt_tdp_stats) * clockRate);
+
+        // Calculate the runtime dynamic power
+        output_data.runtime_dynamic_energy +=
+            computeSBTDynEnergy(&sbt_rtp_stats);
+    }
+}
+
+CacheArray::~CacheArray() {
     local_result.cleanup();
 }

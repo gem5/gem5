@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -50,9 +51,8 @@ class mem_array;
 class uca_org_t;
 
 
-class powerComponents
-{
-  public:
+class powerComponents {
+public:
     double dynamic;
     double leakage;
     double gate_leakage;
@@ -60,17 +60,24 @@ class powerComponents
     double longer_channel_leakage;
 
     powerComponents() : dynamic(0), leakage(0), gate_leakage(0), short_circuit(0), longer_channel_leakage(0)  { }
-    powerComponents(const powerComponents & obj) { *this = obj; }
-    powerComponents & operator=(const powerComponents & rhs)
-    {
-      dynamic = rhs.dynamic;
-      leakage = rhs.leakage;
-      gate_leakage  = rhs.gate_leakage;
-      short_circuit = rhs.short_circuit;
-      longer_channel_leakage = rhs.longer_channel_leakage;
-      return *this;
+    powerComponents(const powerComponents & obj) {
+        *this = obj;
     }
-    void reset() { dynamic = 0; leakage = 0; gate_leakage = 0; short_circuit = 0;longer_channel_leakage = 0;}
+    powerComponents & operator=(const powerComponents & rhs) {
+        dynamic = rhs.dynamic;
+        leakage = rhs.leakage;
+        gate_leakage  = rhs.gate_leakage;
+        short_circuit = rhs.short_circuit;
+        longer_channel_leakage = rhs.longer_channel_leakage;
+        return *this;
+    }
+    void reset() {
+        dynamic = 0;
+        leakage = 0;
+        gate_leakage = 0;
+        short_circuit = 0;
+        longer_channel_leakage = 0;
+    }
 
     friend powerComponents operator+(const powerComponents & x, const powerComponents & y);
     friend powerComponents operator*(const powerComponents & x, double const * const y);
@@ -78,22 +85,24 @@ class powerComponents
 
 
 
-class powerDef
-{
-  public:
+class powerDef {
+public:
     powerComponents readOp;
     powerComponents writeOp;
     powerComponents searchOp;//Sheng: for CAM and FA
 
     powerDef() : readOp(), writeOp(), searchOp() { }
-    void reset() { readOp.reset(); writeOp.reset(); searchOp.reset();}
+    void reset() {
+        readOp.reset();
+        writeOp.reset();
+        searchOp.reset();
+    }
 
     friend powerDef operator+(const powerDef & x, const powerDef & y);
     friend powerDef operator*(const powerDef & x, double const * const y);
 };
 
-enum Wire_type
-{
+enum Wire_type {
     Global /* gloabl wires with repeaters */,
     Global_5 /* 5% delay penalty */,
     Global_10 /* 10% delay penalty */,
@@ -108,12 +117,12 @@ enum Wire_type
 
 
 
-class InputParameter
-{
-  public:
+class InputParameter {
+public:
     void parse_cfg(const string & infile);
 
-    bool error_checking();  // return false if the input parameters are problematic
+    // return false if the input parameters are problematic
+    bool error_checking(string name = "CACTI");
     void display_ip();
 
     unsigned int cache_sz;  // in bytes
@@ -172,14 +181,14 @@ class InputParameter
     int force_nuca_bank;
 
     int delay_wt, dynamic_power_wt, leakage_power_wt,
-        cycle_time_wt, area_wt;
+    cycle_time_wt, area_wt;
     int delay_wt_nuca, dynamic_power_wt_nuca, leakage_power_wt_nuca,
-        cycle_time_wt_nuca, area_wt_nuca;
+    cycle_time_wt_nuca, area_wt_nuca;
 
     int delay_dev, dynamic_power_dev, leakage_power_dev,
-        cycle_time_dev, area_dev;
+    cycle_time_dev, area_dev;
     int delay_dev_nuca, dynamic_power_dev_nuca, leakage_power_dev_nuca,
-        cycle_time_dev_nuca, area_dev_nuca;
+    cycle_time_dev_nuca, area_dev_nuca;
     int ed; //ED or ED2 optimization
     int nuca;
 
@@ -194,167 +203,113 @@ class InputParameter
 
 
     bool     add_ecc_b_;
-  //parameters for design constraint
-  double throughput;
-  double latency;
-  bool pipelinable;
-  int pipeline_stages;
-  int per_stage_vector;
-  bool with_clock_grid;
+    //parameters for design constraint
+    double throughput;
+    double latency;
+    bool pipelinable;
+    int pipeline_stages;
+    int per_stage_vector;
+    bool with_clock_grid;
 };
 
 
-typedef struct{
-  int Ndwl;
-  int Ndbl;
-  double Nspd;
-  int deg_bl_muxing;
-  int Ndsam_lev_1;
-  int Ndsam_lev_2;
-  int number_activated_mats_horizontal_direction;
-  int number_subbanks;
-  int page_size_in_bits;
-  double delay_route_to_bank;
-  double delay_crossbar;
-  double delay_addr_din_horizontal_htree;
-  double delay_addr_din_vertical_htree;
-  double delay_row_predecode_driver_and_block;
-  double delay_row_decoder;
-  double delay_bitlines;
-  double delay_sense_amp;
-  double delay_subarray_output_driver;
-  double delay_bit_mux_predecode_driver_and_block;
-  double delay_bit_mux_decoder;
-  double delay_senseamp_mux_lev_1_predecode_driver_and_block;
-  double delay_senseamp_mux_lev_1_decoder;
-  double delay_senseamp_mux_lev_2_predecode_driver_and_block;
-  double delay_senseamp_mux_lev_2_decoder;
-  double delay_input_htree;
-  double delay_output_htree;
-  double delay_dout_vertical_htree;
-  double delay_dout_horizontal_htree;
-  double delay_comparator;
-  double access_time;
-  double cycle_time;
-  double multisubbank_interleave_cycle_time;
-  double delay_request_network;
-  double delay_inside_mat;
-  double delay_reply_network;
-  double trcd;
-  double cas_latency;
-  double precharge_delay;
-  powerDef power_routing_to_bank;
-  powerDef power_addr_input_htree;
-  powerDef power_data_input_htree;
-  powerDef power_data_output_htree;
-  powerDef power_addr_horizontal_htree;
-  powerDef power_datain_horizontal_htree;
-  powerDef power_dataout_horizontal_htree;
-  powerDef power_addr_vertical_htree;
-  powerDef power_datain_vertical_htree;
-  powerDef power_row_predecoder_drivers;
-  powerDef power_row_predecoder_blocks;
-  powerDef power_row_decoders;
-  powerDef power_bit_mux_predecoder_drivers;
-  powerDef power_bit_mux_predecoder_blocks;
-  powerDef power_bit_mux_decoders;
-  powerDef power_senseamp_mux_lev_1_predecoder_drivers;
-  powerDef power_senseamp_mux_lev_1_predecoder_blocks;
-  powerDef power_senseamp_mux_lev_1_decoders;
-  powerDef power_senseamp_mux_lev_2_predecoder_drivers;
-  powerDef power_senseamp_mux_lev_2_predecoder_blocks;
-  powerDef power_senseamp_mux_lev_2_decoders;
-  powerDef power_bitlines;
-  powerDef power_sense_amps;
-  powerDef power_prechg_eq_drivers;
-  powerDef power_output_drivers_at_subarray;
-  powerDef power_dataout_vertical_htree;
-  powerDef power_comparators;
-  powerDef power_crossbar;
-  powerDef total_power;
-  double area;
-  double all_banks_height;
-  double all_banks_width;
-  double bank_height;
-  double bank_width;
-  double subarray_memory_cell_area_height;
-  double subarray_memory_cell_area_width;
-  double mat_height;
-  double mat_width;
-  double routing_area_height_within_bank;
-  double routing_area_width_within_bank;
-  double area_efficiency;
-//  double perc_power_dyn_routing_to_bank;
-//  double perc_power_dyn_addr_horizontal_htree;
-//  double perc_power_dyn_datain_horizontal_htree;
-//  double perc_power_dyn_dataout_horizontal_htree;
-//  double perc_power_dyn_addr_vertical_htree;
-//  double perc_power_dyn_datain_vertical_htree;
-//  double perc_power_dyn_row_predecoder_drivers;
-//  double perc_power_dyn_row_predecoder_blocks;
-//  double perc_power_dyn_row_decoders;
-//  double perc_power_dyn_bit_mux_predecoder_drivers;
-//  double perc_power_dyn_bit_mux_predecoder_blocks;
-//  double perc_power_dyn_bit_mux_decoders;
-//  double perc_power_dyn_senseamp_mux_lev_1_predecoder_drivers;
-//  double perc_power_dyn_senseamp_mux_lev_1_predecoder_blocks;
-//  double perc_power_dyn_senseamp_mux_lev_1_decoders;
-//  double perc_power_dyn_senseamp_mux_lev_2_predecoder_drivers;
-//  double perc_power_dyn_senseamp_mux_lev_2_predecoder_blocks;
-//  double perc_power_dyn_senseamp_mux_lev_2_decoders;
-//  double perc_power_dyn_bitlines;
-//  double perc_power_dyn_sense_amps;
-//  double perc_power_dyn_prechg_eq_drivers;
-//  double perc_power_dyn_subarray_output_drivers;
-//  double perc_power_dyn_dataout_vertical_htree;
-//  double perc_power_dyn_comparators;
-//  double perc_power_dyn_crossbar;
-//  double perc_power_dyn_spent_outside_mats;
-//  double perc_power_leak_routing_to_bank;
-//  double perc_power_leak_addr_horizontal_htree;
-//  double perc_power_leak_datain_horizontal_htree;
-//  double perc_power_leak_dataout_horizontal_htree;
-//  double perc_power_leak_addr_vertical_htree;
-//  double perc_power_leak_datain_vertical_htree;
-//  double perc_power_leak_row_predecoder_drivers;
-//  double perc_power_leak_row_predecoder_blocks;
-//  double perc_power_leak_row_decoders;
-//  double perc_power_leak_bit_mux_predecoder_drivers;
-//  double perc_power_leak_bit_mux_predecoder_blocks;
-//  double perc_power_leak_bit_mux_decoders;
-//  double perc_power_leak_senseamp_mux_lev_1_predecoder_drivers;
-//  double perc_power_leak_senseamp_mux_lev_1_predecoder_blocks;
-//  double perc_power_leak_senseamp_mux_lev_1_decoders;
-//  double perc_power_leak_senseamp_mux_lev_2_predecoder_drivers;
-//  double perc_power_leak_senseamp_mux_lev_2_predecoder_blocks;
-//  double perc_power_leak_senseamp_mux_lev_2_decoders;
-//  double perc_power_leak_bitlines;
-//  double perc_power_leak_sense_amps;
-//  double perc_power_leak_prechg_eq_drivers;
-//  double perc_power_leak_subarray_output_drivers;
-//  double perc_power_leak_dataout_vertical_htree;
-//  double perc_power_leak_comparators;
-//  double perc_power_leak_crossbar;
-//  double perc_leak_mats;
-//  double perc_active_mats;
-  double refresh_power;
-  double dram_refresh_period;
-  double dram_array_availability;
-  double dyn_read_energy_from_closed_page;
-  double dyn_read_energy_from_open_page;
-  double leak_power_subbank_closed_page;
-  double leak_power_subbank_open_page;
-  double leak_power_request_and_reply_networks;
-  double activate_energy;
-  double read_energy;
-  double write_energy;
-  double precharge_energy;
+typedef struct {
+    int Ndwl;
+    int Ndbl;
+    double Nspd;
+    int deg_bl_muxing;
+    int Ndsam_lev_1;
+    int Ndsam_lev_2;
+    int number_activated_mats_horizontal_direction;
+    int number_subbanks;
+    int page_size_in_bits;
+    double delay_route_to_bank;
+    double delay_crossbar;
+    double delay_addr_din_horizontal_htree;
+    double delay_addr_din_vertical_htree;
+    double delay_row_predecode_driver_and_block;
+    double delay_row_decoder;
+    double delay_bitlines;
+    double delay_sense_amp;
+    double delay_subarray_output_driver;
+    double delay_bit_mux_predecode_driver_and_block;
+    double delay_bit_mux_decoder;
+    double delay_senseamp_mux_lev_1_predecode_driver_and_block;
+    double delay_senseamp_mux_lev_1_decoder;
+    double delay_senseamp_mux_lev_2_predecode_driver_and_block;
+    double delay_senseamp_mux_lev_2_decoder;
+    double delay_input_htree;
+    double delay_output_htree;
+    double delay_dout_vertical_htree;
+    double delay_dout_horizontal_htree;
+    double delay_comparator;
+    double access_time;
+    double cycle_time;
+    double multisubbank_interleave_cycle_time;
+    double delay_request_network;
+    double delay_inside_mat;
+    double delay_reply_network;
+    double trcd;
+    double cas_latency;
+    double precharge_delay;
+    powerDef power_routing_to_bank;
+    powerDef power_addr_input_htree;
+    powerDef power_data_input_htree;
+    powerDef power_data_output_htree;
+    powerDef power_addr_horizontal_htree;
+    powerDef power_datain_horizontal_htree;
+    powerDef power_dataout_horizontal_htree;
+    powerDef power_addr_vertical_htree;
+    powerDef power_datain_vertical_htree;
+    powerDef power_row_predecoder_drivers;
+    powerDef power_row_predecoder_blocks;
+    powerDef power_row_decoders;
+    powerDef power_bit_mux_predecoder_drivers;
+    powerDef power_bit_mux_predecoder_blocks;
+    powerDef power_bit_mux_decoders;
+    powerDef power_senseamp_mux_lev_1_predecoder_drivers;
+    powerDef power_senseamp_mux_lev_1_predecoder_blocks;
+    powerDef power_senseamp_mux_lev_1_decoders;
+    powerDef power_senseamp_mux_lev_2_predecoder_drivers;
+    powerDef power_senseamp_mux_lev_2_predecoder_blocks;
+    powerDef power_senseamp_mux_lev_2_decoders;
+    powerDef power_bitlines;
+    powerDef power_sense_amps;
+    powerDef power_prechg_eq_drivers;
+    powerDef power_output_drivers_at_subarray;
+    powerDef power_dataout_vertical_htree;
+    powerDef power_comparators;
+    powerDef power_crossbar;
+    powerDef total_power;
+    double area;
+    double all_banks_height;
+    double all_banks_width;
+    double bank_height;
+    double bank_width;
+    double subarray_memory_cell_area_height;
+    double subarray_memory_cell_area_width;
+    double mat_height;
+    double mat_width;
+    double routing_area_height_within_bank;
+    double routing_area_width_within_bank;
+    double area_efficiency;
+    double refresh_power;
+    double dram_refresh_period;
+    double dram_array_availability;
+    double dyn_read_energy_from_closed_page;
+    double dyn_read_energy_from_open_page;
+    double leak_power_subbank_closed_page;
+    double leak_power_subbank_open_page;
+    double leak_power_request_and_reply_networks;
+    double activate_energy;
+    double read_energy;
+    double write_energy;
+    double precharge_energy;
 } results_mem_array;
 
 
-class uca_org_t
-{
-  public:
+class uca_org_t {
+public:
     mem_array * tag_array2;
     mem_array * data_array2;
     double access_time;
@@ -378,7 +333,7 @@ class uca_org_t
     void find_cyc();
     void adjust_area();//for McPAT only to adjust routing overhead
     void cleanup();
-    ~uca_org_t(){};
+    ~uca_org_t() {};
 };
 
 void reconfigure(InputParameter *local_interface, uca_org_t *fin_res);
@@ -387,103 +342,62 @@ uca_org_t cacti_interface(const string & infile_name);
 //McPAT's plain interface, please keep !!!
 uca_org_t cacti_interface(InputParameter * const local_interface);
 //McPAT's plain interface, please keep !!!
-uca_org_t init_interface(InputParameter * const local_interface);
+uca_org_t init_interface(InputParameter * const local_interface,
+                         const string &name);
 //McPAT's plain interface, please keep !!!
 uca_org_t cacti_interface(
-            int cache_size,
-            int line_size,
-            int associativity,
-            int rw_ports,
-            int excl_read_ports,
-            int excl_write_ports,
-            int single_ended_read_ports,
-            int search_ports,
-            int banks,
-            double tech_node,
-            int output_width,
-            int specific_tag,
-            int tag_width,
-            int access_mode,
-            int cache,
-            int main_mem,
-            int obj_func_delay,
-            int obj_func_dynamic_power,
-            int obj_func_leakage_power,
-            int obj_func_cycle_time,
-            int obj_func_area,
-            int dev_func_delay,
-            int dev_func_dynamic_power,
-            int dev_func_leakage_power,
-            int dev_func_area,
-            int dev_func_cycle_time,
-            int ed_ed2_none, // 0 - ED, 1 - ED^2, 2 - use weight and deviate
-            int temp,
-            int wt, //0 - default(search across everything), 1 - global, 2 - 5% delay penalty, 3 - 10%, 4 - 20 %, 5 - 30%, 6 - low-swing
-            int data_arr_ram_cell_tech_flavor_in,
-            int data_arr_peri_global_tech_flavor_in,
-            int tag_arr_ram_cell_tech_flavor_in,
-            int tag_arr_peri_global_tech_flavor_in,
-            int interconnect_projection_type_in,
-            int wire_inside_mat_type_in,
-            int wire_outside_mat_type_in,
-            int REPEATERS_IN_HTREE_SEGMENTS_in,
-            int VERTICAL_HTREE_WIRES_OVER_THE_ARRAY_in,
-            int BROADCAST_ADDR_DATAIN_OVER_VERTICAL_HTREES_in,
-            int PAGE_SIZE_BITS_in,
-            int BURST_LENGTH_in,
-            int INTERNAL_PREFETCH_WIDTH_in,
-            int force_wiretype,
-            int wiretype,
-            int force_config,
-            int ndwl,
-            int ndbl,
-            int nspd,
-            int ndcm,
-            int ndsam1,
-            int ndsam2,
-            int ecc);
-//    int cache_size,
-//    int line_size,
-//    int associativity,
-//    int rw_ports,
-//    int excl_read_ports,
-//    int excl_write_ports,
-//    int single_ended_read_ports,
-//    int banks,
-//    double tech_node,
-//    int output_width,
-//    int specific_tag,
-//    int tag_width,
-//    int access_mode,
-//    int cache,
-//    int main_mem,
-//    int obj_func_delay,
-//    int obj_func_dynamic_power,
-//    int obj_func_leakage_power,
-//    int obj_func_area,
-//    int obj_func_cycle_time,
-//    int dev_func_delay,
-//    int dev_func_dynamic_power,
-//    int dev_func_leakage_power,
-//    int dev_func_area,
-//    int dev_func_cycle_time,
-//    int temp,
-//    int data_arr_ram_cell_tech_flavor_in,
-//    int data_arr_peri_global_tech_flavor_in,
-//    int tag_arr_ram_cell_tech_flavor_in,
-//    int tag_arr_peri_global_tech_flavor_in,
-//    int interconnect_projection_type_in,
-//    int wire_inside_mat_type_in,
-//    int wire_outside_mat_type_in,
-//    int REPEATERS_IN_HTREE_SEGMENTS_in,
-//    int VERTICAL_HTREE_WIRES_OVER_THE_ARRAY_in,
-//    int BROADCAST_ADDR_DATAIN_OVER_VERTICAL_HTREES_in,
-////    double MAXAREACONSTRAINT_PERC_in,
-////    double MAXACCTIMECONSTRAINT_PERC_in,
-////    double MAX_PERC_DIFF_IN_DELAY_FROM_BEST_DELAY_REPEATER_SOLUTION_in,
-//    int PAGE_SIZE_BITS_in,
-//    int BURST_LENGTH_in,
-//    int INTERNAL_PREFETCH_WIDTH_in);
+    int cache_size,
+    int line_size,
+    int associativity,
+    int rw_ports,
+    int excl_read_ports,
+    int excl_write_ports,
+    int single_ended_read_ports,
+    int search_ports,
+    int banks,
+    double tech_node,
+    int output_width,
+    int specific_tag,
+    int tag_width,
+    int access_mode,
+    int cache,
+    int main_mem,
+    int obj_func_delay,
+    int obj_func_dynamic_power,
+    int obj_func_leakage_power,
+    int obj_func_cycle_time,
+    int obj_func_area,
+    int dev_func_delay,
+    int dev_func_dynamic_power,
+    int dev_func_leakage_power,
+    int dev_func_area,
+    int dev_func_cycle_time,
+    int ed_ed2_none, // 0 - ED, 1 - ED^2, 2 - use weight and deviate
+    int temp,
+    int wt, //0 - default(search across everything), 1 - global, 2 - 5% delay penalty, 3 - 10%, 4 - 20 %, 5 - 30%, 6 - low-swing
+    int data_arr_ram_cell_tech_flavor_in,
+    int data_arr_peri_global_tech_flavor_in,
+    int tag_arr_ram_cell_tech_flavor_in,
+    int tag_arr_peri_global_tech_flavor_in,
+    int interconnect_projection_type_in,
+    int wire_inside_mat_type_in,
+    int wire_outside_mat_type_in,
+    int REPEATERS_IN_HTREE_SEGMENTS_in,
+    int VERTICAL_HTREE_WIRES_OVER_THE_ARRAY_in,
+    int BROADCAST_ADDR_DATAIN_OVER_VERTICAL_HTREES_in,
+    int PAGE_SIZE_BITS_in,
+    int BURST_LENGTH_in,
+    int INTERNAL_PREFETCH_WIDTH_in,
+    int force_wiretype,
+    int wiretype,
+    int force_config,
+    int ndwl,
+    int ndbl,
+    int nspd,
+    int ndcm,
+    int ndsam1,
+    int ndsam2,
+    int ecc);
 
 //Naveen's interface
 uca_org_t cacti_interface(
@@ -542,91 +456,90 @@ uca_org_t cacti_interface(
     int REPEATERS_IN_HTREE_SEGMENTS_in,//TODO for now only wires with repeaters are supported
     int p_input);
 
-class mem_array
-{
-  public:
-  int    Ndcm;
-  int    Ndwl;
-  int    Ndbl;
-  double Nspd;
-  int    deg_bl_muxing;
-  int    Ndsam_lev_1;
-  int    Ndsam_lev_2;
-  double access_time;
-  double cycle_time;
-  double multisubbank_interleave_cycle_time;
-  double area_ram_cells;
-  double area;
-  powerDef power;
-  double delay_senseamp_mux_decoder;
-  double delay_before_subarray_output_driver;
-  double delay_from_subarray_output_driver_to_output;
-  double height;
-  double width;
+class mem_array {
+public:
+    int    Ndcm;
+    int    Ndwl;
+    int    Ndbl;
+    double Nspd;
+    int    deg_bl_muxing;
+    int    Ndsam_lev_1;
+    int    Ndsam_lev_2;
+    double access_time;
+    double cycle_time;
+    double multisubbank_interleave_cycle_time;
+    double area_ram_cells;
+    double area;
+    powerDef power;
+    double delay_senseamp_mux_decoder;
+    double delay_before_subarray_output_driver;
+    double delay_from_subarray_output_driver_to_output;
+    double height;
+    double width;
 
-  double mat_height;
-  double mat_length;
-  double subarray_length;
-  double subarray_height;
+    double mat_height;
+    double mat_length;
+    double subarray_length;
+    double subarray_height;
 
-  double delay_route_to_bank,
-         delay_input_htree,
-         delay_row_predecode_driver_and_block,
-         delay_row_decoder,
-         delay_bitlines,
-         delay_sense_amp,
-         delay_subarray_output_driver,
-         delay_dout_htree,
-         delay_comparator,
-         delay_matchlines;
+    double delay_route_to_bank,
+    delay_input_htree,
+    delay_row_predecode_driver_and_block,
+    delay_row_decoder,
+    delay_bitlines,
+    delay_sense_amp,
+    delay_subarray_output_driver,
+    delay_dout_htree,
+    delay_comparator,
+    delay_matchlines;
 
-  double all_banks_height,
-         all_banks_width,
-         area_efficiency;
+    double all_banks_height,
+    all_banks_width,
+    area_efficiency;
 
-  powerDef power_routing_to_bank;
-  powerDef power_addr_input_htree;
-  powerDef power_data_input_htree;
-  powerDef power_data_output_htree;
-  powerDef power_htree_in_search;
-  powerDef power_htree_out_search;
-  powerDef power_row_predecoder_drivers;
-  powerDef power_row_predecoder_blocks;
-  powerDef power_row_decoders;
-  powerDef power_bit_mux_predecoder_drivers;
-  powerDef power_bit_mux_predecoder_blocks;
-  powerDef power_bit_mux_decoders;
-  powerDef power_senseamp_mux_lev_1_predecoder_drivers;
-  powerDef power_senseamp_mux_lev_1_predecoder_blocks;
-  powerDef power_senseamp_mux_lev_1_decoders;
-  powerDef power_senseamp_mux_lev_2_predecoder_drivers;
-  powerDef power_senseamp_mux_lev_2_predecoder_blocks;
-  powerDef power_senseamp_mux_lev_2_decoders;
-  powerDef power_bitlines;
-  powerDef power_sense_amps;
-  powerDef power_prechg_eq_drivers;
-  powerDef power_output_drivers_at_subarray;
-  powerDef power_dataout_vertical_htree;
-  powerDef power_comparators;
+    powerDef power_routing_to_bank;
+    powerDef power_addr_input_htree;
+    powerDef power_data_input_htree;
+    powerDef power_data_output_htree;
+    powerDef power_htree_in_search;
+    powerDef power_htree_out_search;
+    powerDef power_row_predecoder_drivers;
+    powerDef power_row_predecoder_blocks;
+    powerDef power_row_decoders;
+    powerDef power_bit_mux_predecoder_drivers;
+    powerDef power_bit_mux_predecoder_blocks;
+    powerDef power_bit_mux_decoders;
+    powerDef power_senseamp_mux_lev_1_predecoder_drivers;
+    powerDef power_senseamp_mux_lev_1_predecoder_blocks;
+    powerDef power_senseamp_mux_lev_1_decoders;
+    powerDef power_senseamp_mux_lev_2_predecoder_drivers;
+    powerDef power_senseamp_mux_lev_2_predecoder_blocks;
+    powerDef power_senseamp_mux_lev_2_decoders;
+    powerDef power_bitlines;
+    powerDef power_sense_amps;
+    powerDef power_prechg_eq_drivers;
+    powerDef power_output_drivers_at_subarray;
+    powerDef power_dataout_vertical_htree;
+    powerDef power_comparators;
 
-  powerDef power_cam_bitline_precharge_eq_drv;
-  powerDef power_searchline;
-  powerDef power_searchline_precharge;
-  powerDef power_matchlines;
-  powerDef power_matchline_precharge;
-  powerDef power_matchline_to_wordline_drv;
+    powerDef power_cam_bitline_precharge_eq_drv;
+    powerDef power_searchline;
+    powerDef power_searchline_precharge;
+    powerDef power_matchlines;
+    powerDef power_matchline_precharge;
+    powerDef power_matchline_to_wordline_drv;
 
-  min_values_t *arr_min;
-  enum Wire_type wt;
+    min_values_t *arr_min;
+    enum Wire_type wt;
 
-  // dram stats
-  double activate_energy, read_energy, write_energy, precharge_energy,
-  refresh_power, leak_power_subbank_closed_page, leak_power_subbank_open_page,
-  leak_power_request_and_reply_networks;
+    // dram stats
+    double activate_energy, read_energy, write_energy, precharge_energy,
+    refresh_power, leak_power_subbank_closed_page, leak_power_subbank_open_page,
+    leak_power_request_and_reply_networks;
 
-  double precharge_delay;
+    double precharge_delay;
 
-  static bool lt(const mem_array * m1, const mem_array * m2);
+    static bool lt(const mem_array * m1, const mem_array * m2);
 };
 
 

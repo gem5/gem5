@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,9 +40,8 @@
 #include "htree2.h"
 #include "mat.h"
 
-class Bank : public Component
-{
-  public:
+class Bank : public Component {
+public:
     Bank(const DynamicParameter & dyn_p);
     ~Bank();
     double compute_delays(double inrisetime);  // return outrisetime

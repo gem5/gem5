@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -39,9 +40,8 @@
 #include "nuca.h"
 #include "router.h"
 
-class min_values_t
-{
-  public:
+class min_values_t {
+public:
     double min_delay;
     double min_dyn;
     double min_leakage;
@@ -58,17 +58,16 @@ class min_values_t
 
 
 
-struct solution
-{
-  int    tag_array_index;
-  int    data_array_index;
-  list<mem_array *>::iterator tag_array_iter;
-  list<mem_array *>::iterator data_array_iter;
-  double access_time;
-  double cycle_time;
-  double area;
-  double efficiency;
-  powerDef total_power;
+struct solution {
+    int    tag_array_index;
+    int    data_array_index;
+    list<mem_array *>::iterator tag_array_iter;
+    list<mem_array *>::iterator data_array_iter;
+    double access_time;
+    double cycle_time;
+    double area;
+    double efficiency;
+    powerDef total_power;
 };
 
 
@@ -94,20 +93,19 @@ void solve(uca_org_t *fin_res);
 void init_tech_params(double tech, bool is_tag);
 
 
-struct calc_time_mt_wrapper_struct
-{
-  uint32_t tid;
-  bool     is_tag;
-  bool     pure_ram;
-  bool     pure_cam;
-  bool     is_main_mem;
-  double   Nspd_min;
+struct calc_time_mt_wrapper_struct {
+    uint32_t tid;
+    bool     is_tag;
+    bool     pure_ram;
+    bool     pure_cam;
+    bool     is_main_mem;
+    double   Nspd_min;
 
-  min_values_t * data_res;
-  min_values_t * tag_res;
+    min_values_t * data_res;
+    min_values_t * tag_res;
 
-  list<mem_array *> data_arr;
-  list<mem_array *> tag_arr;
+    list<mem_array *> data_arr;
+    list<mem_array *> tag_arr;
 };
 
 void *calc_time_mt_wrapper(void * void_obj);

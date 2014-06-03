@@ -1,7 +1,6 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
  *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
@@ -28,74 +27,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Authors: Joel Hestness
+ *          Yasuko Eckert
+ *
  ***************************************************************************/
 
-#ifndef NOC_H_
-#define NOC_H_
+#ifndef SYSTEM_H_
+#define SYSTEM_H_
 
+#include "arbiter.h"
+#include "area.h"
 #include "array.h"
 #include "basic_components.h"
-#include "interconnect.h"
-#include "logic.h"
+#include "bus_interconnect.h"
+#include "cachecontroller.h"
+#include "cacheunit.h"
+#include "core.h"
+#include "decoder.h"
+#include "iocontrollers.h"
+#include "memoryctrl.h"
+#include "noc.h"
 #include "parameter.h"
 #include "router.h"
 
-class OnChipNetworkParameters {
+class System : public McPATComponent {
 public:
-    double clockRate;
-    int flit_size;
-    int input_ports;
-    int output_ports;
-    int min_ports;
-    int global_linked_ports;
-    int virtual_channel_per_port;
-    int input_buffer_entries_per_vc;
-    int horizontal_nodes;
-    int vertical_nodes;
-    int total_nodes;
-    double link_throughput;
-    double link_latency;
-    double chip_coverage;
-    double route_over_perc;
-    bool has_global_link;
-    bool type;
-    double M_traffic_pattern;
-    double link_base_width;
-    double link_base_height;
-    int link_start_wiring_level;
-};
-
-class OnChipNetworkStatistics {
-public:
-    double duty_cycle;
-    double total_access;
-};
-
-class OnChipNetwork : public McPATComponent {
-public:
-    Router* router;
-    Interconnect* link_bus;
-    Component link_bus_tot_per_Router;
-
-    int ithNoC;
     InputParameter interface_ip;
-    double link_len;
-    double scktRatio, chip_PR_overhead, macro_PR_overhead;
-    OnChipNetworkParameters noc_params;
-    OnChipNetworkStatistics noc_stats;
-    uca_org_t local_result;
-    statsDef stats_t;
-    bool link_bus_exist;
-    bool router_exist;
-    string link_name;
 
-    OnChipNetwork(XMLNode* _xml_data, int ithNoC_,
-                  InputParameter* interface_ip_);
-    void set_param_stats();
-    void computeEnergy();
-    void init_link_bus();
-    void init_router();
-    ~OnChipNetwork();
+    int device_type;
+    double core_tech_node;
+    int interconnect_projection_type;
+    int temperature;
+
+    System(XMLNode* _xml_data);
+    void set_proc_param();
+    // TODO: make this recursively compute energy on subcomponents
+    void displayData(uint32_t indent = 0, int plevel = 100);
+    void displayDeviceType(int device_type_, uint32_t indent = 0);
+    void displayInterconnectType(int interconnect_type_, uint32_t indent = 0);
+    ~System();
 };
 
-#endif /* NOC_H_ */
+#endif /* SYSTEM_H_ */

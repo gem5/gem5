@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -44,13 +45,12 @@
 // leakge power includes entire htree in a bank (when uca_tree == false)
 // leakge power includes only part to one bank when uca_tree == true
 
-class Htree2 : public Component
-{
-  public:
+class Htree2 : public Component {
+public:
     Htree2(enum Wire_type wire_model,
-        double mat_w, double mat_h, int add, int data_in, int search_data_in, int data_out, int search_data_out, int bl, int wl,
-        enum Htree_type h_type, bool uca_tree_ = false, bool search_tree_ = false,
-        TechnologyParameter::DeviceType *dt = &(g_tp.peri_global));
+           double mat_w, double mat_h, int add, int data_in, int search_data_in, int data_out, int search_data_out, int bl, int wl,
+           enum Htree_type h_type, bool uca_tree_ = false, bool search_tree_ = false,
+           TechnologyParameter::DeviceType *dt = &(g_tp.peri_global));
     ~Htree2() {};
 
     void in_htree();
@@ -64,16 +64,15 @@ class Htree2 : public Component
 
     double in_rise_time, out_rise_time;
 
-    void set_in_rise_time(double rt)
-    {
-      in_rise_time = rt;
+    void set_in_rise_time(double rt) {
+        in_rise_time = rt;
     }
 
     double max_unpipelined_link_delay;
     powerDef power_bit;
 
 
-  private:
+private:
     double wire_bw;
     double init_wire_bw;  // bus width at root
     enum Htree_type tree_type;
@@ -81,7 +80,11 @@ class Htree2 : public Component
     double htree_vnodes;
     double mat_width;
     double mat_height;
-    int add_bits, data_in_bits,search_data_in_bits,data_out_bits,  search_data_out_bits;
+    int add_bits;
+    int data_in_bits;
+    int search_data_in_bits;
+    int data_out_bits;
+    int search_data_out_bits;
     int ndbl, ndwl;
     bool uca_tree; // should have full bandwidth to access all banks in the array simultaneously
     bool search_tree;

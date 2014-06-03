@@ -2,6 +2,7 @@
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,89 +26,75 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
 #ifndef MEMORYCTRL_H_
 #define MEMORYCTRL_H_
 
-#include "XML_Parse.h"
-#include "parameter.h"
-//#include "io.h"
 #include "array.h"
-//#include "Undifferentiated_Core_Area.h"
-#include <vector>
-
 #include "basic_components.h"
+#include "cachearray.h"
+#include "parameter.h"
 
-class MCBackend : public Component {
-  public:
+class MCBackend : public McPATComponent {
+public:
     InputParameter l_ip;
     uca_org_t local_result;
-        enum MemoryCtrl_type mc_type;
-    MCParam  mcp;
-    statsDef tdp_stats;
-    statsDef rtp_stats;
+    MCParameters mcp;
+    MCStatistics mcs;
     statsDef stats_t;
-    powerDef power_t;
-    MCBackend(InputParameter* interface_ip_, const MCParam & mcp_, enum MemoryCtrl_type mc_type_);
-    void compute();
-        void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-    ~MCBackend(){};
+
+    MCBackend(XMLNode* _xml_data, InputParameter* interface_ip_,
+              const MCParameters & mcp_, const MCStatistics & mcs_);
+    void computeArea();
+    void computeEnergy();
+    ~MCBackend() {};
 };
 
-class MCPHY : public Component {
-  public:
+class MCPHY : public McPATComponent {
+public:
     InputParameter l_ip;
     uca_org_t local_result;
-        enum MemoryCtrl_type mc_type;
-    MCParam  mcp;
-    statsDef       tdp_stats;
-    statsDef       rtp_stats;
-    statsDef       stats_t;
-    powerDef       power_t;
-    MCPHY(InputParameter* interface_ip_, const MCParam & mcp_, enum MemoryCtrl_type mc_type_);
-    void compute();
-        void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-    ~MCPHY(){};
+    MCParameters mcp;
+    MCStatistics mcs;
+    statsDef stats_t;
+
+    MCPHY(XMLNode* _xml_data, InputParameter* interface_ip_,
+          const MCParameters & mcp_, const MCStatistics & mcs_);
+    void computeArea();
+    void computeEnergy();
+    ~MCPHY() {};
 };
 
-class MCFrontEnd : public Component {
-  public:
-        ParseXML *XML;
-        InputParameter interface_ip;
-        enum MemoryCtrl_type mc_type;
-        MCParam  mcp;
-        selection_logic * MC_arb;
-        ArrayST  * frontendBuffer;
-        ArrayST  * readBuffer;
-        ArrayST  * writeBuffer;
+class MCFrontEnd : public McPATComponent {
+public:
+    CacheArray* frontendBuffer;
+    CacheArray* readBuffer;
+    CacheArray* writeBuffer;
+    selection_logic* MC_arb;
 
-    MCFrontEnd(ParseXML *XML_interface,InputParameter* interface_ip_, const MCParam & mcp_, enum MemoryCtrl_type mc_type_);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
+    InputParameter interface_ip;
+    MCParameters mcp;
+    MCStatistics mcs;
+
+    MCFrontEnd(XMLNode* _xml_data,
+               InputParameter* interface_ip_, const MCParameters & mcp_,
+               const MCStatistics & mcs_);
     ~MCFrontEnd();
 };
 
-class MemoryController : public Component {
-  public:
-        ParseXML *XML;
-        InputParameter interface_ip;
-        enum MemoryCtrl_type mc_type;
-    MCParam  mcp;
-        MCFrontEnd * frontend;
-    MCBackend * transecEngine;
-    MCPHY	 * PHY;
-    Pipeline * pipeLogic;
+class MemoryController : public McPATComponent {
+public:
+    InputParameter interface_ip;
+    MCParameters mcp;
+    MCStatistics mcs;
 
-    //clock_network clockNetwork;
-    MemoryController(ParseXML *XML_interface,InputParameter* interface_ip_, enum MemoryCtrl_type mc_type_);
+    MemoryController(XMLNode* _xml_data, InputParameter* interface_ip_);
+    void initialize_params();
     void set_mc_param();
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
     ~MemoryController();
 };
+
 #endif /* MEMORYCTRL_H_ */

@@ -1,7 +1,6 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
  *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
@@ -28,10 +27,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Authors: Joel Hestness
+ *          Yasuko Eckert
+ *
  ***************************************************************************/
 
-#ifndef ARRAY_H_
-#define ARRAY_H_
+#ifndef CACHEARRAY_H_
+#define CACHEARRAY_H_
 
 #include <iostream>
 #include <string>
@@ -42,9 +44,7 @@
 #include "const.h"
 #include "parameter.h"
 
-using namespace std;
-
-class ArrayST : public McPATComponent {
+class CacheArray : public McPATComponent {
 public:
     static double area_efficiency_threshold;
 
@@ -68,18 +68,50 @@ public:
     enum Core_type core_ty;
     bool is_default;
     uca_org_t local_result;
-    statsDef stats_t;
 
-    ArrayST(XMLNode* _xml_data, const InputParameter *configure_interface,
+    // These are only used for static bank tag (SBT) directory type.
+    double sbt_dir_overhead;
+    // Set this to contain SBT peak power stats
+    statsDef sbt_tdp_stats;
+    // Set this to contain SBT runtime power stats
+    statsDef sbt_rtp_stats;
+
+    CacheArray(XMLNode* _xml_data, const InputParameter *configure_interface,
             string _name, enum Device_ty device_ty_, double _clockRate = 0.0f,
             bool opt_local_ = true,
             enum Core_type core_ty_ = Inorder, bool _is_default = true);
     void computeArea();
     void computeEnergy();
     void compute_base_power();
-    ~ArrayST();
+    void setSBTDirOverhead(double overhead) { sbt_dir_overhead = overhead; }
+    ~CacheArray();
 
-    void leakage_feedback(double temperature);
+  private:
+    double computeSBTDynEnergy(statsDef *sbt_stats_ptr);
 };
 
-#endif /* ARRAY_H_ */
+extern inline
+double CacheArray::computeSBTDynEnergy(statsDef *sbt_stats_p) {
+    if (sbt_dir_overhead == 0) {
+        return 0;
+    }
+
+    // Write miss on dynamic home node will generate a replacement write on
+    // whole cache block
+    double dynamic =
+        sbt_stats_p->readAc.hit *
+        (local_result.data_array2->power.readOp.dynamic * sbt_dir_overhead +
+         local_result.tag_array2->power.readOp.dynamic) +
+        sbt_stats_p->readAc.miss *
+        local_result.tag_array2->power.readOp.dynamic +
+        sbt_stats_p->writeAc.miss *
+        local_result.tag_array2->power.readOp.dynamic +
+        sbt_stats_p->writeAc.hit *
+        (local_result.data_array2->power.writeOp.dynamic * sbt_dir_overhead +
+         local_result.tag_array2->power.readOp.dynamic+
+         sbt_stats_p->writeAc.miss *
+         local_result.power.writeOp.dynamic);
+    return dynamic;
+}
+
+#endif /* CACHEARRAY_H_ */

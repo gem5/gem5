@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -39,9 +40,8 @@
 #include "subarray.h"
 #include "wire.h"
 
-class Mat : public Component
-{
-  public:
+class Mat : public Component {
+public:
     Mat(const DynamicParameter & dyn_p);
     ~Mat();
     double compute_delays(double inrisetime);  // return outrisetime
@@ -106,8 +106,8 @@ class Mat : public Component
     int      deg_bl_muxing;
     int      num_act_mats_hor_dir;
     double   delay_writeback;
-    Area     cell,cam_cell;
-    bool     is_dram,is_fa, pure_cam, camFlag;
+    Area     cell, cam_cell;
+    bool     is_dram, is_fa, pure_cam, camFlag;
     int      num_mats;
     powerDef power_sa;
     double   delay_sa;
@@ -127,7 +127,7 @@ class Mat : public Component
     uint32_t num_subarrays_per_row;  // the number of subarrays in a row of a mat
 
 
-  private:
+private:
     double compute_bit_mux_sa_precharge_sa_mux_wr_drv_wr_mux_h();
     double width_write_driver_or_write_mux();
     double compute_comparators_height(int tagbits, int number_ways_in_mat, double subarray_mem_cell_area_w);

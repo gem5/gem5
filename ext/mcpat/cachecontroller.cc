@@ -1,7 +1,7 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,18 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Joel Hestness
  *
  ***************************************************************************/
 
+#include "cachecontroller.h"
 
-#ifndef GLOBALVAR_H_
-#define GLOBALVAR_H_
-
-#ifdef  GLOBALVAR
-#define EXTERN
-#else
-#define EXTERN extern
-#endif
-
-EXTERN bool opt_for_clk;
-
-#endif /* GLOBALVAR_H_ */
-
-
-
-
+CacheController::CacheController(XMLNode* _xml_data,
+                                 InputParameter* _interface_ip)
+        : McPATComponent(_xml_data, _interface_ip) {
+    name = "Cache Controller";
+    clockRate = target_core_clockrate;
+    McPATComponent::recursiveInstantiate();
+}

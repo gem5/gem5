@@ -1,7 +1,7 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,55 +25,21 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Joel Hestness
  *
  ***************************************************************************/
-#ifndef PROCESSOR_H_
-#define PROCESSOR_H_
 
-#include <vector>
+#ifndef CACHECONTROLLER_H_
+#define CACHECONTROLLER_H_
 
-#include "XML_Parse.h"
-#include "arbiter.h"
-#include "area.h"
-#include "array.h"
 #include "basic_components.h"
-#include "core.h"
-#include "decoder.h"
-#include "iocontrollers.h"
-#include "memoryctrl.h"
-#include "noc.h"
-#include "parameter.h"
-#include "router.h"
-#include "sharedcache.h"
 
-class Processor : public Component
-{
-  public:
-        ParseXML *XML;
-        vector<Core *> cores;
-    vector<SharedCache *> l2array;
-    vector<SharedCache *> l3array;
-    vector<SharedCache *> l1dirarray;
-    vector<SharedCache *> l2dirarray;
-    vector<NoC *>  nocs;
-    MemoryController * mc;
-    NIUController    * niu;
-    PCIeController   * pcie;
-    FlashController  * flashcontroller;
-    InputParameter interface_ip;
-    ProcParam procdynp;
-    //wire	globalInterconnect;
-    //clock_network globalClock;
-    Component core, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,flashcontrollers;
-    int  numCore, numL2, numL3, numNOC, numL1Dir, numL2Dir;
-    Processor(ParseXML *XML_interface);
-    void compute();
-    void set_proc_param();
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-    void displayDeviceType(int device_type_, uint32_t indent = 0);
-    void displayInterconnectType(int interconnect_type_, uint32_t indent = 0);
-    ~Processor();
+class CacheController : public McPATComponent {
+public:
+    CacheController(XMLNode* _xml_data, InputParameter* _interface_ip);
+    ~CacheController();
 };
 
-#endif /* PROCESSOR_H_ */
+#endif /* CACHECONTROLLER_H_ */

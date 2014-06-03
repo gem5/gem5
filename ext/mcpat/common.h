@@ -1,7 +1,6 @@
 /*****************************************************************************
  *                                McPAT
  *                      SOFTWARE LICENSE AGREEMENT
- *            Copyright 2012 Hewlett-Packard Development Company, L.P.
  *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
@@ -28,74 +27,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Author: Yasuko Eckert
+ *
  ***************************************************************************/
 
-#ifndef NOC_H_
-#define NOC_H_
+#ifndef __COMMON_H__
+#define __COMMON_H__
 
-#include "array.h"
-#include "basic_components.h"
-#include "interconnect.h"
-#include "logic.h"
-#include "parameter.h"
-#include "router.h"
+#include <string>
 
-class OnChipNetworkParameters {
-public:
-    double clockRate;
-    int flit_size;
-    int input_ports;
-    int output_ports;
-    int min_ports;
-    int global_linked_ports;
-    int virtual_channel_per_port;
-    int input_buffer_entries_per_vc;
-    int horizontal_nodes;
-    int vertical_nodes;
-    int total_nodes;
-    double link_throughput;
-    double link_latency;
-    double chip_coverage;
-    double route_over_perc;
-    bool has_global_link;
-    bool type;
-    double M_traffic_pattern;
-    double link_base_width;
-    double link_base_height;
-    int link_start_wiring_level;
-};
+#include "xmlParser.h"
 
-class OnChipNetworkStatistics {
-public:
-    double duty_cycle;
-    double total_access;
-};
+// Macro definitions to do string comparson to specific parameter/stat.
+// Note: These macros assume node_name and value variables of type XMLCSTR
+//       to exist already.
+#define STRCMP(var, str) else if (strcmp(var, str) == 0)
 
-class OnChipNetwork : public McPATComponent {
-public:
-    Router* router;
-    Interconnect* link_bus;
-    Component link_bus_tot_per_Router;
+#define ASSIGN_INT_IF(str, lhs) STRCMP(node_name, str) \
+lhs = atoi(value)
 
-    int ithNoC;
-    InputParameter interface_ip;
-    double link_len;
-    double scktRatio, chip_PR_overhead, macro_PR_overhead;
-    OnChipNetworkParameters noc_params;
-    OnChipNetworkStatistics noc_stats;
-    uca_org_t local_result;
-    statsDef stats_t;
-    bool link_bus_exist;
-    bool router_exist;
-    string link_name;
+#define ASSIGN_FP_IF(str, lhs) STRCMP(node_name, str) \
+lhs = atof(value)
 
-    OnChipNetwork(XMLNode* _xml_data, int ithNoC_,
-                  InputParameter* interface_ip_);
-    void set_param_stats();
-    void computeEnergy();
-    void init_link_bus();
-    void init_router();
-    ~OnChipNetwork();
-};
+#define ASSIGN_STR_IF(str, lhs) STRCMP(node_name, str) \
+lhs = string(value)
 
-#endif /* NOC_H_ */
+#define ASSIGN_ENUM_IF(str, lhs, etype) STRCMP(node_name, str) \
+lhs = (etype)atoi(value)
+
+
+// Constants shared across many system components
+#define BITS_PER_BYTE 8.0
+#define MIN_BUFFER_SIZE 64
+// CAM structures do not have any associativity
+#define CAM_ASSOC 0
+
+#endif // __COMMON_H__

@@ -2,6 +2,7 @@
  *                                McPAT/CACTI
  *                      SOFTWARE LICENSE AGREEMENT
  *            Copyright 2012 Hewlett-Packard Development Company, L.P.
+ *            Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
  *                          All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,7 @@
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.”
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
 
@@ -249,21 +250,20 @@ const double    bit_to_byte  = 8.0;
 //  v    : vertical or velocity
 
 
-enum ram_cell_tech_type_num
-{
-  itrs_hp   = 0,
-  itrs_lstp = 1,
-  itrs_lop  = 2,
-  lp_dram   = 3,
-  comm_dram = 4
+enum ram_cell_tech_type_num {
+    itrs_hp   = 0,
+    itrs_lstp = 1,
+    itrs_lop  = 2,
+    lp_dram   = 3,
+    comm_dram = 4
 };
 
-const double pppm[4]      = {1,1,1,1};
-const double pppm_lkg[4]  = {0,1,1,0};
-const double pppm_dyn[4]  = {1,0,0,0};
-const double pppm_Isub[4] = {0,1,0,0};
-const double pppm_Ig[4]   = {0,0,1,0};
-const double pppm_sc[4]   = {0,0,0,1};
+const double pppm[4]      = {1, 1, 1, 1};
+const double pppm_lkg[4]  = {0, 1, 1, 0};
+const double pppm_dyn[4]  = {1, 0, 0, 0};
+const double pppm_Isub[4] = {0, 1, 0, 0};
+const double pppm_Ig[4]   = {0, 0, 1, 0};
+const double pppm_sc[4]   = {0, 0, 0, 1};
 
 
 
