@@ -61,21 +61,18 @@ SRCS  = \
   wire.cc \
   xmlParser.cc 
 
-OBJS = $(patsubst %.cc,obj_$(TAG)/%.o,$(SRCS))
+OBJS = $(patsubst %.cc,$(ODIR)/obj_$(TAG)/%.o,$(SRCS))
 
-all: obj_$(TAG)/$(TARGET)
-	cp -f obj_$(TAG)/$(TARGET) $(TARGET)
+all: $(ODIR)/obj_$(TAG)/$(TARGET)
+	cp -f $< $(ODIR)/$(TARGET)
 
-obj_$(TAG)/$(TARGET) : $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(INCS) $(CXXFLAGS) $(LIBS) -pthread
+$(ODIR)/obj_$(TAG)/$(TARGET) : $(OBJS)
+	$(CXX) $^ -o $@ $(INCS) $(CXXFLAGS) $(LIBS) -pthread
 
-#obj_$(TAG)/%.o : %.cc
-#	$(CXX) -c $(CXXFLAGS) $(INCS) -o $@ $<
-
-obj_$(TAG)/%.o : %.cc
+$(ODIR)/obj_$(TAG)/%.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-rm -f *.o $(TARGET)
+	-rm -f *.o $(ODIR)/$(TARGET)
 
 
