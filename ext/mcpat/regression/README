@@ -1,0 +1,75 @@
+regression.py
+
+Copyright (c) 2010-2014 Advanced Micro Devices, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met: redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer;
+redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution;
+neither the name of the copyright holders nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Authors: Yasuko Eckert <yasuko.eckert@amd.com>
+         Joel Hestness <hestness@cs.wisc.edu> (while interning at AMD)
+
+
+Introduction
+============
+
+This regression tester is for the McPAT power model.
+This tester can compile and runs McPAT on the input contained in the
+specified directory, and then compares the output to that of a golden run in
+order to ensure that specific power and area calculations do not change.
+
+Nine tests are included in the initial version of this tester in the directories:
+    $GEM5/ext/mcpat/regression/test-*
+
+In each directory, you will find a regression test input file
+(power_region0.xml) and the golden-run output (region0.out.bak).
+The tester's output file is saved as region0.out, which is then checked against
+region0.out.bak.
+
+
+Options
+=======
+--help, -h      Show a help message and exit
+--build, -b     Build McPAT before running tests
+--cleanup, -c   Clean up the specified regression directory
+--force, -f     Force run regression even if directory isn't set up
+--maketest, -m  Set up the specified test directory
+--verbose, -v   Print verbose output
+
+
+How to Use
+==========
+
+The regression tester must be invoked from the McPAT directory.
+
+% cd $GEM5/ext/mcpat
+
+
+To run all regression tests:
+% ./regression/regression.py ./regression/
+
+
+To run a particular regression test, specify its directory to the tester:
+% ./regression/regression.py ./regression/test-0
+
+Specify the "-v" option to see a diff of the regression output.

@@ -1,0 +1,37 @@
+McPAT (version 0.8 of Aug, 2010) is computing the target processor...
+ 
+
+McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
+*****************************************************************************************
+  Technology 40 nm
+  Interconnect metal projection = conservative interconnect technology projection
+  Target Clock Rate (MHz) 1700
+
+*****************************************************************************************
+  System:
+    Area = 1.13158e-05 mm^2
+    Peak Dynamic Power = 5.36275e-05 W
+    Subthreshold Leakage Power = 3.51615e-06 W
+    Gate Leakage Power = 1.48814e-07 W
+    Runtime Dynamic Power = 1.78758e-05 W
+    Runtime Dynamic Energy = 1.57728e-13 J
+    Total Runtime Energy = 1.90066e-13 J
+
+      Bus Interconnect:
+        Area = 1.13158e-05 mm^2
+        Peak Dynamic Power = 5.36275e-05 W
+        Subthreshold Leakage Power = 3.51615e-06 W
+        Gate Leakage Power = 1.48814e-07 W
+        Runtime Dynamic Power = 1.78758e-05 W
+        Runtime Dynamic Energy = 1.57728e-13 J
+        Total Runtime Energy = 1.90066e-13 J
+
+          Link:
+            Area = 1.13158e-05 mm^2
+            Peak Dynamic Power = 5.36275e-05 W
+            Subthreshold Leakage Power = 3.51615e-06 W
+            Gate Leakage Power = 1.48814e-07 W
+            Runtime Dynamic Power = 1.78758e-05 W
+            Runtime Dynamic Energy = 1.57728e-13 J
+            Total Runtime Energy = 1.90066e-13 J
+

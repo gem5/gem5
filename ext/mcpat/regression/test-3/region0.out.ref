@@ -1,0 +1,82 @@
+McPAT (version 0.8 of Aug, 2010) is computing the target processor...
+ 
+
+McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
+*****************************************************************************************
+  Technology 40 nm
+  Interconnect metal projection = aggressive interconnect technology projection
+  Target Clock Rate (MHz) 1000
+
+*****************************************************************************************
+  System:
+    Area = 10.1619 mm^2
+    Peak Dynamic Power = 0.802936 W
+    Subthreshold Leakage Power = 0.435736 W
+    Gate Leakage Power = 0.0339261 W
+    Runtime Dynamic Power = 0.0198915 W
+    Runtime Dynamic Energy = 3.69324e-05 J
+    Total Runtime Energy = 0.00090895 J
+
+      Memory Controller:
+        Area = 10.1619 mm^2
+        Peak Dynamic Power = 0.802936 W
+        Subthreshold Leakage Power = 0.435736 W
+        Gate Leakage Power = 0.0339261 W
+        Runtime Dynamic Power = 0.0198915 W
+        Runtime Dynamic Energy = 3.69324e-05 J
+        Total Runtime Energy = 0.00090895 J
+
+          Front End:
+            Area = 0.538603 mm^2
+            Peak Dynamic Power = 0.152914 W
+            Subthreshold Leakage Power = 0.0224588 W
+            Gate Leakage Power = 0.00133997 W
+            Runtime Dynamic Power = 0.00210718 W
+            Runtime Dynamic Energy = 3.91238e-06 J
+            Total Runtime Energy = 4.80994e-05 J
+
+              Reorder Buffer:
+                Area = 0.242439 mm^2
+                Peak Dynamic Power = 0.116672 W
+                Subthreshold Leakage Power = 0.0135852 W
+                Gate Leakage Power = 0.000923575 W
+                Runtime Dynamic Power = 0.00165964 W
+                Runtime Dynamic Energy = 3.08145e-06 J
+                Total Runtime Energy = 3.00199e-05 J
+
+              Read Buffer:
+                Area = 0.148082 mm^2
+                Peak Dynamic Power = 0.018121 W
+                Subthreshold Leakage Power = 0.00443679 W
+                Gate Leakage Power = 0.000208199 W
+                Runtime Dynamic Power = 0.00026615 W
+                Runtime Dynamic Energy = 4.9416e-07 J
+                Total Runtime Energy = 9.11848e-06 J
+
+              Write Buffer:
+                Area = 0.148082 mm^2
+                Peak Dynamic Power = 0.018121 W
+                Subthreshold Leakage Power = 0.00443679 W
+                Gate Leakage Power = 0.000208199 W
+                Runtime Dynamic Power = 0.000181383 W
+                Runtime Dynamic Energy = 3.36773e-07 J
+                Total Runtime Energy = 8.9611e-06 J
+
+          Transaction Engine:
+            Area = 3.27456 mm^2
+            Peak Dynamic Power = 0.650022 W
+            Subthreshold Leakage Power = 0.140627 W
+            Gate Leakage Power = 0.0110882 W
+            Runtime Dynamic Power = 0.00689515 W
+            Runtime Dynamic Energy = 1.28022e-05 J
+            Total Runtime Energy = 0.000294491 J
+
+          Physical Interface (PHY):
+            Area = 6.34878 mm^2
+            Peak Dynamic Power = 1.09577e-09 W
+            Subthreshold Leakage Power = 0.27265 W
+            Gate Leakage Power = 0.0214979 W
+            Runtime Dynamic Power = 0.0108891 W
+            Runtime Dynamic Energy = 2.02178e-05 J
+            Total Runtime Energy = 0.00056636 J
+
