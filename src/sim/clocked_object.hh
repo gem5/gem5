@@ -79,7 +79,8 @@ class ClockedObject : public SimObject
     ClockedObject& operator=(ClockedObject&);
 
     /**
-     *  Align cycle and tick to the next clock edge if not already done.
+     *  Align cycle and tick to the next clock edge if not already done. When
+     *  complete, tick must be at least curTick().
      */
     void update() const
     {
@@ -154,13 +155,18 @@ class ClockedObject : public SimObject
     }
 
     /**
-     * Determine the tick when a cycle begins, by default the current
-     * one, but the argument also enables the caller to determine a
-     * future cycle.
+     * Determine the tick when a cycle begins, by default the current one, but
+     * the argument also enables the caller to determine a future cycle. When
+     * curTick() is on a clock edge, the number of cycles in the parameter is
+     * added to curTick() to be returned. When curTick() is not aligned to a
+     * clock edge, the number of cycles in the parameter is added to the next
+     * clock edge.
      *
      * @param cycles The number of cycles into the future
      *
-     * @return The tick when the clock edge occurs
+     * @return The start tick when the requested clock edge occurs. Precisely,
+     * this tick can be
+     *     curTick() + [0, clockPeriod()) + clockPeriod() * cycles
      */
     inline Tick clockEdge(Cycles cycles = Cycles(0)) const
     {
@@ -175,7 +181,9 @@ class ClockedObject : public SimObject
      * Determine the current cycle, corresponding to a tick aligned to
      * a clock edge.
      *
-     * @return The current cycle count
+     * @return When curTick() is on a clock edge, return the Cycle corresponding
+     * to that clock edge. When curTick() is not on a clock edge, return the
+     * Cycle corresponding to the next clock edge.
      */
     inline Cycles curCycle() const
     {
@@ -186,11 +194,14 @@ class ClockedObject : public SimObject
     }
 
     /**
-     * Based on the clock of the object, determine the tick when the next
-     * cycle begins, in other words, return the next clock edge.
-     * (This can never be the current tick.)
+     * Based on the clock of the object, determine the start tick of the first
+     * cycle that is at least one cycle in the future. When curTick() is at the
+     * current cycle edge, this returns the next clock edge. When calling this
+     * during the middle of a cycle, this returns 2 clock edges in the future.
      *
-     * @return The tick when the next cycle starts
+     * @return The start tick of the first cycle that is at least one cycle in
+     * the future. Precisely, the returned tick can be in the range
+     *     curTick() + [clockPeriod(), 2 * clockPeriod())
      */
     Tick nextCycle() const
     { return clockEdge(Cycles(1)); }
