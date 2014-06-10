@@ -568,52 +568,46 @@ else:
     Exit(1)
 
 if main['GCC']:
-    # Check for a supported version of gcc, >= 4.4 is needed for c++0x
-    # support. See http://gcc.gnu.org/projects/cxx0x.html for details
+    # Check for a supported version of gcc. >= 4.6 is chosen for its
+    # level of c++11 support. See
+    # http://gcc.gnu.org/projects/cxx0x.html for details. 4.6 is also
+    # the first version with proper LTO support.
     gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    if compareVersions(gcc_version, "4.4") < 0:
-        print 'Error: gcc version 4.4 or newer required.'
+    if compareVersions(gcc_version, "4.6") < 0:
+        print 'Error: gcc version 4.6 or newer required.'
         print '       Installed version:', gcc_version
         Exit(1)
 
     main['GCC_VERSION'] = gcc_version
 
-    # Check for versions with bugs
-    if not compareVersions(gcc_version, '4.4.1') or \
-       not compareVersions(gcc_version, '4.4.2'):
-        print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
-        main.Append(CCFLAGS=['-fno-tree-vectorize'])
+    # Add the appropriate Link-Time Optimization (LTO) flags
+    # unless LTO is explicitly turned off. Note that these flags
+    # are only used by the fast target.
+    if not GetOption('no_lto'):
+        # Pass the LTO flag when compiling to produce GIMPLE
+        # output, we merely create the flags here and only append
+        # them later/
+        main['LTO_CCFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
 
-    # LTO support is only really working properly from 4.6 and beyond
-    if compareVersions(gcc_version, '4.6') >= 0:
-        # Add the appropriate Link-Time Optimization (LTO) flags
-        # unless LTO is explicitly turned off. Note that these flags
-        # are only used by the fast target.
-        if not GetOption('no_lto'):
-            # Pass the LTO flag when compiling to produce GIMPLE
-            # output, we merely create the flags here and only append
-            # them later/
-            main['LTO_CCFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
-
-            # Use the same amount of jobs for LTO as we are running
-            # scons with, we hardcode the use of the linker plugin
-            # which requires either gold or GNU ld >= 2.21
-            main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
-                                   '-fuse-linker-plugin']
+        # Use the same amount of jobs for LTO as we are running
+        # scons with, we hardcode the use of the linker plugin
+        # which requires either gold or GNU ld >= 2.21
+        main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
+                               '-fuse-linker-plugin']
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
 elif main['CLANG']:
-    # Check for a supported version of clang, >= 2.9 is needed to
-    # support similar features as gcc 4.4. See
+    # Check for a supported version of clang, >= 3.0 is needed to
+    # support similar features as gcc 4.6. See
     # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.search(CXX_version)
     if (clang_version_match):
         clang_version = clang_version_match.groups()[0]
-        if compareVersions(clang_version, "2.9") < 0:
-            print 'Error: clang version 2.9 or newer required.'
+        if compareVersions(clang_version, "3.0") < 0:
+            print 'Error: clang version 3.0 or newer required.'
             print '       Installed version:', clang_version
             Exit(1)
     else:

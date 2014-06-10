@@ -925,10 +925,8 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         # warnings about uninitialized variables and missing field
         # initializers.
         swig_env.Append(CCFLAGS=['-Wno-uninitialized',
-                                 '-Wno-missing-field-initializers'])
-
-        if compareVersions(env['GCC_VERSION'], '4.6') >= 0:
-            swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
+                                 '-Wno-missing-field-initializers',
+                                 '-Wno-unused-but-set-variable'])
 
         # If gcc supports it, also warn for deletion of derived
         # classes with non-virtual desctructors. For gcc >= 4.7 we
