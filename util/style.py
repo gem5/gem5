@@ -149,6 +149,13 @@ class Verifier(object):
         return f
 
     def skip(self, filename):
+        # We never want to handle symlinks, so always skip them: If the location
+        # pointed to is a directory, skip it. If the location is a file inside
+        # the gem5 directory, it will be checked as a file, so symlink can be
+        # skipped. If the location is a file outside gem5, we don't want to
+        # check it anyway.
+        if os.path.islink(filename):
+            return True
         return lang_type(filename) not in self.languages
 
     def check(self, filename, regions=all_regions):
@@ -384,6 +391,13 @@ def do_check_style(hgui, repo, *files, **args):
         files = frozenset(files)
 
     def skip(name):
+        # We never want to handle symlinks, so always skip them: If the location
+        # pointed to is a directory, skip it. If the location is a file inside
+        # the gem5 directory, it will be checked as a file, so symlink can be
+        # skipped. If the location is a file outside gem5, we don't want to
+        # check it anyway.
+        if os.path.islink(name):
+            return True
         return files and name in files
 
     def prompt(name, func, regions=all_regions):
