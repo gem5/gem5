@@ -48,12 +48,12 @@ namespace X86ISA {
         L1CacheAndTLB,
         L2L3CacheAndL2TLB,
         APMInfo,
+        LongModeAddressSize,
  
         /*
          * The following are defined by the spec but not yet implemented
          */
-/*      LongModeAddressSize,
-        // Function 9 is reserved
+/*      // Function 9 is reserved
         SVMInfo = 10,
         // Functions 11-24 are reserved
         TLB1GBPageInfo = 25,
@@ -130,8 +130,11 @@ namespace X86ISA {
                 result = CpuidResult(0x80000018, 0x68747541,
                                      0x69746e65, 0x444d4163);
                 break;
-/*            case LongModeAddressSize:
-              case SVMInfo:
+              case LongModeAddressSize:
+                result = CpuidResult(0x0000ffff, 0x00000000,
+                                     0x00000000, 0x00000000);
+                break;
+/*            case SVMInfo:
               case TLB1GBPageInfo:
               case PerformanceInfo:*/
               default:
