@@ -54,9 +54,9 @@ VoltageDomain::VoltageDomain(const Params *p)
 
     // Voltages must be sorted in descending order.
     fatal_if(!std::is_sorted(voltageOpPoints.begin(), voltageOpPoints.end(),
-             std::greater_equal<Voltages::value_type>()), "DVFS: Voltage "\
-             "operation points not in descending order for voltage domain "\
-             "%s\n", name());
+             std::greater<Voltages::value_type>()), "DVFS: Voltage operation "\
+             "points not in descending order for voltage domain %s\n",
+             name());
 }
 
 void
@@ -65,6 +65,11 @@ VoltageDomain::perfLevel(PerfLevel perf_level)
     chatty_assert(perf_level < voltageOpPoints.size(),
                   "DVFS: Requested voltage ID %d is outside the known "\
                   "range for domain %s.\n", perf_level, name());
+
+    if (perf_level == _perfLevel) {
+        // Silently ignore identical overwrites
+        return;
+    }
 
     _perfLevel = perf_level;
 

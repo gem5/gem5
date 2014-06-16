@@ -60,6 +60,8 @@ class VoltageDomain : public SimObject
     typedef VoltageDomainParams Params;
     VoltageDomain(const Params *p);
 
+    typedef SrcClockDomain::PerfLevel PerfLevel;
+
     /**
      * Get the current voltage.
      *
@@ -67,9 +69,18 @@ class VoltageDomain : public SimObject
      */
     double voltage() const { return voltageOpPoints[_perfLevel]; }
 
-    uint32_t numVoltages() const { return (uint32_t)voltageOpPoints.size(); }
+    /**
+     * Get the voltage at specified performance level.
+     *
+     * @param perf_level Performance level for which the voltage is requested
+     * @return Voltage of the domain at specified performance level
+     */
+    double voltage(PerfLevel perf_level) const
+    {
+        return voltageOpPoints[perf_level];
+    }
 
-    typedef SrcClockDomain::PerfLevel PerfLevel;
+    uint32_t numVoltages() const { return (uint32_t)voltageOpPoints.size(); }
 
     /**
      * Set the voltage point of the domain.

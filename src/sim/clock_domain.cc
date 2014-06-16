@@ -136,6 +136,11 @@ SrcClockDomain::perfLevel(PerfLevel perf_level)
 {
     assert(validPerfLevel(perf_level));
 
+    if (perf_level == _perfLevel) {
+        // Silently ignore identical overwrites
+        return;
+    }
+
     DPRINTF(ClockDomain, "DVFS: Switching performance level of domain %s "\
             "(id: %d) from  %d to %d\n", name(), domainID(), _perfLevel,
             perf_level);
@@ -162,6 +167,13 @@ SrcClockDomain::unserialize(Checkpoint *cp, const std::string &section)
 {
     ClockDomain::unserialize(cp, section);
     UNSERIALIZE_SCALAR(_perfLevel);
+}
+
+void
+SrcClockDomain::startup()
+{
+    // Perform proper clock update when all related components have been
+    // created (i.e. after unserialization / object creation)
     perfLevel(_perfLevel);
 }
 

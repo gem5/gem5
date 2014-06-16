@@ -81,11 +81,25 @@ DVFSHandler::DVFSHandler(const Params *p)
         // Create a dedicated event slot per known domain ID
         UpdateEvent *event = &updatePerfLevelEvents[domain_id];
         event->domainIDToSet = d->domainID();
+
+        // Add domain ID to the list of domains
+        domainIDList.push_back(d->domainID());
     }
     UpdateEvent::dvfsHandler = this;
 }
 
 DVFSHandler *DVFSHandler::UpdateEvent::dvfsHandler;
+
+DVFSHandler::DomainID
+DVFSHandler::domainID(uint32_t index) const
+{
+    fatal_if(index >= numDomains(), "DVFS: Requested index out of "\
+             "bound, max value %d\n", (domainIDList.size() - 1));
+
+    assert(domains.find(domainIDList[index]) != domains.end());
+
+    return domainIDList[index];
+}
 
 bool
 DVFSHandler::validDomainID(DomainID domain_id) const
@@ -186,7 +200,14 @@ DVFSHandler::serialize(std::ostream &os)
 void
 DVFSHandler::unserialize(Checkpoint *cp, const std::string &section)
 {
+    bool temp = enableHandler;
+
     UNSERIALIZE_SCALAR(enableHandler);
+
+    if(temp != enableHandler) {
+        warn("DVFS: Forcing enable handler status to unserialized value of %d",
+             enableHandler);
+    }
 
     // Reconstruct the map of domain IDs and their scheduled events
     std::vector<DomainID> domain_ids;

@@ -52,13 +52,14 @@
 
 #include <vector>
 
+#include "debug/DVFS.hh"
 #include "params/ClockDomain.hh"
 #include "params/DVFSHandler.hh"
 #include "params/VoltageDomain.hh"
 #include "sim/clock_domain.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-
+#include "sim/voltage_domain.hh"
 
 /**
  * DVFS Handler class, maintains a list of all the domains it can handle.
@@ -78,6 +79,18 @@ class DVFSHandler : public SimObject
 
     typedef SrcClockDomain::DomainID DomainID;
     typedef SrcClockDomain::PerfLevel PerfLevel;
+
+    /**
+     * Get the number of domains assigned to this DVFS handler.
+     * @return Number of domains
+     */
+    uint32_t numDomains() const { return domainIDList.size(); }
+
+    /**
+     * Get the n-th domain ID, from the domains managed by this handler.
+     * @return Domain ID
+     */
+    DomainID domainID(uint32_t index) const;
 
     /**
      * Check whether a domain ID is known to the handler or not.
@@ -128,6 +141,19 @@ class DVFSHandler : public SimObject
     }
 
     /**
+     * Read the voltage of the specified domain at the specified
+     * performance level.
+     * @param domain_id Domain ID to query
+     * @param perf_level Performance level of interest
+     * @return Voltage for the requested performance level of the respective
+     * domain
+     */
+    double voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
+    {
+        return findDomain(domain_id)->voltageDomain()->voltage(perf_level);
+    }
+
+    /**
      * Get the total number of available performance levels.
      *
      * @param domain_id Domain ID to query
@@ -152,6 +178,11 @@ class DVFSHandler : public SimObject
   private:
     typedef std::map<DomainID, SrcClockDomain*> Domains;
     Domains domains;
+
+    /**
+      * List of IDs avaiable in the domain list
+      */
+    std::vector<DomainID> domainIDList;
 
     /**
       * Clock domain of the system the handler is instantiated.
