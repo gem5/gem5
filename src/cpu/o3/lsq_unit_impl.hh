@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -414,19 +415,24 @@ LSQUnit<Impl>::getMemDepViolator()
 
 template <class Impl>
 unsigned
-LSQUnit<Impl>::numFreeEntries()
+LSQUnit<Impl>::numFreeLoadEntries()
 {
-    unsigned free_lq_entries = LQEntries - loads;
-    unsigned free_sq_entries = SQEntries - stores;
-
-    // Both the LQ and SQ entries have an extra dummy entry to differentiate
-    // empty/full conditions.  Subtract 1 from the free entries.
-    if (free_lq_entries < free_sq_entries) {
-        return free_lq_entries - 1;
-    } else {
-        return free_sq_entries - 1;
-    }
+        //LQ has an extra dummy entry to differentiate
+        //empty/full conditions. Subtract 1 from the free entries.
+        DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n", LQEntries, loads);
+        return LQEntries - loads - 1;
 }
+
+template <class Impl>
+unsigned
+LSQUnit<Impl>::numFreeStoreEntries()
+{
+        //SQ has an extra dummy entry to differentiate
+        //empty/full conditions. Subtract 1 from the free entries.
+        DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n", SQEntries, stores);
+        return SQEntries - stores - 1;
+
+ }
 
 template <class Impl>
 void

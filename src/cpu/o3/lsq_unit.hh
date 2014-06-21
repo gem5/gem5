@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -198,8 +199,11 @@ class LSQUnit {
     void setLoadBlockedHandled()
     { loadBlockedHandled = true; }
 
-    /** Returns the number of free entries (min of free LQ and SQ entries). */
-    unsigned numFreeEntries();
+    /** Returns the number of free LQ entries. */
+    unsigned numFreeLoadEntries();
+
+    /** Returns the number of free SQ entries. */
+    unsigned numFreeStoreEntries();
 
     /** Returns the number of loads in the LQ. */
     int numLoads() { return loads; }

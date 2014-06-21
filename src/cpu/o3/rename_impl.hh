@@ -131,10 +131,14 @@ DefaultRename<Impl>::regStats()
         .name(name() + ".IQFullEvents")
         .desc("Number of times rename has blocked due to IQ full")
         .prereq(renameIQFullEvents);
-    renameLSQFullEvents
-        .name(name() + ".LSQFullEvents")
-        .desc("Number of times rename has blocked due to LSQ full")
-        .prereq(renameLSQFullEvents);
+    renameLQFullEvents
+        .name(name() + ".LQFullEvents")
+        .desc("Number of times rename has blocked due to LQ full")
+        .prereq(renameLQFullEvents);
+    renameSQFullEvents
+        .name(name() + ".SQFullEvents")
+        .desc("Number of times rename has blocked due to SQ full")
+        .prereq(renameSQFullEvents);
     renameFullRegistersEvents
         .name(name() + ".FullRegisterEvents")
         .desc("Number of times there has been no free registers")
@@ -237,7 +241,8 @@ DefaultRename<Impl>::resetStage()
         renameStatus[tid] = Idle;
 
         freeEntries[tid].iqEntries = iew_ptr->instQueue.numFreeEntries(tid);
-        freeEntries[tid].lsqEntries = iew_ptr->ldstQueue.numFreeEntries(tid);
+        freeEntries[tid].lqEntries = iew_ptr->ldstQueue.numFreeLoadEntries(tid);
+        freeEntries[tid].sqEntries = iew_ptr->ldstQueue.numFreeStoreEntries(tid);
         freeEntries[tid].robEntries = commit_ptr->numROBFreeEntries(tid);
         emptyROB[tid] = true;
 
@@ -246,6 +251,8 @@ DefaultRename<Impl>::resetStage()
         serializeInst[tid] = NULL;
 
         instsInProgress[tid] = 0;
+        loadsInProgress[tid] = 0;
+        storesInProgress[tid] = 0;
 
         serializeOnNextInst[tid] = false;
     }
@@ -420,7 +427,10 @@ DefaultRename<Impl>::tick()
     // @todo: make into updateProgress function
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         instsInProgress[tid] -= fromIEW->iewInfo[tid].dispatched;
-
+        loadsInProgress[tid] -= fromIEW->iewInfo[tid].dispatchedToLQ;
+        storesInProgress[tid] -= fromIEW->iewInfo[tid].dispatchedToSQ;
+        assert(loadsInProgress[tid] >= 0);
+        assert(storesInProgress[tid] >= 0);
         assert(instsInProgress[tid] >=0);
     }
 
@@ -509,7 +519,6 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
     // entries.
     int free_rob_entries = calcFreeROBEntries(tid);
     int free_iq_entries  = calcFreeIQEntries(tid);
-    int free_lsq_entries = calcFreeLSQEntries(tid);
     int min_free_entries = free_rob_entries;
 
     FullSource source = ROB;
@@ -519,22 +528,15 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         source = IQ;
     }
 
-    if (free_lsq_entries < min_free_entries) {
-        min_free_entries = free_lsq_entries;
-        source = LSQ;
-    }
-
     // Check if there's any space left.
     if (min_free_entries <= 0) {
-        DPRINTF(Rename, "[tid:%u]: Blocking due to no free ROB/IQ/LSQ "
+        DPRINTF(Rename, "[tid:%u]: Blocking due to no free ROB/IQ/ "
                 "entries.\n"
                 "ROB has %i free entries.\n"
-                "IQ has %i free entries.\n"
-                "LSQ has %i free entries.\n",
+                "IQ has %i free entries.\n",
                 tid,
                 free_rob_entries,
-                free_iq_entries,
-                free_lsq_entries);
+                free_iq_entries);
 
         blockThisCycle = true;
 
@@ -584,6 +586,28 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         assert(!insts_to_rename.empty());
 
         inst = insts_to_rename.front();
+
+        //For all kind of instructions, check ROB and IQ first
+        //For load instruction, check LQ size and take into account the inflight loads
+        //For store instruction, check SQ size and take into account the inflight stores
+
+        if (inst->isLoad()) {
+                if(calcFreeLQEntries(tid) <= 0) {
+                        DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free LQ\n");
+                        source = LQ;
+                        incrFullStat(source);
+                        break;
+                }
+        }
+
+        if (inst->isStore()) {
+                if(calcFreeSQEntries(tid) <= 0) {
+                        DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free SQ\n");
+                        source = SQ;
+                        incrFullStat(source);
+                        break;
+                }
+        }
 
         insts_to_rename.pop_front();
 
@@ -665,6 +689,12 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         renameDestRegs(inst, inst->threadNumber);
 
+        if (inst->isLoad()) {
+                loadsInProgress[tid]++;
+        }
+        if (inst->isStore()) {
+                storesInProgress[tid]++;
+        }
         ++renamed_insts;
 
 
@@ -1122,14 +1152,26 @@ DefaultRename<Impl>::calcFreeIQEntries(ThreadID tid)
 
 template <class Impl>
 inline int
-DefaultRename<Impl>::calcFreeLSQEntries(ThreadID tid)
+DefaultRename<Impl>::calcFreeLQEntries(ThreadID tid)
 {
-    int num_free = freeEntries[tid].lsqEntries -
-                  (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLSQ);
+        int num_free = freeEntries[tid].lqEntries -
+                                  (loadsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLQ);
+        DPRINTF(Rename, "calcFreeLQEntries: free lqEntries: %d, loadsInProgress: %d, "
+                "loads dispatchedToLQ: %d\n", freeEntries[tid].lqEntries,
+                loadsInProgress[tid], fromIEW->iewInfo[tid].dispatchedToLQ);
+        return num_free;
+}
 
-    //DPRINTF(Rename,"[tid:%i]: %i lsq free\n",tid,num_free);
-
-    return num_free;
+template <class Impl>
+inline int
+DefaultRename<Impl>::calcFreeSQEntries(ThreadID tid)
+{
+        int num_free = freeEntries[tid].sqEntries -
+                                  (storesInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToSQ);
+        DPRINTF(Rename, "calcFreeSQEntries: free sqEntries: %d, storesInProgress: %d, "
+                "stores dispatchedToSQ: %d\n", freeEntries[tid].sqEntries,
+                storesInProgress[tid], fromIEW->iewInfo[tid].dispatchedToSQ);
+        return num_free;
 }
 
 template <class Impl>
@@ -1187,7 +1229,7 @@ DefaultRename<Impl>::checkStall(ThreadID tid)
     } else if (calcFreeIQEntries(tid) <= 0) {
         DPRINTF(Rename,"[tid:%i]: Stall: IQ has 0 free entries.\n", tid);
         ret_val = true;
-    } else if (calcFreeLSQEntries(tid) <= 0) {
+    } else if (calcFreeLQEntries(tid) <= 0 && calcFreeSQEntries(tid) <= 0) {
         DPRINTF(Rename,"[tid:%i]: Stall: LSQ has 0 free entries.\n", tid);
         ret_val = true;
     } else if (renameMap[tid]->numFreeEntries() <= 0) {
@@ -1211,8 +1253,10 @@ DefaultRename<Impl>::readFreeEntries(ThreadID tid)
     if (fromIEW->iewInfo[tid].usedIQ)
         freeEntries[tid].iqEntries = fromIEW->iewInfo[tid].freeIQEntries;
 
-    if (fromIEW->iewInfo[tid].usedLSQ)
-        freeEntries[tid].lsqEntries = fromIEW->iewInfo[tid].freeLSQEntries;
+    if (fromIEW->iewInfo[tid].usedLSQ) {
+        freeEntries[tid].lqEntries = fromIEW->iewInfo[tid].freeLQEntries;
+        freeEntries[tid].sqEntries = fromIEW->iewInfo[tid].freeSQEntries;
+    }
 
     if (fromCommit->commitInfo[tid].usedROB) {
         freeEntries[tid].robEntries =
@@ -1220,11 +1264,13 @@ DefaultRename<Impl>::readFreeEntries(ThreadID tid)
         emptyROB[tid] = fromCommit->commitInfo[tid].emptyROB;
     }
 
-    DPRINTF(Rename, "[tid:%i]: Free IQ: %i, Free ROB: %i, Free LSQ: %i\n",
+    DPRINTF(Rename, "[tid:%i]: Free IQ: %i, Free ROB: %i, "
+                    "Free LQ: %i, Free SQ: %i\n",
             tid,
             freeEntries[tid].iqEntries,
             freeEntries[tid].robEntries,
-            freeEntries[tid].lsqEntries);
+            freeEntries[tid].lqEntries,
+            freeEntries[tid].sqEntries);
 
     DPRINTF(Rename, "[tid:%i]: %i instructions not yet in ROB\n",
             tid, instsInProgress[tid]);
@@ -1363,8 +1409,11 @@ DefaultRename<Impl>::incrFullStat(const FullSource &source)
       case IQ:
         ++renameIQFullEvents;
         break;
-      case LSQ:
-        ++renameLSQFullEvents;
+      case LQ:
+        ++renameLQFullEvents;
+        break;
+      case SQ:
+        ++renameSQFullEvents;
         break;
       default:
         panic("Rename full stall stat should be incremented for a reason!");

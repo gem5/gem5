@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -204,10 +205,20 @@ class LSQ {
     int numStores(ThreadID tid)
     { return thread[tid].numStores(); }
 
-    /** Returns the number of free entries. */
-    unsigned numFreeEntries();
+    /** Returns the number of free load entries. */
+    unsigned numFreeLoadEntries();
+
+    /** Returns the number of free store entries. */
+    unsigned numFreeStoreEntries();
+
     /** Returns the number of free entries for a specific thread. */
     unsigned numFreeEntries(ThreadID tid);
+
+    /** Returns the number of free entries in the LQ for a specific thread. */
+    unsigned numFreeLoadEntries(ThreadID tid);
+
+    /** Returns the number of free entries in the SQ for a specific thread. */
+    unsigned numFreeStoreEntries(ThreadID tid);
 
     /** Returns if the LSQ is full (either LQ or SQ is full). */
     bool isFull();

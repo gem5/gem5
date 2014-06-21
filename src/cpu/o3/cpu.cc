@@ -1009,11 +1009,17 @@ FullO3CPU<Impl>::activateWhenReady(ThreadID tid)
                 "IQ entries.\n",
                 tid);
         ready = false;
-    } else if (iew.ldstQueue.numFreeEntries() >=
+    } else if (iew.ldstQueue.numFreeLoadEntries() >=
                iew.ldstQueue.entryAmount(activeThreads.size() + 1)) {
         DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "LSQ entries.\n",
+                "LQ entries.\n",
                 tid);
+        ready = false;
+    } else if (iew.ldstQueue.numFreeStoreEntries() >=
+            iew.ldstQueue.entryAmount(activeThreads.size() + 1)) {
+        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
+                "SQ entries.\n",
+             tid);
         ready = false;
     }
 

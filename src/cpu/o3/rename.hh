@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -251,8 +252,11 @@ class DefaultRename
     /** Calculates the number of free IQ entries for a specific thread. */
     inline int calcFreeIQEntries(ThreadID tid);
 
-    /** Calculates the number of free LSQ entries for a specific thread. */
-    inline int calcFreeLSQEntries(ThreadID tid);
+    /** Calculates the number of free LQ entries for a specific thread. */
+    inline int calcFreeLQEntries(ThreadID tid);
+
+    /** Calculates the number of free SQ entries for a specific thread. */
+    inline int calcFreeSQEntries(ThreadID tid);
 
     /** Returns the number of valid instructions coming from decode. */
     unsigned validInsts();
@@ -355,6 +359,16 @@ class DefaultRename
      */
     int instsInProgress[Impl::MaxThreads];
 
+    /** Count of Load instructions in progress that have been sent off to the IQ
+     * and ROB, but are not yet included in their occupancy counts.
+     */
+    int loadsInProgress[Impl::MaxThreads];
+
+    /** Count of Store instructions in progress that have been sent off to the IQ
+     * and ROB, but are not yet included in their occupancy counts.
+     */
+    int storesInProgress[Impl::MaxThreads];
+
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
      */
@@ -365,8 +379,9 @@ class DefaultRename
      */
     struct FreeEntries {
         unsigned iqEntries;
-        unsigned lsqEntries;
         unsigned robEntries;
+        unsigned lqEntries;
+        unsigned sqEntries;
     };
 
     /** Per-thread tracking of the number of free entries of back-end
@@ -444,7 +459,8 @@ class DefaultRename
     enum FullSource {
         ROB,
         IQ,
-        LSQ,
+        LQ,
+        SQ,
         NONE
     };
 
@@ -473,8 +489,10 @@ class DefaultRename
     Stats::Scalar renameROBFullEvents;
     /** Stat for total number of times that the IQ starts a stall in rename. */
     Stats::Scalar renameIQFullEvents;
-    /** Stat for total number of times that the LSQ starts a stall in rename. */
-    Stats::Scalar renameLSQFullEvents;
+    /** Stat for total number of times that the LQ starts a stall in rename. */
+    Stats::Scalar renameLQFullEvents;
+    /** Stat for total number of times that the SQ starts a stall in rename. */
+    Stats::Scalar renameSQFullEvents;
     /** Stat for total number of times that rename runs out of free registers
      * to use to rename. */
     Stats::Scalar renameFullRegistersEvents;

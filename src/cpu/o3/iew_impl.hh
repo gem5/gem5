@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -315,8 +316,8 @@ DefaultIEW<Impl>::startupStage()
             instQueue.numFreeEntries(tid);
 
         toRename->iewInfo[tid].usedLSQ = true;
-        toRename->iewInfo[tid].freeLSQEntries =
-            ldstQueue.numFreeEntries(tid);
+        toRename->iewInfo[tid].freeLQEntries = ldstQueue.numFreeLoadEntries(tid);
+        toRename->iewInfo[tid].freeSQEntries = ldstQueue.numFreeStoreEntries(tid);
     }
 
     // Initialize the checker's dcache port here
@@ -467,9 +468,11 @@ DefaultIEW<Impl>::squash(ThreadID tid)
             tid, fromCommit->commitInfo[tid].doneSeqNum);
 
     while (!skidBuffer[tid].empty()) {
-        if (skidBuffer[tid].front()->isLoad() ||
-            skidBuffer[tid].front()->isStore() ) {
-            toRename->iewInfo[tid].dispatchedToLSQ++;
+        if (skidBuffer[tid].front()->isLoad()) {
+            toRename->iewInfo[tid].dispatchedToLQ++;
+        }
+        if (skidBuffer[tid].front()->isStore()) {
+            toRename->iewInfo[tid].dispatchedToSQ++;
         }
 
         toRename->iewInfo[tid].dispatched++;
@@ -903,9 +906,11 @@ DefaultIEW<Impl>::emptyRenameInsts(ThreadID tid)
 
     while (!insts[tid].empty()) {
 
-        if (insts[tid].front()->isLoad() ||
-            insts[tid].front()->isStore() ) {
-            toRename->iewInfo[tid].dispatchedToLSQ++;
+        if (insts[tid].front()->isLoad()) {
+            toRename->iewInfo[tid].dispatchedToLQ++;
+        }
+        if (insts[tid].front()->isStore()) {
+            toRename->iewInfo[tid].dispatchedToSQ++;
         }
 
         toRename->iewInfo[tid].dispatched++;
@@ -1043,9 +1048,13 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             insts_to_dispatch.pop();
 
             //Tell Rename That An Instruction has been processed
-            if (inst->isLoad() || inst->isStore()) {
-                toRename->iewInfo[tid].dispatchedToLSQ++;
+            if (inst->isLoad()) {
+                toRename->iewInfo[tid].dispatchedToLQ++;
             }
+            if (inst->isStore()) {
+                toRename->iewInfo[tid].dispatchedToSQ++;
+            }
+
             toRename->iewInfo[tid].dispatched++;
 
             continue;
@@ -1093,7 +1102,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
 
             add_to_iq = true;
 
-            toRename->iewInfo[tid].dispatchedToLSQ++;
+            toRename->iewInfo[tid].dispatchedToLQ++;
         } else if (inst->isStore()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
@@ -1116,7 +1125,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
                 add_to_iq = true;
             }
 
-            toRename->iewInfo[tid].dispatchedToLSQ++;
+            toRename->iewInfo[tid].dispatchedToSQ++;
         } else if (inst->isMemBarrier() || inst->isWriteBarrier()) {
             // Same as non-speculative stores.
             inst->setCanCommit();
@@ -1613,8 +1622,11 @@ DefaultIEW<Impl>::tick()
             toRename->iewInfo[tid].freeIQEntries =
                 instQueue.numFreeEntries(tid);
             toRename->iewInfo[tid].usedLSQ = true;
-            toRename->iewInfo[tid].freeLSQEntries =
-                ldstQueue.numFreeEntries(tid);
+
+            toRename->iewInfo[tid].freeLQEntries =
+                ldstQueue.numFreeLoadEntries(tid);
+            toRename->iewInfo[tid].freeSQEntries =
+                ldstQueue.numFreeStoreEntries(tid);
 
             wroteToTimeBuffer = true;
         }
@@ -1624,9 +1636,9 @@ DefaultIEW<Impl>::tick()
     }
 
     DPRINTF(IEW, "IQ has %i free entries (Can schedule: %i).  "
-            "LSQ has %i free entries.\n",
+            "LQ has %i free entries. SQ has %i free entries.\n",
             instQueue.numFreeEntries(), instQueue.hasReadyInsts(),
-            ldstQueue.numFreeEntries());
+            ldstQueue.numFreeLoadEntries(), ldstQueue.numFreeStoreEntries());
 
     updateStatus();
 

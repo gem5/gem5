@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -433,7 +434,7 @@ LSQ<Impl>::numStores()
 
 template<class Impl>
 unsigned
-LSQ<Impl>::numFreeEntries()
+LSQ<Impl>::numFreeLoadEntries()
 {
     unsigned total = 0;
 
@@ -443,7 +444,7 @@ LSQ<Impl>::numFreeEntries()
     while (threads != end) {
         ThreadID tid = *threads++;
 
-        total += thread[tid].numFreeEntries();
+        total += thread[tid].numFreeLoadEntries();
     }
 
     return total;
@@ -451,12 +452,34 @@ LSQ<Impl>::numFreeEntries()
 
 template<class Impl>
 unsigned
-LSQ<Impl>::numFreeEntries(ThreadID tid)
+LSQ<Impl>::numFreeStoreEntries()
 {
-    //if (lsqPolicy == Dynamic)
-    //return numFreeEntries();
-    //else
-        return thread[tid].numFreeEntries();
+    unsigned total = 0;
+
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
+
+    while (threads != end) {
+        ThreadID tid = *threads++;
+
+        total += thread[tid].numFreeStoreEntries();
+    }
+
+    return total;
+}
+
+template<class Impl>
+unsigned
+LSQ<Impl>::numFreeLoadEntries(ThreadID tid)
+{
+        return thread[tid].numFreeLoadEntries();
+}
+
+template<class Impl>
+unsigned
+LSQ<Impl>::numFreeStoreEntries(ThreadID tid)
+{
+        return thread[tid].numFreeStoreEntries();
 }
 
 template<class Impl>
