@@ -793,25 +793,6 @@ DefaultIEW<Impl>::checkStall(ThreadID tid)
     } else if (instQueue.isFull(tid)) {
         DPRINTF(IEW,"[tid:%i]: Stall: IQ  is full.\n",tid);
         ret_val = true;
-    } else if (ldstQueue.isFull(tid)) {
-        DPRINTF(IEW,"[tid:%i]: Stall: LSQ is full\n",tid);
-
-        if (ldstQueue.numLoads(tid) > 0 ) {
-
-            DPRINTF(IEW,"[tid:%i]: LSQ oldest load: [sn:%i] \n",
-                    tid,ldstQueue.getLoadHeadSeqNum(tid));
-        }
-
-        if (ldstQueue.numStores(tid) > 0) {
-
-            DPRINTF(IEW,"[tid:%i]: LSQ oldest store: [sn:%i] \n",
-                    tid,ldstQueue.getStoreHeadSeqNum(tid));
-        }
-
-        ret_val = true;
-    } else if (ldstQueue.isStalled(tid)) {
-        DPRINTF(IEW,"[tid:%i]: Stall: LSQ stall detected.\n",tid);
-        ret_val = true;
     }
 
     return ret_val;
@@ -1074,8 +1055,13 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
 
             ++iewIQFullEvents;
             break;
-        } else if (ldstQueue.isFull(tid)) {
-            DPRINTF(IEW, "[tid:%i]: Issue: LSQ has become full.\n",tid);
+        }
+
+        // Check LSQ if inst is LD/ST
+        if ((inst->isLoad() && ldstQueue.lqFull(tid)) ||
+            (inst->isStore() && ldstQueue.sqFull(tid))) {
+            DPRINTF(IEW, "[tid:%i]: Issue: %s has become full.\n",tid,
+                    inst->isLoad() ? "LQ" : "SQ");
 
             // Call function to start blocking.
             block(tid);
