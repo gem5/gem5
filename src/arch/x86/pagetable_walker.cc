@@ -608,9 +608,11 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
     assert(pkt->isResponse());
     assert(inflight);
     assert(state == Waiting);
-    assert(!read);
     inflight--;
     if (pkt->isRead()) {
+        // should not have a pending read it we also had one outstanding
+        assert(!read);
+
         // @todo someone should pay for this
         pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
 
