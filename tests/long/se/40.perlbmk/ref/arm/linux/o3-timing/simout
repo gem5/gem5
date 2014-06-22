@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2014 12:08:08
-gem5 started Jan 23 2014 17:31:04
-gem5 executing on u200540-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/40.perlbmk/arm/linux/o3-timing -re tests/run.py build/ARM/tests/opt/long/se/40.perlbmk/arm/linux/o3-timing
+gem5 compiled Jun 21 2014 11:22:42
+gem5 started Jun 21 2014 21:43:02
+gem5 executing on phenom
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/40.perlbmk/arm/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/se/40.perlbmk/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x4c3a340
+      0: system.cpu.isa: ISA system set to: 0 0x5c9e4b0
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
@@ -1386,4 +1386,4 @@ info: Increasing stack size by one page.
 2000: 760651391
 1000: 4031656975
 0: 2206428413
-Exiting @ tick 629535413500 because target called exit()
+Exiting @ tick 634728078000 because target called exit()

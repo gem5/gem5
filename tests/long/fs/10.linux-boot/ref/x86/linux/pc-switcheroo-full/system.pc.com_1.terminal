@@ -44,7 +44,7 @@ ACPI: Core revision 20070126
 ACPI Exception (tbxface-0618): AE_NO_ACPI_TABLES, While loading namespace from ACPI tables [20070126]
 ACPI: Unable to load the System Description Tables
 Using local APIC timer interrupts.
-result 7812444
+result 7812464
 Detected 7.812 MHz APIC timer.
 NET: Registered protocol family 16
 PCI: Using configuration type 1

@@ -1,17 +1,28 @@
-Redirecting stdout to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/simout
-Redirecting stderr to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb 15 2014 16:30:59
-gem5 started Feb 16 2014 01:49:09
-gem5 executing on ribera.cs.wisc.edu
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
+gem5 compiled Jun 21 2014 11:13:07
+gem5 started Jun 21 2014 22:34:22
+gem5 executing on phenom
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
  Reading the dictionary files: *********info: Increasing stack size by one page.
-****************************************
+info: Increasing stack size by one page.
+******************************info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+**********
  58924 words stored in 3784810 bytes
 
 
@@ -23,8 +34,6 @@ Processing sentences in batch mode
 
 Echoing of input sentence turned on.
 * as had expected the party to be a success , it was a success 
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
 * do you know where John 's 
 * he said that , finding that it was impossible to get work as a waiter , he would work as a janitor 
 info: Increasing stack size by one page.
@@ -74,11 +83,9 @@ info: Increasing stack size by one page.
   the man with whom I play tennis is here 
   there is a dog in the park 
   this is not the man we know and love 
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
   we like to eat at restaurants , usually on weekends 
   what did John say he thought you should do 
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 459118646000 because target called exit()
+Exiting @ tick 456433328000 because target called exit()

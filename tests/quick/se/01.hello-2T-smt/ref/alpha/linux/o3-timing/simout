@@ -3,14 +3,14 @@ Redirecting stderr to build/ALPHA/tests/opt/quick/se/01.hello-2T-smt/alpha/linux
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 17 2014 14:58:40
-gem5 started Apr 17 2014 20:39:31
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py build/ALPHA/tests/opt/quick/se/01.hello-2T-smt/alpha/linux/o3-timing
+gem5 compiled Jun 21 2014 10:36:29
+gem5 started Jun 21 2014 10:38:01
+gem5 executing on phenom
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/01.hello-2T-smt/alpha/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/01.hello-2T-smt/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 Hello world!
 Hello world!
-Exiting @ tick 24279500 because target called exit()
+Exiting @ tick 24521000 because target called exit()
