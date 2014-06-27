@@ -93,9 +93,9 @@ BaseCache::CacheSlavePort::setBlocked()
     // if we already scheduled a retry in this cycle, but it has not yet
     // happened, cancel it
     if (sendRetryEvent.scheduled()) {
-       owner.deschedule(sendRetryEvent);
-       DPRINTF(CachePort, "Cache port %s deschedule retry\n", name());
-       mustSendRetry = true;
+        owner.deschedule(sendRetryEvent);
+        DPRINTF(CachePort, "Cache port %s deschedule retry\n", name());
+        mustSendRetry = true;
     }
 }
 

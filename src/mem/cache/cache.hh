@@ -181,6 +181,11 @@ class Cache : public BaseCache
     const bool doFastWrites;
 
     /**
+     * Turn line-sized writes into WriteInvalidate transactions.
+     */
+    void promoteWholeLineWrites(PacketPtr pkt);
+
+    /**
      * Notify the prefetcher on every access, not just misses.
      */
     const bool prefetchOnAccess;

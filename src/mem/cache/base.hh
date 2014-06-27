@@ -94,6 +94,7 @@ class BaseCache : public MemObject
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
         Blocked_NoWBBuffers = MSHRQueue_WriteBuffer,
         Blocked_NoTargets,
+        Blocked_PendingWriteInvalidate,
         NUM_BLOCKED_CAUSES
     };
 
@@ -167,6 +168,8 @@ class BaseCache : public MemObject
 
         /** Return to normal operation and accept new requests. */
         void clearBlocked();
+
+        bool isBlocked() const { return blocked; }
 
       protected:
 
