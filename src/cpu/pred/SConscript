@@ -38,5 +38,6 @@ if 'InOrderCPU' in env['CPU_MODELS'] or 'O3CPU' in env['CPU_MODELS']:
     Source('btb.cc')
     Source('ras.cc')
     Source('tournament.cc')
+    Source ('bi_mode.cc')
     DebugFlag('FreeList')
     DebugFlag('Branch')

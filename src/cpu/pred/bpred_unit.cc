@@ -32,6 +32,7 @@
  */
 
 #include "cpu/pred/2bit_local.hh"
+#include "cpu/pred/bi_mode.hh"
 #include "cpu/pred/bpred_unit_impl.hh"
 #include "cpu/pred/tournament.hh"
 
@@ -43,6 +44,8 @@ BranchPredictorParams::create()
         return new LocalBP(this);
     } else if (predType == "tournament") {
         return new TournamentBP(this);
+    } else if (predType == "bi-mode") {
+        return new BiModeBP(this);
     } else {
         fatal("Invalid BP selected!");
     }

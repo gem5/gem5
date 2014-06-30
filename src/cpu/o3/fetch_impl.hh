@@ -1332,8 +1332,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             nextPC = thisPC;
 
-            // If we're branching after this instruction, quite fetching
-            // from the same block then.
+            // If we're branching after this instruction, quit fetching
+            // from the same block.
             predictedBranch |= thisPC.branching();
             predictedBranch |=
                 lookupAndUpdateNextPC(instruction, nextPC);
