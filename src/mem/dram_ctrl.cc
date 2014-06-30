@@ -45,6 +45,7 @@
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "debug/DRAM.hh"
+#include "debug/DRAMPower.hh"
 #include "debug/DRAMState.hh"
 #include "debug/Drain.hh"
 #include "mem/dram_ctrl.hh"
@@ -782,8 +783,11 @@ DRAMCtrl::activateBank(Bank& bank, Tick act_tick, uint32_t row)
     ++numBanksActive;
     assert(numBanksActive <= banksPerRank * ranksPerChannel);
 
-    DPRINTF(DRAM, "Activate bank at tick %lld, now got %d active\n",
-            act_tick, numBanksActive);
+    DPRINTF(DRAM, "Activate bank %d, rank %d at tick %lld, now got %d active\n",
+            bank.bank, bank.rank, act_tick, numBanksActive);
+
+    DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_tick, tCK), bank.bank,
+            bank.rank);
 
     // The next access has to respect tRAS for this bank
     bank.preAllowedAt = act_tick + tRAS;
@@ -851,7 +855,7 @@ DRAMCtrl::processActivateEvent()
 }
 
 void
-DRAMCtrl::prechargeBank(Bank& bank, Tick pre_at)
+DRAMCtrl::prechargeBank(Bank& bank, Tick pre_at, bool trace)
 {
     // make sure the bank has an open row
     assert(bank.openRow != Bank::NO_ROW);
@@ -872,8 +876,12 @@ DRAMCtrl::prechargeBank(Bank& bank, Tick pre_at)
     assert(numBanksActive != 0);
     --numBanksActive;
 
-    DPRINTF(DRAM, "Precharging bank at tick %lld, now got %d active\n",
-            pre_at, numBanksActive);
+    DPRINTF(DRAM, "Precharging bank %d, rank %d at tick %lld, now got "
+            "%d active\n", bank.bank, bank.rank, pre_at, numBanksActive);
+
+    if (trace)
+        DPRINTF(DRAMPower, "%llu,PRE,%d,%d\n", divCeil(pre_at, tCK),
+                bank.bank, bank.rank);
 
     // if we look at the current number of active banks we might be
     // tempted to think the DRAM is now idle, however this can be
@@ -1011,10 +1019,15 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
             (got_bank_conflict || pageMgmt == Enums::close_adaptive);
     }
 
+    // DRAMPower trace command to be written
+    std::string mem_cmd = dram_pkt->isRead ? "RD" : "WR";
+
     // if this access should use auto-precharge, then we are
     // closing the row
     if (auto_precharge) {
-        prechargeBank(bank, std::max(curTick(), bank.preAllowedAt));
+        prechargeBank(bank, std::max(curTick(), bank.preAllowedAt), false);
+
+        mem_cmd.append("A");
 
         DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
     }
@@ -1024,6 +1037,9 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 
     DPRINTF(DRAM, "Access to %lld, ready at %lld bus busy until %lld.\n",
             dram_pkt->addr, dram_pkt->readyTime, busBusyUntil);
+
+    DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK), mem_cmd,
+            dram_pkt->bank, dram_pkt->rank);
 
     // Update the minimum timing between the requests, this is a
     // conservative estimate of when we have to schedule the next
@@ -1315,7 +1331,7 @@ DRAMCtrl::processRefreshEvent()
             for (int i = 0; i < ranksPerChannel; i++) {
                 for (int j = 0; j < banksPerRank; j++) {
                     if (banks[i][j].openRow != Bank::NO_ROW) {
-                        prechargeBank(banks[i][j], pre_at);
+                        prechargeBank(banks[i][j], pre_at, false);
                     } else {
                         banks[i][j].actAllowedAt =
                             std::max(banks[i][j].actAllowedAt, act_allowed_at);
@@ -1323,6 +1339,10 @@ DRAMCtrl::processRefreshEvent()
                             std::max(banks[i][j].preAllowedAt, pre_at);
                     }
                 }
+
+                // at the moment this affects all ranks
+                DPRINTF(DRAMPower, "%llu,PREA,0,%d\n", divCeil(pre_at, tCK),
+                        i);
             }
         } else {
             DPRINTF(DRAM, "All banks already precharged, starting refresh\n");
@@ -1354,6 +1374,9 @@ DRAMCtrl::processRefreshEvent()
             for (int j = 0; j < banksPerRank; j++) {
                 banks[i][j].actAllowedAt = ref_done_at;
             }
+
+            // at the moment this affects all ranks
+            DPRINTF(DRAMPower, "%llu,REF,0,%d\n", divCeil(curTick(), tCK), i);
         }
 
         // make sure we did not wait so long that we cannot make up

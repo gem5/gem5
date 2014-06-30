@@ -81,6 +81,7 @@ CompoundFlag('Bus', ['BaseBus', 'BusAddrRanges', 'CoherentBus',
 DebugFlag('Bridge')
 DebugFlag('CommMonitor')
 DebugFlag('DRAM')
+DebugFlag('DRAMPower')
 DebugFlag('DRAMState')
 DebugFlag('LLSC')
 DebugFlag('MMU')

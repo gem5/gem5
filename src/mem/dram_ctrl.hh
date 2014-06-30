@@ -401,10 +401,11 @@ class DRAMCtrl : public AbstractMemory
      * done. This will also deal with any stats related to the
      * accesses to the open page.
      *
-     * @param bank The bank to precharge
+     * @param bank_ref The bank to precharge
      * @param pre_at Time when the precharge takes place
+     * @param trace Is this an auto precharge then do not add to trace
      */
-    void prechargeBank(Bank& bank, Tick pre_at);
+    void prechargeBank(Bank& bank_ref, Tick pre_at,  bool trace = true);
 
     /**
      * Used for debugging to observe the contents of the queues.
