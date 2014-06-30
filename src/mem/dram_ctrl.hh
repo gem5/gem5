@@ -211,7 +211,7 @@ class DRAMCtrl : public AbstractMemory
         /** Will be populated by address decoder */
         const uint8_t rank;
         const uint8_t bank;
-        const uint16_t row;
+        const uint32_t row;
 
         /**
          * Bank id is calculated considering banks in all the ranks
@@ -242,7 +242,7 @@ class DRAMCtrl : public AbstractMemory
         Bank& bankRef;
 
         DRAMPacket(PacketPtr _pkt, bool is_read, uint8_t _rank, uint8_t _bank,
-                   uint16_t _row, uint16_t bank_id, Addr _addr,
+                   uint32_t _row, uint16_t bank_id, Addr _addr,
                    unsigned int _size, Bank& bank_ref)
             : entryTime(curTick()), readyTime(curTick()),
               pkt(_pkt), isRead(is_read), rank(_rank), bank(_bank), row(_row),
@@ -394,7 +394,7 @@ class DRAMCtrl : public AbstractMemory
      * @param bank_ref Reference to the bank
      */
     void activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
-                      uint16_t row, Bank& bank_ref);
+                      uint32_t row, Bank& bank_ref);
 
     /**
      * Precharge a given bank and also update when the precharge is

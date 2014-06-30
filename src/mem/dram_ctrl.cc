@@ -215,7 +215,9 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
     // channel, respectively
     uint8_t rank;
     uint8_t bank;
-    uint16_t row;
+    // use a 64-bit unsigned during the computations as the row is
+    // always the top bits, and check before creating the DRAMPacket
+    uint64_t row;
 
     // truncate the address to the access granularity
     Addr addr = dramPktAddr / burstSize;
@@ -294,6 +296,7 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
     assert(rank < ranksPerChannel);
     assert(bank < banksPerRank);
     assert(row < rowsPerBank);
+    assert(row < Bank::NO_ROW);
 
     DPRINTF(DRAM, "Address: %lld Rank %d Bank %d Row %d\n",
             dramPktAddr, rank, bank, row);
@@ -750,7 +753,7 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 
 void
 DRAMCtrl::activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
-                       uint16_t row, Bank& bank_ref)
+                       uint32_t row, Bank& bank_ref)
 {
     assert(0 <= rank && rank < ranksPerChannel);
     assert(actTicks[rank].size() == activationLimit);
