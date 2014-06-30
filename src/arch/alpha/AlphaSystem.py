@@ -45,7 +45,8 @@ class LinuxAlphaSystem(AlphaSystem):
     system_type = 34
     system_rev = 1 << 10
 
-    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clk_domain.clock.frequency,
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clk_domain.clock[0]
+                                         .frequency,
                                          "boot processor frequency")
 
 class FreebsdAlphaSystem(AlphaSystem):

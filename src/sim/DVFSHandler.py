@@ -35,47 +35,34 @@
 #
 # Authors: Vasileios Spiliopoulos
 #          Akash Bagdia
-#          Stephan Diestelhorst
 
 from m5.params import *
 from m5.SimObject import SimObject
 from m5.proxy import *
 
-# Abstract clock domain
-class ClockDomain(SimObject):
-    type = 'ClockDomain'
-    cxx_header = "sim/clock_domain.hh"
-    abstract = True
+# The handler in its current form is design to be centeralized, one per system
+# and manages all the source clock domains (SrcClockDomain) it is configured to
+# handle.  The specific voltage and frequency points are configured per clock
+# and voltage domain.
+class DVFSHandler(SimObject):
+    type = 'DVFSHandler'
+    cxx_header = "sim/dvfs_handler.hh"
 
-# Source clock domain with an actual clock, and a list of voltage and frequency
-# op points
-class SrcClockDomain(ClockDomain):
-    type = 'SrcClockDomain'
-    cxx_header = "sim/clock_domain.hh"
+    # List of controllable clock domains which in turn reference the appropriate
+    # voltage domains
+    domains = VectorParam.SrcClockDomain([], "list of domains")
 
-    # Single clock frequency value, or list of frequencies for DVFS
-    # Frequencies must be ordered in descending order
-    # Note: Matching voltages should be defined in the voltage domain
-    clock = VectorParam.Clock("Clock period")
+    # System domain (its clock and voltage) is not controllable
+    sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain,
+                         "Clk domain in which the handler is instantiated")
 
-    # A source clock must be associated with a voltage domain
-    voltage_domain = Param.VoltageDomain("Voltage domain")
+    enable = Param.Bool(False, "Enable/Disable the handler")
 
-    # Domain ID is an identifier for the DVFS domain as understood by the
-    # necessary control logic (either software or hardware). For example, in
-    # case of software control via cpufreq framework the IDs should correspond
-    # to the neccessary identifier in the device tree blob which is interpretted
-    # by the device driver to communicate to the domain controller in hardware.
-    domain_id = Param.Int32(-1, "domain id")
-
-    # Initial performance level from the list of available operation points
-    # Defaults to maximum performance
-    init_perf_level = Param.UInt32(0, "Initial performance level")
-
-# Derived clock domain with a parent clock domain and a frequency
-# divider
-class DerivedClockDomain(ClockDomain):
-    type = 'DerivedClockDomain'
-    cxx_header = "sim/clock_domain.hh"
-    clk_domain = Param.ClockDomain("Parent clock domain")
-    clk_divider = Param.Unsigned(1, "Frequency divider")
+    # The transition latency depends on how much time the PLLs and voltage
+    # regualators takes to migrate from current levels to the new level, is
+    # usally variable and hardware implementation dependent. In order to
+    # accomodate this effect with ease, we provide a fixed transition latency
+    # associated with all migrations. Configure this to maximum latency that
+    # the hardware will take to migratate between any two perforamnce levels.
+    transition_latency = Param.Latency('100us',
+                             "fixed latency for perf level migration")

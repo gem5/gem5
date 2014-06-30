@@ -33,6 +33,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
+from DVFSHandler import *
 from SimpleMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
@@ -88,3 +89,7 @@ class System(MemObject):
     load_addr_mask = Param.UInt64(0xffffffffff,
             "Address to mask loading binaries with")
     load_offset = Param.UInt64(0, "Address to offset loading binaries with")
+
+    # Dynamic voltage and frequency handler for the system, disabled by default
+    # Provide list of domains that need to be controlled by the handler
+    dvfs_handler = DVFSHandler()

@@ -144,6 +144,10 @@ class EventBase
     /// Default is zero for historical reasons.
     static const Priority Default_Pri =                  0;
 
+    /// DVFS update event leads to stats dump therefore given a lower priority
+    /// to ensure all relevant states have been updated
+    static const Priority DVFS_Update_Pri =             31;
+
     /// Serailization needs to occur before tick events also, so
     /// that a serialize/unserialize is identical to an on-line
     /// CPU switch.
