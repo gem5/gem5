@@ -42,7 +42,7 @@ class O3_ARM_v7a_Complex_Int(FUDesc):
     count = 1
 
 
-# Floating point and SIMD instructions 
+# Floating point and SIMD instructions
 class O3_ARM_v7a_FP(FUDesc):
     opList = [ OpDesc(opClass='SimdAdd', opLat=4),
                OpDesc(opClass='SimdAddAcc', opLat=4),
@@ -87,12 +87,9 @@ class O3_ARM_v7a_FUP(FUPool):
     FUList = [O3_ARM_v7a_Simple_Int(), O3_ARM_v7a_Complex_Int(),
               O3_ARM_v7a_Load(), O3_ARM_v7a_Store(), O3_ARM_v7a_FP()]
 
-# Tournament Branch Predictor
+# Bi-Mode Branch Predictor
 class O3_ARM_v7a_BP(BranchPredictor):
-    predType = "tournament"
-    localPredictorSize = 2048
-    localCtrBits = 2
-    localHistoryTableSize = 1024
+    predType = "bi-mode"
     globalPredictorSize = 8192
     globalCtrBits = 2
     choicePredictorSize = 8192
@@ -167,7 +164,7 @@ class O3_ARM_v7a_DCache(BaseCache):
     write_buffers = 16
     is_top_level = 'true'
 
-# TLB Cache 
+# TLB Cache
 # Use a cache as a L2 TLB
 class O3_ARM_v7aWalkCache(BaseCache):
     hit_latency = 4
