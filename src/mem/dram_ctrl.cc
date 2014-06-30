@@ -96,6 +96,14 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
         actTicks[c].resize(activationLimit, 0);
     }
 
+    // set the bank indices
+    for (int r = 0; r < ranksPerChannel; r++) {
+        for (int b = 0; b < banksPerRank; b++) {
+            banks[r][b].rank = r;
+            banks[r][b].bank = b;
+        }
+    }
+
     // perform a basic check of the write thresholds
     if (p->write_low_thresh_perc >= p->write_high_thresh_perc)
         fatal("Write buffer low threshold %d must be smaller than the "
@@ -752,23 +760,24 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 }
 
 void
-DRAMCtrl::activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
-                       uint32_t row, Bank& bank_ref)
+DRAMCtrl::activateBank(Bank& bank, Tick act_tick, uint32_t row)
 {
-    assert(0 <= rank && rank < ranksPerChannel);
+    // get the rank index from the bank
+    uint8_t rank = bank.rank;
+
     assert(actTicks[rank].size() == activationLimit);
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
 
     // update the open row
-    assert(bank_ref.openRow == Bank::NO_ROW);
-    bank_ref.openRow = row;
+    assert(bank.openRow == Bank::NO_ROW);
+    bank.openRow = row;
 
     // start counting anew, this covers both the case when we
     // auto-precharged, and when this access is forced to
     // precharge
-    bank_ref.bytesAccessed = 0;
-    bank_ref.rowAccesses = 0;
+    bank.bytesAccessed = 0;
+    bank.rowAccesses = 0;
 
     ++numBanksActive;
     assert(numBanksActive <= banksPerRank * ranksPerChannel);
@@ -777,10 +786,10 @@ DRAMCtrl::activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
             act_tick, numBanksActive);
 
     // The next access has to respect tRAS for this bank
-    bank_ref.preAllowedAt = act_tick + tRAS;
+    bank.preAllowedAt = act_tick + tRAS;
 
     // Respect the row-to-column command delay
-    bank_ref.colAllowedAt = act_tick + tRCD;
+    bank.colAllowedAt = act_tick + tRCD;
 
     // start by enforcing tRRD
     for(int i = 0; i < banksPerRank; i++) {
@@ -922,8 +931,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 
         // Record the activation and deal with all the global timing
         // constraints caused be a new activation (tRRD and tXAW)
-        activateBank(act_tick, dram_pkt->rank, dram_pkt->bank,
-                     dram_pkt->row, bank);
+        activateBank(bank, act_tick, dram_pkt->row);
 
         // issue the command as early as possible
         cmd_at = bank.colAllowedAt;

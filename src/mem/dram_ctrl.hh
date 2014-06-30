@@ -154,6 +154,8 @@ class DRAMCtrl : public AbstractMemory
         static const uint32_t NO_ROW = -1;
 
         uint32_t openRow;
+        uint8_t rank;
+        uint8_t bank;
 
         Tick colAllowedAt;
         Tick preAllowedAt;
@@ -163,7 +165,8 @@ class DRAMCtrl : public AbstractMemory
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(NO_ROW), colAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
+            openRow(NO_ROW), rank(0), bank(0),
+            colAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
     };
@@ -387,14 +390,11 @@ class DRAMCtrl : public AbstractMemory
      * method updates the time that the banks become available based
      * on the current limits.
      *
+     * @param bank Reference to the bank
      * @param act_tick Time when the activation takes place
-     * @param rank Index of the rank
-     * @param bank Index of the bank
      * @param row Index of the row
-     * @param bank_ref Reference to the bank
      */
-    void activateBank(Tick act_tick, uint8_t rank, uint8_t bank,
-                      uint32_t row, Bank& bank_ref);
+    void activateBank(Bank& bank, Tick act_tick, uint32_t row);
 
     /**
      * Precharge a given bank and also update when the precharge is
