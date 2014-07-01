@@ -553,6 +553,22 @@ def from_9(cpt):
             # upgraded checkpoints were not taken with block-size 64!
             cpt.set(sec, 'block_size_bytes', '64')
 
+# Checkpoint version 11 (0xB) adds the perfLevel variable in the clock domain
+# and voltage domain simObjects used for DVFS and is serialized and
+# unserialized.
+def from_A(cpt):
+    for sec in cpt.sections():
+        import re
+
+        if re.match('^.*sys.*[._]clk_domain$', sec):
+            # Make _perfLevel equal to 0 which means best performance
+            cpt.set(sec, '_perfLevel', ' '.join('0'))
+        elif re.match('^.*sys.*[._]voltage_domain$', sec):
+            # Make _perfLevel equal to 0 which means best performance
+            cpt.set(sec, '_perfLevel', ' '.join('0'))
+        else:
+            continue
+
 migrations = []
 migrations.append(from_0)
 migrations.append(from_1)
@@ -564,6 +580,7 @@ migrations.append(from_6)
 migrations.append(from_7)
 migrations.append(from_8)
 migrations.append(from_9)
+migrations.append(from_A)
 
 verbose_print = False
 
