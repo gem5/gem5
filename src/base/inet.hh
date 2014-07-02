@@ -93,9 +93,18 @@ struct EthAddr : protected eth_addr
     uint8_t *bytes() { return &data[0]; }
 
     const uint8_t *addr() const { return &data[0]; }
-    bool unicast() const { return data[0] == 0x00; }
-    bool multicast() const { return data[0] == 0x01; }
-    bool broadcast() const { return data[0] == 0xff; }
+    bool unicast() const { return !(data[0] & 0x01); }
+    bool multicast() const { return !unicast() && !broadcast(); }
+    bool broadcast() const
+    {
+        bool isBroadcast = true;
+        for (int i = 0; i < ETH_ADDR_LEN; ++i) {
+            isBroadcast = isBroadcast && data[i] == 0xff;
+        }
+
+        return isBroadcast;
+    }
+
     std::string string() const;
 
     operator uint64_t() const

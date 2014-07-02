@@ -62,12 +62,14 @@ EthAddr::EthAddr()
 
 EthAddr::EthAddr(const uint8_t ea[ETH_ADDR_LEN])
 {
-    *data = *ea;
+    for (int i = 0; i < ETH_ADDR_LEN; ++i)
+        data[i] = ea[i];
 }
 
 EthAddr::EthAddr(const eth_addr &ea)
 {
-    *data = *ea.data;
+    for (int i = 0; i < ETH_ADDR_LEN; ++i)
+        data[i] = ea.data[i];
 }
 
 EthAddr::EthAddr(const std::string &addr)
