@@ -124,7 +124,7 @@ EthAddr::string() const
 bool
 operator==(const EthAddr &left, const EthAddr &right)
 {
-    return memcmp(left.bytes(), right.bytes(), ETH_ADDR_LEN);
+    return !memcmp(left.bytes(), right.bytes(), ETH_ADDR_LEN);
 }
 
 ostream &
