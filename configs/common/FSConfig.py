@@ -348,14 +348,15 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     x86_sys.bridge = Bridge(delay='50ns')
     x86_sys.bridge.master = x86_sys.iobus.slave
     x86_sys.bridge.slave = x86_sys.membus.master
-    # Allow the bridge to pass through the IO APIC (two pages),
-    # everything in the IO address range up to the local APIC, and
-    # then the entire PCI address space and beyond
+    # Allow the bridge to pass through:
+    #  1) kernel configured PCI device memory map address: address range
+    #     [0xC0000000, 0xFFFF0000). (The upper 64kB are reserved for m5ops.)
+    #  2) the bridge to pass through the IO APIC (two pages, already contained in 1),
+    #  3) everything in the IO address range up to the local APIC, and
+    #  4) then the entire PCI address space and beyond.
     x86_sys.bridge.ranges = \
         [
-        AddrRange(x86_sys.pc.south_bridge.io_apic.pio_addr,
-                  x86_sys.pc.south_bridge.io_apic.pio_addr +
-                  APIC_range_size - 1),
+        AddrRange(0xC0000000, 0xFFFF0000),
         AddrRange(IO_address_space_base,
                   interrupts_address_space_base - 1),
         AddrRange(pci_config_address_space_base,
@@ -521,10 +522,18 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None,
         X86E820Entry(addr = 0x100000,
                 size = '%dB' % (self.mem_ranges[0].size() - 0x100000),
                 range_type = 1),
-        # Reserve the last 16kB of the 32-bit address space for the
-        # m5op interface
-        X86E820Entry(addr=0xFFFF0000, size='64kB', range_type=2),
         ]
+
+    # Mark [mem_size, 3GB) as reserved if memory less than 3GB, which force
+    # IO devices to be mapped to [0xC0000000, 0xFFFF0000). Requests to this
+    # specific range can pass though bridge to iobus.
+    if len(self.mem_ranges) == 1:
+        entries.append(X86E820Entry(addr = self.mem_ranges[0].size(),
+            size='%dB' % (0xC0000000 - self.mem_ranges[0].size()),
+            range_type=2))
+
+    # Reserve the last 16kB of the 32-bit address space for the m5op interface
+    entries.append(X86E820Entry(addr=0xFFFF0000, size='64kB', range_type=2))
 
     # In case the physical memory is greater than 3GB, we split it into two
     # parts and add a separate e820 entry for the second part.  This entry
