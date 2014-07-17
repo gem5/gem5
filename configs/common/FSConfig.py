@@ -454,18 +454,21 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
             address = 0xfec00000)
     self.pc.south_bridge.io_apic.apic_id = io_apic.id
     base_entries.append(io_apic)
-    isa_bus = X86IntelMPBus(bus_id = 0, bus_type='ISA')
-    base_entries.append(isa_bus)
-    pci_bus = X86IntelMPBus(bus_id = 1, bus_type='PCI')
+    # In gem5 Pc::calcPciConfigAddr(), it required "assert(bus==0)",
+    # but linux kernel cannot config PCI device if it was not connected to PCI bus,
+    # so we fix PCI bus id to 0, and ISA bus id to 1.
+    pci_bus = X86IntelMPBus(bus_id = 0, bus_type='PCI')
     base_entries.append(pci_bus)
-    connect_busses = X86IntelMPBusHierarchy(bus_id=0,
-            subtractive_decode=True, parent_bus=1)
+    isa_bus = X86IntelMPBus(bus_id = 1, bus_type='ISA')
+    base_entries.append(isa_bus)
+    connect_busses = X86IntelMPBusHierarchy(bus_id=1,
+            subtractive_decode=True, parent_bus=0)
     ext_entries.append(connect_busses)
     pci_dev4_inta = X86IntelMPIOIntAssignment(
             interrupt_type = 'INT',
             polarity = 'ConformPolarity',
             trigger = 'ConformTrigger',
-            source_bus_id = 1,
+            source_bus_id = 0,
             source_bus_irq = 0 + (4 << 2),
             dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 16)
@@ -475,7 +478,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
                 interrupt_type = 'ExtInt',
                 polarity = 'ConformPolarity',
                 trigger = 'ConformTrigger',
-                source_bus_id = 0,
+                source_bus_id = 1,
                 source_bus_irq = irq,
                 dest_io_apic_id = io_apic.id,
                 dest_io_apic_intin = 0)
@@ -484,7 +487,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
                 interrupt_type = 'INT',
                 polarity = 'ConformPolarity',
                 trigger = 'ConformTrigger',
-                source_bus_id = 0,
+                source_bus_id = 1,
                 source_bus_irq = irq,
                 dest_io_apic_id = io_apic.id,
                 dest_io_apic_intin = apicPin)
