@@ -79,4 +79,3 @@ class Pc(Platform):
         self.fake_com_4.pio = bus.master
         self.fake_floppy.pio = bus.master
         self.pciconfig.pio = bus.default
-        bus.use_default_range = True
