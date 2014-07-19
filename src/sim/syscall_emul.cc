@@ -57,7 +57,7 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 {
     if (DTRACE(SyscallVerbose)) {
         int index = 0;
-        IntReg arg[4];
+        IntReg arg[4] M5_VAR_USED;
 
         // we can't just put the calls to getSyscallArg() in the
         // DPRINTF arg list, because C++ doesn't guarantee their order
