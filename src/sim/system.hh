@@ -121,8 +121,6 @@ class System : public MemObject
     BaseMasterPort& getMasterPort(const std::string &if_name,
                                   PortID idx = InvalidPortID);
 
-    static const char *MemoryModeStrings[4];
-
     /** @{ */
     /**
      * Is the system in atomic mode?

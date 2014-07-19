@@ -462,9 +462,6 @@ System::getMasterName(MasterID master_id)
     return masterIds[master_id];
 }
 
-const char *System::MemoryModeStrings[4] = {"invalid", "atomic", "timing",
-                                            "atomic_noncaching"};
-
 System *
 SystemParams::create()
 {
