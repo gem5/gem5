@@ -36,7 +36,6 @@ if env['TARGET_ISA'] == 'null':
 Source('kernel_stats.cc')
 Source('linux/events.cc')
 Source('linux/linux.cc')
-Source('linux/linux_syscalls.cc')
 Source('linux/printk.cc')
 Source('operatingsystem.cc')
 Source('system_events.cc')
