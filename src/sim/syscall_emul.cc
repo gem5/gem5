@@ -55,16 +55,19 @@ using namespace TheISA;
 void
 SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 {
-#if TRACING_ON
-    int index = 0;
-#endif
-    DPRINTFR(SyscallVerbose,
-             "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
-             curTick(), tc->getCpuPtr()->name(), name,
-             process->getSyscallArg(tc, index),
-             process->getSyscallArg(tc, index),
-             process->getSyscallArg(tc, index),
-             process->getSyscallArg(tc, index));
+    if (DTRACE(SyscallVerbose)) {
+        int index = 0;
+        IntReg arg[4];
+
+        // we can't just put the calls to getSyscallArg() in the
+        // DPRINTF arg list, because C++ doesn't guarantee their order
+        for (int i = 0; i < 4; ++i)
+            arg[i] = process->getSyscallArg(tc, index);
+
+        DPRINTFNR("%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
+                  curTick(), tc->getCpuPtr()->name(), name,
+                  arg[0], arg[1], arg[2], arg[3]);
+    }
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
@@ -91,8 +94,8 @@ ignoreFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
-    warn("ignoring syscall %s(%d, %d, ...)", desc->name,
-         process->getSyscallArg(tc, index), process->getSyscallArg(tc, index));
+    warn("ignoring syscall %s(%d, ...)", desc->name,
+         process->getSyscallArg(tc, index));
 
     return 0;
 }
@@ -103,8 +106,8 @@ ignoreWarnOnceFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
-    warn_once("ignoring syscall %s(%d, %d, ...)", desc->name,
-         process->getSyscallArg(tc, index), process->getSyscallArg(tc, index));
+    warn_once("ignoring syscall %s(%d, ...)", desc->name,
+              process->getSyscallArg(tc, index));
 
     return 0;
 }
