@@ -1,0 +1,2 @@
+warn: Sockets disabled, not accepting gdb connections
+warn: fcntl64(3, 2) passed through to host

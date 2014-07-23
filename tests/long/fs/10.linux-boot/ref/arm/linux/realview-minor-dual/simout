@@ -1,0 +1,17 @@
+Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual/simout
+Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled May  7 2014 10:57:46
+gem5 started May  7 2014 12:48:24
+gem5 executing on cz3211bhr8
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual -re tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual
+Global frequency set at 1000000000000 ticks per second
+info: kernel located at: /arm/projectscratch/pd/sysrandd/dist/binaries/vmlinux.arm.smp.fb.2.6.38.8
+      0: system.cpu0.isa: ISA system set to: 0x15f94710 0x15f94710
+      0: system.cpu1.isa: ISA system set to: 0x15f94710 0x15f94710
+info: Using bootloader at address 0x80000000
+info: Using kernel entry physical address at 0x8000
+info: Entering event queue @ 0.  Starting simulation...
+Exiting @ tick 1146870140500 because m5_exit instruction encountered

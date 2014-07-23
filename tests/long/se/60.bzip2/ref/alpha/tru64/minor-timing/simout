@@ -1,0 +1,28 @@
+Redirecting stdout to build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/minor-timing/simout
+Redirecting stderr to build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/minor-timing/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled May  7 2014 10:41:53
+gem5 started May  7 2014 12:11:11
+gem5 executing on cz3212c2d7
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/minor-timing -re tests/run.py build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/minor-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+spec_init
+Loading Input Data
+Input data 1048576 bytes in length
+Compressing Input Data, level 7
+Compressed data 198546 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 198677 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!
+Exiting @ tick 1184839137500 because target called exit()

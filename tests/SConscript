@@ -306,6 +306,7 @@ if env['TARGET_ISA'] == 'alpha':
                 'tsunami-simple-timing-dual',
                 'twosys-tsunami-simple-atomic',
                 'tsunami-o3', 'tsunami-o3-dual',
+                'tsunami-minor', 'tsunami-minor-dual',
                 'tsunami-inorder',
                 'tsunami-switcheroo-full']
 if env['TARGET_ISA'] == 'sparc':
@@ -321,6 +322,8 @@ if env['TARGET_ISA'] == 'arm':
                 'realview-o3',
                 'realview-o3-checker',
                 'realview-o3-dual',
+                'realview-minor',
+                'realview-minor-dual',
                 'realview-switcheroo-atomic',
                 'realview-switcheroo-timing',
                 'realview-switcheroo-o3',
@@ -331,10 +334,13 @@ if env['TARGET_ISA'] == 'x86':
                 'pc-o3-timing',
                 'pc-switcheroo-full']
 
-configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
-            'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
-            'inorder-timing', 'rubytest', 'tgen-simple-mem',
-            'tgen-dram-ctrl']
+configs += ['simple-atomic', 'simple-atomic-mp',
+            'simple-timing', 'simple-timing-mp',
+            'inorder-timing',
+            'minor-timing', 'minor-timing-mp',
+            'o3-timing', 'o3-timing-mp',
+            'rubytest', 'memtest',
+            'tgen-simple-mem', 'tgen-dram-ctrl']
 
 if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':
