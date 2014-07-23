@@ -59,6 +59,11 @@ class CheckerCPU;
 class AtomicSimpleCPU;
 class TimingSimpleCPU;
 class InorderCPU;
+namespace Minor
+{
+    class ExecContext;
+};
+
 class SymbolTable;
 
 namespace Trace {

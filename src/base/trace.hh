@@ -72,6 +72,20 @@ struct StringWrap
 
 inline const std::string &name() { return Trace::DefaultName; }
 
+// Interface for things with names. (cf. SimObject but without other
+// functionality).  This is useful when using DPRINTF
+class Named
+{
+  protected:
+    const std::string _name;
+
+  public:
+    Named(const std::string &name_) : _name(name_) { }
+
+  public:
+    const std::string &name() const { return _name; }
+};
+
 //
 // DPRINTF is a debugging trace facility that allows one to
 // selectively enable tracing statements.  To use DPRINTF, there must

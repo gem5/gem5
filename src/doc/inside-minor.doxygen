@@ -1,0 +1,1091 @@
+# Copyright (c) 2014 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Andrew Bardsley
+
+namespace Minor
+{
+
+/*!
+
+\page minor Inside the Minor CPU model
+
+\tableofcontents
+
+This document contains a description of the structure and function of the
+Minor gem5 in-order processor model.  It is recommended reading for anyone who
+wants to understand Minor's internal organisation, design decisions, C++
+implementation and Python configuration.  A familiarity with gem5 and some of
+its internal structures is assumed.  This document is meant to be read
+alongside the Minor source code and to explain its general structure without
+being too slavish about naming every function and data type.
+
+\section whatis What is Minor?
+
+Minor is an in-order processor model with a fixed pipeline but configurable
+data structures and execute behaviour.  It is intended to be used to model
+processors with strict in-order execution behaviour and allows visualisation
+of an instruction's position in the pipeline through the
+MinorTrace/minorview.py format/tool.  The intention is to provide a framework
+for micro-architecturally correlating the model with a particular, chosen
+processor with similar capabilities.
+
+\section philo Design philosophy
+
+\subsection mt Multithreading
+
+The model isn't currently capable of multithreading but there are THREAD
+comments in key places where stage data needs to be arrayed to support
+multithreading.
+
+\subsection structs Data structures
+
+Decorating data structures with large amounts of life-cycle information is
+avoided.  Only instructions (MinorDynInst) contain a significant proportion of
+their data content whose values are not set at construction.
+
+All internal structures have fixed sizes on construction.  Data held in queues
+and FIFOs (MinorBuffer, FUPipeline) should have a BubbleIF interface to
+allow a distinct 'bubble'/no data value option for each type.
+
+Inter-stage 'struct' data is packaged in structures which are passed by value.
+Only MinorDynInst, the line data in ForwardLineData and the memory-interfacing
+objects Fetch1::FetchRequest and LSQ::LSQRequest are '::new' allocated while
+running the model.
+
+\section model Model structure
+
+Objects of class MinorCPU are provided by the model to gem5.  MinorCPU
+implements the interfaces of (cpu.hh) and can provide data and
+instruction interfaces for connection to a cache system.  The model is
+configured in a similar way to other gem5 models through Python.  That
+configuration is passed on to MinorCPU::pipeline (of class Pipeline) which
+actually implements the processor pipeline.
+
+The hierarchy of major unit ownership from MinorCPU down looks like this:
+
+<ul>
+<li>MinorCPU</li>
+<ul>
+    <li>Pipeline - container for the pipeline, owns the cyclic 'tick'
+    event mechanism and the idling (cycle skipping) mechanism.</li>
+    <ul>
+        <li>Fetch1 - instruction fetch unit responsible for fetching cache
+            lines (or parts of lines from the I-cache interface)</li>
+        <ul>
+            <li>Fetch1::IcachePort - interface to the I-cache from
+                Fetch1</li>
+            </ul>
+            <li>Fetch2 - line to instruction decomposition</li>
+            <li>Decode - instruction to micro-op decomposition</li>
+            <li>Execute - instruction execution and data memory
+                interface</li>
+            <ul>
+                <li>LSQ - load store queue for memory ref. instructions</li>
+                <li>LSQ::DcachePort - interface to the D-cache from
+                    Execute</li>
+            </ul>
+        </ul>
+    </ul>
+</ul>
+
+\section keystruct Key data structures
+
+\subsection ids Instruction and line identity: InstId (dyn_inst.hh)
+
+An InstId contains the sequence numbers and thread numbers that describe the
+life cycle and instruction stream affiliations of individual fetched cache
+lines and instructions.
+
+An InstId is printed in one of the following forms:
+
+    - T/S.P/L - for fetched cache lines
+    - T/S.P/L/F - for instructions before Decode
+    - T/S.P/L/F.E - for instructions from Decode onwards
+
+for example:
+
+    - 0/10.12/5/6.7
+
+InstId's fields are:
+
+<table>
+<tr>
+    <td><b>Field</b></td>
+    <td><b>Symbol</b></td>
+    <td><b>Generated by</b></td>
+    <td><b>Checked by</b></td>
+    <td><b>Function</b></td>
+</tr>
+
+<tr>
+    <td>InstId::threadId</td>
+    <td>T</td>
+    <td>Fetch1</td>
+    <td>Everywhere the thread number is needed</td>
+    <td>Thread number (currently always 0).</td>
+</tr>
+
+<tr>
+    <td>InstId::streamSeqNum</td>
+    <td>S</td>
+    <td>Execute</td>
+    <td>Fetch1, Fetch2, Execute (to discard lines/insts)</td>
+    <td>Stream sequence number as chosen by Execute.  Stream
+        sequence numbers change after changes of PC (branches, exceptions) in
+        Execute and are used to separate pre and post branch instruction
+        streams.</td>
+</tr>
+
+<tr>
+    <td>InstId::predictionSeqNum</td>
+    <td>P</td>
+    <td>Fetch2</td>
+    <td>Fetch2 (while discarding lines after prediction)</td>
+    <td>Prediction sequence numbers represent branch prediction decisions.
+    This is used by Fetch2 to mark lines/instructions according to the last
+    followed branch prediction made by Fetch2.  Fetch2 can signal to Fetch1
+    that it should change its fetch address and mark lines with a new
+    prediction sequence number (which it will only do if the stream sequence
+    number Fetch1 expects matches that of the request).  </td> </tr>
+
+<tr>
+<td>InstId::lineSeqNum</td>
+<td>L</td>
+<td>Fetch1</td>
+<td>(Just for debugging)</td>
+<td>Line fetch sequence number of this cache line or the line
+    this instruction was extracted from.
+    </td>
+</tr>
+
+<tr>
+<td>InstId::fetchSeqNum</td>
+<td>F</td>
+<td>Fetch2</td>
+<td>Fetch2 (as the inst. sequence number for branches)</td>
+<td>Instruction fetch order assigned by Fetch2 when lines
+    are decomposed into instructions.
+    </td>
+</tr>
+
+<tr>
+<td>InstId::execSeqNum</td>
+<td>E</td>
+<td>Decode</td>
+<td>Execute (to check instruction identity in queues/FUs/LSQ)</td>
+<td>Instruction order after micro-op decomposition.</td>
+</tr>
+
+</table>
+
+The sequence number fields are all independent of each other and although, for
+instance, InstId::execSeqNum for an instruction will always be >=
+InstId::fetchSeqNum, the comparison is not useful.
+
+The originating stage of each sequence number field keeps a counter for that
+field which can be incremented in order to generate new, unique numbers.
+
+\subsection insts Instructions: MinorDynInst (dyn_inst.hh)
+
+MinorDynInst represents an instruction's progression through the pipeline.  An
+instruction can be three things:
+
+<table>
+<tr>
+    <td><b>Thing</b></td>
+    <td><b>Predicate</b></td>
+    <td><b>Explanation</b></td>
+</tr>
+<tr>
+    <td>A bubble</td>
+    <td>MinorDynInst::isBubble()</td>
+    <td>no instruction at all, just a space-filler</td>
+</tr>
+<tr>
+    <td>A fault</td>
+    <td>MinorDynInst::isFault()</td>
+    <td>a fault to pass down the pipeline in an instruction's clothing</td>
+</tr>
+<tr>
+    <td>A decoded instruction</td>
+    <td>MinorDynInst::isInst()</td>
+    <td>instructions are actually passed to the gem5 decoder in Fetch2 and so
+    are created fully decoded.  MinorDynInst::staticInst is the decoded
+    instruction form.</td>
+</tr>
+</table>
+
+Instructions are reference counted using the gem5 RefCountingPtr
+(base/refcnt.hh) wrapper.  They therefore usually appear as MinorDynInstPtr in
+code.  Note that as RefCountingPtr initialises as nullptr rather than an
+object that supports BubbleIF::isBubble, passing raw MinorDynInstPtrs to
+Queue%s and other similar structures from stage.hh without boxing is
+dangerous.
+
+\subsection fld ForwardLineData (pipe_data.hh)
+
+ForwardLineData is used to pass cache lines from Fetch1 to Fetch2.  Like
+MinorDynInst%s, they can be bubbles (ForwardLineData::isBubble()),
+fault-carrying or can contain a line (partial line) fetched by Fetch1.  The
+data carried by ForwardLineData is owned by a Packet object returned from
+memory and is explicitly memory managed and do must be deleted once processed
+(by Fetch2 deleting the Packet).
+
+\subsection fid ForwardInstData (pipe_data.hh)
+
+ForwardInstData can contain up to ForwardInstData::width() instructions in its
+ForwardInstData::insts vector.  This structure is used to carry instructions
+between Fetch2, Decode and Execute and to store input buffer vectors in Decode
+and Execute.
+
+\subsection fr Fetch1::FetchRequest (fetch1.hh)
+
+FetchRequests represent I-cache line fetch requests.  The are used in the
+memory queues of Fetch1 and are pushed into/popped from Packet::senderState
+while traversing the memory system.
+
+FetchRequests contain a memory system Request (mem/request.hh) for that fetch
+access, a packet (Packet, mem/packet.hh), if the request gets to memory, and a
+fault field that can be populated with a TLB-sourced prefetch fault (if any).
+
+\subsection lsqr LSQ::LSQRequest (execute.hh)
+
+LSQRequests are similar to FetchRequests but for D-cache accesses.  They carry
+the instruction associated with a memory access.
+
+\section pipeline The pipeline
+
+\verbatim
+------------------------------------------------------------------------------
+    Key:
+
+    [] : inter-stage BufferBuffer
+    ,--.
+    |  | : pipeline stage
+    `--'
+    ---> : forward communication
+    <--- : backward communication
+
+    rv : reservation information for input buffers
+
+                ,------.     ,------.     ,------.     ,-------.
+ (from  --[]-v->|Fetch1|-[]->|Fetch2|-[]->|Decode|-[]->|Execute|--> (to Fetch1
+ Execute)    |  |      |<-[]-|      |<-rv-|      |<-rv-|       |     & Fetch2)
+             |  `------'<-rv-|      |     |      |     |       |
+             `-------------->|      |     |      |     |       |
+                             `------'     `------'     `-------'
+------------------------------------------------------------------------------
+\endverbatim
+
+The four pipeline stages are connected together by MinorBuffer FIFO
+(stage.hh, derived ultimately from TimeBuffer) structures which allow
+inter-stage delays to be modelled.  There is a MinorBuffer%s between adjacent
+stages in the forward direction (for example: passing lines from Fetch1 to
+Fetch2) and, between Fetch2 and Fetch1, a buffer in the backwards direction
+carrying branch predictions.
+
+Stages Fetch2, Decode and Execute have input buffers which, each cycle, can
+accept input data from the previous stage and can hold that data if the stage
+is not ready to process it.  Input buffers store data in the same form as it
+is received and so Decode and Execute's input buffers contain the output
+instruction vector (ForwardInstData (pipe_data.hh)) from their previous stages
+with the instructions and bubbles in the same positions as a single buffer
+entry.
+
+Stage input buffers provide a Reservable (stage.hh) interface to their
+previous stages, to allow slots to be reserved in their input buffers, and
+communicate their input buffer occupancy backwards to allow the previous stage
+to plan whether it should make an output in a given cycle.
+
+\subsection events Event handling: MinorActivityRecorder (activity.hh,
+pipeline.hh)
+
+Minor is essentially a cycle-callable model with some ability to skip cycles
+based on pipeline activity.  External events are mostly received by callbacks
+(e.g. Fetch1::IcachePort::recvTimingResp) and cause the pipeline to be woken
+up to service advancing request queues.
+
+Ticked (sim/ticked.hh) is a base class bringing together an evaluate
+member function and a provided SimObject.  It provides a Ticked::start/stop
+interface to start and pause clock events from being periodically issued.
+Pipeline is a derived class of Ticked.
+
+During evaluate calls, stages can signal that they still have work to do in
+the next cycle by calling either MinorCPU::activityRecorder->activity() (for
+non-callable related activity) or MinorCPU::wakeupOnEvent(<stageId>) (for
+stage callback-related 'wakeup' activity).
+
+Pipeline::evaluate contains calls to evaluate for each unit and a test for
+pipeline idling which can turns off the clock tick if no unit has signalled
+that it may become active next cycle.
+
+Within Pipeline (pipeline.hh), the stages are evaluated in reverse order (and
+so will ::evaluate in reverse order) and their backwards data can be
+read immediately after being written in each cycle allowing output decisions
+to be 'perfect' (allowing synchronous stalling of the whole pipeline).  Branch
+predictions from Fetch2 to Fetch1 can also be transported in 0 cycles making
+fetch1ToFetch2BackwardDelay the only configurable delay which can be set as
+low as 0 cycles.
+
+The MinorCPU::activateContext and MinorCPU::suspendContext interface can be
+called to start and pause threads (threads in the MT sense) and to start and
+pause the pipeline.  Executing instructions can call this interface
+(indirectly through the ThreadContext) to idle the CPU/their threads.
+
+\subsection stages Each pipeline stage
+
+In general, the behaviour of a stage (each cycle) is:
+
+\verbatim
+    evaluate:
+        push input to inputBuffer
+        setup references to input/output data slots
+
+        do 'every cycle' 'step' tasks
+
+        if there is input and there is space in the next stage:
+            process and generate a new output
+            maybe re-activate the stage
+
+        send backwards data
+
+        if the stage generated output to the following FIFO:
+            signal pipe activity
+
+        if the stage has more processable input and space in the next stage:
+            re-activate the stage for the next cycle
+
+        commit the push to the inputBuffer if that data hasn't all been used
+\endverbatim
+
+The Execute stage differs from this model as its forward output (branch) data
+is unconditionally sent to Fetch1 and Fetch2.  To allow this behaviour, Fetch1
+and Fetch2 must be unconditionally receptive to that data.
+
+\subsection fetch1 Fetch1 stage
+
+Fetch1 is responsible for fetching cache lines or partial cache lines from the
+I-cache and passing them on to Fetch2 to be decomposed into instructions.  It
+can receive 'change of stream' indications from both Execute and Fetch2 to
+signal that it should change its internal fetch address and tag newly fetched
+lines with new stream or prediction sequence numbers.  When both Execute and
+Fetch2 signal changes of stream at the same time, Fetch1 takes Execute's
+change.
+
+Every line issued by Fetch1 will bear a unique line sequence number which can
+be used for debugging stream changes.
+
+When fetching from the I-cache, Fetch1 will ask for data from the current
+fetch address (Fetch1::pc) up to the end of the 'data snap' size set in the
+parameter fetch1LineSnapWidth.  Subsequent autonomous line fetches will fetch
+whole lines at a snap boundary and of size fetch1LineWidth.
+
+Fetch1 will only initiate a memory fetch if it can reserve space in Fetch2
+input buffer.  That input buffer serves an the fetch queue/LFL for the system.
+
+Fetch1 contains two queues: requests and transfers to handle the stages of
+translating the address of a line fetch (via the TLB) and accommodating the
+request/response of fetches to/from memory.
+
+Fetch requests from Fetch1 are pushed into the requests queue as newly
+allocated FetchRequest objects once they have been sent to the ITLB with a
+call to itb->translateTiming.
+
+A response from the TLB moves the request from the requests queue to the
+transfers queue.  If there is more than one entry in each queue, it is
+possible to get a TLB response for request which is not at the head of the
+requests queue.  In that case, the TLB response is marked up as a state change
+to Translated in the request object, and advancing the request to transfers
+(and the memory system) is left to calls to Fetch1::stepQueues which is called
+in the cycle following any event is received.
+
+Fetch1::tryToSendToTransfers is responsible for moving requests between the
+two queues and issuing requests to memory.  Failed TLB lookups (prefetch
+aborts) continue to occupy space in the queues until they are recovered at the
+head of transfers.
+
+Responses from memory change the request object state to Complete and
+Fetch1::evaluate can pick up response data, package it in the ForwardLineData
+object, and forward it to Fetch2%'s input buffer.
+
+As space is always reserved in Fetch2::inputBuffer, setting the input buffer's
+size to 1 results in non-prefetching behaviour.
+
+When a change of stream occurs, translated requests queue members and
+completed transfers queue members can be unconditionally discarded to make way
+for new transfers.
+
+\subsection fetch2 Fetch2 stage
+
+Fetch2 receives a line from Fetch1 into its input buffer.  The data in the
+head line in that buffer is iterated over and separated into individual
+instructions which are packed into a vector of instructions which can be
+passed to Decode.  Packing instructions can be aborted early if a fault is
+found in either the input line as a whole or a decomposed instruction.
+
+\subsubsection bp Branch prediction
+
+Fetch2 contains the branch prediction mechanism.  This is a wrapper around the
+branch predictor interface provided by gem5 (cpu/pred/...).
+
+Branches are predicted for any control instructions found.  If prediction is
+attempted for an instruction, the MinorDynInst::triedToPredict flag is set on
+that instruction.
+
+When a branch is predicted to take, the MinorDynInst::predictedTaken flag is
+set and MinorDynInst::predictedTarget is set to the predicted target PC value.
+The predicted branch instruction is then packed into Fetch2%'s output vector,
+the prediction sequence number is incremented, and the branch is communicated
+to Fetch1.
+
+After signalling a prediction, Fetch2 will discard its input buffer contents
+and will reject any new lines which have the same stream sequence number as
+that branch but have a different prediction sequence number.  This allows
+following sequentially fetched lines to be rejected without ignoring new lines
+generated by a change of stream indicated from a 'real' branch from Execute
+(which will have a new stream sequence number).
+
+The program counter value provided to Fetch2 by Fetch1 packets is only updated
+when there is a change of stream.  Fetch2::havePC indicates whether the PC
+will be picked up from the next processed input line.  Fetch2::havePC is
+necessary to allow line-wrapping instructions to be tracked through decode.
+
+Branches (and instructions predicted to branch) which are processed by Execute
+will generate BranchData (pipe_data.hh) data explaining the outcome of the
+branch which is sent forwards to Fetch1 and Fetch2.  Fetch1 uses this data to
+change stream (and update its stream sequence number and address for new
+lines).  Fetch2 uses it to update the branch predictor.   Minor does not
+communicate branch data to the branch predictor for instructions which are
+discarded on the way to commit.
+
+BranchData::BranchReason (pipe_data.hh) encodes the possible branch scenarios:
+
+<table>
+<tr>
+    <td>Branch enum val.</td>
+    <td>In Execute</td>
+    <td>Fetch1 reaction</td>
+    <td>Fetch2 reaction</td>
+</tr>
+<tr>
+    <td>NoBranch</td>
+    <td>(output bubble data)</td>
+    <td>-</td>
+    <td>-</td>
+</tr>
+<tr>
+    <td>CorrectlyPredictedBranch</td>
+    <td>Predicted, taken</td>
+    <td>-</td>
+    <td>Update BP as taken branch</td>
+</tr>
+<tr>
+    <td>UnpredictedBranch</td>
+    <td>Not predicted, taken and was taken</td>
+    <td>New stream</td>
+    <td>Update BP as taken branch</td>
+</tr>
+<tr>
+    <td>BadlyPredictedBranch</td>
+    <td>Predicted, not taken</td>
+    <td>New stream to restore to old inst. source</td>
+    <td>Update BP as not taken branch</td>
+</tr>
+<tr>
+    <td>BadlyPredictedBranchTarget</td>
+    <td>Predicted, taken, but to a different target than predicted one</td>
+    <td>New stream</td>
+    <td>Update BTB to new target</td>
+</tr>
+<tr>
+    <td>SuspendThread</td>
+    <td>Hint to suspend fetching</td>
+    <td>Suspend fetch for this thread (branch to next inst. as wakeup
+        fetch addr)</td>
+    <td>-</td>
+</tr>
+<tr>
+    <td>Interrupt</td>
+    <td>Interrupt detected</td>
+    <td>New stream</td>
+    <td>-</td>
+</tr>
+</table>
+
+The parameter decodeInputWidth sets the number of instructions which can be
+packed into the output per cycle.  If the parameter fetch2CycleInput is true,
+Decode can try to take instructions from more than one entry in its input
+buffer per cycle.
+
+\subsection decode Decode stage
+
+Decode takes a vector of instructions from Fetch2 (via its input buffer) and
+decomposes those instructions into micro-ops (if necessary) and packs them
+into its output instruction vector.
+
+The parameter executeInputWidth sets the number of instructions which can be
+packed into the output per cycle.  If the parameter decodeCycleInput is true,
+Decode can try to take instructions from more than one entry in its input
+buffer per cycle.
+
+\subsection execute Execute stage
+
+Execute provides all the instruction execution and memory access mechanisms.
+An instructions passage through Execute can take multiple cycles with its
+precise timing modelled by a functional unit pipeline FIFO.
+
+A vector of instructions (possibly including fault 'instructions') is provided
+to Execute by Decode and can be queued in the Execute input buffer before
+being issued.  Setting the parameter executeCycleInput allows execute to
+examine more than one input buffer entry (more than one instruction vector).
+The number of instructions in the input vector can be set with
+executeInputWidth and the depth of the input buffer can be set with parameter
+executeInputBufferSize.
+
+\subsubsection fus Functional units
+
+The Execute stage contains pipelines for each functional unit comprising the
+computational core of the CPU.  Functional units are configured via the
+executeFuncUnits parameter.  Each functional unit has a number of instruction
+classes it supports, a stated delay between instruction issues, and a delay
+from instruction issue to (possible) commit and an optional timing annotation
+capable of more complicated timing.
+
+Each active cycle, Execute::evaluate performs this action:
+
+\verbatim
+    Execute::evaluate:
+        push input to inputBuffer
+        setup references to input/output data slots and branch output slot
+
+        step D-cache interface queues (similar to Fetch1)
+
+        if interrupt posted:
+            take interrupt (signalling branch to Fetch1/Fetch2)
+        else
+            commit instructions
+            issue new instructions
+
+        advance functional unit pipelines
+
+        reactivate Execute if the unit is still active
+
+        commit the push to the inputBuffer if that data hasn't all been used
+\endverbatim
+
+\subsubsection fifos Functional unit FIFOs
+
+Functional units are implemented as SelfStallingPipelines (stage.hh).  These
+are TimeBuffer FIFOs with two distinct 'push' and 'pop' wires.  They respond
+to SelfStallingPipeline::advance in the same way as TimeBuffers <b>unless</b>
+there is data at the far, 'pop', end of the FIFO.  A 'stalled' flag is
+provided for signalling stalling and to allow a stall to be cleared.  The
+intention is to provide a pipeline for each functional unit which will never
+advance an instruction out of that pipeline until it has been processed and
+the pipeline is explicitly unstalled.
+
+The actions 'issue', 'commit', and 'advance' act on the functional units.
+
+\subsubsection issue Issue
+
+Issuing instructions involves iterating over both the input buffer
+instructions and the heads of the functional units to try and issue
+instructions in order.  The number of instructions which can be issued each
+cycle is limited by the parameter executeIssueLimit, how executeCycleInput is
+set, the availability of pipeline space and the policy used to choose a
+pipeline in which the instruction can be issued.
+
+At present, the only issue policy is strict round-robin visiting of each
+pipeline with the given instructions in sequence.  For greater flexibility,
+better (and more specific policies) will need to be possible.
+
+Memory operation instructions traverse their functional units to perform their
+EA calculations.  On 'commit', the ExecContext::initiateAcc execution phase is
+performed and any memory access is issued (via. ExecContext::{read,write}Mem
+calling LSQ::pushRequest) to the LSQ.
+
+Note that faults are issued as if they are instructions and can (currently) be
+issued to *any* functional unit.
+
+Every issued instruction is also pushed into the Execute::inFlightInsts queue.
+Memory ref. instructions are pushing into Execute::inFUMemInsts queue.
+
+\subsubsection commit Commit
+
+Instructions are committed by examining the head of the Execute::inFlightInsts
+queue (which is decorated with the functional unit number to which the
+instruction was issued).  Instructions which can then be found in their
+functional units are executed and popped from Execute::inFlightInsts.
+
+Memory operation instructions are committed into the memory queues (as
+described above) and exit their functional unit pipeline but are not popped
+from the Execute::inFlightInsts queue.  The Execute::inFUMemInsts queue
+provides ordering to memory operations as they pass through the functional
+units (maintaining issue order).  On entering the LSQ, instructions are popped
+from Execute::inFUMemInsts.
+
+If the parameter executeAllowEarlyMemoryIssue is set, memory operations can be
+sent from their FU to the LSQ before reaching the head of
+Execute::inFlightInsts but after their dependencies are met.
+MinorDynInst::instToWaitFor is marked up with the latest dependent instruction
+execSeqNum required to be committed for a memory operation to progress to the
+LSQ.
+
+Once a memory response is available (by testing the head of
+Execute::inFlightInsts against LSQ::findResponse), commit will process that
+response (ExecContext::completeAcc) and pop the instruction from
+Execute::inFlightInsts.
+
+Any branch, fault or interrupt will cause a stream sequence number change and
+signal a branch to Fetch1/Fetch2.  Only instructions with the current stream
+sequence number will be issued and/or committed.
+
+\subsubsection advance Advance
+
+All non-stalled pipeline are advanced and may, thereafter, become stalled.
+Potential activity in the next cycle is signalled if there are any
+instructions remaining in any pipeline.
+
+\subsubsection sb Scoreboard
+
+The scoreboard (Scoreboard) is used to control instruction issue.  It contains
+a count of the number of in flight instructions which will write each general
+purpose CPU integer or float register.  Instructions will only be issued where
+the scoreboard contains a count of 0 instructions which will write to one of
+the instructions source registers.
+
+Once an instruction is issued, the scoreboard counts for each destination
+register for an instruction will be incremented.
+
+The estimated delivery time of the instruction's result is marked up in the
+scoreboard by adding the length of the issued-to FU to the current time.  The
+timings parameter on each FU provides a list of additional rules for
+calculating the delivery time.  These are documented in the parameter comments
+in MinorCPU.py.
+
+On commit, (for memory operations, memory response commit) the scoreboard
+counters for an instruction's source registers are decremented.  will be
+decremented.
+
+\subsubsection ifi Execute::inFlightInsts
+
+The Execute::inFlightInsts queue will always contain all instructions in
+flight in Execute in the correct issue order.  Execute::issue is the only
+process which will push an instruction into the queue.  Execute::commit is the
+only process that can pop an instruction.
+
+\subsubsection lsq LSQ
+
+The LSQ can support multiple outstanding transactions to memory in a number of
+conservative cases.
+
+There are three queues to contain requests: requests, transfers and the store
+buffer.  The requests and transfers queue operate in a similar manner to the
+queues in Fetch1.  The store buffer is used to decouple the delay of
+completing store operations from following loads.
+
+Requests are issued to the DTLB as their instructions leave their functional
+unit.  At the head of requests, cacheable load requests can be sent to memory
+and on to the transfers queue.  Cacheable stores will be passed to transfers
+unprocessed and progress that queue maintaining order with other transactions.
+
+The conditions in LSQ::tryToSendToTransfers dictate when requests can
+be sent to memory.
+
+All uncacheable transactions, split transactions and locked transactions are
+processed in order at the head of requests.  Additionally, store results
+residing in the store buffer can have their data forwarded to cacheable loads
+(removing the need to perform a read from memory) but no cacheable load can be
+issue to the transfers queue until that queue's stores have drained into the
+store buffer.
+
+At the end of transfers, requests which are LSQ::LSQRequest::Complete (are
+faulting, are cacheable stores, or have been sent to memory and received a
+response) can be picked off by Execute and either committed
+(ExecContext::completeAcc) and, for stores, be sent to the store buffer.
+
+Barrier instructions do not prevent cacheable loads from progressing to memory
+but do cause a stream change which will discard that load.  Stores will not be
+committed to the store buffer if they are in the shadow of the barrier but
+before the new instruction stream has arrived at Execute.  As all other memory
+transactions are delayed at the end of the requests queue until they are at
+the head of Execute::inFlightInsts, they will be discarded by any barrier
+stream change.
+
+After commit, LSQ::BarrierDataRequest requests are inserted into the
+store buffer to track each barrier until all preceding memory transactions
+have drained from the store buffer.  No further memory transactions will be
+issued from the ends of FUs until after the barrier has drained.
+
+\subsubsection drain Draining
+
+Draining is mostly handled by the Execute stage.  When initiated by calling
+MinorCPU::drain, Pipeline::evaluate checks the draining status of each unit
+each cycle and keeps the pipeline active until draining is complete.  It is
+Pipeline that signals the completion of draining.  Execute is triggered by
+MinorCPU::drain and starts stepping through its Execute::DrainState state
+machine, starting from state Execute::NotDraining, in this order:
+
+<table>
+<tr>
+    <td><b>State</b></td>
+    <td><b>Meaning</b></td>
+</tr>
+<tr>
+    <td>Execute::NotDraining</td>
+    <td>Not trying to drain, normal execution</td>
+</tr>
+<tr>
+    <td>Execute::DrainCurrentInst</td>
+    <td>Draining micro-ops to complete inst.</td>
+</tr>
+<tr>
+    <td>Execute::DrainHaltFetch</td>
+    <td>Halt fetching instructions</td>
+</tr>
+<tr>
+    <td>Execute::DrainAllInsts</td>
+    <td>Discarding all instructions presented</td>
+</tr>
+</table>
+
+When complete, a drained Execute unit will be in the Execute::DrainAllInsts
+state where it will continue to discard instructions but has no knowledge of
+the drained state of the rest of the model.
+
+\section debug Debug options
+
+The model provides a number of debug flags which can be passed to gem5 with
+the --debug-flags option.
+
+The available flags are:
+
+<table>
+<tr>
+    <td><b>Debug flag</b></td>
+    <td><b>Unit which will generate debugging output</b></td>
+</tr>
+<tr>
+    <td>Activity</td>
+    <td>Debug ActivityMonitor actions</td>
+</tr>
+<tr>
+    <td>Branch</td>
+    <td>Fetch2 and Execute branch prediction decisions</td>
+</tr>
+<tr>
+    <td>MinorCPU</td>
+    <td>CPU global actions such as wakeup/thread suspension</td>
+</tr>
+<tr>
+    <td>Decode</td>
+    <td>Decode</td>
+</tr>
+<tr>
+    <td>MinorExec</td>
+    <td>Execute behaviour</td>
+</tr>
+<tr>
+    <td>Fetch</td>
+    <td>Fetch1 and Fetch2</td>
+</tr>
+<tr>
+    <td>MinorInterrupt</td>
+    <td>Execute interrupt handling</td>
+</tr>
+<tr>
+    <td>MinorMem</td>
+    <td>Execute memory interactions</td>
+</tr>
+<tr>
+    <td>MinorScoreboard</td>
+    <td>Execute scoreboard activity</td>
+</tr>
+<tr>
+    <td>MinorTrace</td>
+    <td>Generate MinorTrace cyclic state trace output (see below)</td>
+</tr>
+<tr>
+    <td>MinorTiming</td>
+    <td>MinorTiming instruction timing modification operations</td>
+</tr>
+</table>
+
+The group flag Minor enables all of the flags beginning with Minor.
+
+\section trace MinorTrace and minorview.py
+
+The debug flag MinorTrace causes cycle-by-cycle state data to be printed which
+can then be processed and viewed by the minorview.py tool.  This output is
+very verbose and so it is recommended it only be used for small examples.
+
+\subsection traceformat MinorTrace format
+
+There are three types of line outputted by MinorTrace:
+
+\subsubsection state MinorTrace - Ticked unit cycle state
+
+For example:
+
+\verbatim
+ 110000: system.cpu.dcachePort: MinorTrace: state=MemoryRunning in_tlb_mem=0/0
+\endverbatim
+
+For each time step, the MinorTrace flag will cause one MinorTrace line to be
+printed for every named element in the model.
+
+\subsubsection traceunit MinorInst - summaries of instructions issued by \
+    Decode
+
+For example:
+
+\verbatim
+ 140000: system.cpu.execute: MinorInst: id=0/1.1/1/1.1 addr=0x5c \
+                             inst="  mov r0, #0" class=IntAlu
+\endverbatim
+
+MinorInst lines are currently only generated for instructions which are
+committed.
+
+\subsubsection tracefetch1 MinorLine - summaries of line fetches issued by \
+    Fetch1
+
+For example:
+
+\verbatim
+  92000: system.cpu.icachePort: MinorLine: id=0/1.1/1 size=36 \
+                                vaddr=0x5c paddr=0x5c
+\endverbatim
+
+\subsection minorview minorview.py
+
+Minorview (util/minorview.py) can be used to visualise the data created by
+MinorTrace.
+
+\verbatim
+usage: minorview.py [-h] [--picture picture-file] [--prefix name]
+                   [--start-time time] [--end-time time] [--mini-views]
+                   event-file
+
+Minor visualiser
+
+positional arguments:
+  event-file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --picture picture-file
+                        markup file containing blob information (default:
+                        <minorview-path>/minor.pic)
+  --prefix name         name prefix in trace for CPU to be visualised
+                        (default: system.cpu)
+  --start-time time     time of first event to load from file
+  --end-time time       time of last event to load from file
+  --mini-views          show tiny views of the next 10 time steps
+\endverbatim
+
+Raw debugging output can be passed to minorview.py as the event-file. It will
+pick out the MinorTrace lines and use other lines where units in the
+simulation are named (such as system.cpu.dcachePort in the above example) will
+appear as 'comments' when units are clicked on the visualiser.
+
+Clicking on a unit which contains instructions or lines will bring up a speech
+bubble giving extra information derived from the MinorInst/MinorLine lines.
+
+--start-time and --end-time allow only sections of debug files to be loaded.
+
+--prefix allows the name prefix of the CPU to be inspected to be supplied.
+This defaults to 'system.cpu'.
+
+In the visualiser, The buttons Start, End, Back, Forward, Play and Stop can be
+used to control the displayed simulation time.
+
+The diagonally striped coloured blocks are showing the InstId of the
+instruction or line they represent.  Note that lines in Fetch1 and f1ToF2.F
+only show the id fields of a line and that instructions in Fetch2, f2ToD, and
+decode.inputBuffer do not yet have execute sequence numbers.  The T/S.P/L/F.E
+buttons can be used to toggle parts of InstId on and off to make it easier to
+understand the display.  Useful combinations are:
+
+<table>
+<tr>
+    <td><b>Combination</b></td>
+    <td><b>Reason</b></td>
+</tr>
+<tr>
+    <td>E</td>
+    <td>just show the final execute sequence number</td>
+</tr>
+<tr>
+    <td>F/E</td>
+    <td>show the instruction-related numbers</td>
+</tr>
+<tr>
+    <td>S/P</td>
+    <td>show just the stream-related numbers (watch the stream sequence
+        change with branches and not change with predicted branches)</td>
+</tr>
+<tr>
+    <td>S/E</td>
+    <td>show instructions and their stream</td>
+</tr>
+</table>
+
+The key to the right shows all the displayable colours (some of the colour
+choices are quite bad!):
+
+<table>
+<tr>
+    <td><b>Symbol</b></td>
+    <td><b>Meaning</b></td>
+</tr>
+<tr>
+    <td>U</td>
+    <td>Unknown data</td>
+</tr>
+<tr>
+    <td>B</td>
+    <td>Blocked stage</td>
+</tr>
+<tr>
+    <td>-</td>
+    <td>Bubble</td>
+</tr>
+<tr>
+    <td>E</td>
+    <td>Empty queue slot</td>
+</tr>
+<tr>
+    <td>R</td>
+    <td>Reserved queue slot</td>
+</tr>
+<tr>
+    <td>F</td>
+    <td>Fault</td>
+</tr>
+<tr>
+    <td>r</td>
+    <td>Read (used as the leftmost stripe on data in the dcachePort)</td>
+</tr>
+<tr>
+    <td>w</td>
+    <td>Write " "</td>
+</tr>
+<tr>
+    <td>0 to 9</td>
+    <td>last decimal digit of the corresponding data</td>
+</tr>
+</table>
+
+\verbatim
+
+    ,---------------.         .--------------.  *U
+    | |=|->|=|->|=| |         ||=|||->||->|| |  *-  <- Fetch queues/LSQ
+    `---------------'         `--------------'  *R
+    === ======                                  *w  <- Activity/Stage activity
+                              ,--------------.  *1
+    ,--.      ,.      ,.      | ============ |  *3  <- Scoreboard
+    |  |-\[]-\||-\[]-\||-\[]-\| ============ |  *5  <- Execute::inFlightInsts
+    |  | :[] :||-/[]-/||-/[]-/| -. --------  |  *7
+    |  |-/[]-/||  ^   ||      |  | --------- |  *9
+    |  |      ||  |   ||      |  | ------    |
+[]->|  |    ->||  |   ||      |  | ----      |
+    |  |<-[]<-||<-+-<-||<-[]<-|  | ------    |->[] <- Execute to Fetch1,
+    '--`      `'  ^   `'      | -' ------    |        Fetch2 branch data
+             ---. |  ---.     `--------------'
+             ---' |  ---'       ^       ^
+                  |   ^         |       `------------ Execute
+  MinorBuffer ----' input       `-------------------- Execute input buffer
+                    buffer
+\endverbatim
+
+Stages show the colours of the instructions currently being
+generated/processed.
+
+Forward FIFOs between stages show the data being pushed into them at the
+current tick (to the left), the data in transit, and the data available at
+their outputs (to the right).
+
+The backwards FIFO between Fetch2 and Fetch1 shows branch prediction data.
+
+In general, all displayed data is correct at the end of a cycle's activity at
+the time indicated but before the inter-stage FIFOs are ticked.  Each FIFO
+has, therefore an extra slot to show the asserted new input data, and all the
+data currently within the FIFO.
+
+Input buffers for each stage are shown below the corresponding stage and show
+the contents of those buffers as horizontal strips.  Strips marked as reserved
+(cyan by default) are reserved to be filled by the previous stage.  An input
+buffer with all reserved or occupied slots will, therefore, block the previous
+stage from generating output.
+
+Fetch queues and LSQ show the lines/instructions in the queues of each
+interface and show the number of lines/instructions in TLB and memory in the
+two striped colours of the top of their frames.
+
+Inside Execute, the horizontal bars represent the individual FU pipelines.
+The vertical bar to the left is the input buffer and the bar to the right, the
+instructions committed this cycle.  The background of Execute shows
+instructions which are being committed this cycle in their original FU
+pipeline positions.
+
+The strip at the top of the Execute block shows the current streamSeqNum that
+Execute is committing.  A similar stripe at the top of Fetch1 shows that
+stage's expected streamSeqNum and the stripe at the top of Fetch2 shows its
+issuing predictionSeqNum.
+
+The scoreboard shows the number of instructions in flight which will commit a
+result to the register in the position shown.  The scoreboard contains slots
+for each integer and floating point register.
+
+The Execute::inFlightInsts queue shows all the instructions in flight in
+Execute with the oldest instruction (the next instruction to be committed) to
+the right.
+
+'Stage activity' shows the signalled activity (as E/1) for each stage (with
+CPU miscellaneous activity to the left)
+
+'Activity' show a count of stage and pipe activity.
+
+\subsection picformat minor.pic format
+
+The minor.pic file (src/minor/minor.pic) describes the layout of the
+models blocks on the visualiser.  Its format is described in the supplied
+minor.pic file.
+
+*/
+
+}

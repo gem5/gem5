@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2013-2014 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -27,67 +39,35 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Andrew Bardsley
 
 Import('*')
 
-SimObject('BaseTLB.py')
-SimObject('ClockedObject.py')
-SimObject('TickedObject.py')
-SimObject('Root.py')
-SimObject('ClockDomain.py')
-SimObject('VoltageDomain.py')
-SimObject('System.py')
-SimObject('DVFSHandler.py')
+if 'MinorCPU' in env['CPU_MODELS']:
+    SimObject('MinorCPU.py')
 
-Source('arguments.cc')
-Source('async.cc')
-Source('core.cc')
-Source('debug.cc')
-Source('eventq.cc')
-Source('global_event.cc')
-Source('init.cc')
-Source('main.cc', main=True, skip_lib=True)
-Source('root.cc')
-Source('serialize.cc')
-Source('drain.cc')
-Source('sim_events.cc')
-Source('sim_object.cc')
-Source('ticked_object.cc')
-Source('simulate.cc')
-Source('stat_control.cc')
-Source('clock_domain.cc')
-Source('voltage_domain.cc')
-Source('system.cc')
-Source('dvfs_handler.cc')
+    Source('activity.cc')
+    Source('cpu.cc')
+    Source('decode.cc')
+    Source('dyn_inst.cc')
+    Source('execute.cc')
+    Source('fetch1.cc')
+    Source('fetch2.cc')
+    Source('func_unit.cc')
+    Source('lsq.cc')
+    Source('pipe_data.cc')
+    Source('pipeline.cc')
+    Source('scoreboard.cc')
+    Source('stats.cc')
 
-if env['TARGET_ISA'] != 'null':
-    SimObject('InstTracer.py')
-    SimObject('Process.py')
-    Source('faults.cc')
-    Source('process.cc')
-    Source('pseudo_inst.cc')
-    Source('syscall_emul.cc')
-    Source('tlb.cc')
+    DebugFlag('MinorCPU', 'Minor CPU-level events')
+    DebugFlag('MinorExecute', 'Minor Execute stage')
+    DebugFlag('MinorInterrupt', 'Minor interrupt handling')
+    DebugFlag('MinorMem', 'Minor memory accesses')
+    DebugFlag('MinorScoreboard', 'Minor Execute register scoreboard')
+    DebugFlag('MinorTrace', 'MinorTrace cycle-by-cycle state trace')
+    DebugFlag('MinorTiming', 'Extra timing for instructions')
 
-DebugFlag('Checkpoint')
-DebugFlag('Config')
-DebugFlag('Drain')
-DebugFlag('Event')
-DebugFlag('Fault')
-DebugFlag('Flow')
-DebugFlag('IPI')
-DebugFlag('IPR')
-DebugFlag('Interrupt')
-DebugFlag('Loader')
-DebugFlag('PseudoInst')
-DebugFlag('Stack')
-DebugFlag('SyscallVerbose')
-DebugFlag('TimeSync')
-DebugFlag('TLB')
-DebugFlag('Thread')
-DebugFlag('Timer')
-DebugFlag('VtoPhys')
-DebugFlag('WorkItems')
-DebugFlag('ClockDomain')
-DebugFlag('VoltageDomain')
-DebugFlag('DVFS')
+    CompoundFlag('Minor', [
+        'MinorCPU', 'MinorExecute', 'MinorInterrupt', 'MinorMem',
+        'MinorScoreboard'])

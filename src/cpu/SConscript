@@ -106,6 +106,7 @@ SimObject('ExeTracer.py')
 SimObject('IntelTrace.py')
 SimObject('IntrControl.py')
 SimObject('NativeTrace.py')
+SimObject('TimingExpr.py')
 
 Source('activity.cc')
 Source('base.cc')
@@ -123,6 +124,7 @@ Source('static_inst.cc')
 Source('simple_thread.cc')
 Source('thread_context.cc')
 Source('thread_state.cc')
+Source('timing_expr.cc')
 
 if env['TARGET_ISA'] == 'sparc':
     SimObject('LegionTrace.py')

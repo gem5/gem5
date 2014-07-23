@@ -1,0 +1,154 @@
+# Copyright (c) 2013 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Andrew Bardsley
+#
+# minor.pic: Pipeline appearance of the Minor pipeline for minorview
+
+# Markup of the pipeline blocks.
+#   '>' and '<' are connecting arrows.
+#   '/', ':' and '\' mark multi-line arrows.
+#   All other (non-space) character rectangles are the shapes of the
+#       corresponding blocks below the markup.
+
+<<<
+        IPIPIPIPIPIPIPIPIP                          LSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLS  KKKKKKKKKK
+        IP              IP                          LS                                      LS  KK      KK
+        IPiririr-\itititIP                          LSimimim  drdrdr-\dtdtdtdt  sbsbsbsbsbsbLS  KK      KK
+        IPiririr-/itititIP                          LSimimim  drdrdr-/dtdtdtdt  sbsbsbsbsbsbLS  KK      KK
+        IPIPIPIPIPIPIPIPIP                          LSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLS  KK      KK
+                                                                                                KK      KK
+                                                                                                KK      KK
+        acacac  sasasasasasasasa                    EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE  KK      KK
+        acacac  sasasasasasasasa                    EE                                      EE  KK      KK
+                                                    EEscscscscscscscscscscscscscscscscscscscEE  KK      KK
+                                                    EEscscscscscscscscscscscscscscscscscscscEE  KK      KK
+                                                    EE                                      EE  KK      KK
+        F1F1F1F1-\1212-\F2F2F2F2-\2D2D-\DDDD-\DEDE-\EEiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqEE  KK      KK
+        F1    F1 :1212 :F2    F2 :2D2D :DDDD :DEDE :EEiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqiqEE  KK      KK
+        F1fefeF1 :1212 :F2fifiF2 :2D2D :DDDD :DEDE :EE                                      EE  KK      KK
+        F1fefeF1 :1212 :F2fifiF2 :2D2D :DDDD :DEDE :EEEiEiEiEi  f0f0f0f0f0f0f0f0f0f0f0  ccccEE  KK      KK
+        F1fefeF1 :1212 :F2fifiF2 :2D2D :DDDD :DEDE :EEEiEiEiEi  f0f0f0f0f0f0f0f0f0f0f0  ccccEE  KK      KK
+        F1fefeF1 :1212 :F2fifiF2-/2D2D-/DDDD-/DEDE-/EEEiEiEiEi  f1f1f1f1f1f1f1f1f1f1f1  ccccEE  KKKKKKKKKK
+        F1fefeF1 :1212 :F2fifiF2        DDDD        EEEiEiEiEi  f1f1f1f1f1f1f1f1f1f1f1  ccccEE
+        F1fefeF1-/1212-/F2fifiF2        DDDD        EEEiEiEiEi  f2f2f2f2f2f2f2f2f2f2f2  ccccEE
+  b2b2-\F1fefeF1      -\F2fifiF2        DDDD        EEEiEiEiEi  f2f2f2f2f2f2f2f2f2f2f2  ccccEE-\b1b1
+  b2b2-/F1fefeF1      -/F2fifiF2        DDDD        EEEiEiEiEi  f3f3f3f3f3f3f3f3f3f3f3  ccccEE-/b1b1
+        F1fefeF1/-2121/-F2fifiF2        DDDD        EEEiEiEiEi  f3f3f3f3f3f3f3f3f3f3f3  ccccEE
+        F1F1F1F1\-2121\-F2F2F2F2        DDDD        EEEiEiEiEi  f4f4f4f4f4f4f4f4f4f4f4  ccccEE
+                                                    EEEiEiEiEi  f4f4f4f4f4f4f4f4f4f4f4  ccccEE
+                      FiFiFiFi    DiDiDiDi          EE          f5f5f5f5f5f5f5f5f5f5f5  ccccEE
+                      Fi    Fi    Di    Di          EE          f5f5f5f5f5f5f5f5f5f5f5  ccccEE
+                      FiFiFiFi    DiDiDiDi          EE          f6f6f6f6f6f6f6f6f6f6f6  ccccEE
+                                                    EE          f6f6f6f6f6f6f6f6f6f6f6  ccccEE
+                                                    EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+>>>
+
+# Macros for block type appearance.  Macros are expanded in the 'block'
+# lines below and can include other macros.
+#
+# Attributes are name=value pairs.
+# Available names (and valid values);
+#
+# shape: {fifo, box, openBottom}
+# stripDir: {vert, horiz}
+# stripOrd: {RL, LR}
+# decoder: {insts, lines, branch, dcache, counts}
+# border: {thin, mid, thick}
+# dataElement: <name>
+# hideId: ({T, S, P, L, F, E})*
+# name: <string>
+# colours: ({U, B, -, E, R, F, r, w, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9})*
+# type: {key, block}
+
+# macro fifo: shape=fifo stripDir=vert
+macro fifo: shape=openBottom stripDir=horiz stripOrd=RL border=mid
+macro fu: decoder=insts border=mid name="" nameLoc=left
+# macro back: decoder=back border=mid dataElement=space name=""
+macro prediction: decoder=branch border=mid dataElement=prediction name=""
+macro forward: border=mid name=""
+macro dcache: fifo decoder=dcache dataElement=addr
+macro icache: fifo decoder=lines
+macro cacheFrame: stripDir=vert decoder=frame blankStrips=5 \
+    dataElement=in_tlb_mem
+macro activity: decoder=counts shorten=2 border=mid
+macro inputBuffer: name="inputBuffer" fifo
+macro seqNum: decoder=counts border=mid
+macro streamFrame: decoder=frame stripDir=vert dataElement=streamSeqNum
+macro predictionFrame: decoder=frame stripDir=vert dataElement=predictionSeqNum
+
+# Block descriptions:
+# description ::= <char>: <unit-name-in-trace>
+#   ( {<macro-name>, <name>=<value> )*
+# name ::= ? alphanumeric name with dots ?
+# value ::= "(<char-except-">)*", <char-except-' '>* }
+
+Fi: fetch2.inputBuffer inputBuffer decoder=lines
+Di: decode.inputBuffer inputBuffer decoder=insts hideId=E
+Ei: execute.inputBuffer inputBuffer stripDir=horiz decoder=insts border=mid
+F1: fetch1 streamFrame blankStrips=11 name="Fetch1"
+fe: fetch1 decoder=lines border=thin name="Line"
+F2: fetch2 predictionFrame blankStrips=11 name="Fetch2"
+fi: fetch2 decoder=insts border=thin name="Insts"
+DD: decode decoder=insts name="Decode"
+EE: execute streamFrame blankStrips=21 name="Execute"
+cc: execute decoder=insts name="Commit" border=mid
+12: f1ToF2 forward decoder=lines
+21: f2ToF1 prediction
+2D: f2ToD forward decoder=insts hideId=E
+DE: dToE forward decoder=insts
+b1: eToF1 forward decoder=branch
+b2: eToF1 forward decoder=branch
+IP: fetch1 cacheFrame name="Fetch queues"
+LS: execute.lsq cacheFrame name="LSQ"
+ir: fetch1.requests icache name="Requests"
+it: fetch1.transfers icache name="Transfers"
+dr: execute.lsq.requests dcache name="Requests"
+dt: execute.lsq.transfers dcache name="Transfers"
+sb: execute.lsq.storeBuffer dcache name="Store buffer"
+KK: _ type=key colours="UB-ERFrw0123456789"
+f0: execute.fu.0 fu shorten=2 name=Int
+f1: execute.fu.1 fu shorten=2 name=Int
+f2: execute.fu.2 fu shorten=2 name=Mul
+f3: execute.fu.3 fu shorten=2 name=Div
+f4: execute.fu.4 fu shorten=2 name=Float
+f5: execute.fu.5 fu shorten=2 name=Mem
+f6: execute.fu.6 fu shorten=2 name=Misc
+iq: execute.inFlightInsts fifo decoder=insts name="inFlightInsts"
+im: execute.inFUMemInsts fifo decoder=insts name="inFU..."
+sc: execute.scoreboard name="scoreboard" decoder=indexedCounts \
+    dataElement=busy border=mid name="scoreboard" strips=38 stripelems=3
+sa: activity dataElement=stages activity name="Stage activity"
+ac: activity dataElement=activity decoder=counts border=mid name="Activity"
