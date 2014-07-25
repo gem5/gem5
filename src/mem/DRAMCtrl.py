@@ -122,6 +122,15 @@ class DRAMCtrl(AbstractMemory):
     # to be instantiated for a multi-channel configuration
     channels = Param.Unsigned(1, "Number of channels")
 
+    # For power modelling we need to know if the DRAM has a DLL or not
+    dll = Param.Bool(True, "DRAM has DLL or not")
+
+    # DRAMPower provides in addition to the core power, the possibility to
+    # include RD/WR termination and IO power. This calculation assumes some
+    # default values. The integration of DRAMPower with gem5 does not include
+    # IO and RD/WR termination power by default. This might be added as an
+    # additional feature in the future.
+
     # timing behaviour and constraints - all in nanoseconds
 
     # the base clock period of the DRAM
@@ -193,14 +202,108 @@ class DRAMCtrl(AbstractMemory):
     tXAW = Param.Latency("X activation window")
     activation_limit = Param.Unsigned("Max number of activates in window")
 
+    # time to exit power-down mode
+    # Exit power-down to next valid command delay
+    tXP = Param.Latency("0ns", "Power-up Delay")
+
+    # Exit Powerdown to commands requiring a locked DLL
+    tXPDLL = Param.Latency("0ns", "Power-up Delay with locked DLL")
+
+    # time to exit self-refresh mode
+    tXS = Param.Latency("0ns", "Self-refresh exit latency")
+
+    # time to exit self-refresh mode with locked DLL
+    tXSDLL = Param.Latency("0ns", "Self-refresh exit latency DLL")
+
     # Currently rolled into other params
     ######################################################################
 
     # tRC  - assumed to be tRAS + tRP
 
+    # Power Behaviour and Constraints
+    # DRAMs like LPDDR and WideIO have 2 external voltage domains. These are
+    # defined as VDD and VDD2. Each current is defined for each voltage domain
+    # separately. For example, current IDD0 is active-precharge current for
+    # voltage domain VDD and current IDD02 is active-precharge current for
+    # voltage domain VDD2.
+    # By default all currents are set to 0mA. Users who are only interested in
+    # the performance of DRAMs can leave them at 0.
+
+    # Operating 1 Bank Active-Precharge current
+    IDD0 = Param.Current("0mA", "Active precharge current")
+
+    # Operating 1 Bank Active-Precharge current multiple voltage Range
+    IDD02 = Param.Current("0mA", "Active precharge current VDD2")
+
+    # Precharge Power-down Current: Slow exit
+    IDD2P0 = Param.Current("0mA", "Precharge Powerdown slow")
+
+    # Precharge Power-down Current: Slow exit multiple voltage Range
+    IDD2P02 = Param.Current("0mA", "Precharge Powerdown slow VDD2")
+
+    # Precharge Power-down Current: Fast exit
+    IDD2P1 = Param.Current("0mA", "Precharge Powerdown fast")
+
+    # Precharge Power-down Current: Fast exit multiple voltage Range
+    IDD2P12 = Param.Current("0mA", "Precharge Powerdown fast VDD2")
+
+    # Precharge Standby current
+    IDD2N = Param.Current("0mA", "Precharge Standby current")
+
+    # Precharge Standby current multiple voltage range
+    IDD2N2 = Param.Current("0mA", "Precharge Standby current VDD2")
+
+    # Active Power-down current: slow exit
+    IDD3P0 = Param.Current("0mA", "Active Powerdown slow")
+
+    # Active Power-down current: slow exit multiple voltage range
+    IDD3P02 = Param.Current("0mA", "Active Powerdown slow VDD2")
+
+    # Active Power-down current : fast exit
+    IDD3P1 = Param.Current("0mA", "Active Powerdown fast")
+
+    # Active Power-down current : fast exit multiple voltage range
+    IDD3P12 = Param.Current("0mA", "Active Powerdown fast VDD2")
+
+    # Active Standby current
+    IDD3N = Param.Current("0mA", "Active Standby current")
+
+    # Active Standby current multiple voltage range
+    IDD3N2 = Param.Current("0mA", "Active Standby current VDD2")
+
+    # Burst Read Operating Current
+    IDD4R = Param.Current("0mA", "READ current")
+
+    # Burst Read Operating Current multiple voltage range
+    IDD4R2 = Param.Current("0mA", "READ current VDD2")
+
+    # Burst Write Operating Current
+    IDD4W = Param.Current("0mA", "WRITE current")
+
+    # Burst Write Operating Current multiple voltage range
+    IDD4W2 = Param.Current("0mA", "WRITE current VDD2")
+
+    # Refresh Current
+    IDD5 = Param.Current("0mA", "Refresh current")
+
+    # Refresh Current multiple voltage range
+    IDD52 = Param.Current("0mA", "Refresh current VDD2")
+
+    # Self-Refresh Current
+    IDD6 = Param.Current("0mA", "Self-refresh Current")
+
+    # Self-Refresh Current multiple voltage range
+    IDD62 = Param.Current("0mA", "Self-refresh Current VDD2")
+
+    # Main voltage range of the DRAM
+    VDD = Param.Voltage("0V", "Main Voltage Range")
+
+    # Second voltage range defined by some DRAMs
+    VDD2 = Param.Voltage("0V", "2nd Voltage Range")
+
 # A single DDR3-1600 x64 channel (one command and address bus), with
 # timings based on a DDR3-1600 4 Gbit datasheet (Micron MT41J512M8) in
-# an 8x8 configuration, amounting to 4 Gbyte of memory.
+# an 8x8 configuration.
 class DDR3_1600_x64(DRAMCtrl):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
@@ -253,6 +356,15 @@ class DDR3_1600_x64(DRAMCtrl):
     # <=85C, half for >85C
     tREFI = '7.8us'
 
+    # Current values from datasheet
+    IDD0 = '75mA'
+    IDD2N = '50mA'
+    IDD3N = '57mA'
+    IDD4W = '165mA'
+    IDD4R = '187mA'
+    IDD5 = '220mA'
+    VDD = '1.5V'
+
 # A single DDR3-2133 x64 channel refining a selected subset of the
 # options for the DDR-1600 configuration, based on the same DDR3-1600
 # 4 Gbit datasheet (Micron MT41J512M8). Most parameters are kept
@@ -272,9 +384,18 @@ class DDR3_2133_x64(DDR3_1600_x64):
     tRRD = '5ns'
     tXAW = '25ns'
 
+    # Current values from datasheet
+    IDD0 = '70mA'
+    IDD2N = '37mA'
+    IDD3N = '44mA'
+    IDD4W = '157mA'
+    IDD4R = '191mA'
+    IDD5 = '250mA'
+    VDD = '1.5V'
+
 # A single DDR4-2400 x64 channel (one command and address bus), with
-# timings based on a DDR4-2400 4 Gbit datasheet (Samsung K4A4G085WD)
-# in an 8x8 configuration, amounting to 4 Gbyte of memory.
+# timings based on a DDR4-2400 4 Gbit datasheet (Micron MT40A512M8)
+# in an 8x8 configuration.
 class DDR4_2400_x64(DRAMCtrl):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
@@ -288,8 +409,8 @@ class DDR4_2400_x64(DRAMCtrl):
     # 8x8 configuration, so 8 devices
     devices_per_rank = 8
 
-    # Use a single rank
-    ranks_per_channel = 1
+    # Match our DDR3 configurations which is dual rank
+    ranks_per_channel = 2
 
     # DDR4 has 2 (x16) or 4 (x4 and x8) bank groups
     # Set to 4 for x4, x8 case
@@ -329,7 +450,7 @@ class DDR4_2400_x64(DRAMCtrl):
 
     tXAW = '21ns'
     activation_limit = 4
-    tRFC = '260ns'
+    tRFC = '350ns'
 
     tWR = '15ns'
 
@@ -348,10 +469,25 @@ class DDR4_2400_x64(DRAMCtrl):
     # <=85C, half for >85C
     tREFI = '7.8us'
 
+    # Current values from datasheet
+    IDD0 = '64mA'
+    IDD02 = '4mA'
+    IDD2N = '50mA'
+    IDD3N = '67mA'
+    IDD3N2 = '3mA'
+    IDD4W = '180mA'
+    IDD4R = '160mA'
+    IDD5 = '192mA'
+    VDD = '1.2V'
+    VDD2 = '2.5V'
+
 # A single LPDDR2-S4 x32 interface (one command/address bus), with
-# default timings based on a LPDDR2-1066 4 Gbit part in a 1x32
-# configuration.
+# default timings based on a LPDDR2-1066 4 Gbit part (Micron MT42L128M32D1)
+# in a 1x32 configuration.
 class LPDDR2_S4_1066_x32(DRAMCtrl):
+    # No DLL in LPDDR2
+    dll = False
+
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
 
@@ -386,8 +522,7 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     tRAS = '42ns'
     tWR = '15ns'
 
-    # 6 CK read to precharge delay
-    tRTP = '11.256ns'
+    tRTP = '7.5ns'
 
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
@@ -415,9 +550,28 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     tXAW = '50ns'
     activation_limit = 4
 
+    # Current values from datasheet
+    IDD0 = '15mA'
+    IDD02 = '70mA'
+    IDD2N = '2mA'
+    IDD2N2 = '30mA'
+    IDD3N = '2.5mA'
+    IDD3N2 = '30mA'
+    IDD4W = '10mA'
+    IDD4W2 = '190mA'
+    IDD4R = '3mA'
+    IDD4R2 = '220mA'
+    IDD5 = '40mA'
+    IDD52 = '150mA'
+    VDD = '1.8V'
+    VDD2 = '1.2V'
+
 # A single WideIO x128 interface (one command and address bus), with
 # default timings based on an estimated WIO-200 8 Gbit part.
 class WideIO_200_x128(DRAMCtrl):
+    # No DLL for WideIO
+    dll = False
+
     # 1x128 configuration, 1 device with a 128-bit interface
     device_bus_width = 128
 
@@ -475,10 +629,15 @@ class WideIO_200_x128(DRAMCtrl):
     tXAW = '50ns'
     activation_limit = 2
 
+    # The WideIO specification does not provide current information
+
 # A single LPDDR3 x32 interface (one command/address bus), with
-# default timings based on a LPDDR3-1600 4 Gbit part in a 1x32
-# configuration
+# default timings based on a LPDDR3-1600 4 Gbit part (Micron
+# EDF8132A1MC) in a 1x32 configuration.
 class LPDDR3_1600_x32(DRAMCtrl):
+    # No DLL for LPDDR3
+    dll = False
+
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
 
@@ -491,7 +650,8 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
 
-    # Use a single rank
+    # Technically the datasheet is a dual-rank package, but for
+    # comparison with the LPDDR2 config we stick to a single rank
     ranks_per_channel = 1
 
     # LPDDR3 has 8 banks in all configurations
@@ -500,8 +660,7 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # 800 MHz
     tCK = '1.25ns'
 
-    # Fixed at 15 ns
-    tRCD = '15ns'
+    tRCD = '18ns'
 
     # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
     tCL = '15ns'
@@ -512,8 +671,8 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
     tRTP = '7.5ns'
 
-    # Pre-charge one bank 15 ns (all banks 18 ns)
-    tRP = '15ns'
+    # Pre-charge one bank 18 ns (all banks 21 ns)
+    tRP = '18ns'
 
     # 8 beats across a x32 DDR interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
@@ -540,3 +699,19 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # Irrespective of size, tFAW is 50 ns
     tXAW = '50ns'
     activation_limit = 4
+
+    # Current values from datasheet
+    IDD0 = '8mA'
+    IDD02 = '60mA'
+    IDD2N = '0.8mA'
+    IDD2N2 = '26mA'
+    IDD3N = '2mA'
+    IDD3N2 = '34mA'
+    IDD4W = '2mA'
+    IDD4W2 = '190mA'
+    IDD4R = '2mA'
+    IDD4R2 = '230mA'
+    IDD5 = '28mA'
+    IDD52 = '150mA'
+    VDD = '1.8V'
+    VDD2 = '1.2V'
