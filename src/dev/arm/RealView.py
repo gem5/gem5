@@ -51,6 +51,7 @@ from Terminal import Terminal
 from Uart import Uart
 from SimpleMemory import SimpleMemory
 from Gic import *
+from EnergyCtrl import EnergyCtrl
 
 class AmbaPioDevice(BasicPioDevice):
     type = 'AmbaPioDevice'
@@ -247,6 +248,7 @@ class RealViewPBX(RealView):
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
     rtc           = PL031(pio_addr=0x10017000, int_num=42)
+    energy_ctrl   = EnergyCtrl(pio_addr=0x1000f000)
 
 
     # Attach I/O devices that are on chip and also set the appropriate
@@ -303,6 +305,7 @@ class RealViewPBX(RealView):
        self.mmc_fake.pio      = bus.master
        self.rtc.pio           = bus.master
        self.flash_fake.pio    = bus.master
+       self.energy_ctrl.pio   = bus.master
 
     # Set the clock domain for IO objects that are considered
     # to be "far" away from the cores.
@@ -331,6 +334,7 @@ class RealViewPBX(RealView):
         self.mmc_fake.clk_domain      = clkdomain
         self.rtc.clk_domain           = clkdomain
         self.flash_fake.clk_domain    = clkdomain
+        self.energy_ctrl.clk_domain   = clkdomain
 
 # Reference for memory map and interrupt number
 # RealView Emulation Baseboard User Guide (ARM DUI 0143B)
@@ -364,8 +368,7 @@ class RealViewEB(RealView):
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
-
-
+    energy_ctrl   = EnergyCtrl(pio_addr=0x1000f000)
 
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
@@ -413,6 +416,7 @@ class RealViewEB(RealView):
        self.rtc_fake.pio      = bus.master
        self.flash_fake.pio    = bus.master
        self.smcreg_fake.pio   = bus.master
+       self.energy_ctrl.pio   = bus.master
 
     # Set the clock domain for IO objects that are considered
     # to be "far" away from the cores.
@@ -441,6 +445,7 @@ class RealViewEB(RealView):
         self.rtc.clk_domain           = clkdomain
         self.flash_fake.clk_domain    = clkdomain
         self.smcreg_fake.clk_domain   = clkdomain
+        self.energy_ctrl.clk_domain   = clkdomain
 
 class VExpress_EMM(RealView):
     _mem_regions = [(Addr('2GB'), Addr('2GB'))]
@@ -479,6 +484,7 @@ class VExpress_EMM(RealView):
     lan_fake       = IsaFake(pio_addr=0x1A000000, pio_size=0xffff)
     usb_fake       = IsaFake(pio_addr=0x1B000000, pio_size=0x1ffff)
     mmc_fake       = AmbaFake(pio_addr=0x1c050000)
+    energy_ctrl    = EnergyCtrl(pio_addr=0x1c080000)
 
     # Attach any PCI devices that are supported
     def attachPciDevices(self):
@@ -559,6 +565,7 @@ class VExpress_EMM(RealView):
        self.lan_fake.pio        = bus.master
        self.usb_fake.pio        = bus.master
        self.mmc_fake.pio        = bus.master
+       self.energy_ctrl.pio     = bus.master
 
        # Try to attach the I/O if it exists
        try:
@@ -596,6 +603,7 @@ class VExpress_EMM(RealView):
         self.lan_fake.clk_domain      = clkdomain
         self.usb_fake.clk_domain      = clkdomain
         self.mmc_fake.clk_domain      = clkdomain
+        self.energy_ctrl.clk_domain   = clkdomain
 
 class VExpress_EMM64(VExpress_EMM):
     pci_io_base = 0x2f000000
