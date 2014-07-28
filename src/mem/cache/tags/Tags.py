@@ -53,13 +53,23 @@ class BaseTags(ClockedObject):
     hit_latency = Param.Cycles(Parent.hit_latency,
                                "The hit latency for this cache")
 
-class LRU(BaseTags):
-    type = 'LRU'
-    cxx_class = 'LRU'
-    cxx_header = "mem/cache/tags/lru.hh"
+class BaseSetAssoc(BaseTags):
+    type = 'BaseSetAssoc'
+    abstract = True
+    cxx_header = "mem/cache/tags/base_set_assoc.hh"
     assoc = Param.Int(Parent.assoc, "associativity")
     sequential_access = Param.Bool(Parent.sequential_access,
         "Whether to access tags and data sequentially")
+
+class LRU(BaseSetAssoc):
+    type = 'LRU'
+    cxx_class = 'LRU'
+    cxx_header = "mem/cache/tags/lru.hh"
+
+class RandomRepl(BaseSetAssoc):
+    type = 'RandomRepl'
+    cxx_class = 'RandomRepl'
+    cxx_header = "mem/cache/tags/random_repl.hh"
 
 class FALRU(BaseTags):
     type = 'FALRU'

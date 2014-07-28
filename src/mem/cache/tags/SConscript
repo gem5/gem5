@@ -33,5 +33,7 @@ Import('*')
 SimObject('Tags.py')
 
 Source('base.cc')
-Source('fa_lru.cc')
+Source('base_set_assoc.cc')
 Source('lru.cc')
+Source('random_repl.cc')
+Source('fa_lru.cc')

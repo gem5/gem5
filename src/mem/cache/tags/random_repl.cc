@@ -1,17 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
- * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
+ * Copyright (c) 2014 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,75 +25,65 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Anthony Gutierrez
  */
 
 /**
  * @file
- * Definitions of a LRU tag store.
+ * Definitions of a random replacement tag store.
  */
 
+#include "base/random.hh"
 #include "debug/CacheRepl.hh"
-#include "mem/cache/tags/lru.hh"
+#include "mem/cache/tags/random_repl.hh"
 #include "mem/cache/base.hh"
 
-LRU::LRU(const Params *p)
+RandomRepl::RandomRepl(const Params *p)
     : BaseSetAssoc(p)
+
 {
 }
 
 BaseSetAssoc::BlkType*
-LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
+RandomRepl::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
-    BlkType *blk = BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
-
-    if (blk != NULL) {
-        // move this block to head of the MRU list
-        sets[blk->set].moveToHead(blk);
-        DPRINTF(CacheRepl, "set %x: moving blk %x (%s) to MRU\n",
-                blk->set, regenerateBlkAddr(blk->tag, blk->set),
-                is_secure ? "s" : "ns");
-    }
-
-    return blk;
+    return BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
 }
 
 BaseSetAssoc::BlkType*
-LRU::findVictim(Addr addr) const
+RandomRepl::findVictim(Addr addr) const
 {
-    int set = extractSet(addr);
-    // grab a replacement candidate
-    BlkType *blk = sets[set].blks[assoc - 1];
+    BlkType *blk = BaseSetAssoc::findVictim(addr);
 
+    // if all blocks are valid, pick a replacement at random
     if (blk->isValid()) {
+        // find a random index within the bounds of the set
+        int idx = random_mt.random<int>(0, assoc - 1);
+        assert(idx < assoc);
+        assert(idx >= 0);
+        blk = sets[extractSet(addr)].blks[idx];
+
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
-                set, regenerateBlkAddr(blk->tag, set));
+                blk->set, regenerateBlkAddr(blk->tag, blk->set));
     }
 
     return blk;
 }
 
 void
-LRU::insertBlock(PacketPtr pkt, BlkType *blk)
+RandomRepl::insertBlock(PacketPtr pkt, BlkType *blk)
 {
     BaseSetAssoc::insertBlock(pkt, blk);
-
-    int set = extractSet(pkt->getAddr());
-    sets[set].moveToHead(blk);
 }
 
 void
-LRU::invalidate(BlkType *blk)
+RandomRepl::invalidate(BlkType *blk)
 {
     BaseSetAssoc::invalidate(blk);
-
-    // should be evicted before valid blocks
-    int set = blk->set;
-    sets[set].moveToTail(blk);
 }
 
-LRU*
-LRUParams::create()
+RandomRepl*
+RandomReplParams::create()
 {
-    return new LRU(this);
+    return new RandomRepl(this);
 }

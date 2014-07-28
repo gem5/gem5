@@ -1,17 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
- * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
+ * Copyright (c) 2014 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,37 +25,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Anthony Gutierrez
  */
 
 /**
  * @file
- * Declaration of a LRU tag store.
- * The LRU tags guarantee that the true least-recently-used way in
- * a set will always be evicted.
+ * Declaration of a random replacement tag store.
+ * The RandomRepl tags first try to evict an invalid
+ * block. If no invalid blocks are found, a candidate
+ * for eviction is found at random.
  */
 
-#ifndef __MEM_CACHE_TAGS_LRU_HH__
-#define __MEM_CACHE_TAGS_LRU_HH__
+#ifndef __MEM_CACHE_TAGS_RANDOM_REPL_HH__
+#define __MEM_CACHE_TAGS_RANDOM_REPL_HH__
 
 #include "mem/cache/tags/base_set_assoc.hh"
-#include "params/LRU.hh"
+#include "params/RandomRepl.hh"
 
-class LRU : public BaseSetAssoc
+class RandomRepl : public BaseSetAssoc
 {
   public:
     /** Convenience typedef. */
-    typedef LRUParams Params;
+    typedef RandomReplParams Params;
 
     /**
-     * Construct and initialize this tag store.
+     * Construct and initiliaze this tag store.
      */
-    LRU(const Params *p);
+    RandomRepl(const Params *p);
 
     /**
      * Destructor
      */
-    ~LRU() {}
+    ~RandomRepl() {}
 
     BlkType* accessBlock(Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
@@ -76,4 +65,4 @@ class LRU : public BaseSetAssoc
     void invalidate(BlkType *blk);
 };
 
-#endif // __MEM_CACHE_TAGS_LRU_HH__
+#endif // __MEM_CACHE_TAGS_RANDOM_REPL_HH__
