@@ -189,4 +189,4 @@ class O3_ARM_v7aL2(BaseCache):
     prefetch_on_access = 'true'
     # Simple stride prefetcher
     prefetcher = StridePrefetcher(degree=8, latency = 1)
-
+    tags = RandomRepl()
