@@ -52,6 +52,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace Data;
 
 DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     AbstractMemory(p),
@@ -90,11 +91,18 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     busBusyUntil(0), refreshDueAt(0), refreshState(REF_IDLE),
     pwrStateTrans(PWR_IDLE), pwrState(PWR_IDLE), prevArrival(0),
     nextReqTime(0), pwrStateTick(0), numBanksActive(0),
-    activeRank(0)
+    activeRank(0), timeStampOffset(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
     banks.resize(ranksPerChannel);
+
+    //create list of drampower objects. For each rank 1 drampower instance.
+    for (int i = 0; i < ranksPerChannel; i++) {
+        DRAMPower drampower = DRAMPower(p, false);
+        rankPower.emplace_back(drampower);
+    }
+
     actTicks.resize(ranksPerChannel);
     for (size_t c = 0; c < ranksPerChannel; ++c) {
         banks[c].resize(banksPerRank);
@@ -227,6 +235,8 @@ DRAMCtrl::init()
 void
 DRAMCtrl::startup()
 {
+    // timestamp offset should be in clock cycles for DRAMPower
+    timeStampOffset = divCeil(curTick(), tCK);
     // update the start tick for the precharge accounting to the
     // current tick
     pwrStateTick = curTick();
@@ -861,8 +871,12 @@ DRAMCtrl::activateBank(Bank& bank, Tick act_tick, uint32_t row)
     DPRINTF(DRAM, "Activate bank %d, rank %d at tick %lld, now got %d active\n",
             bank.bank, bank.rank, act_tick, numBanksActive);
 
-    DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_tick, tCK), bank.bank,
-            bank.rank);
+    rankPower[bank.rank].powerlib.doCommand(MemCommand::ACT, bank.bank,
+                                            divCeil(act_tick, tCK) -
+                                            timeStampOffset);
+
+    DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_tick, tCK) -
+            timeStampOffset, bank.bank, bank.rank);
 
     // The next access has to respect tRAS for this bank
     bank.preAllowedAt = act_tick + tRAS;
@@ -965,10 +979,14 @@ DRAMCtrl::prechargeBank(Bank& bank, Tick pre_at, bool trace)
     DPRINTF(DRAM, "Precharging bank %d, rank %d at tick %lld, now got "
             "%d active\n", bank.bank, bank.rank, pre_at, numBanksActive);
 
-    if (trace)
-        DPRINTF(DRAMPower, "%llu,PRE,%d,%d\n", divCeil(pre_at, tCK),
-                bank.bank, bank.rank);
+    if (trace) {
 
+        rankPower[bank.rank].powerlib.doCommand(MemCommand::PRE, bank.bank,
+                                                divCeil(pre_at, tCK) -
+                                                timeStampOffset);
+        DPRINTF(DRAMPower, "%llu,PRE,%d,%d\n", divCeil(pre_at, tCK) -
+                timeStampOffset, bank.bank, bank.rank);
+    }
     // if we look at the current number of active banks we might be
     // tempted to think the DRAM is now idle, however this can be
     // undone by an activate that is scheduled to happen before we
@@ -1140,12 +1158,16 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // DRAMPower trace command to be written
     std::string mem_cmd = dram_pkt->isRead ? "RD" : "WR";
 
+    // MemCommand required for DRAMPower library
+    MemCommand::cmds command = (mem_cmd == "RD") ? MemCommand::RD :
+                                                   MemCommand::WR;
+
     // if this access should use auto-precharge, then we are
     // closing the row
     if (auto_precharge) {
-        prechargeBank(bank, std::max(curTick(), bank.preAllowedAt), false);
-
-        mem_cmd.append("A");
+        // if auto-precharge push a PRE command at the correct tick to the
+        // list used by DRAMPower library to calculate power
+        prechargeBank(bank, std::max(curTick(), bank.preAllowedAt));
 
         DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
     }
@@ -1156,8 +1178,12 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     DPRINTF(DRAM, "Access to %lld, ready at %lld bus busy until %lld.\n",
             dram_pkt->addr, dram_pkt->readyTime, busBusyUntil);
 
-    DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK), mem_cmd,
-            dram_pkt->bank, dram_pkt->rank);
+    rankPower[dram_pkt->rank].powerlib.doCommand(command, dram_pkt->bank,
+                                                 divCeil(cmd_at, tCK) -
+                                                 timeStampOffset);
+
+    DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK) -
+            timeStampOffset, mem_cmd, dram_pkt->bank, dram_pkt->rank);
 
     // Update the minimum timing between the requests, this is a
     // conservative estimate of when we have to schedule the next
@@ -1510,8 +1536,12 @@ DRAMCtrl::processRefreshEvent()
                 }
 
                 // at the moment this affects all ranks
-                DPRINTF(DRAMPower, "%llu,PREA,0,%d\n", divCeil(pre_at, tCK),
-                        i);
+                rankPower[i].powerlib.doCommand(MemCommand::PREA, 0,
+                                                divCeil(pre_at, tCK) -
+                                                timeStampOffset);
+
+                DPRINTF(DRAMPower, "%llu,PREA,0,%d\n", divCeil(pre_at, tCK) -
+                        timeStampOffset, i);
             }
         } else {
             DPRINTF(DRAM, "All banks already precharged, starting refresh\n");
@@ -1545,7 +1575,33 @@ DRAMCtrl::processRefreshEvent()
             }
 
             // at the moment this affects all ranks
-            DPRINTF(DRAMPower, "%llu,REF,0,%d\n", divCeil(curTick(), tCK), i);
+            rankPower[i].powerlib.doCommand(MemCommand::REF, 0,
+                                            divCeil(curTick(), tCK) -
+                                            timeStampOffset);
+
+            // at the moment sort the list of commands and update the counters
+            // for DRAMPower libray when doing a refresh
+            sort(rankPower[i].powerlib.cmdList.begin(),
+                 rankPower[i].powerlib.cmdList.end(), DRAMCtrl::sortTime);
+
+            // update the counters for DRAMPower, passing false to
+            // indicate that this is not the last command in the
+            // list. DRAMPower requires this information for the
+            // correct calculation of the background energy at the end
+            // of the simulation. Ideally we would want to call this
+            // function with true once at the end of the
+            // simulation. However, the discarded energy is extremly
+            // small and does not effect the final results.
+            rankPower[i].powerlib.updateCounters(false);
+
+            // call the energy function
+            rankPower[i].powerlib.calcEnergy();
+
+            // Update the stats
+            updatePowerStats(i);
+
+            DPRINTF(DRAMPower, "%llu,REF,0,%d\n", divCeil(curTick(), tCK) -
+                    timeStampOffset, i);
         }
 
         // make sure we did not wait so long that we cannot make up
@@ -1643,6 +1699,26 @@ DRAMCtrl::processPowerEvent()
         assert(refreshState == REF_RUN);
         processRefreshEvent();
     }
+}
+
+void
+DRAMCtrl::updatePowerStats(uint8_t rank)
+{
+    // Get the energy and power from DRAMPower
+    Data::MemoryPowerModel::Energy energy =
+        rankPower[rank].powerlib.getEnergy();
+    Data::MemoryPowerModel::Power power =
+        rankPower[rank].powerlib.getPower();
+
+    actEnergy[rank] = energy.act_energy * devicesPerRank;
+    preEnergy[rank] = energy.pre_energy * devicesPerRank;
+    readEnergy[rank] = energy.read_energy * devicesPerRank;
+    writeEnergy[rank] = energy.write_energy * devicesPerRank;
+    refreshEnergy[rank] = energy.ref_energy * devicesPerRank;
+    actBackEnergy[rank] = energy.act_stdby_energy * devicesPerRank;
+    preBackEnergy[rank] = energy.pre_stdby_energy * devicesPerRank;
+    totalEnergy[rank] = energy.total_energy * devicesPerRank;
+    averagePower[rank] = power.average_power * devicesPerRank;
 }
 
 void
@@ -1909,6 +1985,51 @@ DRAMCtrl::regStats()
     pwrStateTime.subname(2, "PRE_PDN");
     pwrStateTime.subname(3, "ACT");
     pwrStateTime.subname(4, "ACT_PDN");
+
+    actEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".actEnergy")
+        .desc("Energy for activate commands per rank (pJ)");
+
+    preEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".preEnergy")
+        .desc("Energy for precharge commands per rank (pJ)");
+
+    readEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".readEnergy")
+        .desc("Energy for read commands per rank (pJ)");
+
+    writeEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".writeEnergy")
+        .desc("Energy for write commands per rank (pJ)");
+
+    refreshEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".refreshEnergy")
+        .desc("Energy for refresh commands per rank (pJ)");
+
+    actBackEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".actBackEnergy")
+        .desc("Energy for active background per rank (pJ)");
+
+    preBackEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".preBackEnergy")
+        .desc("Energy for precharge background per rank (pJ)");
+
+    totalEnergy
+        .init(ranksPerChannel)
+        .name(name() + ".totalEnergy")
+        .desc("Total energy per rank (pJ)");
+
+    averagePower
+        .init(ranksPerChannel)
+        .name(name() + ".averagePower")
+        .desc("Core power per rank (mW)");
 }
 
 void

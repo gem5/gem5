@@ -60,6 +60,7 @@
 #include "mem/qport.hh"
 #include "params/DRAMCtrl.hh"
 #include "sim/eventq.hh"
+#include "mem/drampower.hh"
 
 /**
  * The DRAM controller is a single-channel memory controller capturing
@@ -677,6 +678,20 @@ class DRAMCtrl : public AbstractMemory
     Stats::Formula pageHitRate;
     Stats::Vector pwrStateTime;
 
+    //Command energies
+    Stats::Vector actEnergy;
+    Stats::Vector preEnergy;
+    Stats::Vector readEnergy;
+    Stats::Vector writeEnergy;
+    Stats::Vector refreshEnergy;
+    //Active Background Energy
+    Stats::Vector actBackEnergy;
+    //Precharge Background Energy
+    Stats::Vector preBackEnergy;
+    Stats::Vector totalEnergy;
+    //Power Consumed
+    Stats::Vector averagePower;
+
     // Track when we transitioned to the current power state
     Tick pwrStateTick;
 
@@ -686,11 +701,41 @@ class DRAMCtrl : public AbstractMemory
     // Holds the value of the rank of burst issued
     uint8_t activeRank;
 
+    // timestamp offset
+    uint64_t timeStampOffset;
+
     /** @todo this is a temporary workaround until the 4-phase code is
      * committed. upstream caches needs this packet until true is returned, so
      * hold onto it for deletion until a subsequent call
      */
     std::vector<PacketPtr> pendingDelete;
+
+    // One DRAMPower instance per rank
+    std::vector<DRAMPower> rankPower;
+
+    /**
+      * This function increments the energy when called. If stats are
+      * dumped periodically, note accumulated energy values will
+      * appear in the stats (even if the stats are reset). This is a
+      * result of the energy values coming from DRAMPower, and there
+      * is currently no support for resetting the state.
+      *
+      * @param rank Currrent rank
+      */
+    void updatePowerStats(uint8_t rank);
+
+    /**
+     * Function for sorting commands in the command list of DRAMPower.
+     *
+     * @param a Memory Command in command list of DRAMPower library
+     * @param next Memory Command in command list of DRAMPower
+     * @return true if timestamp of Command 1 < timestamp of Command 2
+     */
+    static bool sortTime(const Data::MemCommand& m1,
+                         const Data::MemCommand& m2) {
+        return m1.getTime() < m2.getTime();
+    };
+
 
   public:
 
