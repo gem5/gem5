@@ -139,7 +139,8 @@ for scale in treespec[:-2]:
      prev = prototypes[0]
      next = prev()
      next.size = prev.size * scale
-     next.latency = prev.latency * 10
+     next.hit_latency = prev.hit_latency * 10
+     next.response_latency = prev.response_latency * 10
      next.assoc = prev.assoc * scale
      next.mshrs = prev.mshrs * scale
      prototypes.insert(0, next)
