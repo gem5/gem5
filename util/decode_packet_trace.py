@@ -48,7 +48,6 @@
 # r,128,64,4000,0
 # w,232123,64,500000,0
 
-import gzip
 import protolib
 import sys
 
@@ -81,22 +80,8 @@ def main():
         print "Usage: ", sys.argv[0], " <protobuf input> <ASCII output>"
         exit(-1)
 
-    try:
-        # First see if this file is gzipped
-        try:
-            # Opening the file works even if it is not a gzip file
-            proto_in = gzip.open(sys.argv[1], 'rb')
-
-            # Force a check of the magic number by seeking in the
-            # file. If we do not do it here the error will occur when
-            # reading the first message.
-            proto_in.seek(1)
-            proto_in.seek(0)
-        except IOError:
-            proto_in = open(sys.argv[1], 'rb')
-    except IOError:
-        print "Failed to open ", sys.argv[1], " for reading"
-        exit(-1)
+    # Open the file in read mode
+    proto_in = protolib.openFileRd(sys.argv[1])
 
     try:
         ascii_out = open(sys.argv[2], 'w')
