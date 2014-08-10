@@ -187,10 +187,18 @@ TrafficGen::update()
         assert(curTick() >= nextPacketTick);
         // get the next packet and try to send it
         PacketPtr pkt = states[currState]->getNextPacket();
-        numPackets++;
-        if (!port.sendTimingReq(pkt)) {
-            retryPkt = pkt;
-            retryPktTick = curTick();
+
+        // suppress packets that are not destined for a memory, such as
+        // device accesses that could be part of a trace
+        if (system->isMemAddr(pkt->getAddr())) {
+            numPackets++;
+            if (!port.sendTimingReq(pkt)) {
+                retryPkt = pkt;
+                retryPktTick = curTick();
+            }
+        } else {
+            DPRINTF(TrafficGen, "Suppressed packet %s 0x%x\n",
+                    pkt->cmdString(), pkt->getAddr());
         }
     }
 
