@@ -580,6 +580,22 @@ if main['GCC']:
 
     main['GCC_VERSION'] = gcc_version
 
+    # gcc from version 4.8 and above generates "rep; ret" instructions
+    # to avoid performance penalties on certain AMD chips. Older
+    # assemblers detect this as an error, "Error: expecting string
+    # instruction after `rep'"
+    if compareVersions(gcc_version, "4.8") > 0:
+        as_version = readCommand([main['AS'], '-v', '/dev/null'],
+                                 exception=False).split()
+
+        if not as_version or compareVersions(as_version[-1], "2.23") < 0:
+            print termcap.Yellow + termcap.Bold + \
+                'Warning: This combination of gcc and binutils have' + \
+                ' known incompatibilities.\n' + \
+                '         If you encounter build problems, please update ' + \
+                'binutils to 2.23.' + \
+                termcap.Normal
+
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off. Note that these flags
     # are only used by the fast target.
