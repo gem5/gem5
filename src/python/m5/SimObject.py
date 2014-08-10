@@ -172,6 +172,7 @@ class MetaSimObject(type):
 
         # class or instance attributes
         cls._values = multidict()   # param values
+        cls._hr_values = multidict() # human readable param values
         cls._children = multidict() # SimObject children
         cls._port_refs = multidict() # port ref objects
         cls._instantiated = False # really instantiated, cloned, or subclassed
@@ -197,6 +198,7 @@ class MetaSimObject(type):
             cls._params.parent = base._params
             cls._ports.parent = base._ports
             cls._values.parent = base._values
+            cls._hr_values.parent = base._hr_values
             cls._children.parent = base._children
             cls._port_refs.parent = base._port_refs
             # mark base as having been subclassed
@@ -273,6 +275,7 @@ class MetaSimObject(type):
     def _set_param(cls, name, value, param):
         assert(param.name == name)
         try:
+            hr_value = value
             value = param.convert(value)
         except Exception, e:
             msg = "%s\nError setting param %s.%s to %s\n" % \
@@ -284,6 +287,11 @@ class MetaSimObject(type):
         # it gets cloned properly when the class is instantiated
         if isSimObjectOrVector(value) and not value.has_parent():
             cls._add_cls_child(name, value)
+        # update human-readable values of the param if it has a literal
+        # value and is not an object or proxy.
+        if not (isSimObjectOrVector(value) or\
+                isinstance(value, m5.proxy.BaseProxy)):
+            cls._hr_values[name] = hr_value
 
     def _add_cls_child(cls, name, child):
         # It's a little funky to have a class as a parent, but these
@@ -585,6 +593,28 @@ struct PyObject;
 def isSimObjectOrVector(value):
     return False
 
+# This class holds information about each simobject parameter
+# that should be displayed on the command line for use in the
+# configuration system.
+class ParamInfo(object):
+  def __init__(self, type, desc, type_str, example, default_val, access_str):
+    self.type = type
+    self.desc = desc
+    self.type_str = type_str
+    self.example_str = example
+    self.default_val = default_val
+    # The string representation used to access this param through python.
+    # The method to access this parameter presented on the command line may
+    # be different, so this needs to be stored for later use.
+    self.access_str = access_str
+    self.created = True
+
+  # Make it so we can only set attributes at initialization time
+  # and effectively make this a const object.
+  def __setattr__(self, name, value):
+    if not "created" in self.__dict__:
+      self.__dict__[name] = value
+
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
@@ -620,6 +650,64 @@ class SimObject(object):
     void regProbeListeners();
     void startup();
 ''')
+
+    # Returns a dict of all the option strings that can be
+    # generated as command line options for this simobject instance
+    # by tracing all reachable params in the top level instance and
+    # any children it contains.
+    def enumerateParams(self, flags_dict = {},
+                        cmd_line_str = "", access_str = ""):
+        if hasattr(self, "_paramEnumed"):
+            print "Cycle detected enumerating params"
+        else:
+            self._paramEnumed = True
+            # Scan the children first to pick up all the objects in this SimObj
+            for keys in self._children:
+                child = self._children[keys]
+                next_cmdline_str = cmd_line_str + keys
+                next_access_str = access_str + keys
+                if not isSimObjectVector(child):
+                    next_cmdline_str = next_cmdline_str + "."
+                    next_access_str = next_access_str + "."
+                flags_dict = child.enumerateParams(flags_dict,
+                                                   next_cmdline_str,
+                                                   next_access_str)
+
+            # Go through the simple params in the simobject in this level
+            # of the simobject hierarchy and save information about the
+            # parameter to be used for generating and processing command line
+            # options to the simulator to set these parameters.
+            for keys,values in self._params.items():
+                if values.isCmdLineSettable():
+                    type_str = ''
+                    ex_str = values.example_str()
+                    ptype = None
+                    if isinstance(values, VectorParamDesc):
+                        type_str = 'Vector_%s' % values.ptype_str
+                        ptype = values
+                    else:
+                        type_str = '%s' % values.ptype_str
+                        ptype = values.ptype
+
+                    if keys in self._hr_values\
+                       and keys in self._values\
+                       and not isinstance(self._values[keys], m5.proxy.BaseProxy):
+                        cmd_str = cmd_line_str + keys
+                        acc_str = access_str + keys
+                        flags_dict[cmd_str] = ParamInfo(ptype,
+                                    self._params[keys].desc, type_str, ex_str,
+                                    values.pretty_print(self._hr_values[keys]),
+                                    acc_str)
+                    elif not keys in self._hr_values\
+                         and not keys in self._values:
+                        # Empty param
+                        cmd_str = cmd_line_str + keys
+                        acc_str = access_str + keys
+                        flags_dict[cmd_str] = ParamInfo(ptype,
+                                    self._params[keys].desc,
+                                    type_str, ex_str, '', acc_str)
+
+        return flags_dict
 
     # Initialize new instance.  For objects with SimObject-valued
     # children, we need to recursively clone the classes represented
@@ -661,6 +749,7 @@ class SimObject(object):
         # individual value settings can be overridden but we still
         # inherit late changes to non-overridden class values.
         self._values = multidict(ancestor._values)
+        self._hr_values = multidict(ancestor._hr_values)
         # clone SimObject-valued parameters
         for key,val in ancestor._values.iteritems():
             val = tryAsSimObjectOrVector(val)
@@ -751,6 +840,7 @@ class SimObject(object):
         param = self._params.get(attr)
         if param:
             try:
+                hr_value = value
                 value = param.convert(value)
             except Exception, e:
                 msg = "%s\nError setting param %s.%s to %s\n" % \
@@ -761,6 +851,13 @@ class SimObject(object):
             # implicitly parent unparented objects assigned as params
             if isSimObjectOrVector(value) and not value.has_parent():
                 self.add_child(attr, value)
+            # set the human-readable value dict if this is a param
+            # with a literal value and is not being set as an object
+            # or proxy.
+            if not (isSimObjectOrVector(value) or\
+                    isinstance(value, m5.proxy.BaseProxy)):
+                self._hr_values[attr] = hr_value
+
             return
 
         # if RHS is a SimObject, it's an implicit child assignment
@@ -778,7 +875,13 @@ class SimObject(object):
     def __getitem__(self, key):
         if key == 0:
             return self
-        raise TypeError, "Non-zero index '%s' to SimObject" % key
+        raise IndexError, "Non-zero index '%s' to SimObject" % key
+
+    # this hack allows us to iterate over a SimObject that may
+    # not be a vector, so we can call a loop over it and get just one
+    # element.
+    def __len__(self):
+        return 1
 
     # Also implemented by SimObjectVector
     def clear_parent(self, old_parent):
@@ -1054,8 +1157,9 @@ class SimObject(object):
             # Cycles in the configuration hierarchy are not supported. This
             # will catch the resulting recursion and stop.
             self._ccObject = -1
-            params = self.getCCParams()
-            self._ccObject = params.create()
+            if not self.abstract:
+                params = self.getCCParams()
+                self._ccObject = params.create()
         elif self._ccObject == -1:
             raise RuntimeError, "%s: Cycle found in configuration hierarchy." \
                   % self.path()
