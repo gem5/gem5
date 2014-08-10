@@ -60,7 +60,6 @@ Source('str.cc')
 Source('time.cc')
 Source('trace.cc')
 Source('types.cc')
-Source('userinfo.cc')
 
 Source('loader/aout_object.cc')
 Source('loader/dtb_object.cc')
