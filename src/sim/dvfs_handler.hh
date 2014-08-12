@@ -137,7 +137,15 @@ class DVFSHandler : public SimObject
      */
     Tick clkPeriodAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
     {
-        return findDomain(domain_id)->clkPeriodAtPerfLevel(perf_level);
+        SrcClockDomain *d = findDomain(domain_id);
+        assert(d);
+        PerfLevel n = d->numPerfLevels();
+        if (perf_level < n)
+            return d->clkPeriodAtPerfLevel(perf_level);
+
+        warn("DVFSHandler %s reads illegal frequency level %u from "\
+             "SrcClockDomain %s. Returning 0\n", name(), perf_level, d->name());
+        return Tick(0);
     }
 
     /**
@@ -150,7 +158,25 @@ class DVFSHandler : public SimObject
      */
     double voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
     {
-        return findDomain(domain_id)->voltageDomain()->voltage(perf_level);
+        VoltageDomain *d = findDomain(domain_id)->voltageDomain();
+        assert(d);
+        PerfLevel n = d->numVoltages();
+        if (perf_level < n)
+            return d->voltage(perf_level);
+
+        // Request outside of the range of the voltage domain
+        if (n == 1) {
+            DPRINTF(DVFS, "DVFS: Request for perf-level %i for single-point "\
+                    "voltage domain %s.  Returning voltage at level 0: %.2f "\
+                    "V\n", perf_level, d->name(), d->voltage(0));
+            // Special case for single point voltage domain -> same voltage for
+            // all points
+            return d->voltage(0);
+        }
+
+        warn("DVFSHandler %s reads illegal voltage level %u from "\
+             "VoltageDomain %s. Returning 0 V\n", name(), perf_level, d->name());
+        return 0.;
     }
 
     /**
