@@ -72,7 +72,7 @@ class SortIncludes(object):
     includes_re = tuple((a, b, re.compile(c)) for a,b,c in includes_re)
 
     def __init__(self):
-        self.reset()
+        pass
 
     def reset(self):
         # clear all stored headers
@@ -103,6 +103,7 @@ class SortIncludes(object):
                 prev = l
 
     def __call__(self, lines, filename, language):
+        self.reset()
         leading_blank = False
         blanks = 0
         block = False
