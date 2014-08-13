@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -274,13 +274,19 @@ System::initState()
          * Load the kernel code into memory
          */
         if (params()->kernel != "")  {
-            // Validate kernel mapping before loading binary
-            if (!(isMemAddr((kernelStart & loadAddrMask) + loadAddrOffset) &&
-                     isMemAddr((kernelEnd & loadAddrMask) + loadAddrOffset))) {
-                fatal("Kernel is mapped to invalid location (not memory). "
-                      "kernelStart 0x(%x) - kernelEnd 0x(%x) %#x:%#x\n", kernelStart,
-                      kernelEnd, (kernelStart & loadAddrMask) + loadAddrOffset,
-                      (kernelEnd & loadAddrMask) + loadAddrOffset);
+            if (params()->kernel_addr_check) {
+                // Validate kernel mapping before loading binary
+                if (!(isMemAddr((kernelStart & loadAddrMask) +
+                                loadAddrOffset) &&
+                      isMemAddr((kernelEnd & loadAddrMask) +
+                                loadAddrOffset))) {
+                    fatal("Kernel is mapped to invalid location (not memory). "
+                          "kernelStart 0x(%x) - kernelEnd 0x(%x) %#x:%#x\n",
+                          kernelStart,
+                          kernelEnd, (kernelStart & loadAddrMask) +
+                          loadAddrOffset,
+                          (kernelEnd & loadAddrMask) + loadAddrOffset);
+                }
             }
             // Load program sections into memory
             kernel->loadSections(physProxy, loadAddrMask, loadAddrOffset);
