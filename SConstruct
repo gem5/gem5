@@ -638,7 +638,12 @@ elif main['CLANG']:
     # is relying on this
     main.Append(CCFLAGS=['-Wno-tautological-compare',
                          '-Wno-parentheses',
-                         '-Wno-self-assign'])
+                         '-Wno-self-assign',
+                         # Some versions of libstdc++ (4.8?) seem to
+                         # use struct hash and class hash
+                         # interchangeably.
+                         '-Wno-mismatched-tags',
+                         ])
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 

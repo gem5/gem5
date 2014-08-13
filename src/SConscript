@@ -940,6 +940,14 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         # with non-virtual destructors
         new_env.Append(CXXFLAGS=['-Wdelete-non-virtual-dtor'])
 
+        swig_env.Append(CCFLAGS=[
+                # Some versions of SWIG can return uninitialized values
+                '-Wno-sometimes-uninitialized',
+                # Register storage is requested in a lot of places in
+                # SWIG-generated code.
+                '-Wno-deprecated-register',
+                ])
+
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
 
