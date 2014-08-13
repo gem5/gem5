@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2010 The University of Edinburgh
  * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved
@@ -57,17 +57,15 @@
 
 BPredUnit::BPredUnit(const Params *params)
     : SimObject(params),
+      numThreads(params->numThreads),
+      predHist(numThreads),
       BTB(params->BTBEntries,
           params->BTBTagSize,
-          params->instShiftAmt)
+          params->instShiftAmt),
+      RAS(numThreads)
 {
-    numThreads = params->numThreads;
-
-    predHist = new History[numThreads];
-
-    RAS = new ReturnAddrStack[numThreads];
-    for (int i=0; i < numThreads; i++)
-        RAS[i].init(params->RASSize);
+    for (auto& r : RAS)
+        r.init(params->RASSize);
 }
 
 void
@@ -126,8 +124,8 @@ BPredUnit::drainSanityCheck() const
 {
     // We shouldn't have any outstanding requests when we resume from
     // a drained system.
-    for (int i = 0; i < numThreads; ++i)
-        assert(predHist[i].empty());
+    for (const auto& ph M5_VAR_USED : predHist)
+        assert(ph.empty());
 }
 
 bool
@@ -448,7 +446,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     // fix up the entry.
     if (!pred_hist.empty()) {
 
-        HistoryIt hist_it = pred_hist.begin();
+        auto hist_it = pred_hist.begin();
         //HistoryIt hist_it = find(pred_hist.begin(), pred_hist.end(),
         //                       squashed_sn);
 
@@ -516,15 +514,14 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 void
 BPredUnit::dump()
 {
-    HistoryIt pred_hist_it;
+    int i = 0;
+    for (const auto& ph : predHist) {
+        if (!ph.empty()) {
+            auto pred_hist_it = ph.begin();
 
-    for (int i = 0; i < numThreads; ++i) {
-        if (!predHist[i].empty()) {
-            pred_hist_it = predHist[i].begin();
+            cprintf("predHist[%i].size(): %i\n", i++, ph.size());
 
-            cprintf("predHist[%i].size(): %i\n", i, predHist[i].size());
-
-            while (pred_hist_it != predHist[i].end()) {
+            while (pred_hist_it != ph.end()) {
                 cprintf("[sn:%lli], PC:%#x, tid:%i, predTaken:%i, "
                         "bpHistory:%#x\n",
                         pred_hist_it->seqNum, pred_hist_it->pc,

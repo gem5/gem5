@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2010 The University of Edinburgh
  * All rights reserved
  *
@@ -47,7 +47,7 @@
 #ifndef __CPU_PRED_BPRED_UNIT_HH__
 #define __CPU_PRED_BPRED_UNIT_HH__
 
-#include <list>
+#include <deque>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -244,8 +244,7 @@ class BPredUnit : public SimObject
         bool wasReturn;
     };
 
-    typedef std::list<PredictorHistory> History;
-    typedef History::iterator HistoryIt;
+    typedef std::deque<PredictorHistory> History;
 
     /** Number of the threads for which the branch history is maintained. */
     uint32_t numThreads;
@@ -255,13 +254,13 @@ class BPredUnit : public SimObject
      * as instructions are committed, or restore it to the proper state after
      * a squash.
      */
-    History *predHist;
+    std::vector<History> predHist;
 
     /** The BTB. */
     DefaultBTB BTB;
 
     /** The per-thread return address stack. */
-    ReturnAddrStack *RAS;
+    std::vector<ReturnAddrStack> RAS;
 
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
