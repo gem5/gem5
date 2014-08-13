@@ -38,7 +38,6 @@ using namespace std;
 namespace PowerISA {
 
 ProcessInfo::ProcessInfo(ThreadContext *_tc)
-    : tc(_tc)
 {
     panic("ProcessInfo constructor not implemented.\n");
 }
