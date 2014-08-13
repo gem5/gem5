@@ -31,8 +31,9 @@
 #ifndef __SIM_FAULT_FWD_HH__
 #define __SIM_FAULT_FWD_HH__
 
+#include "base/refcnt.hh"
+
 class FaultBase;
-template <class T> class RefCountingPtr;
 typedef RefCountingPtr<FaultBase> Fault;
 
 FaultBase * const NoFault = 0;

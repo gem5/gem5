@@ -31,8 +31,9 @@
 #ifndef __CPU_STATIC_INST_FWD_HH__
 #define __CPU_STATIC_INST_FWD_HH__
 
+#include "base/refcnt.hh"
+
 class StaticInst;
-template <class T> class RefCountingPtr;
 typedef RefCountingPtr<StaticInst> StaticInstPtr;
 
 #endif // __CPU_STATIC_INST_FWD_HH__

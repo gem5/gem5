@@ -42,6 +42,8 @@
 #include <cassert>
 #include <ostream>
 
+#include "base/refcnt.hh"
+
 /** uint64_t constant */
 #define ULL(N)          ((uint64_t)N##ULL)
 /** int64_t constant */
@@ -177,7 +179,6 @@ typedef int16_t PortID;
 const PortID InvalidPortID = (PortID)-1;
 
 class FaultBase;
-template <class T> class RefCountingPtr;
 typedef RefCountingPtr<FaultBase> Fault;
 
 #endif // __BASE_TYPES_HH__
