@@ -87,45 +87,6 @@ class LinuxMipsSystem : public MipsSystem
     Addr InitrdSize() const { return Param() + 0x108; }
     static const int CommandLineSize = 256;
 
-  private:
-#ifndef NDEBUG
-    /** Event to halt the simulator if the kernel calls panic()  */
-    BreakPCEvent *kernelPanicEvent;
-
-    /** Event to halt the simulator if the kernel calls die_if_kernel  */
-    BreakPCEvent *kernelDieEvent;
-#endif
-
-    /**
-     * Event to skip determine_cpu_caches() because we don't support
-     * the IPRs that the code can access to figure out cache sizes
-     */
-    SkipFuncEvent *skipCacheProbeEvent;
-
-    /** PC based event to skip the ide_delay_50ms() call */
-    SkipFuncEvent *skipIdeDelay50msEvent;
-
-    /**
-     * PC based event to skip the dprink() call and emulate its
-     * functionality
-     */
-    Linux::DebugPrintkEvent *debugPrintkEvent;
-
-    /**
-     * Skip calculate_delay_loop() rather than waiting for this to be
-     * calculated
-     */
-    SkipDelayLoopEvent *skipDelayLoopEvent;
-
-    /**
-     * Event to print information about thread switches if the trace flag
-     * Thread is set
-     */
-    PrintThreadInfo *printThreadEvent;
-
-    /** Grab the PCBB of the idle process when it starts */
-    IdleStartEvent *idleStartEvent;
-
   public:
     typedef LinuxMipsSystemParams Params;
     LinuxMipsSystem(Params *p);

@@ -59,21 +59,6 @@ using namespace MipsISA;
 //  MIPS TLB
 //
 
-static inline mode_type
-getOperatingMode(MiscReg Stat)
-{
-    if ((Stat & 0x10000006) != 0 || (Stat & 0x18) ==0) {
-        return mode_kernel;
-    } else if ((Stat & 0x18) == 0x8) {
-        return mode_supervisor;
-    } else if ((Stat & 0x18) == 0x10) {
-        return mode_user;
-    } else {
-        return mode_number;
-    }
-}
-
-
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
 {

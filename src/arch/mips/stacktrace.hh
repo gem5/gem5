@@ -45,8 +45,6 @@ class ProcessInfo
   private:
     ThreadContext *tc;
 
-    int thread_info_size;
-    int task_struct_size;
     int task_off;
     int pid_off;
     int name_off;

@@ -51,9 +51,6 @@
  */
 class MaltaIO : public BasicPioDevice
 {
-  private:
-    struct tm tm;
-
   protected:
 
     class RTC : public MC146818

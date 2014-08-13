@@ -59,7 +59,6 @@ class Interrupts : public SimObject
 
     Interrupts(Params * p) : SimObject(p)
     {
-        newInfoSet = false;
     }
 
     void
@@ -127,11 +126,6 @@ class Interrupts : public SimObject
     {
         fatal("Unserialization of Interrupts Unimplemented for MIPS");
     }
-
-  private:
-    bool newInfoSet;
-    int newIpl;
-    int newSummary;
 };
 
 }
