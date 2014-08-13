@@ -71,7 +71,6 @@ __exit_message(const char *prefix, int code,
                    VARARGS_ALLARGS);
 }
 
-M5_PRAGMA_NORETURN(__exit_message)
 #define exit_message(prefix, code, ...)                            \
     __exit_message(prefix, code, __FUNCTION__, __FILE__, __LINE__, \
                    __VA_ARGS__)

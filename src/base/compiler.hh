@@ -47,7 +47,6 @@
 
 #if defined(__GNUC__)
 #define M5_ATTR_NORETURN  __attribute__((noreturn))
-#define M5_PRAGMA_NORETURN(x)
 #define M5_DUMMY_RETURN
 #define M5_VAR_USED __attribute__((unused))
 
