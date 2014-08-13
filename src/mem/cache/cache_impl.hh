@@ -336,7 +336,11 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 return false;
             }
             tags->insertBlock(pkt, blk);
-            blk->status = BlkValid | BlkReadable;
+
+            blk->status = (BlkValid | BlkReadable);
+            if (pkt->isSecure()) {
+                blk->status |= BlkSecure;
+            }
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         blk->status |= BlkDirty;

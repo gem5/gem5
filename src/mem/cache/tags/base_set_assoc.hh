@@ -247,7 +247,7 @@ public:
          Addr addr = pkt->getAddr();
          MasterID master_id = pkt->req->masterId();
          uint32_t task_id = pkt->req->taskId();
-         bool is_secure = pkt->isSecure();
+
          if (!blk->isTouched) {
              tagsInUse++;
              blk->isTouched = true;
@@ -275,10 +275,9 @@ public:
          }
 
          blk->isTouched = true;
+
          // Set tag for new block.  Caller is responsible for setting status.
          blk->tag = extractTag(addr);
-         if (is_secure)
-             blk->status |= BlkSecure;
 
          // deal with what we are bringing in
          assert(master_id < cache->system->maxMasters());
