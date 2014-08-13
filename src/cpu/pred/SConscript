@@ -30,15 +30,16 @@
 
 Import('*')
 
-if 'InOrderCPU' in env['CPU_MODELS'] or 'O3CPU' in env['CPU_MODELS'] \
-    or 'Minor' in env['CPU_MODELS']:
-    SimObject('BranchPredictor.py')
+if env['TARGET_ISA'] == 'null':
+    Return()
 
-    Source('bpred_unit.cc')
-    Source('2bit_local.cc')
-    Source('btb.cc')
-    Source('ras.cc')
-    Source('tournament.cc')
-    Source ('bi_mode.cc')
-    DebugFlag('FreeList')
-    DebugFlag('Branch')
+SimObject('BranchPredictor.py')
+
+Source('bpred_unit.cc')
+Source('2bit_local.cc')
+Source('btb.cc')
+Source('ras.cc')
+Source('tournament.cc')
+Source ('bi_mode.cc')
+DebugFlag('FreeList')
+DebugFlag('Branch')
