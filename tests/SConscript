@@ -104,6 +104,10 @@ def run_test(target, source, env):
     timeout = 15 * 60 # used to be a param, probably should be again
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
+    # The slowest regression (bzip2) requires ~2.8 hours;
+    # 4 hours was chosen to be conservative.
+    elif env['TIMEOUT']:
+        cmd = 'timeout 4h %s' % cmd
 
     # Create a default value for the status string, changed as needed
     # based on the status.
@@ -152,7 +156,9 @@ def run_test(target, source, env):
         # Consider it a failed test unless the exit status is 2
         status_str = "FAILED!"
         # gem5 did not terminate properly, so no need to check the output
-        if signaled(status):
+        if env['TIMEOUT'] and status == 124:
+            status_str = "TIMED-OUT!"
+        elif signaled(status):
             print 'gem5 terminated with signal', signum(status)
             if signum(status) in retry_signals:
                 # Consider the test incomplete; don't create a 'status' output.
@@ -192,7 +198,7 @@ def print_test(target, source, env):
 
     # if the test failed make it red, if it passed make it green, and
     # skip the punctuation
-    if status == "FAILED!":
+    if status == "FAILED!" or status == "TIMED-OUT!":
         status = termcap.Red + status[:-1] + termcap.Normal + status[-1]
     elif status == "CHANGED!":
         status = termcap.Yellow + status[:-1] + termcap.Normal + status[-1]

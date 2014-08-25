@@ -752,6 +752,11 @@ if compareVersions(swig_version[2], min_swig_version) < 0:
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
 main.Append(SWIGFLAGS=swig_flags)
 
+# Check for 'timeout' from GNU coreutils.  If present, regressions
+# will be run with a time limit.
+TIMEOUT_version = readCommand(['timeout', '--version'], exception=False)
+main['TIMEOUT'] = TIMEOUT_version and TIMEOUT_version.find('timeout') == 0
+
 # filter out all existing swig scanners, they mess up the dependency
 # stuff for some reason
 scanners = []
