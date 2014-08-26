@@ -38,7 +38,6 @@
 #include "base/output.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "base/varargs.hh"
 
 using namespace std;
 
@@ -70,59 +69,35 @@ setOutput(const string &filename)
 
 ObjectMatch ignore;
 
-void
-dprintf(Tick when, const std::string &name, const char *format,
-        CPRINTF_DEFINITION)
+
+bool
+__dprintf_prologue(Tick when, const std::string &name)
 {
     if (!name.empty() && ignore.match(name))
-        return;
+        return false;
 
     std::ostream &os = *dprintf_stream;
 
-    string fmt = "";
-    CPrintfArgsList args(VARARGS_ALLARGS);
+    if (when != MaxTick)
+        ccprintf(os, "%7d: ", when);
 
-    if (!name.empty()) {
-        fmt = "%s: " + fmt;
-        args.push_front(name);
-    }
+    if (!name.empty())
+        os << name << ": ";
 
-    if (when != (Tick)-1) {
-        fmt = "%7d: " + fmt;
-        args.push_front(when);
-    }
-
-    fmt += format;
-
-    ccprintf(os, fmt.c_str(), args);
-    os.flush();
+    return true;
 }
 
 void
 dump(Tick when, const std::string &name, const void *d, int len)
 {
-    if (!name.empty() && ignore.match(name))
-        return;
-
-    std::ostream &os = *dprintf_stream;
-
-    string fmt = "";
-    CPrintfArgsList args;
-
-    if (!name.empty()) {
-        fmt = "%s: " + fmt;
-        args.push_front(name);
-    }
-
-    if (when != (Tick)-1) {
-        fmt = "%7d: " + fmt;
-        args.push_front(when);
-    }
-
     const char *data = static_cast<const char *>(d);
+    std::ostream &os = *dprintf_stream;
     int c, i, j;
+
     for (i = 0; i < len; i += 16) {
-        ccprintf(os, fmt, args);
+        if (!__dprintf_prologue(when, name))
+            return;
+
         ccprintf(os, "%08x  ", i);
         c = len - i;
         if (c > 16) c = 16;

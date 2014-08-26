@@ -112,8 +112,9 @@ template <int Func>
 class M5VarArgsFault : public M5DebugFault
 {
   public:
-    M5VarArgsFault(const std::string &format, CPRINTF_DECLARATION) :
-        M5DebugFault((DebugFunc)Func, csprintf(format, VARARGS_ALLARGS))
+    template<typename ...Args>
+    M5VarArgsFault(const std::string &format, const Args &...args) :
+        M5DebugFault((DebugFunc)Func, csprintf(format, args...))
     {}
 };
 

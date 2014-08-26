@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,10 +38,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Andreas Sandberg
  */
 
 #include <cstdlib>
-#include <iostream>
+#include <cstring>
 #include <string>
 
 #include "base/cprintf.hh"
@@ -38,7 +51,6 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "base/varargs.hh"
 #include "sim/core.hh"
 
 using namespace std;
@@ -51,34 +63,32 @@ bool warn_verbose = false;
 bool info_verbose = false;
 bool hack_verbose = false;
 
-void
-__exit_message(const char *prefix, int code,
-    const char *func, const char *file, int line,
-    const char *fmt, CPRINTF_DEFINITION)
+static void
+newline_if_needed(std::ostream &stream, const char *format)
 {
-    CPrintfArgsList args(VARARGS_ALLARGS);
+    const size_t format_len(strlen(format));
 
-    string format = prefix;
-    format += ": ";
-    format += fmt;
-    switch (format[format.size() - 1]) {
+    switch (format_len ? format[format_len - 1] : '\0') {
       case '\n':
       case '\r':
         break;
       default:
-        format += "\n";
+        stream << std::endl;
     }
+}
 
-    format += " @ tick %d\n[%s:%s, line %d]\n";
-    format += "Memory Usage: %ld KBytes\n";
+void
+__exit_epilogue(int code,
+                const char *func, const char *file, int line,
+                const char *format)
+{
+    newline_if_needed(std::cerr, format);
 
-    args.push_back(curTick());
-    args.push_back(func);
-    args.push_back(file);
-    args.push_back(line);
-    args.push_back(memUsage());
-
-    ccprintf(cerr, format.c_str(), args);
+    ccprintf(std::cerr,
+             " @ tick %d\n"
+             "[%s:%s, line %d]\n"
+             "Memory Usage: %ld KBytes\n",
+             curTick(), func, file, line, memUsage());
 
     if (code < 0)
         abort();
@@ -87,30 +97,14 @@ __exit_message(const char *prefix, int code,
 }
 
 void
-__base_message(std::ostream &stream, const char *prefix, bool verbose,
-    const char *func, const char *file, int line,
-    const char *fmt, CPRINTF_DEFINITION)
+__base_message_epilogue(std::ostream &stream, bool verbose,
+                        const char *func, const char *file, int line,
+                        const char *format)
 {
-    CPrintfArgsList args(VARARGS_ALLARGS);
-
-    string format = prefix;
-    format += ": ";
-    format += fmt;
-    switch (format[format.size() - 1]) {
-      case '\n':
-      case '\r':
-        break;
-      default:
-        format += "\n";
-    }
+    newline_if_needed(stream, format);
 
     if (verbose) {
-        format += " @ cycle %d\n[%s:%s, line %d]\n";
-        args.push_back(curTick());
-        args.push_back(func);
-        args.push_back(file);
-        args.push_back(line);
+        ccprintf(stream, " @ cycle %d\n[%s:%s, line %d]\n",
+                 curTick(), func, file, line);
     }
-
-    ccprintf(stream, format.c_str(), args);
 }

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2014 ARM Limited
  * Copyright (c) 2002-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,6 +28,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Andreas Sandberg
  */
 
 #ifndef __BASE_CPRINTF_HH__
@@ -38,12 +40,8 @@
 #include <string>
 
 #include "base/cprintf_formats.hh"
-#include "base/varargs.hh"
 
 namespace cp {
-
-#define CPRINTF_DECLARATION VARARGS_DECLARATION(cp::Print)
-#define CPRINTF_DEFINITION VARARGS_DEFINITION(cp::Print)
 
 struct Print
 {
@@ -128,33 +126,42 @@ struct Print
 
 } // namespace cp
 
-typedef VarArgs::List<cp::Print> CPrintfArgsList;
-
 inline void
-ccprintf(std::ostream &stream, const char *format, const CPrintfArgsList &args)
+ccprintf(cp::Print &print)
+{
+    print.end_args();
+}
+
+
+template<typename T, typename ...Args> void
+ccprintf(cp::Print &print, const T &value, const Args &...args)
+{
+    print.add_arg(value);
+
+    ccprintf(print, args...);
+}
+
+
+template<typename ...Args> void
+ccprintf(std::ostream &stream, const char *format, const Args &...args)
 {
     cp::Print print(stream, format);
-    args.add_args(print);
+
+    ccprintf(print, args...);
 }
 
-inline void
-ccprintf(std::ostream &stream, const char *format, CPRINTF_DECLARATION)
+
+template<typename ...Args> void
+cprintf(const char *format, const Args &...args)
 {
-    cp::Print print(stream, format);
-    VARARGS_ADDARGS(print);
+    ccprintf(std::cout, format, args...);
 }
 
-inline void
-cprintf(const char *format, CPRINTF_DECLARATION)
-{
-    ccprintf(std::cout, format, VARARGS_ALLARGS);
-}
-
-inline std::string
-csprintf(const char *format, CPRINTF_DECLARATION)
+template<typename ...Args> std::string
+csprintf(const char *format, const Args &...args)
 {
     std::stringstream stream;
-    ccprintf(stream, format, VARARGS_ALLARGS);
+    ccprintf(stream, format, args...);
     return stream.str();
 }
 
@@ -163,31 +170,22 @@ csprintf(const char *format, CPRINTF_DECLARATION)
  * time converting const char * to std::string since we don't take
  * advantage of it.
  */
-inline void
-ccprintf(std::ostream &stream, const std::string &format,
-         const CPrintfArgsList &args)
+template<typename ...Args> void
+ccprintf(std::ostream &stream, const std::string &format, const Args &...args)
 {
-    ccprintf(stream, format.c_str(), args);
+    ccprintf(stream, format.c_str(), args...);
 }
 
-inline void
-ccprintf(std::ostream &stream, const std::string &format, CPRINTF_DECLARATION)
+template<typename ...Args> void
+cprintf(const std::string &format, const Args &...args)
 {
-    ccprintf(stream, format.c_str(), VARARGS_ALLARGS);
+    ccprintf(std::cout, format.c_str(), args...);
 }
 
-inline void
-cprintf(const std::string &format, CPRINTF_DECLARATION)
+template<typename ...Args> std::string
+csprintf(const std::string &format, const Args &...args)
 {
-    ccprintf(std::cout, format.c_str(), VARARGS_ALLARGS);
-}
-
-inline std::string
-csprintf(const std::string &format, CPRINTF_DECLARATION)
-{
-    std::stringstream stream;
-    ccprintf(stream, format.c_str(), VARARGS_ALLARGS);
-    return stream.str();
+    return csprintf(format.c_str(), args...);
 }
 
 #endif // __CPRINTF_HH__

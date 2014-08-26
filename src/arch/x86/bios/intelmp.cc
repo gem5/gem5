@@ -92,7 +92,7 @@ writeOutString(PortProxy& proxy, Addr addr, string str, int length)
     if (str.length() > length) {
         memcpy(cleanedString, str.c_str(), length);
         warn("Intel MP configuration table string \"%s\" "
-                "will be truncated to \"%s\".\n", str, cleanedString);
+             "will be truncated to \"%s\".\n", str, (char *)&cleanedString);
     } else {
         memcpy(cleanedString, str.c_str(), str.length());
         memset(cleanedString + str.length(), 0, length - str.length());
