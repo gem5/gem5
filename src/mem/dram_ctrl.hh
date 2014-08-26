@@ -62,23 +62,25 @@
 #include "sim/eventq.hh"
 
 /**
- * The DRAM controller is a basic single-channel memory controller
- * aiming to mimic a high-level DRAM controller and the most important
- * timing constraints associated with the DRAM. The focus is really on
- * modelling the impact on the system rather than the DRAM itself,
- * hence the focus is on the controller model and not on the
- * memory. By adhering to the correct timing constraints, ultimately
- * there is no need for a memory model in addition to the controller
- * model.
+ * The DRAM controller is a single-channel memory controller capturing
+ * the most important timing constraints associated with a
+ * contemporary DRAM. For multi-channel memory systems, the controller
+ * is combined with a crossbar model, with the channel address
+ * interleaving taking part in the crossbar.
  *
- * As a basic design principle, this controller is not cycle callable,
- * but instead uses events to decide when new decisions can be made,
- * when resources become available, when things are to be considered
- * done, and when to send things back. Through these simple
- * principles, we achieve a performant model that is not
- * cycle-accurate, but enables us to evaluate the system impact of a
- * wide range of memory technologies, and also collect statistics
- * about the use of the memory.
+ * As a basic design principle, this controller
+ * model is not cycle callable, but instead uses events to: 1) decide
+ * when new decisions can be made, 2) when resources become available,
+ * 3) when things are to be considered done, and 4) when to send
+ * things back. Through these simple principles, the model delivers
+ * high performance, and lots of flexibility, allowing users to
+ * evaluate the system impact of a wide range of memory technologies,
+ * such as DDR3/4, LPDDR2/3/4, WideIO1/2, HBM and HMC.
+ *
+ * For more details, please see Hansson et al, "Simulating DRAM
+ * controllers for future system architecture exploration",
+ * Proc. ISPASS, 2014. If you use this model as part of your research
+ * please cite the paper.
  */
 class DRAMCtrl : public AbstractMemory
 {
