@@ -67,6 +67,37 @@ good_control = re.compile(r'\b(if|while|for) [(]')
 
 format_types = set(('C', 'C++'))
 
+
+def re_ignore(expr):
+    """Helper function to create regular expression ignore file
+    matcher functions"""
+
+    rex = re.compile(expr)
+    def match_re(fname):
+        return rex.match(fname)
+    return match_re
+
+# This list contains a list of functions that are called to determine
+# if a file should be excluded from the style matching rules or
+# not. The functions are called with the file name relative to the
+# repository root (without a leading slash) as their argument. A file
+# is excluded if any function in the list returns true.
+style_ignores = [
+    # Ignore external projects as they are unlikely to follow the gem5
+    # coding convention.
+    re_ignore("^ext/"),
+]
+
+def check_ignores(fname):
+    """Check if a file name matches any of the ignore rules"""
+
+    for rule in style_ignores:
+        if rule(fname):
+            return True
+
+    return False
+
+
 def modified_regions(old_data, new_data):
     regions = Regions()
     beg = None
@@ -408,6 +439,7 @@ def do_check_style(hgui, repo, *pats, **opts):
 
     opt_fix_white = opts.get('fix_white', False)
     opt_all = opts.get('all', False)
+    opt_no_ignore = opts.get('no_ignore', False)
     ui = MercurialUI(hgui, hgui.verbose, opt_fix_white)
 
     def prompt(name, func, regions=all_regions):
@@ -447,6 +479,9 @@ def do_check_style(hgui, repo, *pats, **opts):
     whitespace = Whitespace(ui)
     sorted_includes = SortedIncludes(ui)
     for fname, mod_regions in files:
+        if not opt_no_ignore and check_ignores(fname):
+            continue
+
         fpath = joinpath(repo.root, fname)
 
         if whitespace.apply(fpath, prompt, mod_regions):
@@ -515,6 +550,7 @@ cmdtable = {
             ('w', 'fix-white', False, _("automatically fix whitespace")),
             ('a', 'all', False,
              _("include clean files and unmodified parts of modified files")),
+            ('', 'no-ignore', False, _("ignore the style ignore list")),
             ] +  commands.walkopts,
         _('hg m5style [-a] [FILE]...')),
     '^m5format' :
