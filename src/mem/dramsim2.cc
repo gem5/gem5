@@ -50,7 +50,7 @@ DRAMSim2::DRAMSim2(const Params* p) :
     port(name() + ".port", *this),
     wrapper(p->deviceConfigFile, p->systemConfigFile, p->filePath,
             p->traceFile, p->range.size() / 1024 / 1024, p->enableDebug),
-    retryReq(false), retryResp(false),
+    retryReq(false), retryResp(false), startTick(0),
     nbrOutstandingReads(0), nbrOutstandingWrites(0),
     drainManager(NULL),
     sendResponseEvent(this), tickEvent(this)
@@ -91,6 +91,8 @@ DRAMSim2::init()
 void
 DRAMSim2::startup()
 {
+    startTick = curTick();
+
     // kick off the clock ticks
     schedule(tickEvent, clockEdge());
 }
@@ -287,7 +289,7 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
 
 void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
-    assert(cycle == divCeil(curTick(),
+    assert(cycle == divCeil(curTick() - startTick,
                             wrapper.clockPeriod() * SimClock::Int::ns));
 
     DPRINTF(DRAMSim2, "Read to address %lld complete\n", addr);
@@ -315,7 +317,7 @@ void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
 
 void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
-    assert(cycle == divCeil(curTick(),
+    assert(cycle == divCeil(curTick() - startTick,
                             wrapper.clockPeriod() * SimClock::Int::ns));
 
     DPRINTF(DRAMSim2, "Write to address %lld complete\n", addr);

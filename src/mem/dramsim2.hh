@@ -104,6 +104,11 @@ class DRAMSim2 : public AbstractMemory
     bool retryResp;
 
     /**
+     * Keep track of when the wrapper is started.
+     */
+    Tick startTick;
+
+    /**
      * Keep track of what packets are outstanding per
      * address, and do so separately for reads and writes. This is
      * done so that we can return the right packet on completion from
