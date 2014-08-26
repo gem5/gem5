@@ -85,6 +85,9 @@ namespace BitfieldBackend
         template<int first, int last=first>
         class Bitfield : public BitfieldBase<Type>
         {
+            static_assert(first >= last,
+                          "Bitfield ranges must be specified as <msb, lsb>");
+
           public:
             operator const uint64_t () const
             {
