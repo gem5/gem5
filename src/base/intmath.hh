@@ -42,7 +42,7 @@ int prevPrime(int n);
 // Determine if a number is prime
 template <class T>
 inline bool
-isPrime(T n)
+isPrime(const T& n)
 {
     T i;
 
@@ -63,14 +63,14 @@ isPrime(T n)
 
 template <class T>
 inline T
-leastSigBit(T n)
+leastSigBit(const T& n)
 {
     return n & ~(n - 1);
 }
 
 template <class T>
 inline bool
-isPowerOf2(T n)
+isPowerOf2(const T& n)
 {
     return n != 0 && leastSigBit(n) == n;
 }
@@ -171,7 +171,7 @@ floorLog2(long long x)
 
 template <class T>
 inline int
-ceilLog2(T n)
+ceilLog2(const T& n)
 {
     if (n == 1)
         return 0;
@@ -181,14 +181,14 @@ ceilLog2(T n)
 
 template <class T>
 inline T
-floorPow2(T n)
+floorPow2(const T& n)
 {
     return (T)1 << floorLog2(n);
 }
 
 template <class T>
 inline T
-ceilPow2(T n)
+ceilPow2(const T& n)
 {
     return (T)1 << ceilLog2(n);
 }
@@ -200,17 +200,17 @@ divCeil(const T& a, const U& b)
     return (a + b - 1) / b;
 }
 
-template <class T>
+template <class T, class U>
 inline T
-roundUp(T val, int align)
+roundUp(const T& val, const U& align)
 {
     T mask = (T)align - 1;
     return (val + mask) & ~mask;
 }
 
-template <class T>
+template <class T, class U>
 inline T
-roundDown(T val, int align)
+roundDown(const T& val, const U& align)
 {
     T mask = (T)align - 1;
     return val & ~mask;
