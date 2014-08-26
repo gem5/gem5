@@ -129,7 +129,7 @@ BitUnion16(PSTATE)
     Bitfield<2> priv;
     Bitfield<3> am;
     Bitfield<4> pef;
-    Bitfield<6, 7> mm;
+    Bitfield<7, 6> mm;
     Bitfield<8> tle;
     Bitfield<9> cle;
     Bitfield<10> pid0;
