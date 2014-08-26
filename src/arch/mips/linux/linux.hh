@@ -117,7 +117,7 @@ class MipsLinux : public Linux
     /// Resource constants for getrlimit() (overide some generics).
     static const unsigned TGT_RLIMIT_NPROC = 8;
     static const unsigned TGT_RLIMIT_AS = 6;
-    static const unsigned RLIMIT_RSS = 7;
+    static const unsigned TGT_RLIMIT_RSS = 7;
     static const unsigned TGT_RLIMIT_NOFILE = 5;
     static const unsigned TGT_RLIMIT_MEMLOCK = 9;
 
