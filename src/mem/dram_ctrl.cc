@@ -67,6 +67,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     burstSize((devicesPerRank * burstLength * deviceBusWidth) / 8),
     rowBufferSize(devicesPerRank * deviceRowBufferSize),
     columnsPerRowBuffer(rowBufferSize / burstSize),
+    columnsPerStripe(range.granularity() / burstSize),
     ranksPerChannel(p->ranks_per_channel),
     banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
@@ -122,6 +123,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 
     rowsPerBank = capacity / (rowBufferSize * banksPerRank * ranksPerChannel);
 
+    // a bit of sanity checks on the interleaving
     if (range.interleaved()) {
         if (channels != range.stripes())
             fatal("%s has %d interleaved address stripes but %d channel(s)\n",
@@ -129,18 +131,34 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 
         if (addrMapping == Enums::RoRaBaChCo) {
             if (rowBufferSize != range.granularity()) {
-                fatal("Interleaving of %s doesn't match RoRaBaChCo "
+                fatal("Channel interleaving of %s doesn't match RoRaBaChCo "
                       "address map\n", name());
             }
-        } else if (addrMapping == Enums::RoRaBaCoCh) {
-            if (system()->cacheLineSize() != range.granularity()) {
-                fatal("Interleaving of %s doesn't match RoRaBaCoCh "
-                      "address map\n", name());
+        } else if (addrMapping == Enums::RoRaBaCoCh ||
+                   addrMapping == Enums::RoCoRaBaCh) {
+            // for the interleavings with channel bits in the bottom,
+            // if the system uses a channel striping granularity that
+            // is larger than the DRAM burst size, then map the
+            // sequential accesses within a stripe to a number of
+            // columns in the DRAM, effectively placing some of the
+            // lower-order column bits as the least-significant bits
+            // of the address (above the ones denoting the burst size)
+            assert(columnsPerStripe >= 1);
+
+            // channel striping has to be done at a granularity that
+            // is equal or larger to a cache line
+            if (system()->cacheLineSize() > range.granularity()) {
+                fatal("Channel interleaving of %s must be at least as large "
+                      "as the cache line size\n", name());
             }
-        } else if (addrMapping == Enums::RoCoRaBaCh) {
-            if (system()->cacheLineSize() != range.granularity())
-                fatal("Interleaving of %s doesn't match RoCoRaBaCh "
-                      "address map\n", name());
+
+            // ...and equal or smaller than the row-buffer size
+            if (rowBufferSize < range.granularity()) {
+                fatal("Channel interleaving of %s must be at most as large "
+                      "as the row-buffer size\n", name());
+            }
+            // this is essentially the check above, so just to be sure
+            assert(columnsPerStripe <= columnsPerRowBuffer);
         }
     }
 
@@ -228,7 +246,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
     // always the top bits, and check before creating the DRAMPacket
     uint64_t row;
 
-    // truncate the address to the access granularity
+    // truncate the address to a DRAM burst, which makes it unique to
+    // a specific column, row, bank, rank and channel
     Addr addr = dramPktAddr / burstSize;
 
     // we have removed the lowest order address bits that denote the
@@ -255,11 +274,14 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         row = addr % rowsPerBank;
         addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::RoRaBaCoCh) {
+        // take out the lower-order column bits
+        addr = addr / columnsPerStripe;
+
         // take out the channel part of the address
         addr = addr / channels;
 
-        // next, the column
-        addr = addr / columnsPerRowBuffer;
+        // next, the higher-order column bites
+        addr = addr / (columnsPerRowBuffer / columnsPerStripe);
 
         // after the column bits, we get the bank bits to interleave
         // over the banks
@@ -278,6 +300,9 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
 
+        // take out the lower-order column bits
+        addr = addr / columnsPerStripe;
+
         // take out the channel part of the address, not that this has
         // to match with how accesses are interleaved between the
         // controllers in the address mapping
@@ -292,9 +317,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
-        // next the column bits which we do not need to keep track of
-        // and simply skip past
-        addr = addr / columnsPerRowBuffer;
+        // next, the higher-order column bites
+        addr = addr / (columnsPerRowBuffer / columnsPerStripe);
 
         // lastly, get the row bits
         row = addr % rowsPerBank;

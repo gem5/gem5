@@ -453,6 +453,7 @@ class DRAMCtrl : public AbstractMemory
     const uint32_t burstSize;
     const uint32_t rowBufferSize;
     const uint32_t columnsPerRowBuffer;
+    const uint32_t columnsPerStripe;
     const uint32_t ranksPerChannel;
     const uint32_t banksPerRank;
     const uint32_t channels;
@@ -469,7 +470,7 @@ class DRAMCtrl : public AbstractMemory
      * Basic memory timing parameters initialized based on parameter
      * values.
      */
-    const Tick tCK;
+    const Tick M5_CLASS_VAR_USED tCK;
     const Tick tWTR;
     const Tick tRTW;
     const Tick tBURST;
