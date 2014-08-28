@@ -63,23 +63,6 @@
 
 namespace X86ISA {
 
-// Unfortunately, the placement of the base field in a page table entry is
-// very erratic and would make a mess here. It might be moved here at some
-// point in the future.
-BitUnion64(PageTableEntry)
-    Bitfield<63> nx;
-    Bitfield<11, 9> avl;
-    Bitfield<8> g;
-    Bitfield<7> ps;
-    Bitfield<6> d;
-    Bitfield<5> a;
-    Bitfield<4> pcd;
-    Bitfield<3> pwt;
-    Bitfield<2> u;
-    Bitfield<1> w;
-    Bitfield<0> p;
-EndBitUnion(PageTableEntry)
-
 Fault
 Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
               RequestPtr _req, BaseTLB::Mode _mode)

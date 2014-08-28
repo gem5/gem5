@@ -98,5 +98,8 @@ class ArmLiveProcess64 : public ArmLiveProcess
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
+/* No architectural page table defined for this ISA */
+typedef NoArchPageTable ArchPageTable;
+
 #endif // __ARM_PROCESS_HH__
 

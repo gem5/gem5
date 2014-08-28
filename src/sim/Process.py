@@ -38,6 +38,8 @@ class Process(SimObject):
     output = Param.String('cout', 'filename for stdout')
     errout = Param.String('cerr', 'filename for stderr')
     system = Param.System(Parent.any, "system process will run on")
+    useArchPT = Param.Bool('false', 'maintain an in-memory version of the page\
+                            table in an architecture-specific format')
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 
     @classmethod

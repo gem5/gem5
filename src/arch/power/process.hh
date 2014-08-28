@@ -58,5 +58,8 @@ class PowerLiveProcess : public LiveProcess
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
+/* No architectural page table defined for this ISA */
+typedef NoArchPageTable ArchPageTable;
+
 #endif // __POWER_PROCESS_HH__
 

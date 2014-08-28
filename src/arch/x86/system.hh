@@ -61,6 +61,20 @@ namespace X86ISA
         class FloatingPointer;
         class ConfigTable;
     }
+
+    /* memory mappings for KVMCpu in SE mode */
+    const uint64_t syscallCodeVirtAddr = 0xffff800000000000;
+    const uint64_t syscallCodePhysAddr = 0x60000;
+    const uint64_t GDTVirtAddr = 0xffff800000001000;
+    const uint64_t GDTPhysAddr = 0x61000;
+    const uint64_t IDTVirtAddr = 0xffff800000002000;
+    const uint64_t IDTPhysAddr = 0x62000;
+    const uint64_t TSSVirtAddr = 0xffff800000003000;
+    const uint64_t TSSPhysAddr = 0x63000;
+    const uint64_t ISTVirtAddr = 0xffff800000004000;
+    const uint64_t ISTPhysAddr = 0x64000;
+
+    const uint64_t pageTablePhysAddr = 0x70000;
 }
 
 class X86System : public System

@@ -106,7 +106,10 @@ Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system),
       max_stack_size(params->max_stack_size),
       M5_pid(system->allocatePID()),
-      pTable(new FuncPageTable(name(), M5_pid)),
+      useArchPT(params->useArchPT),
+      pTable(useArchPT ?
+        static_cast<PageTableBase *>(new ArchPageTable(name(), M5_pid, system)) :
+        static_cast<PageTableBase *>(new FuncPageTable(name(), M5_pid)) ),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always)
 {

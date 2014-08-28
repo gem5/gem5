@@ -65,6 +65,8 @@ if env['TARGET_ISA'] != 'null':
     Source('fs_translating_port_proxy.cc')
     Source('se_translating_port_proxy.cc')
     Source('page_table.cc')
+if env['TARGET_ISA'] == 'x86':
+    Source('multi_level_page_table.cc')
 
 if env['HAVE_DRAMSIM']:
     SimObject('DRAMSim2.py')

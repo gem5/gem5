@@ -131,4 +131,7 @@ class Sparc64LiveProcess : public SparcLiveProcess
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
+/* No architectural page table defined for this ISA */
+typedef NoArchPageTable ArchPageTable;
+
 #endif // __SPARC_PROCESS_HH__

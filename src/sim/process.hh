@@ -125,6 +125,8 @@ class Process : public SimObject
     //separated.
     uint64_t M5_pid;
 
+    // flag for using architecture specific page table
+    bool useArchPT;
     PageTableBase* pTable;
 
     class FdMap
