@@ -35,23 +35,23 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 {
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer requestToL2, network="To", virtual_network="0", ordered="false", vnet_type="request";
   // a local L1 -> this L2 bank
-  MessageBuffer responseFromCache, network="To", virtual_network="1", ordered="false", vnet_type="response";
-  MessageBuffer unblockFromCache, network="To", virtual_network="2", ordered="false", vnet_type="unblock";
+  MessageBuffer responseToL2, network="To", virtual_network="1", ordered="false", vnet_type="response";
+  MessageBuffer unblockToL2, network="To", virtual_network="2", ordered="false", vnet_type="unblock";
 
 
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
-  MessageBuffer requestToCache, network="From", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer requestFromL2, network="From", virtual_network="0", ordered="false", vnet_type="request";
   // a L2 bank -> this L1
-  MessageBuffer responseToCache, network="From", virtual_network="1", ordered="false", vnet_type="response";
+  MessageBuffer responseFromL2, network="From", virtual_network="1", ordered="false", vnet_type="response";
 
   // Message Buffers between the L1 and the L0 Cache
   // From the L1 cache to the L0 cache
-  MessageBuffer bufferFromL1ToL0, network="To", physical_network="0", ordered="true";
+  MessageBuffer bufferToL0, network="To", physical_network="0", ordered="true";
   // From the L0 cache to the L1 cache
-  MessageBuffer bufferToL1FromL0, network="From", physical_network="0", ordered="true";
+  MessageBuffer bufferFromL0, network="From", physical_network="0", ordered="true";
 
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -244,13 +244,13 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return false;
   }
 
-  out_port(requestNetwork_out, RequestMsg, requestFromCache);
-  out_port(responseNetwork_out, ResponseMsg, responseFromCache);
-  out_port(unblockNetwork_out, ResponseMsg, unblockFromCache);
-  out_port(bufferToL0_out, CoherenceMsg, bufferFromL1ToL0);
+  out_port(requestNetwork_out, RequestMsg, requestToL2);
+  out_port(responseNetwork_out, ResponseMsg, responseToL2);
+  out_port(unblockNetwork_out, ResponseMsg, unblockToL2);
+  out_port(bufferToL0_out, CoherenceMsg, bufferToL0);
 
   // Response From the L2 Cache to this L1 cache
-  in_port(responseNetwork_in, ResponseMsg, responseToCache, rank = 3) {
+  in_port(responseNetwork_in, ResponseMsg, responseFromL2, rank = 3) {
     if (responseNetwork_in.isReady()) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -288,7 +288,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Request to this L1 cache from the shared L2
-  in_port(requestNetwork_in, RequestMsg, requestToCache, rank = 2) {
+  in_port(requestNetwork_in, RequestMsg, requestFromL2, rank = 2) {
     if(requestNetwork_in.isReady()) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -325,7 +325,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Requests to this L1 cache from the L0 cache.
-  in_port(messageBufferFromL0_in, CoherenceMsg, bufferToL1FromL0, rank = 0) {
+  in_port(messageBufferFromL0_in, CoherenceMsg, bufferFromL0, rank = 0) {
     if (messageBufferFromL0_in.isReady()) {
       peek(messageBufferFromL0_in, CoherenceMsg) {
         Entry cache_entry := getCacheEntry(in_msg.Addr);

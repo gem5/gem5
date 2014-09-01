@@ -36,10 +36,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
 {
   // NODE L0 CACHE
   // From this node's L0 cache to the network
-  MessageBuffer bufferFromCache, network="To", physical_network="0", ordered="true";
+  MessageBuffer bufferToL1, network="To", physical_network="0", ordered="true";
 
   // To this node's L0 cache FROM the network
-  MessageBuffer bufferToCache, network="From", physical_network="0", ordered="true";
+  MessageBuffer bufferFromL1, network="From", physical_network="0", ordered="true";
 
   // Message queue between this controller and the processor
   MessageBuffer mandatoryQueue, ordered="false";
@@ -237,10 +237,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
     return tbe.pendingAcks;
   }
 
-  out_port(requestNetwork_out, CoherenceMsg, bufferFromCache);
+  out_port(requestNetwork_out, CoherenceMsg, bufferToL1);
 
   // Messages for this L0 cache from the L1 cache
-  in_port(messgeBuffer_in, CoherenceMsg, bufferToCache, rank = 1) {
+  in_port(messgeBuffer_in, CoherenceMsg, bufferFromL1, rank = 1) {
     if (messgeBuffer_in.isReady()) {
       peek(messgeBuffer_in, CoherenceMsg, block_on="Addr") {
         assert(in_msg.Destination == machineID);
