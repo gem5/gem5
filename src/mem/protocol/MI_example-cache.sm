@@ -28,11 +28,11 @@
  */
 
 machine(L1Cache, "MI Example L1 Cache")
-: Sequencer * sequencer,
-  CacheMemory * cacheMemory,
-  Cycles cache_response_latency = 12,
-  Cycles issue_latency = 2,
-  bool send_evictions
+: Sequencer * sequencer;
+  CacheMemory * cacheMemory;
+  Cycles cache_response_latency := 12;
+  Cycles issue_latency := 2;
+  bool send_evictions;
 {
 
   // NETWORK BUFFERS

@@ -29,12 +29,13 @@ from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Var
 
 class ObjDeclAST(DeclAST):
-    def __init__(self, slicc, type_ast, ident, pairs, rvalue):
+    def __init__(self, slicc, type_ast, ident, pairs, rvalue, pointer):
         super(ObjDeclAST, self).__init__(slicc, pairs)
 
         self.type_ast = type_ast
         self.ident = ident
         self.rvalue = rvalue
+        self.pointer = pointer
 
     def __repr__(self):
         return "[ObjDecl: %r]" % self.ident

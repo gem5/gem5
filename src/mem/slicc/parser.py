@@ -258,11 +258,11 @@ class SLICC(Grammar):
         p[0] = self.parse_file(filename)
 
     def p_decl__machine0(self, p):
-        "decl : MACHINE '(' idents ')' ':' params '{' decls '}'"
+        "decl : MACHINE '(' idents ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], [], p[7], p[9])
 
     def p_decl__machine1(self, p):
-        "decl : MACHINE '(' idents pairs ')' ':' params '{' decls '}'"
+        "decl : MACHINE '(' idents pairs ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], p[4], p[7], p[9])
 
     def p_decl__action(self, p):
@@ -319,6 +319,14 @@ class SLICC(Grammar):
         p[0] = ast.StateDeclAST(self, p[3], p[4], p[7])
 
     # Type fields
+    def p_obj_decls__list(self, p):
+        "obj_decls : obj_decl obj_decls"
+        p[0] = [ p[1] ] + p[2]
+
+    def p_obj_decls__empty(self, p):
+        "obj_decls : empty"
+        p[0] = []
+
     def p_type_members__list(self, p):
         "type_members : type_member type_members"
         p[0] = [ p[1] ] + p[2]
@@ -340,19 +348,21 @@ class SLICC(Grammar):
 
     def p_obj_decl__0(self, p):
         "obj_decl : type ident pairs SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3], None)
+        p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3], None, False)
 
     def p_obj_decl__1(self, p):
         "obj_decl : type STAR ident pairs SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[3], p[4], None)
+        p[0] = ast.ObjDeclAST(self, p[1], p[3], p[4], None, True)
 
     def p_obj_decl__2(self, p):
         "obj_decl : type ident ASSIGN expr SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[2], ast.PairListAST(self), p[4])
+        p[0] = ast.ObjDeclAST(self, p[1], p[2], ast.PairListAST(self), p[4],
+                False)
 
     def p_obj_decl__3(self, p):
         "obj_decl : type STAR ident ASSIGN expr SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[3], ast.PairListAST(self), p[5])
+        p[0] = ast.ObjDeclAST(self, p[1], p[3], ast.PairListAST(self), p[5],
+                True)
 
     # Function definition and declaration
     def p_decl__func_decl(self, p):
@@ -426,19 +436,19 @@ class SLICC(Grammar):
         p[0] = ast.FormalParamAST(self, p[1], p[3], None, True)
 
     def p_param__pointer_default(self, p):
-        "param : type STAR ident '=' STRING"
+        "param : type STAR ident ASSIGN STRING"
         p[0] = ast.FormalParamAST(self, p[1], p[3], p[5], True)
 
     def p_param__default_number(self, p):
-        "param : type ident '=' NUMBER"
+        "param : type ident ASSIGN NUMBER"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
 
     def p_param__default_bool(self, p):
-        "param : type ident '=' LIT_BOOL"
+        "param : type ident ASSIGN LIT_BOOL"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
 
     def p_param__default_string(self, p):
-        "param : type ident '=' STRING"
+        "param : type ident ASSIGN STRING"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
 
     # Type

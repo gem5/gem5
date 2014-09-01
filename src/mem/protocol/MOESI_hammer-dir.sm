@@ -34,12 +34,12 @@
  */
 
 machine(Directory, "AMD Hammer-like protocol") 
-: DirectoryMemory * directory,
-  CacheMemory * probeFilter,
-  MemoryControl * memBuffer,
-  Cycles memory_controller_latency = 2,
-  bool probe_filter_enabled = false,
-  bool full_bit_dir_enabled = false
+: DirectoryMemory * directory;
+  CacheMemory * probeFilter;
+  MemoryControl * memBuffer;
+  Cycles memory_controller_latency := 2;
+  bool probe_filter_enabled := "False";
+  bool full_bit_dir_enabled := "False";
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false", vnet_type="forward";

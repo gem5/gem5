@@ -51,6 +51,7 @@ class FormalParamAST(AST):
         v = Var(self.symtab, self.ident, self.location, type, param,
                 self.pairs)
         self.symtab.newSymbol(v)
+
         if self.pointer or str(type) == "TBE" or (
            "interface" in type and (
                type["interface"] == "AbstractCacheEntry" or

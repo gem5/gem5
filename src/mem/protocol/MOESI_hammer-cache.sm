@@ -34,15 +34,15 @@
  */
 
 machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
-: Sequencer * sequencer,
-  CacheMemory * L1Icache,
-  CacheMemory * L1Dcache,
-  CacheMemory * L2cache,
-  Cycles cache_response_latency = 10,
-  Cycles issue_latency = 2,
-  Cycles l2_cache_hit_latency = 10,
-  bool no_mig_atomic = true,
-  bool send_evictions
+: Sequencer * sequencer;
+  CacheMemory * L1Icache;
+  CacheMemory * L1Dcache;
+  CacheMemory * L2cache;
+  Cycles cache_response_latency := 10;
+  Cycles issue_latency := 2;
+  Cycles l2_cache_hit_latency := 10;
+  bool no_mig_atomic := "True";
+  bool send_evictions;
 {
 
   // NETWORK BUFFERS

@@ -56,12 +56,14 @@ class StateMachine(Symbol):
 
         for param in config_parameters:
             if param.pointer:
-                var = Var(symtab, param.name, location, param.type_ast.type,
-                          "(*m_%s_ptr)" % param.name, {}, self)
+                var = Var(symtab, param.ident, location, param.type_ast.type,
+                          "(*m_%s_ptr)" % param.ident, {}, self)
             else:
-                var = Var(symtab, param.name, location, param.type_ast.type,
-                          "m_%s" % param.name, {}, self)
-            self.symtab.registerSym(param.name, var)
+                var = Var(symtab, param.ident, location, param.type_ast.type,
+                          "m_%s" % param.ident, {}, self)
+
+            self.symtab.registerSym(param.ident, var)
+
             if str(param.type_ast.type) == "Prefetcher":
                 self.prefetchers.append(var)
 
@@ -178,8 +180,10 @@ class StateMachine(Symbol):
     def printControllerPython(self, path):
         code = self.symtab.codeFormatter()
         ident = self.ident
+
         py_ident = "%s_Controller" % ident
         c_ident = "%s_Controller" % self.ident
+
         code('''
 from m5.params import *
 from m5.SimObject import SimObject
@@ -192,11 +196,14 @@ class $py_ident(RubyController):
         code.indent()
         for param in self.config_parameters:
             dflt_str = ''
-            if param.default is not None:
-                dflt_str = str(param.default) + ', '
+
+            if param.rvalue is not None:
+                dflt_str = str(param.rvalue.inline()) + ', '
+
             if python_class_map.has_key(param.type_ast.type.c_ident):
                 python_type = python_class_map[param.type_ast.type.c_ident]
-                code('${{param.name}} = Param.${{python_type}}(${dflt_str}"")')
+                code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
+
             else:
                 self.error("Unknown c++ to python class conversion for c++ " \
                            "type: '%s'. Please update the python_class_map " \
@@ -480,11 +487,11 @@ $c_ident::$c_ident(const Params *p)
         #
         for param in self.config_parameters:
             if param.pointer:
-                code('m_${{param.name}}_ptr = p->${{param.name}};')
+                code('m_${{param.ident}}_ptr = p->${{param.ident}};')
             else:
-                code('m_${{param.name}} = p->${{param.name}};')
-            if re.compile("sequencer").search(param.name):
-                code('m_${{param.name}}_ptr->setController(this);')
+                code('m_${{param.ident}} = p->${{param.ident}};')
+            if re.compile("sequencer").search(param.ident):
+                code('m_${{param.ident}}_ptr->setController(this);')
             
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:
@@ -679,9 +686,9 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 
         seq_ident = "NULL"
         for param in self.config_parameters:
-            if param.name == "sequencer":
+            if param.ident == "sequencer":
                 assert(param.pointer)
-                seq_ident = "m_%s_ptr" % param.name
+                seq_ident = "m_%s_ptr" % param.ident
 
         code('''
 

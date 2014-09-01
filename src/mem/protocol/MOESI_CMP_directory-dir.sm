@@ -27,9 +27,9 @@
  */
 
 machine(Directory, "Directory protocol")
-:  DirectoryMemory * directory,
-   MemoryControl * memBuffer,
-   Cycles directory_latency = 6
+:  DirectoryMemory * directory;
+   MemoryControl * memBuffer;
+   Cycles directory_latency := 6;
 {
 
   // ** IN QUEUES **

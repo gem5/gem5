@@ -32,10 +32,10 @@
  */
 
 machine(L2Cache, "MESI Directory L2 Cache CMP")
- : CacheMemory * L2cache,
-   Cycles l2_request_latency = 2,
-   Cycles l2_response_latency = 2,
-   Cycles to_l1_latency = 1
+ : CacheMemory * L2cache;
+   Cycles l2_request_latency := 2;
+   Cycles l2_response_latency := 2;
+   Cycles to_l1_latency := 1;
 {
   // L2 BANK QUEUES
   // From local bank of L2 cache TO the network

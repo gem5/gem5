@@ -32,8 +32,8 @@
 
 
 machine(L1Cache, "Network_test L1 Cache")
-: Sequencer * sequencer,
-  Cycles issue_latency = 2
+: Sequencer * sequencer;
+  Cycles issue_latency := 2;
 {
 
   // NETWORK BUFFERS

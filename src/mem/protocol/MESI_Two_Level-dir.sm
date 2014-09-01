@@ -35,10 +35,10 @@
 
 
 machine(Directory, "MESI Two Level directory protocol")
- : DirectoryMemory * directory,
-   MemoryControl * memBuffer,
-   Cycles to_mem_ctrl_latency = 1,
-   Cycles directory_latency = 6,
+ : DirectoryMemory * directory;
+   MemoryControl * memBuffer;
+   Cycles to_mem_ctrl_latency := 1;
+   Cycles directory_latency := 6;
 {
   MessageBuffer requestToDir, network="From", virtual_network="0",
         ordered="false", vnet_type="request";

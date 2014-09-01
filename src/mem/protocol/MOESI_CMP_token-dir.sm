@@ -27,13 +27,13 @@
  */
 
 machine(Directory, "Token protocol")
- : DirectoryMemory * directory,
-   MemoryControl * memBuffer,
-   int l2_select_num_bits,
-   Cycles directory_latency = 5,
-   bool distributed_persistent = true,
-   Cycles fixed_timeout_latency = 100,
-   Cycles reissue_wakeup_latency = 10
+ : DirectoryMemory * directory;
+   MemoryControl * memBuffer;
+   int l2_select_num_bits;
+   Cycles directory_latency := 5;
+   bool distributed_persistent := "True";
+   Cycles fixed_timeout_latency := 100;
+   Cycles reissue_wakeup_latency := 10;
 {
 
   MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true", vnet_type="response";

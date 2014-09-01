@@ -27,11 +27,11 @@
  */
 
 machine(L1Cache, "MESI Directory L1 Cache CMP")
- : CacheMemory * cache,
-   int l2_select_num_bits,
-   Cycles l1_request_latency = 2,
-   Cycles l1_response_latency = 2,
-   Cycles to_l2_latency = 1,
+ : CacheMemory * cache;
+   int l2_select_num_bits;
+   Cycles l1_request_latency := 2;
+   Cycles l1_response_latency := 2;
+   Cycles to_l2_latency := 1;
 {
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
@@ -39,7 +39,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   // a local L1 -> this L2 bank
   MessageBuffer responseToL2, network="To", virtual_network="1", ordered="false", vnet_type="response";
   MessageBuffer unblockToL2, network="To", virtual_network="2", ordered="false", vnet_type="unblock";
-
 
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1

@@ -27,11 +27,11 @@
  */
 
 machine(L2Cache, "Token protocol")
- : CacheMemory * L2cache,
-   int N_tokens,
-   Cycles l2_request_latency = 5,
-   Cycles l2_response_latency = 5,
-   bool filtering_enabled = true
+ : CacheMemory * L2cache;
+   int N_tokens;
+   Cycles l2_request_latency := 5;
+   Cycles l2_response_latency := 5;
+   bool filtering_enabled := "True";
 {
 
   // L2 BANK QUEUES

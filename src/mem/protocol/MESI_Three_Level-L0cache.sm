@@ -27,12 +27,12 @@
  */
 
 machine(L0Cache, "MESI Directory L0 Cache")
- : Sequencer * sequencer,
-   CacheMemory * Icache,
-   CacheMemory * Dcache,
-   Cycles request_latency = 2,
-   Cycles response_latency = 2,
-   bool send_evictions,
+ : Sequencer * sequencer;
+   CacheMemory * Icache;
+   CacheMemory * Dcache;
+   Cycles request_latency := 2;
+   Cycles response_latency := 2;
+   bool send_evictions;
 {
   // NODE L0 CACHE
   // From this node's L0 cache to the network

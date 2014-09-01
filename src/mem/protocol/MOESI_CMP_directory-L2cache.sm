@@ -27,9 +27,9 @@
  */
 
 machine(L2Cache, "Token protocol")
-: CacheMemory * L2cache,
-  Cycles response_latency = 2,
-  Cycles request_latency = 2
+: CacheMemory * L2cache;
+  Cycles response_latency := 2;
+  Cycles request_latency := 2;
 {
 
   // L2 BANK QUEUES

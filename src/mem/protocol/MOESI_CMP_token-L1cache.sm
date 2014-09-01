@@ -32,22 +32,22 @@
  */
 
 machine(L1Cache, "Token protocol")
- : Sequencer * sequencer,
-   CacheMemory * L1Icache,
-   CacheMemory * L1Dcache,
-   int l2_select_num_bits,
-   int N_tokens,
+ : Sequencer * sequencer;
+   CacheMemory * L1Icache;
+   CacheMemory * L1Dcache;
+   int l2_select_num_bits;
+   int N_tokens;
 
-   Cycles l1_request_latency = 2,
-   Cycles l1_response_latency = 2,
-   int retry_threshold = 1,
-   Cycles fixed_timeout_latency = 100,
-   Cycles reissue_wakeup_latency = 10,
-   Cycles use_timeout_latency = 50,
+   Cycles l1_request_latency := 2;
+   Cycles l1_response_latency := 2;
+   int retry_threshold := 1;
+   Cycles fixed_timeout_latency := 100;
+   Cycles reissue_wakeup_latency := 10;
+   Cycles use_timeout_latency := 50;
 
-   bool dynamic_timeout_enabled = true,
-   bool no_mig_atomic = true,
-   bool send_evictions
+   bool dynamic_timeout_enabled := "True";
+   bool no_mig_atomic := "True";
+   bool send_evictions;
 {
 
   // From this node's L1 cache TO the network
@@ -206,7 +206,6 @@ machine(L1Cache, "Token protocol")
   Cycles averageLatencyEstimate() {
     DPRINTF(RubySlicc, "%d\n",
             (averageLatencyCounter >> averageLatencyHysteresis));
-    //profile_average_latency_estimate( (averageLatencyCounter >> averageLatencyHysteresis) );
     return averageLatencyCounter >> averageLatencyHysteresis;
   }
 

@@ -27,13 +27,13 @@
  */
 
 machine(L1Cache, "Directory protocol")
- : Sequencer * sequencer,
-   CacheMemory * L1Icache,
-   CacheMemory * L1Dcache,
-   int l2_select_num_bits,
-   Cycles request_latency = 2,
-   Cycles use_timeout_latency = 50,
-   bool send_evictions
+ : Sequencer * sequencer;
+   CacheMemory * L1Icache;
+   CacheMemory * L1Dcache;
+   int l2_select_num_bits;
+   Cycles request_latency := 2;
+   Cycles use_timeout_latency := 50;
+   bool send_evictions;
 {
 
   // NODE L1 CACHE
