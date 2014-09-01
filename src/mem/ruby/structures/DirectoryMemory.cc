@@ -30,7 +30,7 @@
 #include "debug/RubyCache.hh"
 #include "debug/RubyStats.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
-#include "mem/ruby/system/DirectoryMemory.hh"
+#include "mem/ruby/structures/DirectoryMemory.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;

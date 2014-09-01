@@ -28,7 +28,7 @@
  */
 
 #include "debug/RubyCacheTrace.hh"
-#include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/ruby/system/CacheRecorder.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 

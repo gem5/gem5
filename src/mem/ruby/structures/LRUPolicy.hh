@@ -29,7 +29,7 @@
 #ifndef __MEM_RUBY_SYSTEM_LRUPOLICY_HH__
 #define __MEM_RUBY_SYSTEM_LRUPOLICY_HH__
 
-#include "mem/ruby/system/AbstractReplacementPolicy.hh"
+#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 
 /* Simple true LRU replacement policy */
 

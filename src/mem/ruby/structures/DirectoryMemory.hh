@@ -26,75 +26,79 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
-#define __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
+#ifndef __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
+#define __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
 
 #include <iostream>
+#include <string>
 
-#include "base/hashmap.hh"
-#include "mem/protocol/AccessType.hh"
+#include "mem/protocol/DirectoryRequestType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/slicc_interface/AbstractEntry.hh"
+#include "mem/ruby/structures/MemoryVector.hh"
+#include "mem/ruby/structures/SparseMemory.hh"
+#include "params/RubyDirectoryMemory.hh"
+#include "sim/sim_object.hh"
 
-class PersistentTableEntry
+class DirectoryMemory : public SimObject
 {
   public:
-    PersistentTableEntry() {}
-    void print(std::ostream& out) const {}
+    typedef RubyDirectoryMemoryParams Params;
+    DirectoryMemory(const Params *p);
+    ~DirectoryMemory();
 
-    NetDest m_starving;
-    NetDest m_marked;
-    NetDest m_request_to_write;
-};
+    void init();
 
-class PersistentTable
-{
-  public:
-    // Constructors
-    PersistentTable();
+    uint64 mapAddressToLocalIdx(PhysAddress address);
+    static uint64 mapAddressToDirectoryVersion(PhysAddress address);
 
-    // Destructor
-    ~PersistentTable();
+    bool isSparseImplementation() { return m_use_map; }
+    uint64 getSize() { return m_size_bytes; }
 
-    // Public Methods
-    void persistentRequestLock(const Address& address, MachineID locker,
-                               AccessType type);
-    void persistentRequestUnlock(const Address& address, MachineID unlocker);
-    bool okToIssueStarving(const Address& address, MachineID machID) const;
-    MachineID findSmallest(const Address& address) const;
-    AccessType typeOfSmallest(const Address& address) const;
-    void markEntries(const Address& address);
-    bool isLocked(const Address& addr) const;
-    int countStarvingForAddress(const Address& addr) const;
-    int countReadStarvingForAddress(const Address& addr) const;
+    bool isPresent(PhysAddress address);
+    AbstractEntry* lookup(PhysAddress address);
+    AbstractEntry* allocate(const PhysAddress& address,
+                            AbstractEntry* new_entry);
+
+    void invalidateBlock(PhysAddress address);
 
     void print(std::ostream& out) const;
+    void regStats();
+
+    void recordRequestType(DirectoryRequestType requestType);
 
   private:
     // Private copy constructor and assignment operator
-    PersistentTable(const PersistentTable& obj);
-    PersistentTable& operator=(const PersistentTable& obj);
+    DirectoryMemory(const DirectoryMemory& obj);
+    DirectoryMemory& operator=(const DirectoryMemory& obj);
 
-    // Data Members (m_prefix)
-    typedef m5::hash_map<Address, PersistentTableEntry> AddressMap;
-    AddressMap m_map;
+  private:
+    const std::string m_name;
+    AbstractEntry **m_entries;
+    // int m_size;  // # of memory module blocks this directory is
+                    // responsible for
+    uint64 m_size_bytes;
+    uint64 m_size_bits;
+    uint64 m_num_entries;
+    int m_version;
+
+    static int m_num_directories;
+    static int m_num_directories_bits;
+    static uint64_t m_total_size_bytes;
+    static int m_numa_high_bit;
+
+    MemoryVector* m_ram;
+    SparseMemory* m_sparseMemory;
+    bool m_use_map;
+    int m_map_levels;
 };
 
 inline std::ostream&
-operator<<(std::ostream& out, const PersistentTable& obj)
+operator<<(std::ostream& out, const DirectoryMemory& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const PersistentTableEntry& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
-}
-
-#endif // __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
+#endif // __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__

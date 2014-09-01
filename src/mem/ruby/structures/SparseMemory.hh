@@ -36,8 +36,8 @@
 #include "base/hashmap.hh"
 #include "base/statistics.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
+#include "mem/ruby/system/CacheRecorder.hh"
 
 typedef void* SparseMemEntry;
 typedef m5::hash_map<Address, SparseMemEntry> SparseMapType;

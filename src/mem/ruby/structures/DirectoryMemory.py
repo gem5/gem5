@@ -28,22 +28,17 @@
 #          Brad Beckmann
 
 from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
-from Controller import RubyController
 
-class RubyCache(SimObject):
-    type = 'RubyCache'
-    cxx_class = 'CacheMemory'
-    cxx_header = "mem/ruby/system/CacheMemory.hh"
-    size = Param.MemorySize("capacity in bytes");
-    latency = Param.Cycles("");
-    assoc = Param.Int("");
-    replacement_policy = Param.String("PSEUDO_LRU", "");
-    start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");
-    is_icache = Param.Bool(False, "is instruction only cache");
-
-    dataArrayBanks = Param.Int(1, "Number of banks for the data array")
-    tagArrayBanks = Param.Int(1, "Number of banks for the tag array")
-    dataAccessLatency = Param.Cycles(1, "cycles for a data array access")
-    tagAccessLatency = Param.Cycles(1, "cycles for a tag array access")
-    resourceStalls = Param.Bool(False, "stall if there is a resource failure")
+class RubyDirectoryMemory(SimObject):
+    type = 'RubyDirectoryMemory'
+    cxx_class = 'DirectoryMemory'
+    cxx_header = "mem/ruby/structures/DirectoryMemory.hh"
+    version = Param.Int(0, "")
+    size = Param.MemorySize("1GB", "capacity in bytes")
+    use_map = Param.Bool(False, "enable sparse memory")
+    map_levels = Param.Int(4, "sparse memory map levels")
+    # the default value of the numa high bit is specified in the command line
+    # option and must be passed into the directory memory sim object
+    numa_high_bit = Param.Int("numa high bit")

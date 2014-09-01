@@ -37,7 +37,7 @@
 #include "mem/protocol/MemoryControlRequestType.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/system/MemoryNode.hh"
+#include "mem/ruby/structures/MemoryNode.hh"
 #include "params/MemoryControl.hh"
 #include "sim/clocked_object.hh"
 

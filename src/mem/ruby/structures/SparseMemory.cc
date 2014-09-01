@@ -30,7 +30,7 @@
 #include <queue>
 
 #include "debug/RubyCache.hh"
-#include "mem/ruby/system/SparseMemory.hh"
+#include "mem/ruby/structures/SparseMemory.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -39,7 +39,7 @@ SparseMemory::SparseMemory(int number_of_levels)
 {
     int even_level_bits;
     int extra;
-    m_total_number_of_bits = RubySystem::getMemorySizeBits() 
+    m_total_number_of_bits = RubySystem::getMemorySizeBits()
         - RubySystem::getBlockSizeBits();;
 
     m_number_of_levels = number_of_levels;

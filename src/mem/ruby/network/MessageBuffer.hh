@@ -41,11 +41,11 @@
 #include <string>
 #include <vector>
 
-#include "mem/packet.hh"
-#include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/MessageBufferNode.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/packet.hh"
 
 class MessageBuffer
 {

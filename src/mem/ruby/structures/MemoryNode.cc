@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/buffers/MessageBufferNode.hh"
+#include "mem/ruby/structures/MemoryNode.hh"
+
+using namespace std;
 
 void
-MessageBufferNode::print(std::ostream& out) const
+MemoryNode::print(ostream& out) const
 {
     out << "[";
     out << m_time << ", ";
     out << m_msg_counter << ", ";
-    out << *m_msgptr << "; ";
+    out << m_msgptr << "; ";
     out << "]";
 }

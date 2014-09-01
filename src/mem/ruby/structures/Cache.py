@@ -29,27 +29,21 @@
 
 from m5.params import *
 from m5.SimObject import SimObject
-from MemoryControl import MemoryControl
+from Controller import RubyController
 
-class RubyMemoryControl(MemoryControl):
-    type = 'RubyMemoryControl'
-    cxx_class = 'RubyMemoryControl'
-    cxx_header = "mem/ruby/system/RubyMemoryControl.hh"
-    version = Param.Int("");
+class RubyCache(SimObject):
+    type = 'RubyCache'
+    cxx_class = 'CacheMemory'
+    cxx_header = "mem/ruby/structures/CacheMemory.hh"
+    size = Param.MemorySize("capacity in bytes");
+    latency = Param.Cycles("");
+    assoc = Param.Int("");
+    replacement_policy = Param.String("PSEUDO_LRU", "");
+    start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");
+    is_icache = Param.Bool(False, "is instruction only cache");
 
-    banks_per_rank = Param.Int(8, "");
-    ranks_per_dimm = Param.Int(2, "");
-    dimms_per_channel = Param.Int(2, "");
-    bank_bit_0 = Param.Int(8, "");
-    rank_bit_0 = Param.Int(11, "");
-    dimm_bit_0 = Param.Int(12, "");
-    bank_queue_size = Param.Int(12, "");
-    bank_busy_time = Param.Int(11, "");
-    rank_rank_delay = Param.Int(1, "");
-    read_write_delay = Param.Int(2, "");
-    basic_bus_busy_time = Param.Int(2, "");
-    mem_ctl_latency = Param.Cycles(12, "");
-    refresh_period = Param.Cycles(1560, "");
-    tFaw = Param.Int(0, "");
-    mem_random_arbitrate = Param.Int(0, "");
-    mem_fixed_delay = Param.Cycles(0, "");
+    dataArrayBanks = Param.Int(1, "Number of banks for the data array")
+    tagArrayBanks = Param.Int(1, "Number of banks for the tag array")
+    dataAccessLatency = Param.Cycles(1, "cycles for a data array access")
+    tagAccessLatency = Param.Cycles(1, "cycles for a tag array access")
+    resourceStalls = Param.Bool(False, "stall if there is a resource failure")

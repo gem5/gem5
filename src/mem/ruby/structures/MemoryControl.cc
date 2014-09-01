@@ -30,7 +30,7 @@
 #include "debug/RubyStats.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/system/MemoryControl.hh"
+#include "mem/ruby/structures/MemoryControl.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;

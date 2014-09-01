@@ -39,5 +39,7 @@ SimObject('Network.py')
 
 Source('BasicLink.cc')
 Source('BasicRouter.cc')
+Source('MessageBuffer.cc')
+Source('MessageBufferNode.cc')
 Source('Network.cc')
 Source('Topology.cc')

@@ -113,7 +113,7 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/system/RubyMemoryControl.hh"
+#include "mem/ruby/structures/RubyMemoryControl.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;

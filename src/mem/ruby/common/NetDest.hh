@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "mem/ruby/common/Set.hh"
-#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/common/MachineID.hh"
 
 class NetDest
 {

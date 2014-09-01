@@ -36,7 +36,7 @@
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/CacheMemory.hh"
+#include "mem/ruby/structures/CacheMemory.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
 

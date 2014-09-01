@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Advanced Micro Devices, Inc.
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,62 +24,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Brad Beckmann
- *
  */
 
-#include "base/intmath.hh"
-#include "mem/ruby/system/BankedArray.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/network/MessageBufferNode.hh"
 
-BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
-                         unsigned int startIndexBit)
+void
+MessageBufferNode::print(std::ostream& out) const
 {
-    this->banks = banks;
-    this->accessLatency = accessLatency;
-    this->startIndexBit = startIndexBit;
-
-    if (banks != 0) {
-        bankBits = floorLog2(banks);
-    }
-
-    busyBanks.resize(banks);
-}
-
-bool
-BankedArray::tryAccess(Index idx)
-{
-    if (accessLatency == 0)
-        return true;
-
-    unsigned int bank = mapIndexToBank(idx);
-    assert(bank < banks);
-
-    if (busyBanks[bank].endAccess >= curTick()) {
-        if (!(busyBanks[bank].startAccess == curTick() &&
-            busyBanks[bank].idx == idx)) {
-            return false;
-        } else {
-            // We tried to allocate resources twice
-            // in the same cycle for the same addr
-            return true;
-        }
-    }
-
-    busyBanks[bank].idx = idx;
-    busyBanks[bank].startAccess = curTick();
-    busyBanks[bank].endAccess = curTick() +
-        (accessLatency-1) * g_system_ptr->clockPeriod();
-
-    return true;
-}
-
-unsigned int
-BankedArray::mapIndexToBank(Index idx)
-{
-    if (banks == 1) {
-        return 0;
-    }
-    return idx % banks;
+    out << "[";
+    out << m_time << ", ";
+    out << m_msg_counter << ", ";
+    out << *m_msgptr << "; ";
+    out << "]";
 }

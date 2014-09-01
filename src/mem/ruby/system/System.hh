@@ -37,13 +37,13 @@
 
 #include "base/callback.hh"
 #include "base/output.hh"
-#include "mem/packet.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/system/MemoryControl.hh"
-#include "mem/ruby/system/MemoryVector.hh"
-#include "mem/ruby/system/SparseMemory.hh"
+#include "mem/ruby/structures/MemoryControl.hh"
+#include "mem/ruby/structures/MemoryVector.hh"
+#include "mem/ruby/structures/SparseMemory.hh"
+#include "mem/ruby/system/CacheRecorder.hh"
+#include "mem/packet.hh"
 #include "params/RubySystem.hh"
 #include "sim/clocked_object.hh"
 

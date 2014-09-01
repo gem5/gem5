@@ -27,8 +27,8 @@
  */
 
 #include "mem/ruby/common/Global.hh"
+#include "mem/ruby/structures/TimerTable.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/system/TimerTable.hh"
 
 TimerTable::TimerTable()
     : m_next_time(0)

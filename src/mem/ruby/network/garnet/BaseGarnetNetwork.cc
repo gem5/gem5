@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
+#include "mem/ruby/network/MessageBuffer.hh"
 
 using namespace std;
 

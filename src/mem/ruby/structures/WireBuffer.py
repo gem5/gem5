@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Brad Beckmann
+# Author: Lisa Hsu
 
 from m5.params import *
-from m5.proxy import *
 from m5.SimObject import SimObject
 
-class RubyDirectoryMemory(SimObject):
-    type = 'RubyDirectoryMemory'
-    cxx_class = 'DirectoryMemory'
-    cxx_header = "mem/ruby/system/DirectoryMemory.hh"
-    version = Param.Int(0, "")
-    size = Param.MemorySize("1GB", "capacity in bytes")
-    use_map = Param.Bool(False, "enable sparse memory")
-    map_levels = Param.Int(4, "sparse memory map levels")
-    # the default value of the numa high bit is specified in the command line
-    # option and must be passed into the directory memory sim object
-    numa_high_bit = Param.Int("numa high bit")
+class RubyWireBuffer(SimObject):
+    type = 'RubyWireBuffer'
+    cxx_class = 'WireBuffer'
+    cxx_header = "mem/ruby/structures/WireBuffer.hh"

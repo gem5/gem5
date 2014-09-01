@@ -32,7 +32,7 @@
 #include "base/misc.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;

@@ -29,7 +29,7 @@
 #ifndef __MEM_RUBY_SYSTEM_PSEUDOLRUPOLICY_HH__
 #define __MEM_RUBY_SYSTEM_PSEUDOLRUPOLICY_HH__
 
-#include "mem/ruby/system/AbstractReplacementPolicy.hh"
+#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 
 /**
  * Implementation of tree-based pseudo-LRU replacement

@@ -34,8 +34,8 @@
 #include <bitset>
 
 #include "base/statistics.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/System.hh"

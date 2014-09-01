@@ -31,8 +31,8 @@
 
 #include "base/cast.hh"
 #include "base/stl_helpers.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleLink.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"

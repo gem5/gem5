@@ -585,7 +585,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
             for enum in self.enums.itervalues():
                 if enum.get("Primary"):
                     code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
-            code('#include "mem/ruby/system/MachineID.hh"')
+            code('#include "mem/ruby/common/MachineID.hh"')
 
         code('''
 // Code for output operator
