@@ -66,8 +66,6 @@ class AbstractController : public ClockedObject, public Consumer
     void unblock(Address);
 
     virtual MessageBuffer* getMandatoryQueue() const = 0;
-    virtual const std::string toString() const = 0;  // returns text version of
-                                                     // controller type
     virtual AccessPermission getAccessPermission(const Address& addr) = 0;
     virtual DataBlock& getDataBlock(const Address& addr) = 0;
 

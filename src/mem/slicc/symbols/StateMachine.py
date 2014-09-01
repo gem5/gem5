@@ -253,7 +253,6 @@ class $c_ident : public AbstractController
     static int getNumControllers();
     void init();
     MessageBuffer* getMandatoryQueue() const;
-    const std::string toString() const;
 
     void print(std::ostream& out) const;
     void wakeup();
@@ -805,12 +804,6 @@ Sequencer*
 $c_ident::getSequencer() const
 {
     return $seq_ident;
-}
-
-const string
-$c_ident::toString() const
-{
-    return "$c_ident";
 }
 
 void
