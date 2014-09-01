@@ -29,21 +29,23 @@ from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Var
 
 class ObjDeclAST(DeclAST):
-    def __init__(self, slicc, type_ast, ident, pairs):
+    def __init__(self, slicc, type_ast, ident, pairs, rvalue):
         super(ObjDeclAST, self).__init__(slicc, pairs)
 
         self.type_ast = type_ast
         self.ident = ident
+        self.rvalue = rvalue
 
     def __repr__(self):
         return "[ObjDecl: %r]" % self.ident
 
-    def generate(self):
+    def generate(self, parent = None):
         if "network" in self and not ("virtual_network" in self or
                                       "physical_network" in self) :
             self.error("Network queues require a 'virtual_network' attribute")
 
         type = self.type_ast.type
+
         if type.isBuffer and "ordered" not in self:
             self.error("Buffer object decls require an 'ordered' attribute")
 
@@ -60,8 +62,6 @@ class ObjDeclAST(DeclAST):
                 self.error("The 'random' attribute is '%s' " + \
                            "must be 'true' or 'false'.", value)
 
-        machine = self.symtab.state_machine
-
         # FIXME : should all use accessors here to avoid public member
         # variables
         if self.ident == "version":
@@ -73,10 +73,26 @@ class ObjDeclAST(DeclAST):
         else:
             c_code = "(*m_%s_ptr)" % (self.ident)
 
+        # check type if this is a initialization
+        init_code = ""
+        if self.rvalue:
+            rvalue_type,init_code = self.rvalue.inline(True)
+            if type != rvalue_type:
+                self.error("Initialization type mismatch '%s' and '%s'" % \
+                           (type, rvalue_type))
+
+        machine = self.symtab.state_machine
+
         v = Var(self.symtab, self.ident, self.location, type, c_code,
                 self.pairs, machine)
 
-        if machine:
+        # Add data member to the parent type
+        if parent:
+            if not parent.addDataMember(self.ident, type, self.pairs, init_code):
+                self.error("Duplicate data member: %s:%s" % (parent, self.ident))
+
+        elif machine:
             machine.addObject(v)
 
-        self.symtab.newSymbol(v)
+        else:
+            self.symtab.newSymbol(v)

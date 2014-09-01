@@ -318,9 +318,41 @@ class SLICC(Grammar):
         p[4]["state_decl"] = "yes"
         p[0] = ast.StateDeclAST(self, p[3], p[4], p[7])
 
-    def p_decl__object(self, p):
-        "decl : type ident pairs SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3])
+    # Type fields
+    def p_type_members__list(self, p):
+        "type_members : type_member type_members"
+        p[0] = [ p[1] ] + p[2]
+
+    def p_type_members__empty(self, p):
+        "type_members : empty"
+        p[0] = []
+
+    def p_type_member__0(self, p):
+        """type_member : obj_decl
+                       | func_decl
+                       | func_def"""
+        p[0] = p[1]
+
+    # Member / Variable declarations
+    def p_decl__obj_decl(self, p):
+        "decl : obj_decl"
+        p[0] = p[1]
+
+    def p_obj_decl__0(self, p):
+        "obj_decl : type ident pairs SEMI"
+        p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3], None)
+
+    def p_obj_decl__1(self, p):
+        "obj_decl : type STAR ident pairs SEMI"
+        p[0] = ast.ObjDeclAST(self, p[1], p[3], p[4], None)
+
+    def p_obj_decl__2(self, p):
+        "obj_decl : type ident ASSIGN expr SEMI"
+        p[0] = ast.ObjDeclAST(self, p[1], p[2], ast.PairListAST(self), p[4])
+
+    def p_obj_decl__3(self, p):
+        "obj_decl : type STAR ident ASSIGN expr SEMI"
+        p[0] = ast.ObjDeclAST(self, p[1], p[3], ast.PairListAST(self), p[5])
 
     # Function definition and declaration
     def p_decl__func_decl(self, p):
@@ -332,6 +364,11 @@ class SLICC(Grammar):
                 | type ident '(' params ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
+    def p_func_decl__1(self, p):
+        """func_decl :  void ident '(' types ')' pairs SEMI
+                | type ident '(' types ')' pairs SEMI"""
+        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
+
     def p_decl__func_def(self, p):
         "decl : func_def"
         p[0] = p[1]
@@ -340,32 +377,6 @@ class SLICC(Grammar):
         """func_def : void ident '(' params ')' pairs statements
             | type ident '(' params ')' pairs statements"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
-
-    # Type fields
-    def p_type_members__list(self, p):
-        "type_members : type_member type_members"
-        p[0] = [ p[1] ] + p[2]
-
-    def p_type_members__empty(self, p):
-        "type_members : empty"
-        p[0] = []
-
-    def p_type_method__0(self, p):
-        "type_member : type_or_void ident '(' types ')' pairs SEMI"
-        p[0] = ast.TypeFieldMethodAST(self, p[1], p[2], p[4], p[6])
-
-    def p_type_method__1(self, p):
-        "type_member : type_or_void ident '(' params ')' pairs statements"
-        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
-
-    def p_type_member__1(self, p):
-        "type_member : type_or_void ident pairs SEMI"
-        p[0] = ast.TypeFieldMemberAST(self, p[1], p[2], p[3], None)
-
-    def p_type_member__2(self, p):
-        "type_member : type_or_void ident ASSIGN expr SEMI"
-        p[0] = ast.TypeFieldMemberAST(self, p[1], p[2],
-                                      ast.PairListAST(self), p[4])
 
     # Enum fields
     def p_type_enums__list(self, p):
@@ -392,40 +403,6 @@ class SLICC(Grammar):
     def p_type_state(self, p):
         "type_state : ident ',' enumeration pairs SEMI"
         p[0] = ast.TypeFieldStateAST(self, p[1], p[3], p[4])
-
-    # Type
-    def p_types__multiple(self, p):
-        "types : type ',' types"
-        p[0] = [ p[1] ] + p[3]
-
-    def p_types__one(self, p):
-        "types : type"
-        p[0] = [ p[1] ]
-
-    def p_types__empty(self, p):
-        "types : empty"
-        p[0] = []
-
-    def p_typestr__multi(self, p):
-        "typestr : typestr DOUBLE_COLON ident"
-        p[0] = '%s::%s' % (p[1], p[3])
-
-    def p_typestr__single(self, p):
-        "typestr : ident"
-        p[0] = p[1]
-
-    def p_type__one(self, p):
-        "type : typestr"
-        p[0] = ast.TypeAST(self, p[1])
-
-    def p_void(self, p):
-        "void : VOID"
-        p[0] = ast.TypeAST(self, p[1])
-
-    def p_type_or_void(self, p):
-        """type_or_void : type
-                        | void"""
-        p[0] = p[1]
 
     # Formal Param
     def p_params__many(self, p):
@@ -463,6 +440,35 @@ class SLICC(Grammar):
     def p_param__default_string(self, p):
         "param : type ident '=' STRING"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
+
+    # Type
+    def p_types__multiple(self, p):
+        "types : type ',' types"
+        p[0] = [ p[1] ] + p[3]
+
+    def p_types__one(self, p):
+        "types : type"
+        p[0] = [ p[1] ]
+
+    def p_types__empty(self, p):
+        "types : empty"
+        p[0] = []
+
+    def p_typestr__multi(self, p):
+        "typestr : typestr DOUBLE_COLON ident"
+        p[0] = '%s::%s' % (p[1], p[3])
+
+    def p_typestr__single(self, p):
+        "typestr : ident"
+        p[0] = p[1]
+
+    def p_type__one(self, p):
+        "type : typestr"
+        p[0] = ast.TypeAST(self, p[1])
+
+    def p_void(self, p):
+        "void : VOID"
+        p[0] = ast.TypeAST(self, p[1])
 
     # Idents and lists
     def p_idents__braced(self, p):

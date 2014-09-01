@@ -120,6 +120,7 @@ class StateMachine(Symbol):
         self.functions.append(func)
 
     def addObject(self, obj):
+        self.symtab.registerSym(str(obj), obj)
         self.objects.append(obj)
 
     def addType(self, type):

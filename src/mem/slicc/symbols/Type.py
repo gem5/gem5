@@ -43,11 +43,6 @@ class Enumeration(PairContainer):
         super(Enumeration, self).__init__(pairs)
         self.ident = ident
 
-class Method(object):
-    def __init__(self, return_type, param_types):
-        self.return_type = return_type
-        self.param_types = param_types
-
 class Type(Symbol):
     def __init__(self, table, ident, location, pairs, machine=None):
         super(Type, self).__init__(table, ident, location, pairs)
@@ -96,12 +91,7 @@ class Type(Symbol):
         self.statePermPairs = []
 
         self.data_members = orderdict()
-
-        # Methods
         self.methods = {}
-        self.functions = {}
-
-        # Enums
         self.enums = orderdict()
 
     @property
@@ -160,23 +150,12 @@ class Type(Symbol):
     def statePermPairAdd(self, state_name, perm_name):
         self.statePermPairs.append([state_name, perm_name])
 
-    def addMethod(self, name, return_type, param_type_vec):
-        ident = self.methodId(name, param_type_vec)
+    def addFunc(self, func):
+        ident = self.methodId(func.ident, func.param_types)
         if ident in self.methods:
             return False
 
-        self.methods[ident] = Method(return_type, param_type_vec)
-        return True
-
-    # Ideally either this function or the one above should exist. But
-    # methods and functions have different structures right now.
-    # Hence, these are different, at least for the time being.
-    def addFunc(self, func):
-        ident = self.methodId(func.ident, func.param_types)
-        if ident in self.functions:
-            return False
-
-        self.functions[ident] = func
+        self.methods[ident] = func
         return True
 
     def addEnum(self, ident, pairs):
@@ -379,9 +358,9 @@ set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
 
                 code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init;')
 
-        # Prototypes for functions defined for the Type
-        for item in self.functions:
-            proto = self.functions[item].prototype
+        # Prototypes for methods defined for the Type
+        for item in self.methods:
+            proto = self.methods[item].prototype
             if proto:
                 code('$proto')
 
@@ -442,9 +421,9 @@ ${{self.c_ident}}::print(ostream& out) const
     out << "]";
 }''')
 
-        # print the code for the functions in the type
-        for item in self.functions:
-            code(self.functions[item].generateCode())
+        # print the code for the methods in the type
+        for item in self.methods:
+            code(self.methods[item].generateCode())
 
         code.write(path, "%s.cc" % self.c_ident)
 

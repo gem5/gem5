@@ -57,9 +57,14 @@ class FuncDeclAST(DeclAST):
         # Generate function header
         for formal in self.formals:
             # Lookup parameter types
-            type, ident = formal.generate()
-            types.append(type)
-            params.append(ident)
+            try:
+                type, ident = formal.generate()
+                types.append(type)
+                params.append(ident)
+
+            except AttributeError:
+                types.append(formal.type)
+                params.append(None)
 
         body = self.slicc.codeFormatter()
         if self.statements is None:

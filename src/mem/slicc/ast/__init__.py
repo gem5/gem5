@@ -67,7 +67,5 @@ from slicc.ast.TypeAST import *
 from slicc.ast.TypeDeclAST import *
 from slicc.ast.TypeFieldAST import *
 from slicc.ast.TypeFieldEnumAST import *
-from slicc.ast.TypeFieldMemberAST import *
-from slicc.ast.TypeFieldMethodAST import *
 from slicc.ast.TypeFieldStateAST import *
 from slicc.ast.VarExprAST import *
