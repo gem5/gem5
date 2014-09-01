@@ -47,11 +47,11 @@
 class PseudoLRUPolicy : public AbstractReplacementPolicy
 {
   public:
-    PseudoLRUPolicy(Index num_sets, Index assoc);
+    PseudoLRUPolicy(int64 num_sets, int64 assoc);
     ~PseudoLRUPolicy();
 
-    void touch(Index set, Index way, Tick time);
-    Index getVictim(Index set) const;
+    void touch(int64 set, int64 way, Tick time);
+    int64 getVictim(int64 set) const;
 
   private:
     unsigned int m_effective_assoc;    /** nearest (to ceiling) power of 2 */
@@ -61,11 +61,11 @@ class PseudoLRUPolicy : public AbstractReplacementPolicy
 };
 
 inline
-PseudoLRUPolicy::PseudoLRUPolicy(Index num_sets, Index assoc)
+PseudoLRUPolicy::PseudoLRUPolicy(int64 num_sets, int64 assoc)
     : AbstractReplacementPolicy(num_sets, assoc)
 {
     // associativity cannot exceed capacity of tree representation
-    assert(num_sets > 0 && assoc > 1 && assoc <= (Index) sizeof(uint64)*4);
+    assert(num_sets > 0 && assoc > 1 && assoc <= sizeof(uint64)*4);
 
     m_trees = NULL;
     m_num_levels = 0;
@@ -96,7 +96,7 @@ PseudoLRUPolicy::~PseudoLRUPolicy()
 }
 
 inline void
-PseudoLRUPolicy::touch(Index set, Index index, Tick time)
+PseudoLRUPolicy::touch(int64 set, int64 index, Tick time)
 {
     assert(index >= 0 && index < m_assoc);
     assert(set >= 0 && set < m_num_sets);
@@ -114,11 +114,11 @@ PseudoLRUPolicy::touch(Index set, Index index, Tick time)
     m_last_ref_ptr[set][index] = time;
 }
 
-inline Index
-PseudoLRUPolicy::getVictim(Index set) const
+inline int64
+PseudoLRUPolicy::getVictim(int64 set) const
 {
     // assert(m_assoc != 0);
-    Index index = 0;
+    int64 index = 0;
 
     int tree_index = 0;
     int node_val;

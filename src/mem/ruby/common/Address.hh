@@ -72,7 +72,7 @@ class Address
     void makePageAddress();
     void makeNextStrideAddress(int stride);
 
-    Index memoryModuleIndex() const;
+    int64 memoryModuleIndex() const;
 
     void print(std::ostream& out) const;
     void output(std::ostream& out) const;

@@ -57,22 +57,22 @@ Address::makeNextStrideAddress(int stride)
         + RubySystem::getBlockSizeBytes()*stride;
 }
 
-Index
+int64
 Address::memoryModuleIndex() const
 {
-    Index index =
+    int64 index =
         bitSelect(RubySystem::getBlockSizeBits() +
                   RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
     assert (index >= 0);
     return index;
 
-    // Index indexHighPortion =
+    // int64 indexHighPortion =
     //     address.bitSelect(MEMORY_SIZE_BITS - 1,
     //                       PAGE_SIZE_BITS + NUMBER_OF_MEMORY_MODULE_BITS);
-    // Index indexLowPortion =
+    // int64 indexLowPortion =
     //     address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS - 1);
     //
-    // Index index = indexLowPortion |
+    // int64 index = indexLowPortion |
     //     (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
 
     /*

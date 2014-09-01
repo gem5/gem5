@@ -49,7 +49,7 @@ class BankedArray
     {
       public:
         AccessRecord() : idx(0), startAccess(0), endAccess(0) {}
-        Index idx;
+        int64 idx;
         Tick startAccess;
         Tick endAccess;
     };
@@ -58,14 +58,14 @@ class BankedArray
     // otherwise, schedule the event and wait for it to complete
     std::vector<AccessRecord> busyBanks;
 
-    unsigned int mapIndexToBank(Index idx);
+    unsigned int mapIndexToBank(int64 idx);
 
   public:
     BankedArray(unsigned int banks, Cycles accessLatency, unsigned int startIndexBit);
 
     // Note: We try the access based on the cache index, not the address
     // This is so we don't get aliasing on blocks being replaced
-    bool tryAccess(Index idx);
+    bool tryAccess(int64 idx);
 
 };
 

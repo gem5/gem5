@@ -131,12 +131,12 @@ class CacheMemory : public SimObject
 
   private:
     // convert a Address to its location in the cache
-    Index addressToCacheSet(const Address& address) const;
+    int64 addressToCacheSet(const Address& address) const;
 
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
-    int findTagInSet(Index line, const Address& tag) const;
-    int findTagInSetIgnorePermissions(Index cacheSet,
+    int findTagInSet(int64 line, const Address& tag) const;
+    int findTagInSetIgnorePermissions(int64 cacheSet,
                                       const Address& tag) const;
 
     // Private copy constructor and assignment operator

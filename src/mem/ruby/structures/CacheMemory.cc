@@ -104,7 +104,7 @@ CacheMemory::~CacheMemory()
 }
 
 // convert a Address to its location in the cache
-Index
+int64
 CacheMemory::addressToCacheSet(const Address& address) const
 {
     assert(address == line_address(address));
@@ -115,7 +115,7 @@ CacheMemory::addressToCacheSet(const Address& address) const
 // Given a cache index: returns the index of the tag in a set.
 // returns -1 if the tag is not found.
 int
-CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
+CacheMemory::findTagInSet(int64 cacheSet, const Address& tag) const
 {
     assert(tag == line_address(tag));
     // search the set for the tags
@@ -130,7 +130,7 @@ CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
 // Given a cache index: returns the index of the tag in a set.
 // returns -1 if the tag is not found.
 int
-CacheMemory::findTagInSetIgnorePermissions(Index cacheSet,
+CacheMemory::findTagInSetIgnorePermissions(int64 cacheSet,
                                            const Address& tag) const
 {
     assert(tag == line_address(tag));
@@ -147,7 +147,7 @@ CacheMemory::tryCacheAccess(const Address& address, RubyRequestType type,
 {
     assert(address == line_address(address));
     DPRINTF(RubyCache, "address: %s\n", address);
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {
         // Do we even have a tag match?
@@ -174,7 +174,7 @@ CacheMemory::testCacheAccess(const Address& address, RubyRequestType type,
 {
     assert(address == line_address(address));
     DPRINTF(RubyCache, "address: %s\n", address);
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
     if (loc != -1) {
@@ -196,7 +196,7 @@ bool
 CacheMemory::isTagPresent(const Address& address) const
 {
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
     if (loc == -1) {
@@ -216,7 +216,7 @@ CacheMemory::cacheAvail(const Address& address) const
 {
     assert(address == line_address(address));
 
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
 
     for (int i = 0; i < m_cache_assoc; i++) {
         AbstractCacheEntry* entry = m_cache[cacheSet][i];
@@ -242,7 +242,7 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
     DPRINTF(RubyCache, "address: %s\n", address);
 
     // Find the first open slot
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     std::vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
     for (int i = 0; i < m_cache_assoc; i++) {
         if (!set[i] || set[i]->m_Permission == AccessPermission_NotPresent) {
@@ -268,7 +268,7 @@ CacheMemory::deallocate(const Address& address)
     assert(address == line_address(address));
     assert(isTagPresent(address));
     DPRINTF(RubyCache, "address: %s\n", address);
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {
         delete m_cache[cacheSet][loc];
@@ -284,7 +284,7 @@ CacheMemory::cacheProbe(const Address& address) const
     assert(address == line_address(address));
     assert(!cacheAvail(address));
 
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     return m_cache[cacheSet][m_replacementPolicy_ptr->getVictim(cacheSet)]->
         m_Address;
 }
@@ -294,7 +294,7 @@ AbstractCacheEntry*
 CacheMemory::lookup(const Address& address)
 {
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if(loc == -1) return NULL;
     return m_cache[cacheSet][loc];
@@ -305,7 +305,7 @@ const AbstractCacheEntry*
 CacheMemory::lookup(const Address& address) const
 {
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if(loc == -1) return NULL;
     return m_cache[cacheSet][loc];
@@ -315,7 +315,7 @@ CacheMemory::lookup(const Address& address) const
 void
 CacheMemory::setMRU(const Address& address)
 {
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
     if(loc != -1)
@@ -391,7 +391,7 @@ CacheMemory::setLocked(const Address& address, int context)
 {
     DPRINTF(RubyCache, "Setting Lock for addr: %x to %d\n", address, context);
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
     m_cache[cacheSet][loc]->m_locked = context;
@@ -402,7 +402,7 @@ CacheMemory::clearLocked(const Address& address)
 {
     DPRINTF(RubyCache, "Clear Lock for addr: %x\n", address);
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
     m_cache[cacheSet][loc]->m_locked = -1;
@@ -412,7 +412,7 @@ bool
 CacheMemory::isLocked(const Address& address, int context)
 {
     assert(address == line_address(address));
-    Index cacheSet = addressToCacheSet(address);
+    int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
     DPRINTF(RubyCache, "Testing Lock for addr: %llx cur %d con %d\n",

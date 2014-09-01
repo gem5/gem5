@@ -171,7 +171,7 @@ DirectoryMemory::invalidateBlock(PhysAddress address)
     else {
         assert(isPresent(address));
 
-        Index index = address.memoryModuleIndex();
+        int64 index = address.memoryModuleIndex();
 
         if (index < 0 || index > m_size) {
             ERROR_MSG("Directory Memory Assertion: "

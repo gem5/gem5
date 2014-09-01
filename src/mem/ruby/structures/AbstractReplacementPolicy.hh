@@ -34,17 +34,17 @@
 class AbstractReplacementPolicy
 {
   public:
-    AbstractReplacementPolicy(Index num_sets, Index assoc);
+    AbstractReplacementPolicy(int64 num_sets, int64 assoc);
     virtual ~AbstractReplacementPolicy();
 
     /* touch a block. a.k.a. update timestamp */
-    virtual void touch(Index set, Index way, Tick time) = 0;
+    virtual void touch(int64 set, int64 way, Tick time) = 0;
 
     /* returns the way to replace */
-    virtual Index getVictim(Index set) const = 0;
+    virtual int64 getVictim(int64 set) const = 0;
 
     /* get the time of the last access */
-    Tick getLastAccess(Index set, Index way);
+    Tick getLastAccess(int64 set, int64 way);
 
   protected:
     unsigned m_num_sets;       /** total number of sets */
@@ -53,8 +53,8 @@ class AbstractReplacementPolicy
 };
 
 inline
-AbstractReplacementPolicy::AbstractReplacementPolicy(Index num_sets,
-                                                     Index assoc)
+AbstractReplacementPolicy::AbstractReplacementPolicy(int64 num_sets,
+                                                     int64 assoc)
 {
     m_num_sets = num_sets;
     m_assoc = assoc;
@@ -81,7 +81,7 @@ AbstractReplacementPolicy::~AbstractReplacementPolicy()
 }
 
 inline Tick
-AbstractReplacementPolicy::getLastAccess(Index set, Index way)
+AbstractReplacementPolicy::getLastAccess(int64 set, int64 way)
 {
     return m_last_ref_ptr[set][way];
 }
