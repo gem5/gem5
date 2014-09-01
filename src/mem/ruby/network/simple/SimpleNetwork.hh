@@ -63,8 +63,6 @@ class SimpleNetwork : public Network
     bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
     bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
 
-    int getNumNodes() {return m_nodes; }
-
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
                      LinkDirection direction, 

@@ -53,29 +53,7 @@ SimpleNetwork::SimpleNetwork(const Params *p)
     // Note: the parent Network Object constructor is called before the
     // SimpleNetwork child constructor.  Therefore, the member variables
     // used below should already be initialized.
-
     m_endpoint_switches.resize(m_nodes);
-
-    m_in_use.resize(m_virtual_networks);
-    m_ordered.resize(m_virtual_networks);
-    for (int i = 0; i < m_virtual_networks; i++) {
-        m_in_use[i] = false;
-        m_ordered[i] = false;
-    }
-
-    // Allocate to and from queues
-    m_toNetQueues.resize(m_nodes);
-    m_fromNetQueues.resize(m_nodes);
-    for (int node = 0; node < m_nodes; node++) {
-        m_toNetQueues[node].resize(m_virtual_networks);
-        m_fromNetQueues[node].resize(m_virtual_networks);
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j] =
-                new MessageBuffer(csprintf("toNet node %d j %d", node, j));
-            m_fromNetQueues[node][j] =
-                new MessageBuffer(csprintf("fromNet node %d j %d", node, j));
-        }
-    }
 
     // record the routers
     for (vector<BasicRouter*>::const_iterator i = p->routers.begin();
@@ -99,13 +77,8 @@ SimpleNetwork::init()
 
 SimpleNetwork::~SimpleNetwork()
 {
-    for (int i = 0; i < m_nodes; i++) {
-        deletePointers(m_toNetQueues[i]);
-        deletePointers(m_fromNetQueues[i]);
-    }
     deletePointers(m_switches);
     deletePointers(m_buffers_to_free);
-    // delete m_topology_ptr;
 }
 
 // From a switch to an endpoint node

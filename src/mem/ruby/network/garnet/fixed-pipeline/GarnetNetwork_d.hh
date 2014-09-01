@@ -52,10 +52,7 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     GarnetNetwork_d(const Params *p);
 
     ~GarnetNetwork_d();
-
     void init();
-
-    int getNumNodes() { return m_nodes; }
 
     int getBuffersPerDataVC() {return m_buffers_per_data_vc; }
     int getBuffersPerCtrlVC() {return m_buffers_per_ctrl_vc; }

@@ -60,13 +60,15 @@ class Network : public ClockedObject
   public:
     typedef RubyNetworkParams Params;
     Network(const Params *p);
-    virtual ~Network() {}
     const Params * params() const
     { return dynamic_cast<const Params *>(_params);}
 
+    virtual ~Network();
     virtual void init();
 
     static uint32_t getNumberOfVirtualNetworks() { return m_virtual_networks; }
+    int getNumNodes() const { return m_nodes; }
+
     static uint32_t MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component
@@ -74,7 +76,7 @@ class Network : public ClockedObject
         int netNumber, std::string vnet_type) = 0;
     virtual MessageBuffer* getFromNetQueue(NodeID id, bool ordered,
         int netNumber, std::string vnet_type) = 0;
-    virtual int getNumNodes() {return 1;}
+
 
     virtual void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              LinkDirection direction,

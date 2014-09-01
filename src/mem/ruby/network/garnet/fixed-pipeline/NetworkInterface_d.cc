@@ -114,8 +114,8 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
     assert(in.size() == m_virtual_networks);
     inNode_ptr = in;
     outNode_ptr = out;
-    for (int j = 0; j < m_virtual_networks; j++) {
 
+    for (int j = 0; j < m_virtual_networks; j++) {
         // the protocol injects messages into the NI
         inNode_ptr[j]->setConsumer(this);
         inNode_ptr[j]->setReceiver(this);

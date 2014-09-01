@@ -49,6 +49,35 @@ Network::Network(const Params *p)
 
     m_topology_ptr = new Topology(p->routers.size(), p->ext_links,
                                   p->int_links);
+
+    // Allocate to and from queues
+    // Queues that are getting messages from protocol
+    m_toNetQueues.resize(m_nodes);
+
+    // Queues that are feeding the protocol
+    m_fromNetQueues.resize(m_nodes);
+
+    for (int node = 0; node < m_nodes; node++) {
+        // Setting number of virtual message buffers per Network Queue
+        m_toNetQueues[node].resize(m_virtual_networks);
+        m_fromNetQueues[node].resize(m_virtual_networks);
+
+        // Instantiating the Message Buffers that
+        // interact with the coherence protocol
+        for (int j = 0; j < m_virtual_networks; j++) {
+            m_toNetQueues[node][j] = new MessageBuffer();
+            m_fromNetQueues[node][j] = new MessageBuffer();
+        }
+    }
+
+    m_in_use.resize(m_virtual_networks);
+    m_ordered.resize(m_virtual_networks);
+
+    for (int i = 0; i < m_virtual_networks; i++) {
+        m_in_use[i] = false;
+        m_ordered[i] = false;
+    }
+
     p->ruby_system->registerNetwork(this);
 
     // Initialize the controller's network pointers
@@ -61,6 +90,19 @@ Network::Network(const Params *p)
 
     // Register a callback function for combining the statistics
     Stats::registerDumpCallback(new StatsCallback(this));
+}
+
+Network::~Network()
+{
+    for (int node = 0; node < m_nodes; node++) {
+        // Delete the Message Buffers
+        for (int j = 0; j < m_virtual_networks; j++) {
+            delete m_toNetQueues[node][j];
+            delete m_fromNetQueues[node][j];
+        }
+    }
+
+    delete m_topology_ptr;
 }
 
 void

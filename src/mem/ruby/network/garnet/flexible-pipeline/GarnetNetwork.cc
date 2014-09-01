@@ -88,14 +88,9 @@ GarnetNetwork::init()
 
 GarnetNetwork::~GarnetNetwork()
 {
-    for (int i = 0; i < m_nodes; i++) {
-        deletePointers(m_toNetQueues[i]);
-        deletePointers(m_fromNetQueues[i]);
-    }
     deletePointers(m_routers);
     deletePointers(m_nis);
     deletePointers(m_links);
-    delete m_topology_ptr;
 }
 
 void

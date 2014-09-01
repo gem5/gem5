@@ -50,12 +50,10 @@ class GarnetNetwork : public BaseGarnetNetwork
     GarnetNetwork(const Params *p);
 
     ~GarnetNetwork();
-
     void init();
 
     int getBufferSize() { return m_buffer_size; }
     int getNumPipeStages() {return m_number_of_pipe_stages; }
-    int getNumNodes(){ return m_nodes; }
 
     void collateStats();
     void regStats();
