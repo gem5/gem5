@@ -1,10 +1,12 @@
+Redirecting stdout to build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/simout
+Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 21 2014 11:13:07
-gem5 started Jun 21 2014 22:44:43
-gem5 executing on phenom
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
+gem5 compiled Aug 28 2014 04:02:39
+gem5 started Aug 28 2014 04:26:16
+gem5 executing on ribera.cs.wisc.edu
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sav
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
@@ -24,4 +26,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 145782984000 because target called exit()
+122 123 124 Exiting @ tick 145755370500 because target called exit()

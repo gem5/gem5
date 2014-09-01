@@ -27,7 +27,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 memcluster 1, usage 0, start      392, end    16384
 freeing pages 1069:16384
 reserving pages 1069:1070
-4096K Bcache detected; load hit latency 38 cycles, load miss latency 142 cycles
+4096K Bcache detected; load hit latency 38 cycles, load miss latency 148 cycles
 SMP: 2 CPUs probed -- cpu_present_mask = 3
 Built 1 zonelists
 Kernel command line: root=/dev/hda1 console=ttyS0

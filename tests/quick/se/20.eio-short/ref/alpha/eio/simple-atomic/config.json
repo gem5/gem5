@@ -26,13 +26,7 @@
             "type": "CoherentBus", 
             "use_default_range": false
         }, 
-        "voltage_domain": {
-            "eventq_index": 0, 
-            "path": "system.voltage_domain", 
-            "type": "VoltageDomain", 
-            "name": "voltage_domain", 
-            "cxx_class": "VoltageDomain"
-        }, 
+        "kernel_addr_check": true, 
         "physmem": {
             "latency": 3.0000000000000004e-08, 
             "name": "physmem", 
@@ -55,26 +49,44 @@
         "work_begin_ckpt_count": 0, 
         "clk_domain": {
             "name": "clk_domain", 
-            "clock": 1e-09, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
         }, 
         "eventq_index": 0, 
+        "dvfs_handler": {
+            "enable": false, 
+            "name": "dvfs_handler", 
+            "transition_latency": 9.999999999999999e-05, 
+            "eventq_index": 0, 
+            "cxx_class": "DVFSHandler", 
+            "path": "system.dvfs_handler", 
+            "type": "DVFSHandler"
+        }, 
         "work_end_exit_count": 0, 
         "type": "System", 
+        "voltage_domain": {
+            "eventq_index": 0, 
+            "path": "system.voltage_domain", 
+            "type": "VoltageDomain", 
+            "name": "voltage_domain", 
+            "cxx_class": "VoltageDomain"
+        }, 
         "cache_line_size": 64, 
         "work_cpus_ckpt_count": 0, 
         "work_begin_exit_count": 0, 
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
-            "clock": 5e-10, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.cpu_clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
         }, 
         "mem_mode": "atomic", 
         "name": "system", 

@@ -20,42 +20,7 @@
             "resp_size": 16, 
             "type": "Bridge"
         }, 
-        "iobus": {
-            "slave": {
-                "peer": [
-                    "system.bridge.master"
-                ], 
-                "role": "SLAVE"
-            }, 
-            "name": "iobus", 
-            "header_cycles": 1, 
-            "width": 8, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": [
-                    "system.t1000.fake_clk.pio", 
-                    "system.t1000.fake_membnks.pio", 
-                    "system.t1000.fake_l2_1.pio", 
-                    "system.t1000.fake_l2_2.pio", 
-                    "system.t1000.fake_l2_3.pio", 
-                    "system.t1000.fake_l2_4.pio", 
-                    "system.t1000.fake_l2esr_1.pio", 
-                    "system.t1000.fake_l2esr_2.pio", 
-                    "system.t1000.fake_l2esr_3.pio", 
-                    "system.t1000.fake_l2esr_4.pio", 
-                    "system.t1000.fake_ssi.pio", 
-                    "system.t1000.fake_jbi.pio", 
-                    "system.t1000.puart0.pio", 
-                    "system.t1000.hvuart.pio", 
-                    "system.disk0.pio"
-                ], 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "NoncoherentBus", 
-            "path": "system.iobus", 
-            "type": "NoncoherentBus", 
-            "use_default_range": false
-        }, 
+        "kernel_addr_check": true, 
         "rom": {
             "latency": 3.0000000000000004e-08, 
             "name": "rom", 
@@ -127,6 +92,42 @@
             "cxx_class": "CoherentBus", 
             "path": "system.membus", 
             "type": "CoherentBus", 
+            "use_default_range": false
+        }, 
+        "iobus": {
+            "slave": {
+                "peer": [
+                    "system.bridge.master"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "iobus", 
+            "header_cycles": 1, 
+            "width": 8, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.t1000.fake_clk.pio", 
+                    "system.t1000.fake_membnks.pio", 
+                    "system.t1000.fake_l2_1.pio", 
+                    "system.t1000.fake_l2_2.pio", 
+                    "system.t1000.fake_l2_3.pio", 
+                    "system.t1000.fake_l2_4.pio", 
+                    "system.t1000.fake_l2esr_1.pio", 
+                    "system.t1000.fake_l2esr_2.pio", 
+                    "system.t1000.fake_l2esr_3.pio", 
+                    "system.t1000.fake_l2esr_4.pio", 
+                    "system.t1000.fake_ssi.pio", 
+                    "system.t1000.fake_jbi.pio", 
+                    "system.t1000.puart0.pio", 
+                    "system.t1000.hvuart.pio", 
+                    "system.disk0.pio"
+                ], 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "NoncoherentBus", 
+            "path": "system.iobus", 
+            "type": "NoncoherentBus", 
             "use_default_range": false
         }, 
         "t1000": {
@@ -520,11 +521,12 @@
         }, 
         "clk_domain": {
             "name": "clk_domain", 
-            "clock": 1e-09, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
         }, 
         "hypervisor_desc": {
             "latency": 3.0000000000000004e-08, 
@@ -559,6 +561,15 @@
             "in_addr_map": true
         }, 
         "eventq_index": 0, 
+        "dvfs_handler": {
+            "enable": false, 
+            "name": "dvfs_handler", 
+            "transition_latency": 9.999999999999999e-05, 
+            "eventq_index": 0, 
+            "cxx_class": "DVFSHandler", 
+            "path": "system.dvfs_handler", 
+            "type": "DVFSHandler"
+        }, 
         "work_end_exit_count": 0, 
         "type": "SparcSystem", 
         "voltage_domain": {
@@ -575,11 +586,12 @@
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
-            "clock": 1e-09, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.cpu_clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
         }, 
         "mem_mode": "atomic", 
         "name": "system", 

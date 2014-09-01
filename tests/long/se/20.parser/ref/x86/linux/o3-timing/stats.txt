@@ -4,11 +4,11 @@ sim_seconds                                  0.456433                       # Nu
 sim_ticks                                456433328000                       # Number of ticks simulated
 final_tick                               456433328000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  93655                       # Simulator instruction rate (inst/s)
-host_op_rate                                   173179                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               51697488                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 350856                       # Number of bytes of host memory used
-host_seconds                                  8828.93                       # Real time elapsed on the host
+host_inst_rate                                  81383                       # Simulator instruction rate (inst/s)
+host_op_rate                                   150486                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               44923021                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 402504                       # Number of bytes of host memory used
+host_seconds                                 10160.34                       # Real time elapsed on the host
 sim_insts                                   826877109                       # Number of instructions simulated
 sim_ops                                    1528988701                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -419,10 +419,10 @@ system.cpu.iq.fu_full::MemWrite               2923144     13.85%    100.00% # at
 system.cpu.iq.fu_full::IprAccess                    0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.fu_full::InstPrefetch                 0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.FU_type_0::No_OpClass           2650510      0.15%      0.15% # Type of FU issued
-system.cpu.iq.FU_type_0::IntAlu            1189351111     66.06%     66.20% # Type of FU issued
+system.cpu.iq.FU_type_0::IntAlu            1189351125     66.06%     66.20% # Type of FU issued
 system.cpu.iq.FU_type_0::IntMult               365099      0.02%     66.22% # Type of FU issued
 system.cpu.iq.FU_type_0::IntDiv               3880777      0.22%     66.44% # Type of FU issued
-system.cpu.iq.FU_type_0::FloatAdd                  71      0.00%     66.44% # Type of FU issued
+system.cpu.iq.FU_type_0::FloatAdd                  57      0.00%     66.44% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatCmp                   0      0.00%     66.44% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatCvt                   0      0.00%     66.44% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatMult                  0      0.00%     66.44% # Type of FU issued

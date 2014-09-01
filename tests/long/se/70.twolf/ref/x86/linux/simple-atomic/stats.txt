@@ -67,10 +67,10 @@ system.cpu.not_idle_fraction                        1                       # Pe
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                          12326938                       # Number of branches fetched
 system.cpu.op_class::No_OpClass               1176721      0.53%      0.53% # Class of executed instruction
-system.cpu.op_class::IntAlu                 133863963     60.47%     61.00% # Class of executed instruction
-system.cpu.op_class::IntMult                   772953      0.35%     61.35% # Class of executed instruction
-system.cpu.op_class::IntDiv                   7031501      3.18%     64.53% # Class of executed instruction
-system.cpu.op_class::FloatAdd                 1352943      0.61%     65.14% # Class of executed instruction
+system.cpu.op_class::IntAlu                 134111833     60.58%     61.12% # Class of executed instruction
+system.cpu.op_class::IntMult                   772953      0.35%     61.47% # Class of executed instruction
+system.cpu.op_class::IntDiv                   7031501      3.18%     64.64% # Class of executed instruction
+system.cpu.op_class::FloatAdd                 1105073      0.50%     65.14% # Class of executed instruction
 system.cpu.op_class::FloatCmp                       0      0.00%     65.14% # Class of executed instruction
 system.cpu.op_class::FloatCvt                       0      0.00%     65.14% # Class of executed instruction
 system.cpu.op_class::FloatMult                      0      0.00%     65.14% # Class of executed instruction

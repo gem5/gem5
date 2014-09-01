@@ -5,6 +5,7 @@ warn: Prefetch instructions in Alpha do not do anything
 gzip: stdout: Broken pipe
 
 gzip: stdout: Broken pipe
-stdout: Broken pipe
+
+gzip: stdout: Broken pipe
 
 gzip: stdout: Broken pipe

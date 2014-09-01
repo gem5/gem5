@@ -2,4 +2,9 @@ warn: Sockets disabled, not accepting gdb connections
 warn: Prefetch instructions in Alpha do not do anything
 warn: Prefetch instructions in Alpha do not do anything
 warn: Prefetch instructions in Alpha do not do anything
-warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
+warn: system.cpu.execute.inFlightInsts: No space to push data into queue of capacity 26, pushing anyway
+warn: system.cpu.execute.inFlightInsts: No space to push data into queue of capacity 26, pushing anyway
+warn: system.cpu.execute.inFlightInsts: No space to push data into queue of capacity 26, pushing anyway
+warn: system.cpu.execute.inFlightInsts: No space to push data into queue of capacity 26, pushing anyway
+warn: system.cpu.execute.inFlightInsts: No space to push data into queue of capacity 26, pushing anyway
+warn: ignoring syscall sigprocmask(1, ...)

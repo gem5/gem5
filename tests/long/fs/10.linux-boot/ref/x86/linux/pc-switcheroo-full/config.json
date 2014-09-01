@@ -60,23 +60,7 @@
             "forward_snoops": true, 
             "size": 4194304
         }, 
-        "acpi_description_table_pointer": {
-            "name": "acpi_description_table_pointer", 
-            "xsdt": {
-                "name": "xsdt", 
-                "creator_revision": 0, 
-                "eventq_index": 0, 
-                "cxx_class": "X86ISA::ACPI::XSDT", 
-                "path": "system.acpi_description_table_pointer.xsdt", 
-                "oem_revision": 0, 
-                "type": "X86ACPIXSDT"
-            }, 
-            "eventq_index": 0, 
-            "cxx_class": "X86ISA::ACPI::RSDP", 
-            "path": "system.acpi_description_table_pointer", 
-            "type": "X86ACPIRSDP", 
-            "revision": 2
-        }, 
+        "kernel_addr_check": true, 
         "membus": {
             "slave": {
                 "peer": [
@@ -175,7 +159,7 @@
             "cxx_class": "NoncoherentBus", 
             "path": "system.iobus", 
             "type": "NoncoherentBus", 
-            "use_default_range": true
+            "use_default_range": false
         }, 
         "physmem": [
             {
@@ -720,14 +704,39 @@
         "cxx_class": "LinuxX86System", 
         "load_offset": 0, 
         "work_end_ckpt_count": 0, 
+        "smbios_table": {
+            "name": "smbios_table", 
+            "structures": [
+                {
+                    "major": 0, 
+                    "name": "structures", 
+                    "emb_cont_firmware_major": 0, 
+                    "rom_size": 0, 
+                    "starting_addr_segment": 0, 
+                    "emb_cont_firmware_minor": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "X86ISA::SMBios::BiosInformation", 
+                    "path": "system.smbios_table.structures", 
+                    "type": "X86SMBiosBiosInformation", 
+                    "minor": 0
+                }
+            ], 
+            "major_version": 2, 
+            "minor_version": 5, 
+            "eventq_index": 0, 
+            "cxx_class": "X86ISA::SMBios::SMBiosTable", 
+            "path": "system.smbios_table", 
+            "type": "X86SMBiosSMBiosTable"
+        }, 
         "work_begin_ckpt_count": 0, 
         "clk_domain": {
             "name": "clk_domain", 
-            "clock": 1e-09, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
         }, 
         "pc": {
             "fake_com_4": {
@@ -1372,54 +1381,31 @@
             "path": "system.e820_table", 
             "type": "X86E820Table"
         }, 
-        "smbios_table": {
-            "name": "smbios_table", 
-            "structures": [
-                {
-                    "major": 0, 
-                    "name": "structures", 
-                    "emb_cont_firmware_major": 0, 
-                    "rom_size": 0, 
-                    "starting_addr_segment": 0, 
-                    "emb_cont_firmware_minor": 0, 
-                    "eventq_index": 0, 
-                    "cxx_class": "X86ISA::SMBios::BiosInformation", 
-                    "path": "system.smbios_table.structures", 
-                    "type": "X86SMBiosBiosInformation", 
-                    "minor": 0
-                }
-            ], 
-            "major_version": 2, 
-            "minor_version": 5, 
+        "acpi_description_table_pointer": {
+            "name": "acpi_description_table_pointer", 
+            "xsdt": {
+                "name": "xsdt", 
+                "creator_revision": 0, 
+                "eventq_index": 0, 
+                "cxx_class": "X86ISA::ACPI::XSDT", 
+                "path": "system.acpi_description_table_pointer.xsdt", 
+                "oem_revision": 0, 
+                "type": "X86ACPIXSDT"
+            }, 
             "eventq_index": 0, 
-            "cxx_class": "X86ISA::SMBios::SMBiosTable", 
-            "path": "system.smbios_table", 
-            "type": "X86SMBiosSMBiosTable"
+            "cxx_class": "X86ISA::ACPI::RSDP", 
+            "path": "system.acpi_description_table_pointer", 
+            "type": "X86ACPIRSDP", 
+            "revision": 2
         }, 
-        "toL2Bus": {
-            "slave": {
-                "peer": [
-                    "system.cpu0.icache.mem_side", 
-                    "system.cpu0.dcache.mem_side", 
-                    "system.cpu0.itb.walker.port", 
-                    "system.cpu0.dtb.walker.port"
-                ], 
-                "role": "SLAVE"
-            }, 
-            "name": "toL2Bus", 
-            "header_cycles": 1, 
-            "width": 8, 
+        "dvfs_handler": {
+            "enable": false, 
+            "name": "dvfs_handler", 
+            "transition_latency": 9.999999999999999e-05, 
             "eventq_index": 0, 
-            "master": {
-                "peer": [
-                    "system.l2c.cpu_side"
-                ], 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "CoherentBus", 
-            "path": "system.toL2Bus", 
-            "type": "CoherentBus", 
-            "use_default_range": false
+            "cxx_class": "DVFSHandler", 
+            "path": "system.dvfs_handler", 
+            "type": "DVFSHandler"
         }, 
         "work_end_exit_count": 0, 
         "type": "LinuxX86System", 
@@ -1446,11 +1432,37 @@
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
-            "clock": 5e-10, 
+            "init_perf_level": 0, 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.cpu_clk_domain", 
-            "type": "SrcClockDomain"
+            "type": "SrcClockDomain", 
+            "domain_id": -1
+        }, 
+        "toL2Bus": {
+            "slave": {
+                "peer": [
+                    "system.cpu0.icache.mem_side", 
+                    "system.cpu0.dcache.mem_side", 
+                    "system.cpu0.itb.walker.port", 
+                    "system.cpu0.dtb.walker.port"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "toL2Bus", 
+            "header_cycles": 1, 
+            "width": 8, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.l2c.cpu_side"
+                ], 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "CoherentBus", 
+            "path": "system.toL2Bus", 
+            "type": "CoherentBus", 
+            "use_default_range": false
         }, 
         "iocache": {
             "assoc": 8, 
