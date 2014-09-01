@@ -32,17 +32,12 @@ class Var(Symbol):
                  machine=None):
         super(Var, self).__init__(symtab, ident, location, pairs)
 
-        if machine:
-            self.c_ident = "%s_%s" % (machine, ident)
-        else:
-            self.c_ident = ident
-
         self.machine = machine
         self.type = type
         self.code = code
 
     def __repr__(self):
-        return "[Var id: %s]" % (self.c_ident)
+        return "[Var id: %s]" % (self.ident)
 
     def writeCodeFiles(self, path, includes):
         pass

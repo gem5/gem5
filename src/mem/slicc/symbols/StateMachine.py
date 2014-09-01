@@ -383,7 +383,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 ''')
         for var in self.objects:
             th = var.get("template", "")
-            code('${{var.type.c_ident}}$th* m_${{var.c_ident}}_ptr;')
+            code('${{var.type.c_ident}}$th* m_${{var.ident}}_ptr;')
 
         code.dedent()
         code('};')
@@ -488,17 +488,17 @@ $c_ident::$c_ident(const Params *p)
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:
                 code('''
-m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();
-m_${{var.c_ident}}_ptr->setReceiver(this);
+m_${{var.ident}}_ptr = new ${{var.type.c_ident}}();
+m_${{var.ident}}_ptr->setReceiver(this);
 ''')
             else:
                 if "network" in var and "physical_network" in var and \
                    var["network"] == "To":
                     has_peer = True
                     code('''
-m_${{var.c_ident}}_ptr = new ${{var.type.c_ident}}();
-peerQueueMap[${{var["physical_network"]}}] = m_${{var.c_ident}}_ptr;
-m_${{var.c_ident}}_ptr->setSender(this);
+m_${{var.ident}}_ptr = new ${{var.type.c_ident}}();
+peerQueueMap[${{var["physical_network"]}}] = m_${{var.ident}}_ptr;
+m_${{var.ident}}_ptr->setSender(this);
 ''')
 
         code('''
@@ -532,7 +532,7 @@ $c_ident::init()
         code.indent()
         for var in self.objects:
             vtype = var.type
-            vid = "m_%s_ptr" % var.c_ident
+            vid = "m_%s_ptr" % var.ident
             if "network" not in var:
                 # Not a network port object
                 if "primitive" in vtype:
@@ -626,7 +626,7 @@ if (m_buffer_size > 0) {
 
                 # set description (may be overriden later by port def)
                 code('''
-$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.c_ident}}]");
+$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.ident}}]");
 
 ''')
 
@@ -674,7 +674,7 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
         mq_ident = "NULL"
         for port in self.in_ports:
             if port.code.find("mandatoryQueue_ptr") >= 0:
-                mq_ident = "m_%s_mandatoryQueue_ptr" % self.ident
+                mq_ident = "m_mandatoryQueue_ptr"
 
         seq_ident = "NULL"
         for param in self.config_parameters:
@@ -955,7 +955,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt)
         for var in self.objects:
             vtype = var.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.c_ident
+                vid = "m_%s_ptr" % var.ident
                 code('if ($vid->functionalRead(pkt)) { return true; }')
         code('''
                 return false;
@@ -972,7 +972,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
         for var in self.objects:
             vtype = var.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.c_ident
+                vid = "m_%s_ptr" % var.ident
                 code('num_functional_writes += $vid->functionalWrite(pkt);')
         code('''
     return num_functional_writes;
@@ -992,9 +992,9 @@ $c_ident::getQueuesFromPeer(AbstractController *peer)
                 if "network" in var and "physical_network" in var and \
                    var["network"] == "From":
                     code('''
-m_${{var.c_ident}}_ptr = peer->getPeerQueue(${{var["physical_network"]}});
-assert(m_${{var.c_ident}}_ptr != NULL);
-m_${{var.c_ident}}_ptr->setReceiver(this);
+m_${{var.ident}}_ptr = peer->getPeerQueue(${{var["physical_network"]}});
+assert(m_${{var.ident}}_ptr != NULL);
+m_${{var.ident}}_ptr->setReceiver(this);
 
 ''')
             code('}')
@@ -1131,6 +1131,8 @@ ${ident}_Controller::doTransition(${ident}_Event event,
                                   const Address addr)
 {
 ''')
+        code.indent()
+
         if self.TBEType != None and self.EntryType != None:
             code('${ident}_State state = getState(m_tbe_ptr, m_cache_entry_ptr, addr);')
         elif self.TBEType != None:
@@ -1141,13 +1143,13 @@ ${ident}_Controller::doTransition(${ident}_Event event,
             code('${ident}_State state = getState(addr);')
 
         code('''
-    ${ident}_State next_state = state;
+${ident}_State next_state = state;
 
-    DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
-            *this, curCycle(), ${ident}_State_to_string(state),
-            ${ident}_Event_to_string(event), addr);
+DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
+        *this, curCycle(), ${ident}_State_to_string(state),
+        ${ident}_Event_to_string(event), addr);
 
-    TransitionResult result =
+TransitionResult result =
 ''')
         if self.TBEType != None and self.EntryType != None:
             code('doTransitionWorker(event, state, next_state, m_tbe_ptr, m_cache_entry_ptr, addr);')
@@ -1159,18 +1161,20 @@ ${ident}_Controller::doTransition(${ident}_Event event,
             code('doTransitionWorker(event, state, next_state, addr);')
 
         code('''
-    if (result == TransitionResult_Valid) {
-        DPRINTF(RubyGenerated, "next_state: %s\\n",
-                ${ident}_State_to_string(next_state));
-        countTransition(state, event);
-        DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %s %s\\n",
-                 curTick(), m_version, "${ident}",
-                 ${ident}_Event_to_string(event),
-                 ${ident}_State_to_string(state),
-                 ${ident}_State_to_string(next_state),
-                 addr, GET_TRANSITION_COMMENT());
 
-        CLEAR_TRANSITION_COMMENT();
+if (result == TransitionResult_Valid) {
+    DPRINTF(RubyGenerated, "next_state: %s\\n",
+            ${ident}_State_to_string(next_state));
+    countTransition(state, event);
+
+    DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %s %s\\n",
+             curTick(), m_version, "${ident}",
+             ${ident}_Event_to_string(event),
+             ${ident}_State_to_string(state),
+             ${ident}_State_to_string(next_state),
+             addr, GET_TRANSITION_COMMENT());
+
+    CLEAR_TRANSITION_COMMENT();
 ''')
         if self.TBEType != None and self.EntryType != None:
             code('setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);')
@@ -1186,24 +1190,27 @@ ${ident}_Controller::doTransition(${ident}_Event event,
             code('setAccessPermission(addr, next_state);')
 
         code('''
-    } else if (result == TransitionResult_ResourceStall) {
-        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
-                 curTick(), m_version, "${ident}",
-                 ${ident}_Event_to_string(event),
-                 ${ident}_State_to_string(state),
-                 ${ident}_State_to_string(next_state),
-                 addr, "Resource Stall");
-    } else if (result == TransitionResult_ProtocolStall) {
-        DPRINTF(RubyGenerated, "stalling\\n");
-        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
-                 curTick(), m_version, "${ident}",
-                 ${ident}_Event_to_string(event),
-                 ${ident}_State_to_string(state),
-                 ${ident}_State_to_string(next_state),
-                 addr, "Protocol Stall");
-    }
+} else if (result == TransitionResult_ResourceStall) {
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+             curTick(), m_version, "${ident}",
+             ${ident}_Event_to_string(event),
+             ${ident}_State_to_string(state),
+             ${ident}_State_to_string(next_state),
+             addr, "Resource Stall");
+} else if (result == TransitionResult_ProtocolStall) {
+    DPRINTF(RubyGenerated, "stalling\\n");
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+             curTick(), m_version, "${ident}",
+             ${ident}_Event_to_string(event),
+             ${ident}_State_to_string(state),
+             ${ident}_State_to_string(next_state),
+             addr, "Protocol Stall");
+}
 
-    return result;
+return result;
+''')
+        code.dedent()
+        code('''
 }
 
 TransitionResult
@@ -1310,7 +1317,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
             # the same code
             for trans in transitions:
                 code('  case HASH_FUN($trans):')
-            code('    $case')
+            code('    $case\n')
 
         code('''
       default:
@@ -1318,6 +1325,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
               "%s time: %d addr: %s event: %s state: %s\\n",
               name(), curCycle(), addr, event, state);
     }
+
     return TransitionResult_Valid;
 }
 ''')

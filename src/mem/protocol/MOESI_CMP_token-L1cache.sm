@@ -201,7 +201,7 @@ machine(L1Cache, "Token protocol")
   // Constant that provides hysteresis for calculated the estimated average
   int averageLatencyHysteresis, default="(8)";
   Cycles averageLatencyCounter,
-        default="(Cycles(500) << (*m_L1Cache_averageLatencyHysteresis_ptr))";
+        default="(Cycles(500) << (*m_averageLatencyHysteresis_ptr))";
 
   Cycles averageLatencyEstimate() {
     DPRINTF(RubySlicc, "%d\n",
