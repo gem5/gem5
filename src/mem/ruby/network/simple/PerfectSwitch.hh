@@ -84,6 +84,8 @@ class PerfectSwitch : public Consumer
     PerfectSwitch(const PerfectSwitch& obj);
     PerfectSwitch& operator=(const PerfectSwitch& obj);
 
+    void operateVnet(int vnet);
+
     SwitchID m_switch_id;
 
     // vector of queues from the components
