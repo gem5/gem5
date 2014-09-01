@@ -84,7 +84,7 @@ CommMonitor::CommMonitor(Params* params)
 
         // Create a protobuf message for the header and write it to
         // the stream
-        Message::PacketHeader header_msg;
+        ProtoMessage::PacketHeader header_msg;
         header_msg.set_obj_id(name());
         header_msg.set_tick_freq(SimClock::Frequency);
         traceStream->write(header_msg);
@@ -214,7 +214,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         // Create a protobuf message representing the
         // packet. Currently we do not preserve the flags in the
         // trace.
-        Message::Packet pkt_msg;
+        ProtoMessage::Packet pkt_msg;
         pkt_msg.set_tick(curTick());
         pkt_msg.set_cmd(cmd);
         pkt_msg.set_flags(req_flags);

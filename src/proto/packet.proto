@@ -36,7 +36,7 @@
 // Authors: Andreas Hansson
 
 // Put all the generated messages in a namespace
-package Message;
+package ProtoMessage;
 
 // Packet header with the identifier describing what object captured
 // the trace, the version of this file format, and the tick frequency

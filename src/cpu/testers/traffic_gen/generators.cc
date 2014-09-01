@@ -301,7 +301,7 @@ void
 TraceGen::InputStream::init()
 {
     // Create a protobuf message for the header and read it from the stream
-    Message::PacketHeader header_msg;
+    ProtoMessage::PacketHeader header_msg;
     if (!trace.read(header_msg)) {
         panic("Failed to read packet header from trace\n");
 
@@ -322,7 +322,7 @@ TraceGen::InputStream::reset()
 bool
 TraceGen::InputStream::read(TraceElement& element)
 {
-    Message::Packet pkt_msg;
+    ProtoMessage::Packet pkt_msg;
     if (trace.read(pkt_msg)) {
         element.cmd = pkt_msg.cmd();
         element.addr = pkt_msg.addr();
