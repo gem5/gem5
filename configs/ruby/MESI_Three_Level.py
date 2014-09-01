@@ -129,7 +129,19 @@ def create_system(options, system, dma_ports, ruby_system):
             cpu_sequencers.append(cpu_seq)
             l0_cntrl_nodes.append(l0_cntrl)
             l1_cntrl_nodes.append(l1_cntrl)
-            l0_cntrl.peer = l1_cntrl
+
+            # Connect the L0 and L1 controllers
+            l0_cntrl.bufferToL1 = l1_cntrl.bufferFromL0
+            l0_cntrl.bufferFromL1 = l1_cntrl.bufferToL0
+
+            # Connect the L1 controllers and the network
+            l1_cntrl.requestToL2 =  ruby_system.network.slave
+            l1_cntrl.responseToL2 =  ruby_system.network.slave
+            l1_cntrl.unblockToL2 =  ruby_system.network.slave
+
+            l1_cntrl.requestFromL2 =  ruby_system.network.master
+            l1_cntrl.responseFromL2 =  ruby_system.network.master
+
 
         for j in xrange(num_l2caches_per_cluster):
             l2_cache = L2Cache(size = options.l2_size,
@@ -145,6 +157,15 @@ def create_system(options, system, dma_ports, ruby_system):
             exec("ruby_system.l2_cntrl%d = l2_cntrl" % (
                         i * num_l2caches_per_cluster + j))
             l2_cntrl_nodes.append(l2_cntrl)
+
+            # Connect the L2 controllers and the network
+            l2_cntrl.DirRequestFromL2Cache = ruby_system.network.slave
+            l2_cntrl.L1RequestFromL2Cache = ruby_system.network.slave
+            l2_cntrl.responseFromL2Cache = ruby_system.network.slave
+
+            l2_cntrl.unblockToL2Cache = ruby_system.network.master
+            l2_cntrl.L1RequestToL2Cache = ruby_system.network.master
+            l2_cntrl.responseToL2Cache = ruby_system.network.master
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
@@ -182,6 +203,11 @@ def create_system(options, system, dma_ports, ruby_system):
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
+
+        # Connect the directory controllers and the network
+        dir_cntrl.requestToDir = ruby_system.network.master
+        dir_cntrl.responseToDir = ruby_system.network.master
+        dir_cntrl.responseFromDir = ruby_system.network.slave
 
     for i, dma_port in enumerate(dma_ports):
         #

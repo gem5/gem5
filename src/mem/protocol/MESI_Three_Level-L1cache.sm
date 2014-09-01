@@ -32,26 +32,30 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
    Cycles l1_request_latency := 2;
    Cycles l1_response_latency := 2;
    Cycles to_l2_latency := 1;
+
+   // Message Buffers between the L1 and the L0 Cache
+   // From the L1 cache to the L0 cache
+   MessageBuffer * bufferToL0, network="To", ordered="true";
+
+   // From the L0 cache to the L1 cache
+   MessageBuffer * bufferFromL0, network="From", ordered="true";
+
+   // Message queue from this L1 cache TO the network / L2
+   MessageBuffer * requestToL2, network="To", virtual_network="0",
+        ordered="false", vnet_type="request";
+
+   MessageBuffer * responseToL2, network="To", virtual_network="1",
+        ordered="false", vnet_type="response";
+   MessageBuffer * unblockToL2, network="To", virtual_network="2",
+        ordered="false", vnet_type="unblock";
+
+   // To this L1 cache FROM the network / L2
+   MessageBuffer * requestFromL2, network="From", virtual_network="2",
+        ordered="false", vnet_type="request";
+   MessageBuffer * responseFromL2, network="From", virtual_network="1",
+        ordered="false", vnet_type="response";
+
 {
-  // From this node's L1 cache TO the network
-  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestToL2, network="To", virtual_network="0", ordered="false", vnet_type="request";
-  // a local L1 -> this L2 bank
-  MessageBuffer responseToL2, network="To", virtual_network="1", ordered="false", vnet_type="response";
-  MessageBuffer unblockToL2, network="To", virtual_network="2", ordered="false", vnet_type="unblock";
-
-  // To this node's L1 cache FROM the network
-  // a L2 bank -> this L1
-  MessageBuffer requestFromL2, network="From", virtual_network="0", ordered="false", vnet_type="request";
-  // a L2 bank -> this L1
-  MessageBuffer responseFromL2, network="From", virtual_network="1", ordered="false", vnet_type="response";
-
-  // Message Buffers between the L1 and the L0 Cache
-  // From the L1 cache to the L0 cache
-  MessageBuffer bufferToL0, network="To", physical_network="0", ordered="true";
-  // From the L0 cache to the L1 cache
-  MessageBuffer bufferFromL0, network="From", physical_network="0", ordered="true";
-
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states

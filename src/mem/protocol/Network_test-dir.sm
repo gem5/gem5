@@ -32,13 +32,13 @@
 
 
 machine(Directory, "Network_test Directory")
-:
+    : MessageBuffer * requestToDir, network="From", virtual_network="0",
+            ordered="false", vnet_type = "request";
+      MessageBuffer * forwardToDir, network="From", virtual_network="1",
+            ordered="false", vnet_type = "forward";
+      MessageBuffer * responseToDir, network="From", virtual_network="2",
+            ordered="false", vnet_type = "response";
 {
-
-  MessageBuffer requestToDir, network="From", virtual_network="0", ordered="false", vnet_type = "request";
-  MessageBuffer forwardToDir, network="From", virtual_network="1", ordered="false", vnet_type = "forward";
-  MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false", vnet_type = "response";
-
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states

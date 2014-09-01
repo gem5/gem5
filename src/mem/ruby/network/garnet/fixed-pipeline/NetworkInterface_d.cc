@@ -53,8 +53,6 @@ NetworkInterface_d::NetworkInterface_d(const Params *p)
     m_vc_round_robin = 0;
     m_ni_buffers.resize(m_num_vcs);
     m_ni_enqueue_time.resize(m_num_vcs);
-    inNode_ptr.resize(m_virtual_networks);
-    outNode_ptr.resize(m_virtual_networks);
     creditQueue = new flitBuffer_d();
 
     // instantiating the NI flit buffers
@@ -108,18 +106,20 @@ NetworkInterface_d::addOutPort(NetworkLink_d *out_link,
 }
 
 void
-NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
-                            vector<MessageBuffer *>& out)
+NetworkInterface_d::addNode(map<int, MessageBuffer *>& in,
+                            map<int, MessageBuffer *>& out)
 {
-    assert(in.size() == m_virtual_networks);
     inNode_ptr = in;
     outNode_ptr = out;
 
-    for (int j = 0; j < m_virtual_networks; j++) {
+    for (auto& it : in) {
         // the protocol injects messages into the NI
-        inNode_ptr[j]->setConsumer(this);
-        inNode_ptr[j]->setReceiver(this);
-        outNode_ptr[j]->setSender(this);
+        it.second->setConsumer(this);
+        it.second->setReceiver(this);
+    }
+
+    for (auto& it : out) {
+        it.second->setSender(this);
     }
 }
 
@@ -223,11 +223,14 @@ NetworkInterface_d::wakeup()
 
     // Checking for messages coming from the protocol
     // can pick up a message/cycle for each virtual net
-    for (int vnet = 0; vnet < m_virtual_networks; vnet++) {
-        while (inNode_ptr[vnet]->isReady()) { // Is there a message waiting
-            msg_ptr = inNode_ptr[vnet]->peekMsgPtr();
+    for (auto it = inNode_ptr.begin(); it != inNode_ptr.end(); ++it) {
+        int vnet = (*it).first;
+        MessageBuffer *b = (*it).second;
+
+        while (b->isReady()) { // Is there a message waiting
+            msg_ptr = b->peekMsgPtr();
             if (flitisizeMessage(msg_ptr, vnet)) {
-                inNode_ptr[vnet]->dequeue();
+                b->dequeue();
             } else {
                 break;
             }
@@ -351,12 +354,15 @@ NetworkInterface_d::get_vnet(int vc)
 void
 NetworkInterface_d::checkReschedule()
 {
-    for (int vnet = 0; vnet < m_virtual_networks; vnet++) {
-        if (inNode_ptr[vnet]->isReady()) { // Is there a message waiting
+    for (const auto& it : inNode_ptr) {
+        MessageBuffer *b = it.second;
+
+        while (b->isReady()) { // Is there a message waiting
             scheduleEvent(Cycles(1));
             return;
         }
     }
+
     for (int vc = 0; vc < m_num_vcs; vc++) {
         if (m_ni_buffers[vc]->isReady(curCycle() + Cycles(1))) {
             scheduleEvent(Cycles(1));

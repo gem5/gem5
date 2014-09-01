@@ -28,13 +28,16 @@
 
 
 machine(DMA, "DMA Controller")
-: DMASequencer * dma_sequencer;
-  Cycles request_latency := 6;
+    : DMASequencer * dma_sequencer;
+      Cycles request_latency := 6;
+
+      // Messsage Queues
+      MessageBuffer * responseFromDir, network="From", virtual_network="5",
+            ordered="true", vnet_type="response";
+      MessageBuffer * reqToDirectory, network="To", virtual_network="0",
+            ordered="false", vnet_type="request";
+
 {
-
-  MessageBuffer responseFromDir, network="From", virtual_network="5", ordered="true", vnet_type="response";
-  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", vnet_type="request";
-
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
     BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";

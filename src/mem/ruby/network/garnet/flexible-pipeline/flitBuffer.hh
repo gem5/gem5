@@ -44,7 +44,6 @@ class flitBuffer
     flitBuffer(int maximum_size);
 
     bool isReady(Cycles curTime);
-    bool isReadyForNext(Cycles curTime);
     bool isFull();
     bool isEmpty();
     void setMaxSize(int maximum);

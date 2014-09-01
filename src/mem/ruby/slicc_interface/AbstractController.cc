@@ -89,13 +89,6 @@ AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 }
 
 void
-AbstractController::connectWithPeer(AbstractController *c)
-{
-    getQueuesFromPeer(c);
-    c->getQueuesFromPeer(this);
-}
-
-void
 AbstractController::stallBuffer(MessageBuffer* buf, Address addr)
 {
     if (m_waiting_buffers.count(addr) == 0) {

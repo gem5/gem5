@@ -27,22 +27,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(DMA, "DMA Controller") 
-: DMASequencer * dma_sequencer;
-  Cycles request_latency := 14;
-  Cycles response_latency := 14;
-{
-  MessageBuffer responseFromDir, network="From", virtual_network="2", ordered="false", vnet_type="response";
+machine(DMA, "DMA Controller")
+    : DMASequencer * dma_sequencer;
+      Cycles request_latency := 14;
+      Cycles response_latency := 14;
 
-  MessageBuffer reqToDir, network="To", virtual_network="1", ordered="false", vnet_type="request";
-  MessageBuffer respToDir, network="To", virtual_network="2", ordered="false", vnet_type="dmaresponse";
-  
+      MessageBuffer * responseFromDir, network="From", virtual_network="2",
+            ordered="false", vnet_type="response";
+
+      MessageBuffer * reqToDir, network="To", virtual_network="1",
+            ordered="false", vnet_type="request";
+      MessageBuffer * respToDir, network="To", virtual_network="2",
+            ordered="false", vnet_type="dmaresponse";
+
+{
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
     BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";
     BUSY_WR, AccessPermission:Busy, desc="Busy: currently processing a request";
   }
-  
+
   enumeration(Event, desc="DMA events") {
     ReadRequest,  desc="A new read request";
     WriteRequest, desc="A new write request";
@@ -293,7 +297,7 @@ machine(DMA, "DMA Controller")
   }
 
   transition(BUSY_WR, All_Acks, READY) {
-    a_ackCallback; 
+    a_ackCallback;
     u_sendExclusiveUnblockToDir;
     w_deallocateTBE;
     p_popTriggerQueue;

@@ -32,29 +32,36 @@ machine(L2Cache, "Token protocol")
    Cycles l2_request_latency := 5;
    Cycles l2_response_latency := 5;
    bool filtering_enabled := "True";
+
+   // L2 BANK QUEUES
+   // From local bank of L2 cache TO the network
+ 
+   // this L2 bank -> a local L1 || mod-directory
+   MessageBuffer * responseFromL2Cache, network="To", virtual_network="4",
+        ordered="false", vnet_type="response";
+   // this L2 bank -> mod-directory
+   MessageBuffer * GlobalRequestFromL2Cache, network="To", virtual_network="2",
+        ordered="false", vnet_type="request";
+   // this L2 bank -> a local L1
+   MessageBuffer * L1RequestFromL2Cache, network="To", virtual_network="1",
+        ordered="false", vnet_type="request";
+ 
+ 
+   // FROM the network to this local bank of L2 cache
+ 
+   // a local L1 || mod-directory -> this L2 bank
+   MessageBuffer * responseToL2Cache, network="From", virtual_network="4",
+        ordered="false", vnet_type="response";
+   MessageBuffer * persistentToL2Cache, network="From", virtual_network="3",
+        ordered="true", vnet_type="persistent";
+   // mod-directory -> this L2 bank
+   MessageBuffer * GlobalRequestToL2Cache, network="From", virtual_network="2",
+        ordered="false", vnet_type="request";
+   // a local L1 -> this L2 bank
+   MessageBuffer * L1RequestToL2Cache, network="From", virtual_network="1",
+        ordered="false", vnet_type="request";
+
 {
-
-  // L2 BANK QUEUES
-  // From local bank of L2 cache TO the network
-
-  // this L2 bank -> a local L1 || mod-directory
-  MessageBuffer responseFromL2Cache, network="To", virtual_network="4", ordered="false", vnet_type="response";
-  // this L2 bank -> mod-directory
-  MessageBuffer GlobalRequestFromL2Cache, network="To", virtual_network="2", ordered="false", vnet_type="request";
-  // this L2 bank -> a local L1
-  MessageBuffer L1RequestFromL2Cache, network="To", virtual_network="1", ordered="false", vnet_type="request";
-
-
-  // FROM the network to this local bank of L2 cache
-
-  // a local L1 || mod-directory -> this L2 bank
-  MessageBuffer responseToL2Cache, network="From", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer persistentToL2Cache, network="From", virtual_network="3", ordered="true", vnet_type="persistent";
-  // mod-directory -> this L2 bank
-  MessageBuffer GlobalRequestToL2Cache, network="From", virtual_network="2", ordered="false", vnet_type="request";
-  // a local L1 -> this L2 bank
-  MessageBuffer L1RequestToL2Cache, network="From", virtual_network="1", ordered="false", vnet_type="request";
-
   // STATES
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_I") {
     // Base states

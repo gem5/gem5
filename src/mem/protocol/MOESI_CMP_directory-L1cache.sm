@@ -34,25 +34,24 @@ machine(L1Cache, "Directory protocol")
    Cycles request_latency := 2;
    Cycles use_timeout_latency := 50;
    bool send_evictions;
+
+   // Message Queues
+   // From this node's L1 cache TO the network
+   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+   MessageBuffer * requestFromL1Cache, network="To", virtual_network="0",
+        ordered="false", vnet_type="request";
+   // a local L1 -> this L2 bank
+   MessageBuffer * responseFromL1Cache, network="To", virtual_network="2",
+        ordered="false", vnet_type="response";
+
+   // To this node's L1 cache FROM the network
+   // a L2 bank -> this L1
+   MessageBuffer * requestToL1Cache, network="From", virtual_network="0",
+        ordered="false", vnet_type="request";
+   // a L2 bank -> this L1
+   MessageBuffer * responseToL1Cache, network="From", virtual_network="2",
+        ordered="false", vnet_type="response";
 {
-
-  // NODE L1 CACHE
-  // From this node's L1 cache TO the network
-  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false", vnet_type="request";
-  // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false", vnet_type="response";
-//  MessageBuffer writebackFromL1Cache, network="To", virtual_network="3", ordered="false", vnet_type="writeback";
-
-
-  // To this node's L1 cache FROM the network
-  // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false", vnet_type="request";
-  // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false", vnet_type="response";
-
-
-
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states

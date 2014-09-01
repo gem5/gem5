@@ -33,14 +33,13 @@ machine(L0Cache, "MESI Directory L0 Cache")
    Cycles request_latency := 2;
    Cycles response_latency := 2;
    bool send_evictions;
+
+   // From this node's L0 cache to the network
+   MessageBuffer * bufferToL1, network="To", ordered="true";
+
+   // To this node's L0 cache FROM the network
+   MessageBuffer * bufferFromL1, network="From", ordered="true";
 {
-  // NODE L0 CACHE
-  // From this node's L0 cache to the network
-  MessageBuffer bufferToL1, network="To", physical_network="0", ordered="true";
-
-  // To this node's L0 cache FROM the network
-  MessageBuffer bufferFromL1, network="From", physical_network="0", ordered="true";
-
   // Message queue between this controller and the processor
   MessageBuffer mandatoryQueue, ordered="false";
 

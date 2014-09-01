@@ -96,6 +96,9 @@ class AbstractController : public ClockedObject, public Consumer
     virtual void collateStats()
     {fatal("collateStats() should be overridden!");}
 
+    //! Set the message buffer with given name.
+    virtual void setNetQueue(const std::string& name, MessageBuffer *b) = 0;
+
   public:
     MachineID getMachineID() const { return m_machineID; }
 
@@ -103,24 +106,11 @@ class AbstractController : public ClockedObject, public Consumer
     Stats::Histogram& getDelayVCHist(uint32_t index)
     { return *(m_delayVCHistogram[index]); }
 
-    MessageBuffer *getPeerQueue(uint32_t pid)
-    {
-        std::map<uint32_t, MessageBuffer *>::iterator it =
-                                        peerQueueMap.find(pid);
-        assert(it != peerQueueMap.end());
-        return (*it).second;
-    }
-
   protected:
     //! Profiles original cache requests including PUTs
     void profileRequest(const std::string &request);
     //! Profiles the delay associated with messages.
     void profileMsgDelay(uint32_t virtualNetwork, Cycles delay);
-
-    //! Function for connecting peer controllers
-    void connectWithPeer(AbstractController *);
-    virtual void getQueuesFromPeer(AbstractController *)
-    { fatal("getQueuesFromPeer() should be called only if implemented!"); }
 
     void stallBuffer(MessageBuffer* buf, Address addr);
     void wakeUpBuffers(Address addr);
@@ -146,9 +136,6 @@ class AbstractController : public ClockedObject, public Consumer
     int m_transitions_per_cycle;
     unsigned int m_buffer_size;
     Cycles m_recycle_latency;
-
-    //! Map from physical network number to the Message Buffer.
-    std::map<uint32_t, MessageBuffer*> peerQueueMap;
 
     //! Counter for the number of cycles when the transitions carried out
     //! were equal to the maximum allowed

@@ -28,16 +28,15 @@
 
 
 machine(DMA, "DMA Controller") 
-: DMASequencer * dma_sequencer;
-  Cycles request_latency := 6;
+    : DMASequencer * dma_sequencer;
+      Cycles request_latency := 6;
+
+      MessageBuffer * responseFromDir, network="From", virtual_network="1",
+            ordered="true", vnet_type="response";
+      MessageBuffer * requestToDir, network="To", virtual_network="0",
+            ordered="false", vnet_type="request";
 {
-
-  MessageBuffer responseFromDir, network="From", virtual_network="1", ordered="true", vnet_type="response";
-  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", vnet_type="request";
-
-  state_declaration(State, 
-                    desc="DMA states", 
-                    default="DMA_State_READY") {
+  state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
     BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";
     BUSY_WR, AccessPermission:Busy, desc="Busy: currently processing a request";
@@ -71,7 +70,7 @@ machine(DMA, "DMA Controller")
     error("DMA Controller does not support getDataBlock function.\n");
   }
 
-  out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
+  out_port(requestToDir_out, DMARequestMsg, requestToDir, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
     if (dmaRequestQueue_in.isReady()) {
@@ -103,7 +102,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, request_latency) {
+      enqueue(requestToDir_out, DMARequestMsg, request_latency) {
         out_msg.PhysicalAddress := in_msg.PhysicalAddress;
         out_msg.LineAddress := in_msg.LineAddress; 
         out_msg.Type := DMARequestType:READ;
@@ -118,7 +117,7 @@ machine(DMA, "DMA Controller")
 
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, request_latency) {
+      enqueue(requestToDir_out, DMARequestMsg, request_latency) {
           out_msg.PhysicalAddress := in_msg.PhysicalAddress;
           out_msg.LineAddress := in_msg.LineAddress; 
           out_msg.Type := DMARequestType:WRITE;

@@ -37,24 +37,33 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
    Cycles to_l2_latency := 1;
    bool send_evictions;
    bool enable_prefetch := "False";
+
+   // Message Queues
+   // From this node's L1 cache TO the network
+
+   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+   MessageBuffer * requestFromL1Cache, network="To", virtual_network="0",
+        ordered="false", vnet_type="request";
+
+   // a local L1 -> this L2 bank
+   MessageBuffer * responseFromL1Cache, network="To", virtual_network="1",
+        ordered="false", vnet_type="response";
+
+   MessageBuffer * unblockFromL1Cache, network="To", virtual_network="2",
+        ordered="false", vnet_type="unblock";
+
+
+   // To this node's L1 cache FROM the network
+   // a L2 bank -> this L1
+   MessageBuffer * requestToL1Cache, network="From", virtual_network="2",
+        ordered="false", vnet_type="request";
+
+   // a L2 bank -> this L1
+   MessageBuffer * responseToL1Cache, network="From", virtual_network="1",
+        ordered="false", vnet_type="response";
 {
-  // NODE L1 CACHE
-  // From this node's L1 cache TO the network
-  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false", vnet_type="request";
-  // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="1", ordered="false", vnet_type="response";
-  MessageBuffer unblockFromL1Cache, network="To", virtual_network="2", ordered="false", vnet_type="unblock";
-
-
-  // To this node's L1 cache FROM the network
-  // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false", vnet_type="request";
-  // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="1", ordered="false", vnet_type="response";
   // Request Buffer for prefetches
   MessageBuffer optionalQueue, ordered="false";
-
 
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {

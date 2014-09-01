@@ -51,7 +51,12 @@ class StateMachine(Symbol):
     def __init__(self, symtab, ident, location, pairs, config_parameters):
         super(StateMachine, self).__init__(symtab, ident, location, pairs)
         self.table = None
+
+        # Data members in the State Machine that have been declared before
+        # the opening brace '{'  of the machine.  Note that these along with
+        # the members in self.objects form the entire set of data members.
         self.config_parameters = config_parameters
+
         self.prefetchers = []
 
         for param in config_parameters:
@@ -74,6 +79,10 @@ class StateMachine(Symbol):
         self.transitions = []
         self.in_ports = []
         self.functions = []
+
+        # Data members in the State Machine that have been declared inside
+        # the {} machine.  Note that these along with the config params
+        # form the entire set of data members of the machine.
         self.objects = []
         self.TBEType   = None
         self.EntryType = None
@@ -200,7 +209,13 @@ class $py_ident(RubyController):
             if param.rvalue is not None:
                 dflt_str = str(param.rvalue.inline()) + ', '
 
-            if python_class_map.has_key(param.type_ast.type.c_ident):
+            if param.type_ast.type.c_ident == "MessageBuffer":
+                if param["network"] == "To":
+                    code('${{param.ident}} = MasterPort(${dflt_str}"")')
+                else:
+                    code('${{param.ident}} = SlavePort(${dflt_str}"")')
+
+            elif python_class_map.has_key(param.type_ast.type.c_ident):
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
 
@@ -241,13 +256,10 @@ class $py_ident(RubyController):
 ''')
 
         seen_types = set()
-        has_peer = False
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
                 code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
-            if "network" in var and "physical_network" in var:
-                has_peer = True
-            seen_types.add(var.type.ident)
+                seen_types.add(var.type.ident)
 
         # for adding information to the protocol debug trace
         code('''
@@ -260,7 +272,9 @@ class $c_ident : public AbstractController
     $c_ident(const Params *p);
     static int getNumControllers();
     void init();
+
     MessageBuffer* getMandatoryQueue() const;
+    void setNetQueue(const std::string& name, MessageBuffer *b);
 
     void print(std::ostream& out) const;
     void wakeup();
@@ -340,8 +354,6 @@ static int m_num_controllers;
             if proto:
                 code('$proto')
 
-        if has_peer:
-            code('void getQueuesFromPeer(AbstractController *);')
         if self.EntryType != None:
             code('''
 
@@ -404,7 +416,6 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
-        has_peer = False
 
         code('''
 /** \\file $c_ident.cc
@@ -486,10 +497,17 @@ $c_ident::$c_ident(const Params *p)
         # include a sequencer, connect the it to the controller.
         #
         for param in self.config_parameters:
+
+            # Do not initialize messgage buffers since they are initialized
+            # when the port based connections are made.
+            if param.type_ast.type.c_ident == "MessageBuffer":
+                continue
+
             if param.pointer:
                 code('m_${{param.ident}}_ptr = p->${{param.ident}};')
             else:
                 code('m_${{param.ident}} = p->${{param.ident}};')
+
             if re.compile("sequencer").search(param.ident):
                 code('m_${{param.ident}}_ptr->setController(this);')
             
@@ -499,19 +517,8 @@ $c_ident::$c_ident(const Params *p)
 m_${{var.ident}}_ptr = new ${{var.type.c_ident}}();
 m_${{var.ident}}_ptr->setReceiver(this);
 ''')
-            else:
-                if "network" in var and "physical_network" in var and \
-                   var["network"] == "To":
-                    has_peer = True
-                    code('''
-m_${{var.ident}}_ptr = new ${{var.type.c_ident}}();
-peerQueueMap[${{var["physical_network"]}}] = m_${{var.ident}}_ptr;
-m_${{var.ident}}_ptr->setSender(this);
-''')
 
         code('''
-if (p->peer != NULL)
-    connectWithPeer(p->peer);
 
 for (int state = 0; state < ${ident}_State_NUM; state++) {
     for (int event = 0; event < ${ident}_Event_NUM; event++) {
@@ -528,16 +535,92 @@ for (int event = 0; event < ${ident}_Event_NUM; event++) {
 }
 
 void
-$c_ident::init()
+$c_ident::setNetQueue(const std::string& name, MessageBuffer *b)
 {
-    MachineType machine_type = string_to_MachineType("${{var.machine.ident}}");
+    MachineType machine_type = string_to_MachineType("${{self.ident}}");
     int base M5_VAR_USED = MachineType_base_number(machine_type);
 
+''')
+        code.indent()
+
+        # set for maintaining the vnet, direction pairs already seen for this
+        # machine.  This map helps in implementing the check for avoiding
+        # multiple message buffers being mapped to the same vnet.
+        vnet_dir_set = set()
+
+        for var in self.config_parameters:
+            if "network" in var:
+                vtype = var.type_ast.type
+                vid = "m_%s_ptr" % var.ident
+
+                code('''
+if ("${{var.ident}}" == name) {
+    $vid = b;
+    assert($vid != NULL);
+''')
+                code.indent()
+                # Network port object
+                network = var["network"]
+                ordered =  var["ordered"]
+
+                if "virtual_network" in var:
+                    vnet = var["virtual_network"]
+                    vnet_type = var["vnet_type"]
+
+                    assert (vnet, network) not in vnet_dir_set
+                    vnet_dir_set.add((vnet,network))
+
+                    code('''
+m_net_ptr->set${network}NetQueue(m_version + base, $ordered, $vnet,
+                                 "$vnet_type", b);
+''')
+                # Set the end
+                if network == "To":
+                    code('$vid->setSender(this);')
+                else:
+                    code('$vid->setReceiver(this);')
+
+                # Set ordering
+                code('$vid->setOrdering(${{var["ordered"]}});')
+
+                # Set randomization
+                if "random" in var:
+                    # A buffer
+                    code('$vid->setRandomization(${{var["random"]}});')
+
+                # Set Priority
+                if "rank" in var:
+                    code('$vid->setPriority(${{var["rank"]}})')
+
+                # Set buffer size
+                code('$vid->resize(m_buffer_size);')
+
+                if "recycle_latency" in var:
+                    code('$vid->setRecycleLatency( ' \
+                         'Cycles(${{var["recycle_latency"]}}));')
+                else:
+                    code('$vid->setRecycleLatency(m_recycle_latency);')
+
+                # set description (may be overriden later by port def)
+                code('''
+$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.ident}}]");
+''')
+                code.dedent()
+                code('}\n')
+
+        code.dedent()
+        code('''
+}
+
+void
+$c_ident::init()
+{
     // initialize objects
 
 ''')
 
         code.indent()
+
         for var in self.objects:
             vtype = var.type
             vid = "m_%s_ptr" % var.ident
@@ -588,55 +671,6 @@ $c_ident::init()
                     elif var.ident.find("optionalQueue") >= 0:
                         code('$vid->setSender(this);')
                         code('$vid->setReceiver(this);')
-
-            else:
-                # Network port object
-                network = var["network"]
-                ordered =  var["ordered"]
-
-                if "virtual_network" in var:
-                    vnet = var["virtual_network"]
-                    vnet_type = var["vnet_type"]
-
-                    assert var.machine is not None
-                    code('''
-$vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet, "$vnet_type");
-assert($vid != NULL);
-''')
-
-                    # Set the end
-                    if network == "To":
-                        code('$vid->setSender(this);')
-                    else:
-                        code('$vid->setReceiver(this);')
-
-                # Set ordering
-                if "ordered" in var:
-                    # A buffer
-                    code('$vid->setOrdering(${{var["ordered"]}});')
-
-                # Set randomization
-                if "random" in var:
-                    # A buffer
-                    code('$vid->setRandomization(${{var["random"]}});')
-
-                # Set Priority
-                if "rank" in var:
-                    code('$vid->setPriority(${{var["rank"]}})')
-
-                # Set buffer size
-                if vtype.isBuffer:
-                    code('''
-if (m_buffer_size > 0) {
-    $vid->resize(m_buffer_size);
-}
-''')
-
-                # set description (may be overriden later by port def)
-                code('''
-$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.ident}}]");
-
-''')
 
             if vtype.isBuffer:
                 if "recycle_latency" in var:
@@ -965,6 +999,13 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt)
             if vtype.isBuffer:
                 vid = "m_%s_ptr" % var.ident
                 code('if ($vid->functionalRead(pkt)) { return true; }')
+
+        for var in self.config_parameters:
+            vtype = var.type_ast.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('if ($vid->functionalRead(pkt)) { return true; }')
+
         code('''
                 return false;
 }
@@ -982,30 +1023,17 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
             if vtype.isBuffer:
                 vid = "m_%s_ptr" % var.ident
                 code('num_functional_writes += $vid->functionalWrite(pkt);')
+
+        for var in self.config_parameters:
+            vtype = var.type_ast.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('num_functional_writes += $vid->functionalWrite(pkt);')
+
         code('''
     return num_functional_writes;
 }
 ''')
-
-        # Check if this controller has a peer, if yes then write the
-        # function for connecting to the peer.
-        if has_peer:
-            code('''
-
-void
-$c_ident::getQueuesFromPeer(AbstractController *peer)
-{
-''')
-            for var in self.objects:
-                if "network" in var and "physical_network" in var and \
-                   var["network"] == "From":
-                    code('''
-m_${{var.ident}}_ptr = peer->getPeerQueue(${{var["physical_network"]}});
-assert(m_${{var.ident}}_ptr != NULL);
-m_${{var.ident}}_ptr->setReceiver(this);
-
-''')
-            code('}')
 
         code.write(path, "%s.cc" % c_ident)
 

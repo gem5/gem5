@@ -62,17 +62,6 @@ flitBuffer::isReady(Cycles curTime)
 }
 
 bool
-flitBuffer::isReadyForNext(Cycles curTime)
-{
-    if (m_buffer.size() != 0 ) {
-        flit *t_flit = m_buffer.front();
-        if (t_flit->get_time() <= (curTime + 1))
-            return true;
-    }
-    return false;
-}
-
-bool
 flitBuffer::isFull()
 {
     return (m_buffer.size() >= max_size);

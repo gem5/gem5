@@ -26,27 +26,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id: MOESI_CMP_token-dir.sm 1.6 05/01/19 15:48:35-06:00 mikem@royal16.cs.wisc.edu $
- */
-
-// This file is copied from Yasuko Watanabe's prefetch / memory protocol
-// Copied here by aep 12/14/07
-
-
 machine(Directory, "MESI Two Level directory protocol")
  : DirectoryMemory * directory;
    MemoryControl * memBuffer;
    Cycles to_mem_ctrl_latency := 1;
    Cycles directory_latency := 6;
-{
-  MessageBuffer requestToDir, network="From", virtual_network="0",
-        ordered="false", vnet_type="request";
-  MessageBuffer responseToDir, network="From", virtual_network="1",
-        ordered="false", vnet_type="response";
-  MessageBuffer responseFromDir, network="To", virtual_network="1",
-        ordered="false", vnet_type="response";
 
+   MessageBuffer * requestToDir, network="From", virtual_network="0",
+        ordered="false", vnet_type="request";
+   MessageBuffer * responseToDir, network="From", virtual_network="1",
+        ordered="false", vnet_type="response";
+   MessageBuffer * responseFromDir, network="To", virtual_network="1",
+        ordered="false", vnet_type="response";
+{
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states

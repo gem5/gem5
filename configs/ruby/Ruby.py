@@ -106,31 +106,7 @@ def create_system(options, system, piobus = None, dma_ports = []):
     system.ruby = RubySystem(no_mem_vec = options.use_map)
     ruby = system.ruby
 
-    protocol = buildEnv['PROTOCOL']
-    exec "import %s" % protocol
-    try:
-        (cpu_sequencers, dir_cntrls, topology) = \
-             eval("%s.create_system(options, system, dma_ports, ruby)"
-                  % protocol)
-    except:
-        print "Error: could not create sytem for ruby protocol %s" % protocol
-        raise
-
-    # Create a port proxy for connecting the system port. This is
-    # independent of the protocol and kept in the protocol-agnostic
-    # part (i.e. here).
-    sys_port_proxy = RubyPortProxy(ruby_system = ruby)
-    # Give the system port proxy a SimObject parent without creating a
-    # full-fledged controller
-    system.sys_port_proxy = sys_port_proxy
-
-    # Connect the system port for loading of binaries etc
-    system.system_port = system.sys_port_proxy.slave
-
-
-    #
     # Set the network classes based on the command line options
-    #
     if options.garnet_network == "fixed":
         NetworkClass = GarnetNetwork_d
         IntLinkClass = GarnetIntLink_d
@@ -152,10 +128,34 @@ def create_system(options, system, piobus = None, dma_ports = []):
         RouterClass = Switch
         InterfaceClass = None
 
+    # Instantiate the network object so that the controllers can connect to it.
+    network = NetworkClass(ruby_system = ruby, topology = options.topology,
+            routers = [], ext_links = [], int_links = [], netifs = [])
+    ruby.network = network
+
+    protocol = buildEnv['PROTOCOL']
+    exec "import %s" % protocol
+    try:
+        (cpu_sequencers, dir_cntrls, topology) = \
+             eval("%s.create_system(options, system, dma_ports, ruby)"
+                  % protocol)
+    except:
+        print "Error: could not create sytem for ruby protocol %s" % protocol
+        raise
+
+    # Create a port proxy for connecting the system port. This is
+    # independent of the protocol and kept in the protocol-agnostic
+    # part (i.e. here).
+    sys_port_proxy = RubyPortProxy(ruby_system = ruby)
+
+    # Give the system port proxy a SimObject parent without creating a
+    # full-fledged controller
+    system.sys_port_proxy = sys_port_proxy
+
+    # Connect the system port for loading of binaries etc
+    system.system_port = system.sys_port_proxy.slave
 
     # Create the network topology
-    network = NetworkClass(ruby_system = ruby, topology = topology.description,
-            routers = [], ext_links = [], int_links = [], netifs = [])
     topology.makeTopology(options, network, IntLinkClass, ExtLinkClass,
             RouterClass)
 
@@ -168,14 +168,12 @@ def create_system(options, system, piobus = None, dma_ports = []):
         network.enable_fault_model = True
         network.fault_model = FaultModel()
 
-    #
     # Loop through the directory controlers.
     # Determine the total memory size of the ruby system and verify it is equal
     # to physmem.  However, if Ruby memory is using sparse memory in SE
     # mode, then the system should not back-up the memory state with
     # the Memory Vector and thus the memory size bytes should stay at 0.
     # Also set the numa bits to the appropriate values.
-    #
     total_mem_size = MemorySize('0B')
 
     ruby.block_size_bytes = options.cacheline_size
@@ -196,8 +194,6 @@ def create_system(options, system, piobus = None, dma_ports = []):
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(total_mem_size.value == phys_mem_size)
-
-    ruby.network = network
     ruby.mem_size = total_mem_size
 
     # Connect the cpu sequencers and the piobus

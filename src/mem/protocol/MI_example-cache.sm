@@ -28,20 +28,23 @@
  */
 
 machine(L1Cache, "MI Example L1 Cache")
-: Sequencer * sequencer;
-  CacheMemory * cacheMemory;
-  Cycles cache_response_latency := 12;
-  Cycles issue_latency := 2;
-  bool send_evictions;
+    : Sequencer * sequencer;
+      CacheMemory * cacheMemory;
+      Cycles cache_response_latency := 12;
+      Cycles issue_latency := 2;
+      bool send_evictions;
+
+      // NETWORK BUFFERS
+      MessageBuffer * requestFromCache, network="To", virtual_network="2",
+            ordered="true", vnet_type="request";
+      MessageBuffer * responseFromCache, network="To", virtual_network="4",
+            ordered="true", vnet_type="response";
+
+      MessageBuffer * forwardToCache, network="From", virtual_network="3",
+            ordered="true", vnet_type="forward";
+      MessageBuffer * responseToCache, network="From", virtual_network="4",
+            ordered="true", vnet_type="response";
 {
-
-  // NETWORK BUFFERS
-  MessageBuffer requestFromCache, network="To", virtual_network="2", ordered="true", vnet_type="request";
-  MessageBuffer responseFromCache, network="To", virtual_network="4", ordered="true", vnet_type="response";
-
-  MessageBuffer forwardToCache, network="From", virtual_network="3", ordered="true", vnet_type="forward";
-  MessageBuffer responseToCache, network="From", virtual_network="4", ordered="true", vnet_type="response";
-
   // STATES
   state_declaration(State, desc="Cache states") {
     I, AccessPermission:Invalid, desc="Not Present/Invalid";

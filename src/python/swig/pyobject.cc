@@ -39,6 +39,7 @@
 #include "dev/etherdevice.hh"
 #include "dev/etherobject.hh"
 #endif
+#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/mem_object.hh"
 #include "python/swig/pyobject.hh"
 #include "sim/full_system.hh"
@@ -98,6 +99,27 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
         }
     }
 #endif
+
+    // These could be objects from the ruby memory system.  If yes, then at
+    // least one of them should be an abstract controller.  Do a type check.
+    AbstractController *ac1, *ac2;
+    ac1 = dynamic_cast<AbstractController*>(o1);
+    ac2 = dynamic_cast<AbstractController*>(o2);
+
+    if (ac1 || ac2) {
+        MessageBuffer *b = new MessageBuffer();
+
+        // set the message buffer associated with the provided names
+        if (ac1) {
+            ac1->setNetQueue(name1, b);
+        }
+        if (ac2) {
+            ac2->setNetQueue(name2, b);
+        }
+
+        return 1;
+    }
+
     MemObject *mo1, *mo2;
     mo1 = dynamic_cast<MemObject*>(o1);
     mo2 = dynamic_cast<MemObject*>(o2);

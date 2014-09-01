@@ -61,36 +61,33 @@ PerfectSwitch::init(SimpleNetwork *network_ptr)
 {
     m_network_ptr = network_ptr;
 
-    for(int i = 0;i < m_virtual_networks;++i)
-    {
+    for(int i = 0;i < m_virtual_networks;++i) {
         m_pending_message_count.push_back(0);
     }
 }
 
 void
-PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
+PerfectSwitch::addInPort(const map<int, MessageBuffer*>& in)
 {
-    assert(in.size() == m_virtual_networks);
     NodeID port = m_in.size();
     m_in.push_back(in);
 
-    for (int j = 0; j < m_virtual_networks; j++) {
-        m_in[port][j]->setConsumer(this);
+    for (auto& it : in) {
+        it.second->setConsumer(this);
 
         string desc = csprintf("[Queue from port %s %s %s to PerfectSwitch]",
-            to_string(m_switch_id), to_string(port), to_string(j));
-        m_in[port][j]->setDescription(desc);
-        m_in[port][j]->setIncomingLink(port);
-        m_in[port][j]->setVnet(j);
+            to_string(m_switch_id), to_string(port), to_string(it.first));
+
+        it.second->setDescription(desc);
+        it.second->setIncomingLink(port);
+        it.second->setVnet(it.first);
     }
 }
 
 void
-PerfectSwitch::addOutPort(const vector<MessageBuffer*>& out,
+PerfectSwitch::addOutPort(const map<int, MessageBuffer*>& out,
     const NetDest& routing_table_entry)
 {
-    assert(out.size() == m_virtual_networks);
-
     // Setup link order
     LinkOrder l;
     l.m_value = 0;
@@ -152,11 +149,16 @@ PerfectSwitch::wakeup()
                 vector<NetDest> output_link_destinations;
 
                 // Is there a message waiting?
-                while (m_in[incoming][vnet]->isReady()) {
+                auto it = m_in[incoming].find(vnet);
+                if (it == m_in[incoming].end())
+                    continue;
+                MessageBuffer *buffer = (*it).second;
+
+                while (buffer->isReady()) {
                     DPRINTF(RubyNetwork, "incoming: %d\n", incoming);
 
                     // Peek at message
-                    msg_ptr = m_in[incoming][vnet]->peekMsgPtr();
+                    msg_ptr = buffer->peekMsgPtr();
                     net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
                     DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
 
@@ -261,7 +263,7 @@ PerfectSwitch::wakeup()
                     }
 
                     // Dequeue msg
-                    m_in[incoming][vnet]->dequeue();
+                    buffer->dequeue();
                     m_pending_message_count[vnet]--;
 
                     // Enqueue it - for all outgoing queues

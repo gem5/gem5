@@ -60,12 +60,13 @@ class Switch : public BasicRouter
     typedef SwitchParams Params;
     Switch(const Params *p);
     ~Switch();
-
     void init();
-    void addInPort(const std::vector<MessageBuffer*>& in);
-    void addOutPort(const std::vector<MessageBuffer*>& out,
-        const NetDest& routing_table_entry, Cycles link_latency,
-        int bw_multiplier);
+
+    void addInPort(const std::map<int, MessageBuffer*>& in);
+    void addOutPort(const std::map<int, MessageBuffer*>& out,
+                    const NetDest& routing_table_entry,
+                    Cycles link_latency, int bw_multiplier);
+
     const Throttle* getThrottle(LinkID link_number) const;
 
     void resetStats();

@@ -34,18 +34,34 @@ machine(Directory, "Token protocol")
    bool distributed_persistent := "True";
    Cycles fixed_timeout_latency := 100;
    Cycles reissue_wakeup_latency := 10;
+
+   // Message Queues from dir to other controllers / network
+   MessageBuffer * dmaResponseFromDir, network="To", virtual_network="5",
+        ordered="true", vnet_type="response";
+
+   MessageBuffer * responseFromDir, network="To", virtual_network="4",
+        ordered="false", vnet_type="response";
+
+   MessageBuffer * persistentFromDir, network="To", virtual_network="3",
+        ordered="true", vnet_type="persistent";
+
+   MessageBuffer * requestFromDir, network="To", virtual_network="1",
+        ordered="false", vnet_type="request";
+ 
+   // Message Queues to dir from other controllers / network
+   MessageBuffer * responseToDir, network="From", virtual_network="4",
+        ordered="false", vnet_type="response";
+
+   MessageBuffer * persistentToDir, network="From", virtual_network="3",
+        ordered="true", vnet_type="persistent";
+   
+   MessageBuffer * requestToDir, network="From", virtual_network="2",
+        ordered="false", vnet_type="request";
+   
+   MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
+        ordered="true", vnet_type="request";
+
 {
-
-  MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true", vnet_type="response";
-  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer persistentFromDir, network="To", virtual_network="3", ordered="true", vnet_type="persistent";
-  MessageBuffer requestFromDir, network="To", virtual_network="1", ordered="false", vnet_type="request";
-
-  MessageBuffer responseToDir, network="From", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer persistentToDir, network="From", virtual_network="3", ordered="true", vnet_type="persistent";
-  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false", vnet_type="request";
-  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true", vnet_type="request";
-
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_O") {
     // Base states

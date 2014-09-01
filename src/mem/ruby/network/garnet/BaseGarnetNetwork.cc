@@ -66,20 +66,20 @@ BaseGarnetNetwork::init()
     Network::init();
 }
 
-MessageBuffer*
-BaseGarnetNetwork::getToNetQueue(NodeID id, bool ordered, int network_num,
-                                 string vnet_type)
+void
+BaseGarnetNetwork::setToNetQueue(NodeID id, bool ordered, int network_num,
+                                 string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    return m_toNetQueues[id][network_num];
+    m_toNetQueues[id][network_num] = b;
 }
 
-MessageBuffer*
-BaseGarnetNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,  
-                                   string vnet_type)
+void
+BaseGarnetNetwork::setFromNetQueue(NodeID id, bool ordered, int network_num,
+                                   string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    return m_fromNetQueues[id][network_num];
+    m_fromNetQueues[id][network_num] = b;
 }
 
 void

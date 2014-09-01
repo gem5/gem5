@@ -108,11 +108,18 @@ def create_system(options, system, dma_ports, ruby_system):
         l1_cntrl.sequencer = cpu_seq
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
 
-        #
         # Add controllers and sequencers to the appropriate lists
-        #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
+
+        # Connect the L1 controllers and the network
+        l1_cntrl.requestFromL1Cache =  ruby_system.network.slave
+        l1_cntrl.responseFromL1Cache =  ruby_system.network.slave
+        l1_cntrl.unblockFromL1Cache =  ruby_system.network.slave
+
+        l1_cntrl.requestToL1Cache =  ruby_system.network.master
+        l1_cntrl.responseToL1Cache =  ruby_system.network.master
+
 
     l2_index_start = block_size_bits + l2_bits
 
@@ -132,9 +139,20 @@ def create_system(options, system, dma_ports, ruby_system):
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
 
+        # Connect the L2 controllers and the network
+        l2_cntrl.DirRequestFromL2Cache = ruby_system.network.slave
+        l2_cntrl.L1RequestFromL2Cache = ruby_system.network.slave
+        l2_cntrl.responseFromL2Cache = ruby_system.network.slave
+
+        l2_cntrl.unblockToL2Cache = ruby_system.network.master
+        l2_cntrl.L1RequestToL2Cache = ruby_system.network.master
+        l2_cntrl.responseToL2Cache = ruby_system.network.master
+
+
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
     mem_module_size = phys_mem_size / options.num_dirs
+
 
     # Run each of the ruby memory controllers at a ratio of the frequency of
     # the ruby system
@@ -169,10 +187,14 @@ def create_system(options, system, dma_ports, ruby_system):
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
+        # Connect the directory controllers and the network
+        dir_cntrl.requestToDir = ruby_system.network.master
+        dir_cntrl.responseToDir = ruby_system.network.master
+        dir_cntrl.responseFromDir = ruby_system.network.slave
+
+
     for i, dma_port in enumerate(dma_ports):
-        #
         # Create the Ruby objects associated with the dma controller
-        #
         dma_seq = DMASequencer(version = i,
                                ruby_system = ruby_system)
 
@@ -184,6 +206,11 @@ def create_system(options, system, dma_ports, ruby_system):
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
         exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
+
+        # Connect the dma controller to the network
+        dma_cntrl.responseFromDir = ruby_system.network.master
+        dma_cntrl.requestToDir = ruby_system.network.slave
+
 
     all_cntrls = l1_cntrl_nodes + \
                  l2_cntrl_nodes + \

@@ -93,10 +93,9 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
 
-    m_switches[src]->addOutPort(m_fromNetQueues[dest],
-                                         routing_table_entry,
-                                         simple_link->m_latency,
-                                         simple_link->m_bw_multiplier);
+    m_switches[src]->addOutPort(m_fromNetQueues[dest], routing_table_entry,
+                                simple_link->m_latency,
+                                simple_link->m_bw_multiplier);
 
     m_endpoint_switches[dest] = m_switches[src];
 }
@@ -118,25 +117,28 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 const NetDest& routing_table_entry)
 {
     // Create a set of new MessageBuffers
-    std::vector<MessageBuffer*> queues;
+    std::map<int, MessageBuffer*> queues;
     for (int i = 0; i < m_virtual_networks; i++) {
         // allocate a buffer
         MessageBuffer* buffer_ptr = new MessageBuffer;
         buffer_ptr->setOrdering(true);
+
         if (m_buffer_size > 0) {
             buffer_ptr->resize(m_buffer_size);
         }
-        queues.push_back(buffer_ptr);
+
+        queues[i] = buffer_ptr;
         // remember to deallocate it
         m_buffers_to_free.push_back(buffer_ptr);
     }
+
     // Connect it to the two switches
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
 
     m_switches[dest]->addInPort(queues);
     m_switches[src]->addOutPort(queues, routing_table_entry,
-                                         simple_link->m_latency, 
-                                         simple_link->m_bw_multiplier);
+                                simple_link->m_latency,
+                                simple_link->m_bw_multiplier);
 }
 
 void
@@ -151,20 +153,20 @@ SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
     m_in_use[network_num] = true;
 }
 
-MessageBuffer*
-SimpleNetwork::getToNetQueue(NodeID id, bool ordered, int network_num,
-                             std::string vnet_type)
+void
+SimpleNetwork::setToNetQueue(NodeID id, bool ordered, int network_num,
+                             std::string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num);
-    return m_toNetQueues[id][network_num];
+    m_toNetQueues[id][network_num] = b;
 }
 
-MessageBuffer*
-SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
-                               std::string vnet_type)
+void
+SimpleNetwork::setFromNetQueue(NodeID id, bool ordered, int network_num,
+                               std::string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num);
-    return m_fromNetQueues[id][network_num];
+    m_fromNetQueues[id][network_num] = b;
 }
 
 void

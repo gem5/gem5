@@ -56,9 +56,11 @@ class SimpleNetwork : public Network
     void collateStats();
     void regStats();
 
-    // returns the queue requested for the given component
-    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);
-    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);
+    // sets the queue requested
+    void setToNetQueue(NodeID id, bool ordered, int network_num,
+                       std::string vnet_type, MessageBuffer *b);
+    void setFromNetQueue(NodeID id, bool ordered, int network_num,
+                         std::string vnet_type, MessageBuffer *b);
 
     bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
     bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
@@ -89,6 +91,7 @@ class SimpleNetwork : public Network
     // Private copy constructor and assignment operator
     SimpleNetwork(const SimpleNetwork& obj);
     SimpleNetwork& operator=(const SimpleNetwork& obj);
+
     std::vector<Switch*> m_switches;
     std::vector<MessageBuffer*> m_buffers_to_free;
     std::vector<Switch*> m_endpoint_switches;

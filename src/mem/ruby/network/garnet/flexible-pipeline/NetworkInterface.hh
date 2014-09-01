@@ -56,10 +56,10 @@ class NetworkInterface : public ClockedObject, public FlexibleConsumer
 
     void addInPort(NetworkLink *in_link);
     void addOutPort(NetworkLink *out_link);
+    void addNode(std::map<int, MessageBuffer *> &inNode,
+                 std::map<int, MessageBuffer *> &outNode);
 
     void wakeup();
-    void addNode(std::vector<MessageBuffer *> &inNode,
-                 std::vector<MessageBuffer *> &outNode);
     void grant_vc(int out_port, int vc, Cycles grant_time);
     void release_vc(int out_port, int vc, Cycles release_time);
 
@@ -93,10 +93,10 @@ class NetworkInterface : public ClockedObject, public FlexibleConsumer
     std::vector<flitBuffer *>   m_ni_buffers;
 
     // The Message buffers that takes messages from the protocol
-    std::vector<MessageBuffer *> inNode_ptr;
+    std::map<int, MessageBuffer *> inNode_ptr;
 
     // The Message buffers that provides messages to the protocol
-    std::vector<MessageBuffer *> outNode_ptr;
+    std::map<int, MessageBuffer *> outNode_ptr;
 
     bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     int calculateVC(int vnet);

@@ -34,26 +34,29 @@
  */
 
 machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
-: Sequencer * sequencer;
-  CacheMemory * L1Icache;
-  CacheMemory * L1Dcache;
-  CacheMemory * L2cache;
-  Cycles cache_response_latency := 10;
-  Cycles issue_latency := 2;
-  Cycles l2_cache_hit_latency := 10;
-  bool no_mig_atomic := "True";
-  bool send_evictions;
+    : Sequencer * sequencer;
+      CacheMemory * L1Icache;
+      CacheMemory * L1Dcache;
+      CacheMemory * L2cache;
+      Cycles cache_response_latency := 10;
+      Cycles issue_latency := 2;
+      Cycles l2_cache_hit_latency := 10;
+      bool no_mig_atomic := "True";
+      bool send_evictions;
+
+      // NETWORK BUFFERS
+      MessageBuffer * requestFromCache, network="To", virtual_network="2",
+            ordered="false", vnet_type="request";
+      MessageBuffer * responseFromCache, network="To", virtual_network="4",
+            ordered="false", vnet_type="response";
+      MessageBuffer * unblockFromCache, network="To", virtual_network="5",
+            ordered="false", vnet_type="unblock";
+
+      MessageBuffer * forwardToCache, network="From", virtual_network="3",
+            ordered="false", vnet_type="forward";
+      MessageBuffer * responseToCache, network="From", virtual_network="4",
+            ordered="false", vnet_type="response";
 {
-
-  // NETWORK BUFFERS
-  MessageBuffer requestFromCache, network="To", virtual_network="2", ordered="false", vnet_type="request";
-  MessageBuffer responseFromCache, network="To", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer unblockFromCache, network="To", virtual_network="5", ordered="false", vnet_type="unblock";
-
-  MessageBuffer forwardToCache, network="From", virtual_network="3", ordered="false", vnet_type="forward";
-  MessageBuffer responseToCache, network="From", virtual_network="4", ordered="false", vnet_type="response";
-
-
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states

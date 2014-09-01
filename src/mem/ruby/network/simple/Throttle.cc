@@ -69,42 +69,92 @@ Throttle::init(NodeID node, Cycles link_latency,
                int link_bandwidth_multiplier, int endpoint_bandwidth)
 {
     m_node = node;
-    m_vnets = 0;
-
     assert(link_bandwidth_multiplier > 0);
     m_link_bandwidth_multiplier = link_bandwidth_multiplier;
+
     m_link_latency = link_latency;
     m_endpoint_bandwidth = endpoint_bandwidth;
 
     m_wakeups_wo_switch = 0;
-
     m_link_utilization_proxy = 0;
 }
 
 void
-Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
-    const std::vector<MessageBuffer*>& out_vec)
+Throttle::addLinks(const map<int, MessageBuffer*>& in_vec,
+                   const map<int, MessageBuffer*>& out_vec)
 {
     assert(in_vec.size() == out_vec.size());
-    for (int i=0; i<in_vec.size(); i++) {
-        addVirtualNetwork(in_vec[i], out_vec[i]);
+
+    for (auto& it : in_vec) {
+        int vnet = it.first;
+
+        auto jt = out_vec.find(vnet);
+        assert(jt != out_vec.end());
+
+        MessageBuffer *in_ptr = it.second;
+        MessageBuffer *out_ptr = (*jt).second;
+
+        m_in[vnet] = in_ptr;
+        m_out[vnet] = out_ptr;
+        m_units_remaining[vnet] = 0;
+
+        // Set consumer and description
+        in_ptr->setConsumer(this);
+        string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
+            to_string(m_node) + "]";
+        in_ptr->setDescription(desc);
     }
 }
 
 void
-Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
+Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
+                      MessageBuffer *in, MessageBuffer *out)
 {
-    m_units_remaining.push_back(0);
-    m_in.push_back(in_ptr);
-    m_out.push_back(out_ptr);
+    assert(out != NULL);
+    assert(in != NULL);
+    assert(m_units_remaining[vnet] >= 0);
 
-    // Set consumer and description
-    m_in[m_vnets]->setConsumer(this);
+    while (bw_remaining > 0 && (in->isReady() || m_units_remaining[vnet] > 0) &&
+                                out->areNSlotsAvailable(1)) {
 
-    string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
-        to_string(m_node) + "]";
-    m_in[m_vnets]->setDescription(desc);
-    m_vnets++;
+        // See if we are done transferring the previous message on
+        // this virtual network
+        if (m_units_remaining[vnet] == 0 && in->isReady()) {
+            // Find the size of the message we are moving
+            MsgPtr msg_ptr = in->peekMsgPtr();
+            NetworkMessage* net_msg_ptr =
+                safe_cast<NetworkMessage*>(msg_ptr.get());
+            m_units_remaining[vnet] +=
+                network_message_to_size(net_msg_ptr);
+
+            DPRINTF(RubyNetwork, "throttle: %d my bw %d bw spent "
+                    "enqueueing net msg %d time: %lld.\n",
+                    m_node, getLinkBandwidth(), m_units_remaining[vnet],
+                    g_system_ptr->curCycle());
+
+            // Move the message
+            in->dequeue();
+            out->enqueue(msg_ptr, m_link_latency);
+
+            // Count the message
+            m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;
+            DPRINTF(RubyNetwork, "%s\n", *out);
+        }
+
+        // Calculate the amount of bandwidth we spent on this message
+        int diff = m_units_remaining[vnet] - bw_remaining;
+        m_units_remaining[vnet] = max(0, diff);
+        bw_remaining = max(0, -diff);
+    }
+
+    if (bw_remaining > 0 && (in->isReady() || m_units_remaining[vnet] > 0) &&
+                             !out->areNSlotsAvailable(1)) {
+        DPRINTF(RubyNetwork, "vnet: %d", vnet);
+
+        // schedule me to wakeup again because I'm waiting for my
+        // output queue to become available
+        schedule_wakeup = true;
+    }
 }
 
 void
@@ -114,71 +164,30 @@ Throttle::wakeup()
     assert(getLinkBandwidth() > 0);
     int bw_remaining = getLinkBandwidth();
 
-    // Give the highest numbered link priority most of the time
     m_wakeups_wo_switch++;
-    int highest_prio_vnet = m_vnets-1;
-    int lowest_prio_vnet = 0;
-    int counter = 1;
     bool schedule_wakeup = false;
+
+    // variable for deciding the direction in which to iterate
+    bool iteration_direction = false;
+
 
     // invert priorities to avoid starvation seen in the component network
     if (m_wakeups_wo_switch > PRIORITY_SWITCH_LIMIT) {
         m_wakeups_wo_switch = 0;
-        highest_prio_vnet = 0;
-        lowest_prio_vnet = m_vnets-1;
-        counter = -1;
+        iteration_direction = true;
     }
 
-    for (int vnet = highest_prio_vnet;
-         (vnet * counter) >= (counter * lowest_prio_vnet);
-         vnet -= counter) {
-
-        assert(m_out[vnet] != NULL);
-        assert(m_in[vnet] != NULL);
-        assert(m_units_remaining[vnet] >= 0);
-
-        while (bw_remaining > 0 &&
-            (m_in[vnet]->isReady() || m_units_remaining[vnet] > 0) &&
-            m_out[vnet]->areNSlotsAvailable(1)) {
-
-            // See if we are done transferring the previous message on
-            // this virtual network
-            if (m_units_remaining[vnet] == 0 && m_in[vnet]->isReady()) {
-                // Find the size of the message we are moving
-                MsgPtr msg_ptr = m_in[vnet]->peekMsgPtr();
-                NetworkMessage* net_msg_ptr =
-                    safe_cast<NetworkMessage*>(msg_ptr.get());
-                m_units_remaining[vnet] +=
-                    network_message_to_size(net_msg_ptr);
-
-                DPRINTF(RubyNetwork, "throttle: %d my bw %d bw spent "
-                        "enqueueing net msg %d time: %lld.\n",
-                        m_node, getLinkBandwidth(), m_units_remaining[vnet],
-                        g_system_ptr->curCycle());
-
-                // Move the message
-                m_in[vnet]->dequeue();
-                m_out[vnet]->enqueue(msg_ptr, m_link_latency);
-
-                // Count the message
-                m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;
-
-                DPRINTF(RubyNetwork, "%s\n", *m_out[vnet]);
-            }
-
-            // Calculate the amount of bandwidth we spent on this message
-            int diff = m_units_remaining[vnet] - bw_remaining;
-            m_units_remaining[vnet] = max(0, diff);
-            bw_remaining = max(0, -diff);
+    if (iteration_direction) {
+        for (auto& it : m_in) {
+            int vnet = it.first;
+            operateVnet(vnet, bw_remaining, schedule_wakeup,
+                        it.second, m_out[vnet]);
         }
-
-        if (bw_remaining > 0 &&
-            (m_in[vnet]->isReady() || m_units_remaining[vnet] > 0) &&
-            !m_out[vnet]->areNSlotsAvailable(1)) {
-            DPRINTF(RubyNetwork, "vnet: %d", vnet);
-            // schedule me to wakeup again because I'm waiting for my
-            // output queue to become available
-            schedule_wakeup = true;
+    } else {
+        for (auto it = m_in.rbegin(); it != m_in.rend(); ++it) {
+            int vnet = (*it).first;
+            operateVnet(vnet, bw_remaining, schedule_wakeup,
+                        (*it).second, m_out[vnet]);
         }
     }
 
@@ -215,7 +224,7 @@ Throttle::regStats(string parent)
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         m_msg_counts[(unsigned int)type]
-            .init(m_vnets)
+            .init(Network::getNumberOfVirtualNetworks())
             .name(parent + csprintf(".throttle%i", m_node) + ".msg_count." +
                     MessageSizeType_to_string(type))
             .flags(Stats::nozero)

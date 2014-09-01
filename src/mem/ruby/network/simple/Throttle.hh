@@ -62,8 +62,8 @@ class Throttle : public Consumer
     std::string name()
     { return csprintf("Throttle-%i", m_sID); }
 
-    void addLinks(const std::vector<MessageBuffer*>& in_vec,
-                  const std::vector<MessageBuffer*>& out_vec);
+    void addLinks(const std::map<int, MessageBuffer*>& in_vec,
+                  const std::map<int, MessageBuffer*>& out_vec);
     void wakeup();
 
     // The average utilization (a fraction) since last clearStats()
@@ -85,16 +85,17 @@ class Throttle : public Consumer
   private:
     void init(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
               int endpoint_bandwidth);
-    void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
+    void operateVnet(int vnet, int &bw_remainin, bool &schedule_wakeup,
+                     MessageBuffer *in, MessageBuffer *out);
 
     // Private copy constructor and assignment operator
     Throttle(const Throttle& obj);
     Throttle& operator=(const Throttle& obj);
 
-    std::vector<MessageBuffer*> m_in;
-    std::vector<MessageBuffer*> m_out;
-    unsigned int m_vnets;
-    std::vector<int> m_units_remaining;
+    std::map<int, MessageBuffer*> m_in;
+    std::map<int, MessageBuffer*> m_out;
+    std::map<int, int> m_units_remaining;
+
     int m_sID;
     NodeID m_node;
     int m_link_bandwidth_multiplier;

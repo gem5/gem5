@@ -28,7 +28,6 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
 from ClockedObject import ClockedObject
 from BasicLink import BasicLink
 
@@ -48,3 +47,6 @@ class RubyNetwork(ClockedObject):
     netifs = VectorParam.ClockedObject("Network Interfaces")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
+
+    slave = VectorSlavePort("CPU slave port")
+    master = VectorMasterPort("CPU master port")

@@ -26,34 +26,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id: MSI_MOSI_CMP_directory-L2cache.sm 1.12 05/01/19 15:55:40-06:00 beckmann@s0-28.cs.wisc.edu $
- *
- */
-
 machine(L2Cache, "MESI Directory L2 Cache CMP")
  : CacheMemory * L2cache;
    Cycles l2_request_latency := 2;
    Cycles l2_response_latency := 2;
    Cycles to_l1_latency := 1;
-{
-  // L2 BANK QUEUES
+
+  // Message Queues
   // From local bank of L2 cache TO the network
-  MessageBuffer DirRequestFromL2Cache, network="To", virtual_network="0",
+  MessageBuffer * DirRequestFromL2Cache, network="To", virtual_network="0",
     ordered="false", vnet_type="request";  // this L2 bank -> Memory
-  MessageBuffer L1RequestFromL2Cache, network="To", virtual_network="0",
+
+  MessageBuffer * L1RequestFromL2Cache, network="To", virtual_network="2",
     ordered="false", vnet_type="request";  // this L2 bank -> a local L1
-  MessageBuffer responseFromL2Cache, network="To", virtual_network="1",
+
+  MessageBuffer * responseFromL2Cache, network="To", virtual_network="1",
     ordered="false", vnet_type="response";  // this L2 bank -> a local L1 || Memory
 
   // FROM the network to this local bank of L2 cache
-  MessageBuffer unblockToL2Cache, network="From", virtual_network="2",
+  MessageBuffer * unblockToL2Cache, network="From", virtual_network="2",
     ordered="false", vnet_type="unblock";  // a local L1 || Memory -> this L2 bank
-  MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0",
-    ordered="false", vnet_type="request";  // a local L1 -> this L2 bank
-  MessageBuffer responseToL2Cache, network="From", virtual_network="1",
-    ordered="false", vnet_type="response";  // a local L1 || Memory -> this L2 bank
 
+  MessageBuffer * L1RequestToL2Cache, network="From", virtual_network="0",
+    ordered="false", vnet_type="request";  // a local L1 -> this L2 bank
+
+  MessageBuffer * responseToL2Cache, network="From", virtual_network="1",
+    ordered="false", vnet_type="response";  // a local L1 || Memory -> this L2 bank
+{
   // STATES
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
     // Base states

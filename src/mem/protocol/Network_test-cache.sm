@@ -32,15 +32,17 @@
 
 
 machine(L1Cache, "Network_test L1 Cache")
-: Sequencer * sequencer;
-  Cycles issue_latency := 2;
+    : Sequencer * sequencer;
+      Cycles issue_latency := 2;
+
+      // NETWORK BUFFERS
+      MessageBuffer * requestFromCache, network="To", virtual_network="0",
+            ordered="false", vnet_type = "request";
+      MessageBuffer * forwardFromCache, network="To", virtual_network="1",
+            ordered="false", vnet_type = "forward";
+      MessageBuffer * responseFromCache, network="To", virtual_network="2",
+            ordered="false", vnet_type = "response";
 {
-
-  // NETWORK BUFFERS
-  MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="false", vnet_type = "request";
-  MessageBuffer forwardFromCache, network="To", virtual_network="1", ordered="false", vnet_type = "forward";
-  MessageBuffer responseFromCache, network="To", virtual_network="2", ordered="false", vnet_type = "response";
-
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     I,  AccessPermission:Invalid, desc="Not Present/Invalid";

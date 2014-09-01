@@ -387,7 +387,7 @@ Router::checkReschedule()
 {
     for (int port = 0; port < m_out_link.size(); port++) {
         for (int vc = 0; vc < m_num_vcs; vc++) {
-            if (m_router_buffers[port][vc]->isReadyForNext(curCycle())) {
+            if (m_router_buffers[port][vc]->isReady(curCycle() + Cycles(1))) {
                 scheduleEvent(Cycles(1));
                 return;
             }

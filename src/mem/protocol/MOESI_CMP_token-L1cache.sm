@@ -48,24 +48,32 @@ machine(L1Cache, "Token protocol")
    bool dynamic_timeout_enabled := "True";
    bool no_mig_atomic := "True";
    bool send_evictions;
+
+   // Message Queues
+   // From this node's L1 cache TO the network
+ 
+   // a local L1 -> this L2 bank
+   MessageBuffer * responseFromL1Cache, network="To", virtual_network="4",
+        ordered="false", vnet_type="response";
+   MessageBuffer * persistentFromL1Cache, network="To", virtual_network="3",
+        ordered="true", vnet_type="persistent";
+   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+   MessageBuffer * requestFromL1Cache, network="To", virtual_network="1",
+        ordered="false", vnet_type="request";
+ 
+ 
+   // To this node's L1 cache FROM the network
+
+   // a L2 bank -> this L1
+   MessageBuffer * responseToL1Cache, network="From", virtual_network="4",
+        ordered="false", vnet_type="response";
+   MessageBuffer * persistentToL1Cache, network="From", virtual_network="3",
+        ordered="true", vnet_type="persistent";
+   // a L2 bank -> this L1
+   MessageBuffer * requestToL1Cache, network="From", virtual_network="1",
+        ordered="false", vnet_type="request";
+
 {
-
-  // From this node's L1 cache TO the network
-
-  // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer persistentFromL1Cache, network="To", virtual_network="3", ordered="true", vnet_type="persistent";
-  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromL1Cache, network="To", virtual_network="1", ordered="false", vnet_type="request";
-
-
-  // To this node's L1 cache FROM the network
-  // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="4", ordered="false", vnet_type="response";
-  MessageBuffer persistentToL1Cache, network="From", virtual_network="3", ordered="true", vnet_type="persistent";
-  // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="1", ordered="false", vnet_type="request";
-
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states

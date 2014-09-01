@@ -30,16 +30,19 @@ machine(Directory, "Directory protocol")
 :  DirectoryMemory * directory;
    MemoryControl * memBuffer;
    Cycles directory_latency := 6;
+
+   // Message Queues
+   MessageBuffer * requestToDir, network="From", virtual_network="1",
+        ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
+   MessageBuffer * responseToDir, network="From", virtual_network="2",
+        ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
+
+   MessageBuffer * forwardFromDir, network="To", virtual_network="1",
+        ordered="false", vnet_type="forward";
+   MessageBuffer * responseFromDir, network="To", virtual_network="2",
+        ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
+
 {
-
-  // ** IN QUEUES **
-  MessageBuffer requestToDir, network="From", virtual_network="1", ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
-  MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
-
-  MessageBuffer forwardFromDir, network="To", virtual_network="1", ordered="false", vnet_type="forward";
-  MessageBuffer responseFromDir, network="To", virtual_network="2", ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
-
-
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states

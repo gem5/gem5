@@ -91,11 +91,15 @@ def create_system(options, system, dma_ports, ruby_system):
         l1_cntrl.sequencer = cpu_seq
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
 
-        #
         # Add controllers and sequencers to the appropriate lists
-        #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
+
+        # Connect the L1 controllers and the network
+        l1_cntrl.requestFromCache =  ruby_system.network.slave
+        l1_cntrl.responseFromCache =  ruby_system.network.slave
+        l1_cntrl.forwardFromCache =  ruby_system.network.slave
+
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
     assert(phys_mem_size % options.num_dirs == 0)
@@ -113,6 +117,12 @@ def create_system(options, system, dma_ports, ruby_system):
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
+
+        # Connect the directory controllers and the network
+        dir_cntrl.requestToDir = ruby_system.network.master
+        dir_cntrl.forwardToDir = ruby_system.network.master
+        dir_cntrl.responseToDir = ruby_system.network.master
+
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes
     topology = create_topology(all_cntrls, options)

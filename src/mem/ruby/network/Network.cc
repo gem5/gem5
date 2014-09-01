@@ -57,19 +57,6 @@ Network::Network(const Params *p)
     // Queues that are feeding the protocol
     m_fromNetQueues.resize(m_nodes);
 
-    for (int node = 0; node < m_nodes; node++) {
-        // Setting number of virtual message buffers per Network Queue
-        m_toNetQueues[node].resize(m_virtual_networks);
-        m_fromNetQueues[node].resize(m_virtual_networks);
-
-        // Instantiating the Message Buffers that
-        // interact with the coherence protocol
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j] = new MessageBuffer();
-            m_fromNetQueues[node][j] = new MessageBuffer();
-        }
-    }
-
     m_in_use.resize(m_virtual_networks);
     m_ordered.resize(m_virtual_networks);
 
@@ -95,10 +82,14 @@ Network::Network(const Params *p)
 Network::~Network()
 {
     for (int node = 0; node < m_nodes; node++) {
+
         // Delete the Message Buffers
-        for (int j = 0; j < m_virtual_networks; j++) {
-            delete m_toNetQueues[node][j];
-            delete m_fromNetQueues[node][j];
+        for (auto& it : m_toNetQueues[node]) {
+            delete it.second;
+        }
+
+        for (auto& it : m_fromNetQueues[node]) {
+            delete it.second;
         }
     }
 
