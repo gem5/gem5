@@ -105,7 +105,7 @@ system.clk_domain = SrcClockDomain(clock = options.sys_clock,
 #
 # Create the ruby random tester
 #
-system.tester = RubyDirectedTester(requests_to_complete = \
+system.cpu = RubyDirectedTester(requests_to_complete = \
                                    options.requests,
                                    generator = generator)
 

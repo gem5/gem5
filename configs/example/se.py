@@ -235,6 +235,8 @@ if options.ruby:
     Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))
 
+    system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+                                        voltage_domain = system.voltage_domain)
     for i in xrange(np):
         ruby_port = system.ruby._cpu_ports[i]
 

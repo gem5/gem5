@@ -95,12 +95,14 @@ def create_system(options, system, dma_ports, ruby_system):
                                           options.cpu_type == "detailed"),
                                       prefetcher = prefetcher,
                                       ruby_system = ruby_system,
+                                      clk_domain=system.cpu[i].clk_domain,
                                       transitions_per_cycle=options.ports,
                                       enable_prefetch = False)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
+                                clk_domain=system.cpu[i].clk_domain,
                                 ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq

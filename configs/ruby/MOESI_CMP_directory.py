@@ -92,11 +92,13 @@ def create_system(options, system, dma_ports, ruby_system):
                                       send_evictions = (
                                           options.cpu_type == "detailed"),
                                       transitions_per_cycle = options.ports,
+                                      clk_domain=system.cpu[i].clk_domain,
                                       ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
+                                clk_domain=system.cpu[i].clk_domain,
                                 ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq

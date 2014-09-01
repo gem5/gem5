@@ -102,9 +102,11 @@ def create_system(options, system, dma_ports, ruby_system):
             l0_cntrl = L0Cache_Controller(version = i*num_cpus_per_cluster + j,
                           Icache = l0i_cache, Dcache = l0d_cache,
                           send_evictions = (options.cpu_type == "detailed"),
+                          clk_domain=system.cpu[i].clk_domain,
                           ruby_system = ruby_system)
 
             cpu_seq = RubySequencer(version = i, icache = l0i_cache,
+                        clk_domain=system.cpu[i].clk_domain,
                         dcache = l0d_cache, ruby_system = ruby_system)
 
             l0_cntrl.sequencer = cpu_seq
