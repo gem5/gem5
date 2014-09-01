@@ -266,7 +266,7 @@ Check::initiateCheck()
 }
 
 void
-Check::performCallback(NodeID proc, SubBlock* data, Time curTime)
+Check::performCallback(NodeID proc, SubBlock* data, Cycles curTime)
 {
     Address address = data->getAddress();
 

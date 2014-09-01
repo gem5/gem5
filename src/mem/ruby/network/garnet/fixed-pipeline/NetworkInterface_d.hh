@@ -86,7 +86,7 @@ class NetworkInterface_d : public ClockedObject, public Consumer
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
     std::vector<flitBuffer_d *>   m_ni_buffers;
-    std::vector<Time> m_ni_enqueue_time;
+    std::vector<Cycles> m_ni_enqueue_time;
 
     // The Message buffers that takes messages from the protocol
     std::vector<MessageBuffer *> inNode_ptr;

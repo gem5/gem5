@@ -60,7 +60,7 @@ NetworkInterface_d::NetworkInterface_d(const Params *p)
     // instantiating the NI flit buffers
     for (int i = 0; i < m_num_vcs; i++) {
         m_ni_buffers[i] = new flitBuffer_d();
-        m_ni_enqueue_time[i] = INFINITE_;
+        m_ni_enqueue_time[i] = Cycles(INFINITE_);
     }
 
     m_vc_allocator.resize(m_virtual_networks); // 1 allocator per vnet
@@ -330,7 +330,7 @@ NetworkInterface_d::scheduleOutputLink()
 
             if (t_flit->get_type() == TAIL_ ||
                t_flit->get_type() == HEAD_TAIL_) {
-                m_ni_enqueue_time[vc] = INFINITE_;
+                m_ni_enqueue_time[vc] = Cycles(INFINITE_);
             }
             return;
         }

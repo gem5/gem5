@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "base/hashmap.hh"
+#include "base/types.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -54,7 +55,7 @@ class Sequencer;
 class TraceRecord {
   public:
     int m_cntrl_id;
-    Time m_time;
+    Tick m_time;
     physical_address_t m_data_address;
     physical_address_t m_pc_address;
     RubyRequestType m_type;
@@ -75,7 +76,7 @@ class CacheRecorder
                   uint64_t block_size_bytes);
     void addRecord(int cntrl, const physical_address_t data_addr,
                    const physical_address_t pc_addr,  RubyRequestType type,
-                   Time time, DataBlock& data);
+                   Tick time, DataBlock& data);
 
     uint64 aggregateRecords(uint8_t** data, uint64 size);
 

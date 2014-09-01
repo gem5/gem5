@@ -31,6 +31,7 @@
 
 #include <iostream>
 
+#include "base/types.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Histogram.hh"
 
@@ -61,8 +62,8 @@ class StoreTrace
 
     Address m_addr;
     NodeID m_last_writer;
-    Time m_first_store;
-    Time m_last_store;
+    Tick m_first_store;
+    Tick m_last_store;
     int m_stores_this_interval;
 
     int64 m_total_samples; // Total number of store lifetimes of this line

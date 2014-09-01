@@ -127,7 +127,7 @@ void
 StoreTrace::downgrade(NodeID node)
 {
     if (node == m_last_writer) {
-        Time current = curTick();
+        Tick current = curTick();
         assert(m_stores_this_interval != 0);
         assert(m_last_store != 0);
         assert(m_first_store != 0);

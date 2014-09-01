@@ -33,7 +33,6 @@
 typedef unsigned long long uint64;
 typedef long long int64;
 
-typedef int64 Time;
 typedef uint64 physical_address_t;
 
 typedef int64 Index;            // what the address bit ripper returns

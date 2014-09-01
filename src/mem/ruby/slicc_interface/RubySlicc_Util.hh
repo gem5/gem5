@@ -47,7 +47,6 @@ random(int n)
 }
 
 inline Cycles zero_time() { return Cycles(0); }
-inline Cycles TimeToCycles(Time t) { return Cycles(t); }
 
 inline NodeID
 intToID(int nodenum)
