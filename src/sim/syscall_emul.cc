@@ -71,10 +71,15 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
-    DPRINTFR(SyscallVerbose, "%d: %s: syscall %s returns %d\n",
-             curTick(), tc->getCpuPtr()->name(), name, retval.encodedValue());
+    if (retval.needsRetry()) {
+        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s needs retry\n",
+                 name);
+    } else {
+        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s returns %d\n",
+                 name, retval.encodedValue());
+    }
 
-    if (!(flags & SyscallDesc::SuppressReturnValue))
+    if (!(flags & SyscallDesc::SuppressReturnValue) && !retval.needsRetry())
         process->setSyscallReturn(tc, retval);
 }
 
