@@ -219,7 +219,7 @@ let {{
     msrBankedRegIop = InstObjParams("msr", "MsrBankedReg", "MsrRegOp",
                                     { "code": msrBankedRegCode,
                                       "predicate_test": predicateTest },
-                                    ["IsSerializeAfter"])
+                                    ["IsSerializeAfter", "IsNonSpeculative"])
     header_output += MsrBankedRegDeclare.subst(msrBankedRegIop)
     decoder_output += MsrBankedRegConstructor.subst(msrBankedRegIop)
     exec_output += PredOpExecute.subst(msrBankedRegIop)
