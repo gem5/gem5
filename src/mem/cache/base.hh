@@ -182,7 +182,10 @@ class BaseCache : public MemObject
 
       private:
 
-        EventWrapper<SlavePort, &SlavePort::sendRetry> sendRetryEvent;
+        void processSendRetry();
+
+        EventWrapper<CacheSlavePort,
+                     &CacheSlavePort::processSendRetry> sendRetryEvent;
 
     };
 

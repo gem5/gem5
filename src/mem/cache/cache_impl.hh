@@ -1937,16 +1937,27 @@ template<class TagStore>
 bool
 Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
-    // always let inhibited requests through even if blocked
-    if (!pkt->memInhibitAsserted() && blocked) {
-        assert(!cache->system->bypassCaches());
-        DPRINTF(Cache,"Scheduling a retry while blocked\n");
-        mustSendRetry = true;
-        return false;
+    assert(!cache->system->bypassCaches());
+
+    bool success = false;
+
+    // always let inhibited requests through, even if blocked
+    if (pkt->memInhibitAsserted()) {
+        // this should always succeed
+        success = cache->recvTimingReq(pkt);
+        assert(success);
+    } else if (blocked || mustSendRetry) {
+        // either already committed to send a retry, or blocked
+        success = false;
+    } else {
+        // for now this should always succeed
+        success = cache->recvTimingReq(pkt);
+        assert(success);
     }
 
-    cache->recvTimingReq(pkt);
-    return true;
+    // remember if we have to retry
+    mustSendRetry = !success;
+    return success;
 }
 
 template<class TagStore>
