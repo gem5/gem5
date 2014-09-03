@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -163,11 +163,11 @@ let {{
         header_output += MicroNeonMemDeclare64.subst(loadIop) + \
             MicroNeonMemDeclare64.subst(storeIop)
 
-    def mkMarshalMicroOp(name, Name):
+    def mkMarshalMicroOp(name, Name, numRegs=4):
         global header_output, decoder_output, exec_output
 
         getInputCodeOp1L = ''
-        for v in range(4):
+        for v in range(numRegs):
             for p in range(4):
                 getInputCodeOp1L += '''
             writeVecElem(&input[%(v)d], (XReg) AA64FpOp1P%(p)dV%(v)d_uw,
@@ -175,7 +175,7 @@ let {{
             ''' % { 'v' : v, 'p' : p }
 
         getInputCodeOp1S = ''
-        for v in range(4):
+        for v in range(numRegs):
             for p in range(4):
                 getInputCodeOp1S += '''
             writeVecElem(&input[%(v)d], (XReg) AA64FpOp1P%(p)dV%(v)dS_uw,
@@ -262,7 +262,8 @@ let {{
             '''
 
             iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
-                                { 'code' : eCode }, ['IsMicroop'])
+                                { 'code' : eCode, 'op_class' : 'No_OpClass' },
+                                ['IsMicroop'])
             header_output += MicroNeonMixDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -323,7 +324,8 @@ let {{
                 ''' % { 'v': v, 'p': p}
 
             iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
-                                { 'code' : eCode }, ['IsMicroop'])
+                                { 'code' : eCode, 'op_class' : 'No_OpClass' },
+                                ['IsMicroop'])
             header_output += MicroNeonMixDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -443,8 +445,14 @@ let {{
 
     # Generate instructions
     mkMemAccMicroOp('mem_neon_uop')
-    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64')
-    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64')
+    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64_1Reg', numRegs=1)
+    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64_2Reg', numRegs=2)
+    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64_3Reg', numRegs=3)
+    mkMarshalMicroOp('deint_neon_uop', 'MicroDeintNeon64_4Reg', numRegs=4)
+    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64_1Reg', numRegs=1)
+    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64_2Reg', numRegs=2)
+    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64_3Reg', numRegs=3)
+    mkMarshalMicroOp('int_neon_uop', 'MicroIntNeon64_4Reg', numRegs=4)
     mkMarshalMicroOp('unpack_neon_uop', 'MicroUnpackNeon64')
     mkMarshalMicroOp('pack_neon_uop', 'MicroPackNeon64')
 

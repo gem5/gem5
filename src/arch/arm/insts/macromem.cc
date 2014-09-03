@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1107,9 +1107,26 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
     }
 
     for (int i = 0; i < numMarshalMicroops; ++i) {
-        microOps[uopIdx++] = new MicroDeintNeon64(
-            machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
-            numStructElems, numRegs, i /* step */);
+        switch(numRegs) {
+            case 1: microOps[uopIdx++] = new MicroDeintNeon64_1Reg(
+                        machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
+                        numStructElems, 1, i /* step */);
+                    break;
+            case 2: microOps[uopIdx++] = new MicroDeintNeon64_2Reg(
+                        machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
+                        numStructElems, 2, i /* step */);
+                    break;
+            case 3: microOps[uopIdx++] = new MicroDeintNeon64_3Reg(
+                        machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
+                        numStructElems, 3, i /* step */);
+                    break;
+            case 4: microOps[uopIdx++] = new MicroDeintNeon64_4Reg(
+                        machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
+                        numStructElems, 4, i /* step */);
+                    break;
+            default: panic("Invalid number of registers");
+        }
+
     }
 
     assert(uopIdx == numMicroops);
@@ -1150,9 +1167,25 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
     unsigned uopIdx = 0;
 
     for(int i = 0; i < numMarshalMicroops; ++i) {
-        microOps[uopIdx++] = new MicroIntNeon64(
-            machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
-            numStructElems, numRegs, i /* step */);
+        switch (numRegs) {
+            case 1: microOps[uopIdx++] = new MicroIntNeon64_1Reg(
+                        machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
+                        numStructElems, 1, i /* step */);
+                    break;
+            case 2: microOps[uopIdx++] = new MicroIntNeon64_2Reg(
+                        machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
+                        numStructElems, 2, i /* step */);
+                    break;
+            case 3: microOps[uopIdx++] = new MicroIntNeon64_3Reg(
+                        machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
+                        numStructElems, 3, i /* step */);
+                    break;
+            case 4: microOps[uopIdx++] = new MicroIntNeon64_4Reg(
+                        machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
+                        numStructElems, 4, i /* step */);
+                    break;
+            default: panic("Invalid number of registers");
+        }
     }
 
     uint32_t memaccessFlags = TLB::MustBeOne | (TLB::ArmFlags) eSize |
