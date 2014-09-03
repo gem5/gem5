@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -460,6 +460,19 @@ DefaultCommit<Impl>::takeOverFrom()
     squashCounter = 0;
     rob->takeOverFrom();
 }
+
+template <class Impl>
+void
+DefaultCommit<Impl>::deactivateThread(ThreadID tid)
+{
+    list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
+            priority_list.end(), tid);
+
+    if (thread_it != priority_list.end()) {
+        priority_list.erase(thread_it);
+    }
+}
+
 
 template <class Impl>
 void

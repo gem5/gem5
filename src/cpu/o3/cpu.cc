@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -728,6 +728,9 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
                 tid);
         activeThreads.erase(thread_it);
     }
+
+    fetch.deactivateThread(tid);
+    commit.deactivateThread(tid);
 }
 
 template <class Impl>

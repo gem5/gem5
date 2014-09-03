@@ -255,6 +255,8 @@ class DefaultFetch
     /** Tells fetch to wake up from a quiesce instruction. */
     void wakeFromQuiesce();
 
+    /** For priority-based fetch policies, need to keep update priorityList */
+    void deactivateThread(ThreadID tid);
   private:
     /** Reset this pipeline stage */
     void resetStage();
@@ -484,8 +486,8 @@ class DefaultFetch
     /** The size of the fetch queue in micro-ops */
     unsigned fetchQueueSize;
 
-    /** Queue of fetched instructions */
-    std::deque<DynInstPtr> fetchQueue;
+    /** Queue of fetched instructions. Per-thread to prevent HoL blocking. */
+    std::deque<DynInstPtr> fetchQueue[Impl::MaxThreads];
 
     /** Whether or not the fetch buffer data is valid. */
     bool fetchBufferValid[Impl::MaxThreads];

@@ -54,6 +54,7 @@
 #include "arch/tlb.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
+#include "base/random.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
@@ -342,7 +343,6 @@ DefaultFetch<Impl>::resetStage()
     cacheBlocked = false;
 
     priorityList.clear();
-    fetchQueue.clear();
 
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
@@ -359,6 +359,8 @@ DefaultFetch<Impl>::resetStage()
 
         fetchBufferPC[tid] = 0;
         fetchBufferValid[tid] = false;
+
+        fetchQueue[tid].clear();
 
         priorityList.push_back(tid);
     }
@@ -450,14 +452,18 @@ DefaultFetch<Impl>::isDrained() const
      * drain other components).
      */
     for (ThreadID i = 0; i < numThreads; ++i) {
-        if (!(fetchStatus[i] == Idle ||
-              (fetchStatus[i] == Blocked && stalls[i].drain)))
+        // Verify fetch queues are drained
+        if (!fetchQueue[i].empty())
             return false;
-    }
 
-    // Not drained if fetch queue contains entries
-    if (!fetchQueue.empty())
-        return false;
+        // Return false if not idle or drain stalled
+        if (fetchStatus[i] != Idle) {
+            if (fetchStatus[i] == Blocked && stalls[i].drain)
+                continue;
+            else
+                return false;
+        }
+    }
 
     /* The pipeline might start up again in the middle of the drain
      * cycle if the finish translation event is scheduled, so make
@@ -518,6 +524,17 @@ DefaultFetch<Impl>::switchToInactive()
         cpu->deactivateStage(O3CPU::FetchIdx);
 
         _status = Inactive;
+    }
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::deactivateThread(ThreadID tid)
+{
+    // Update priority list
+    auto thread_it = std::find(priorityList.begin(), priorityList.end(), tid);
+    if (thread_it != priorityList.end()) {
+        priorityList.erase(thread_it);
     }
 }
 
@@ -679,7 +696,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         }
     } else {
         // Don't send an instruction to decode if we can't handle it.
-        if (!(numInst < fetchWidth) || !(fetchQueue.size() < fetchQueueSize)) {
+        if (!(numInst < fetchWidth) || !(fetchQueue[tid].size() < fetchQueueSize)) {
             assert(!finishTranslationEvent.scheduled());
             finishTranslationEvent.setFault(fault);
             finishTranslationEvent.setReq(mem_req);
@@ -761,13 +778,7 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
     fetchStatus[tid] = Squashing;
 
     // Empty fetch queue
-    auto inst_itr = fetchQueue.begin();
-    while (inst_itr != fetchQueue.end()) {
-        if ((*inst_itr)->threadNumber == tid)
-            inst_itr = fetchQueue.erase(inst_itr);
-         else
-            ++inst_itr;
-    }
+    fetchQueue[tid].clear();
 
     // microops are being squashed, it is not known wheather the
     // youngest non-squashed microop was  marked delayed commit
@@ -915,13 +926,6 @@ DefaultFetch<Impl>::tick()
         _status = updateFetchStatus();
     }
 
-    // If there was activity this cycle, inform the CPU of it.
-    if (wroteToTimeBuffer || cpu->contextSwitch) {
-        DPRINTF(Activity, "Activity this cycle.\n");
-
-        cpu->activityThisCycle();
-    }
-
     // Issue the next I-cache request if possible.
     for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
         if (issuePipelinedIfetch[i]) {
@@ -931,17 +935,45 @@ DefaultFetch<Impl>::tick()
 
     // Send instructions enqueued into the fetch queue to decode.
     // Limit rate by fetchWidth.  Stall if decode is stalled.
-    unsigned instsToDecode = 0;
-    while(!fetchQueue.empty() &&
-          instsToDecode < decodeWidth &&
-          !stalls[fetchQueue.front()->threadNumber].decode) {
-        auto inst = fetchQueue.front();
-        toDecode->insts[toDecode->size++] = inst;
-        DPRINTF(Fetch, "[tid:%i][sn:%i]: Sending instruction to decode from "
-                "fetch queue. Fetch queue size: %i.\n",
-                inst->threadNumber, inst->seqNum, fetchQueue.size());
-        fetchQueue.pop_front();
-        instsToDecode++;
+    unsigned insts_to_decode = 0;
+    unsigned available_insts = 0;
+
+    for (auto tid : *activeThreads) {
+        if (!stalls[tid].decode) {
+            available_insts += fetchQueue[tid].size();
+        }
+    }
+
+    // Pick a random thread to start trying to grab instructions from
+    auto tid_itr = activeThreads->begin();
+    std::advance(tid_itr, random_mt.random<uint8_t>(0, activeThreads->size() - 1));
+
+    while (available_insts != 0 && insts_to_decode < decodeWidth) {
+        ThreadID tid = *tid_itr;
+        if (!stalls[tid].decode && !fetchQueue[tid].empty()) {
+            auto inst = fetchQueue[tid].front();
+            toDecode->insts[toDecode->size++] = inst;
+            DPRINTF(Fetch, "[tid:%i][sn:%i]: Sending instruction to decode from "
+                    "fetch queue. Fetch queue size: %i.\n",
+                    tid, inst->seqNum, fetchQueue[tid].size());
+
+            wroteToTimeBuffer = true;
+            fetchQueue[tid].pop_front();
+            insts_to_decode++;
+            available_insts--;
+        }
+
+        tid_itr++;
+        // Wrap around if at end of active threads list
+        if (tid_itr == activeThreads->end())
+            tid_itr = activeThreads->begin();
+    }
+
+    // If there was activity this cycle, inform the CPU of it.
+    if (wroteToTimeBuffer || cpu->contextSwitch) {
+        DPRINTF(Activity, "Activity this cycle.\n");
+
+        cpu->activityThisCycle();
     }
 
     // Reset the number of the instruction we've fetched.
@@ -1095,10 +1127,10 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     // Write the instruction to the first slot in the queue
     // that heads to decode.
     assert(numInst < fetchWidth);
-    fetchQueue.push_back(instruction);
-    assert(fetchQueue.size() <= fetchQueueSize);
+    fetchQueue[tid].push_back(instruction);
+    assert(fetchQueue[tid].size() <= fetchQueueSize);
     DPRINTF(Fetch, "[tid:%i]: Fetch queue entry created (%i/%i).\n",
-            tid, fetchQueue.size(), fetchQueueSize);
+            tid, fetchQueue[tid].size(), fetchQueueSize);
     //toDecode->insts[toDecode->size++] = instruction;
 
     // Keep track of if we can take an interrupt at this boundary
@@ -1213,7 +1245,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // Loop through instruction memory from the cache.
     // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
-    while (numInst < fetchWidth && fetchQueue.size() < fetchQueueSize
+    while (numInst < fetchWidth && fetchQueue[tid].size() < fetchQueueSize
            && !predictedBranch) {
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
@@ -1337,7 +1369,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
         } while ((curMacroop || decoder[tid]->instReady()) &&
-                 numInst < fetchWidth && fetchQueue.size() < fetchQueueSize);
+                 numInst < fetchWidth &&
+                 fetchQueue[tid].size() < fetchQueueSize);
     }
 
     if (predictedBranch) {

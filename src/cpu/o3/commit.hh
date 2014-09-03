@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -217,6 +217,9 @@ class DefaultCommit
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
+
+    /** Deschedules a thread from scheduling */
+    void deactivateThread(ThreadID tid);
 
     /** Ticks the commit stage, which tries to commit instructions. */
     void tick();
