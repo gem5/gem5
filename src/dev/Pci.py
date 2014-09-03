@@ -98,6 +98,7 @@ class PciDevice(DmaDevice):
     BAR3LegacyIO = Param.Bool(False, "Whether BAR3 is hardwired legacy IO")
     BAR4LegacyIO = Param.Bool(False, "Whether BAR4 is hardwired legacy IO")
     BAR5LegacyIO = Param.Bool(False, "Whether BAR5 is hardwired legacy IO")
+    LegacyIOBase = Param.Addr(0x0, "Base Address for Legacy IO")
 
     CardbusCIS = Param.UInt32(0x00, "Cardbus Card Information Structure")
     SubsystemID = Param.UInt16(0x00, "Subsystem ID")

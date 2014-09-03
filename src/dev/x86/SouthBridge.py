@@ -84,6 +84,7 @@ class SouthBridge(SimObject):
     ide.ProgIF = 0x80
     ide.InterruptLine = 14
     ide.InterruptPin = 1
+    ide.LegacyIOBase = x86IOAddress(0)
 
     def attachIO(self, bus, dma_ports):
         # Route interupt signals

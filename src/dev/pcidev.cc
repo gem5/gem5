@@ -213,7 +213,7 @@ PciDevice::PciDevice(const Params *p)
 
     for (int i = 0; i < 6; ++i) {
         if (legacyIO[i]) {
-            BARAddrs[i] = platform->calcPciIOAddr(letoh(config.baseAddr[i]));
+            BARAddrs[i] = p->LegacyIOBase + letoh(config.baseAddr[i]);
             config.baseAddr[i] = 0;
         } else {
             BARAddrs[i] = 0;
