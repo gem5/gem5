@@ -76,7 +76,6 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
       issueToExecuteDelay(params->issueToExecuteDelay),
       dispatchWidth(params->dispatchWidth),
       issueWidth(params->issueWidth),
-      wbOutstanding(0),
       wbWidth(params->wbWidth),
       numThreads(params->numThreads)
 {
@@ -109,11 +108,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
         fetchRedirect[tid] = false;
     }
 
-    wbMax = wbWidth * params->wbDepth;
-
     updateLSQNextCycle = false;
-
-    ableToIssue = true;
 
     skidBufferMax = (3 * (renameToIEWDelay * params->renameWidth)) + issueWidth;
 }
@@ -635,8 +630,6 @@ DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
             ++wbCycle;
             wbNumInst = 0;
         }
-
-        assert((wbCycle * wbWidth + wbNumInst) <= wbMax);
     }
 
     DPRINTF(IEW, "Current wb cycle: %i, width: %i, numInst: %i\nwbActual:%i\n",
@@ -1263,7 +1256,6 @@ DefaultIEW<Impl>::executeInsts()
 
             ++iewExecSquashedInsts;
 
-            decrWb(inst->seqNum);
             continue;
         }
 
@@ -1502,8 +1494,6 @@ DefaultIEW<Impl>::writebackInsts()
             }
             writebackCount[tid]++;
         }
-
-        decrWb(inst->seqNum);
     }
 }
 

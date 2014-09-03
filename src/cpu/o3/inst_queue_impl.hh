@@ -756,7 +756,6 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     int total_issued = 0;
 
     while (total_issued < (totalWidth - total_deferred_mem_issued) &&
-           iewStage->canIssue() &&
            order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
 
@@ -861,7 +860,6 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             listOrder.erase(order_it++);
             statIssuedInstType[tid][op_class]++;
-            iewStage->incrWb(issuing_inst->seqNum);
         } else {
             statFuBusy[op_class]++;
             fuBusy[tid]++;

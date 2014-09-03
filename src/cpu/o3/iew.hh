@@ -219,49 +219,6 @@ class DefaultIEW
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB(ThreadID tid) { return ldstQueue.hasStoresToWB(tid); }
 
-    void incrWb(InstSeqNum &sn)
-    {
-        ++wbOutstanding;
-        if (wbOutstanding == wbMax)
-            ableToIssue = false;
-        DPRINTF(IEW, "wbOutstanding: %i [sn:%lli]\n", wbOutstanding, sn);
-        assert(wbOutstanding <= wbMax);
-#ifdef DEBUG
-        wbList.insert(sn);
-#endif
-    }
-
-    void decrWb(InstSeqNum &sn)
-    {
-        if (wbOutstanding == wbMax)
-            ableToIssue = true;
-        wbOutstanding--;
-        DPRINTF(IEW, "wbOutstanding: %i [sn:%lli]\n", wbOutstanding, sn);
-        assert(wbOutstanding >= 0);
-#ifdef DEBUG
-        assert(wbList.find(sn) != wbList.end());
-        wbList.erase(sn);
-#endif
-    }
-
-#ifdef DEBUG
-    std::set<InstSeqNum> wbList;
-
-    void dumpWb()
-    {
-        std::set<InstSeqNum>::iterator wb_it = wbList.begin();
-        while (wb_it != wbList.end()) {
-            cprintf("[sn:%lli]\n",
-                    (*wb_it));
-            wb_it++;
-        }
-    }
-#endif
-
-    bool canIssue() { return ableToIssue; }
-
-    bool ableToIssue;
-
     /** Check misprediction  */
     void checkMisprediction(DynInstPtr &inst);
 
@@ -452,18 +409,8 @@ class DefaultIEW
      */
     unsigned wbCycle;
 
-    /** Number of instructions in flight that will writeback. */
-
-    /** Number of instructions in flight that will writeback. */
-    int wbOutstanding;
-
     /** Writeback width. */
     unsigned wbWidth;
-
-    /** Writeback width * writeback depth, where writeback depth is
-     * the number of cycles of writing back instructions that can be
-     * buffered. */
-    unsigned wbMax;
 
     /** Number of active threads. */
     ThreadID numThreads;

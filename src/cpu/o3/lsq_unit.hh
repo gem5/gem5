@@ -762,7 +762,6 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
             iewStage->rescheduleMemInst(load_inst);
-            iewStage->decrWb(load_inst->seqNum);
             load_inst->clearIssued();
             ++lsqRescheduledLoads;
 
@@ -888,12 +887,6 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         }
 
         ++lsqCacheBlocked;
-
-        // If the first part of a split access succeeds, then let the LSQ
-        // handle the decrWb when completeDataAccess is called upon return
-        // of the requested first part of data
-        if (!completedFirst)
-            iewStage->decrWb(load_inst->seqNum);
 
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < load_inst->seqNum)
