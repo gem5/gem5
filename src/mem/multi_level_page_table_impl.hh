@@ -74,13 +74,13 @@ MultiLevelPageTable<ISAOps>::initState(ThreadContext* tc)
     /* setting first level of the page table */
     uint64_t log_req_size = floorLog2(sizeof(PageTableEntry)) +
                             logLevelSize[numLevels-1];
-    assert(log_req_size >= LogVMPageSize);
-    uint64_t npages = 1 << (log_req_size - LogVMPageSize);
+    assert(log_req_size >= PageShift);
+    uint64_t npages = 1 << (log_req_size - PageShift);
 
     Addr paddr = system->allocPhysPages(npages);
 
     PortProxy &p = system->physProxy;
-    p.memsetBlob(paddr, 0, npages << LogVMPageSize);
+    p.memsetBlob(paddr, 0, npages << PageShift);
 }
 
 
@@ -93,7 +93,7 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
     Addr level_base = basePtr;
     for (int i = numLevels - 1; i > 0; i--) {
 
-        Addr entry_addr = (level_base<<LogVMPageSize) +
+        Addr entry_addr = (level_base<<PageShift) +
                           offsets[i] * sizeof(PageTableEntry);
 
         PortProxy &p = system->physProxy;
@@ -106,16 +106,16 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
 
             uint64_t log_req_size = floorLog2(sizeof(PageTableEntry)) +
                                     logLevelSize[i-1];
-            assert(log_req_size >= LogVMPageSize);
-            uint64_t npages = 1 << (log_req_size - LogVMPageSize);
+            assert(log_req_size >= PageShift);
+            uint64_t npages = 1 << (log_req_size - PageShift);
 
             DPRINTF(MMU, "Allocating %d pages needed for entry in level %d\n", npages, i-1);
 
             /* allocate new entry */
             Addr next_entry_paddr = system->allocPhysPages(npages);
-            p.memsetBlob(next_entry_paddr, 0, npages << LogVMPageSize);
+            p.memsetBlob(next_entry_paddr, 0, npages << PageShift);
 
-            next_entry_pnum = next_entry_paddr >> LogVMPageSize;
+            next_entry_pnum = next_entry_paddr >> PageShift;
             pTableISAOps.setPnum(entry, next_entry_pnum);
             pTableISAOps.setPTEFields(entry);
             p.write<PageTableEntry>(entry_addr, entry);
@@ -125,7 +125,7 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
         level_base = next_entry_pnum;
 
     }
-    PTE_addr = (level_base<<LogVMPageSize) +
+    PTE_addr = (level_base<<PageShift) +
         offsets[0] * sizeof(PageTableEntry);
     DPRINTF(MMU, "Returning PTE_addr: %x\n", PTE_addr);
     return true;
@@ -148,7 +148,7 @@ MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr, int64_t size, bool clob
             PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
             Addr entry_paddr = pTableISAOps.getPnum(PTE);
             if (!clobber && entry_paddr == 0) {
-                pTableISAOps.setPnum(PTE, paddr >> LogVMPageSize);
+                pTableISAOps.setPnum(PTE, paddr >> PageShift);
                 pTableISAOps.setPTEFields(PTE);
                 p.write<PageTableEntry>(PTE_addr, PTE);
                 DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
@@ -193,7 +193,7 @@ MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
                 walk(new_vaddr, true, new_PTE_addr);
                 PageTableEntry new_PTE = p.read<PageTableEntry>(new_PTE_addr);
 
-                pTableISAOps.setPnum(new_PTE, paddr>>LogVMPageSize);
+                pTableISAOps.setPnum(new_PTE, paddr>>PageShift);
                 pTableISAOps.setPTEFields(new_PTE);
                 p.write<PageTableEntry>(new_PTE_addr, new_PTE);
                 DPRINTF(MMU, "Remapping: %#x-%#x\n", vaddr, new_PTE_addr);
@@ -285,7 +285,7 @@ MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
         if (pnum == 0)
             return false;
 
-        entry = TlbEntry(pid, vaddr, pnum << LogVMPageSize);
+        entry = TlbEntry(pid, vaddr, pnum << PageShift);
         updateCache(page_addr, entry);
     } else {
         return false;

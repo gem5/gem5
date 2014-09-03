@@ -51,8 +51,6 @@
 
 namespace LittleEndianGuest {}
 
-#define TARGET_ARM
-
 namespace ArmISA
 {
     using namespace LittleEndianGuest;
@@ -101,16 +99,7 @@ namespace ArmISA
     // return a no-op instruction... used for instruction fetch faults
     const ExtMachInst NoopMachInst = 0x01E320F000ULL;
 
-    const int LogVMPageSize = 12;       // 4K bytes
-    const int VMPageSize = (1 << LogVMPageSize);
-
-    // Shouldn't this be 1 because of Thumb?! Dynamic? --Ali
-    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
-
     const int MachineBytes = 4;
-    const int WordBytes = 4;
-    const int HalfwordBytes = 2;
-    const int ByteBytes = 1;
 
     const uint32_t HighVecs = 0xFFFF0000;
 

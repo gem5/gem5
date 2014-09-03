@@ -73,7 +73,7 @@ class PageTableBase
   public:
 
     PageTableBase(const std::string &__name, uint64_t _pid,
-              Addr _pageSize = TheISA::VMPageSize)
+              Addr _pageSize = TheISA::PageBytes)
             : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
               pid(_pid), _name(__name)
     {
@@ -188,7 +188,7 @@ class FuncPageTable : public PageTableBase
   public:
 
     FuncPageTable(const std::string &__name, uint64_t _pid,
-              Addr _pageSize = TheISA::VMPageSize);
+                  Addr _pageSize = TheISA::PageBytes);
 
     ~FuncPageTable();
 
@@ -229,7 +229,7 @@ class NoArchPageTable : public FuncPageTable
 {
   public:
     NoArchPageTable(const std::string &__name, uint64_t _pid, System *_sys,
-              Addr _pageSize = TheISA::VMPageSize) : FuncPageTable(__name, _pid)
+              Addr _pageSize = TheISA::PageBytes) : FuncPageTable(__name, _pid)
     {
         fatal("No architectural page table defined for this ISA.\n");
     }

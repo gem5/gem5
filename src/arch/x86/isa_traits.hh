@@ -59,14 +59,8 @@ namespace X86ISA
     //XXX This needs to be set to an intermediate instruction struct
     //which encodes this instruction
 
-    //4k. This value is not constant on x86.
-    const int LogVMPageSize = 12;
-    const int VMPageSize = (1 << LogVMPageSize);
-
-    const int PageShift = 12;
-    const int PageBytes = 1ULL << PageShift;
-
-    const int BranchPredAddrShiftAmt = 0;
+    const Addr PageShift = 12;
+    const Addr PageBytes = ULL(1) << PageShift;
 
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;

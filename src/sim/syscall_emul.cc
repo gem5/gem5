@@ -148,7 +148,7 @@ exitGroupFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
-    return (int)VMPageSize;
+    return (int)PageBytes;
 }
 
 
@@ -167,9 +167,9 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (new_brk > p->brk_point) {
         // might need to allocate some new pages
         for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
-                                VMPageSize); !gen.done(); gen.next()) {
+                                PageBytes); !gen.done(); gen.next()) {
             if (!p->pTable->translate(gen.addr()))
-                p->allocateMem(roundDown(gen.addr(), VMPageSize), VMPageSize);
+                p->allocateMem(roundDown(gen.addr(), PageBytes), PageBytes);
 
             // if the address is already there, zero it out
             else {
@@ -177,14 +177,14 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
                 SETranslatingPortProxy &tp = tc->getMemProxy();
 
                 // split non-page aligned accesses
-                Addr next_page = roundUp(gen.addr(), VMPageSize);
+                Addr next_page = roundUp(gen.addr(), PageBytes);
                 uint32_t size_needed = next_page - gen.addr();
                 tp.memsetBlob(gen.addr(), zero, size_needed);
-                if (gen.addr() + VMPageSize > next_page &&
+                if (gen.addr() + PageBytes > next_page &&
                     next_page < new_brk &&
                     p->pTable->translate(next_page))
                 {
-                    size_needed = VMPageSize - size_needed;
+                    size_needed = PageBytes - size_needed;
                     tp.memsetBlob(next_page, zero, size_needed);
                 }
             }

@@ -68,7 +68,7 @@ SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
 {
     int prevSize = 0;
 
-    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
         Addr paddr;
 
         if (!pTable->translate(gen.addr(),paddr))
@@ -94,13 +94,13 @@ SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size) const
 {
     int prevSize = 0;
 
-    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
         Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
-                process->allocateMem(roundDown(gen.addr(), VMPageSize),
-                                     VMPageSize);
+                process->allocateMem(roundDown(gen.addr(), PageBytes),
+                                     PageBytes);
             } else if (allocating == NextPage) {
                 // check if we've accessed the next page on the stack
                 if (!process->fixupStackFault(gen.addr()))
@@ -130,13 +130,13 @@ SETranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size) const
 bool
 SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size) const
 {
-    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+    for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
         Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
-                process->allocateMem(roundDown(gen.addr(), VMPageSize),
-                                     VMPageSize);
+                process->allocateMem(roundDown(gen.addr(), PageBytes),
+                                     PageBytes);
                 pTable->translate(gen.addr(), paddr);
             } else {
                 return false;

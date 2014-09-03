@@ -74,7 +74,7 @@ ArmLiveProcess32::ArmLiveProcess32(LiveProcessParams *params,
 
     // Set up break point (Top of Heap)
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     mmap_start = mmap_end = 0x40000000L;
@@ -91,7 +91,7 @@ ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
 
     // Set up break point (Top of Heap)
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     mmap_start = mmap_end = 0x4000000000L;
@@ -101,7 +101,7 @@ void
 ArmLiveProcess32::initState()
 {
     LiveProcess::initState();
-    argsInit<uint32_t>(VMPageSize, INTREG_SP);
+    argsInit<uint32_t>(PageBytes, INTREG_SP);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
         CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
@@ -120,7 +120,7 @@ void
 ArmLiveProcess64::initState()
 {
     LiveProcess::initState();
-    argsInit<uint64_t>(VMPageSize, INTREG_SP0);
+    argsInit<uint64_t>(PageBytes, INTREG_SP0);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -203,7 +203,7 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
         //XXX Figure out what these should be
         auxv.push_back(auxv_t(M5_AT_HWCAP, features));
         //The system page size
-        auxv.push_back(auxv_t(M5_AT_PAGESZ, ArmISA::VMPageSize));
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, ArmISA::PageBytes));
         //Frequency at which times() increments
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 0x64));
         // For statically linked executables, this is the virtual address of the

@@ -334,7 +334,7 @@ Process::sim_fd_obj(int tgt_fd)
 void
 Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
-    int npages = divCeil(size, (int64_t)VMPageSize);
+    int npages = divCeil(size, (int64_t)PageBytes);
     Addr paddr = system->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size, clobber);
 }
@@ -345,7 +345,7 @@ Process::fixupStackFault(Addr vaddr)
     // Check if this is already on the stack and there's just no page there
     // yet.
     if (vaddr >= stack_min && vaddr < stack_base) {
-        allocateMem(roundDown(vaddr, VMPageSize), VMPageSize);
+        allocateMem(roundDown(vaddr, PageBytes), PageBytes);
         return true;
     }
 

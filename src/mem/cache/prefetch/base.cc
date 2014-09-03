@@ -312,7 +312,7 @@ BasePrefetcher::inPrefetch(Addr address, bool is_secure)
 bool
 BasePrefetcher::samePage(Addr a, Addr b)
 {
-    return roundDown(a, TheISA::VMPageSize) == roundDown(b, TheISA::VMPageSize);
+    return roundDown(a, TheISA::PageBytes) == roundDown(b, TheISA::PageBytes);
 }
 
 

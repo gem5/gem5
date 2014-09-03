@@ -109,19 +109,7 @@ enum mode_type
     mode_number             // number of modes
 };
 
-// Constants Related to the number of registers
-
-enum {
-    LogVMPageSize = 13,       // 8K bytes
-    VMPageSize = (1 << LogVMPageSize),
-
-    BranchPredAddrShiftAmt = 2, // instructions are 4-byte aligned
-
-    MachineBytes = 8,
-    WordBytes = 4,
-    HalfwordBytes = 2,
-    ByteBytes = 1
-};
+const int MachineBytes = 8;
 
 // return a no-op instruction... used for instruction fetch faults
 // Alpha UNOP (ldq_u r31,0(r0))

@@ -85,6 +85,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
         }
     } else {
         if (size == (uint16_t)(-1))
+            // todo: should this not be sizeof(uint32_t) rather?
             size = ArmISA::MachineBytes;
 
         if (number < NumArgumentRegs) {

@@ -57,7 +57,7 @@ SparcLiveProcess::SparcLiveProcess(LiveProcessParams * params,
 
     // XXX all the below need to be updated for SPARC - Ali
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -166,7 +166,7 @@ Sparc32LiveProcess::initState()
     pstate.am = 1;
     tc->setMiscReg(MISCREG_PSTATE, pstate);
 
-    argsInit(32 / 8, VMPageSize);
+    argsInit(32 / 8, PageBytes);
 }
 
 void
@@ -180,7 +180,7 @@ Sparc64LiveProcess::initState()
     pstate.ie = 1;
     tc->setMiscReg(MISCREG_PSTATE, pstate);
 
-    argsInit(sizeof(IntReg), VMPageSize);
+    argsInit(sizeof(IntReg), PageBytes);
 }
 
 template<class IntType>
@@ -234,7 +234,7 @@ SparcLiveProcess::argsInit(int pageSize)
         // Bits which describe the system hardware capabilities
         auxv.push_back(auxv_t(M5_AT_HWCAP, hwcap));
         // The system page size
-        auxv.push_back(auxv_t(M5_AT_PAGESZ, SparcISA::VMPageSize));
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, SparcISA::PageBytes));
         // Defined to be 100 in the kernel source.
         // Frequency at which times() increments
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));

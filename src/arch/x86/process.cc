@@ -86,7 +86,7 @@ X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
     numSyscallDescs(_numSyscallDescs)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
+    brk_point = roundUp(brk_point, PageBytes);
 }
 
 X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
@@ -96,7 +96,7 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
 {
 
     vsyscallPage.base = 0xffffffffff600000ULL;
-    vsyscallPage.size = VMPageSize;
+    vsyscallPage.size = PageBytes;
     vsyscallPage.vtimeOffset = 0x400;
     vsyscallPage.vgettimeofdayOffset = 0x0;
 
@@ -133,10 +133,10 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
     _gdtStart = ULL(0xffffd000);
-    _gdtSize = VMPageSize;
+    _gdtSize = PageBytes;
 
     vsyscallPage.base = 0xffffe000ULL;
-    vsyscallPage.size = VMPageSize;
+    vsyscallPage.size = PageBytes;
     vsyscallPage.vsyscallOffset = 0x400;
     vsyscallPage.vsysexitOffset = 0x410;
 
@@ -163,7 +163,7 @@ X86_64LiveProcess::initState()
 {
     X86LiveProcess::initState();
 
-    argsInit(sizeof(uint64_t), VMPageSize);
+    argsInit(sizeof(uint64_t), PageBytes);
 
        // Set up the vsyscall page for this process.
     allocateMem(vsyscallPage.base, vsyscallPage.size);
@@ -258,7 +258,7 @@ I386LiveProcess::initState()
 {
     X86LiveProcess::initState();
 
-    argsInit(sizeof(uint32_t), VMPageSize);
+    argsInit(sizeof(uint32_t), PageBytes);
 
     /* 
      * Set up a GDT for this process. The whole GDT wouldn't really be for
@@ -474,7 +474,7 @@ X86LiveProcess::argsInit(int pageSize,
         //XXX Figure out what these should be
         auxv.push_back(auxv_t(M5_AT_HWCAP, features));
         //The system page size
-        auxv.push_back(auxv_t(M5_AT_PAGESZ, X86ISA::VMPageSize));
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, X86ISA::PageBytes));
         //Frequency at which times() increments
         //Defined to be 100 in the kernel source.
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));

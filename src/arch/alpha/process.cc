@@ -49,7 +49,7 @@ AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams *params,
     : LiveProcess(params, objFile)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.
@@ -83,7 +83,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
         // seem to be a problem.
         // check out _dl_aux_init() in glibc/elf/dl-support.c for details
         // --Lisa
-        auxv.push_back(auxv_t(M5_AT_PAGESZ, AlphaISA::VMPageSize));
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, AlphaISA::PageBytes));
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
         auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
         DPRINTF(Loader, "auxv at PHDR %08p\n", elfObject->programHeaderTable());
@@ -193,7 +193,7 @@ AlphaLiveProcess::initState()
 
     LiveProcess::initState();
 
-    argsInit(MachineBytes, VMPageSize);
+    argsInit(MachineBytes, PageBytes);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     tc->setIntReg(GlobalPointerReg, objFile->globalPointer());

@@ -139,7 +139,7 @@ Address::operator=(const Address& obj)
 void
 Address::makePageAddress()
 {
-    m_address = maskLowOrderBits(TheISA::LogVMPageSize);
+    m_address = maskLowOrderBits(TheISA::PageShift);
 }
 
 Address

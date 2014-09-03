@@ -145,16 +145,6 @@ enum mode_type
 // return a no-op instruction... used for instruction fetch faults
 const ExtMachInst NoopMachInst = 0x00000000;
 
-const int LogVMPageSize = 13;       // 8K bytes
-const int VMPageSize = (1 << LogVMPageSize);
-
-const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
-
-const int MachineBytes = 4;
-const int WordBytes = 4;
-const int HalfwordBytes = 2;
-const int ByteBytes = 1;
-
 const int ANNOTE_NONE = 0;
 const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 

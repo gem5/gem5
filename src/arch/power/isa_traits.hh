@@ -61,9 +61,6 @@ const Addr NPtePageShift = PageShift - PteShift;
 const Addr NPtePage = ULL(1) << NPtePageShift;
 const Addr PteMask = NPtePage - 1;
 
-const int LogVMPageSize = 12;  // 4K bytes
-const int VMPageSize = (1 << LogVMPageSize);
-
 const int MachineBytes = 4;
 
 // This is ori 0, 0, 0

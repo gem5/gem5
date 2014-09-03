@@ -51,9 +51,6 @@ namespace NullISA
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
 
-    const int LogVMPageSize = 12;       // 4K bytes
-    const int VMPageSize = (1 << LogVMPageSize);
-
 }
 
 #endif //__ARCH_NULL_ISA_TRAITS_HH__

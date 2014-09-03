@@ -317,9 +317,9 @@ System::replaceThreadContext(ThreadContext *tc, int context_id)
 Addr
 System::allocPhysPages(int npages)
 {
-    Addr return_addr = pagePtr << LogVMPageSize;
+    Addr return_addr = pagePtr << PageShift;
     pagePtr += npages;
-    if ((pagePtr << LogVMPageSize) > physmem.totalSize())
+    if ((pagePtr << PageShift) > physmem.totalSize())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
@@ -333,7 +333,7 @@ System::memSize() const
 Addr
 System::freeMemSize() const
 {
-   return physmem.totalSize() - (pagePtr << LogVMPageSize);
+   return physmem.totalSize() - (pagePtr << PageShift);
 }
 
 bool

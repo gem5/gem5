@@ -41,8 +41,6 @@ namespace BigEndianGuest {}
 
 namespace SparcISA
 {
-const int MachineBytes = 8;
-
 // This makes sure the big endian versions of certain functions are used.
 using namespace BigEndianGuest;
 
@@ -52,21 +50,13 @@ using namespace BigEndianGuest;
 // SPARC NOP (sethi %(hi(0), g0)
 const MachInst NoopMachInst = 0x01000000;
 
-// 8K. This value is implmentation specific; and should probably
-// be somewhere else.
-const int LogVMPageSize = 13;
-const int VMPageSize = (1 << LogVMPageSize);
-
 // real address virtual mapping
 // sort of like alpha super page, but less frequently used
 const Addr SegKPMEnd  = ULL(0xfffffffc00000000);
 const Addr SegKPMBase = ULL(0xfffffac000000000);
 
-// Why does both the previous set of constants and this one exist?
-const int PageShift = 13;
-const int PageBytes = 1ULL << PageShift;
-
-const int BranchPredAddrShiftAmt = 2;
+const Addr PageShift = 13;
+const Addr PageBytes = ULL(1) << PageShift;
 
 StaticInstPtr decodeInst(ExtMachInst);
 

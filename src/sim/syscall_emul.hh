@@ -822,9 +822,9 @@ mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *
     if (use_provided_address)
         provided_address = process->getSyscallArg(tc, index);
 
-    if ((start % TheISA::VMPageSize != 0) ||
-        (new_length % TheISA::VMPageSize != 0) ||
-        (provided_address % TheISA::VMPageSize != 0)) {
+    if ((start % TheISA::PageBytes != 0) ||
+        (new_length % TheISA::PageBytes != 0) ||
+        (provided_address % TheISA::PageBytes != 0)) {
         warn("mremap failing: arguments not page aligned");
         return -EINVAL;
     }
@@ -1226,8 +1226,8 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
     }
 
-    if ((start  % TheISA::VMPageSize) != 0 ||
-        (length % TheISA::VMPageSize) != 0) {
+    if ((start  % TheISA::PageBytes) != 0 ||
+        (length % TheISA::PageBytes) != 0) {
         warn("mmap failing: arguments not page-aligned: "
              "start 0x%x length 0x%x",
              start, length);
