@@ -185,9 +185,6 @@ class DefaultCommit
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
-    /** Skid buffer between rename and commit. */
-    std::queue<DynInstPtr> skidBuffer;
-
     /** The pointer to the IEW stage. Used solely to ensure that
      * various events (traps, interrupts, syscalls) do not occur until
      * all stores have written back.
@@ -250,11 +247,6 @@ class DefaultCommit
      * current status at the end of the cycle.
      */
     void setNextStatus();
-
-    /** Checks if the ROB is completed with squashing. This is for the case
-     * where the ROB can take multiple cycles to complete squashing.
-     */
-    bool robDoneSquashing();
 
     /** Returns if any of the threads have the number of ROB entries changed
      * on this cycle. Used to determine if the number of free ROB entries needs
@@ -320,9 +312,6 @@ class DefaultCommit
 
     /** Gets instructions from rename and inserts them into the ROB. */
     void getInsts();
-
-    /** Insert all instructions from rename into skidBuffer */
-    void skidInsert();
 
     /** Marks completed instructions using information sent from IEW. */
     void markCompletedInsts();

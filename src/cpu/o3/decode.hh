@@ -126,7 +126,7 @@ class DefaultDecode
     void drainSanityCheck() const;
 
     /** Has the stage drained? */
-    bool isDrained() const { return true; }
+    bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom() { resetStage(); }
@@ -249,8 +249,6 @@ class DefaultDecode
     /** Source of possible stalls. */
     struct Stalls {
         bool rename;
-        bool iew;
-        bool commit;
     };
 
     /** Tracks which stages are telling decode to stall. */

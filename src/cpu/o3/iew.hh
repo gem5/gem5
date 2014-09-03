@@ -270,9 +270,6 @@ class DefaultIEW
      */
     unsigned validInstsFromRename();
 
-    /** Reads the stall signals. */
-    void readStallSignals(ThreadID tid);
-
     /** Checks if any of the stall conditions are currently true. */
     bool checkStall(ThreadID tid);
 
@@ -345,14 +342,6 @@ class DefaultIEW
      * CPU can deschedule itself if there is no activity.
      */
     bool wroteToTimeBuffer;
-
-    /** Source of possible stalls. */
-    struct Stalls {
-        bool commit;
-    };
-
-    /** Stages that are telling IEW to stall. */
-    Stalls stalls[Impl::MaxThreads];
 
     /** Debug function to print instructions that are issued this cycle. */
     void printAvailableInsts();

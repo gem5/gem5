@@ -104,13 +104,12 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         dispatchStatus[tid] = Running;
-        stalls[tid].commit = false;
         fetchRedirect[tid] = false;
     }
 
     updateLSQNextCycle = false;
 
-    skidBufferMax = (3 * (renameToIEWDelay * params->renameWidth)) + issueWidth;
+    skidBufferMax = (renameToIEWDelay + 1) * params->renameWidth;
 }
 
 template <class Impl>
@@ -434,7 +433,6 @@ DefaultIEW<Impl>::takeOverFrom()
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         dispatchStatus[tid] = Running;
-        stalls[tid].commit = false;
         fetchRedirect[tid] = false;
     }
 
@@ -761,26 +759,12 @@ DefaultIEW<Impl>::resetEntries()
 }
 
 template <class Impl>
-void
-DefaultIEW<Impl>::readStallSignals(ThreadID tid)
-{
-    if (fromCommit->commitBlock[tid]) {
-        stalls[tid].commit = true;
-    }
-
-    if (fromCommit->commitUnblock[tid]) {
-        assert(stalls[tid].commit);
-        stalls[tid].commit = false;
-    }
-}
-
-template <class Impl>
 bool
 DefaultIEW<Impl>::checkStall(ThreadID tid)
 {
     bool ret_val(false);
 
-    if (stalls[tid].commit) {
+    if (fromCommit->commitInfo[tid].robSquashing) {
         DPRINTF(IEW,"[tid:%i]: Stall from Commit stage detected.\n",tid);
         ret_val = true;
     } else if (instQueue.isFull(tid)) {
@@ -802,8 +786,6 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(ThreadID tid)
     // If status was Squashing
     //     check if squashing is not high.  Switch to running this cycle.
 
-    readStallSignals(tid);
-
     if (fromCommit->commitInfo[tid].squash) {
         squash(tid);
 
@@ -824,7 +806,6 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(ThreadID tid)
         dispatchStatus[tid] = Squashing;
         emptyRenameInsts(tid);
         wroteToTimeBuffer = true;
-        return;
     }
 
     if (checkStall(tid)) {

@@ -434,9 +434,6 @@ class DefaultFetch
     /** Source of possible stalls. */
     struct Stalls {
         bool decode;
-        bool rename;
-        bool iew;
-        bool commit;
         bool drain;
     };
 

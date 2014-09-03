@@ -1335,29 +1335,6 @@ DefaultCommit<Impl>::getInsts()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::skidInsert()
-{
-    DPRINTF(Commit, "Attempting to any instructions from rename into "
-            "skidBuffer.\n");
-
-    for (int inst_num = 0; inst_num < fromRename->size; ++inst_num) {
-        DynInstPtr inst = fromRename->insts[inst_num];
-
-        if (!inst->isSquashed()) {
-            DPRINTF(Commit, "Inserting PC %s [sn:%i] [tid:%i] into ",
-                    "skidBuffer.\n", inst->pcState(), inst->seqNum,
-                    inst->threadNumber);
-            skidBuffer.push(inst);
-        } else {
-            DPRINTF(Commit, "Instruction PC %s [sn:%i] [tid:%i] was "
-                    "squashed, skipping.\n",
-                    inst->pcState(), inst->seqNum, inst->threadNumber);
-        }
-    }
-}
-
-template <class Impl>
-void
 DefaultCommit<Impl>::markCompletedInsts()
 {
     // Grab completed insts out of the IEW instruction queue, and mark
@@ -1377,23 +1354,6 @@ DefaultCommit<Impl>::markCompletedInsts()
             fromIEW->insts[inst_num]->setCanCommit();
         }
     }
-}
-
-template <class Impl>
-bool
-DefaultCommit<Impl>::robDoneSquashing()
-{
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        if (!rob->isDoneSquashing(tid))
-            return false;
-    }
-
-    return true;
 }
 
 template <class Impl>

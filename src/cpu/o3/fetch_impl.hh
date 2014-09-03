@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -354,9 +354,6 @@ DefaultFetch<Impl>::resetStage()
         memReq[tid] = NULL;
 
         stalls[tid].decode = false;
-        stalls[tid].rename = false;
-        stalls[tid].iew = false;
-        stalls[tid].commit = false;
         stalls[tid].drain = false;
 
         fetchBufferPC[tid] = 0;
@@ -435,10 +432,6 @@ DefaultFetch<Impl>::drainSanityCheck() const
 
     for (ThreadID i = 0; i < numThreads; ++i) {
         assert(!memReq[i]);
-        assert(!stalls[i].decode);
-        assert(!stalls[i].rename);
-        assert(!stalls[i].iew);
-        assert(!stalls[i].commit);
         assert(fetchStatus[i] == Idle || stalls[i].drain);
     }
 
@@ -680,7 +673,11 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             fetchStatus[tid] = IcacheWaitResponse;
         }
     } else {
-        if (!(numInst < fetchWidth)) {
+        // Don't send an instruction to decode if it can't handle it.
+        // Asynchronous nature of this function's calling means we have to
+        // check 2 signals to see if decode is stalled.
+        if (!(numInst < fetchWidth) || stalls[tid].decode ||
+            fromDecode->decodeBlock[tid]) {
             assert(!finishTranslationEvent.scheduled());
             finishTranslationEvent.setFault(fault);
             finishTranslationEvent.setReq(mem_req);
@@ -801,15 +798,6 @@ DefaultFetch<Impl>::checkStall(ThreadID tid) const
         ret_val = true;
     } else if (stalls[tid].decode) {
         DPRINTF(Fetch,"[tid:%i]: Stall from Decode stage detected.\n",tid);
-        ret_val = true;
-    } else if (stalls[tid].rename) {
-        DPRINTF(Fetch,"[tid:%i]: Stall from Rename stage detected.\n",tid);
-        ret_val = true;
-    } else if (stalls[tid].iew) {
-        DPRINTF(Fetch,"[tid:%i]: Stall from IEW stage detected.\n",tid);
-        ret_val = true;
-    } else if (stalls[tid].commit) {
-        DPRINTF(Fetch,"[tid:%i]: Stall from Commit stage detected.\n",tid);
         ret_val = true;
     }
 
@@ -952,36 +940,6 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
         stalls[tid].decode = false;
     }
 
-    if (fromRename->renameBlock[tid]) {
-        stalls[tid].rename = true;
-    }
-
-    if (fromRename->renameUnblock[tid]) {
-        assert(stalls[tid].rename);
-        assert(!fromRename->renameBlock[tid]);
-        stalls[tid].rename = false;
-    }
-
-    if (fromIEW->iewBlock[tid]) {
-        stalls[tid].iew = true;
-    }
-
-    if (fromIEW->iewUnblock[tid]) {
-        assert(stalls[tid].iew);
-        assert(!fromIEW->iewBlock[tid]);
-        stalls[tid].iew = false;
-    }
-
-    if (fromCommit->commitBlock[tid]) {
-        stalls[tid].commit = true;
-    }
-
-    if (fromCommit->commitUnblock[tid]) {
-        assert(stalls[tid].commit);
-        assert(!fromCommit->commitBlock[tid]);
-        stalls[tid].commit = false;
-    }
-
     // Check squash signals from commit.
     if (fromCommit->commitInfo[tid].squash) {
 
@@ -1011,16 +969,6 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
         // Update the branch predictor if it wasn't a squashed instruction
         // that was broadcasted.
         branchPred->update(fromCommit->commitInfo[tid].doneSeqNum, tid);
-    }
-
-    // Check ROB squash signals from commit.
-    if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Fetch, "[tid:%u]: ROB is still squashing.\n", tid);
-
-        // Continue to squash.
-        fetchStatus[tid] = Squashing;
-
-        return true;
     }
 
     // Check squash signals from decode.

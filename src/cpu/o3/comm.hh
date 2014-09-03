@@ -229,8 +229,6 @@ struct TimeBufStruct {
     bool renameUnblock[Impl::MaxThreads];
     bool iewBlock[Impl::MaxThreads];
     bool iewUnblock[Impl::MaxThreads];
-    bool commitBlock[Impl::MaxThreads];
-    bool commitUnblock[Impl::MaxThreads];
 };
 
 #endif //__CPU_O3_COMM_HH__

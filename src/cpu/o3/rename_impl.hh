@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -77,7 +77,7 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
              renameWidth, static_cast<int>(Impl::MaxWidth));
 
     // @todo: Make into a parameter.
-    skidBufferMax = (2 * (decodeToRenameDelay * params->decodeWidth)) + renameWidth;
+    skidBufferMax = (decodeToRenameDelay + 1) * params->decodeWidth;
 }
 
 template <class Impl>
@@ -247,7 +247,6 @@ DefaultRename<Impl>::resetStage()
         emptyROB[tid] = true;
 
         stalls[tid].iew = false;
-        stalls[tid].commit = false;
         serializeInst[tid] = NULL;
 
         instsInProgress[tid] = 0;
@@ -1200,15 +1199,6 @@ DefaultRename<Impl>::readStallSignals(ThreadID tid)
         assert(stalls[tid].iew);
         stalls[tid].iew = false;
     }
-
-    if (fromCommit->commitBlock[tid]) {
-        stalls[tid].commit = true;
-    }
-
-    if (fromCommit->commitUnblock[tid]) {
-        assert(stalls[tid].commit);
-        stalls[tid].commit = false;
-    }
 }
 
 template <class Impl>
@@ -1219,9 +1209,6 @@ DefaultRename<Impl>::checkStall(ThreadID tid)
 
     if (stalls[tid].iew) {
         DPRINTF(Rename,"[tid:%i]: Stall from IEW stage detected.\n", tid);
-        ret_val = true;
-    } else if (stalls[tid].commit) {
-        DPRINTF(Rename,"[tid:%i]: Stall from Commit stage detected.\n", tid);
         ret_val = true;
     } else if (calcFreeROBEntries(tid) <= 0) {
         DPRINTF(Rename,"[tid:%i]: Stall: ROB has 0 free entries.\n", tid);
@@ -1298,14 +1285,6 @@ DefaultRename<Impl>::checkSignalsAndUpdate(ThreadID tid)
                 "commit.\n", tid);
 
         squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
-
-        return true;
-    }
-
-    if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Rename, "[tid:%u]: ROB is still squashing.\n", tid);
-
-        renameStatus[tid] = Squashing;
 
         return true;
     }
