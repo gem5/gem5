@@ -82,9 +82,15 @@ Ticked::serialize(std::ostream &os)
 void
 Ticked::unserialize(Checkpoint *cp, const std::string &section)
 {
-    uint64_t lastStoppedUint;
+    uint64_t lastStoppedUint = 0;
 
-    paramIn(cp, section, "lastStopped", lastStoppedUint);
+    /* lastStopped is optional on checkpoint restore as this object may be
+     *  being restored from one which has a common base (and so possibly
+     *  many common checkpointed values) but where Ticked is used in the
+     *  checkpointed object but not this one.
+     *  An example would be a CPU model using Ticked restores from a
+     *  simple CPU without without Ticked */
+    optParamIn(cp, section, "lastStopped", lastStoppedUint);
 
     lastStopped = Cycles(lastStoppedUint);
 }
