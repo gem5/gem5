@@ -221,6 +221,9 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
 
     self.cf0 = CowIdeDisk(driveID='master')
     self.cf0.childImage(mdesc.disk())
+
+    # Attach any PCI devices this platform supports
+    self.realview.attachPciDevices()
     # default to an IDE controller rather than a CF one
     # assuming we've got one; EMM64 is an exception for the moment
     if machine_type != "VExpress_EMM64":

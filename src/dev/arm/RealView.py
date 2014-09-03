@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2013 ARM Limited
+# Copyright (c) 2009-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -44,7 +44,7 @@ from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
 from Pci import PciConfigAll
-from Ethernet import NSGigE, IGbE_e1000, IGbE_igb
+from Ethernet import NSGigE, IGbE_igb, IGbE_e1000
 from Ide import *
 from Platform import Platform
 from Terminal import Terminal
@@ -184,6 +184,18 @@ class RealView(Platform):
     mem_start_addr = Param.Addr(0, "Start address of main memory")
     max_mem_size = Param.Addr('256MB', "Maximum amount of RAM supported by platform")
 
+    def attachPciDevices(self):
+        pass
+
+    def enableMSIX(self):
+        pass
+
+    def onChipIOClkDomain(self, clkdomain):
+        pass
+
+    def offChipIOClkDomain(self, clkdomain):
+        pass
+
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange('2GB', size = '64MB'),
                                   conf_table_reported = False)
@@ -250,6 +262,14 @@ class RealViewPBX(RealView):
                                   self.flash_fake.pio_addr + \
                                   self.flash_fake.pio_size - 1)]
 
+    # Set the clock domain for IO objects that are considered
+    # to be "close" to the cores.
+    def onChipIOClkDomain(self, clkdomain):
+        self.gic.clk_domain             = clkdomain
+        self.l2x0_fake.clk_domain       = clkdomain
+        self.a9scu.clkdomain            = clkdomain
+        self.local_cpu_timer.clk_domain = clkdomain
+
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
     # System level.
@@ -282,12 +302,40 @@ class RealViewPBX(RealView):
        self.rtc.pio           = bus.master
        self.flash_fake.pio    = bus.master
 
+    # Set the clock domain for IO objects that are considered
+    # to be "far" away from the cores.
+    def offChipIOClkDomain(self, clkdomain):
+        self.uart.clk_domain          = clkdomain
+        self.realview_io.clk_domain   = clkdomain
+        self.timer0.clk_domain        = clkdomain
+        self.timer1.clk_domain        = clkdomain
+        self.clcd.clk_domain          = clkdomain
+        self.kmi0.clk_domain          = clkdomain
+        self.kmi1.clk_domain          = clkdomain
+        self.cf_ctrl.clk_domain       = clkdomain
+        self.dmac_fake.clk_domain     = clkdomain
+        self.uart1_fake.clk_domain    = clkdomain
+        self.uart2_fake.clk_domain    = clkdomain
+        self.uart3_fake.clk_domain    = clkdomain
+        self.smc_fake.clk_domain      = clkdomain
+        self.sp810_fake.clk_domain    = clkdomain
+        self.watchdog_fake.clk_domain = clkdomain
+        self.gpio0_fake.clk_domain    = clkdomain
+        self.gpio1_fake.clk_domain    = clkdomain
+        self.gpio2_fake.clk_domain    = clkdomain
+        self.ssp_fake.clk_domain      = clkdomain
+        self.sci_fake.clk_domain      = clkdomain
+        self.aaci_fake.clk_domain     = clkdomain
+        self.mmc_fake.clk_domain      = clkdomain
+        self.rtc.clk_domain           = clkdomain
+        self.flash_fake.clk_domain    = clkdomain
+
 # Reference for memory map and interrupt number
 # RealView Emulation Baseboard User Guide (ARM DUI 0143B)
 # Chapter 4: Programmer's Reference
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
-    realview_io = RealViewCtrl(pio_addr=0x10000000)
+    realview_io = RealViewCtrl(pio_addr=0x10000000, idreg=0x01400500)
     gic = Pl390(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
@@ -328,6 +376,12 @@ class RealViewEB(RealView):
                                   self.gic.cpu_addr - 1),
                         AddrRange(self.flash_fake.pio_addr, Addr.max)]
 
+    # Set the clock domain for IO objects that are considered
+    # to be "close" to the cores.
+    def onChipIOClkDomain(self, clkdomain):
+        self.gic.clk_domain             = clkdomain
+        self.l2x0_fake.clk_domain       = clkdomain
+
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
     # System level.
@@ -358,12 +412,41 @@ class RealViewEB(RealView):
        self.flash_fake.pio    = bus.master
        self.smcreg_fake.pio   = bus.master
 
+    # Set the clock domain for IO objects that are considered
+    # to be "far" away from the cores.
+    def offChipIOClkDomain(self, clkdomain):
+        self.uart.clk_domain          = clkdomain
+        self.realview_io.clk_domain   = clkdomain
+        self.timer0.clk_domain        = clkdomain
+        self.timer1.clk_domain        = clkdomain
+        self.clcd.clk_domain          = clkdomain
+        self.kmi0.clk_domain          = clkdomain
+        self.kmi1.clk_domain          = clkdomain
+        self.dmac_fake.clk_domain     = clkdomain
+        self.uart1_fake.clk_domain    = clkdomain
+        self.uart2_fake.clk_domain    = clkdomain
+        self.uart3_fake.clk_domain    = clkdomain
+        self.smc_fake.clk_domain      = clkdomain
+        self.sp810_fake.clk_domain    = clkdomain
+        self.watchdog_fake.clk_domain = clkdomain
+        self.gpio0_fake.clk_domain    = clkdomain
+        self.gpio1_fake.clk_domain    = clkdomain
+        self.gpio2_fake.clk_domain    = clkdomain
+        self.ssp_fake.clk_domain      = clkdomain
+        self.sci_fake.clk_domain      = clkdomain
+        self.aaci_fake.clk_domain     = clkdomain
+        self.mmc_fake.clk_domain      = clkdomain
+        self.rtc.clk_domain           = clkdomain
+        self.flash_fake.clk_domain    = clkdomain
+        self.smcreg_fake.clk_domain   = clkdomain
+
 class VExpress_EMM(RealView):
     mem_start_addr = '2GB'
     max_mem_size = '2GB'
     pci_cfg_base = 0x30000000
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
-    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, pio_addr=0x1C010000)
+    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, \
+                               idreg=0x02250000, pio_addr=0x1C010000)
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
     generic_timer = GenericTimer(int_num=29)
@@ -381,13 +464,6 @@ class VExpress_EMM(RealView):
                             BAR0LegacyIO = True, BAR1LegacyIO = True)
 
     pciconfig = PciConfigAll(size='256MB')
-    ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
-                          InterruptLine=1, InterruptPin=1)
-
-    ide = IdeController(disks = [], pci_bus=0, pci_dev=1, pci_func=0,
-                        InterruptLine=2, InterruptPin=2)
-
-
     vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
                                   conf_table_reported = False)
     rtc            = PL031(pio_addr=0x1C170000, int_num=36)
@@ -403,6 +479,18 @@ class VExpress_EMM(RealView):
     usb_fake       = IsaFake(pio_addr=0x1B000000, pio_size=0x1ffff)
     mmc_fake       = AmbaFake(pio_addr=0x1c050000)
 
+    # Attach any PCI devices that are supported
+    def attachPciDevices(self):
+        self.ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
+                                   InterruptLine=1, InterruptPin=1)
+        self.ide = IdeController(disks = [], pci_bus=0, pci_dev=1, pci_func=0,
+                                 InterruptLine=2, InterruptPin=2)
+
+    def enableMSIX(self):
+        self.gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000, it_lines=512)
+        self.gicv2m = Gicv2m()
+        self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
+
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange('64MB'),
                                   conf_table_reported = False)
@@ -417,6 +505,8 @@ class VExpress_EMM(RealView):
     def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.master
        self.local_cpu_timer.pio = bus.master
+       if hasattr(self, "gicv2m"):
+           self.gicv2m.pio      = bus.master
        self.hdlcd.dma           = bus.slave
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, a9scu)
@@ -429,9 +519,17 @@ class VExpress_EMM(RealView):
        self.vgic.pio = bus.master
 
 
-    # Attach I/O devices to specified bus object.  Can't do this
-    # earlier, since the bus object itself is typically defined at the
-    # System level.
+    # Set the clock domain for IO objects that are considered
+    # to be "close" to the cores.
+    def onChipIOClkDomain(self, clkdomain):
+        self.gic.clk_domain             = clkdomain
+        if hasattr(self, "gicv2m"):
+            self.gicv2m.clk_domain      = clkdomain
+        self.hdlcd.clk_domain           = clkdomain
+        self.vgic.clk_domain            = clkdomain
+
+    # Attach I/O devices to specified bus object.  Done here
+    # as the specified bus to connect to may not always be fixed.
     def attachIO(self, bus):
        self.uart.pio            = bus.master
        self.realview_io.pio     = bus.master
@@ -448,12 +546,6 @@ class VExpress_EMM(RealView):
        self.rtc.pio             = bus.master
        bus.use_default_range    = True
        self.vram.port           = bus.master
-       self.ide.pio             = bus.master
-       self.ide.config          = bus.master
-       self.ide.dma             = bus.slave
-       self.ethernet.pio        = bus.master
-       self.ethernet.config     = bus.master
-       self.ethernet.dma        = bus.slave
        self.pciconfig.pio       = bus.default
 
        self.l2x0_fake.pio       = bus.master
@@ -466,6 +558,43 @@ class VExpress_EMM(RealView):
        self.lan_fake.pio        = bus.master
        self.usb_fake.pio        = bus.master
        self.mmc_fake.pio        = bus.master
+
+       # Try to attach the I/O if it exists
+       try:
+           self.ide.pio         = bus.master
+           self.ide.config      = bus.master
+           self.ide.dma         = bus.slave
+           self.ethernet.pio    = bus.master
+           self.ethernet.config = bus.master
+           self.ethernet.dma    = bus.slave
+       except:
+           pass
+
+    # Set the clock domain for IO objects that are considered
+    # to be "far" away from the cores.
+    def offChipIOClkDomain(self, clkdomain):
+        self.uart.clk_domain          = clkdomain
+        self.realview_io.clk_domain   = clkdomain
+        self.timer0.clk_domain        = clkdomain
+        self.timer1.clk_domain        = clkdomain
+        self.clcd.clk_domain          = clkdomain
+        self.kmi0.clk_domain          = clkdomain
+        self.kmi1.clk_domain          = clkdomain
+        self.cf_ctrl.clk_domain       = clkdomain
+        self.rtc.clk_domain           = clkdomain
+        self.vram.clk_domain          = clkdomain
+        self.pciconfig.clk_domain     = clkdomain
+
+        self.l2x0_fake.clk_domain     = clkdomain
+        self.uart1_fake.clk_domain    = clkdomain
+        self.uart2_fake.clk_domain    = clkdomain
+        self.uart3_fake.clk_domain    = clkdomain
+        self.sp810_fake.clk_domain    = clkdomain
+        self.watchdog_fake.clk_domain = clkdomain
+        self.aaci_fake.clk_domain     = clkdomain
+        self.lan_fake.clk_domain      = clkdomain
+        self.usb_fake.clk_domain      = clkdomain
+        self.mmc_fake.clk_domain      = clkdomain
 
 class VExpress_EMM64(VExpress_EMM):
     def setupBootLoader(self, mem_bus, cur_sys, loc):
