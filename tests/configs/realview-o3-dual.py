@@ -37,8 +37,9 @@
 
 from m5.objects import *
 from arm_generic import *
+from O3_ARM_v7a import O3_ARM_v7a_3
 
 root = LinuxArmFSSystem(mem_mode='timing',
                         mem_class=DDR3_1600_x64,
-                        cpu_class=DerivO3CPU,
+                        cpu_class=O3_ARM_v7a_3,
                         num_cpus=2).create_root()
