@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -166,8 +166,12 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
     } else if (pkt->isWrite()) {
         if (blk->checkWrite(pkt)) {
             pkt->writeDataToBlock(blk->data, blkSize);
-            blk->status |= BlkDirty;
         }
+        // Always mark the line as dirty even if we are a failed
+        // StoreCond so we supply data to any snoops that have
+        // appended themselves to this cache before knowing the store
+        // will fail.
+        blk->status |= BlkDirty;
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
             blk->trackLoadLocked(pkt);
@@ -658,6 +662,13 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         // (read-only) and we need exclusive
         assert(needsExclusive && !blk->isWritable());
         cmd = cpu_pkt->isLLSC() ? MemCmd::SCUpgradeReq : MemCmd::UpgradeReq;
+    } else if (cpu_pkt->cmd == MemCmd::SCUpgradeFailReq ||
+               cpu_pkt->cmd == MemCmd::StoreCondFailReq) {
+        // Even though this SC will fail, we still need to send out the
+        // request and get the data to supply it to other snoopers in the case
+        // where the determination the StoreCond fails is delayed due to
+        // all caches not being on the same local bus.
+        cmd = MemCmd::SCUpgradeFailReq;
     } else {
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
@@ -1724,18 +1735,7 @@ Cache<TagStore>::getTimingPacket()
     DPRINTF(CachePort, "%s %s for address %x size %d\n", __func__,
             tgt_pkt->cmdString(), tgt_pkt->getAddr(), tgt_pkt->getSize());
 
-    if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq ||
-        tgt_pkt->cmd == MemCmd::StoreCondFailReq) {
-        // SCUpgradeReq or StoreCondReq saw invalidation while queued
-        // in MSHR, so now that we are getting around to processing
-        // it, just treat it as if we got a failure response
-        pkt = new Packet(tgt_pkt);
-        pkt->cmd = MemCmd::UpgradeFailResp;
-        pkt->senderState = mshr;
-        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
-        recvTimingResp(pkt);
-        return NULL;
-    } else if (mshr->isForwardNoResponse()) {
+    if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
         assert(tags->findBlock(mshr->addr, mshr->isSecure) == NULL);
         pkt = tgt_pkt;
