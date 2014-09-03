@@ -1,3 +1,15 @@
+# Copyright (c) 2014 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2003-2005 The Regents of The University of Michigan
 # Copyright (c) 2013 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -1119,17 +1131,7 @@ class InstObjParams(object):
 
         self.flags = self.operands.concatAttrLists('flags')
 
-        # Make a basic guess on the operand class (function unit type).
-        # These are good enough for most cases, and can be overridden
-        # later otherwise.
-        if 'IsStore' in self.flags:
-            self.op_class = 'MemWriteOp'
-        elif 'IsLoad' in self.flags or 'IsPrefetch' in self.flags:
-            self.op_class = 'MemReadOp'
-        elif 'IsFloating' in self.flags:
-            self.op_class = 'FloatAddOp'
-        else:
-            self.op_class = 'IntAluOp'
+        self.op_class = None
 
         # Optional arguments are assumed to be either StaticInst flags
         # or an OpClass value.  To avoid having to import a complete
@@ -1143,6 +1145,18 @@ class InstObjParams(object):
             else:
                 error('InstObjParams: optional arg "%s" not recognized '
                       'as StaticInst::Flag or OpClass.' % oa)
+
+        # Make a basic guess on the operand class if not set.
+        # These are good enough for most cases.
+        if not self.op_class:
+            if 'IsStore' in self.flags:
+                self.op_class = 'MemWriteOp'
+            elif 'IsLoad' in self.flags or 'IsPrefetch' in self.flags:
+                self.op_class = 'MemReadOp'
+            elif 'IsFloating' in self.flags:
+                self.op_class = 'FloatAddOp'
+            else:
+                self.op_class = 'IntAluOp'
 
         # add flag initialization to contructor here to include
         # any flags added via opt_args
