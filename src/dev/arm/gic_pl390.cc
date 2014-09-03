@@ -395,8 +395,25 @@ Pl390::writeDistributor(PacketPtr pkt)
     assert(pkt->req->hasContextId());
     int ctx_id = pkt->req->contextId();
 
+    uint32_t pkt_data M5_VAR_USED;
+    switch (pkt->getSize())
+    {
+      case 1:
+        pkt_data = pkt->get<uint8_t>();
+        break;
+      case 2:
+        pkt_data = pkt->get<uint16_t>();
+        break;
+      case 4:
+        pkt_data = pkt->get<uint32_t>();
+        break;
+      default:
+        panic("Invalid size when writing to priority regs in Gic: %d\n",
+              pkt->getSize());
+    }
+
     DPRINTF(GIC, "gic distributor write register %#x size %#x value %#x \n",
-            daddr, pkt->getSize(), pkt->get<uint32_t>());
+            daddr, pkt->getSize(), pkt_data);
 
     if (daddr >= ICDISER_ST && daddr < ICDISER_ED + 4) {
         assert((daddr-ICDISER_ST) >> 2 < 32);
