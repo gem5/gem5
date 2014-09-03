@@ -178,6 +178,13 @@ class BPredUnit : public SimObject
      */
     virtual void update(Addr instPC, bool taken, void *bp_history,
                         bool squashed) = 0;
+     /**
+     * Deletes the associated history with a branch, performs no predictor
+     * updates.  Used for branches that mispredict and update tables but
+     * are still speculative and later retire.
+     * @param bp_history History to delete associated with this predictor
+     */
+    virtual void retireSquashed(void *bp_history) = 0;
 
     /**
      * Updates the BTB with the target of a branch.
@@ -200,7 +207,7 @@ class BPredUnit : public SimObject
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0)
+              wasCall(0), wasReturn(0), wasSquashed(0)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -234,7 +241,7 @@ class BPredUnit : public SimObject
         /** Whether or not the RAS was used. */
         bool usedRAS;
 
-        /* Wether or not the RAS was pushed */
+        /* Whether or not the RAS was pushed */
         bool pushedRAS;
 
         /** Whether or not the instruction was a call. */
@@ -242,6 +249,9 @@ class BPredUnit : public SimObject
 
         /** Whether or not the instruction was a return. */
         bool wasReturn;
+
+        /** Whether this instruction has already mispredicted/updated bp */
+        bool wasSquashed;
     };
 
     typedef std::deque<PredictorHistory> History;

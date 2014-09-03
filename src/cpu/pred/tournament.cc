@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -346,15 +346,22 @@ TournamentBP::update(Addr branch_addr, bool taken, void *bp_history,
                 }
              }
 
+        } else {
+            // We're done with this history, now delete it.
+            delete history;
         }
-        // We're done with this history, now delete it.
-        delete history;
-
     }
 
     assert(local_history_idx < localHistoryTableSize);
 
 
+}
+
+void
+TournamentBP::retireSquashed(void *bp_history)
+{
+    BPHistory *history = static_cast<BPHistory *>(bp_history);
+    delete history;
 }
 
 void

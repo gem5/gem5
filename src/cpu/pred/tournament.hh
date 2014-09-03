@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -103,6 +103,8 @@ class TournamentBP : public BPredUnit
      * operation.
      */
     void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
+
+    void retireSquashed(void *bp_history);
 
     /**
      * Restores the global branch history on a squash.

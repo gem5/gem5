@@ -372,8 +372,12 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
     while (!predHist[tid].empty() &&
            predHist[tid].back().seqNum <= done_sn) {
         // Update the branch predictor with the correct results.
-        update(predHist[tid].back().pc, predHist[tid].back().predTaken,
-               predHist[tid].back().bpHistory, false);
+        if (!predHist[tid].back().wasSquashed) {
+            update(predHist[tid].back().pc, predHist[tid].back().predTaken,
+                predHist[tid].back().bpHistory, false);
+        } else {
+            retireSquashed(predHist[tid].back().bpHistory);
+        }
 
         predHist[tid].pop_back();
     }
@@ -465,12 +469,15 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
         update((*hist_it).pc, actually_taken,
                pred_hist.front().bpHistory, true);
+        hist_it->wasSquashed = true;
+
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {
                  DPRINTF(Branch, "[tid: %i] Incorrectly predicted"
                          "  return [sn:%i] PC: %s\n", tid, hist_it->seqNum,
                          hist_it->pc);
                  RAS[tid].pop();
+                 hist_it->usedRAS = true;
             }
 
             DPRINTF(Branch,"[tid: %i] BTB Update called for [sn:%i]"
@@ -488,23 +495,16 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         " to: %i, target: %s.\n", tid,
                         hist_it->RASIndex, hist_it->RASTarget);
                 RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget);
-
+                hist_it->usedRAS = false;
            } else if (hist_it->wasCall && hist_it->pushedRAS) {
                  //Was a Call but predicated false. Pop RAS here
                  DPRINTF(Branch, "[tid: %i] Incorrectly predicted"
                          "  Call [sn:%i] PC: %s Popping RAS\n", tid,
                          hist_it->seqNum, hist_it->pc);
                  RAS[tid].pop();
+                 hist_it->pushedRAS = false;
            }
         }
-        DPRINTF(Branch, "[tid:%i]: Removing history for [sn:%i]"
-                " PC %s  Actually Taken: %i\n", tid, hist_it->seqNum,
-                hist_it->pc, actually_taken);
-
-        pred_hist.erase(hist_it);
-
-        DPRINTF(Branch, "[tid:%i]: predHist.size(): %i\n", tid,
-                                         predHist[tid].size());
     } else {
         DPRINTF(Branch, "[tid:%i]: [sn:%i] pred_hist empty, can't "
                 "update.\n", tid, squashed_sn);

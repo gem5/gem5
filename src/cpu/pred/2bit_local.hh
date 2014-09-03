@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,6 +91,9 @@ class LocalBP : public BPredUnit
      * @param taken Whether or not the branch was taken.
      */
     void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
+
+    void retireSquashed(void *bp_history)
+    { assert(bp_history == NULL); }
 
     void squash(void *bp_history)
     { assert(bp_history == NULL); }
