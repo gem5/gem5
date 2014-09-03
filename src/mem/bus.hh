@@ -221,14 +221,6 @@ class BaseBus : public MemObject
         std::deque<SrcType*> waitingForLayer;
 
         /**
-         * Port that we are currently in the process of telling to
-         * retry a previously failed attempt to perform a timing
-         * transaction. This is a valid port when in the retry state,
-         * and NULL when in busy or idle.
-         */
-        SrcType* retryingPort;
-
-        /**
          * Track who is waiting for the retry when receiving it from a
          * peer. If no port is waiting NULL is stored.
          */

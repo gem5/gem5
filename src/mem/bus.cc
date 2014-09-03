@@ -136,8 +136,7 @@ template <typename SrcType, typename DstType>
 BaseBus::Layer<SrcType,DstType>::Layer(DstType& _port, BaseBus& _bus,
                                        const std::string& _name) :
     port(_port), bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
-    retryingPort(NULL), waitingForPeer(NULL),
-    releaseEvent(this)
+    waitingForPeer(NULL), releaseEvent(this)
 {
 }
 
@@ -190,9 +189,6 @@ BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
     // update the state to busy
     state = BUSY;
 
-    // reset the retrying port
-    retryingPort = NULL;
-
     return true;
 }
 
@@ -243,7 +239,10 @@ BaseBus::Layer<SrcType,DstType>::releaseLayer()
 
     // bus layer is now idle, so if someone is waiting we can retry
     if (!waitingForLayer.empty()) {
-        retryWaiting();
+        // there is no point in sending a retry if someone is still
+        // waiting for the peer
+        if (waitingForPeer == NULL)
+            retryWaiting();
     } else if (waitingForPeer == NULL && drainManager) {
         DPRINTF(Drain, "Bus done draining, signaling drain manager\n");
         //If we weren't able to drain before, do it now.
@@ -268,8 +267,7 @@ BaseBus::Layer<SrcType,DstType>::retryWaiting()
 
     // set the retrying port to the front of the retry list and pop it
     // off the list
-    assert(retryingPort == NULL);
-    retryingPort = waitingForLayer.front();
+    SrcType* retryingPort = waitingForLayer.front();
     waitingForLayer.pop_front();
 
     // tell the port to retry, which in some cases ends up calling the
@@ -282,7 +280,6 @@ BaseBus::Layer<SrcType,DstType>::retryWaiting()
         // update the state to busy and reset the retrying port, we
         // have done our bit and sent the retry
         state = BUSY;
-        retryingPort = NULL;
 
         // occupy the bus layer until the next cycle ends
         occupyLayer(bus.clockEdge(Cycles(1)));
