@@ -82,11 +82,13 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       iewToFetchDelay(params->iewToFetchDelay),
       commitToFetchDelay(params->commitToFetchDelay),
       fetchWidth(params->fetchWidth),
+      decodeWidth(params->decodeWidth),
       retryPkt(NULL),
       retryTid(InvalidThreadID),
       cacheBlkSize(cpu->cacheLineSize()),
       fetchBufferSize(params->fetchBufferSize),
       fetchBufferMask(fetchBufferSize - 1),
+      fetchQueueSize(params->fetchQueueSize),
       numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       finishTranslationEvent(this)
@@ -313,12 +315,10 @@ DefaultFetch<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
+DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *ftb_ptr)
 {
-    fetchQueue = fq_ptr;
-
-    // Create wire to write information to proper place in fetch queue.
-    toDecode = fetchQueue->getWire(0);
+    // Create wire to write information to proper place in fetch time buf.
+    toDecode = ftb_ptr->getWire(0);
 }
 
 template<class Impl>
@@ -342,6 +342,7 @@ DefaultFetch<Impl>::resetStage()
     cacheBlocked = false;
 
     priorityList.clear();
+    fetchQueue.clear();
 
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
@@ -453,6 +454,10 @@ DefaultFetch<Impl>::isDrained() const
               (fetchStatus[i] == Blocked && stalls[i].drain)))
             return false;
     }
+
+    // Not drained if fetch queue contains entries
+    if (!fetchQueue.empty())
+        return false;
 
     /* The pipeline might start up again in the middle of the drain
      * cycle if the finish translation event is scheduled, so make
@@ -673,11 +678,8 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             fetchStatus[tid] = IcacheWaitResponse;
         }
     } else {
-        // Don't send an instruction to decode if it can't handle it.
-        // Asynchronous nature of this function's calling means we have to
-        // check 2 signals to see if decode is stalled.
-        if (!(numInst < fetchWidth) || stalls[tid].decode ||
-            fromDecode->decodeBlock[tid]) {
+        // Don't send an instruction to decode if we can't handle it.
+        if (!(numInst < fetchWidth) || !(fetchQueue.size() < fetchQueueSize)) {
             assert(!finishTranslationEvent.scheduled());
             finishTranslationEvent.setFault(fault);
             finishTranslationEvent.setReq(mem_req);
@@ -758,6 +760,15 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
 
     fetchStatus[tid] = Squashing;
 
+    // Empty fetch queue
+    auto inst_itr = fetchQueue.begin();
+    while (inst_itr != fetchQueue.end()) {
+        if ((*inst_itr)->threadNumber == tid)
+            inst_itr = fetchQueue.erase(inst_itr);
+         else
+            ++inst_itr;
+    }
+
     // microops are being squashed, it is not known wheather the
     // youngest non-squashed microop was  marked delayed commit
     // or not. Setting the flag to true ensures that the
@@ -795,9 +806,6 @@ DefaultFetch<Impl>::checkStall(ThreadID tid) const
     } else if (stalls[tid].drain) {
         assert(cpu->isDraining());
         DPRINTF(Fetch,"[tid:%i]: Drain stall detected.\n",tid);
-        ret_val = true;
-    } else if (stalls[tid].decode) {
-        DPRINTF(Fetch,"[tid:%i]: Stall from Decode stage detected.\n",tid);
         ret_val = true;
     }
 
@@ -919,6 +927,21 @@ DefaultFetch<Impl>::tick()
         if (issuePipelinedIfetch[i]) {
             pipelineIcacheAccesses(i);
         }
+    }
+
+    // Send instructions enqueued into the fetch queue to decode.
+    // Limit rate by fetchWidth.  Stall if decode is stalled.
+    unsigned instsToDecode = 0;
+    while(!fetchQueue.empty() &&
+          instsToDecode < decodeWidth &&
+          !stalls[fetchQueue.front()->threadNumber].decode) {
+        auto inst = fetchQueue.front();
+        toDecode->insts[toDecode->size++] = inst;
+        DPRINTF(Fetch, "[tid:%i][sn:%i]: Sending instruction to decode from "
+                "fetch queue. Fetch queue size: %i.\n",
+                inst->threadNumber, inst->seqNum, fetchQueue.size());
+        fetchQueue.pop_front();
+        instsToDecode++;
     }
 
     // Reset the number of the instruction we've fetched.
@@ -1072,7 +1095,11 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     // Write the instruction to the first slot in the queue
     // that heads to decode.
     assert(numInst < fetchWidth);
-    toDecode->insts[toDecode->size++] = instruction;
+    fetchQueue.push_back(instruction);
+    assert(fetchQueue.size() <= fetchQueueSize);
+    DPRINTF(Fetch, "[tid:%i]: Fetch queue entry created (%i/%i).\n",
+            tid, fetchQueue.size(), fetchQueueSize);
+    //toDecode->insts[toDecode->size++] = instruction;
 
     // Keep track of if we can take an interrupt at this boundary
     delayedCommit[tid] = instruction->isDelayedCommit();
@@ -1186,8 +1213,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // Loop through instruction memory from the cache.
     // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
-    while (numInst < fetchWidth && !predictedBranch) {
-
+    while (numInst < fetchWidth && fetchQueue.size() < fetchQueueSize
+           && !predictedBranch) {
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
         // in the decoder.
@@ -1310,7 +1337,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
         } while ((curMacroop || decoder[tid]->instReady()) &&
-                 numInst < fetchWidth);
+                 numInst < fetchWidth && fetchQueue.size() < fetchQueueSize);
     }
 
     if (predictedBranch) {

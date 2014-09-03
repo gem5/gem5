@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -401,9 +401,6 @@ class DefaultFetch
     /** Wire to get commit's information from backwards time buffer. */
     typename TimeBuffer<TimeStruct>::wire fromCommit;
 
-    /** Internal fetch instruction queue. */
-    TimeBuffer<FetchStruct> *fetchQueue;
-
     //Might be annoying how this name is different than the queue.
     /** Wire used to write any information heading to decode. */
     typename TimeBuffer<FetchStruct>::wire toDecode;
@@ -455,6 +452,9 @@ class DefaultFetch
     /** The width of fetch in instructions. */
     unsigned fetchWidth;
 
+    /** The width of decode in instructions. */
+    unsigned decodeWidth;
+
     /** Is the cache blocked?  If so no threads can access it. */
     bool cacheBlocked;
 
@@ -480,6 +480,12 @@ class DefaultFetch
 
     /** The PC of the first instruction loaded into the fetch buffer. */
     Addr fetchBufferPC[Impl::MaxThreads];
+
+    /** The size of the fetch queue in micro-ops */
+    unsigned fetchQueueSize;
+
+    /** Queue of fetched instructions */
+    std::deque<DynInstPtr> fetchQueue;
 
     /** Whether or not the fetch buffer data is valid. */
     bool fetchBufferValid[Impl::MaxThreads];
