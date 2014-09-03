@@ -51,7 +51,6 @@ Source('misc.cc')
 Source('output.cc')
 Source('pollevent.cc')
 Source('random.cc')
-Source('random_mt.cc')
 if env['TARGET_ISA'] != 'null':
     Source('remote_gdb.cc')
 Source('socket.cc')

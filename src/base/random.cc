@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,20 +39,18 @@
  *
  * Authors: Nathan Binkert
  *          Ali Saidi
+ *          Andreas Hansson
  */
 
-#include <limits>
-#include "base/fenv.hh"
-#include "base/intmath.hh"
+#include <sstream>
+
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 Random::Random()
 {
-    // default random seed taken from original source
+    // default random seed
     init(5489);
 }
 
@@ -49,79 +59,41 @@ Random::Random(uint32_t s)
     init(s);
 }
 
-Random::Random(uint32_t init_key[], int key_length)
-{
-    init(init_key, key_length);
-}
-
 Random::~Random()
 {
 }
 
-// To preserve the uniform random distribution between min and max,
-// and allow all numbers to be represented, we generate a uniform
-// random number to the nearest power of two greater than max.  If
-// this number doesn't fall between 0 and max, we try again.  Anything
-// else would skew the distribution.
-uint32_t
-Random::genrand(uint32_t max)
+void
+Random::init(uint32_t s)
 {
-    if (max == 0)
-        return 0;
-    if (max == std::numeric_limits<uint32_t>::max())
-        return genrand();
-
-    int log = ceilLog2(max + 1);
-    int shift = (sizeof(uint32_t) * 8 - log);
-    uint32_t random;
-
-    do {
-        random = genrand() >> shift;
-    } while (random > max);
-
-    return random;
-}
-
-uint64_t
-Random::genrand(uint64_t max)
-{
-    if (max == 0)
-        return 0;
-    if (max == std::numeric_limits<uint64_t>::max())
-        return genrand();
-
-    int log = ceilLog2(max + 1);
-    int shift = (sizeof(uint64_t) * 8 - log);
-    uint64_t random;
-
-    do {
-        random = (uint64_t)genrand() << 32 | (uint64_t)genrand();
-        random = random >> shift;
-    } while (random > max);
-
-    return random;
+    gen.seed(s);
 }
 
 void
-Random::serialize(const string &base, ostream &os)
+Random::serialize(std::ostream &os)
 {
-    int length = N;
-    paramOut(os, base + ".mti", mti);
-    paramOut(os, base + ".length", length);
-    arrayParamOut(os, base + ".data", mt, length);
+    panic("Currently not used anywhere.\n");
+
+    // get the state from the generator
+    std::ostringstream oss;
+    oss << gen;
+    std::string state = oss.str();
+    paramOut(os, "mt_state", state);
 }
 
 void
-Random::unserialize(const string &base, Checkpoint *cp, const string &section)
+Random::unserialize(Checkpoint *cp, const std::string &section)
 {
-    int length;
+    panic("Currently not used anywhere.\n");
 
-    paramIn(cp, section, base + ".mti", mti);
-    paramIn(cp, section, base + ".length", length);
-    if (length != N)
-        panic("cant unserialize random number data. length != %d\n", length);
-
-    arrayParamIn(cp, section, base + ".data", mt, length);
+    // the random generator state did not use to be part of the
+    // checkpoint state, so be forgiving in the unserialization and
+    // keep on going if the parameter is not there
+    std::string state;
+    if (optParamIn(cp, section, "mt_state", state)) {
+        std::istringstream iss(state);
+        iss >> gen;
+    }
 }
 
 Random random_mt;

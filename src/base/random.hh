@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,20 +39,19 @@
  *
  * Authors: Nathan Binkert
  *          Ali Saidi
+ *          Andreas Hansson
  */
 
 /*
- * Mersenne Twister random number generator has a period of
- * 2^19937-1.
- *
- * The actual math is in its own file to keep the license clear.
+ * Mersenne twister random number generator.
  */
 
 #ifndef __BASE_RANDOM_HH__
 #define __BASE_RANDOM_HH__
 
-#include <ios>
+#include <random>
 #include <string>
+#include <type_traits>
 
 #include "base/types.hh"
 
@@ -48,192 +59,51 @@ class Checkpoint;
 
 class Random
 {
-  protected:
-    static const int N = 624;
-    static const int M = 397;
-    static const uint32_t MATRIX_A = (uint32_t)0x9908b0df;
-    static const uint32_t UPPER_MASK = (uint32_t)0x80000000;
-    static const uint32_t LOWER_MASK = (uint32_t)0x7fffffff;
 
-    uint32_t mt[N];
-    int mti;
+  private:
 
-    uint32_t genrand();
-    uint32_t genrand(uint32_t max);
-    uint64_t genrand(uint64_t max);
-
-    void
-    _random(int8_t &value)
-    {
-        value = genrand() & (int8_t)-1;
-    }
-
-    void
-    _random(int16_t &value)
-    {
-        value = genrand() & (int16_t)-1;
-    }
-
-    void
-    _random(int32_t &value)
-    {
-        value = (int32_t)genrand();
-    }
-
-    void
-    _random(int64_t &value)
-    {
-        value = (int64_t)genrand() << 32 | (int64_t)genrand();
-    }
-
-    void
-    _random(uint8_t &value)
-    {
-        value = genrand() & (uint8_t)-1;
-    }
-
-    void
-    _random(uint16_t &value)
-    {
-        value = genrand() & (uint16_t)-1;
-    }
-
-    void
-    _random(uint32_t &value)
-    {
-        value = genrand();
-    }
-
-    void
-    _random(uint64_t &value)
-    {
-        value = (uint64_t)genrand() << 32 | (uint64_t)genrand();
-    }
-
-    // [0,1]
-    void
-    _random(float &value)
-    {
-        // ieee floats have 23 bits of mantissa
-        value = (genrand() >> 9) / 8388608.0;
-    }
-
-    // [0,1]
-    void
-    _random(double &value)
-    {
-        double number = genrand() * 2097152.0 + (genrand() >> 11);
-        value = number / 9007199254740992.0;
-    }
-
-
-    // Range based versions of the random number generator
-    int8_t
-    _random(int8_t min, int8_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<int8_t>(min + genrand(diff));
-    }
-
-    int16_t
-    _random(int16_t min, int16_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<int16_t>(min + genrand(diff));
-    }
-
-    int32_t
-    _random(int32_t min, int32_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<int32_t>(min + genrand(diff));
-    }
-
-    int64_t
-    _random(int64_t min, int64_t max)
-    {
-        uint64_t diff = max - min;
-        return static_cast<int64_t>(min + genrand(diff));
-    }
-
-    uint8_t
-    _random(uint8_t min, uint8_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<uint8_t>(min + genrand(diff));
-    }
-
-    uint16_t
-    _random(uint16_t min, uint16_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<uint16_t>(min + genrand(diff));
-    }
-
-    uint32_t
-    _random(uint32_t min, uint32_t max)
-    {
-        uint32_t diff = max - min;
-        return static_cast<uint32_t>(min + genrand(diff));
-    }
-
-    uint64_t
-    _random(uint64_t min, uint64_t max)
-    {
-        uint64_t diff = max - min;
-        return static_cast<uint64_t>(min + genrand(diff));
-    }
+    std::mt19937_64 gen;
 
   public:
+
     Random();
     Random(uint32_t s);
-    Random(uint32_t init_key[], int key_length);
     ~Random();
 
     void init(uint32_t s);
-    void init(uint32_t init_key[], int key_length);
 
+    /**
+     * Use the SFINAE idiom to choose an implementation based on
+     * whether the type is integral or floating point.
+     */
     template <typename T>
-    T
+    typename std::enable_if<std::is_integral<T>::value, T>::type
     random()
     {
-        T value;
-        _random(value);
-        return value;
+        // [0, max_value] for integer types
+        std::uniform_int_distribution<T> dist;
+        return dist(gen);
     }
 
     template <typename T>
-    T
+    typename std::enable_if<std::is_floating_point<T>::value, T>::type
+    random()
+    {
+        // [0, 1) for real types
+        std::uniform_real_distribution<T> dist;
+        return dist(gen);
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_integral<T>::value, T>::type
     random(T min, T max)
     {
-        return _random(min, max);
+        std::uniform_int_distribution<T> dist(min, max);
+        return dist(gen);
     }
 
-    // [0,1]
-    double
-    gen_real1()
-    {
-        return genrand() / 4294967296.0;
-    }
-
-    // [0,1)
-    double
-    gen_real2()
-    {
-        return genrand() / 4294967295.0;
-    }
-
-    // (0,1)
-    double
-    gen_real3()
-    {
-        return ((double)genrand() + 0.5) / 4294967296.0;
-    }
-
-  public:
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 extern Random random_mt;
