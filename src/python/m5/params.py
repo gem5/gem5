@@ -626,9 +626,17 @@ class Addr(CheckedInt):
             self.value = value.value
         else:
             try:
+                # Often addresses are referred to with sizes. Ex: A device
+                # base address is at "512MB".  Use toMemorySize() to convert
+                # these into addresses. If the address is not specified with a
+                # "size", an exception will occur and numeric translation will
+                # proceed below.
                 self.value = convert.toMemorySize(value)
-            except TypeError:
-                self.value = long(value)
+            except (TypeError, ValueError):
+                # Convert number to string and use long() to do automatic
+                # base conversion (requires base=0 for auto-conversion)
+                self.value = long(str(value), base=0)
+
         self._check()
     def __add__(self, other):
         if isinstance(other, Addr):

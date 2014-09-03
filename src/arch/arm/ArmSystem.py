@@ -65,7 +65,7 @@ class ArmSystem(System):
     highest_el_is_64 = Param.Bool(False,
         "True if the register width of the highest implemented exception level "
         "is 64 bits (ARMv8)")
-    reset_addr_64 = Param.UInt64(0x0,
+    reset_addr_64 = Param.Addr(0x0,
         "Reset address if the highest implemented exception level is 64 bits "
         "(ARMv8)")
     phys_addr_range_64 = Param.UInt8(40,
