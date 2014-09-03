@@ -727,12 +727,17 @@ namespace ArmISA
 } // namespace ArmISA
 
 __hash_namespace_begin
-    template<>
-    struct hash<ArmISA::ExtMachInst> : public hash<uint32_t> {
-        size_t operator()(const ArmISA::ExtMachInst &emi) const {
-            return hash<uint32_t>::operator()((uint32_t)emi);
-        };
-    };
+
+template<>
+struct hash<ArmISA::ExtMachInst> :
+        public hash<ArmISA::ExtMachInst::__DataType> {
+
+    size_t operator()(const ArmISA::ExtMachInst &emi) const {
+        return hash<ArmISA::ExtMachInst::__DataType>::operator()(emi);
+    }
+
+};
+
 __hash_namespace_end
 
 #endif
