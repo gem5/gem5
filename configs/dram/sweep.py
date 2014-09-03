@@ -124,12 +124,16 @@ itt = system.mem_ctrls[0].tBURST.value * 1000000000000
 # assume we start at 0
 max_addr = mem_range.end
 
+# use min of the page size and 512 bytes as that should be more than
+# enough
+max_stride = min(512, page_size)
+
 # now we create the state by iterating over the stride size from burst
-# size to min of the page size and 1 kB, and from using only a single
-# bank up to the number of banks available
+# size to the max stride, and from using only a single bank up to the
+# number of banks available
 nxt_state = 0
 for bank in range(1, nbr_banks + 1):
-    for stride_size in range(burst_size, min(1024, page_size) + 1, burst_size):
+    for stride_size in range(burst_size, max_stride + 1, burst_size):
         cfg_file.write("STATE %d %d DRAM 100 0 %d "
                        "%d %d %d %d %d %d %d %d 1\n" %
                        (nxt_state, period, max_addr, burst_size, itt, itt, 0,
@@ -168,3 +172,6 @@ root.system.mem_mode = 'timing'
 
 m5.instantiate()
 m5.simulate(nxt_state * period)
+
+print "DRAM sweep with burst: %d, banks: %d, max stride: %d" % \
+    (burst_size, nbr_banks, max_stride)
