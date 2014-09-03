@@ -141,13 +141,13 @@
                         }}, IsNonSpeculative);
                         0x01: m5quiesce({{
                             PseudoInst::quiesce(xc->tcBase());
-                        }}, IsNonSpeculative);
+                        }}, IsNonSpeculative, IsQuiesce);
                         0x02: m5quiesceNs({{
                             PseudoInst::quiesceNs(xc->tcBase(), Rdi);
-                        }}, IsNonSpeculative);
+                        }}, IsNonSpeculative, IsQuiesce);
                         0x03: m5quiesceCycle({{
                             PseudoInst::quiesceCycles(xc->tcBase(), Rdi);
-                        }}, IsNonSpeculative);
+                        }}, IsNonSpeculative, IsQuiesce);
                         0x04: m5quiesceTime({{
                             Rax = PseudoInst::quiesceTime(xc->tcBase());
                         }}, IsNonSpeculative);
