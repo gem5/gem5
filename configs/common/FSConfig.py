@@ -246,19 +246,30 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
         if dtb_filename:
             self.dtb_filename = binary(dtb_filename)
         self.machine_type = machine_type
-        if convert.toMemorySize(mdesc.mem()) > int(self.realview.max_mem_size):
-            print "The currently selected ARM platforms doesn't support"
-            print " the amount of DRAM you've selected. Please try"
-            print " another platform"
-            sys.exit(1)
-
         # Ensure that writes to the UART actually go out early in the boot
         boot_flags = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
                      'lpj=19988480 norandmaps rw loglevel=8 ' + \
                      'mem=%s root=/dev/sda1' % mdesc.mem()
 
-        self.mem_ranges = [AddrRange(self.realview.mem_start_addr,
-                                     size = mdesc.mem())]
+        self.mem_ranges = []
+        size_remain = long(Addr(mdesc.mem()))
+        for region in self.realview._mem_regions:
+            if size_remain > long(region[1]):
+                self.mem_ranges.append(AddrRange(region[0], size=region[1]))
+                size_remain = size_remain - long(region[1])
+            else:
+                self.mem_ranges.append(AddrRange(region[0], size=size_remain))
+                size_remain = 0
+                break
+            warn("Memory size specified spans more than one region. Creating" \
+                 " another memory controller for that range.")
+
+        if size_remain > 0:
+            fatal("The currently selected ARM platforms doesn't support" \
+                  " the amount of DRAM you've selected. Please try" \
+                  " another platform")
+
+
         self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30

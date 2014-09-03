@@ -184,8 +184,7 @@ class RealView(Platform):
     pci_cfg_base = Param.Addr(0, "Base address of PCI Configuraiton Space")
     pci_cfg_gen_offsets = Param.Bool(False, "Should the offsets used for PCI cfg access"
             " be compatible with the pci-generic-host or the legacy host bridge?")
-    mem_start_addr = Param.Addr(0, "Start address of main memory")
-    max_mem_size = Param.Addr('256MB', "Maximum amount of RAM supported by platform")
+    _mem_regions = [(Addr(0), Addr('256MB'))]
 
     def attachPciDevices(self):
         pass
@@ -444,8 +443,7 @@ class RealViewEB(RealView):
         self.smcreg_fake.clk_domain   = clkdomain
 
 class VExpress_EMM(RealView):
-    mem_start_addr = '2GB'
-    max_mem_size = '2GB'
+    _mem_regions = [(Addr('2GB'), Addr('2GB'))]
     pci_cfg_base = 0x30000000
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, \
@@ -602,6 +600,9 @@ class VExpress_EMM(RealView):
 class VExpress_EMM64(VExpress_EMM):
     pci_io_base = 0x2f000000
     pci_cfg_gen_offsets = True
+    # Three memory regions are specified totalling 512GB
+    _mem_regions = [(Addr('2GB'), Addr('2GB')), (Addr('34GB'), Addr('30GB')),
+                    (Addr('512GB'), Addr('480GB'))]
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'))
         self.nvmem.port = mem_bus.master
