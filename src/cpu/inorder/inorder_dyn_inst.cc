@@ -469,7 +469,7 @@ InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
 }
 
 MiscReg
-InOrderDynInst::readRegOtherThread(unsigned reg_idx, ThreadID tid)
+InOrderDynInst::readRegOtherThread(int reg_idx, ThreadID tid)
 {
     if (tid == -1) {
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
@@ -544,8 +544,7 @@ InOrderDynInst::setMiscReg(int misc_reg, const MiscReg &val)
 }
 
 void
-InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
-                                  ThreadID tid)
+InOrderDynInst::setRegOtherThread(int reg_idx, MiscReg val, ThreadID tid)
 {
     if (tid == InvalidThreadID) {
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));

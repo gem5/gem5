@@ -71,9 +71,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     typedef TheISA::IntReg   IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-#ifdef ISA_HAS_CC_REGS
     typedef TheISA::CCReg   CCReg;
-#endif
+
     /** Misc register index type. */
     typedef TheISA::MiscReg  MiscReg;
 
@@ -250,7 +249,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntRegOperand(const StaticInst *si, int idx)
+    IntReg readIntRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
@@ -265,7 +264,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
 
-    uint64_t readCCRegOperand(const StaticInst *si, int idx)
+    CCReg readCCRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readCCReg(this->_srcRegIdx[idx]);
     }
@@ -273,7 +272,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
         this->cpu->setIntReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
@@ -292,20 +291,20 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
     {
         this->cpu->setCCReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setCCRegOperand(si, idx, val);
     }
 
 #if THE_ISA == MIPS_ISA
-    uint64_t readRegOtherThread(int misc_reg)
+    MiscReg readRegOtherThread(int misc_reg, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(int misc_reg, const TheISA::MiscReg &val)
+    void setRegOtherThread(int misc_reg, MiscReg val, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
     }

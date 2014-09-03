@@ -56,6 +56,7 @@
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
@@ -73,7 +74,7 @@
  */
 
 template <class Impl>
-class BaseDynInst : public RefCounted
+class BaseDynInst : public ExecContext, public RefCounted
 {
   public:
     // Typedef for the CPU.
@@ -82,10 +83,6 @@ class BaseDynInst : public RefCounted
 
     // Logical register index type.
     typedef TheISA::RegIndex RegIndex;
-    // Integer register type.
-    typedef TheISA::IntReg IntReg;
-    // Floating point register type.
-    typedef TheISA::FloatReg FloatReg;
 
     // The DynInstPtr type.
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -634,26 +631,15 @@ class BaseDynInst : public RefCounted
     }
 
     /** Records an integer register being set to a value. */
-    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
         setResult<uint64_t>(val);
     }
 
     /** Records a CC register being set to a value. */
-    void setCCRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
     {
         setResult<uint64_t>(val);
-    }
-
-    /** Records an fp register being set to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                            int width)
-    {
-        if (width == 32 || width == 64) {
-            setResult<double>(val);
-        } else {
-            panic("Unsupported width!");
-        }
     }
 
     /** Records an fp register being set to a value. */
@@ -663,14 +649,7 @@ class BaseDynInst : public RefCounted
     }
 
     /** Records an fp register being set to an integer value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val,
-                                int width)
-    {
-        setResult<uint64_t>(val);
-    }
-
-    /** Records an fp register being set to an integer value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         setResult<uint64_t>(val);
     }
@@ -802,10 +781,10 @@ class BaseDynInst : public RefCounted
     bool isSquashedInROB() const { return status[SquashedInROB]; }
 
     /** Read the PC state of this instruction. */
-    const TheISA::PCState pcState() const { return pc; }
+    TheISA::PCState pcState() const { return pc; }
 
     /** Set the PC state of this instruction. */
-    const void pcState(const TheISA::PCState &val) { pc = val; }
+    void pcState(const TheISA::PCState &val) { pc = val; }
 
     /** Read the PC of this instruction. */
     const Addr instAddr() const { return pc.instAddr(); }
@@ -844,10 +823,10 @@ class BaseDynInst : public RefCounted
 
   public:
     /** Sets the effective address. */
-    void setEA(Addr &ea) { instEffAddr = ea; instFlags[EACalcDone] = true; }
+    void setEA(Addr ea) { instEffAddr = ea; instFlags[EACalcDone] = true; }
 
     /** Returns the effective address. */
-    const Addr &getEA() const { return instEffAddr; }
+    Addr getEA() const { return instEffAddr; }
 
     /** Returns whether or not the eff. addr. calculation has been completed. */
     bool doneEACalc() { return instFlags[EACalcDone]; }
@@ -869,11 +848,11 @@ class BaseDynInst : public RefCounted
 
   public:
     /** Returns the number of consecutive store conditional failures. */
-    unsigned readStCondFailures()
+    unsigned int readStCondFailures() const
     { return thread->storeCondFailures; }
 
     /** Sets the number of consecutive store conditional failures. */
-    void setStCondFailures(unsigned sc_failures)
+    void setStCondFailures(unsigned int sc_failures)
     { thread->storeCondFailures = sc_failures; }
 };
 

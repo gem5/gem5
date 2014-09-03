@@ -50,6 +50,7 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "params/BaseCPU.hh"
+#include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
@@ -213,3 +214,18 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
     TheISA::copyRegs(src_tc, tc);
 }
 
+// The following methods are defined in src/arch/alpha/ev5.cc for
+// Alpha.
+#if THE_ISA != ALPHA_ISA
+Fault
+SimpleThread::hwrei()
+{
+    return NoFault;
+}
+
+bool
+SimpleThread::simPalCheck(int palFunc)
+{
+    return true;
+}
+#endif

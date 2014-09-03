@@ -1025,17 +1025,10 @@ class CpuModel(object):
 
     # Dict of available CPU model objects.  Accessible as CpuModel.dict.
     dict = {}
-    list = []
-    defaults = []
 
     # Constructor.  Automatically adds models to CpuModel.dict.
-    def __init__(self, name, filename, includes, strings, default=False):
+    def __init__(self, name, default=False):
         self.name = name           # name of model
-        self.filename = filename   # filename for output exec code
-        self.includes = includes   # include files needed in exec file
-        # The 'strings' dict holds all the per-CPU symbols we can
-        # substitute into templates etc.
-        self.strings = strings
 
         # This cpu is enabled by default
         self.default = default
@@ -1044,7 +1037,6 @@ class CpuModel(object):
         if name in CpuModel.dict:
             raise AttributeError, "CpuModel '%s' already registered" % name
         CpuModel.dict[name] = self
-        CpuModel.list.append(name)
 
 Export('CpuModel')
 
@@ -1086,7 +1078,7 @@ sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
     ListVariable('CPU_MODELS', 'CPU models',
                  sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
-                 sorted(CpuModel.list)),
+                 sorted(CpuModel.dict.keys())),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
                  False),
     BoolVariable('SS_COMPATIBLE_FP',

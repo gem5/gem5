@@ -1178,13 +1178,25 @@ class Stack(list):
 #
 
 class ISAParser(Grammar):
-    def __init__(self, output_dir, cpu_models):
+    class CpuModel(object):
+        def __init__(self, name, filename, includes, strings):
+            self.name = name
+            self.filename = filename
+            self.includes = includes
+            self.strings = strings
+
+    def __init__(self, output_dir):
         super(ISAParser, self).__init__()
         self.output_dir = output_dir
 
         self.filename = None # for output file watermarking/scaremongering
 
-        self.cpuModels = cpu_models
+        self.cpuModels = [
+            ISAParser.CpuModel('ExecContext',
+                               'generic_cpu_exec.cc',
+                               '#include "cpu/exec_context.hh"',
+                               { "CPU_exec_context" : "ExecContext" }),
+            ]
 
         # variable to hold templates
         self.templateMap = {}
@@ -2376,8 +2388,6 @@ StaticInstPtr
             e.exit(self.fileNameStack)
 
 # Called as script: get args from command line.
-# Args are: <path to cpu_models.py> <isa desc file> <output dir> <cpu models>
+# Args are: <isa desc file> <output dir>
 if __name__ == '__main__':
-    execfile(sys.argv[1])  # read in CpuModel definitions
-    cpu_models = [CpuModel.dict[cpu] for cpu in sys.argv[4:]]
-    ISAParser(sys.argv[3], cpu_models).parse_isa_desc(sys.argv[2])
+    ISAParser(sys.argv[2]).parse_isa_desc(sys.argv[1])

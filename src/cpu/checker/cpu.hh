@@ -52,6 +52,7 @@
 #include "base/statistics.hh"
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
@@ -86,7 +87,7 @@ class Request;
  * checker to be able to correctly verify instructions, even with
  * external accesses to the ThreadContext that change state.
  */
-class CheckerCPU : public BaseCPU
+class CheckerCPU : public BaseCPU, public ExecContext
 {
   protected:
     typedef TheISA::MachInst MachInst;
@@ -194,7 +195,7 @@ class CheckerCPU : public BaseCPU
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
     void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
-    Addr getEA()        { panic("SimpleCPU::getEA() not implemented\n"); }
+    Addr getEA() const  { panic("SimpleCPU::getEA() not implemented\n"); }
 
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
@@ -207,7 +208,7 @@ class CheckerCPU : public BaseCPU
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntRegOperand(const StaticInst *si, int idx)
+    IntReg readIntRegOperand(const StaticInst *si, int idx)
     {
         return thread->readIntReg(si->srcRegIdx(idx));
     }
@@ -224,7 +225,7 @@ class CheckerCPU : public BaseCPU
         return thread->readFloatRegBits(reg_idx);
     }
 
-    uint64_t readCCRegOperand(const StaticInst *si, int idx)
+    CCReg readCCRegOperand(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
         return thread->readCCReg(reg_idx);
@@ -238,7 +239,7 @@ class CheckerCPU : public BaseCPU
         result.push(instRes);
     }
 
-    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
         thread->setIntReg(si->destRegIdx(idx), val);
         setResult<uint64_t>(val);
@@ -259,7 +260,7 @@ class CheckerCPU : public BaseCPU
         setResult<uint64_t>(val);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, uint64_t val)
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
         thread->setCCReg(reg_idx, val);
@@ -272,7 +273,7 @@ class CheckerCPU : public BaseCPU
         thread->setPredicate(val);
     }
 
-    TheISA::PCState pcState() { return thread->pcState(); }
+    TheISA::PCState pcState() const { return thread->pcState(); }
     void pcState(const TheISA::PCState &val)
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s.\n",
@@ -322,13 +323,13 @@ class CheckerCPU : public BaseCPU
     }
 
 #if THE_ISA == MIPS_ISA
-    uint64_t readRegOtherThread(int misc_reg)
+    MiscReg readRegOtherThread(int misc_reg, ThreadID tid)
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(int misc_reg, const TheISA::MiscReg &val)
+    void setRegOtherThread(int misc_reg, MiscReg val, ThreadID tid)
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
     }
@@ -362,7 +363,11 @@ class CheckerCPU : public BaseCPU
     Fault writeMem(uint8_t *data, unsigned size,
                    Addr addr, unsigned flags, uint64_t *res);
 
-    void setStCondFailures(unsigned sc_failures)
+    unsigned int readStCondFailures() const {
+        return thread->readStCondFailures();
+    }
+
+    void setStCondFailures(unsigned int sc_failures)
     {}
     /////////////////////////////////////////////////////
 
@@ -371,7 +376,7 @@ class CheckerCPU : public BaseCPU
     void wakeup() { }
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
-    void syscall(uint64_t callnum) { }
+    void syscall(int64_t callnum) { }
 
     void handleError()
     {

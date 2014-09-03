@@ -90,6 +90,7 @@ output exec {{
 #include "arch/arm/utility.hh"
 #include "arch/generic/memhelpers.hh"
 #include "base/condcodes.hh"
+#include "cpu/base.hh"
 #include "sim/pseudo_inst.hh"
 #if defined(linux)
 #include <fenv.h>

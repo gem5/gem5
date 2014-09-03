@@ -30,6 +30,4 @@
 
 Import('*')
 
-CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
-         '#include "cpu/checker/cpu.hh"',
-         { 'CPU_exec_context': 'CheckerCPU' })
+CpuModel('CheckerCPU')

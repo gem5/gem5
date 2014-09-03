@@ -35,70 +35,7 @@ if env['TARGET_ISA'] == 'null':
     Source('intr_control_noisa.cc')
     Return()
 
-#################################################################
-#
-# Generate StaticInst execute() method signatures.
-#
-# There must be one signature for each CPU model compiled in.
-# Since the set of compiled-in models is flexible, we generate a
-# header containing the appropriate set of signatures on the fly.
-#
-#################################################################
-
-# Template for execute() signature.
-exec_sig_template = '''
-virtual Fault execute(%(type)s *xc, Trace::InstRecord *traceData) const = 0;
-virtual Fault eaComp(%(type)s *xc, Trace::InstRecord *traceData) const
-{ panic("eaComp not defined!"); M5_DUMMY_RETURN };
-virtual Fault initiateAcc(%(type)s *xc, Trace::InstRecord *traceData) const
-{ panic("initiateAcc not defined!"); M5_DUMMY_RETURN };
-virtual Fault completeAcc(Packet *pkt, %(type)s *xc,
-                          Trace::InstRecord *traceData) const
-{ panic("completeAcc not defined!"); M5_DUMMY_RETURN };
-'''
-
-mem_ini_sig_template = '''
-virtual Fault eaComp(%(type)s *xc, Trace::InstRecord *traceData) const
-{ panic("eaComp not defined!"); M5_DUMMY_RETURN };
-virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); M5_DUMMY_RETURN };
-'''
-
-mem_comp_sig_template = '''
-virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; M5_DUMMY_RETURN };
-'''
-
-# Generate a temporary CPU list, including the CheckerCPU if
-# it's enabled.  This isn't used for anything else other than StaticInst
-# headers.
-temp_cpu_list = env['CPU_MODELS'][:]
-temp_cpu_list.append('CheckerCPU')
 SimObject('CheckerCPU.py')
-
-# Generate header.
-def gen_cpu_exec_signatures(target, source, env):
-    f = open(str(target[0]), 'w')
-    print >> f, '''
-#ifndef __CPU_STATIC_INST_EXEC_SIGS_HH__
-#define __CPU_STATIC_INST_EXEC_SIGS_HH__
-'''
-    for cpu in temp_cpu_list:
-        xc_type = CpuModel.dict[cpu].strings['CPU_exec_context']
-        print >> f, exec_sig_template % { 'type' : xc_type }
-    print >> f, '''
-#endif  // __CPU_STATIC_INST_EXEC_SIGS_HH__
-'''
-
-# Generate string that gets printed when header is rebuilt
-def gen_sigs_string(target, source, env):
-    return " [GENERATE] static_inst_exec_sigs.hh: " \
-           + ', '.join(temp_cpu_list)
-
-# Add command to generate header to environment.
-env.Command('static_inst_exec_sigs.hh', (),
-            Action(gen_cpu_exec_signatures, gen_sigs_string,
-                   varlist = temp_cpu_list))
-
-env.Depends('static_inst_exec_sigs.hh', Value(env['CPU_MODELS']))
 
 SimObject('BaseCPU.py')
 SimObject('FuncUnit.py')
@@ -112,6 +49,7 @@ Source('activity.cc')
 Source('base.cc')
 Source('cpuevent.cc')
 Source('exetrace.cc')
+Source('exec_context.cc')
 Source('func_unit.cc')
 Source('inteltrace.cc')
 Source('intr_control.cc')

@@ -30,7 +30,4 @@
 
 Import('*')
 
-CpuModel('InOrderCPU', 'inorder_cpu_exec.cc',
-         '#include "cpu/inorder/inorder_dyn_inst.hh"',
-         { 'CPU_exec_context': 'InOrderDynInst' },
-         default=True)
+CpuModel('InOrderCPU', default=True)

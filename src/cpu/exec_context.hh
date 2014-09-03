@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,104 +38,228 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Andreas Sandberg
  */
 
-#error "Cannot include this file"
+#ifndef __CPU_EXEC_CONTEXT_HH__
+#define __CPU_EXEC_CONTEXT_HH__
+
+#include "arch/registers.hh"
+#include "base/types.hh"
+#include "config/the_isa.hh"
+#include "cpu/static_inst_fwd.hh"
+#include "cpu/translation.hh"
+#include "sim/fault_fwd.hh"
 
 /**
- * The ExecContext is not a usable class.  It is simply here for
- * documentation purposes.  It shows the interface that is used by the
- * ISA to access and change CPU state.
+ * The ExecContext is an abstract base class the provides the
+ * interface used by the ISA to manipulate the state of the CPU model.
+ *
+ * Register accessor methods in this class typically provide the index
+ * of the instruction's operand (e.g., 0 or 1), not the architectural
+ * register index, to simplify the implementation of register
+ * renaming.  The architectural register index can be found by
+ * indexing into the instruction's own operand index table.
+ *
+ * @note The methods in this class typically take a raw pointer to the
+ * StaticInst is provided instead of a ref-counted StaticInstPtr to
+ * reduce overhead as an argument. This is fine as long as the
+ * implementation doesn't copy the pointer into any long-term storage
+ * (which is pretty hard to imagine they would have reason to do).
  */
 class ExecContext {
-    // The register accessor methods provide the index of the
-    // instruction's operand (e.g., 0 or 1), not the architectural
-    // register index, to simplify the implementation of register
-    // renaming.  We find the architectural register index by indexing
-    // into the instruction's own operand index table.  Note that a
-    // raw pointer to the StaticInst is provided instead of a
-    // ref-counted StaticInstPtr to reduce overhead.  This is fine as
-    // long as these methods don't copy the pointer into any long-term
-    // storage (which is pretty hard to imagine they would have reason
-    // to do).
+  public:
+    typedef TheISA::IntReg IntReg;
+    typedef TheISA::PCState PCState;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
+    typedef TheISA::MiscReg MiscReg;
+
+    typedef TheISA::CCReg CCReg;
+
+  public:
+    /**
+     * @{
+     * @name Integer Register Interfaces
+     *
+     */
 
     /** Reads an integer register. */
-    uint64_t readIntRegOperand(const StaticInst *si, int idx);
+    virtual IntReg readIntRegOperand(const StaticInst *si, int idx) = 0;
+
+    /** Sets an integer register to a value. */
+    virtual void setIntRegOperand(const StaticInst *si,
+                                  int idx, IntReg val) = 0;
+
+    /** @} */
+
+
+    /**
+     * @{
+     * @name Floating Point Register Interfaces
+     */
 
     /** Reads a floating point register of single register width. */
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx);
+    virtual FloatReg readFloatRegOperand(const StaticInst *si, int idx) = 0;
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx);
-
-    /** Sets an integer register to a value. */
-    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val);
+    virtual FloatRegBits readFloatRegOperandBits(const StaticInst *si,
+                                                 int idx) = 0;
 
     /** Sets a floating point register of single width to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
+    virtual void setFloatRegOperand(const StaticInst *si,
+                                    int idx, FloatReg val) = 0;
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val);
+    virtual void setFloatRegOperandBits(const StaticInst *si,
+                                        int idx, FloatRegBits val) = 0;
 
-    /** Reads the PC. */
-    uint64_t readPC();
-    /** Reads the NextPC. */
-    uint64_t readNextPC();
-    /** Reads the Next-NextPC. Only for architectures like SPARC or MIPS. */
-    uint64_t readNextNPC();
+    /** @} */
 
-    /** Sets the PC. */
-    void setPC(uint64_t val);
-    /** Sets the NextPC. */
-    void setNextPC(uint64_t val);
-    /** Sets the Next-NextPC.  Only for architectures like SPARC or MIPS. */
-    void setNextNPC(uint64_t val);
+    /**
+     * @{
+     * @name Condition Code Registers
+     */
+    virtual CCReg readCCRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void setCCRegOperand(const StaticInst *si, int idx, CCReg val) = 0;
+    /** @} */
 
-    /** Reads a miscellaneous register. */
-    MiscReg readMiscRegNoEffect(int misc_reg);
+    /**
+     * @{
+     * @name Misc Register Interfaces
+     */
+    virtual MiscReg readMiscRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void setMiscRegOperand(const StaticInst *si,
+                                   int idx, const MiscReg &val) = 0;
 
-    /** Reads a miscellaneous register, handling any architectural
-     * side effects due to reading that register. */
-    MiscReg readMiscReg(int misc_reg);
+    /**
+     * Reads a miscellaneous register, handling any architectural
+     * side effects due to reading that register.
+     */
+    virtual MiscReg readMiscReg(int misc_reg) = 0;
 
-    /** Sets a miscellaneous register. */
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
+    /**
+     * Sets a miscellaneous register, handling any architectural
+     * side effects due to writing that register.
+     */
+    virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
 
-    /** Sets a miscellaneous register, handling any architectural
-     * side effects due to writing that register. */
-    void setMiscReg(int misc_reg, const MiscReg &val);
+    /** @} */
 
-    /** Records the effective address of the instruction.  Only valid
-     * for memory ops. */
-    void setEA(Addr EA);
-    /** Returns the effective address of the instruction.  Only valid
-     * for memory ops. */
-    Addr getEA();
+    /**
+     * @{
+     * @name PC Control
+     */
+    virtual PCState pcState() const = 0;
+    virtual void pcState(const PCState &val) = 0;
+    /** @} */
+
+    /**
+     * @{
+     * @name Memory Interface
+     */
+    /**
+     * Record the effective address of the instruction.
+     *
+     * @note Only valid for memory ops.
+     */
+    virtual void setEA(Addr EA) = 0;
+    /**
+     * Get the effective address of the instruction.
+     *
+     * @note Only valid for memory ops.
+     */
+    virtual Addr getEA() const = 0;
+
+    virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
+                          unsigned int flags) = 0;
+
+    virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
+                           unsigned int flags, uint64_t *res) = 0;
+
+    /**
+     * Sets the number of consecutive store conditional failures.
+     */
+    virtual void setStCondFailures(unsigned int sc_failures) = 0;
+
+    /**
+     * Returns the number of consecutive store conditional failures.
+     */
+    virtual unsigned int readStCondFailures() const = 0;
+
+    /** @} */
+
+    /**
+     * @{
+     * @name SysCall Emulation Interfaces
+     */
+
+    /**
+     * Executes a syscall specified by the callnum.
+     */
+    virtual void syscall(int64_t callnum) = 0;
+
+    /** @} */
 
     /** Returns a pointer to the ThreadContext. */
-    ThreadContext *tcBase();
+    virtual ThreadContext *tcBase() = 0;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    /**
+     * @{
+     * @name Alpha-Specific Interfaces
+     */
 
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res);
-
-    /** Somewhat Alpha-specific function that handles returning from
-     * an error or interrupt. */
-    Fault hwrei();
+    /**
+     * Somewhat Alpha-specific function that handles returning from an
+     * error or interrupt.
+     */
+    virtual Fault hwrei() = 0;
 
     /**
      * Check for special simulator handling of specific PAL calls.  If
      * return value is false, actual PAL call will be suppressed.
      */
-    bool simPalCheck(int palFunc);
+    virtual bool simPalCheck(int palFunc) = 0;
 
-    /** Executes a syscall specified by the callnum. */
-    void syscall(int64_t callnum);
+    /** @} */
 
-    /** Finish a DTB address translation. */
-    void finishTranslation(WholeTranslationState *state);
+    /**
+     * @{
+     * @name ARM-Specific Interfaces
+     */
+
+    virtual bool readPredicate() = 0;
+    virtual void setPredicate(bool val) = 0;
+
+    /** @} */
+
+    /**
+     * @{
+     * @name X86-Specific Interfaces
+     */
+
+    /**
+     * Invalidate a page in the DTLB <i>and</i> ITLB.
+     */
+    virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
+
+    /** @} */
+
+    /**
+     * @{
+     * @name MIPS-Specific Interfaces
+     */
+
+#if THE_ISA == MIPS_ISA
+    virtual MiscReg readRegOtherThread(int regIdx,
+                                       ThreadID tid = InvalidThreadID) = 0;
+    virtual void setRegOtherThread(int regIdx, MiscReg val,
+                                   ThreadID tid = InvalidThreadID) = 0;
+#endif
+
+    /** @} */
 };
+
+#endif // __CPU_EXEC_CONTEXT_HH__

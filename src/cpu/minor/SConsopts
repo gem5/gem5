@@ -39,7 +39,4 @@
 
 Import('*')
 
-CpuModel('MinorCPU', 'minor_cpu_exec.cc',
-         '#include "cpu/minor/exec_context.hh"',
-         { 'CPU_exec_context': 'Minor::ExecContext' },
-         default=True)
+CpuModel('MinorCPU', default=True)

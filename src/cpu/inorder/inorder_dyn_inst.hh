@@ -45,6 +45,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/inorder/inorder_trace.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource.hh"
@@ -73,7 +74,7 @@
 class ResourceRequest;
 class Packet;
 
-class InOrderDynInst : public RefCounted
+class InOrderDynInst : public ExecContext, public RefCounted
 {
   public:
     // Binary machine instruction type.
@@ -543,7 +544,7 @@ class InOrderDynInst : public RefCounted
     //
     ////////////////////////////////////////////////////////////
     /** Read the PC of this instruction. */
-    const TheISA::PCState &pcState() const { return pc; }
+    TheISA::PCState pcState() const { return pc; }
 
     /** Sets the PC of this instruction. */
     void pcState(const TheISA::PCState &_pc) { pc = _pc; }
@@ -649,10 +650,10 @@ class InOrderDynInst : public RefCounted
     { return memAddr; }
 
     /** Sets the effective address. */
-    void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
+    void setEA(Addr ea) { instEffAddr = ea; eaCalcDone = true; }
 
     /** Returns the effective address. */
-    const Addr &getEA() const { return instEffAddr; }
+    Addr getEA() const { return instEffAddr; }
 
     /** Returns whether or not the eff. addr. calculation has been completed.*/
     bool doneEACalc() { return eaCalcDone; }
@@ -854,7 +855,10 @@ class InOrderDynInst : public RefCounted
      *  language (which is why the name isnt readIntSrc(...)) Note: That
      *  the source reg. value is set using the setSrcReg() function.
      */
-    IntReg readIntRegOperand(const StaticInst *si, int idx, ThreadID tid = 0);
+    IntReg readIntRegOperand(const StaticInst *si, int idx, ThreadID tid);
+    IntReg readIntRegOperand(const StaticInst *si, int idx) {
+        return readIntRegOperand(si, idx, 0);
+    }
     FloatReg readFloatRegOperand(const StaticInst *si, int idx);
     TheISA::FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx);
     MiscReg readMiscReg(int misc_reg);
@@ -899,24 +903,21 @@ class InOrderDynInst : public RefCounted
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
     void setFloatRegOperandBits(const StaticInst *si, int idx,
             TheISA::FloatRegBits val);
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val);
     void setMiscReg(int misc_reg, const MiscReg &val);
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
     void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val);
     void setMiscRegOperandNoEffect(const StaticInst *si, int idx,
                                    const MiscReg &val);
 
-    virtual uint64_t readRegOtherThread(unsigned idx,
-                                        ThreadID tid = InvalidThreadID);
-    virtual void setRegOtherThread(unsigned idx, const uint64_t &val,
-                                   ThreadID tid = InvalidThreadID);
+    MiscReg readRegOtherThread(int idx, ThreadID tid);
+    void setRegOtherThread(int idx, MiscReg val, ThreadID tid);
 
     /** Returns the number of consecutive store conditional failures. */
-    unsigned readStCondFailures()
+    unsigned int readStCondFailures() const
     { return thread->storeCondFailures; }
 
     /** Sets the number of consecutive store conditional failures. */
-    void setStCondFailures(unsigned sc_failures)
+    void setStCondFailures(unsigned int sc_failures)
     { thread->storeCondFailures = sc_failures; }
 
     //////////////////////////////////////////////////////////////
@@ -1063,6 +1064,27 @@ class InOrderDynInst : public RefCounted
     void dump(std::string &outstring);
 
     //inline int curCount() { return curCount(); }
+
+
+    CCReg readCCRegOperand(const StaticInst *si, int idx) {
+        panic("readCCRegOperand unimplemented");
+    }
+
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val) {
+        panic("setCCRegOperand unimplemented");
+    }
+
+    void setPredicate(bool val) {
+        panic("setPredicate unimplemented");
+    }
+
+    bool readPredicate() {
+        panic("readPredicate unimplemented");
+    }
+
+    void demapPage(Addr vaddr, uint64_t asn) {
+        panic("demapPage unimplemented");
+    }
 };
 
 

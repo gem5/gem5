@@ -53,6 +53,7 @@
 #ifndef __CPU_MINOR_EXEC_CONTEXT_HH__
 #define __CPU_MINOR_EXEC_CONTEXT_HH__
 
+#include "cpu/exec_context.hh"
 #include "cpu/minor/execute.hh"
 #include "cpu/minor/pipeline.hh"
 #include "cpu/base.hh"
@@ -69,7 +70,7 @@ class Execute;
  *  separates that interface from other classes such as Pipeline, MinorCPU
  *  and DynMinorInst and makes it easier to see what state is accessed by it.
  */
-class ExecContext
+class ExecContext : public ::ExecContext
 {
   public:
     MinorCPU &cpu;
@@ -119,7 +120,7 @@ class ExecContext
         return NoFault;
     }
 
-    uint64_t
+    IntReg
     readIntRegOperand(const StaticInst *si, int idx)
     {
         return thread.readIntReg(si->srcRegIdx(idx));
@@ -140,7 +141,7 @@ class ExecContext
     }
 
     void
-    setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
+    setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
         thread.setIntReg(si->destRegIdx(idx), val);
     }
@@ -174,7 +175,7 @@ class ExecContext
     }
 
     TheISA::PCState
-    pcState()
+    pcState() const
     {
         return thread.pcState();
     }
@@ -250,12 +251,8 @@ class ExecContext
     ThreadContext *tcBase() { return thread.getTC(); }
 
     /* @todo, should make stCondFailures persistent somewhere */
-    unsigned int readStCondFailures() { return 0; }
-    unsigned int
-    setStCondFailures(unsigned int st_cond_failures)
-    {
-        return 0;
-    }
+    unsigned int readStCondFailures() const { return 0; }
+    void setStCondFailures(unsigned int st_cond_failures) {}
 
     int contextId() { return thread.contextId(); }
     /* ISA-specific (or at least currently ISA singleton) functions */
@@ -295,7 +292,7 @@ class ExecContext
     }
 
     /* ALPHA/POWER: Effective address storage */
-    void setEA(Addr &ea)
+    void setEA(Addr ea)
     {
         inst->ea = ea;
     }
@@ -303,14 +300,14 @@ class ExecContext
     BaseCPU *getCpuPtr() { return &cpu; }
 
     /* POWER: Effective address storage */
-    Addr getEA()
+    Addr getEA() const
     {
         return inst->ea;
     }
 
     /* MIPS: other thread register reading/writing */
     uint64_t
-    readRegOtherThread(unsigned idx, ThreadID tid = InvalidThreadID)
+    readRegOtherThread(int idx, ThreadID tid = InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID
             ? &thread : cpu.threads[tid]);
@@ -327,7 +324,7 @@ class ExecContext
     }
 
     void
-    setRegOtherThread(unsigned idx, const TheISA::MiscReg &val,
+    setRegOtherThread(int idx, const TheISA::MiscReg &val,
         ThreadID tid = InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID

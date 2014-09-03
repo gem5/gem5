@@ -1,4 +1,4 @@
 
 Import('*')
 
-CpuModel('no', '', '', { '': '' })
+CpuModel('no')
