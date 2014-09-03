@@ -438,8 +438,17 @@ class DefaultCommit
     /** Number of Active Threads */
     ThreadID numThreads;
 
-    /** Is a drain pending. */
+    /** Is a drain pending? Commit is looking for an instruction boundary while
+     * there are no pending interrupts
+     */
     bool drainPending;
+
+    /** Is a drain imminent? Commit has found an instruction boundary while no
+     * interrupts were present or in flight.  This was the last architecturally
+     * committed instruction.  Interrupts disabled and pipeline flushed.
+     * Waiting for structures to finish draining.
+     */
+    bool drainImminent;
 
     /** The latency to handle a trap.  Used when scheduling trap
      * squash event.

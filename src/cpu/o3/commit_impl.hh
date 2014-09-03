@@ -104,6 +104,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       commitWidth(params->commitWidth),
       numThreads(params->numThreads),
       drainPending(false),
+      drainImminent(false),
       trapLatency(params->trapLatency),
       canHandleInterrupts(true),
       avoidQuiesceLiveLock(false)
@@ -406,6 +407,7 @@ void
 DefaultCommit<Impl>::drainResume()
 {
     drainPending = false;
+    drainImminent = false;
 }
 
 template <class Impl>
@@ -816,8 +818,10 @@ template <class Impl>
 void
 DefaultCommit<Impl>::propagateInterrupt()
 {
+    // Don't propagate intterupts if we are currently handling a trap or
+    // in draining and the last observable instruction has been committed.
     if (commitStatus[0] == TrapPending || interrupt || trapSquash[0] ||
-            tcSquash[0])
+            tcSquash[0] || drainImminent)
         return;
 
     // Process interrupts if interrupts are enabled, not in PAL
@@ -1089,10 +1093,15 @@ DefaultCommit<Impl>::commitInsts()
                     squashAfter(tid, head_inst);
 
                 if (drainPending) {
-                    DPRINTF(Drain, "Draining: %i:%s\n", tid, pc[tid]);
-                    if (pc[tid].microPC() == 0 && interrupt == NoFault) {
+                    if (pc[tid].microPC() == 0 && interrupt == NoFault &&
+                        !thread[tid]->trapPending) {
+                        // Last architectually committed instruction.
+                        // Squash the pipeline, stall fetch, and use
+                        // drainImminent to disable interrupts
+                        DPRINTF(Drain, "Draining: %i:%s\n", tid, pc[tid]);
                         squashAfter(tid, head_inst);
                         cpu->commitDrained(tid);
+                        drainImminent = true;
                     }
                 }
 
