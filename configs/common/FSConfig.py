@@ -225,13 +225,9 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
     # Attach any PCI devices this platform supports
     self.realview.attachPciDevices()
     # default to an IDE controller rather than a CF one
-    # assuming we've got one; EMM64 is an exception for the moment
-    if machine_type != "VExpress_EMM64":
-        try:
-            self.realview.ide.disks = [self.cf0]
-        except:
-            self.realview.cf_ctrl.disks = [self.cf0]
-    else:
+    try:
+        self.realview.ide.disks = [self.cf0]
+    except:
         self.realview.cf_ctrl.disks = [self.cf0]
 
     if bare_metal:
@@ -241,7 +237,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
                                      size = mdesc.mem())]
     else:
         if machine_type == "VExpress_EMM64":
-            self.kernel = binary('vmlinux-3.14-aarch64-vexpress-emm64')
+            self.kernel = binary('vmlinux-3.16-aarch64-vexpress-emm64-pcie')
         elif machine_type == "VExpress_EMM":
             self.kernel = binary('vmlinux-3.3-arm-vexpress-emm-pcie')
         else:
