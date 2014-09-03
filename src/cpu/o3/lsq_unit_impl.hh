@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -99,7 +99,16 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     DPRINTF(IEW, "Writeback event [sn:%lli].\n", inst->seqNum);
     DPRINTF(Activity, "Activity: Writeback event [sn:%lli].\n", inst->seqNum);
 
-    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
+    if (state->cacheBlocked) {
+        // This is the first half of a previous split load,
+        // where the 2nd half blocked, ignore this response
+        DPRINTF(IEW, "[sn:%lli]: Response from first half of earlier "
+                "blocked split load recieved. Ignoring.\n", inst->seqNum);
+        delete state;
+        delete pkt->req;
+        delete pkt;
+        return;
+    }
 
     // If this is a split access, wait until all packets are received.
     if (TheISA::HasUnalignedMemAcc && !state->complete()) {
@@ -140,8 +149,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
-      isStoreBlocked(false), isLoadBlocked(false),
-      loadBlockedHandled(false), storeInFlight(false), hasPendingPkt(false)
+      isStoreBlocked(false), storeInFlight(false), hasPendingPkt(false)
 {
 }
 
@@ -195,11 +203,7 @@ LSQUnit<Impl>::resetState()
     retryPkt = NULL;
     memDepViolator = NULL;
 
-    blockedLoadSeqNum = 0;
-
     stalled = false;
-    isLoadBlocked = false;
-    loadBlockedHandled = false;
 
     cacheBlockMask = ~(cpu->cacheLineSize() - 1);
 }
@@ -632,7 +636,7 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         }
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
-    } else if (!loadBlocked()) {
+    } else {
         assert(inst->effAddrValid());
         int load_idx = inst->lqIdx;
         incrLdIdx(load_idx);
@@ -787,7 +791,7 @@ LSQUnit<Impl>::writebackStores()
            ((!needsTSO) || (!storeInFlight)) &&
            usedPorts < cachePorts) {
 
-        if (isStoreBlocked || lsq->cacheBlocked()) {
+        if (isStoreBlocked) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
                     " is blocked!\n");
             break;
@@ -1024,14 +1028,6 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         ++lsqSquashedLoads;
     }
 
-    if (isLoadBlocked) {
-        if (squashed_num < blockedLoadSeqNum) {
-            isLoadBlocked = false;
-            loadBlockedHandled = false;
-            blockedLoadSeqNum = 0;
-        }
-    }
-
     if (memDepViolator && squashed_num < memDepViolator->seqNum) {
         memDepViolator = NULL;
     }
@@ -1218,7 +1214,6 @@ LSQUnit<Impl>::sendStore(PacketPtr data_pkt)
         ++lsqCacheBlocked;
         assert(retryPkt == NULL);
         retryPkt = data_pkt;
-        lsq->setRetryTid(lsqID);
         return false;
     }
     return true;
@@ -1244,7 +1239,6 @@ LSQUnit<Impl>::recvRetry()
             }
             retryPkt = NULL;
             isStoreBlocked = false;
-            lsq->setRetryTid(InvalidThreadID);
 
             // Send any outstanding packet.
             if (TheISA::HasUnalignedMemAcc && state->pktToSend) {
@@ -1256,13 +1250,7 @@ LSQUnit<Impl>::recvRetry()
         } else {
             // Still blocked!
             ++lsqCacheBlocked;
-            lsq->setRetryTid(lsqID);
         }
-    } else if (isLoadBlocked) {
-        DPRINTF(LSQUnit, "Loads squash themselves and all younger insts, "
-                "no need to resend packet.\n");
-    } else {
-        DPRINTF(LSQUnit, "Retry received but LSQ is no longer blocked.\n");
     }
 }
 

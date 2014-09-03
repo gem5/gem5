@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -62,8 +62,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
-      numThreads(params->numThreads),
-      retryTid(-1)
+      numThreads(params->numThreads)
 {
     assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
 
@@ -172,11 +171,6 @@ LSQ<Impl>::isDrained() const
 
     if (!sqEmpty()) {
         DPRINTF(Drain, "Not drained, SQ not empty.\n");
-        drained = false;
-    }
-
-    if (retryTid != InvalidThreadID) {
-        DPRINTF(Drain, "Not drained, the LSQ has blocked the caches.\n");
         drained = false;
     }
 
@@ -338,16 +332,11 @@ template <class Impl>
 void
 LSQ<Impl>::recvRetry()
 {
-    if (retryTid == InvalidThreadID)
-    {
-        //Squashed, so drop it
-        return;
+    iewStage->cacheUnblocked();
+
+    for (ThreadID tid : *activeThreads) {
+        thread[tid].recvRetry();
     }
-    int curr_retry_tid = retryTid;
-    // Speculatively clear the retry Tid.  This will get set again if
-    // the LSQUnit was unable to complete its access.
-    retryTid = -1;
-    thread[curr_retry_tid].recvRetry();
 }
 
 template <class Impl>

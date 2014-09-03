@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -188,10 +188,15 @@ class InstructionQueue
      */
     DynInstPtr getInstToExecute();
 
-    /** Returns a memory instruction that was referred due to a delayed DTB
-     *  translation if it is now ready to execute.
+    /** Gets a memory instruction that was referred due to a delayed DTB
+     *  translation if it is now ready to execute.  NULL if none available.
      */
     DynInstPtr getDeferredMemInstToExecute();
+
+    /** Gets a memory instruction that was blocked on the cache. NULL if none
+     *  available.
+     */
+    DynInstPtr getBlockedMemInstToExecute();
 
     /**
      * Records the instruction as the producer of a register without
@@ -241,6 +246,12 @@ class InstructionQueue
      * page table walk.
      */
     void deferMemInst(DynInstPtr &deferred_inst);
+
+    /**  Defers a memory instruction when it is cache blocked. */
+    void blockMemInst(DynInstPtr &blocked_inst);
+
+    /**  Notify instruction queue that a previous blockage has resolved */
+    void cacheUnblocked();
 
     /** Indicates an ordering violation between a store and a load. */
     void violation(DynInstPtr &store, DynInstPtr &faulting_load);
@@ -307,6 +318,14 @@ class InstructionQueue
      *  complete (hw page table walk in progress).
      */
     std::list<DynInstPtr> deferredMemInsts;
+
+    /** List of instructions that have been cache blocked. */
+    std::list<DynInstPtr> blockedMemInsts;
+
+    /** List of instructions that were cache blocked, but a retry has been seen
+     * since, so they can now be retried. May fail again go on the blocked list.
+     */
+    std::list<DynInstPtr> retryMemInsts;
 
     /**
      * Struct for comparing entries to be added to the priority queue.

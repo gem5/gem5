@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -134,7 +134,7 @@ class MemDepUnit
     /** Replays all instructions that have been rescheduled by moving them to
      *  the ready list.
      */
-    void replay(DynInstPtr &inst);
+    void replay();
 
     /** Completes a memory instruction. */
     void completed(DynInstPtr &inst);

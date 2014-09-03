@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -151,18 +151,6 @@ class LSQ {
     bool violation(ThreadID tid)
     { return thread[tid].violation(); }
 
-    /** Returns if a load is blocked due to the memory system for a specific
-     *  thread.
-     */
-    bool loadBlocked(ThreadID tid)
-    { return thread[tid].loadBlocked(); }
-
-    bool isLoadBlockedHandled(ThreadID tid)
-    { return thread[tid].isLoadBlockedHandled(); }
-
-    void setLoadBlockedHandled(ThreadID tid)
-    { thread[tid].setLoadBlockedHandled(); }
-
     /** Gets the instruction that caused the memory ordering violation. */
     DynInstPtr getMemDepViolator(ThreadID tid)
     { return thread[tid].getMemDepViolator(); }
@@ -277,15 +265,6 @@ class LSQ {
     bool willWB(ThreadID tid)
     { return thread[tid].willWB(); }
 
-    /** Returns if the cache is currently blocked. */
-    bool cacheBlocked() const
-    { return retryTid != InvalidThreadID; }
-
-    /** Sets the retry thread id, indicating that one of the LSQUnits
-     * tried to access the cache but the cache was blocked. */
-    void setRetryTid(ThreadID tid)
-    { retryTid = tid; }
-
     /** Debugging function to print out all instructions. */
     void dumpInsts() const;
     /** Debugging function to print out instructions from a specific thread. */
@@ -348,10 +327,6 @@ class LSQ {
 
     /** Number of Threads. */
     ThreadID numThreads;
-
-    /** The thread id of the LSQ Unit that is currently waiting for a
-     * retry. */
-    ThreadID retryTid;
 };
 
 template <class Impl>

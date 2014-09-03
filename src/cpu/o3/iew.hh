@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -181,6 +181,12 @@ class DefaultIEW
     /** Re-executes all rescheduled memory instructions. */
     void replayMemInst(DynInstPtr &inst);
 
+    /** Moves memory instruction onto the list of cache blocked instructions */
+    void blockMemInst(DynInstPtr &inst);
+
+    /** Notifies that the cache has become unblocked */
+    void cacheUnblocked();
+
     /** Sends an instruction to commit through the time buffer. */
     void instToCommit(DynInstPtr &inst);
 
@@ -232,11 +238,6 @@ class DefaultIEW
      * violation.
      */
     void squashDueToMemOrder(DynInstPtr &inst, ThreadID tid);
-
-    /** Sends commit proper information for a squash due to memory becoming
-     * blocked (younger issued instructions must be retried).
-     */
-    void squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid);
 
     /** Sets Dispatch to blocked, and signals back to other stages to block. */
     void block(ThreadID tid);

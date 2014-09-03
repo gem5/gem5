@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -413,6 +413,8 @@ InstructionQueue<Impl>::resetState()
     nonSpecInsts.clear();
     listOrder.clear();
     deferredMemInsts.clear();
+    blockedMemInsts.clear();
+    retryMemInsts.clear();
 }
 
 template <class Impl>
@@ -734,13 +736,14 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
     IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
-    DynInstPtr deferred_mem_inst;
-    int total_deferred_mem_issued = 0;
-    while (total_deferred_mem_issued < totalWidth &&
-           (deferred_mem_inst = getDeferredMemInstToExecute()) != 0) {
-        issueToExecuteQueue->access(0)->size++;
-        instsToExecute.push_back(deferred_mem_inst);
-        total_deferred_mem_issued++;
+    DynInstPtr mem_inst;
+    while (mem_inst = getDeferredMemInstToExecute()) {
+        addReadyMemInst(mem_inst);
+    }
+
+    // See if any cache blocked instructions are able to be executed
+    while (mem_inst = getBlockedMemInstToExecute()) {
+        addReadyMemInst(mem_inst);
     }
 
     // Have iterator to head of the list
@@ -751,12 +754,11 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     // Increment the iterator.
     // This will avoid trying to schedule a certain op class if there are no
     // FUs that handle it.
+    int total_issued = 0;
     ListOrderIt order_it = listOrder.begin();
     ListOrderIt order_end_it = listOrder.end();
-    int total_issued = 0;
 
-    while (total_issued < (totalWidth - total_deferred_mem_issued) &&
-           order_it != order_end_it) {
+    while (total_issued < totalWidth && order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
 
         assert(!readyInsts[op_class].empty());
@@ -874,7 +876,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     // @todo If the way deferred memory instructions are handeled due to
     // translation changes then the deferredMemInsts condition should be removed
     // from the code below.
-    if (total_issued || total_deferred_mem_issued || deferredMemInsts.size()) {
+    if (total_issued || !retryMemInsts.empty() || !deferredMemInsts.empty()) {
         cpu->activityThisCycle();
     } else {
         DPRINTF(IQ, "Not able to schedule any instructions.\n");
@@ -1050,7 +1052,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::replayMemInst(DynInstPtr &replay_inst)
 {
-    memDepUnit[replay_inst->threadNumber].replay(replay_inst);
+    memDepUnit[replay_inst->threadNumber].replay();
 }
 
 template <class Impl>
@@ -1078,18 +1080,52 @@ InstructionQueue<Impl>::deferMemInst(DynInstPtr &deferred_inst)
 }
 
 template <class Impl>
+void
+InstructionQueue<Impl>::blockMemInst(DynInstPtr &blocked_inst)
+{
+    blocked_inst->translationStarted(false);
+    blocked_inst->translationCompleted(false);
+
+    blocked_inst->clearIssued();
+    blocked_inst->clearCanIssue();
+    blockedMemInsts.push_back(blocked_inst);
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::cacheUnblocked()
+{
+    retryMemInsts.splice(retryMemInsts.end(), blockedMemInsts);
+    // Get the CPU ticking again
+    cpu->wakeCPU();
+}
+
+template <class Impl>
 typename Impl::DynInstPtr
 InstructionQueue<Impl>::getDeferredMemInstToExecute()
 {
     for (ListIt it = deferredMemInsts.begin(); it != deferredMemInsts.end();
          ++it) {
         if ((*it)->translationCompleted() || (*it)->isSquashed()) {
-            DynInstPtr ret = *it;
+            DynInstPtr mem_inst = *it;
             deferredMemInsts.erase(it);
-            return ret;
+            return mem_inst;
         }
     }
-    return NULL;
+    return nullptr;
+}
+
+template <class Impl>
+typename Impl::DynInstPtr
+InstructionQueue<Impl>::getBlockedMemInstToExecute()
+{
+    if (retryMemInsts.empty()) {
+        return nullptr;
+    } else {
+        DynInstPtr mem_inst = retryMemInsts.front();
+        retryMemInsts.pop_front();
+        return mem_inst;
+    }
 }
 
 template <class Impl>

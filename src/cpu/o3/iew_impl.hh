@@ -530,29 +530,6 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
-{
-    DPRINTF(IEW, "[tid:%i]: Memory blocked, squashing load and younger insts, "
-            "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
-    if (!toCommit->squash[tid] ||
-            inst->seqNum < toCommit->squashedSeqNum[tid]) {
-        toCommit->squash[tid] = true;
-
-        toCommit->squashedSeqNum[tid] = inst->seqNum;
-        toCommit->pc[tid] = inst->pcState();
-        toCommit->mispredictInst[tid] = NULL;
-
-        // Must include the broadcasted SN in the squash.
-        toCommit->includeSquashInst[tid] = true;
-
-        ldstQueue.setLoadBlockedHandled(tid);
-
-        wroteToTimeBuffer = true;
-    }
-}
-
-template<class Impl>
-void
 DefaultIEW<Impl>::block(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%u]: Blocking.\n", tid);
@@ -606,6 +583,20 @@ void
 DefaultIEW<Impl>::replayMemInst(DynInstPtr &inst)
 {
     instQueue.replayMemInst(inst);
+}
+
+template<class Impl>
+void
+DefaultIEW<Impl>::blockMemInst(DynInstPtr& inst)
+{
+    instQueue.blockMemInst(inst);
+}
+
+template<class Impl>
+void
+DefaultIEW<Impl>::cacheUnblocked()
+{
+    instQueue.cacheUnblocked();
 }
 
 template<class Impl>
@@ -1376,15 +1367,6 @@ DefaultIEW<Impl>::executeInsts()
                 squashDueToMemOrder(violator, tid);
 
                 ++memOrderViolationEvents;
-            } else if (ldstQueue.loadBlocked(tid) &&
-                       !ldstQueue.isLoadBlockedHandled(tid)) {
-                fetchRedirect[tid] = true;
-
-                DPRINTF(IEW, "Load operation couldn't execute because the "
-                        "memory system is blocked.  PC: %s [sn:%lli]\n",
-                        inst->pcState(), inst->seqNum);
-
-                squashDueToMemBlocked(inst, tid);
             }
         } else {
             // Reset any state associated with redirects that will not
@@ -1403,17 +1385,6 @@ DefaultIEW<Impl>::executeInsts()
 
                 ++memOrderViolationEvents;
             }
-            if (ldstQueue.loadBlocked(tid) &&
-                !ldstQueue.isLoadBlockedHandled(tid)) {
-                DPRINTF(IEW, "Load operation couldn't execute because the "
-                        "memory system is blocked.  PC: %s [sn:%lli]\n",
-                        inst->pcState(), inst->seqNum);
-                DPRINTF(IEW, "Blocked load will not be handled because "
-                        "already squashing\n");
-
-                ldstQueue.setLoadBlockedHandled(tid);
-            }
-
         }
     }
 
