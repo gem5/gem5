@@ -193,7 +193,9 @@ let {{
         return Name
 
     def buildMemSuffix(sign, size):
-        if size == 8:
+        if size == 16:
+            memSuffix = '_tud'
+        elif size == 8:
             memSuffix = '_ud'
         elif size == 4:
             if sign:

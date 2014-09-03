@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013 ARM Limited
+// Copyright (c) 2011-2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -187,35 +187,32 @@ let {{
                         AA64FpDestP2_uw = 0;
                         AA64FpDestP3_uw = 0;
                     '''
-                elif self.size == 8 or (self.size == 16 and not self.top):
+                elif self.size == 8:
                     accCode = '''
                         uint64_t data = cSwap(Mem%s,
                                               isBigEndian64(xc->tcBase()));
                         AA64FpDestP0_uw = (uint32_t)data;
                         AA64FpDestP1_uw = (data >> 32);
+                        AA64FpDestP2_uw = 0;
+                        AA64FpDestP3_uw = 0;
                     '''
-                    # Only zero out the other half if this isn't part of a
-                    # pair of 8 byte loads implementing a 16 byte load.
-                    if self.size == 8:
-                        accCode += '''
-                            AA64FpDestP2_uw = 0;
-                            AA64FpDestP3_uw = 0;
-                        '''
-                elif self.size == 16 and self.top:
+                elif self.size == 16:
                     accCode = '''
-                        uint64_t data = cSwap(Mem%s,
-                                              isBigEndian64(xc->tcBase()));
-                        AA64FpDestP2_uw = (uint32_t)data;
-                        AA64FpDestP3_uw = (data >> 32);
+                    Twin64_t data = cSwap(Mem%s,
+                                          isBigEndian64(xc->tcBase()));
+
+
+                    AA64FpDestP0_uw = (uint32_t)data.a;
+                    AA64FpDestP1_uw = (data.a >> 32);
+                    AA64FpDestP2_uw = (uint32_t)data.b;
+                    AA64FpDestP3_uw = (data.b >> 32);
                     '''
             elif self.flavor == "widen" or self.size == 8:
                 accCode = "XDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
             else:
                 accCode = "WDest = cSwap(Mem%s, isBigEndian64(xc->tcBase()));"
-            if self.size == 16:
-                accCode = accCode % buildMemSuffix(self.sign, 8)
-            else:
-                accCode = accCode % buildMemSuffix(self.sign, self.size)
+
+            accCode = accCode % buildMemSuffix(self.sign, self.size)
 
             self.codeBlobs["memacc_code"] = accCode
 
@@ -231,17 +228,29 @@ let {{
 
             # Code that actually handles the access
             if self.flavor == "fp":
-                accCode = '''
-                    uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
-                    AA64FpDestP0_uw = (uint32_t)data;
-                    AA64FpDestP1_uw = 0;
-                    AA64FpDestP2_uw = 0;
-                    AA64FpDestP3_uw = 0;
-                    AA64FpDest2P0_uw = (data >> 32);
-                    AA64FpDest2P1_uw = 0;
-                    AA64FpDest2P2_uw = 0;
-                    AA64FpDest2P3_uw = 0;
-                '''
+                if self.size == 4:
+                    accCode = '''
+                        uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
+                        AA64FpDestP0_uw = (uint32_t)data;
+                        AA64FpDestP1_uw = 0;
+                        AA64FpDestP2_uw = 0;
+                        AA64FpDestP3_uw = 0;
+                        AA64FpDest2P0_uw = (data >> 32);
+                        AA64FpDest2P1_uw = 0;
+                        AA64FpDest2P2_uw = 0;
+                        AA64FpDest2P3_uw = 0;
+                    '''
+                elif self.size == 8:
+                    accCode = '''
+                        AA64FpDestP0_uw = (uint32_t)Mem_tud.a;
+                        AA64FpDestP1_uw = (uint32_t)(Mem_tud.a >> 32);
+                        AA64FpDestP2_uw = 0;
+                        AA64FpDestP3_uw = 0;
+                        AA64FpDest2P0_uw = (uint32_t)Mem_tud.b;
+                        AA64FpDest2P1_uw = (uint32_t)(Mem_tud.b >> 32);
+                        AA64FpDest2P2_uw = 0;
+                        AA64FpDest2P3_uw = 0;
+                    '''
             else:
                 if self.sign:
                     if self.size == 4:
@@ -253,8 +262,8 @@ let {{
                         '''
                     elif self.size == 8:
                         accCode = '''
-                            XDest = sext<64>(Mem_tud.a);
-                            XDest2 = sext<64>(Mem_tud.b);
+                            XDest = Mem_tud.a;
+                            XDest2 = Mem_tud.b;
                         '''
                 else:
                     if self.size == 4:
@@ -416,6 +425,11 @@ let {{
         decConstBase = 'LoadStoreLitU64'
         micro = True
 
+    LoadImmDU64("ldp_uop", "MicroLdPairUop", 8).emit()
+    LoadImmDU64("ldp_fp8_uop", "MicroLdPairFp8Uop", 8, flavor="fp").emit()
+    LoadImmU64("ldfp16_uop", "MicroLdFp16Uop", 16, flavor="fp").emit()
+    LoadReg64("ldfp16reg_uop", "MicroLdFp16RegUop", 16, flavor="fp").emit()
+
     LoadImmDouble64("ldaxp", "LDAXPW64", 4, flavor="acexp").emit()
     LoadImmDouble64("ldaxp", "LDAXPX64", 8, flavor="acexp").emit()
     LoadImmDouble64("ldxp", "LDXPW64", 4, flavor="exp").emit()
@@ -428,18 +442,8 @@ let {{
     LoadRegU64("ldrfpxr_uop", "MicroLdrFpXRegUop", 8, flavor="fp").emit()
     LoadLitU64("ldrfpxl_uop", "MicroLdrFpXLitUop", 8, literal=True,
                flavor="fp").emit()
-    LoadImmU64("ldrqbfpxi_uop", "MicroLdrQBFpXImmUop",
-               16, flavor="fp", top = False).emit()
-    LoadRegU64("ldrqbfpxr_uop", "MicroLdrQBFpXRegUop",
-               16, flavor="fp", top = False).emit()
-    LoadLitU64("ldrqbfpxl_uop", "MicroLdrQBFpXLitUop",
-               16, literal=True, flavor="fp", top = False).emit()
-    LoadImmU64("ldrqtfpxi_uop", "MicroLdrQTFpXImmUop",
-               16, flavor="fp", top = True).emit()
-    LoadRegU64("ldrqtfpxr_uop", "MicroLdrQTFpXRegUop",
-               16, flavor="fp", top = True).emit()
-    LoadLitU64("ldrqtfpxl_uop", "MicroLdrQTFpXLitUop",
-               16, literal=True, flavor="fp", top = True).emit()
+    LoadLitU64("ldfp16_lit__uop", "MicroLdFp16LitUop",
+               16, literal=True, flavor="fp").emit()
     LoadImmDU64("ldrduxi_uop", "MicroLdrDUXImmUop", 4, sign=False).emit()
     LoadImmDU64("ldrdsxi_uop", "MicroLdrDSXImmUop", 4, sign=True).emit()
     LoadImmDU64("ldrdfpxi_uop", "MicroLdrDFpXImmUop", 4, flavor="fp").emit()

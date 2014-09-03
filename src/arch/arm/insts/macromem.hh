@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -389,6 +389,26 @@ class MicroMemOp : public MicroIntImmOp
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
             : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
               up(_up), memAccessFlags(TLB::MustBeOne | TLB::AlignWord)
+    {
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class MicroMemPairOp : public MicroOp
+{
+  protected:
+    RegIndex dest, dest2, urb;
+    bool up;
+    int32_t imm;
+    unsigned memAccessFlags;
+
+    MicroMemPairOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+            RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
+            bool _up, uint8_t _imm)
+        : MicroOp(mnem, machInst, __opClass),
+        dest(_dreg1), dest2(_dreg2), urb(_base), up(_up), imm(_imm),
+        memAccessFlags(TLB::MustBeOne | TLB::AlignWord)
     {
     }
 
