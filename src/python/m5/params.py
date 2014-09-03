@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1615,6 +1615,36 @@ class PortRef(object):
             raise TypeError, \
                   "assigning non-port reference '%s' to port '%s'" \
                   % (other, self)
+
+    # Allow a master/slave port pair to be spliced between
+    # a port and its connected peer. Useful operation for connecting
+    # instrumentation structures into a system when it is necessary
+    # to connect the instrumentation after the full system has been
+    # constructed.
+    def splice(self, new_master_peer, new_slave_peer):
+        if self.peer and not proxy.isproxy(self.peer):
+            if isinstance(new_master_peer, PortRef) and \
+               isinstance(new_slave_peer, PortRef):
+                 old_peer = self.peer
+                 if self.role == 'SLAVE':
+                     self.peer = new_master_peer
+                     old_peer.peer = new_slave_peer
+                     new_master_peer.connect(self)
+                     new_slave_peer.connect(old_peer)
+                 elif self.role == 'MASTER':
+                     self.peer = new_slave_peer
+                     old_peer.peer = new_master_peer
+                     new_slave_peer.connect(self)
+                     new_master_peer.connect(old_peer)
+                 else:
+                     panic("Port %s has unknown role, "+\
+                           "cannot splice in new peers\n", self)
+            else:
+                raise TypeError, \
+                      "Splicing non-port references '%s','%s' to port '%s'"\
+                      % (new_peer, peers_new_peer, self)
+        else:
+            fatal("Port %s not connected, cannot splice in new peers\n", self)
 
     def clone(self, simobj, memo):
         if memo.has_key(self):
