@@ -4,11 +4,11 @@ sim_seconds                                  0.199332                       # Nu
 sim_ticks                                199332411500                       # Number of ticks simulated
 final_tick                               199332411500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2589605                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2589605                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1294803220                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 262692                       # Number of bytes of host memory used
-host_seconds                                   153.95                       # Real time elapsed on the host
+host_inst_rate                                3159999                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3159998                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1579999901                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 261616                       # Number of bytes of host memory used
+host_seconds                                   126.16                       # Real time elapsed on the host
 sim_insts                                   398664595                       # Number of instructions simulated
 sim_ops                                     398664595                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -96,10 +96,10 @@ system.cpu.not_idle_fraction                        1                       # Pe
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                          44587532                       # Number of branches fetched
 system.cpu.op_class::No_OpClass              23123356      5.80%      5.80% # Class of executed instruction
-system.cpu.op_class::IntAlu                 145805196     36.57%     42.37% # Class of executed instruction
-system.cpu.op_class::IntMult                  2124322      0.53%     42.91% # Class of executed instruction
-system.cpu.op_class::IntDiv                         0      0.00%     42.91% # Class of executed instruction
-system.cpu.op_class::FloatAdd                31467419      7.89%     50.80% # Class of executed instruction
+system.cpu.op_class::IntAlu                 141652555     35.53%     41.33% # Class of executed instruction
+system.cpu.op_class::IntMult                  2124322      0.53%     41.86% # Class of executed instruction
+system.cpu.op_class::IntDiv                         0      0.00%     41.86% # Class of executed instruction
+system.cpu.op_class::FloatAdd                35620060      8.93%     50.80% # Class of executed instruction
 system.cpu.op_class::FloatCmp                 7072549      1.77%     52.57% # Class of executed instruction
 system.cpu.op_class::FloatCvt                 2735231      0.69%     53.26% # Class of executed instruction
 system.cpu.op_class::FloatMult               16498021      4.14%     57.40% # Class of executed instruction

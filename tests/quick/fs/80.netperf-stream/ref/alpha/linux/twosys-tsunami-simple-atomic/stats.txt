@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409284500                       # Number of ticks simulated
 final_tick                               4321214250500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               14275836                       # Simulator instruction rate (inst/s)
-host_op_rate                                 14275831                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             5462126987                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 513712                       # Number of bytes of host memory used
-host_seconds                                    36.69                       # Real time elapsed on the host
+host_inst_rate                               23274047                       # Simulator instruction rate (inst/s)
+host_op_rate                                 23274036                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8904961694                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 483300                       # Number of bytes of host memory used
+host_seconds                                    22.51                       # Real time elapsed on the host
 sim_insts                                   523790075                       # Number of instructions simulated
 sim_ops                                     523790075                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
@@ -114,10 +114,10 @@ testsys.cpu.not_idle_fraction                0.050555                       # Pe
 testsys.cpu.idle_fraction                    0.949445                       # Percentage of idle cycles
 testsys.cpu.Branches                          2929848                       # Number of branches fetched
 testsys.cpu.op_class::No_OpClass               712819      3.52%      3.52% # Class of executed instruction
-testsys.cpu.op_class::IntAlu                 12147340     59.95%     63.47% # Class of executed instruction
+testsys.cpu.op_class::IntAlu                 12147338     59.95%     63.47% # Class of executed instruction
 testsys.cpu.op_class::IntMult                   21654      0.11%     63.58% # Class of executed instruction
 testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
-testsys.cpu.op_class::FloatAdd                   4653      0.02%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatAdd                   4655      0.02%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatCmp                      1      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatCvt                      0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::FloatMult                     0      0.00%     63.60% # Class of executed instruction
@@ -372,10 +372,10 @@ drivesys.cpu.not_idle_fraction               0.023766                       # Pe
 drivesys.cpu.idle_fraction                   0.976234                       # Percentage of idle cycles
 drivesys.cpu.Branches                         2793313                       # Number of branches fetched
 drivesys.cpu.op_class::No_OpClass              623554      3.27%      3.27% # Class of executed instruction
-drivesys.cpu.op_class::IntAlu                11538630     60.57%     63.84% # Class of executed instruction
+drivesys.cpu.op_class::IntAlu                11538627     60.57%     63.84% # Class of executed instruction
 drivesys.cpu.op_class::IntMult                  20663      0.11%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::IntDiv                       0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatAdd                   138      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatAdd                   141      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.95% # Class of executed instruction
 drivesys.cpu.op_class::FloatMult                    0      0.00%     63.95% # Class of executed instruction
@@ -525,11 +525,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321621592000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             7312019890                       # Simulator instruction rate (inst/s)
-host_op_rate                               7310591323                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             5683411932                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 513712                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_inst_rate                            11799945954                       # Simulator instruction rate (inst/s)
+host_op_rate                              11797124974                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             9171074905                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 483300                       # Number of bytes of host memory used
+host_seconds                                     0.04                       # Real time elapsed on the host
 sim_insts                                   523862353                       # Number of instructions simulated
 sim_ops                                     523862353                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
