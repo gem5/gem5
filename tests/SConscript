@@ -307,7 +307,6 @@ if env['TARGET_ISA'] == 'alpha':
                 'twosys-tsunami-simple-atomic',
                 'tsunami-o3', 'tsunami-o3-dual',
                 'tsunami-minor', 'tsunami-minor-dual',
-                'tsunami-inorder',
                 'tsunami-switcheroo-full']
 if env['TARGET_ISA'] == 'sparc':
     configs += ['t1000-simple-atomic',
