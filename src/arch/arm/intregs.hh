@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -510,6 +510,13 @@ makeSP(IntRegIndex reg)
     return reg;
 }
 
+static inline IntRegIndex
+makeZero(IntRegIndex reg)
+{
+    if (reg == INTREG_X31)
+        reg = INTREG_ZERO;
+    return reg;
+}
 
 static inline bool
 isSP(IntRegIndex reg)

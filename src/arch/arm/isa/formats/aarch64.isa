@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 ARM Limited
+// Copyright (c) 2011-2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -63,6 +63,7 @@ namespace Aarch64
     {
         IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
         IntRegIndex rdsp = makeSP(rd);
+        IntRegIndex rdzr = makeZero(rd);
         IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
         IntRegIndex rnsp = makeSP(rn);
 
@@ -79,9 +80,9 @@ namespace Aarch64
             uint64_t immhi = bits(machInst, 23, 5);
             uint64_t imm = (immlo << 0) | (immhi << 2);
             if (bits(machInst, 31) == 0)
-                return new AdrXImm(machInst, rd, INTREG_ZERO, sext<21>(imm));
+                return new AdrXImm(machInst, rdzr, INTREG_ZERO, sext<21>(imm));
             else
-                return new AdrpXImm(machInst, rd, INTREG_ZERO,
+                return new AdrpXImm(machInst, rdzr, INTREG_ZERO,
                                     sext<33>(imm << 12));
           }
           case 0x2:
@@ -100,11 +101,11 @@ namespace Aarch64
               case 0x0:
                 return new AddXImm(machInst, rdsp, rnsp, imm);
               case 0x1:
-                return new AddXImmCc(machInst, rd, rnsp, imm);
+                return new AddXImmCc(machInst, rdzr, rnsp, imm);
               case 0x2:
                 return new SubXImm(machInst, rdsp, rnsp, imm);
               case 0x3:
-                return new SubXImmCc(machInst, rd, rnsp, imm);
+                return new SubXImmCc(machInst, rdzr, rnsp, imm);
             }
           }
           case 0x4:
@@ -146,23 +147,24 @@ namespace Aarch64
               case 0x2:
                 return new EorXImm(machInst, rdsp, rn, imm);
               case 0x3:
-                return new AndXImmCc(machInst, rd, rn, imm);
+                return new AndXImmCc(machInst, rdzr, rn, imm);
             }
           }
           case 0x5:
           {
             IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
+            IntRegIndex rdzr = makeZero(rd);
             uint32_t imm16 = bits(machInst, 20, 5);
             uint32_t hw = bits(machInst, 22, 21);
             switch (opc) {
               case 0x0:
-                return new Movn(machInst, rd, imm16, hw * 16);
+                return new Movn(machInst, rdzr, imm16, hw * 16);
               case 0x1:
                 return new Unknown64(machInst);
               case 0x2:
-                return new Movz(machInst, rd, imm16, hw * 16);
+                return new Movz(machInst, rdzr, imm16, hw * 16);
               case 0x3:
-                return new Movk(machInst, rd, imm16, hw * 16);
+                return new Movk(machInst, rdzr, imm16, hw * 16);
             }
           }
           case 0x6:
@@ -170,11 +172,11 @@ namespace Aarch64
                 return new Unknown64(machInst);
             switch (opc) {
               case 0x0:
-                return new Sbfm64(machInst, rd, rn, immr, imms);
+                return new Sbfm64(machInst, rdzr, rn, immr, imms);
               case 0x1:
-                return new Bfm64(machInst, rd, rn, immr, imms);
+                return new Bfm64(machInst, rdzr, rn, immr, imms);
               case 0x2:
-                return new Ubfm64(machInst, rd, rn, immr, imms);
+                return new Ubfm64(machInst, rdzr, rn, immr, imms);
               case 0x3:
                 return new Unknown64(machInst);
             }
@@ -184,7 +186,7 @@ namespace Aarch64
             if (opc || bits(machInst, 21))
                 return new Unknown64(machInst);
             else
-                return new Extr64(machInst, rd, rn, rm, imms);
+                return new Extr64(machInst, rdzr, rn, rm, imms);
           }
         }
         return new FailUnimplemented("Unhandled Case8", machInst);
@@ -1026,26 +1028,27 @@ namespace Aarch64
             if (!sf && (imm6 & 0x20))
                 return new Unknown64(machInst);
             IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+            IntRegIndex rdzr = makeZero(rd);
             IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
             IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
 
             switch (switchVal) {
               case 0x0:
-                return new AndXSReg(machInst, rd, rn, rm, imm6, type);
+                return new AndXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x1:
-                return new BicXSReg(machInst, rd, rn, rm, imm6, type);
+                return new BicXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x2:
-                return new OrrXSReg(machInst, rd, rn, rm, imm6, type);
+                return new OrrXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x3:
-                return new OrnXSReg(machInst, rd, rn, rm, imm6, type);
+                return new OrnXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x4:
-                return new EorXSReg(machInst, rd, rn, rm, imm6, type);
+                return new EorXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x5:
-                return new EonXSReg(machInst, rd, rn, rm, imm6, type);
+                return new EonXSReg(machInst, rdzr, rn, rm, imm6, type);
               case 0x6:
-                return new AndXSRegCc(machInst, rd, rn, rm, imm6, type);
+                return new AndXSRegCc(machInst, rdzr, rn, rm, imm6, type);
               case 0x7:
-                return new BicXSRegCc(machInst, rd, rn, rm, imm6, type);
+                return new BicXSRegCc(machInst, rdzr, rn, rm, imm6, type);
             }
           }
           case 0x1:
@@ -1060,17 +1063,18 @@ namespace Aarch64
                 if (!bits(machInst, 31) && bits(imm6, 5))
                     return new Unknown64(machInst);
                 IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+                IntRegIndex rdzr = makeZero(rd);
                 IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
                 IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
                 switch (switchVal) {
                   case 0x0:
-                    return new AddXSReg(machInst, rd, rn, rm, imm6, type);
+                    return new AddXSReg(machInst, rdzr, rn, rm, imm6, type);
                   case 0x1:
-                    return new AddXSRegCc(machInst, rd, rn, rm, imm6, type);
+                    return new AddXSRegCc(machInst, rdzr, rn, rm, imm6, type);
                   case 0x2:
-                    return new SubXSReg(machInst, rd, rn, rm, imm6, type);
+                    return new SubXSReg(machInst, rdzr, rn, rm, imm6, type);
                   case 0x3:
-                    return new SubXSRegCc(machInst, rd, rn, rm, imm6, type);
+                    return new SubXSRegCc(machInst, rdzr, rn, rm, imm6, type);
                 }
             } else {
                 if (bits(machInst, 23, 22) != 0 || bits(machInst, 12, 10) > 0x4)
@@ -1080,6 +1084,7 @@ namespace Aarch64
                 uint8_t imm3 = bits(machInst, 12, 10);
                 IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
                 IntRegIndex rdsp = makeSP(rd);
+                IntRegIndex rdzr = makeZero(rd);
                 IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
                 IntRegIndex rnsp = makeSP(rn);
                 IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
@@ -1088,11 +1093,11 @@ namespace Aarch64
                   case 0x0:
                     return new AddXEReg(machInst, rdsp, rnsp, rm, type, imm3);
                   case 0x1:
-                    return new AddXERegCc(machInst, rd, rnsp, rm, type, imm3);
+                    return new AddXERegCc(machInst, rdzr, rnsp, rm, type, imm3);
                   case 0x2:
                     return new SubXEReg(machInst, rdsp, rnsp, rm, type, imm3);
                   case 0x3:
-                    return new SubXERegCc(machInst, rd, rnsp, rm, type, imm3);
+                    return new SubXERegCc(machInst, rdzr, rnsp, rm, type, imm3);
                 }
             }
           }
@@ -1101,6 +1106,7 @@ namespace Aarch64
             if (bits(machInst, 21) == 1)
                 return new Unknown64(machInst);
             IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+            IntRegIndex rdzr = makeZero(rd);
             IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
             IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
             switch (bits(machInst, 23, 22)) {
@@ -1111,13 +1117,13 @@ namespace Aarch64
                 uint8_t switchVal = bits(machInst, 30, 29);
                 switch (switchVal) {
                   case 0x0:
-                    return new AdcXSReg(machInst, rd, rn, rm, 0, LSL);
+                    return new AdcXSReg(machInst, rdzr, rn, rm, 0, LSL);
                   case 0x1:
-                    return new AdcXSRegCc(machInst, rd, rn, rm, 0, LSL);
+                    return new AdcXSRegCc(machInst, rdzr, rn, rm, 0, LSL);
                   case 0x2:
-                    return new SbcXSReg(machInst, rd, rn, rm, 0, LSL);
+                    return new SbcXSReg(machInst, rdzr, rn, rm, 0, LSL);
                   case 0x3:
-                    return new SbcXSRegCc(machInst, rd, rn, rm, 0, LSL);
+                    return new SbcXSRegCc(machInst, rdzr, rn, rm, 0, LSL);
                 }
               }
               case 0x1:
@@ -1157,19 +1163,20 @@ namespace Aarch64
                 uint8_t switchVal = (bits(machInst, 10) << 0) |
                                     (bits(machInst, 30) << 1);
                 IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+                IntRegIndex rdzr = makeZero(rd);
                 IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
                 IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
                 ConditionCode cond =
                     (ConditionCode)(uint8_t)bits(machInst, 15, 12);
                 switch (switchVal) {
                   case 0x0:
-                    return new Csel64(machInst, rd, rn, rm, cond);
+                    return new Csel64(machInst, rdzr, rn, rm, cond);
                   case 0x1:
-                    return new Csinc64(machInst, rd, rn, rm, cond);
+                    return new Csinc64(machInst, rdzr, rn, rm, cond);
                   case 0x2:
-                    return new Csinv64(machInst, rd, rn, rm, cond);
+                    return new Csinv64(machInst, rdzr, rn, rm, cond);
                   case 0x3:
-                    return new Csneg64(machInst, rd, rn, rm, cond);
+                    return new Csneg64(machInst, rdzr, rn, rm, cond);
                 }
               }
               case 0x3:
@@ -1179,17 +1186,17 @@ namespace Aarch64
                     uint8_t switchVal = bits(machInst, 15, 10);
                     switch (switchVal) {
                       case 0x2:
-                        return new Udiv64(machInst, rd, rn, rm);
+                        return new Udiv64(machInst, rdzr, rn, rm);
                       case 0x3:
-                        return new Sdiv64(machInst, rd, rn, rm);
+                        return new Sdiv64(machInst, rdzr, rn, rm);
                       case 0x8:
-                        return new Lslv64(machInst, rd, rn, rm);
+                        return new Lslv64(machInst, rdzr, rn, rm);
                       case 0x9:
-                        return new Lsrv64(machInst, rd, rn, rm);
+                        return new Lsrv64(machInst, rdzr, rn, rm);
                       case 0xa:
-                        return new Asrv64(machInst, rd, rn, rm);
+                        return new Asrv64(machInst, rdzr, rn, rm);
                       case 0xb:
-                        return new Rorv64(machInst, rd, rn, rm);
+                        return new Rorv64(machInst, rdzr, rn, rm);
                       default:
                         return new Unknown64(machInst);
                     }
@@ -1201,22 +1208,22 @@ namespace Aarch64
                     uint8_t switchVal = bits(machInst, 15, 10);
                     switch (switchVal) {
                       case 0x0:
-                        return new Rbit64(machInst, rd, rn);
+                        return new Rbit64(machInst, rdzr, rn);
                       case 0x1:
-                        return new Rev1664(machInst, rd, rn);
+                        return new Rev1664(machInst, rdzr, rn);
                       case 0x2:
                         if (bits(machInst, 31) == 0)
-                            return new Rev64(machInst, rd, rn);
+                            return new Rev64(machInst, rdzr, rn);
                         else
-                            return new Rev3264(machInst, rd, rn);
+                            return new Rev3264(machInst, rdzr, rn);
                       case 0x3:
                         if (bits(machInst, 31) != 1)
                             return new Unknown64(machInst);
-                        return new Rev64(machInst, rd, rn);
+                        return new Rev64(machInst, rdzr, rn);
                       case 0x4:
-                        return new Clz64(machInst, rd, rn);
+                        return new Clz64(machInst, rdzr, rn);
                       case 0x5:
-                        return new Cls64(machInst, rd, rn);
+                        return new Cls64(machInst, rdzr, rn);
                     }
                 }
             }
@@ -1227,33 +1234,34 @@ namespace Aarch64
                     (bits(machInst, 23, 21) != 0 && bits(machInst, 31) == 0))
                 return new Unknown64(machInst);
             IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+            IntRegIndex rdzr = makeZero(rd);
             IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
             IntRegIndex ra = (IntRegIndex)(uint8_t)bits(machInst, 14, 10);
             IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
             switch (bits(machInst, 23, 21)) {
               case 0x0:
                 if (bits(machInst, 15) == 0)
-                    return new Madd64(machInst, rd, ra, rn, rm);
+                    return new Madd64(machInst, rdzr, ra, rn, rm);
                 else
-                    return new Msub64(machInst, rd, ra, rn, rm);
+                    return new Msub64(machInst, rdzr, ra, rn, rm);
               case 0x1:
                 if (bits(machInst, 15) == 0)
-                    return new Smaddl64(machInst, rd, ra, rn, rm);
+                    return new Smaddl64(machInst, rdzr, ra, rn, rm);
                 else
-                    return new Smsubl64(machInst, rd, ra, rn, rm);
+                    return new Smsubl64(machInst, rdzr, ra, rn, rm);
               case 0x2:
                 if (bits(machInst, 15) != 0)
                     return new Unknown64(machInst);
-                return new Smulh64(machInst, rd, rn, rm);
+                return new Smulh64(machInst, rdzr, rn, rm);
               case 0x5:
                 if (bits(machInst, 15) == 0)
-                    return new Umaddl64(machInst, rd, ra, rn, rm);
+                    return new Umaddl64(machInst, rdzr, ra, rn, rm);
                 else
-                    return new Umsubl64(machInst, rd, ra, rn, rm);
+                    return new Umsubl64(machInst, rdzr, ra, rn, rm);
               case 0x6:
                 if (bits(machInst, 15) != 0)
                     return new Unknown64(machInst);
-                return new Umulh64(machInst, rd, rn, rm);
+                return new Umulh64(machInst, rdzr, rn, rm);
               default:
                 return new Unknown64(machInst);
             }
