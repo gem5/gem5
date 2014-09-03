@@ -1236,6 +1236,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // ended this fetch block.
     bool predictedBranch = false;
 
+    // Need to halt fetch if quiesce instruction detected
+    bool quiesce = false;
+
     TheISA::MachInst *cacheInsts =
         reinterpret_cast<TheISA::MachInst *>(fetchBuffer[tid]);
 
@@ -1246,7 +1249,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
     while (numInst < fetchWidth && fetchQueue[tid].size() < fetchQueueSize
-           && !predictedBranch) {
+           && !predictedBranch && !quiesce) {
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
         // in the decoder.
@@ -1363,9 +1366,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             if (instruction->isQuiesce()) {
                 DPRINTF(Fetch,
-                        "Quiesce instruction encountered, halting fetch!");
+                        "Quiesce instruction encountered, halting fetch!\n");
                 fetchStatus[tid] = QuiescePending;
                 status_change = true;
+                quiesce = true;
                 break;
             }
         } while ((curMacroop || decoder[tid]->instReady()) &&
