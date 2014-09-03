@@ -167,7 +167,7 @@ BiModeBP::update(Addr branchAddr, bool taken, void *bpHistory, bool squashed)
         unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
                                     & choiceHistoryMask);
         unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
-                                    ^ globalHistoryReg)
+                                    ^ history->globalHistoryReg)
                                     & globalHistoryMask);
 
         assert(choiceHistoryIdx < choicePredictorSize);
