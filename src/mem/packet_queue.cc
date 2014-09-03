@@ -71,11 +71,10 @@ PacketQueue::checkFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(label);
 
-    DeferredPacketIterator i = transmitList.begin();
-    DeferredPacketIterator end = transmitList.end();
+    auto i = transmitList.begin();
     bool found = false;
 
-    while (!found && i != end) {
+    while (!found && i != transmitList.end()) {
         // If the buffered packet contains data, and it overlaps the
         // current packet, then update data
         found = pkt->checkFunctional(i->pkt);
@@ -140,7 +139,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
     }
 
     // this belongs in the middle somewhere, insertion sort
-    DeferredPacketIterator i = transmitList.begin();
+    auto i = transmitList.begin();
     ++i; // already checked for insertion at front
     while (i != transmitList.end() && when >= i->tick)
         ++i;
@@ -151,21 +150,16 @@ void PacketQueue::trySendTiming()
 {
     assert(deferredPacketReady());
 
-    // take the next packet off the list here, as we might return to
-    // ourselves through the sendTiming call below
     DeferredPacket dp = transmitList.front();
-    transmitList.pop_front();
 
     // use the appropriate implementation of sendTiming based on the
     // type of port associated with the queue, and whether the packet
     // is to be sent as a snoop or not
     waitingOnRetry = !sendTiming(dp.pkt, dp.sendAsSnoop);
 
-    if (waitingOnRetry) {
-        // put the packet back at the front of the list (packet should
-        // not have changed since it wasn't accepted)
-        assert(!sendEvent.scheduled());
-        transmitList.push_front(dp);
+    if (!waitingOnRetry) {
+        // take the packet off the list
+        transmitList.pop_front();
     }
 }
 
@@ -216,7 +210,7 @@ PacketQueue::processSendEvent()
 unsigned int
 PacketQueue::drain(DrainManager *dm)
 {
-    if (transmitList.empty() && !sendEvent.scheduled())
+    if (transmitList.empty())
         return 0;
     DPRINTF(Drain, "PacketQueue not drained\n");
     drainManager = dm;

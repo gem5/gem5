@@ -78,7 +78,6 @@ class PacketQueue : public Drainable
     };
 
     typedef std::list<DeferredPacket> DeferredPacketList;
-    typedef std::list<DeferredPacket>::iterator DeferredPacketIterator;
 
     /** A list of outgoing timing response packets that haven't been
      * serviced yet. */
@@ -109,10 +108,10 @@ class PacketQueue : public Drainable
     bool waitingOnRetry;
 
     /** Check whether we have a packet ready to go on the transmit list. */
-    bool deferredPacketReady()
+    bool deferredPacketReady() const
     { return !transmitList.empty() && transmitList.front().tick <= curTick(); }
 
-    Tick deferredPacketReadyTime()
+    Tick deferredPacketReadyTime() const
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
     /**
