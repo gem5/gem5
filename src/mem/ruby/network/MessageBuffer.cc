@@ -30,6 +30,7 @@
 
 #include "base/cprintf.hh"
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
@@ -133,9 +134,9 @@ Cycles
 random_time()
 {
     Cycles time(1);
-    time += Cycles(random() & 0x3);  // [0...3]
-    if ((random() & 0x7) == 0) {  // 1 in 8 chance
-        time += Cycles(100 + (random() % 0xf)); // 100 + [1...15]
+    time += Cycles(random_mt.random(0, 3));  // [0...3]
+    if (random_mt.random(0, 7) == 0) {  // 1 in 8 chance
+        time += Cycles(100 + random_mt.random(1, 15)); // 100 + [1...15]
     }
     return time;
 }

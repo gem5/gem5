@@ -87,7 +87,6 @@ class Set
     }
 
     void addSet(const Set& set);
-    void addRandom();
 
     void
     remove(NodeID index)

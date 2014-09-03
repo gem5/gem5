@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/memtest/memtest.hh"
 #include "debug/MemTest.hh"
@@ -261,14 +262,14 @@ MemTest::tick()
     }
 
     //make new request
-    unsigned cmd = random() % 100;
-    unsigned offset = random() % size;
-    unsigned base = random() % 2;
-    uint64_t data = random();
-    unsigned access_size = random() % 4;
-    bool uncacheable = (random() % 100) < percentUncacheable;
+    unsigned cmd = random_mt.random(0, 100);
+    unsigned offset = random_mt.random<unsigned>(0, size - 1);
+    unsigned base = random_mt.random(0, 1);
+    uint64_t data = random_mt.random<uint64_t>();
+    unsigned access_size = random_mt.random(0, 3);
+    bool uncacheable = random_mt.random(0, 100) < percentUncacheable;
 
-    unsigned dma_access_size = random() % 4; 
+    unsigned dma_access_size = random_mt.random(0, 3);
 
     //If we aren't doing copies, use id as offset, and do a false sharing
     //mem tester
@@ -296,7 +297,8 @@ MemTest::tick()
         return;
     }
 
-    bool do_functional = (random() % 100 < percentFunctional) && !uncacheable;
+    bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
+        !uncacheable;
     Request *req = new Request();
     uint8_t *result = new uint8_t[8];
 

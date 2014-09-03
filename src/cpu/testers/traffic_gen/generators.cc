@@ -84,7 +84,7 @@ LinearGen::getNextPacket()
 {
     // choose if we generate a read or a write here
     bool isRead = readPercent != 0 &&
-        (readPercent == 100 || random_mt.random<uint8_t>(0, 100) < readPercent);
+        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
@@ -124,7 +124,7 @@ LinearGen::nextPacketTick(bool elastic, Tick delay) const
         return MaxTick;
     } else {
         // return the time when the next request should take place
-        Tick wait = random_mt.random<Tick>(minPeriod, maxPeriod);
+        Tick wait = random_mt.random(minPeriod, maxPeriod);
 
         // compensate for the delay experienced to not be elastic, by
         // default the value we generate is from the time we are
@@ -152,13 +152,13 @@ RandomGen::getNextPacket()
 {
     // choose if we generate a read or a write here
     bool isRead = readPercent != 0 &&
-        (readPercent == 100 || random_mt.random<uint8_t>(0, 100) < readPercent);
+        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
 
     // address of the request
-    Addr addr = random_mt.random<Addr>(startAddr, endAddr - 1);
+    Addr addr = random_mt.random(startAddr, endAddr - 1);
 
     // round down to start address of block
     addr -= addr % blocksize;
@@ -184,15 +184,14 @@ DramGen::getNextPacket()
 
         // choose if we generate a read or a write here
         isRead = readPercent != 0 &&
-            (readPercent == 100 ||
-             random_mt.random<uint8_t>(0, 100) < readPercent);
+            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
                (readPercent == 100 && isRead) ||
                readPercent != 100);
 
         // start by picking a random address in the range
-        addr = random_mt.random<Addr>(startAddr, endAddr - 1);
+        addr = random_mt.random(startAddr, endAddr - 1);
 
         // round down to start address of a block, i.e. a DRAM burst
         addr -= addr % blocksize;
@@ -275,7 +274,7 @@ RandomGen::nextPacketTick(bool elastic, Tick delay) const
         return MaxTick;
     } else {
         // return the time when the next request should take place
-        Tick wait = random_mt.random<Tick>(minPeriod, maxPeriod);
+        Tick wait = random_mt.random(minPeriod, maxPeriod);
 
         // compensate for the delay experienced to not be elastic, by
         // default the value we generate is from the time we are

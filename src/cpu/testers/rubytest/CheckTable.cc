@@ -28,6 +28,7 @@
  */
 
 #include "base/intmath.hh"
+#include "base/random.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "cpu/testers/rubytest/CheckTable.hh"
 #include "debug/RubyTest.hh"
@@ -107,7 +108,7 @@ Check*
 CheckTable::getRandomCheck()
 {
     assert(m_check_vector.size() > 0);
-    return m_check_vector[random() % m_check_vector.size()];
+    return m_check_vector[random_mt.random<unsigned>(0, m_check_vector.size() - 1)];
 }
 
 Check*

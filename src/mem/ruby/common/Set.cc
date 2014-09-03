@@ -103,22 +103,6 @@ Set::addSet(const Set& set)
 }
 
 /*
- * This function should randomly assign 1 to the bits in the set--it
- * should not clear the bits bits first, though?
- */
-void
-Set::addRandom()
-{
-
-    for (int i = 0; i < m_nArrayLen; i++) {
-        // this ensures that all 32 bits are subject to random effects,
-        // as RAND_MAX typically = 0x7FFFFFFF
-        m_p_nArray[i] |= random() ^ (random() << 4);
-    }
-    clearExcess();
-}
-
-/*
  * This function clears bits that are =1 in the parameter set
  */
 void

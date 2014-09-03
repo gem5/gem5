@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/random.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
@@ -60,7 +61,7 @@ SeriesRequestGenerator::initiate()
     Request *req = new Request(m_address, 1, flags, masterId);
 
     Packet::Command cmd;
-    bool do_write = ((random() % 100) < m_percent_writes);
+    bool do_write = (random_mt.random(0, 100) < m_percent_writes);
     if (do_write) {
         cmd = MemCmd::WriteReq;
     } else {

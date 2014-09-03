@@ -107,6 +107,7 @@
 
 #include "base/cast.hh"
 #include "base/cprintf.hh"
+#include "base/random.hh"
 #include "debug/RubyMemory.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -437,7 +438,7 @@ RubyMemoryControl::queueReady(int bank)
     }
 
     if (m_mem_random_arbitrate >= 2) {
-        if ((random() % 100) < m_mem_random_arbitrate) {
+        if (random_mt.random(0, 100) < m_mem_random_arbitrate) {
             m_profiler_ptr->profileMemRandBusy();
             return false;
         }
@@ -614,7 +615,7 @@ RubyMemoryControl::executeCycle()
 
     // If randomness desired, re-randomize round-robin position each cycle
     if (m_mem_random_arbitrate) {
-        m_roundRobin = random() % m_total_banks;
+        m_roundRobin = random_mt.random(0, m_total_banks - 1);
     }
 
     // For each channel, scan round-robin, and pick an old, ready

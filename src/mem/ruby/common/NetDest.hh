@@ -55,7 +55,6 @@ class NetDest
 
     void add(MachineID newElement);
     void addNetDest(const NetDest& netDest);
-    void addRandom();
     void setNetDest(MachineType machine, const Set& set);
     void remove(MachineID oldElement);
     void removeNetDest(const NetDest& netDest);

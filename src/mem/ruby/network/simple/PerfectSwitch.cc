@@ -29,6 +29,7 @@
 #include <algorithm>
 
 #include "base/cast.hh"
+#include "base/random.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
@@ -169,7 +170,8 @@ PerfectSwitch::operateVnet(int vnet)
                                 out_queue_length += m_out[out][v]->getSize();
                             }
                             int value =
-                                (out_queue_length << 8) | (random() & 0xff);
+                                (out_queue_length << 8) |
+                                random_mt.random(0, 0xff);
                             m_link_order[out].m_link = out;
                             m_link_order[out].m_value = value;
                         }

@@ -423,7 +423,7 @@ TrafficGen::transition()
     states[currState]->exit();
 
     // determine next state
-    double p = random_mt.gen_real1();
+    double p = random_mt.random<double>();
     assert(currState < transitionMatrix.size());
     double cumulative = 0.0;
     size_t i = 0;

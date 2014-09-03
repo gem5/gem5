@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/networktest/networktest.hh"
 #include "debug/NetworkTest.hh"
@@ -143,7 +144,7 @@ NetworkTest::tick()
     // - send pkt if this number is < injRate*(10^precision)
     bool send_this_cycle;
     double injRange = pow((double) 10, (double) precision);
-    unsigned trySending = random() % (int) injRange;
+    unsigned trySending = random_mt.random<unsigned>(0, (int) injRange);
     if (trySending < injRate*injRange)
         send_this_cycle = true;
     else
@@ -174,7 +175,7 @@ NetworkTest::generatePkt()
 {
     unsigned destination = id;
     if (trafficType == 0) { // Uniform Random
-        destination = random() % numMemories;
+        destination = random_mt.random<unsigned>(0, numMemories - 1);
     } else if (trafficType == 1) { // Tornado
         int networkDimension = (int) sqrt(numMemories);
         int my_x = id%networkDimension;
@@ -232,7 +233,7 @@ NetworkTest::generatePkt()
     // 
     MemCmd::Command requestType;
 
-    unsigned randomReqType = random() % 3;
+    unsigned randomReqType = random_mt.random(0, 2);
     if (randomReqType == 0) {
         // generate packet for virtual network 0
         requestType = MemCmd::ReadReq;

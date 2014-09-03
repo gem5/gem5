@@ -40,12 +40,6 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/packet.hh"
 
-inline int
-random(int n)
-{
-  return random() % n;
-}
-
 inline Cycles zero_time() { return Cycles(0); }
 
 inline NodeID
