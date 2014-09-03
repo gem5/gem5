@@ -79,6 +79,9 @@ class RealView : public Platform
      */
     RealView(const Params *p);
 
+    /** In init do some checks to help verify we're setup correctly */
+    virtual void initState();
+
     /** Give platform a pointer to interrupt controller */
     void setGic(BaseGic *_gic) { gic = _gic; }
 

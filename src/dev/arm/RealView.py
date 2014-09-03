@@ -180,7 +180,10 @@ class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
     system = Param.System(Parent.any, "system")
+    pci_io_base = Param.Addr(0, "Base address of PCI IO Space")
     pci_cfg_base = Param.Addr(0, "Base address of PCI Configuraiton Space")
+    pci_cfg_gen_offsets = Param.Bool(False, "Should the offsets used for PCI cfg access"
+            " be compatible with the pci-generic-host or the legacy host bridge?")
     mem_start_addr = Param.Addr(0, "Start address of main memory")
     max_mem_size = Param.Addr('256MB', "Maximum amount of RAM supported by platform")
 
@@ -597,6 +600,8 @@ class VExpress_EMM(RealView):
         self.mmc_fake.clk_domain      = clkdomain
 
 class VExpress_EMM64(VExpress_EMM):
+    pci_io_base = 0x2f000000
+    pci_cfg_gen_offsets = True
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'))
         self.nvmem.port = mem_bus.master
