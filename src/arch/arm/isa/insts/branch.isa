@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2012 ARM Limited
+// Copyright (c) 2010-2012, 2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -174,12 +174,15 @@ let {{
     #CBNZ, CBZ. These are always unconditional as far as predicates
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
         code = 'NPC = (uint32_t)(PC + imm);\n'
+        br_tgt_code = '''pcs.instNPC((uint32_t)(branchPC.instPC() + imm));'''
         predTest = "Op1 %(test)s 0" % {"test": test}
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
-                            {"code": code, "predicate_test": predTest},
-                            ["IsIndirectControl"])
+                            {"code": code, "predicate_test": predTest,
+                            "brTgtCode" : br_tgt_code},
+                            ["IsDirectControl"])
         header_output += BranchImmRegDeclare.subst(iop)
-        decoder_output += BranchImmRegConstructor.subst(iop)
+        decoder_output += BranchImmRegConstructor.subst(iop) + \
+                          BranchTarget.subst(iop)
         exec_output += PredOpExecute.subst(iop)
 
     #TBB, TBH
