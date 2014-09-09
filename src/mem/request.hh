@@ -497,8 +497,14 @@ class Request
     }
 
     /** Accessor function for vaddr.*/
+    bool
+    hasVaddr() const
+    {
+        return privateFlags.isSet(VALID_VADDR);
+    }
+
     Addr
-    getVaddr()
+    getVaddr() const
     {
         assert(privateFlags.isSet(VALID_VADDR));
         return _vaddr;
