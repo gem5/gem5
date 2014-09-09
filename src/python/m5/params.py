@@ -311,6 +311,10 @@ class VectorParamDesc(ParamDesc):
         if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
             tmp_list = [ ParamDesc.convert(self, v) for v in value ]
+        elif isinstance(value, str):
+            # If input is a csv string
+            tmp_list = [ ParamDesc.convert(self, v) \
+                         for v in value.strip('[').strip(']').split(',') ]
         else:
             # singleton: coerce to a single-element list
             tmp_list = [ ParamDesc.convert(self, value) ]
@@ -346,7 +350,8 @@ class VectorParamDesc(ParamDesc):
             tmp_list = [ ParamDesc.convert(self, v) for v in value ]
         elif isinstance(value, str):
             # If input is a csv string
-            tmp_list = [ ParamDesc.convert(self, v) for v in value.split(',') ]
+            tmp_list = [ ParamDesc.convert(self, v) \
+                         for v in value.strip('[').strip(']').split(',') ]
         else:
             # singleton: coerce to a single-element list
             tmp_list = [ ParamDesc.convert(self, value) ]
