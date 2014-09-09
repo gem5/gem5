@@ -239,7 +239,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 ElfObject::ElfObject(const string &_filename, int _fd,
                      size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys),
+      _programHeaderTable(0), _programHeaderSize(0), _programHeaderCount(0)
 
 {
     Elf *elf;

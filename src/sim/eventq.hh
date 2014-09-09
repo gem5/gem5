@@ -287,7 +287,7 @@ class Event : public EventBase, public Serializable
      * @param queue that the event gets scheduled on
      */
     Event(Priority p = Default_Pri, Flags f = 0)
-        : nextBin(NULL), nextInBin(NULL), _priority(p),
+        : nextBin(nullptr), nextInBin(nullptr), _when(0), _priority(p),
           flags(Initialized | f)
     {
         assert(f.noneSet(~PublicWrite));

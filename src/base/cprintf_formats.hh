@@ -65,6 +65,7 @@ struct Format
         uppercase = false;
         base = dec;
         format = none;
+        float_format = best;
         precision = -1;
         width = 0;
         get_precision = false;

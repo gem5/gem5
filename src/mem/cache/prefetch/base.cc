@@ -57,7 +57,8 @@
 #include "sim/system.hh"
 
 BasePrefetcher::BasePrefetcher(const Params *p)
-    : ClockedObject(p), size(p->size), latency(p->latency), degree(p->degree),
+    : ClockedObject(p), size(p->size), cache(nullptr), blkSize(0),
+      latency(p->latency), degree(p->degree),
       useMasterId(p->use_master_id), pageStop(!p->cross_pages),
       serialSquash(p->serial_squash), onlyData(p->data_accesses_only),
       onMissOnly(p->on_miss_only), onReadOnly(p->on_read_only),
@@ -69,6 +70,7 @@ BasePrefetcher::BasePrefetcher(const Params *p)
 void
 BasePrefetcher::setCache(BaseCache *_cache)
 {
+    assert(!cache);
     cache = _cache;
     blkSize = cache->getBlockSize();
 }

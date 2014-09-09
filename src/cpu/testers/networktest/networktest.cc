@@ -84,6 +84,7 @@ NetworkTest::NetworkTest(const Params *p)
       simCycles(p->sim_cycles),
       fixedPkts(p->fixed_pkts),
       maxPackets(p->max_packets),
+      numPacketsSent(0),
       trafficType(p->traffic_type),
       injRate(p->inj_rate),
       precision(p->precision),

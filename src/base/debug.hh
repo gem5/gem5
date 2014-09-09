@@ -66,7 +66,7 @@ class SimpleFlag : public Flag
 
   public:
     SimpleFlag(const char *name, const char *desc)
-        : Flag(name, desc)
+        : Flag(name, desc), _status(false)
     { }
 
     bool status() const { return _status; }

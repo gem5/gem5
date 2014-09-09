@@ -1092,7 +1092,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
 
   public:
     VectorBase()
-        : storage(NULL)
+        : storage(nullptr), _size(0)
     {}
 
     ~VectorBase()
@@ -1232,7 +1232,7 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
 
   public:
     Vector2dBase()
-        : storage(NULL)
+        : x(0), y(0), _size(0), storage(nullptr)
     {}
 
     ~Vector2dBase()
@@ -1505,7 +1505,7 @@ class HistStor
         /** The number of buckets.. */
         size_type buckets;
 
-        Params() : DistParams(Hist) {}
+        Params() : DistParams(Hist), buckets(0) {}
     };
 
   private:

@@ -78,6 +78,8 @@ System::System(Params *p)
       pagePtr(0),
       init_param(p->init_param),
       physProxy(_systemPort, p->cache_line_size),
+      kernelSymtab(nullptr),
+      kernel(nullptr),
       loadAddrMask(p->load_addr_mask),
       loadAddrOffset(p->load_offset),
       nextPID(0),
@@ -118,8 +120,6 @@ System::System(Params *p)
         if (params()->kernel == "") {
             inform("No kernel set for full system simulation. "
                    "Assuming you know what you're doing\n");
-
-            kernel = NULL;
         } else {
             // Get the kernel code
             kernel = createObjectFile(params()->kernel);

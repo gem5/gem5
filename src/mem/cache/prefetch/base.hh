@@ -83,7 +83,7 @@ class BasePrefetcher : public ClockedObject
     BaseCache* cache;
 
     /** The block size of the parent cache. */
-    int blkSize;
+    unsigned blkSize;
 
     /** The latency before a prefetch is issued */
     const Cycles latency;

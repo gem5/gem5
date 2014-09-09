@@ -259,8 +259,10 @@ class Request
      *  default constructor.)
      */
     Request()
-        : _taskId(ContextSwitchTaskId::Unknown),
-        translateDelta(0), accessDelta(0), depth(0)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          translateDelta(0), accessDelta(0), depth(0)
     {}
 
     /**
@@ -269,19 +271,28 @@ class Request
      * These fields are adequate to perform a request. 
      */
     Request(Addr paddr, int size, Flags flags, MasterID mid)
-        : _taskId(ContextSwitchTaskId::Unknown)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid);
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time)
-        : _taskId(ContextSwitchTaskId::Unknown)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
     }
 
     Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time, Addr pc)
-        : _taskId(ContextSwitchTaskId::Unknown)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
         privateFlags.set(VALID_PC);
@@ -290,7 +301,10 @@ class Request
 
     Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
             int cid, ThreadID tid)
-        : _taskId(ContextSwitchTaskId::Unknown)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          translateDelta(0), accessDelta(0), depth(0)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setThreadContext(cid, tid);

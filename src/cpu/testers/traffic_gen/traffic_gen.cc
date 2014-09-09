@@ -59,6 +59,7 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       elasticReq(p->elastic_req),
       nextTransitionTick(0),
       nextPacketTick(0),
+      currState(0),
       port(name() + ".port", *this),
       retryPkt(NULL),
       retryPktTick(0),

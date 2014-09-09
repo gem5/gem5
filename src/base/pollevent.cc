@@ -57,6 +57,7 @@ PollEvent::PollEvent(int _fd, int _events)
 {
     pfd.fd = _fd;
     pfd.events = _events;
+    pfd.revents = 0;
 }
 
 PollEvent::~PollEvent()

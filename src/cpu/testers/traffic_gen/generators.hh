@@ -190,7 +190,7 @@ class LinearGen : public BaseGen
           startAddr(start_addr), endAddr(end_addr),
           blocksize(_blocksize), minPeriod(min_period),
           maxPeriod(max_period), readPercent(read_percent),
-          dataLimit(data_limit)
+          dataLimit(data_limit), nextAddr(startAddr), dataManipulated(0)
     { }
 
     void enter();
@@ -267,7 +267,7 @@ class RandomGen : public BaseGen
           startAddr(start_addr), endAddr(end_addr),
           blocksize(_blocksize), minPeriod(min_period),
           maxPeriod(max_period), readPercent(read_percent),
-          dataLimit(data_limit)
+          dataLimit(data_limit), dataManipulated(0)
     { }
 
     void enter();
@@ -348,7 +348,7 @@ class DramGen : public RandomGen
             unsigned int addr_mapping)
         : RandomGen(_name, master_id, _duration, start_addr, end_addr,
           _blocksize, min_period, max_period, read_percent, data_limit),
-          numSeqPkts(num_seq_pkts), countNumSeqPkts(0),
+          numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
           isRead(true), pageSize(page_size),
           pageBits(floorLog2(page_size / _blocksize)),
           bankBits(floorLog2(nbr_of_banks_DRAM)),

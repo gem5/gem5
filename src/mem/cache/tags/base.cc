@@ -56,13 +56,15 @@ using namespace std;
 
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), size(p->size),
-      hitLatency(p->hit_latency)
+      hitLatency(p->hit_latency), cache(nullptr), warmupBound(0),
+      warmedUp(false), numBlocks(0)
 {
 }
 
 void
 BaseTags::setCache(BaseCache *_cache)
 {
+    assert(!cache);
     cache = _cache;
 }
 

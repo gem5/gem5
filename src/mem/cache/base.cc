@@ -67,6 +67,7 @@ BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
 
 BaseCache::BaseCache(const Params *p)
     : MemObject(p),
+      cpuSidePort(nullptr), memSidePort(nullptr),
       mshrQueue("MSHRs", p->mshrs, 4, MSHRQueue_MSHRs),
       writeBuffer("write buffer", p->write_buffers, p->mshrs+1000,
                   MSHRQueue_WriteBuffer),
@@ -77,6 +78,7 @@ BaseCache::BaseCache(const Params *p)
       forwardSnoops(p->forward_snoops),
       isTopLevel(p->is_top_level),
       blocked(0),
+      order(0),
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),

@@ -601,7 +601,7 @@ class Packet : public Printable
      * not be valid. The command must be supplied.
      */
     Packet(Request *_req, MemCmd _cmd)
-        :  cmd(_cmd), req(_req), data(NULL),
+        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            busFirstWordDelay(0), busLastWordDelay(0),
@@ -624,7 +624,7 @@ class Packet : public Printable
      * req.  this allows for overriding the size/addr of the req.
      */
     Packet(Request *_req, MemCmd _cmd, int _blkSize)
-        :  cmd(_cmd), req(_req), data(NULL),
+        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            busFirstWordDelay(0), busLastWordDelay(0),

@@ -55,7 +55,7 @@
 using namespace std;
 
 FALRU::FALRU(const Params *p)
-    : BaseTags(p)
+    : BaseTags(p), cacheBoundaries(nullptr)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
@@ -74,7 +74,6 @@ FALRU::FALRU(const Params *p)
         cacheMask = 0;
     }
 
-    warmedUp = false;
     warmupBound = size/blkSize;
     numBlocks = size/blkSize;
 
