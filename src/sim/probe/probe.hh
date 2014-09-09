@@ -104,7 +104,11 @@ class ProbeListener
 {
   public:
     ProbeListener(ProbeManager *manager, const std::string &name);
-    virtual ~ProbeListener() {}
+    virtual ~ProbeListener();
+
+  protected:
+    ProbeManager *const manager;
+    const std::string name;
 };
 
 /**
