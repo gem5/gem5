@@ -34,9 +34,9 @@
 std::mutex BaseGlobalEvent::globalQMutex;
 
 BaseGlobalEvent::BaseGlobalEvent(Priority p, Flags f)
+    : barrier(numMainEventQueues),
+      barrierEvent(numMainEventQueues, NULL)
 {
-    barrierEvent.resize(numMainEventQueues);
-    barrier = new Barrier(numMainEventQueues);
 }
 
 

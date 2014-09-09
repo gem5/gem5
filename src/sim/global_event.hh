@@ -100,7 +100,7 @@ class BaseGlobalEvent : public EventBase
             // while waiting on the barrier to prevent deadlocks if
             // another thread wants to lock the event queue.
             EventQueue::ScopedRelease release(curEventQueue());
-            return _globalEvent->barrier->wait();
+            return _globalEvent->barrier.wait();
         }
 
       public:
@@ -109,7 +109,7 @@ class BaseGlobalEvent : public EventBase
 
     //! The barrier that all threads wait on before performing the
     //! global event.
-    Barrier *barrier;
+    Barrier barrier;
 
     //! The individual local event instances (one per thread/event queue).
     std::vector<BarrierEvent *> barrierEvent;
