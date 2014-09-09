@@ -419,7 +419,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::drainResume()
 {
-    for (ThreadID i = 0; i < Impl::MaxThreads; ++i)
+    for (ThreadID i = 0; i < numThreads; ++i)
         stalls[i].drain = false;
 }
 
@@ -887,7 +887,7 @@ DefaultFetch<Impl>::tick()
 
     wroteToTimeBuffer = false;
 
-    for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
+    for (ThreadID i = 0; i < numThreads; ++i) {
         issuePipelinedIfetch[i] = false;
     }
 
@@ -927,7 +927,7 @@ DefaultFetch<Impl>::tick()
     }
 
     // Issue the next I-cache request if possible.
-    for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
+    for (ThreadID i = 0; i < numThreads; ++i) {
         if (issuePipelinedIfetch[i]) {
             pipelineIcacheAccesses(i);
         }
