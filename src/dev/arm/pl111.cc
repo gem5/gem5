@@ -196,8 +196,8 @@ Pl111::read(PacketPtr pkt)
             data = lcdPalette[index];
             break;
         } else {
-            panic("Tried to read CLCD register at offset %#x that \
-                       doesn't exist\n", daddr);
+            panic("Tried to read CLCD register at offset %#x that "
+                       "doesn't exist\n", daddr);
             break;
         }
     }
@@ -369,8 +369,8 @@ Pl111::write(PacketPtr pkt)
             lcdPalette[index] = data;
             break;
         } else {
-            panic("Tried to write PL111 register at offset %#x that \
-                       doesn't exist\n", daddr);
+            panic("Tried to write PL111 register at offset %#x that "
+                       "doesn't exist\n", daddr);
             break;
         }
     }

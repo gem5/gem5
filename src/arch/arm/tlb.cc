@@ -163,7 +163,7 @@ TLB::lookup(Addr va, uint16_t asn, uint8_t vmid, bool hyp, bool secure,
             retval ? retval->pAddr(va) : 0, retval ? retval->ap    : 0,
             retval ? retval->ns        : 0, retval ? retval->nstid : 0,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,
-            retval ? retval->el        : 0, retval ? retval->el    : 0);
+            retval ? retval->el        : 0);
 
     return retval;
 }
@@ -1027,8 +1027,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             temp_te.outerShareable = false;
         }
         temp_te.setAttributes(long_desc_format);
-        DPRINTF(TLBVerbose, "(No MMU) setting memory attributes: shareable:\
-                %d, innerAttrs: %d, outerAttrs: %d, isStage2: %d\n",
+        DPRINTF(TLBVerbose, "(No MMU) setting memory attributes: shareable: "
+                "%d, innerAttrs: %d, outerAttrs: %d, isStage2: %d\n",
                 temp_te.shareable, temp_te.innerAttrs, temp_te.outerAttrs,
                 isStage2);
         setAttr(temp_te.attributes);
@@ -1052,8 +1052,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     if (te != NULL) {
         // Set memory attributes
         DPRINTF(TLBVerbose,
-                "Setting memory attributes: shareable: %d, innerAttrs: %d, \
-                outerAttrs: %d, mtype: %d, isStage2: %d\n",
+                "Setting memory attributes: shareable: %d, innerAttrs: %d, "
+                "outerAttrs: %d, mtype: %d, isStage2: %d\n",
                 te->shareable, te->innerAttrs, te->outerAttrs,
                 static_cast<uint8_t>(te->mtype), isStage2);
         setAttr(te->attributes);

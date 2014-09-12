@@ -1120,8 +1120,8 @@ DataAbort::ec(ThreadContext *tc) const
     if (to64) {
         // AArch64
         if (source == ArmFault::AsynchronousExternalAbort) {
-            panic("Asynchronous External Abort should be handled with \
-                    SystemErrors (SErrors)!");
+            panic("Asynchronous External Abort should be handled with "
+                    "SystemErrors (SErrors)!");
         }
         if (toEL == fromEL)
             return EC_DATA_ABORT_CURR_EL;

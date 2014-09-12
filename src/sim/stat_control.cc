@@ -157,8 +157,8 @@ Global::Global()
     finalTick
         .functor(statFinalTick)
         .name("final_tick")
-        .desc("Number of ticks from beginning of simulation \
-(restored from checkpoints and never reset)")
+        .desc("Number of ticks from beginning of simulation "
+              "(restored from checkpoints and never reset)")
         ;
 
     hostInstRate

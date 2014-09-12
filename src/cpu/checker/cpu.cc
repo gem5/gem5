@@ -306,8 +306,8 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
 
    if (unverifiedReq && unverifiedMemData &&
        memcmp(data, unverifiedMemData, fullSize) && extraData) {
-           warn("%lli: Store value does not match value sent to memory!\
-                  data: %#x inst_data: %#x", curTick(), data,
+           warn("%lli: Store value does not match value sent to memory! "
+                  "data: %#x inst_data: %#x", curTick(), data,
                   unverifiedMemData);
        handleError();
    }

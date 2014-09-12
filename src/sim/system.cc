@@ -450,9 +450,10 @@ System::getMasterId(std::string master_name)
     // Otherwise objects will have sized their stat buckets and
     // they will be too small
 
-    if (Stats::enabled())
-        fatal("Can't request a masterId after regStats(). \
-                You must do so in init().\n");
+    if (Stats::enabled()) {
+        fatal("Can't request a masterId after regStats(). "
+                "You must do so in init().\n");
+    }
 
     masterIds.push_back(master_name);
 

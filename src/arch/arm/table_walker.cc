@@ -1116,8 +1116,8 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
             }
         }
     }
-    DPRINTF(TLBVerbose, "memAttrs: shareable: %d, innerAttrs: %d, \
-            outerAttrs: %d\n",
+    DPRINTF(TLBVerbose, "memAttrs: shareable: %d, innerAttrs: %d, "
+            "outerAttrs: %d\n",
             te.shareable, te.innerAttrs, te.outerAttrs);
     te.setAttributes(false);
 }
