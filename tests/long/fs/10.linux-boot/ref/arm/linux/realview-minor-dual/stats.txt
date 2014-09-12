@@ -4,15 +4,33 @@ sim_seconds                                  1.145505                       # Nu
 sim_ticks                                1145504982000                       # Number of ticks simulated
 final_tick                               1145504982000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  75061                       # Simulator instruction rate (inst/s)
-host_op_rate                                    90396                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1390275818                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 476724                       # Number of bytes of host memory used
-host_seconds                                   823.94                       # Real time elapsed on the host
+host_inst_rate                                 113120                       # Simulator instruction rate (inst/s)
+host_op_rate                                   136231                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2095202848                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 413760                       # Number of bytes of host memory used
+host_seconds                                   546.73                       # Real time elapsed on the host
 sim_insts                                    61845931                       # Number of instructions simulated
 sim_ops                                      74481224                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.realview.nvmem.bytes_read::cpu0.inst          256                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::cpu1.inst          448                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total           704                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu0.inst          256                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu1.inst          448                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total          704                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu0.inst            4                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::cpu1.inst            7                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total             11                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu0.inst          223                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::cpu1.inst          391                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total              615                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu0.inst          223                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu1.inst          391                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total          615                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu0.inst          223                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu1.inst          391                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total             615                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd     50331648                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.dtb.walker          384                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker          128                       # Number of bytes read from this memory
@@ -278,24 +296,6 @@ system.physmem.memoryStateTime::REF       38250680000                       # Ti
 system.physmem.memoryStateTime::PRE_PDN             0                       # Time in different power states
 system.physmem.memoryStateTime::ACT      200188472000                       # Time in different power states
 system.physmem.memoryStateTime::ACT_PDN             0                       # Time in different power states
-system.realview.nvmem.bytes_read::cpu0.inst          256                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::cpu1.inst          448                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total           704                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu0.inst          256                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu1.inst          448                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total          704                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu0.inst            4                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::cpu1.inst            7                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total             11                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu0.inst          223                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::cpu1.inst          391                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total              615                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu0.inst          223                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu1.inst          391                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total          615                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu0.inst          223                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu1.inst          391                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total             615                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.throughput                     61688542                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq             7506218                       # Transaction distribution
 system.membus.trans_dist::ReadResp            7506218                       # Transaction distribution
@@ -339,9 +339,9 @@ system.membus.reqLayer4.occupancy                2500                       # La
 system.membus.reqLayer4.utilization               0.0                       # Layer utilization (%)
 system.membus.reqLayer5.occupancy              781000                       # Layer occupancy (ticks)
 system.membus.reqLayer5.utilization               0.0                       # Layer utilization (%)
-system.membus.reqLayer6.occupancy          8866177500                       # Layer occupancy (ticks)
+system.membus.reqLayer6.occupancy          8866177000                       # Layer occupancy (ticks)
 system.membus.reqLayer6.utilization               0.8                       # Layer utilization (%)
-system.membus.respLayer1.occupancy         4931588899                       # Layer occupancy (ticks)
+system.membus.respLayer1.occupancy         4931588399                       # Layer occupancy (ticks)
 system.membus.respLayer1.utilization              0.4                       # Layer utilization (%)
 system.membus.respLayer2.occupancy        15569082998                       # Layer occupancy (ticks)
 system.membus.respLayer2.utilization              1.4                       # Layer utilization (%)
@@ -622,15 +622,15 @@ system.l2c.overall_mshr_miss_latency::cpu0.inst   6157493883                    
 system.l2c.overall_mshr_miss_latency::cpu1.dtb.walker       603750                       # number of overall MSHR miss cycles
 system.l2c.overall_mshr_miss_latency::cpu1.inst   3385153957                       # number of overall MSHR miss cycles
 system.l2c.overall_mshr_miss_latency::total   9543895090                       # number of overall MSHR miss cycles
-system.l2c.ReadReq_mshr_uncacheable_latency::cpu0.inst 156449024487                       # number of ReadReq MSHR uncacheable cycles
+system.l2c.ReadReq_mshr_uncacheable_latency::cpu0.inst 156449029487                       # number of ReadReq MSHR uncacheable cycles
 system.l2c.ReadReq_mshr_uncacheable_latency::cpu1.inst  10979297747                       # number of ReadReq MSHR uncacheable cycles
-system.l2c.ReadReq_mshr_uncacheable_latency::total 167428322234                       # number of ReadReq MSHR uncacheable cycles
+system.l2c.ReadReq_mshr_uncacheable_latency::total 167428327234                       # number of ReadReq MSHR uncacheable cycles
 system.l2c.WriteReq_mshr_uncacheable_latency::cpu0.inst   1364347483                       # number of WriteReq MSHR uncacheable cycles
 system.l2c.WriteReq_mshr_uncacheable_latency::cpu1.inst  15414886347                       # number of WriteReq MSHR uncacheable cycles
 system.l2c.WriteReq_mshr_uncacheable_latency::total  16779233830                       # number of WriteReq MSHR uncacheable cycles
-system.l2c.overall_mshr_uncacheable_latency::cpu0.inst 157813371970                       # number of overall MSHR uncacheable cycles
+system.l2c.overall_mshr_uncacheable_latency::cpu0.inst 157813376970                       # number of overall MSHR uncacheable cycles
 system.l2c.overall_mshr_uncacheable_latency::cpu1.inst  26394184094                       # number of overall MSHR uncacheable cycles
-system.l2c.overall_mshr_uncacheable_latency::total 184207556064                       # number of overall MSHR uncacheable cycles
+system.l2c.overall_mshr_uncacheable_latency::total 184207561064                       # number of overall MSHR uncacheable cycles
 system.l2c.ReadReq_mshr_miss_rate::cpu0.dtb.walker     0.000269                       # mshr miss rate for ReadReq accesses
 system.l2c.ReadReq_mshr_miss_rate::cpu0.itb.walker     0.000305                       # mshr miss rate for ReadReq accesses
 system.l2c.ReadReq_mshr_miss_rate::cpu0.inst     0.016636                       # mshr miss rate for ReadReq accesses
@@ -967,8 +967,8 @@ system.cpu0.cpi                             14.430649                       # CP
 system.cpu0.ipc                              0.069297                       # IPC: instructions per cycle
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.quiesce                   50317                       # number of quiesce instructions executed
-system.cpu0.tickCycles                      351703832                       # Number of cycles that the object actually ticked
-system.cpu0.idleCycles                       79468876                       # Total number of cycles that the object has spent stopped
+system.cpu0.tickCycles                      351703818                       # Number of cycles that the object actually ticked
+system.cpu0.idleCycles                       79468890                       # Total number of cycles that the object has spent stopped
 system.cpu0.icache.tags.replacements           775463                       # number of replacements
 system.cpu0.icache.tags.tagsinuse          510.771777                       # Cycle average of tags in use
 system.cpu0.icache.tags.total_refs           11489502                       # Total number of references to valid blocks.
@@ -1040,10 +1040,10 @@ system.cpu0.icache.demand_mshr_miss_latency::cpu0.inst   9133730845             
 system.cpu0.icache.demand_mshr_miss_latency::total   9133730845                       # number of demand (read+write) MSHR miss cycles
 system.cpu0.icache.overall_mshr_miss_latency::cpu0.inst   9133730845                       # number of overall MSHR miss cycles
 system.cpu0.icache.overall_mshr_miss_latency::total   9133730845                       # number of overall MSHR miss cycles
-system.cpu0.icache.ReadReq_mshr_uncacheable_latency::cpu0.inst    171406750                       # number of ReadReq MSHR uncacheable cycles
-system.cpu0.icache.ReadReq_mshr_uncacheable_latency::total    171406750                       # number of ReadReq MSHR uncacheable cycles
-system.cpu0.icache.overall_mshr_uncacheable_latency::cpu0.inst    171406750                       # number of overall MSHR uncacheable cycles
-system.cpu0.icache.overall_mshr_uncacheable_latency::total    171406750                       # number of overall MSHR uncacheable cycles
+system.cpu0.icache.ReadReq_mshr_uncacheable_latency::cpu0.inst    171407250                       # number of ReadReq MSHR uncacheable cycles
+system.cpu0.icache.ReadReq_mshr_uncacheable_latency::total    171407250                       # number of ReadReq MSHR uncacheable cycles
+system.cpu0.icache.overall_mshr_uncacheable_latency::cpu0.inst    171407250                       # number of overall MSHR uncacheable cycles
+system.cpu0.icache.overall_mshr_uncacheable_latency::total    171407250                       # number of overall MSHR uncacheable cycles
 system.cpu0.icache.ReadReq_mshr_miss_rate::cpu0.inst     0.063265                       # mshr miss rate for ReadReq accesses
 system.cpu0.icache.ReadReq_mshr_miss_rate::total     0.063265                       # mshr miss rate for ReadReq accesses
 system.cpu0.icache.demand_mshr_miss_rate::cpu0.inst     0.063265                       # mshr miss rate for demand accesses
@@ -1191,12 +1191,12 @@ system.cpu0.dcache.demand_mshr_miss_latency::cpu0.inst   9816946134             
 system.cpu0.dcache.demand_mshr_miss_latency::total   9816946134                       # number of demand (read+write) MSHR miss cycles
 system.cpu0.dcache.overall_mshr_miss_latency::cpu0.inst   9816946134                       # number of overall MSHR miss cycles
 system.cpu0.dcache.overall_mshr_miss_latency::total   9816946134                       # number of overall MSHR miss cycles
-system.cpu0.dcache.ReadReq_mshr_uncacheable_latency::cpu0.inst 170796520252                       # number of ReadReq MSHR uncacheable cycles
-system.cpu0.dcache.ReadReq_mshr_uncacheable_latency::total 170796520252                       # number of ReadReq MSHR uncacheable cycles
+system.cpu0.dcache.ReadReq_mshr_uncacheable_latency::cpu0.inst 170796523752                       # number of ReadReq MSHR uncacheable cycles
+system.cpu0.dcache.ReadReq_mshr_uncacheable_latency::total 170796523752                       # number of ReadReq MSHR uncacheable cycles
 system.cpu0.dcache.WriteReq_mshr_uncacheable_latency::cpu0.inst   1513122000                       # number of WriteReq MSHR uncacheable cycles
 system.cpu0.dcache.WriteReq_mshr_uncacheable_latency::total   1513122000                       # number of WriteReq MSHR uncacheable cycles
-system.cpu0.dcache.overall_mshr_uncacheable_latency::cpu0.inst 172309642252                       # number of overall MSHR uncacheable cycles
-system.cpu0.dcache.overall_mshr_uncacheable_latency::total 172309642252                       # number of overall MSHR uncacheable cycles
+system.cpu0.dcache.overall_mshr_uncacheable_latency::cpu0.inst 172309645752                       # number of overall MSHR uncacheable cycles
+system.cpu0.dcache.overall_mshr_uncacheable_latency::total 172309645752                       # number of overall MSHR uncacheable cycles
 system.cpu0.dcache.ReadReq_mshr_miss_rate::cpu0.inst     0.035073                       # mshr miss rate for ReadReq accesses
 system.cpu0.dcache.ReadReq_mshr_miss_rate::total     0.035073                       # mshr miss rate for ReadReq accesses
 system.cpu0.dcache.WriteReq_mshr_miss_rate::cpu0.inst     0.028846                       # mshr miss rate for WriteReq accesses
@@ -1333,8 +1333,8 @@ system.cpu1.cpi                              4.617611                       # CP
 system.cpu1.ipc                              0.216562                       # IPC: instructions per cycle
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                   40481                       # number of quiesce instructions executed
-system.cpu1.tickCycles                      117794277                       # Number of cycles that the object actually ticked
-system.cpu1.idleCycles                       29816803                       # Total number of cycles that the object has spent stopped
+system.cpu1.tickCycles                      117794272                       # Number of cycles that the object actually ticked
+system.cpu1.idleCycles                       29816808                       # Total number of cycles that the object has spent stopped
 system.cpu1.icache.tags.replacements           791766                       # number of replacements
 system.cpu1.icache.tags.tagsinuse          480.612166                       # Cycle average of tags in use
 system.cpu1.icache.tags.total_refs           10411414                       # Total number of references to valid blocks.
@@ -1562,12 +1562,12 @@ system.cpu1.dcache.demand_mshr_miss_latency::cpu1.inst   6566104279             
 system.cpu1.dcache.demand_mshr_miss_latency::total   6566104279                       # number of demand (read+write) MSHR miss cycles
 system.cpu1.dcache.overall_mshr_miss_latency::cpu1.inst   6566104279                       # number of overall MSHR miss cycles
 system.cpu1.dcache.overall_mshr_miss_latency::total   6566104279                       # number of overall MSHR miss cycles
-system.cpu1.dcache.ReadReq_mshr_uncacheable_latency::cpu1.inst  11993503500                       # number of ReadReq MSHR uncacheable cycles
-system.cpu1.dcache.ReadReq_mshr_uncacheable_latency::total  11993503500                       # number of ReadReq MSHR uncacheable cycles
+system.cpu1.dcache.ReadReq_mshr_uncacheable_latency::cpu1.inst  11993503000                       # number of ReadReq MSHR uncacheable cycles
+system.cpu1.dcache.ReadReq_mshr_uncacheable_latency::total  11993503000                       # number of ReadReq MSHR uncacheable cycles
 system.cpu1.dcache.WriteReq_mshr_uncacheable_latency::cpu1.inst  24672579152                       # number of WriteReq MSHR uncacheable cycles
 system.cpu1.dcache.WriteReq_mshr_uncacheable_latency::total  24672579152                       # number of WriteReq MSHR uncacheable cycles
-system.cpu1.dcache.overall_mshr_uncacheable_latency::cpu1.inst  36666082652                       # number of overall MSHR uncacheable cycles
-system.cpu1.dcache.overall_mshr_uncacheable_latency::total  36666082652                       # number of overall MSHR uncacheable cycles
+system.cpu1.dcache.overall_mshr_uncacheable_latency::cpu1.inst  36666082152                       # number of overall MSHR uncacheable cycles
+system.cpu1.dcache.overall_mshr_uncacheable_latency::total  36666082152                       # number of overall MSHR uncacheable cycles
 system.cpu1.dcache.ReadReq_mshr_miss_rate::cpu1.inst     0.031385                       # mshr miss rate for ReadReq accesses
 system.cpu1.dcache.ReadReq_mshr_miss_rate::total     0.031385                       # mshr miss rate for ReadReq accesses
 system.cpu1.dcache.WriteReq_mshr_miss_rate::cpu1.inst     0.027020                       # mshr miss rate for WriteReq accesses
