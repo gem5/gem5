@@ -585,7 +585,11 @@ class LSQ : public Named
 
   protected:
     /** Count of the number of mem. accesses which have left the
-     *  requests queue and are in the 'wild' in the memory system. */
+     *  requests queue and are in the 'wild' in the memory system and who
+     *  *must not* be interrupted as they are not normal cacheable
+     *  accesses.  This is a count of the number of in-flight requests
+     *  with issuedToMemory set who have visited tryToSendRequest at least
+     *  once */
     unsigned int numAccessesInMemorySystem;
 
     /** Number of requests in the DTLB in the requests queue */

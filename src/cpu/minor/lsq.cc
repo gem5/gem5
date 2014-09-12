@@ -476,6 +476,8 @@ LSQ::SplitDataRequest::makeFragmentPackets()
             makePacketForRequest(*fragment, isLoad, this, request_data);
 
         fragmentPackets.push_back(fragment_packet);
+        /* Accumulate flags in parent request */
+        request.setFlags(fragment->getFlags());
     }
 
     /* Might as well make the overall/response packet here */
@@ -1029,7 +1031,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
 
         /* Remember if this is an access which can't be idly
          *  discarded by an interrupt */
-        if (!bufferable) {
+        if (!bufferable && !request->issuedToMemory) {
             numAccessesIssuedToMemory++;
             request->issuedToMemory = true;
         }
