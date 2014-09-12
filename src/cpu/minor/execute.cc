@@ -259,9 +259,9 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
         } else {
             /* Branch prediction got the wrong target */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x"
-                " but got the wrong target (actual: 0x%x) inst: %s\n",
-                inst->pc.instAddr(), inst->predictedTarget.instAddr(),
-                target.instAddr() *inst);
+                    " but got the wrong target (actual: 0x%x) inst: %s\n",
+                    inst->pc.instAddr(), inst->predictedTarget.instAddr(),
+                    target.instAddr(), *inst);
 
             reason = BranchData::BadlyPredictedBranchTarget;
         }
