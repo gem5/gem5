@@ -117,7 +117,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 const NetDest& routing_table_entry)
 {
     // Create a set of new MessageBuffers
-    std::map<int, MessageBuffer*> queues;
+    std::vector<MessageBuffer*> queues(m_virtual_networks);
+
     for (int i = 0; i < m_virtual_networks; i++) {
         // allocate a buffer
         MessageBuffer* buffer_ptr = new MessageBuffer;
@@ -158,6 +159,9 @@ SimpleNetwork::setToNetQueue(NodeID id, bool ordered, int network_num,
                              std::string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num);
+    while (m_toNetQueues[id].size() <= network_num) {
+        m_toNetQueues[id].push_back(nullptr);
+    }
     m_toNetQueues[id][network_num] = b;
 }
 
@@ -166,6 +170,9 @@ SimpleNetwork::setFromNetQueue(NodeID id, bool ordered, int network_num,
                                std::string vnet_type, MessageBuffer *b)
 {
     checkNetworkAllocation(id, ordered, network_num);
+    while (m_fromNetQueues[id].size() <= network_num) {
+        m_fromNetQueues[id].push_back(nullptr);
+    }
     m_fromNetQueues[id][network_num] = b;
 }
 

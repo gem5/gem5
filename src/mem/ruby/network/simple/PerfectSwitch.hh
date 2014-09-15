@@ -65,8 +65,8 @@ class PerfectSwitch : public Consumer
     { return csprintf("PerfectSwitch-%i", m_switch_id); }
 
     void init(SimpleNetwork *);
-    void addInPort(const std::map<int, MessageBuffer*>& in);
-    void addOutPort(const std::map<int, MessageBuffer*>& out,
+    void addInPort(const std::vector<MessageBuffer*>& in);
+    void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry);
 
     int getInLinks() const { return m_in.size(); }
@@ -89,8 +89,8 @@ class PerfectSwitch : public Consumer
     SwitchID m_switch_id;
 
     // vector of queues from the components
-    std::vector<std::map<int, MessageBuffer*> > m_in;
-    std::vector<std::map<int, MessageBuffer*> > m_out;
+    std::vector<std::vector<MessageBuffer*> > m_in;
+    std::vector<std::vector<MessageBuffer*> > m_out;
 
     std::vector<NetDest> m_routing_table;
     std::vector<LinkOrder> m_link_order;

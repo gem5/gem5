@@ -68,26 +68,30 @@ PerfectSwitch::init(SimpleNetwork *network_ptr)
 }
 
 void
-PerfectSwitch::addInPort(const map<int, MessageBuffer*>& in)
+PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
 {
     NodeID port = m_in.size();
     m_in.push_back(in);
 
-    for (auto& it : in) {
-        it.second->setConsumer(this);
+    for (int i = 0; i < in.size(); ++i) {
+        if (in[i] != nullptr) {
+            in[i]->setConsumer(this);
 
-        string desc = csprintf("[Queue from port %s %s %s to PerfectSwitch]",
-            to_string(m_switch_id), to_string(port), to_string(it.first));
+            string desc =
+                csprintf("[Queue from port %s %s %s to PerfectSwitch]",
+                         to_string(m_switch_id), to_string(port),
+                         to_string(i));
 
-        it.second->setDescription(desc);
-        it.second->setIncomingLink(port);
-        it.second->setVnet(it.first);
+            in[i]->setDescription(desc);
+            in[i]->setIncomingLink(port);
+            in[i]->setVnet(i);
+        }
     }
 }
 
 void
-PerfectSwitch::addOutPort(const map<int, MessageBuffer*>& out,
-    const NetDest& routing_table_entry)
+PerfectSwitch::addOutPort(const vector<MessageBuffer*>& out,
+                          const NetDest& routing_table_entry)
 {
     // Setup link order
     LinkOrder l;
@@ -131,10 +135,14 @@ PerfectSwitch::operateVnet(int vnet)
             vector<NetDest> output_link_destinations;
 
             // Is there a message waiting?
-            auto it = m_in[incoming].find(vnet);
-            if (it == m_in[incoming].end())
+            if (m_in[incoming].size() <= vnet) {
                 continue;
-            MessageBuffer *buffer = (*it).second;
+            }
+
+            MessageBuffer *buffer = m_in[incoming][vnet];
+            if (buffer == nullptr) {
+                continue;
+            }
 
             while (buffer->isReady()) {
                 DPRINTF(RubyNetwork, "incoming: %d\n", incoming);

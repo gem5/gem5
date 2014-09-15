@@ -69,6 +69,8 @@ Throttle::init(NodeID node, Cycles link_latency,
                int link_bandwidth_multiplier, int endpoint_bandwidth)
 {
     m_node = node;
+    m_vnets = 0;
+
     assert(link_bandwidth_multiplier > 0);
     m_link_bandwidth_multiplier = link_bandwidth_multiplier;
 
@@ -80,23 +82,19 @@ Throttle::init(NodeID node, Cycles link_latency,
 }
 
 void
-Throttle::addLinks(const map<int, MessageBuffer*>& in_vec,
-                   const map<int, MessageBuffer*>& out_vec)
+Throttle::addLinks(const vector<MessageBuffer*>& in_vec,
+                   const vector<MessageBuffer*>& out_vec)
 {
     assert(in_vec.size() == out_vec.size());
 
-    for (auto& it : in_vec) {
-        int vnet = it.first;
+    for (int vnet = 0; vnet < in_vec.size(); ++vnet) {
+        MessageBuffer *in_ptr = in_vec[vnet];
+        MessageBuffer *out_ptr = out_vec[vnet];
 
-        auto jt = out_vec.find(vnet);
-        assert(jt != out_vec.end());
-
-        MessageBuffer *in_ptr = it.second;
-        MessageBuffer *out_ptr = (*jt).second;
-
-        m_in[vnet] = in_ptr;
-        m_out[vnet] = out_ptr;
-        m_units_remaining[vnet] = 0;
+        m_vnets++;
+        m_units_remaining.push_back(0);
+        m_in.push_back(in_ptr);
+        m_out.push_back(out_ptr);
 
         // Set consumer and description
         in_ptr->setConsumer(this);
@@ -110,8 +108,9 @@ void
 Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
                       MessageBuffer *in, MessageBuffer *out)
 {
-    assert(out != NULL);
-    assert(in != NULL);
+    if (out == nullptr || in == nullptr) {
+        return;
+    }
     assert(m_units_remaining[vnet] >= 0);
 
     while (bw_remaining > 0 && (in->isReady() || m_units_remaining[vnet] > 0) &&
@@ -178,16 +177,14 @@ Throttle::wakeup()
     }
 
     if (iteration_direction) {
-        for (auto& it : m_in) {
-            int vnet = it.first;
+        for (int vnet = 0; vnet < m_vnets; ++vnet) {
             operateVnet(vnet, bw_remaining, schedule_wakeup,
-                        it.second, m_out[vnet]);
+                        m_in[vnet], m_out[vnet]);
         }
     } else {
-        for (auto it = m_in.rbegin(); it != m_in.rend(); ++it) {
-            int vnet = (*it).first;
+        for (int vnet = m_vnets-1; vnet >= 0; --vnet) {
             operateVnet(vnet, bw_remaining, schedule_wakeup,
-                        (*it).second, m_out[vnet]);
+                        m_in[vnet], m_out[vnet]);
         }
     }
 

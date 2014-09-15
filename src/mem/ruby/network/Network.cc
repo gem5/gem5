@@ -85,11 +85,11 @@ Network::~Network()
 
         // Delete the Message Buffers
         for (auto& it : m_toNetQueues[node]) {
-            delete it.second;
+            delete it;
         }
 
         for (auto& it : m_fromNetQueues[node]) {
-            delete it.second;
+            delete it;
         }
     }
 

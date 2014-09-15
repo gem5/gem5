@@ -60,8 +60,8 @@ class NetworkInterface_d : public ClockedObject, public Consumer
     void addOutPort(NetworkLink_d *out_link, CreditLink_d *credit_link);
 
     void wakeup();
-    void addNode(std::map<int, MessageBuffer *> &inNode,
-                 std::map<int, MessageBuffer *> &outNode);
+    void addNode(std::vector<MessageBuffer *> &inNode,
+                 std::vector<MessageBuffer *> &outNode);
 
     void print(std::ostream& out) const;
     int get_vnet(int vc);
@@ -90,9 +90,9 @@ class NetworkInterface_d : public ClockedObject, public Consumer
     std::vector<Cycles> m_ni_enqueue_time;
 
     // The Message buffers that takes messages from the protocol
-    std::map<int, MessageBuffer *> inNode_ptr;
+    std::vector<MessageBuffer *> inNode_ptr;
     // The Message buffers that provides messages to the protocol
-    std::map<int, MessageBuffer *> outNode_ptr;
+    std::vector<MessageBuffer *> outNode_ptr;
 
     bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     int calculateVC(int vnet);

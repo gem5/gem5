@@ -62,8 +62,8 @@ class Throttle : public Consumer
     std::string name()
     { return csprintf("Throttle-%i", m_sID); }
 
-    void addLinks(const std::map<int, MessageBuffer*>& in_vec,
-                  const std::map<int, MessageBuffer*>& out_vec);
+    void addLinks(const std::vector<MessageBuffer*>& in_vec,
+                  const std::vector<MessageBuffer*>& out_vec);
     void wakeup();
 
     // The average utilization (a fraction) since last clearStats()
@@ -92,9 +92,10 @@ class Throttle : public Consumer
     Throttle(const Throttle& obj);
     Throttle& operator=(const Throttle& obj);
 
-    std::map<int, MessageBuffer*> m_in;
-    std::map<int, MessageBuffer*> m_out;
-    std::map<int, int> m_units_remaining;
+    std::vector<MessageBuffer*> m_in;
+    std::vector<MessageBuffer*> m_out;
+    unsigned int m_vnets;
+    std::vector<int> m_units_remaining;
 
     int m_sID;
     NodeID m_node;

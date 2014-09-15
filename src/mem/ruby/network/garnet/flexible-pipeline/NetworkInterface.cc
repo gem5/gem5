@@ -90,20 +90,23 @@ NetworkInterface::addOutPort(NetworkLink *out_link)
 }
 
 void
-NetworkInterface::addNode(map<int, MessageBuffer*>& in,
-    map<int, MessageBuffer*>& out)
+NetworkInterface::addNode(vector<MessageBuffer*>& in,
+                          vector<MessageBuffer*>& out)
 {
     inNode_ptr = in;
     outNode_ptr = out;
 
     for (auto& it: in) {
-        // the protocol injects messages into the NI
-        it.second->setConsumer(this);
-        it.second->setReceiver(this);
+        if (it != nullptr) {
+            it->setConsumer(this);
+            it->setReceiver(this);
+        }
     }
 
     for (auto& it : out) {
-        it.second->setSender(this);
+        if (it != nullptr) {
+            it->setSender(this);
+        }
     }
 }
 
@@ -242,9 +245,11 @@ NetworkInterface::wakeup()
 
     //Checking for messages coming from the protocol
     // can pick up a message/cycle for each virtual net
-    for (auto it = inNode_ptr.begin(); it != inNode_ptr.end(); ++it) {
-        int vnet = (*it).first;
-        MessageBuffer *b = (*it).second;
+    for (int vnet = 0; vnet < inNode_ptr.size(); ++vnet) {
+        MessageBuffer *b = inNode_ptr[vnet];
+        if (b == nullptr) {
+            continue;
+        }
 
         while (b->isReady()) { // Is there a message waiting
             msg_ptr = b->peekMsgPtr();
@@ -326,9 +331,11 @@ void
 NetworkInterface::checkReschedule()
 {
     for (const auto& it : inNode_ptr) {
-        MessageBuffer *b = it.second;
+        if (it == nullptr) {
+            continue;
+        }
 
-        while (b->isReady()) { // Is there a message waiting
+        while (it->isReady()) { // Is there a message waiting
             scheduleEvent(Cycles(1));
             return;
         }

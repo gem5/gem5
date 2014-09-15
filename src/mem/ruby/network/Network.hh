@@ -112,8 +112,8 @@ class Network : public ClockedObject
     static uint32_t m_data_msg_size;
 
     // vector of queues from the components
-    std::vector<std::map<int, MessageBuffer*> > m_toNetQueues;
-    std::vector<std::map<int, MessageBuffer*> > m_fromNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
     std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;
