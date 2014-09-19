@@ -80,9 +80,13 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 
     functionalAccess(pkt);
 
+    bool done = false;
+    auto p = packetQueue.begin();
     // potentially update the packets in our packet queue as well
-    for (auto i = packetQueue.begin(); i != packetQueue.end(); ++i)
-        pkt->checkFunctional(i->pkt);
+    while (!done && p != packetQueue.end()) {
+        done = pkt->checkFunctional(p->pkt);
+        ++p;
+    }
 
     pkt->popLabel();
 }
