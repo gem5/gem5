@@ -86,12 +86,11 @@ class DefaultRename
     // Typedefs from the ISA.
     typedef TheISA::RegIndex RegIndex;
 
-    // A list is used to queue the instructions.  Barrier insts must
-    // be added to the front of the list, which is the only reason for
-    // using a list instead of a queue. (Most other stages use a
+    // A deque is used to queue the instructions. Barrier insts must
+    // be added to the front of the queue, which is the only reason for
+    // using a deque instead of a queue. (Most other stages use a
     // queue)
-    typedef std::list<DynInstPtr> InstQueue;
-    typedef typename std::list<DynInstPtr>::iterator ListIt;
+    typedef std::deque<DynInstPtr> InstQueue;
 
   public:
     /** Overall rename status. Used to determine if the CPU can
