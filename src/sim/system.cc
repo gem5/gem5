@@ -418,12 +418,16 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 void
 System::printSystems()
 {
+    ios::fmtflags flags(cerr.flags());
+
     vector<System *>::iterator i = systemList.begin();
     vector<System *>::iterator end = systemList.end();
     for (; i != end; ++i) {
         System *sys = *i;
         cerr << "System " << sys->name() << ": " << hex << sys << endl;
     }
+
+    cerr.flags(flags);
 }
 
 void

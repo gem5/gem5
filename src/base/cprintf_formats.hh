@@ -88,6 +88,8 @@ _format_integer(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
 
+    ios::fmtflags flags(out.flags());
+
     switch (fmt.base) {
       case Format::hex:
         out.setf(std::ios::hex, std::ios::basefield);
@@ -137,6 +139,8 @@ _format_integer(std::ostream &out, const T &data, Format &fmt)
         out.setf(std::ios::uppercase);
 
     out << data;
+
+    out.flags(flags);
 }
 
 template <typename T>
@@ -144,6 +148,8 @@ inline void
 _format_float(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
+
+    ios::fmtflags flags(out.flags());
 
     switch (fmt.float_format) {
       case Format::scientific:
@@ -189,6 +195,8 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
     }
 
     out << data;
+
+    out.flags(flags);
 }
 
 template <typename T>
