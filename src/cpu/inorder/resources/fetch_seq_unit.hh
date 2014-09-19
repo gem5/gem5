@@ -71,7 +71,7 @@ class FetchSeqUnit : public Resource {
                 InstSeqNum squash_seq_num, ThreadID tid);
 
     /** Update to correct PC from a trap */
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+    void trap(const Fault &fault, ThreadID tid, DynInstPtr inst);
 
   protected:
     unsigned instSize;

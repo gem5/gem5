@@ -255,7 +255,7 @@ OzoneDynInst<Impl>::hwrei()
 
 template <class Impl>
 void
-OzoneDynInst<Impl>::trap(Fault fault)
+OzoneDynInst<Impl>::trap(const Fault &fault)
 {
     fault->invoke(this->thread->getTC());
 }

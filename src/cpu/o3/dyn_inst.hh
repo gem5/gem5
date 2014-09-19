@@ -230,7 +230,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
     /** Traps to handle specified fault. */
-    void trap(Fault fault);
+    void trap(const Fault &fault);
     bool simPalCheck(int palFunc);
 
     /** Emulates a syscall. */

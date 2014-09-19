@@ -226,8 +226,8 @@ LSQ::clearMemBarrier(MinorDynInstPtr inst)
 }
 
 void
-LSQ::SingleDataRequest::finish(Fault fault_, RequestPtr request_,
-    ThreadContext *tc, BaseTLB::Mode mode)
+LSQ::SingleDataRequest::finish(const Fault &fault_, RequestPtr request_,
+                               ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = fault_;
 
@@ -273,8 +273,8 @@ LSQ::SingleDataRequest::retireResponse(PacketPtr packet_)
 }
 
 void
-LSQ::SplitDataRequest::finish(Fault fault_, RequestPtr request_,
-    ThreadContext *tc, BaseTLB::Mode mode)
+LSQ::SplitDataRequest::finish(const Fault &fault_, RequestPtr request_,
+                              ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = fault_;
 

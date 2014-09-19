@@ -263,11 +263,11 @@ class InOrderCPU : public BaseCPU
         
       public:
         /** Constructs a CPU event. */
-        CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
+        CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, const Fault &fault,
                  ThreadID _tid, DynInstPtr inst, CPUEventPri event_pri);
 
         /** Set Type of Event To Be Scheduled */
-        void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
+        void setEvent(CPUEventType e_type, const Fault &_fault, ThreadID _tid,
                       DynInstPtr _inst)
         {
             fault = _fault;
@@ -291,7 +291,8 @@ class InOrderCPU : public BaseCPU
     };
 
     /** Schedule a CPU Event */
-    void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
+    void scheduleCpuEvent(CPUEventType cpu_event, const Fault &fault,
+                          ThreadID tid,
                           DynInstPtr inst, Cycles delay = Cycles(0),
                           CPUEventPri event_pri = InOrderCPU_Pri);
 
@@ -471,7 +472,7 @@ class InOrderCPU : public BaseCPU
     Fault getInterrupts();
 
     /** Processes any an interrupt fault. */
-    void processInterrupts(Fault interrupt);
+    void processInterrupts(const Fault &interrupt);
 
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
@@ -483,18 +484,18 @@ class InOrderCPU : public BaseCPU
     bool validDataAddr(Addr addr) { return true; }
 
     /** Schedule a syscall on the CPU */
-    void syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
+    void syscallContext(const Fault &fault, ThreadID tid, DynInstPtr inst,
                         Cycles delay = Cycles(0));
 
     /** Executes a syscall.*/
     void syscall(int64_t callnum, ThreadID tid);
 
     /** Schedule a trap on the CPU */
-    void trapContext(Fault fault, ThreadID tid, DynInstPtr inst,
+    void trapContext(const Fault &fault, ThreadID tid, DynInstPtr inst,
                      Cycles delay = Cycles(0));
 
     /** Perform trap to Handle Given Fault */
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+    void trap(const Fault &fault, ThreadID tid, DynInstPtr inst);
 
     /** Schedule thread activation on the CPU */
     void activateContext(ThreadID tid, Cycles delay = Cycles(0));

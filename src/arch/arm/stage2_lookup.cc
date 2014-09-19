@@ -171,7 +171,7 @@ Stage2LookUp::mergeTe(RequestPtr req, BaseTLB::Mode mode)
 }
 
 void
-Stage2LookUp::finish(Fault _fault, RequestPtr req,
+Stage2LookUp::finish(const Fault &_fault, RequestPtr req,
     ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = _fault;

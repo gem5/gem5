@@ -128,8 +128,8 @@ InOrderCPU::TickEvent::description() const
 }
 
 InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
-                               Fault fault, ThreadID _tid, DynInstPtr inst,
-                               CPUEventPri event_pri)
+                               const Fault &fault, ThreadID _tid,
+                               DynInstPtr inst, CPUEventPri event_pri)
     : Event(event_pri), cpu(_cpu)
 {
     setEvent(e_type, fault, _tid, inst);
@@ -910,7 +910,7 @@ InOrderCPU::getInterrupts()
 }
 
 void
-InOrderCPU::processInterrupts(Fault interrupt)
+InOrderCPU::processInterrupts(const Fault &interrupt)
 {
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
@@ -928,7 +928,7 @@ InOrderCPU::processInterrupts(Fault interrupt)
 }
 
 void
-InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst,
+InOrderCPU::trapContext(const Fault &fault, ThreadID tid, DynInstPtr inst,
                         Cycles delay)
 {
     scheduleCpuEvent(Trap, fault, tid, inst, delay);
@@ -936,7 +936,7 @@ InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst,
 }
 
 void
-InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+InOrderCPU::trap(const Fault &fault, ThreadID tid, DynInstPtr inst)
 {
     fault->invoke(tcBase(tid), inst->staticInst);
     removePipelineStalls(tid);
@@ -970,7 +970,7 @@ InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num,
 }
 
 void
-InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
+InOrderCPU::scheduleCpuEvent(CPUEventType c_event, const Fault &fault,
                              ThreadID tid, DynInstPtr inst, 
                              Cycles delay, CPUEventPri event_pri)
 {
@@ -1847,7 +1847,7 @@ InOrderCPU::wakeup()
 }
 
 void
-InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
+InOrderCPU::syscallContext(const Fault &fault, ThreadID tid, DynInstPtr inst,
                            Cycles delay)
 {
     // Syscall must be non-speculative, so squash from last stage

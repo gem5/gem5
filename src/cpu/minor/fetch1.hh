@@ -163,8 +163,8 @@ class Fetch1 : public Named
         /** Interface for ITLB responses.  Populates self and then passes
          *  the request on to the ports' handleTLBResponse member
          *  function */
-        void finish(Fault fault_, RequestPtr request_, ThreadContext *tc,
-            BaseTLB::Mode mode);
+        void finish(const Fault &fault_, RequestPtr request_,
+                    ThreadContext *tc, BaseTLB::Mode mode);
 
       public:
         FetchRequest(Fetch1 &fetch_, InstId id_, TheISA::PCState pc_) :

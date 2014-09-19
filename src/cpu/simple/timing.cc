@@ -328,7 +328,7 @@ TimingSimpleCPU::sendSplitData(RequestPtr req1, RequestPtr req2,
 }
 
 void
-TimingSimpleCPU::translationFault(Fault fault)
+TimingSimpleCPU::translationFault(const Fault &fault)
 {
     // fault may be NoFault in cases where a fault is suppressed,
     // for instance prefetches.
@@ -576,7 +576,8 @@ TimingSimpleCPU::fetch()
 
 
 void
-TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
+TimingSimpleCPU::sendFetch(const Fault &fault, RequestPtr req,
+                           ThreadContext *tc)
 {
     if (fault == NoFault) {
         DPRINTF(SimpleCPU, "Sending fetch for addr %#x(pa: %#x)\n",
@@ -608,7 +609,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
 
 
 void
-TimingSimpleCPU::advanceInst(Fault fault)
+TimingSimpleCPU::advanceInst(const Fault &fault)
 {
     if (_status == Faulting)
         return;

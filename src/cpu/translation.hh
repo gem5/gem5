@@ -111,7 +111,7 @@ class WholeTranslationState
      * request to make it easier to access them later on.
      */
     bool
-    finish(Fault fault, int index)
+    finish(const Fault &fault, int index)
     {
         assert(outstanding);
         faults[index] = fault;
@@ -249,7 +249,7 @@ class DataTranslation : public BaseTLB::Translation
      * translation is complete if the state says so.
      */
     void
-    finish(Fault fault, RequestPtr req, ThreadContext *tc,
+    finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
            BaseTLB::Mode mode)
     {
         assert(state);

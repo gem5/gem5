@@ -78,7 +78,7 @@ class Stage2MMU : public SimObject
         markDelayed() {}
 
         void
-        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+        finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
                BaseTLB::Mode mode);
 
         void setVirt(Addr vaddr, int size, Request::Flags flags, int masterId)

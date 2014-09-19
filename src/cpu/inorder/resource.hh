@@ -104,7 +104,7 @@ class Resource {
     virtual void instGraduated(InstSeqNum seq_num, ThreadID tid) { }
 
     /** Post-processsing for Trap Generated from this instruction */
-    virtual void trap(Fault fault, ThreadID tid, DynInstPtr inst) { }
+    virtual void trap(const Fault &fault, ThreadID tid, DynInstPtr inst) { }
 
     /** Request usage of this resource. Returns a ResourceRequest object
      *  with all the necessary resource information

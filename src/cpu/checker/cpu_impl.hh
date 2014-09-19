@@ -69,7 +69,7 @@ using namespace TheISA;
 
 template <class Impl>
 void
-Checker<Impl>::advancePC(Fault fault)
+Checker<Impl>::advancePC(const Fault &fault)
 {
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;

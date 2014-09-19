@@ -498,7 +498,7 @@ class FullO3CPU : public BaseO3CPU
     { return globalSeqNum++; }
 
     /** Traps to handle given fault. */
-    void trap(Fault fault, ThreadID tid, StaticInstPtr inst);
+    void trap(const Fault &fault, ThreadID tid, StaticInstPtr inst);
 
     /** HW return from error interrupt. */
     Fault hwrei(ThreadID tid);
@@ -509,7 +509,7 @@ class FullO3CPU : public BaseO3CPU
     Fault getInterrupts();
 
     /** Processes any an interrupt fault. */
-    void processInterrupts(Fault interrupt);
+    void processInterrupts(const Fault &interrupt);
 
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }

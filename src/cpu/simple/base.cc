@@ -555,7 +555,7 @@ BaseSimpleCPU::postExecute()
 }
 
 void
-BaseSimpleCPU::advancePC(Fault fault)
+BaseSimpleCPU::advancePC(const Fault &fault)
 {
     const bool branching(thread->pcState().branching());
 

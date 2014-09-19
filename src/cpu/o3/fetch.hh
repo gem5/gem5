@@ -100,7 +100,7 @@ class DefaultFetch
         {}
 
         void
-        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+        finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
                BaseTLB::Mode mode)
         {
             assert(mode == BaseTLB::Execute);
@@ -294,7 +294,7 @@ class DefaultFetch
      * @return Any fault that occured.
      */
     bool fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc);
-    void finishTranslation(Fault fault, RequestPtr mem_req);
+    void finishTranslation(const Fault &fault, RequestPtr mem_req);
 
 
     /** Check if an interrupt is pending and that we need to handle

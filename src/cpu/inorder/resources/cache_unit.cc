@@ -405,7 +405,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 }
 
 void
-CacheUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+CacheUnit::trap(const Fault &fault, ThreadID tid, DynInstPtr inst)
 {
     tlbBlocked[tid] = false;
 }

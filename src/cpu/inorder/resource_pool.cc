@@ -206,7 +206,7 @@ ResourcePool::squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num,
 }
 
 void
-ResourcePool::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+ResourcePool::trap(const Fault &fault, ThreadID tid, DynInstPtr inst)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting Trap to all "
             "resources.\n", tid);

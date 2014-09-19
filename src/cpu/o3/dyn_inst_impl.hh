@@ -225,7 +225,7 @@ BaseO3DynInst<Impl>::hwrei()
 
 template <class Impl>
 void
-BaseO3DynInst<Impl>::trap(Fault fault)
+BaseO3DynInst<Impl>::trap(const Fault &fault)
 {
     this->cpu->trap(fault, this->threadNumber, this->staticInst);
 }

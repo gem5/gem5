@@ -298,7 +298,7 @@ InOrderDynInst::hwrei()
 
 
 void
-InOrderDynInst::trap(Fault fault)
+InOrderDynInst::trap(const Fault &fault)
 {
     this->cpu->trap(fault, this->threadNumber, this);
 }

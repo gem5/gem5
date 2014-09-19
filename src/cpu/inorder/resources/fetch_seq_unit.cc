@@ -304,7 +304,7 @@ FetchSeqUnit::suspendThread(ThreadID tid)
 }
 
 void
-FetchSeqUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+FetchSeqUnit::trap(const Fault &fault, ThreadID tid, DynInstPtr inst)
 {
     pcValid[tid] = true;
     pc[tid] = cpu->pcState(tid);

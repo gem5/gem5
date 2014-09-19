@@ -524,7 +524,7 @@ class InOrderDynInst : public ExecContext, public RefCounted
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
     /** Traps to handle specified fault. */
-    void trap(Fault fault);
+    void trap(const Fault &fault);
     bool simPalCheck(int palFunc);
     short syscallNum;
 

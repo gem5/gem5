@@ -104,8 +104,8 @@ class BaseTLB : public SimObject
          * be responsible for cleaning itself up which will happen in this
          * function. Once it's called, the object is no longer valid.
          */
-        virtual void finish(Fault fault, RequestPtr req, ThreadContext *tc,
-                            Mode mode) = 0;
+        virtual void finish(const Fault &fault, RequestPtr req,
+                            ThreadContext *tc, Mode mode) = 0;
 
         /** This function is used by the page table walker to determine if it
          * should translate the a pending request or if the underlying request

@@ -87,7 +87,7 @@ class FetchUnit : public CacheUnit
     /** Executes one of the commands from the "Command" enum */
     void execute(int slot_num);
 
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+    void trap(const Fault &fault, ThreadID tid, DynInstPtr inst);
 
     TheISA::Decoder *decoder[ThePipeline::MaxThreads];
 

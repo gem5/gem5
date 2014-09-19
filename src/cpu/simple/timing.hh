@@ -123,7 +123,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         }
 
         void
-        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+        finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
                BaseTLB::Mode mode)
         {
             cpu->sendFetch(fault, req, tc);
@@ -135,7 +135,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void sendSplitData(RequestPtr req1, RequestPtr req2, RequestPtr req,
                        uint8_t *data, bool read);
 
-    void translationFault(Fault fault);
+    void translationFault(const Fault &fault);
 
     void buildPacket(PacketPtr &pkt, RequestPtr req, bool read);
     void buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
@@ -280,10 +280,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
                    Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
-    void sendFetch(Fault fault, RequestPtr req, ThreadContext *tc);
+    void sendFetch(const Fault &fault, RequestPtr req, ThreadContext *tc);
     void completeIfetch(PacketPtr );
     void completeDataAccess(PacketPtr pkt);
-    void advanceInst(Fault fault);
+    void advanceInst(const Fault &fault);
 
     /** This function is used by the page table walker to determine if it could
      * translate the a pending request or if the underlying request has been

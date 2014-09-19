@@ -113,7 +113,7 @@ class CacheUnit : public Resource
 
     bool processSquash(CacheReqPacket *cache_pkt);
 
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+    void trap(const Fault &fault, ThreadID tid, DynInstPtr inst);
 
     void recvRetry();
     

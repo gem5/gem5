@@ -204,8 +204,8 @@ Fetch1::FetchRequest::makePacket()
 }
 
 void
-Fetch1::FetchRequest::finish(
-    Fault fault_, RequestPtr request_, ThreadContext *tc, BaseTLB::Mode mode)
+Fetch1::FetchRequest::finish(const Fault &fault_, RequestPtr request_,
+                             ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = fault_;
 

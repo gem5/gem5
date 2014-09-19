@@ -1095,7 +1095,7 @@ FullO3CPU<Impl>::getInterrupts()
 
 template <class Impl>
 void
-FullO3CPU<Impl>::processInterrupts(Fault interrupt)
+FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
 {
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
@@ -1112,7 +1112,7 @@ FullO3CPU<Impl>::processInterrupts(Fault interrupt)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::trap(Fault fault, ThreadID tid, StaticInstPtr inst)
+FullO3CPU<Impl>::trap(const Fault &fault, ThreadID tid, StaticInstPtr inst)
 {
     // Pass the thread's TC into the invoke method.
     fault->invoke(this->threadContexts[tid], inst);

@@ -426,7 +426,7 @@ class Checker : public CheckerCPU
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
-    void advancePC(Fault fault);
+    void advancePC(const Fault &fault);
 
     void verify(DynInstPtr &inst);
 

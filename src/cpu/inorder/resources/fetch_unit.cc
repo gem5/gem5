@@ -574,7 +574,7 @@ FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
 }
 
 void
-FetchUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+FetchUnit::trap(const Fault &fault, ThreadID tid, DynInstPtr inst)
 {
     //@todo: per thread?
     decoder[tid]->reset();

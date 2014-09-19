@@ -168,7 +168,7 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     void setupFetchRequest(Request *req);
     void preExecute();
     void postExecute();
-    void advancePC(Fault fault);
+    void advancePC(const Fault &fault);
 
     virtual void deallocateContext(ThreadID thread_num);
     virtual void haltContext(ThreadID thread_num);
