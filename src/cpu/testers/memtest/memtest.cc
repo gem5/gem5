@@ -170,7 +170,7 @@ MemTest::completeRequest(PacketPtr pkt)
             pkt->isError() ? "error" : "success");
 
     MemTestSenderState *state =
-        dynamic_cast<MemTestSenderState *>(pkt->senderState);
+        safe_cast<MemTestSenderState *>(pkt->senderState);
 
     uint8_t *data = state->data;
     uint8_t *pkt_data = pkt->getPtr<uint8_t>();

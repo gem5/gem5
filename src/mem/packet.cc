@@ -189,7 +189,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
     // check print first since it doesn't require data
     if (isPrint()) {
-        dynamic_cast<PrintReqState*>(senderState)->printObj(obj);
+        safe_cast<PrintReqState*>(senderState)->printObj(obj);
         return false;
     }
 
