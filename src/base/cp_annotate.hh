@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -40,6 +52,7 @@
 #include "base/hashmap.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/AnnotateQ.hh"
 #include "config/cp_annotate.hh"
 #include "config/the_isa.hh"
 #include "sim/serialize.hh"
@@ -109,6 +122,24 @@ class CPA
               int32_t count = 1)                                  { return; }
 };
 #else
+
+/**
+ * Provide a hash function for the CPI Id type
+ */
+__hash_namespace_begin
+template <>
+struct hash<std::pair<std::string, uint64_t> >
+{
+
+    size_t
+    operator()(const std::pair<std::string, uint64_t>& x) const
+    {
+        return hash<std::string>()(x.first);
+    }
+
+};
+__hash_namespace_end
+
 class CPA : SimObject
 {
   public:
@@ -290,7 +321,7 @@ class CPA : SimObject
         if (smi == 0) {
             smCache[sysi-1][smid] = smi = ++numSm;
             assert(smi < 65535);
-            smMap.push_back(std::make_pair<int, Id>(sysi, smid));
+            smMap.push_back(std::make_pair(sysi, smid));
         }
         return smi;
     }
@@ -325,7 +356,7 @@ class CPA : SimObject
     {
         NameCache::iterator i = nameCache.find(s);
         if (i == nameCache.end()) {
-            nameCache[s] = std::make_pair<std::string,int>(s->name(), ++numSys);
+            nameCache[s] = std::make_pair(s->name(), ++numSys);
             i = nameCache.find(s);
             // might need to put smstackid into map here, but perhaps not
             //smStack.push_back(std::vector<int>());
@@ -354,7 +385,7 @@ class CPA : SimObject
             qBytes.push_back(0);
             qData.push_back(AnnotateList());
             numQ[sys-1]++;
-            qMap.push_back(std::make_pair<int, Id>(sys, qid));
+            qMap.push_back(std::make_pair(sys, qid));
         }
         return qi;
     }
@@ -494,11 +525,7 @@ class CPA : SimObject
     CPA(Params *p);
     void startup();
 
-    // This code is ISA specific and will need to be changed
-    // if the annotation code is used for something other than Alpha
-    inline uint64_t getFrame(ThreadContext *tc)
-        { return (tc->readMiscRegNoEffect(TheISA::IPR_PALtemp23) & 
-                ~ULL(0x3FFF)); }
+    uint64_t getFrame(ThreadContext *tc);
 
     static bool available()  { return true; }
 

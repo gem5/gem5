@@ -28,7 +28,7 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/alpha/linux/threadinfo.hh"
+#include "arch/generic/linux/threadinfo.hh"
 #include "arch/utility.hh"
 #include "base/loader/object_file.hh"
 #include "base/callback.hh"
@@ -37,6 +37,8 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Annotate.hh"
+#include "debug/AnnotateVerbose.hh"
 #include "sim/arguments.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"
@@ -142,6 +144,17 @@ CPA::startup()
 
     registerExitCallback(new AnnotateDumpCallback(this));
 }
+
+uint64_t
+CPA::getFrame(ThreadContext *tc)
+{
+    // This code is ISA specific and will need to be changed
+    // if the annotation code is used for something other than Alpha
+    return (tc->readMiscRegNoEffect(TheISA::IPR_PALtemp23) &
+            ~ULL(0x3FFF));
+
+}
+
 void
 CPA::swSmBegin(ThreadContext *tc)
 {
@@ -328,12 +341,9 @@ CPA::swAutoBegin(ThreadContext *tc, Addr next_pc)
 
     string sym;
     Addr sym_addr = 0;
-    SymbolTable *symtab = NULL;
-
 
     if (!TheISA::inUserMode(tc)) {
         debugSymbolTable->findNearestSymbol(next_pc, sym, sym_addr);
-        symtab = debugSymbolTable;
     } else {
         Linux::ThreadInfo ti(tc);
         string app = ti.curTaskName();
@@ -1285,7 +1295,7 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
 
         paramIn(cp, section, csprintf("nameCache%d.str", x), str);
         paramIn(cp, section, csprintf("nameCache%d.int", x), sysi);
-        nameCache[sys] = std::make_pair<std::string,int>(str, sysi);
+        nameCache[sys] = std::make_pair(str, sysi);
     }
 
     //smStack (SmStack)
