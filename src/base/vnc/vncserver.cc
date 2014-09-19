@@ -593,8 +593,8 @@ VncServer::recvCutText()
         size_t bytes_to_read = data_len > 1024 ? 1024 : data_len;
         len = read((uint8_t*)&str, bytes_to_read);
         str[bytes_to_read] = 0;
+        assert(len >= data_len);
         data_len -= len;
-        assert(data_len >= 0);
         DPRINTF(VNC, "Buffer: %s\n", str);
     }
 

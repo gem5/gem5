@@ -1567,7 +1567,7 @@ class HistStor
         size_type index =
             (int64_t)std::floor((val - min_bucket) / bucket_size);
 
-        assert(index >= 0 && index < size());
+        assert(index < size());
         cvec[index] += number;
 
         sum += val * number;

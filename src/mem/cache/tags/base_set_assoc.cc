@@ -181,8 +181,8 @@ BaseSetAssoc::computeStats()
         if (blks[i].isValid()) {
             assert(blks[i].task_id < ContextSwitchTaskId::NumTaskId);
             occupanciesTaskId[blks[i].task_id]++;
+            assert(blks[i].tickInserted <= curTick());
             Tick age = curTick() - blks[i].tickInserted;
-            assert(age >= 0);
 
             int age_index;
             if (age / SimClock::Int::us < 10) { // <10us
