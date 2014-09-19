@@ -571,8 +571,8 @@ Text::visit(const Vector2dInfo &info)
         for (off_type i = 0; i < info.y; ++i) {
             if (!info.y_subnames[i].empty()) {
                 print.subnames = info.y_subnames;
+                break;
             }
-            break;
         }
     }
     print.flags = info.flags;
