@@ -462,7 +462,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
     // Just forward the packet if caches are disabled.
     if (system->bypassCaches()) {
-        memSidePort->sendTimingReq(pkt);
+        // @todo This should really enqueue the packet rather
+        bool M5_VAR_USED success = memSidePort->sendTimingReq(pkt);
+        assert(success);
         return true;
     }
 
@@ -483,7 +485,10 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             snoopPkt->busFirstWordDelay = snoopPkt->busLastWordDelay = 0;
             snoopPkt->setExpressSnoop();
             snoopPkt->assertMemInhibit();
-            memSidePort->sendTimingReq(snoopPkt);
+            bool M5_VAR_USED success = memSidePort->sendTimingReq(snoopPkt);
+            // the packet is marked inhibited and will thus bypass any
+            // flow control
+            assert(success);
             // main memory will delete snoopPkt
         }
         // since we're the official target but we aren't responding,
