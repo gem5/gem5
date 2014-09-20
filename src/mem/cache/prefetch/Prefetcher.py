@@ -69,11 +69,6 @@ class BasePrefetcher(ClockedObject):
          "Perform a tagged prefetch for instruction fetches always")
     sys = Param.System(Parent.any, "System this device belongs to")
 
-class GHBPrefetcher(BasePrefetcher):
-    type = 'GHBPrefetcher'
-    cxx_class = 'GHBPrefetcher'
-    cxx_header = "mem/cache/prefetch/ghb.hh"
-
 class StridePrefetcher(BasePrefetcher):
     type = 'StridePrefetcher'
     cxx_class = 'StridePrefetcher'
