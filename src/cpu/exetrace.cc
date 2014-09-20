@@ -131,6 +131,12 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 
         if (Debug::ExecCPSeq && cp_seq_valid)
             outs << "  CPSeq=" << dec << cp_seq;
+
+        if (Debug::ExecFlags) {
+            outs << "  flags=(";
+            inst->printFlags(outs, "|");
+            outs << ")";
+        }
     }
 
     //

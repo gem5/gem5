@@ -96,6 +96,7 @@ DebugFlag('ExecMacro', 'Filter: Include macroops')
 DebugFlag('ExecUser', 'Filter: Trace user mode instructions')
 DebugFlag('ExecKernel', 'Filter: Trace kernel mode instructions')
 DebugFlag('ExecAsid', 'Format: Include ASID in trace')
+DebugFlag('ExecFlags', 'Format: Include instruction flags in trace')
 DebugFlag('Fetch')
 DebugFlag('IntrControl')
 DebugFlag('O3PipeView')
@@ -106,7 +107,7 @@ CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
     'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
     'ExecResult', 'ExecSpeculative', 'ExecSymbol', 'ExecThread',
     'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
-    'ExecAsid' ])
+    'ExecAsid', 'ExecFlags' ])
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
     'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting',
     'ExecUser', 'ExecKernel' ])
