@@ -344,7 +344,7 @@ configs += ['simple-atomic', 'simple-atomic-mp',
             'inorder-timing',
             'minor-timing', 'minor-timing-mp',
             'o3-timing', 'o3-timing-mp',
-            'rubytest', 'memtest',
+            'rubytest', 'memtest', 'memtest-filter',
             'tgen-simple-mem', 'tgen-dram-ctrl']
 
 if env['PROTOCOL'] != 'None':
