@@ -78,23 +78,6 @@ typedef SimpleThread MinorThread;
 class MinorCPU : public BaseCPU
 {
   protected:
-    /** Event for delayed wakeup of a thread */
-    class ThreadActivateEvent : public Event
-    {
-      public:
-        MinorCPU &cpu;
-        ThreadID thread_id;
-
-        ThreadActivateEvent(MinorCPU &cpu_, ThreadID thread_id_) :
-            cpu(cpu_), thread_id(thread_id_)
-        { }
-
-        void process();
-    };
-
-    /** Events to wakeup each thread */
-    std::vector<ThreadActivateEvent *> threadActivateEvents;
-
     /** pipeline is a container for the clockable pipeline stage objects.
      *  Elements of pipeline call TheISA to implement the model. */
     Minor::Pipeline *pipeline;
@@ -184,7 +167,7 @@ class MinorCPU : public BaseCPU
     void takeOverFrom(BaseCPU *old_cpu);
 
     /** Thread activation interface from BaseCPU. */
-    void activateContext(ThreadID thread_id, Cycles delay);
+    void activateContext(ThreadID thread_id);
     void suspendContext(ThreadID thread_id);
 
     /** Interface for stages to signal that they have become active after

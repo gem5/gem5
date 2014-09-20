@@ -165,15 +165,14 @@ class ThreadContext
 
     virtual void setStatus(Status new_status) = 0;
 
-    /// Set the status to Active.  Optional delay indicates number of
-    /// cycles to wait before beginning execution.
-    virtual void activate(Cycles delay = Cycles(1)) = 0;
+    /// Set the status to Active.
+    virtual void activate() = 0;
 
     /// Set the status to Suspended.
-    virtual void suspend(Cycles delay = Cycles(0)) = 0;
+    virtual void suspend() = 0;
 
     /// Set the status to Halted.
-    virtual void halt(Cycles delay = Cycles(0)) = 0;
+    virtual void halt() = 0;
 
     virtual void dumpFuncProfile() = 0;
 
@@ -362,16 +361,14 @@ class ProxyThreadContext : public ThreadContext
 
     void setStatus(Status new_status) { actualTC->setStatus(new_status); }
 
-    /// Set the status to Active.  Optional delay indicates number of
-    /// cycles to wait before beginning execution.
-    void activate(Cycles delay = Cycles(1))
-    { actualTC->activate(delay); }
+    /// Set the status to Active.
+    void activate() { actualTC->activate(); }
 
     /// Set the status to Suspended.
-    void suspend(Cycles delay = Cycles(0)) { actualTC->suspend(); }
+    void suspend() { actualTC->suspend(); }
 
     /// Set the status to Halted.
-    void halt(Cycles delay = Cycles(0)) { actualTC->halt(); }
+    void halt() { actualTC->halt(); }
 
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 

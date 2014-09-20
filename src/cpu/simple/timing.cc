@@ -200,9 +200,9 @@ TimingSimpleCPU::verifyMemoryMode() const
 }
 
 void
-TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
+TimingSimpleCPU::activateContext(ThreadID thread_num)
 {
-    DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
+    DPRINTF(SimpleCPU, "ActivateContext %d\n", thread_num);
 
     assert(thread_num == 0);
     assert(thread);
@@ -213,7 +213,7 @@ TimingSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
     _status = BaseSimpleCPU::Running;
 
     // kick things off by initiating the fetch of the next instruction
-    schedule(fetchEvent, clockEdge(delay));
+    schedule(fetchEvent, clockEdge(Cycles(0)));
 }
 
 

@@ -271,7 +271,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     void verifyMemoryMode() const;
 
-    virtual void activateContext(ThreadID thread_num, Cycles delay);
+    virtual void activateContext(ThreadID thread_num);
     virtual void suspendContext(ThreadID thread_num);
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);

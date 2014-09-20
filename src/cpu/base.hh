@@ -251,10 +251,8 @@ class BaseCPU : public MemObject
     /// Provide access to the tracer pointer
     Trace::InstTracer * getTracer() { return tracer; }
 
-    /// Notify the CPU that the indicated context is now active.  The
-    /// delay parameter indicates the number of ticks to wait before
-    /// executing (typically 0 or 1).
-    virtual void activateContext(ThreadID thread_num, Cycles delay) {}
+    /// Notify the CPU that the indicated context is now active.
+    virtual void activateContext(ThreadID thread_num) {}
 
     /// Notify the CPU that the indicated context is now suspended.
     virtual void suspendContext(ThreadID thread_num) {}
@@ -284,8 +282,6 @@ class BaseCPU : public MemObject
     virtual void init();
     virtual void startup();
     virtual void regStats();
-
-    virtual void activateWhenReady(ThreadID tid) {};
 
     void registerThreadContexts();
 

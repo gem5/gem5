@@ -63,7 +63,6 @@ MinorCPU::MinorCPU(MinorCPUParams *params) :
     }
 
     threads.push_back(thread);
-    threadActivateEvents.push_back(new ThreadActivateEvent(*this, 0));
 
     thread->setStatus(ThreadContext::Halted);
 
@@ -87,7 +86,6 @@ MinorCPU::~MinorCPU()
 
     for (ThreadID thread_id = 0; thread_id < threads.size(); thread_id++) {
         delete threads[thread_id];
-        delete threadActivateEvents[thread_id];
     }
 }
 
@@ -192,6 +190,9 @@ MinorCPU::startup()
 
     for (auto i = threads.begin(); i != threads.end(); i ++)
         (*i)->startup();
+
+    /* CPU state setup, activate initial context */
+    activateContext(0);
 }
 
 unsigned int
@@ -275,31 +276,20 @@ MinorCPU::takeOverFrom(BaseCPU *old_cpu)
 }
 
 void
-MinorCPU::activateContext(ThreadID thread_id, Cycles delay)
+MinorCPU::activateContext(ThreadID thread_id)
 {
-    DPRINTF(MinorCPU, "ActivateContext thread: %d delay: %d\n",
-        thread_id, delay);
-
-    if (!threadActivateEvents[thread_id]->scheduled()) {
-        schedule(threadActivateEvents[thread_id], clockEdge(delay));
-    }
-}
-
-void
-MinorCPU::ThreadActivateEvent::process()
-{
-    DPRINTFS(MinorCPU, (&cpu), "Activating thread: %d\n", thread_id);
+    DPRINTF(MinorCPU, "ActivateContext thread: %d", thread_id);
 
     /* Do some cycle accounting.  lastStopped is reset to stop the
      *  wakeup call on the pipeline from adding the quiesce period
      *  to BaseCPU::numCycles */
-    cpu.stats.quiesceCycles += cpu.pipeline->cyclesSinceLastStopped();
-    cpu.pipeline->resetLastStopped();
+    stats.quiesceCycles += pipeline->cyclesSinceLastStopped();
+    pipeline->resetLastStopped();
 
     /* Wake up the thread, wakeup the pipeline tick */
-    cpu.threads[thread_id]->activate();
-    cpu.wakeupOnEvent(Minor::Pipeline::CPUStageId);
-    cpu.pipeline->wakeupFetch();
+    threads[thread_id]->activate();
+    wakeupOnEvent(Minor::Pipeline::CPUStageId);
+    pipeline->wakeupFetch();
 }
 
 void

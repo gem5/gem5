@@ -229,116 +229,6 @@ class FullO3CPU : public BaseO3CPU
             tickEvent.squash();
     }
 
-    class ActivateThreadEvent : public Event
-    {
-      private:
-        /** Number of Thread to Activate */
-        ThreadID tid;
-
-        /** Pointer to the CPU. */
-        FullO3CPU<Impl> *cpu;
-
-      public:
-        /** Constructs the event. */
-        ActivateThreadEvent();
-
-        /** Initialize Event */
-        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
-
-        /** Processes the event, calling activateThread() on the CPU. */
-        void process();
-
-        /** Returns the description of the event. */
-        const char *description() const;
-    };
-
-    /** Schedule thread to activate , regardless of its current state. */
-    void
-    scheduleActivateThreadEvent(ThreadID tid, Cycles delay)
-    {
-        // Schedule thread to activate, regardless of its current state.
-        if (activateThreadEvent[tid].squashed())
-            reschedule(activateThreadEvent[tid],
-                       clockEdge(delay));
-        else if (!activateThreadEvent[tid].scheduled()) {
-            Tick when = clockEdge(delay);
-
-            // Check if the deallocateEvent is also scheduled, and make
-            // sure they do not happen at same time causing a sleep that
-            // is never woken from.
-            if (deallocateContextEvent[tid].scheduled() &&
-                deallocateContextEvent[tid].when() == when) {
-                when++;
-            }
-
-            schedule(activateThreadEvent[tid], when);
-        }
-    }
-
-    /** Unschedule actiavte thread event, regardless of its current state. */
-    void
-    unscheduleActivateThreadEvent(ThreadID tid)
-    {
-        if (activateThreadEvent[tid].scheduled())
-            activateThreadEvent[tid].squash();
-    }
-
-    /** The tick event used for scheduling CPU ticks. */
-    ActivateThreadEvent activateThreadEvent[Impl::MaxThreads];
-
-    class DeallocateContextEvent : public Event
-    {
-      private:
-        /** Number of Thread to deactivate */
-        ThreadID tid;
-
-        /** Should the thread be removed from the CPU? */
-        bool remove;
-
-        /** Pointer to the CPU. */
-        FullO3CPU<Impl> *cpu;
-
-      public:
-        /** Constructs the event. */
-        DeallocateContextEvent();
-
-        /** Initialize Event */
-        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
-
-        /** Processes the event, calling activateThread() on the CPU. */
-        void process();
-
-        /** Sets whether the thread should also be removed from the CPU. */
-        void setRemove(bool _remove) { remove = _remove; }
-
-        /** Returns the description of the event. */
-        const char *description() const;
-    };
-
-    /** Schedule cpu to deallocate thread context.*/
-    void
-    scheduleDeallocateContextEvent(ThreadID tid, bool remove, Cycles delay)
-    {
-        // Schedule thread to activate, regardless of its current state.
-        if (deallocateContextEvent[tid].squashed())
-            reschedule(deallocateContextEvent[tid],
-                       clockEdge(delay));
-        else if (!deallocateContextEvent[tid].scheduled())
-            schedule(deallocateContextEvent[tid],
-                     clockEdge(delay));
-    }
-
-    /** Unschedule thread deallocation in CPU */
-    void
-    unscheduleDeallocateContextEvent(ThreadID tid)
-    {
-        if (deallocateContextEvent[tid].scheduled())
-            deallocateContextEvent[tid].squash();
-    }
-
-    /** The tick event used for scheduling CPU ticks. */
-    DeallocateContextEvent deallocateContextEvent[Impl::MaxThreads];
-
     /**
      * Check if the pipeline has drained and signal the DrainManager.
      *
@@ -430,7 +320,7 @@ class FullO3CPU : public BaseO3CPU
     virtual Counter totalOps() const;
 
     /** Add Thread to Active Threads List. */
-    void activateContext(ThreadID tid, Cycles delay);
+    void activateContext(ThreadID tid);
 
     /** Remove Thread from Active Threads List */
     void suspendContext(ThreadID tid);
@@ -438,19 +328,12 @@ class FullO3CPU : public BaseO3CPU
     /** Remove Thread from Active Threads List &&
      *  Possibly Remove Thread Context from CPU.
      */
-    bool scheduleDeallocateContext(ThreadID tid, bool remove,
-                                   Cycles delay = Cycles(1));
+    void deallocateContext(ThreadID tid, bool remove);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
     void haltContext(ThreadID tid);
-
-    /** Activate a Thread When CPU Resources are Available. */
-    void activateWhenReady(ThreadID tid);
-
-    /** Add or Remove a Thread Context in the CPU. */
-    void doContextSwitch();
 
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
@@ -791,9 +674,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
-
-    /** Is there a context switch pending? */
-    bool contextSwitch;
 
     /** Threads Scheduled to Enter CPU */
     std::list<int> cpuWaitList;

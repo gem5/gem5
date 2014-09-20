@@ -136,15 +136,14 @@ class O3ThreadContext : public ThreadContext
     virtual void setStatus(Status new_status)
     { thread->setStatus(new_status); }
 
-    /** Set the status to Active.  Optional delay indicates number of
-     * cycles to wait before beginning execution. */
-    virtual void activate(Cycles delay = Cycles(1));
+    /** Set the status to Active. */
+    virtual void activate();
 
     /** Set the status to Suspended. */
-    virtual void suspend(Cycles delay = Cycles(0));
+    virtual void suspend();
 
     /** Set the status to Halted. */
-    virtual void halt(Cycles delay = Cycles(0));
+    virtual void halt();
 
     /** Dumps the function profiling information.
      * @todo: Implement.

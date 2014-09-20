@@ -96,7 +96,7 @@ restoreThread(TC *tc)
 
         // TODO: SET PC WITH AN EVENT INSTEAD OF INSTANTANEOUSLY
         tc->pcState(restartPC);
-        tc->activate(Cycles(0));
+        tc->activate();
 
         warn("%i: Restoring thread %i in %s @ PC %x",
                 curTick(), tc->threadId(), tc->getCpuPtr()->name(), restartPC);

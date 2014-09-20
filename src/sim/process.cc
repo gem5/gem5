@@ -250,7 +250,7 @@ Process::initState()
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     // mark this context as active so it will start ticking.
-    tc->activate(Cycles(0));
+    tc->activate();
 
     pTable->initState(tc);
 }

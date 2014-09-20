@@ -430,9 +430,9 @@ BaseKvmCPU::wakeup()
 }
 
 void
-BaseKvmCPU::activateContext(ThreadID thread_num, Cycles delay)
+BaseKvmCPU::activateContext(ThreadID thread_num)
 {
-    DPRINTF(Kvm, "ActivateContext %d (%d cycles)\n", thread_num, delay);
+    DPRINTF(Kvm, "ActivateContext %d\n", thread_num);
 
     assert(thread_num == 0);
     assert(thread);
@@ -442,7 +442,7 @@ BaseKvmCPU::activateContext(ThreadID thread_num, Cycles delay)
 
     numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
 
-    schedule(tickEvent, clockEdge(delay));
+    schedule(tickEvent, clockEdge(Cycles(0)));
     _status = Running;
 }
 

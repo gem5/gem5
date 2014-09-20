@@ -179,15 +179,14 @@ class InOrderThreadContext : public ThreadContext
     void setStatus(Status new_status)
     { thread->setStatus(new_status); }
 
-    /** Set the status to Active.  Optional delay indicates number of
-     * cycles to wait before beginning execution. */
-    void activate(Cycles delay = Cycles(1));
+    /** Set the status to Active. */
+    void activate();
 
     /** Set the status to Suspended. */
-    void suspend(Cycles delay = Cycles(0));
+    void suspend();
 
     /** Set the status to Halted. */
-    void halt(Cycles delay = Cycles(0));
+    void halt();
 
     /** Takes over execution of a thread from another CPU. */
     void takeOverFrom(ThreadContext *old_context);
@@ -279,8 +278,8 @@ class InOrderThreadContext : public ThreadContext
     int flattenMiscIndex(int reg)
     { return cpu->isa[thread->threadId()]->flattenMiscIndex(reg); }
 
-    void activateContext(Cycles delay)
-    { cpu->activateContext(thread->threadId(), delay); }
+    void activateContext()
+    { cpu->activateContext(thread->threadId()); }
 
     void deallocateContext()
     { cpu->deallocateContext(thread->threadId()); }

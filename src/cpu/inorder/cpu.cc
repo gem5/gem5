@@ -1090,11 +1090,11 @@ InOrderCPU::activateThreadInPipeline(ThreadID tid)
 }
 
 void
-InOrderCPU::deactivateContext(ThreadID tid, Cycles delay)
+InOrderCPU::deactivateContext(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Deactivating ...\n", tid);
 
-    scheduleCpuEvent(DeactivateThread, NoFault, tid, dummyInst[tid], delay);
+    scheduleCpuEvent(DeactivateThread, NoFault, tid, dummyInst[tid]);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
@@ -1172,12 +1172,12 @@ InOrderCPU::tickThreadStats()
 }
 
 void
-InOrderCPU::activateContext(ThreadID tid, Cycles delay)
+InOrderCPU::activateContext(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Activating ...\n", tid);
 
     
-    scheduleCpuEvent(ActivateThread, NoFault, tid, dummyInst[tid], delay);
+    scheduleCpuEvent(ActivateThread, NoFault, tid, dummyInst[tid]);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
@@ -1187,12 +1187,12 @@ InOrderCPU::activateContext(ThreadID tid, Cycles delay)
 }
 
 void
-InOrderCPU::activateNextReadyContext(Cycles delay)
+InOrderCPU::activateNextReadyContext()
 {
     DPRINTF(InOrderCPU,"Activating next ready thread\n");
 
     scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst[0], 
-                     delay, ActivateNextReadyThread_Pri);
+                     Cycles(0), ActivateNextReadyThread_Pri);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.

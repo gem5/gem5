@@ -222,9 +222,9 @@ AtomicSimpleCPU::verifyMemoryMode() const
 }
 
 void
-AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
+AtomicSimpleCPU::activateContext(ThreadID thread_num)
 {
-    DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
+    DPRINTF(SimpleCPU, "ActivateContext %d\n", thread_num);
 
     assert(thread_num == 0);
     assert(thread);
@@ -236,7 +236,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num, Cycles delay)
     numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    schedule(tickEvent, clockEdge(delay));
+    schedule(tickEvent, clockEdge(Cycles(0)));
     _status = BaseSimpleCPU::Running;
 }
 

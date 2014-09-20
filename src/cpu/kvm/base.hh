@@ -100,7 +100,7 @@ class BaseKvmCPU : public BaseCPU
     MasterPort &getInstPort() { return instPort; }
 
     void wakeup();
-    void activateContext(ThreadID thread_num, Cycles delay);
+    void activateContext(ThreadID thread_num);
     void suspendContext(ThreadID thread_num);
     void deallocateContext(ThreadID thread_num);
     void haltContext(ThreadID thread_num);

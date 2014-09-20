@@ -157,16 +157,14 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setStatus(new_status);
     }
 
-    /// Set the status to Active.  Optional delay indicates number of
-    /// cycles to wait before beginning execution.
-    void activate(Cycles delay = Cycles(1))
-    { actualTC->activate(delay); }
+    /// Set the status to Active.
+    void activate() { actualTC->activate(); }
 
     /// Set the status to Suspended.
-    void suspend(Cycles delay) { actualTC->suspend(delay); }
+    void suspend() { actualTC->suspend(); }
 
     /// Set the status to Halted.
-    void halt(Cycles delay) { actualTC->halt(delay); }
+    void halt() { actualTC->halt(); }
 
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 

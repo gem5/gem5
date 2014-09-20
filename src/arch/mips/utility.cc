@@ -231,7 +231,7 @@ zeroRegisters(CPU *cpu)
 void
 startupCPU(ThreadContext *tc, int cpuId)
 {
-    tc->activate(Cycles(0));
+    tc->activate();
 }
 
 void

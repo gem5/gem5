@@ -498,7 +498,7 @@ class InOrderCPU : public BaseCPU
     void trap(const Fault &fault, ThreadID tid, DynInstPtr inst);
 
     /** Schedule thread activation on the CPU */
-    void activateContext(ThreadID tid, Cycles delay = Cycles(0));
+    void activateContext(ThreadID tid);
 
     /** Add Thread to Active Threads List. */
     void activateThread(ThreadID tid);
@@ -507,13 +507,13 @@ class InOrderCPU : public BaseCPU
     void activateThreadInPipeline(ThreadID tid);
     
     /** Schedule Thread Activation from Ready List */
-    void activateNextReadyContext(Cycles delay = Cycles(0));
+    void activateNextReadyContext();
 
     /** Add Thread From Ready List to Active Threads List. */
     void activateNextReadyThread();
 
     /** Schedule a thread deactivation on the CPU */
-    void deactivateContext(ThreadID tid, Cycles delay = Cycles(0));
+    void deactivateContext(ThreadID tid);
 
     /** Remove from Active Thread List */
     void deactivateThread(ThreadID tid);

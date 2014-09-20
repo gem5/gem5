@@ -148,67 +148,6 @@ FullO3CPU<Impl>::TickEvent::description() const
 }
 
 template <class Impl>
-FullO3CPU<Impl>::ActivateThreadEvent::ActivateThreadEvent()
-    : Event(CPU_Switch_Pri)
-{
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::ActivateThreadEvent::init(int thread_num,
-                                           FullO3CPU<Impl> *thread_cpu)
-{
-    tid = thread_num;
-    cpu = thread_cpu;
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::ActivateThreadEvent::process()
-{
-    cpu->activateThread(tid);
-}
-
-template <class Impl>
-const char *
-FullO3CPU<Impl>::ActivateThreadEvent::description() const
-{
-    return "FullO3CPU \"Activate Thread\"";
-}
-
-template <class Impl>
-FullO3CPU<Impl>::DeallocateContextEvent::DeallocateContextEvent()
-    : Event(CPU_Tick_Pri), tid(0), remove(false), cpu(NULL)
-{
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::DeallocateContextEvent::init(int thread_num,
-                                              FullO3CPU<Impl> *thread_cpu)
-{
-    tid = thread_num;
-    cpu = thread_cpu;
-    remove = false;
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::DeallocateContextEvent::process()
-{
-    cpu->deactivateThread(tid);
-    if (remove)
-        cpu->removeThread(tid);
-}
-
-template <class Impl>
-const char *
-FullO3CPU<Impl>::DeallocateContextEvent::description() const
-{
-    return "FullO3CPU \"Deallocate Context\"";
-}
-
-template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     : BaseO3CPU(params),
       itb(params->itb),
@@ -346,9 +285,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
         renameMap[tid].init(&regFile, TheISA::ZeroReg, fpZeroReg,
                             &freeList);
-
-        activateThreadEvent[tid].init(tid, this);
-        deallocateContextEvent[tid].init(tid, this);
     }
 
     // Initialize rename map to assign physical registers to the
@@ -389,7 +325,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         globalSeqNum[tid] = 1;
 #endif
 
-    contextSwitch = false;
     DPRINTF(O3CPU, "Creating O3CPU object.\n");
 
     // Setup any thread state.
@@ -613,9 +548,6 @@ FullO3CPU<Impl>::tick()
 
     commit.tick();
 
-    if (!FullSystem)
-        doContextSwitch();
-
     // Now advance the time buffers
     timeBuffer.advance();
 
@@ -761,18 +693,12 @@ FullO3CPU<Impl>::totalOps() const
 
 template <class Impl>
 void
-FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
+FullO3CPU<Impl>::activateContext(ThreadID tid)
 {
     assert(!switchedOut());
 
     // Needs to set each stage to running as well.
-    if (delay){
-        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
-                "on cycle %d\n", tid, clockEdge(delay));
-        scheduleActivateThreadEvent(tid, delay);
-    } else {
-        activateThread(tid);
-    }
+    activateThread(tid);
 
     // We don't want to wake the CPU if it is drained. In that case,
     // we just want to flag the thread as active and schedule the tick
@@ -783,7 +709,7 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
     // If we are time 0 or if the last activation time is in the past,
     // schedule the next tick and wake up the fetch unit
     if (lastActivatedCycle == 0 || lastActivatedCycle < curTick()) {
-        scheduleTickEvent(delay);
+        scheduleTickEvent(Cycles(0));
 
         // Be sure to signal that there's some activity so the CPU doesn't
         // deschedule itself.
@@ -803,22 +729,12 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, Cycles delay)
 }
 
 template <class Impl>
-bool
-FullO3CPU<Impl>::scheduleDeallocateContext(ThreadID tid, bool remove,
-                                           Cycles delay)
+void
+FullO3CPU<Impl>::deallocateContext(ThreadID tid, bool remove)
 {
-    // Schedule removal of thread data from CPU
-    if (delay){
-        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to deallocate "
-                "on tick %d\n", tid, clockEdge(delay));
-        scheduleDeallocateContextEvent(tid, remove, delay);
-        return false;
-    } else {
-        deactivateThread(tid);
-        if (remove)
-            removeThread(tid);
-        return true;
-    }
+    deactivateThread(tid);
+    if (remove)
+        removeThread(tid);
 }
 
 template <class Impl>
@@ -827,10 +743,10 @@ FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
     assert(!switchedOut());
-    bool deallocated = scheduleDeallocateContext(tid, false, Cycles(1));
+    deallocateContext(tid, false);
+
     // If this was the last thread then unschedule the tick event.
-    if ((activeThreads.size() == 1 && !deallocated) ||
-        activeThreads.size() == 0)
+    if (activeThreads.size() == 0)
         unscheduleTickEvent();
 
     DPRINTF(Quiesce, "Suspending Context\n");
@@ -845,7 +761,7 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
     //For now, this is the same as deallocate
     DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
     assert(!switchedOut());
-    scheduleDeallocateContext(tid, true, Cycles(1));
+    deallocateContext(tid, true);
 }
 
 template <class Impl>
@@ -896,7 +812,7 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
 
     src_tc->setStatus(ThreadContext::Active);
 
-    activateContext(tid, Cycles(1));
+    activateContext(tid);
 
     //Reset ROB/IQ/LSQ Entries
     commit.rob->resetEntries();
@@ -971,77 +887,6 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
         iew.resetEntries();
     }
 */
-}
-
-
-template <class Impl>
-void
-FullO3CPU<Impl>::activateWhenReady(ThreadID tid)
-{
-    DPRINTF(O3CPU,"[tid:%i]: Checking if resources are available for incoming"
-            "(e.g. PhysRegs/ROB/IQ/LSQ) \n",
-            tid);
-
-    bool ready = true;
-
-    // Should these all be '<' not '>='?  This seems backwards...
-    if (freeList.numFreeIntRegs() >= TheISA::NumIntRegs) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "Phys. Int. Regs.\n",
-                tid);
-        ready = false;
-    } else if (freeList.numFreeFloatRegs() >= TheISA::NumFloatRegs) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "Phys. Float. Regs.\n",
-                tid);
-        ready = false;
-    } else if (freeList.numFreeCCRegs() >= TheISA::NumCCRegs) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "Phys. CC. Regs.\n",
-                tid);
-        ready = false;
-    } else if (commit.rob->numFreeEntries() >=
-               commit.rob->entryAmount(activeThreads.size() + 1)) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "ROB entries.\n",
-                tid);
-        ready = false;
-    } else if (iew.instQueue.numFreeEntries() >=
-               iew.instQueue.entryAmount(activeThreads.size() + 1)) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "IQ entries.\n",
-                tid);
-        ready = false;
-    } else if (iew.ldstQueue.numFreeLoadEntries() >=
-               iew.ldstQueue.entryAmount(activeThreads.size() + 1)) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "LQ entries.\n",
-                tid);
-        ready = false;
-    } else if (iew.ldstQueue.numFreeStoreEntries() >=
-            iew.ldstQueue.entryAmount(activeThreads.size() + 1)) {
-        DPRINTF(O3CPU,"[tid:%i] Suspending thread due to not enough "
-                "SQ entries.\n",
-             tid);
-        ready = false;
-    }
-
-    if (ready) {
-        insertThread(tid);
-
-        contextSwitch = false;
-
-        cpuWaitList.remove(tid);
-    } else {
-        suspendContext(tid);
-
-        //blocks fetch
-        contextSwitch = true;
-
-        //@todo: dont always add to waitlist
-        //do waitlist
-        cpuWaitList.push_back(tid);
-    }
 }
 
 template <class Impl>
@@ -1242,19 +1087,6 @@ bool
 FullO3CPU<Impl>::isDrained() const
 {
     bool drained(true);
-
-    for (ThreadID i = 0; i < thread.size(); ++i) {
-        if (activateThreadEvent[i].scheduled()) {
-            DPRINTF(Drain, "CPU not drained, tread %i has a "
-                    "pending activate event\n", i);
-            drained = false;
-        }
-        if (deallocateContextEvent[i].scheduled()) {
-            DPRINTF(Drain, "CPU not drained, tread %i has a "
-                    "pending deallocate context event\n", i);
-            drained = false;
-        }
-    }
 
     if (!instList.empty() || !removeList.empty()) {
         DPRINTF(Drain, "Main CPU structures not drained.\n");
@@ -1828,24 +1660,6 @@ FullO3CPU<Impl>::getFreeTid()
     }
 
     return InvalidThreadID;
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::doContextSwitch()
-{
-    if (contextSwitch) {
-
-        //ADD CODE TO DEACTIVE THREAD HERE (???)
-
-        ThreadID size = cpuWaitList.size();
-        for (ThreadID tid = 0; tid < size; tid++) {
-            activateWhenReady(tid);
-        }
-
-        if (cpuWaitList.size() == 0)
-            contextSwitch = true;
-    }
 }
 
 template <class Impl>

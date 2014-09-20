@@ -811,10 +811,7 @@ DefaultFetch<Impl>::checkStall(ThreadID tid) const
 {
     bool ret_val = false;
 
-    if (cpu->contextSwitch) {
-        DPRINTF(Fetch,"[tid:%i]: Stalling for a context switch.\n",tid);
-        ret_val = true;
-    } else if (stalls[tid].drain) {
+    if (stalls[tid].drain) {
         assert(cpu->isDraining());
         DPRINTF(Fetch,"[tid:%i]: Drain stall detected.\n",tid);
         ret_val = true;
@@ -970,9 +967,8 @@ DefaultFetch<Impl>::tick()
     }
 
     // If there was activity this cycle, inform the CPU of it.
-    if (wroteToTimeBuffer || cpu->contextSwitch) {
+    if (wroteToTimeBuffer) {
         DPRINTF(Activity, "Activity this cycle.\n");
-
         cpu->activityThisCycle();
     }
 

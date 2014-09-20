@@ -159,22 +159,14 @@ SimpleThread::dumpFuncProfile()
 }
 
 void
-SimpleThread::activate(Cycles delay)
+SimpleThread::activate()
 {
     if (status() == ThreadContext::Active)
         return;
 
     lastActivate = curTick();
-
-//    if (status() == ThreadContext::Unallocated) {
-//      cpu->activateWhenReady(_threadId);
-//      return;
-//   }
-
     _status = ThreadContext::Active;
-
-    // status() == Suspended
-    baseCpu->activateContext(_threadId, delay);
+    baseCpu->activateContext(_threadId);
 }
 
 void
