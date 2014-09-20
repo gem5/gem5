@@ -37,18 +37,15 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from VirtIO import VirtIODeviceBase
 
-if env['TARGET_ISA'] == 'null':
-    Return()
+class VirtIOConsole(VirtIODeviceBase):
+    type = 'VirtIOConsole'
+    cxx_header = 'dev/virtio/console.hh'
 
-SimObject('VirtIO.py')
-SimObject('VirtIOConsole.py')
+    qRecvSize = Param.Unsigned(16, "Receive queue size (descriptors)")
+    qTransSize = Param.Unsigned(16, "Transmit queue size (descriptors)")
 
-Source('base.cc')
-Source('pci.cc')
-Source('console.cc')
-
-DebugFlag('VIO', 'VirtIO base functionality')
-DebugFlag('VIOPci', 'VirtIO PCI transport')
-DebugFlag('VIOConsole', 'VirtIO console device')
+    terminal = Param.Terminal(Parent.any, "The terminal")
