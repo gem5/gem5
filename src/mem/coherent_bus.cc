@@ -55,7 +55,7 @@
 #include "sim/system.hh"
 
 CoherentBus::CoherentBus(const CoherentBusParams *p)
-    : BaseBus(p), system(p->system)
+    : BaseBus(p), system(p->system), snoopFilter(p->snoop_filter)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -94,6 +94,9 @@ CoherentBus::CoherentBus(const CoherentBusParams *p)
                                            csprintf(".respLayer%d", i)));
         snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
+
+    if (snoopFilter)
+        snoopFilter->setSlavePorts(slavePorts);
 
     clearPortCache();
 }
@@ -171,7 +174,18 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
-        forwardTiming(pkt, slave_port_id);
+        if (snoopFilter) {
+            // check with the snoop filter where to forward this packet
+            auto sf_res = snoopFilter->lookupRequest(pkt, *src_port);
+            packetFinishTime += sf_res.second * clockPeriod();
+            DPRINTF(CoherentBus, "recvTimingReq: src %s %s 0x%x"\
+                    " SF size: %i lat: %i\n", src_port->name(),
+                    pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
+                    sf_res.second);
+            forwardTiming(pkt, slave_port_id, sf_res.first);
+        } else {
+            forwardTiming(pkt, slave_port_id);
+        }
     }
 
     // remember if we add an outstanding req so we can undo it if
@@ -190,8 +204,26 @@ CoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         outstandingReq.insert(pkt->req);
     }
 
+    // Note: Cannot create a copy of the full packet, here.
+    MemCmd orig_cmd(pkt->cmd);
+
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
+
+    if (snoopFilter && !pkt->req->isUncacheable()
+        && !system->bypassCaches()) {
+        // The packet may already be overwritten by the sendTimingReq function.
+        // The snoop filter needs to see the original request *and* the return
+        // status of the send operation, so we need to recreate the original
+        // request.  Atomic mode does not have the issue, as there the send
+        // operation and the response happen instantaneously and don't need two
+        // phase tracking.
+        MemCmd tmp_cmd(pkt->cmd);
+        pkt->cmd = orig_cmd;
+        // Let the snoop filter know about the success of the send operation
+        snoopFilter->updateRequest(pkt, *src_port, !success);
+        pkt->cmd = tmp_cmd;
+    }
 
     // if this is an express snoop, we are done at this point
     if (is_express_snoop) {
@@ -267,6 +299,11 @@ CoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // have seen passing through the bus
     assert(outstandingReq.find(pkt->req) != outstandingReq.end());
 
+    if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches()) {
+        // let the snoop filter inspect the response and update its state
+        snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
+    }
+
     // remove it as outstanding
     outstandingReq.erase(pkt->req);
 
@@ -306,8 +343,20 @@ CoherentBus::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // set the source port for routing of the response
     pkt->setSrc(master_port_id);
 
-    // forward to all snoopers
-    forwardTiming(pkt, InvalidPortID);
+    if (snoopFilter) {
+        // let the Snoop Filter work its magic and guide probing
+        auto sf_res = snoopFilter->lookupSnoop(pkt);
+        // No timing here: packetFinishTime += sf_res.second * clockPeriod();
+        DPRINTF(CoherentBus, "recvTimingSnoopReq: src %s %s 0x%x"\
+                " SF size: %i lat: %i\n", masterPorts[master_port_id]->name(),
+                pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
+                sf_res.second);
+
+        // forward to all snoopers
+        forwardTiming(pkt, InvalidPortID, sf_res.first);
+    } else {
+        forwardTiming(pkt, InvalidPortID);
+    }
 
     // a snoop request came from a connected slave device (one of
     // our master ports), and if it is not coming from the slave
@@ -372,6 +421,13 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // this is a snoop response to a snoop request we forwarded,
         // e.g. coming from the L1 and going to the L2, and it should
         // be forwarded as a snoop response
+
+        if (snoopFilter) {
+            // update the probe filter so that it can properly track the line
+            snoopFilter->updateSnoopForward(pkt, *slavePorts[slave_port_id],
+                                            *masterPorts[dest_port_id]);
+        }
+
         bool success M5_VAR_USED =
             masterPorts[dest_port_id]->sendTimingSnoopResp(pkt);
         pktCount[slave_port_id][dest_port_id]++;
@@ -392,6 +448,16 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // snoop response came from, but instead to where the
         // original request came from
         assert(slave_port_id != dest_port_id);
+
+        if (snoopFilter) {
+            // update the probe filter so that it can properly track the line
+            snoopFilter->updateSnoopResponse(pkt, *slavePorts[slave_port_id],
+                                    *slavePorts[dest_port_id]);
+        }
+
+        DPRINTF(CoherentBus, "recvTimingSnoopResp: src %s %s 0x%x"\
+                " FWD RESP\n", src_port->name(), pkt->cmdString(),
+                pkt->getAddr());
 
         // as a normal response, it should go back to a master through
         // one of our slave ports, at this point we are ignoring the
@@ -420,7 +486,8 @@ CoherentBus::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
 
 void
-CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
+CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
+                           const std::vector<SlavePort*>& dests)
 {
     DPRINTF(CoherentBus, "%s for %s address %x size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -430,7 +497,7 @@ CoherentBus::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
 
     unsigned fanout = 0;
 
-    for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
+    for (SlavePortConstIter s = dests.begin(); s != dests.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
         // (corresponding to our own slave port that is also in
@@ -473,10 +540,23 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     // uncacheable requests need never be snooped
     if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
         // forward to all snoopers but the source
-        std::pair<MemCmd, Tick> snoop_result =
-            forwardAtomic(pkt, slave_port_id);
+        std::pair<MemCmd, Tick> snoop_result;
+        if (snoopFilter) {
+            // check with the snoop filter where to forward this packet
+            auto sf_res =
+                snoopFilter->lookupRequest(pkt, *slavePorts[slave_port_id]);
+            snoop_response_latency += sf_res.second * clockPeriod();
+            DPRINTF(CoherentBus, "%s: src %s %s 0x%x"\
+                    " SF size: %i lat: %i\n", __func__,
+                    slavePorts[slave_port_id]->name(), pkt->cmdString(),
+                    pkt->getAddr(), sf_res.first.size(), sf_res.second);
+            snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
+                                         sf_res.first);
+        } else {
+            snoop_result = forwardAtomic(pkt, slave_port_id);
+        }
         snoop_response_cmd = snoop_result.first;
-        snoop_response_latency = snoop_result.second;
+        snoop_response_latency += snoop_result.second;
     }
 
     // even if we had a snoop response, we must continue and also
@@ -485,6 +565,12 @@ CoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
 
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
+
+    // Lower levels have replied, tell the snoop filter
+    if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches() &&
+        pkt->isResponse()) {
+        snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
+    }
 
     // if we got a response from a snooper, restore it here
     if (snoop_response_cmd != MemCmd::InvalidCmd) {
@@ -515,10 +601,21 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
     snoopsThroughBus++;
 
     // forward to all snoopers
-    std::pair<MemCmd, Tick> snoop_result =
-        forwardAtomic(pkt, InvalidPortID);
+    std::pair<MemCmd, Tick> snoop_result;
+    Tick snoop_response_latency = 0;
+    if (snoopFilter) {
+        auto sf_res = snoopFilter->lookupSnoop(pkt);
+        snoop_response_latency += sf_res.second * clockPeriod();
+        DPRINTF(CoherentBus, "%s: src %s %s 0x%x SF size: %i lat: %i\n",
+                __func__, masterPorts[master_port_id]->name(), pkt->cmdString(),
+                pkt->getAddr(), sf_res.first.size(), sf_res.second);
+        snoop_result = forwardAtomic(pkt, InvalidPortID, master_port_id,
+                                     sf_res.first);
+    } else {
+        snoop_result = forwardAtomic(pkt, InvalidPortID);
+    }
     MemCmd snoop_response_cmd = snoop_result.first;
-    Tick snoop_response_latency = snoop_result.second;
+    snoop_response_latency += snoop_result.second;
 
     if (snoop_response_cmd != MemCmd::InvalidCmd)
         pkt->cmd = snoop_response_cmd;
@@ -535,7 +632,9 @@ CoherentBus::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
 }
 
 std::pair<MemCmd, Tick>
-CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
+CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id,
+                           PortID source_master_port_id,
+                           const std::vector<SlavePort*>& dests)
 {
     // the packet may be changed on snoops, record the original
     // command to enable us to restore it between snoops so that
@@ -549,33 +648,51 @@ CoherentBus::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
 
     unsigned fanout = 0;
 
-    for (SlavePortIter s = snoopPorts.begin(); s != snoopPorts.end(); ++s) {
+    for (SlavePortConstIter s = dests.begin(); s != dests.end(); ++s) {
         SlavePort *p = *s;
         // we could have gotten this request from a snooping master
         // (corresponding to our own slave port that is also in
         // snoopPorts) and should not send it back to where it came
         // from
-        if (exclude_slave_port_id == InvalidPortID ||
-            p->getId() != exclude_slave_port_id) {
-            Tick latency = p->sendAtomicSnoop(pkt);
-            fanout++;
+        if (exclude_slave_port_id != InvalidPortID &&
+            p->getId() == exclude_slave_port_id)
+            continue;
 
-            // in contrast to a functional access, we have to keep on
-            // going as all snoopers must be updated even if we get a
-            // response
-            if (pkt->isResponse()) {
-                // response from snoop agent
-                assert(pkt->cmd != orig_cmd);
-                assert(pkt->memInhibitAsserted());
-                // should only happen once
-                assert(snoop_response_cmd == MemCmd::InvalidCmd);
-                // save response state
-                snoop_response_cmd = pkt->cmd;
-                snoop_response_latency = latency;
-                // restore original packet state for remaining snoopers
-                pkt->cmd = orig_cmd;
+        Tick latency = p->sendAtomicSnoop(pkt);
+        fanout++;
+
+        // in contrast to a functional access, we have to keep on
+        // going as all snoopers must be updated even if we get a
+        // response
+        if (!pkt->isResponse())
+            continue;
+
+        // response from snoop agent
+        assert(pkt->cmd != orig_cmd);
+        assert(pkt->memInhibitAsserted());
+        // should only happen once
+        assert(snoop_response_cmd == MemCmd::InvalidCmd);
+        // save response state
+        snoop_response_cmd = pkt->cmd;
+        snoop_response_latency = latency;
+
+        if (snoopFilter) {
+            // Handle responses by the snoopers and differentiate between
+            // responses to requests from above and snoops from below
+            if (source_master_port_id != InvalidPortID) {
+                // Getting a response for a snoop from below
+                assert(exclude_slave_port_id == InvalidPortID);
+                snoopFilter->updateSnoopForward(pkt, *p,
+                             *masterPorts[source_master_port_id]);
+            } else {
+                // Getting a response for a request from above
+                assert(source_master_port_id == InvalidPortID);
+                snoopFilter->updateSnoopResponse(pkt, *p,
+                             *slavePorts[exclude_slave_port_id]);
             }
         }
+        // restore original packet state for remaining snoopers
+        pkt->cmd = orig_cmd;
     }
 
     // Stats for fanout

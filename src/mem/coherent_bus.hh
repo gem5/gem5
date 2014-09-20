@@ -53,6 +53,7 @@
 
 #include "base/hashmap.hh"
 #include "mem/bus.hh"
+#include "mem/snoop_filter.hh"
 #include "params/CoherentBus.hh"
 
 /**
@@ -270,6 +271,10 @@ class CoherentBus : public BaseBus
      */
     System *system;
 
+    /** A snoop filter that tracks cache line residency and can restrict the
+      * broadcast needed for probes.  NULL denotes an absent filter. */
+    SnoopFilter *snoopFilter;
+
     /** Function called by the port when the bus is recieving a Timing
       request packet.*/
     bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
@@ -298,7 +303,21 @@ class CoherentBus : public BaseBus
      * @param pkt Packet to forward
      * @param exclude_slave_port_id Id of slave port to exclude
      */
-    void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id);
+    void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id) {
+        forwardTiming(pkt, exclude_slave_port_id, snoopPorts);
+    }
+
+    /**
+     * Forward a timing packet to a selected list of snoopers, potentially
+     * excluding one of the connected coherent masters to avoid sending a packet
+     * back to where it came from.
+     *
+     * @param pkt Packet to forward
+     * @param exclude_slave_port_id Id of slave port to exclude
+     * @param dests Vector of destination ports for the forwarded pkt
+     */
+    void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
+                       const std::vector<SlavePort*>& dests);
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
@@ -319,7 +338,27 @@ class CoherentBus : public BaseBus
      * @return a pair containing the snoop response and snoop latency
      */
     std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
-                                          PortID exclude_slave_port_id);
+                                          PortID exclude_slave_port_id)
+    {
+        return forwardAtomic(pkt, exclude_slave_port_id, InvalidPortID, snoopPorts);
+    }
+
+    /**
+     * Forward an atomic packet to a selected list of snoopers, potentially
+     * excluding one of the connected coherent masters to avoid sending a packet
+     * back to where it came from.
+     *
+     * @param pkt Packet to forward
+     * @param exclude_slave_port_id Id of slave port to exclude
+     * @param source_master_port_id Id of the master port for snoops from below
+     * @param dests Vector of destination ports for the forwarded pkt
+     *
+     * @return a pair containing the snoop response and snoop latency
+     */
+    std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
+                                          PortID exclude_slave_port_id,
+                                          PortID source_master_port_id,
+                                          const std::vector<SlavePort*>& dests);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/

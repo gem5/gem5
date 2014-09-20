@@ -75,6 +75,7 @@ class CoherentBus(BaseBus):
     cxx_header = "mem/coherent_bus.hh"
 
     system = Param.System(Parent.any, "System that the bus belongs to.")
+    snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter for the bus.")
 
 class SnoopFilter(SimObject):
     type = 'SnoopFilter'
