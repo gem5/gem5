@@ -39,10 +39,12 @@
 using namespace std;
 
 Uart::Uart(const Params *p, Addr pio_size)
-    : BasicPioDevice(p, pio_size), platform(p->platform), term(p->terminal)
+    : BasicPioDevice(p, pio_size),
+      platform(p->platform), term(p->terminal),
+      callbackDataAvail(this)
 {
     status = 0;
 
-    // set back pointers
-    term->uart = this;
+    // setup terminal callbacks
+    term->regDataAvailCallback(&callbackDataAvail);
 }

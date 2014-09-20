@@ -36,9 +36,9 @@
 #define __UART_HH__
 
 #include "dev/io_device.hh"
+#include "dev/terminal.hh"
 #include "params/Uart.hh"
 
-class Terminal;
 class Platform;
 
 const int RX_INT = 0x1;
@@ -46,7 +46,6 @@ const int TX_INT = 0x2;
 
 class Uart : public BasicPioDevice
 {
-
   protected:
     int status;
     Platform *platform;
@@ -72,6 +71,9 @@ class Uart : public BasicPioDevice
      * @return interrupt status
      */
     bool intStatus() { return status ? true : false; }
+
+  protected:
+    MakeCallback<Uart, &Uart::dataAvailable> callbackDataAvail;
 };
 
 #endif // __UART_HH__

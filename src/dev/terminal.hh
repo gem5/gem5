@@ -38,6 +38,7 @@
 
 #include <iostream>
 
+#include "base/callback.hh"
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
@@ -46,12 +47,24 @@
 #include "sim/sim_object.hh"
 
 class TerminalListener;
-class Uart;
 
 class Terminal : public SimObject
 {
   public:
-    Uart *uart;
+    /**
+     * Register a data available callback into the transport layer.
+     *
+     * The terminal needs to call the underlying transport layer to
+     * inform it of available data. The transport layer uses this
+     * method to register a callback that informs it of pending data.
+     *
+     * @param c Callback instance from transport layer.
+     */
+    void regDataAvailCallback(Callback *c);
+
+  protected:
+    /** Currently registered transport layer callbacks */
+    Callback *termDataAvail;
 
   protected:
     class ListenEvent : public PollEvent

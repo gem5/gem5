@@ -99,8 +99,8 @@ Terminal::DataEvent::process(int revent)
  * Terminal code
  */
 Terminal::Terminal(const Params *p)
-    : SimObject(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
-      data_fd(-1), txbuf(16384), rxbuf(16384), outfile(NULL)
+    : SimObject(p), termDataAvail(NULL), listenEvent(NULL), dataEvent(NULL),
+      number(p->number), data_fd(-1), txbuf(16384), rxbuf(16384), outfile(NULL)
 #if TRACING_ON == 1
       , linebuf(16384)
 #endif
@@ -127,6 +127,17 @@ Terminal::~Terminal()
 
     if (dataEvent)
         delete dataEvent;
+}
+
+void
+Terminal::regDataAvailCallback(Callback *c)
+{
+    // This can happen if the user has connected multiple UARTs to the
+    // same terminal. In that case, each of them tries to register
+    // callbacks.
+    if (termDataAvail)
+        fatal("Terminal already has already been associated with a UART.\n");
+    termDataAvail = c;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -215,7 +226,8 @@ Terminal::data()
     if (len) {
         rxbuf.write((char *)buf, len);
         // Inform the UART there is data available
-        uart->dataAvailable();
+        assert(termDataAvail);
+        termDataAvail->process();
     }
 }
 
