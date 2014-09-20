@@ -37,21 +37,14 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from VirtIO import VirtIODeviceBase
 
-if env['TARGET_ISA'] == 'null':
-    Return()
+class VirtIOBlock(VirtIODeviceBase):
+    type = 'VirtIOBlock'
+    cxx_header = 'dev/virtio/block.hh'
 
-SimObject('VirtIO.py')
-SimObject('VirtIOConsole.py')
-SimObject('VirtIOBlock.py')
+    queueSize = Param.Unsigned(128, "Output queue size (pages)")
 
-Source('base.cc')
-Source('pci.cc')
-Source('console.cc')
-Source('block.cc')
-
-DebugFlag('VIO', 'VirtIO base functionality')
-DebugFlag('VIOPci', 'VirtIO PCI transport')
-DebugFlag('VIOConsole', 'VirtIO console device')
-DebugFlag('VIOBlock', 'VirtIO block device')
+    image = Param.DiskImage("Disk image")
