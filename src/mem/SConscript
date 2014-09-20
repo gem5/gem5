@@ -60,6 +60,7 @@ Source('tport.cc')
 Source('port_proxy.cc')
 Source('simple_mem.cc')
 Source('physical.cc')
+Source('snoop_filter.cc')
 
 if env['TARGET_ISA'] != 'null':
     Source('fs_translating_port_proxy.cc')
@@ -77,8 +78,9 @@ DebugFlag('BaseBus')
 DebugFlag('BusAddrRanges')
 DebugFlag('CoherentBus')
 DebugFlag('NoncoherentBus')
+DebugFlag('SnoopFilter')
 CompoundFlag('Bus', ['BaseBus', 'BusAddrRanges', 'CoherentBus',
-                     'NoncoherentBus'])
+                     'NoncoherentBus', 'SnoopFilter'])
 
 DebugFlag('Bridge')
 DebugFlag('CommMonitor')
