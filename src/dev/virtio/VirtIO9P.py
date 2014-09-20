@@ -37,25 +37,34 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from VirtIO import VirtIODeviceBase
 
-if env['TARGET_ISA'] == 'null':
-    Return()
+class VirtIO9PBase(VirtIODeviceBase):
+    type = 'VirtIO9PBase'
+    abstract = True
+    cxx_header = 'dev/virtio/fs9p.hh'
 
-SimObject('VirtIO.py')
-SimObject('VirtIOConsole.py')
-SimObject('VirtIOBlock.py')
-SimObject('VirtIO9P.py')
+    queueSize = Param.Unsigned(32, "Output queue size (pages)")
+    tag = Param.String("gem5", "Mount tag")
 
-Source('base.cc')
-Source('pci.cc')
-Source('console.cc')
-Source('block.cc')
-Source('fs9p.cc')
 
-DebugFlag('VIO', 'VirtIO base functionality')
-DebugFlag('VIOPci', 'VirtIO PCI transport')
-DebugFlag('VIOConsole', 'VirtIO console device')
-DebugFlag('VIOBlock', 'VirtIO block device')
-DebugFlag('VIO9P', 'General 9p over VirtIO debugging')
-DebugFlag('VIO9PData', 'Dump data in VirtIO 9p connections')
+class VirtIO9PProxy(VirtIO9PBase):
+    type = 'VirtIO9PProxy'
+    abstract = True
+    cxx_header = 'dev/virtio/fs9p.hh'
+
+class VirtIO9PDiod(VirtIO9PProxy):
+    type = 'VirtIO9PDiod'
+    cxx_header = 'dev/virtio/fs9p.hh'
+
+    diod = Param.String("/usr/sbin/diod", "Path to diod")
+    root = Param.String("/tmp", "Path to export through diod")
+
+class VirtIO9PSocket(VirtIO9PProxy):
+    type = 'VirtIO9PSocket'
+    cxx_header = 'dev/virtio/fs9p.hh'
+
+    server = Param.String("127.0.0.1", "9P server address or host name")
+    port = Param.String("564", "9P server port")
