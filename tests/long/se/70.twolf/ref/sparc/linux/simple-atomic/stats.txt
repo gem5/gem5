@@ -4,11 +4,11 @@ sim_seconds                                  0.096723                       # Nu
 sim_ticks                                 96722945000                       # Number of ticks simulated
 final_tick                                96722945000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2358558                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2358560                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1179286883                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 269756                       # Number of bytes of host memory used
-host_seconds                                    82.02                       # Real time elapsed on the host
+host_inst_rate                                2119754                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2119756                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1059884256                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 284956                       # Number of bytes of host memory used
+host_seconds                                    91.26                       # Real time elapsed on the host
 sim_insts                                   193444518                       # Number of instructions simulated
 sim_ops                                     193444756                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -37,9 +37,29 @@ system.physmem.bw_write::total              745070490                       # Wr
 system.physmem.bw_total::cpu.inst          7999985319                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data          3055415910                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total            11055401229                       # Total bandwidth to/from this memory (bytes/s)
-system.membus.throughput                  11057254439                       # Throughput (bytes/s)
-system.membus.data_through_bus             1069490213                       # Total data (bytes)
-system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.membus.trans_dist::ReadReq           251180603                       # Transaction distribution
+system.membus.trans_dist::ReadResp          251180603                       # Transaction distribution
+system.membus.trans_dist::WriteReq           18976439                       # Transaction distribution
+system.membus.trans_dist::WriteResp          18976439                       # Transaction distribution
+system.membus.trans_dist::SwapReq               22406                       # Transaction distribution
+system.membus.trans_dist::SwapResp              22406                       # Transaction distribution
+system.membus.pkt_count_system.cpu.icache_port::system.physmem.port    386891070                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.physmem.port    153467826                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total              540358896                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.physmem.port    773782140                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port    295708073                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total              1069490213                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoop_fanout::samples         270179448                       # Request fanout histogram
+system.membus.snoop_fanout::mean             0.715989                       # Request fanout histogram
+system.membus.snoop_fanout::stdev            0.450942                       # Request fanout histogram
+system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
+system.membus.snoop_fanout::0                76733913     28.40%     28.40% # Request fanout histogram
+system.membus.snoop_fanout::1               193445535     71.60%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
+system.membus.snoop_fanout::total           270179448                       # Request fanout histogram
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.workload.num_syscalls                  401                       # Number of system calls
 system.cpu.numCycles                        193445891                       # number of cpu cycles simulated

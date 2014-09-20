@@ -1,50 +1,81 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.200409                       # Number of seconds simulated
-sim_ticks                                200409284500                       # Number of ticks simulated
-final_tick                               4321214250500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                200409271000                       # Number of ticks simulated
+final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               23274047                       # Simulator instruction rate (inst/s)
-host_op_rate                                 23274036                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8904961694                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 483300                       # Number of bytes of host memory used
-host_seconds                                    22.51                       # Real time elapsed on the host
-sim_insts                                   523790075                       # Number of instructions simulated
-sim_ops                                     523790075                       # Number of ops (including micro ops) simulated
+host_inst_rate                               15445218                       # Simulator instruction rate (inst/s)
+host_op_rate                                 15445213                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5909651303                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 534848                       # Number of bytes of host memory used
+host_seconds                                    33.91                       # Real time elapsed on the host
+sim_insts                                   523780905                       # Number of instructions simulated
+sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
 testsys.clk_domain.clock                         1000                       # Clock period in ticks
-testsys.physmem.bytes_read::cpu.inst         81046720                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::cpu.data         27826276                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::cpu.inst         81044080                       # Number of bytes read from this memory
+testsys.physmem.bytes_read::cpu.data         27825116                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet     57260496                       # Number of bytes read from this memory
-testsys.physmem.bytes_read::total           166133492                       # Number of bytes read from this memory
-testsys.physmem.bytes_inst_read::cpu.inst     81046720                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_inst_read::total       81046720                       # Number of instructions bytes read from this memory
-testsys.physmem.bytes_written::cpu.data      16606680                       # Number of bytes written to this memory
+testsys.physmem.bytes_read::total           166129692                       # Number of bytes read from this memory
+testsys.physmem.bytes_inst_read::cpu.inst     81044080                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_inst_read::total       81044080                       # Number of instructions bytes read from this memory
+testsys.physmem.bytes_written::cpu.data      16605404                       # Number of bytes written to this memory
 testsys.physmem.bytes_written::tsunami.ethernet          902                       # Number of bytes written to this memory
-testsys.physmem.bytes_written::total         16607582                       # Number of bytes written to this memory
-testsys.physmem.num_reads::cpu.inst          20261680                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::cpu.data           3842559                       # Number of read requests responded to by this memory
+testsys.physmem.bytes_written::total         16606306                       # Number of bytes written to this memory
+testsys.physmem.num_reads::cpu.inst          20261020                       # Number of read requests responded to by this memory
+testsys.physmem.num_reads::cpu.data           3842409                       # Number of read requests responded to by this memory
 testsys.physmem.num_reads::tsunami.ethernet      2385836                       # Number of read requests responded to by this memory
-testsys.physmem.num_reads::total             26490075                       # Number of read requests responded to by this memory
-testsys.physmem.num_writes::cpu.data          2258392                       # Number of write requests responded to by this memory
+testsys.physmem.num_reads::total             26489265                       # Number of read requests responded to by this memory
+testsys.physmem.num_writes::cpu.data          2258228                       # Number of write requests responded to by this memory
 testsys.physmem.num_writes::tsunami.ethernet           31                       # Number of write requests responded to by this memory
-testsys.physmem.num_writes::total             2258423                       # Number of write requests responded to by this memory
-testsys.physmem.bw_read::cpu.inst           404406014                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::cpu.data           138847240                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::tsunami.ethernet    285717781                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_read::total              828971035                       # Total read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::cpu.inst      404406014                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_inst_read::total         404406014                       # Instruction read bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::cpu.data           82863826                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.num_writes::total             2258259                       # Number of write requests responded to by this memory
+testsys.physmem.bw_read::cpu.inst           404392869                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::cpu.data           138841461                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::tsunami.ethernet    285717800                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_read::total              828952130                       # Total read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::cpu.inst      404392869                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_inst_read::total         404392869                       # Instruction read bandwidth from this memory (bytes/s)
+testsys.physmem.bw_write::cpu.data           82857464                       # Write bandwidth from this memory (bytes/s)
 testsys.physmem.bw_write::tsunami.ethernet         4501                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_write::total              82868326                       # Write bandwidth from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.inst          404406014                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::cpu.data          221711065                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::tsunami.ethernet    285722281                       # Total bandwidth to/from this memory (bytes/s)
-testsys.physmem.bw_total::total             911839361                       # Total bandwidth to/from this memory (bytes/s)
-testsys.membus.throughput                   916540501                       # Throughput (bytes/s)
-testsys.membus.data_through_bus             183683226                       # Total data (bytes)
-testsys.membus.snoop_data_through_bus               0                       # Total snoop data (bytes)
+testsys.physmem.bw_write::total              82861965                       # Write bandwidth from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.inst          404392869                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::cpu.data          221698925                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::tsunami.ethernet    285722301                       # Total bandwidth to/from this memory (bytes/s)
+testsys.physmem.bw_total::total             911814095                       # Total bandwidth to/from this memory (bytes/s)
+testsys.membus.trans_dist::ReadReq           26478762                       # Transaction distribution
+testsys.membus.trans_dist::ReadResp          26587372                       # Transaction distribution
+testsys.membus.trans_dist::WriteReq           2189273                       # Transaction distribution
+testsys.membus.trans_dist::WriteResp          2189273                       # Transaction distribution
+testsys.membus.trans_dist::LoadLockedReq       108610                       # Transaction distribution
+testsys.membus.trans_dist::StoreCondReq        108528                       # Transaction distribution
+testsys.membus.trans_dist::StoreCondResp       108528                       # Transaction distribution
+testsys.membus.pkt_count_testsys.cpu.icache_port::testsys.physmem.port     40522040                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.icache_port::total     40522040                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::testsys.bridge.slave       275298                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::testsys.physmem.port     12201274                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::total     12476572                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.iobridge.master::testsys.physmem.port      4771734                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.iobridge.master::total      4771734                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count::total              57770346                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.icache_port::testsys.physmem.port     81044080                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.icache_port::total     81044080                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::testsys.bridge.slave       942152                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::testsys.physmem.port     44430520                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::total     45372672                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port     57261398                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.iobridge.master::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size::total              183678150                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoop_fanout::samples         28747524                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean            0.787786                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev           0.408876                       # Request fanout histogram
+testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                6100637     21.22%     21.22% # Request fanout histogram
+testsys.membus.snoop_fanout::1               22646887     78.78%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::total           28747524                       # Request fanout histogram
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -62,22 +93,22 @@ testsys.cpu.dtb.fetch_hits                          0                       # IT
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
 testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
-testsys.cpu.dtb.read_hits                     3916918                       # DTB read hits
+testsys.cpu.dtb.read_hits                     3916768                       # DTB read hits
 testsys.cpu.dtb.read_misses                      3287                       # DTB read misses
 testsys.cpu.dtb.read_acv                           80                       # DTB read access violations
 testsys.cpu.dtb.read_accesses                  225414                       # DTB read accesses
-testsys.cpu.dtb.write_hits                    2316885                       # DTB write hits
+testsys.cpu.dtb.write_hits                    2316721                       # DTB write hits
 testsys.cpu.dtb.write_misses                      528                       # DTB write misses
 testsys.cpu.dtb.write_acv                          81                       # DTB write access violations
 testsys.cpu.dtb.write_accesses                 109988                       # DTB write accesses
-testsys.cpu.dtb.data_hits                     6233803                       # DTB hits
+testsys.cpu.dtb.data_hits                     6233489                       # DTB hits
 testsys.cpu.dtb.data_misses                      3815                       # DTB misses
 testsys.cpu.dtb.data_acv                          161                       # DTB access violations
 testsys.cpu.dtb.data_accesses                  335402                       # DTB accesses
-testsys.cpu.itb.fetch_hits                    4052211                       # ITB hits
+testsys.cpu.itb.fetch_hits                    4052237                       # ITB hits
 testsys.cpu.itb.fetch_misses                     1497                       # ITB misses
 testsys.cpu.itb.fetch_acv                          69                       # ITB acv
-testsys.cpu.itb.fetch_accesses                4053708                       # ITB accesses
+testsys.cpu.itb.fetch_accesses                4053734                       # ITB accesses
 testsys.cpu.itb.read_hits                           0                       # DTB read hits
 testsys.cpu.itb.read_misses                         0                       # DTB read misses
 testsys.cpu.itb.read_acv                            0                       # DTB read access violations
@@ -90,31 +121,31 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
-testsys.cpu.numCycles                       400804755                       # number of cpu cycles simulated
+testsys.cpu.numCycles                       400825859                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.committedInsts                   20257704                       # Number of instructions committed
-testsys.cpu.committedOps                     20257704                       # Number of ops (including micro ops) committed
-testsys.cpu.num_int_alu_accesses             18837017                       # Number of integer alu accesses
+testsys.cpu.committedInsts                   20257044                       # Number of instructions committed
+testsys.cpu.committedOps                     20257044                       # Number of ops (including micro ops) committed
+testsys.cpu.num_int_alu_accesses             18836392                       # Number of integer alu accesses
 testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
-testsys.cpu.num_func_calls                    1221180                       # number of times a function call or return occured
-testsys.cpu.num_conditional_control_insts      1442148                       # number of instructions that are conditional controls
-testsys.cpu.num_int_insts                    18837017                       # number of integer instructions
+testsys.cpu.num_func_calls                    1221158                       # number of times a function call or return occured
+testsys.cpu.num_conditional_control_insts      1442105                       # number of instructions that are conditional controls
+testsys.cpu.num_int_insts                    18836392                       # number of integer instructions
 testsys.cpu.num_fp_insts                        17380                       # number of float instructions
-testsys.cpu.num_int_register_reads           24787248                       # number of times the integer registers were read
-testsys.cpu.num_int_register_writes          14693875                       # number of times the integer registers were written
+testsys.cpu.num_int_register_reads           24786330                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes          14693469                       # number of times the integer registers were written
 testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
 testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
-testsys.cpu.num_mem_refs                      6263046                       # number of memory refs
-testsys.cpu.num_load_insts                    3944033                       # Number of load instructions
-testsys.cpu.num_store_insts                   2319013                       # Number of store instructions
-testsys.cpu.num_idle_cycles              380542207.362158                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              20262547.637842                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.050555                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.949445                       # Percentage of idle cycles
-testsys.cpu.Branches                          2929848                       # Number of branches fetched
-testsys.cpu.op_class::No_OpClass               712819      3.52%      3.52% # Class of executed instruction
-testsys.cpu.op_class::IntAlu                 12147338     59.95%     63.47% # Class of executed instruction
+testsys.cpu.num_mem_refs                      6262732                       # number of memory refs
+testsys.cpu.num_load_insts                    3943883                       # Number of load instructions
+testsys.cpu.num_store_insts                   2318849                       # Number of store instructions
+testsys.cpu.num_idle_cycles              380582482.461103                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              20243376.538897                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.050504                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.949496                       # Percentage of idle cycles
+testsys.cpu.Branches                          2929782                       # Number of branches fetched
+testsys.cpu.op_class::No_OpClass               712785      3.52%      3.52% # Class of executed instruction
+testsys.cpu.op_class::IntAlu                 12147004     59.95%     63.47% # Class of executed instruction
 testsys.cpu.op_class::IntMult                   21654      0.11%     63.58% # Class of executed instruction
 testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
 testsys.cpu.op_class::FloatAdd                   4655      0.02%     63.60% # Class of executed instruction
@@ -143,34 +174,34 @@ testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.60% # Cl
 testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.60% # Class of executed instruction
 testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::MemRead                 4230637     20.88%     84.48% # Class of executed instruction
-testsys.cpu.op_class::MemWrite                2319552     11.45%     95.93% # Class of executed instruction
-testsys.cpu.op_class::IprAccess                824102      4.07%    100.00% # Class of executed instruction
+testsys.cpu.op_class::MemRead                 4230485     20.88%     84.48% # Class of executed instruction
+testsys.cpu.op_class::MemWrite                2319388     11.45%     95.93% # Class of executed instruction
+testsys.cpu.op_class::IprAccess                824126      4.07%    100.00% # Class of executed instruction
 testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
-testsys.cpu.op_class::total                  20261680                       # Class of executed instruction
+testsys.cpu.op_class::total                  20261020                       # Class of executed instruction
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                   19580                       # number of quiesce instructions executed
-testsys.cpu.kern.inst.hwrei                    153667                       # number of hwrei instructions executed
+testsys.cpu.kern.inst.hwrei                    153669                       # number of hwrei instructions executed
 testsys.cpu.kern.ipl_count::0                   62779     42.67%     42.67% # number of times we switched to this ipl
 testsys.cpu.kern.ipl_count::21                  19625     13.34%     56.01% # number of times we switched to this ipl
 testsys.cpu.kern.ipl_count::22                    205      0.14%     56.15% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::31                  64509     43.85%    100.00% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::total              147118                       # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::31                  64511     43.85%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::total              147120                       # number of times we switched to this ipl
 testsys.cpu.kern.ipl_good::0                    62773     43.18%     43.18% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::21                   19625     13.50%     56.67% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::22                     205      0.14%     56.82% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::31                   62785     43.18%    100.00% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good::total               145388                       # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks::0            194346512500     96.98%     96.98% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::0            194347611000     96.98%     96.98% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks::21             1588986000      0.79%     97.77% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks::22                8815000      0.00%     97.78% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::31             4458282500      2.22%    100.00% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::total        200402596000                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::31             4457946500      2.22%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::total        200403358500                       # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_used::0                 0.999904                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::31                0.973275                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::total             0.988241                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::31                0.973245                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::total             0.988227                       # fraction of swpipl calls that actually changed the ipl
 testsys.cpu.kern.syscall::2                         3      3.61%      3.61% # number of syscalls executed
 testsys.cpu.kern.syscall::3                         7      8.43%     12.05% # number of syscalls executed
 testsys.cpu.kern.syscall::4                         1      1.20%     13.25% # number of syscalls executed
@@ -195,27 +226,27 @@ testsys.cpu.kern.syscall::118                       2      2.41%    100.00% # nu
 testsys.cpu.kern.syscall::total                    83                       # number of syscalls executed
 testsys.cpu.kern.callpal::swpctx                  438      0.34%      0.34% # number of callpals executed
 testsys.cpu.kern.callpal::tbi                      20      0.02%      0.36% # number of callpals executed
-testsys.cpu.kern.callpal::swpipl               106830     83.26%     83.62% # number of callpals executed
+testsys.cpu.kern.callpal::swpipl               106832     83.26%     83.62% # number of callpals executed
 testsys.cpu.kern.callpal::rdps                    359      0.28%     83.90% # number of callpals executed
 testsys.cpu.kern.callpal::wrusp                     3      0.00%     83.90% # number of callpals executed
 testsys.cpu.kern.callpal::rdusp                     3      0.00%     83.90% # number of callpals executed
 testsys.cpu.kern.callpal::rti                   20470     15.95%     99.86% # number of callpals executed
 testsys.cpu.kern.callpal::callsys                 140      0.11%     99.97% # number of callpals executed
 testsys.cpu.kern.callpal::imb                      44      0.03%    100.00% # number of callpals executed
-testsys.cpu.kern.callpal::total                128307                       # number of callpals executed
+testsys.cpu.kern.callpal::total                128309                       # number of callpals executed
 testsys.cpu.kern.mode_switch::kernel             1280                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::user                702                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::user                706                       # number of protection mode switches
 testsys.cpu.kern.mode_switch::idle              19629                       # number of protection mode switches
-testsys.cpu.kern.mode_good::kernel                707                      
-testsys.cpu.kern.mode_good::user                  702                      
+testsys.cpu.kern.mode_good::kernel                711                      
+testsys.cpu.kern.mode_good::user                  706                      
 testsys.cpu.kern.mode_good::idle                    5                      
-testsys.cpu.kern.mode_switch_good::kernel     0.552344                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::kernel     0.555469                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_switch_good::idle      0.000255                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::total     0.065430                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_ticks::kernel         994603000     60.01%     60.01% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::user           533068000     32.16%     92.17% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::idle           129740500      7.83%    100.00% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_switch_good::total     0.065788                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_ticks::kernel         994253000     59.96%     59.96% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::user           533088000     32.15%     92.11% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::idle           130749000      7.89%    100.00% # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                     438                       # number of times the context was actually changed
 testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
@@ -267,14 +298,32 @@ testsys.tsunami.ethernet.totalRxOrn                 0                       # to
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.postedInterrupts      2385819                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
-testsys.iobus.throughput                    290423421                       # Throughput (bytes/s)
-testsys.iobus.data_through_bus               58203550                       # Total data (bytes)
+testsys.iobus.trans_dist::ReadReq             2483943                       # Transaction distribution
+testsys.iobus.trans_dist::ReadResp            2483943                       # Transaction distribution
+testsys.iobus.trans_dist::WriteReq              39573                       # Transaction distribution
+testsys.iobus.trans_dist::WriteResp             39573                       # Transaction distribution
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.cchip.pio       196204                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.io.pio          336                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.uart.pio          428                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.ethernet.pio        78330                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::total       275298                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.tsunami.ethernet.dma::testsys.iobridge.slave      4771734                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.tsunami.ethernet.dma::total      4771734                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count::total                5047032                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.cchip.pio       784816                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.io.pio          462                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.uart.pio          214                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.ethernet.pio       156660                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::total       942152                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave     57261398                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size::total                58203550                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
 drivesys.clk_domain.clock                        1000                       # Clock period in ticks
 drivesys.physmem.bytes_read::cpu.inst        76205572                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data        26284292                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::tsunami.ethernet     57260526                       # Number of bytes read from this memory
-drivesys.physmem.bytes_read::total          159750390                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::tsunami.ethernet     57260550                       # Number of bytes read from this memory
+drivesys.physmem.bytes_read::total          159750414                       # Number of bytes read from this memory
 drivesys.physmem.bytes_inst_read::cpu.inst     76205572                       # Number of instructions bytes read from this memory
 drivesys.physmem.bytes_inst_read::total      76205572                       # Number of instructions bytes read from this memory
 drivesys.physmem.bytes_written::cpu.data     14619632                       # Number of bytes written to this memory
@@ -282,27 +331,58 @@ drivesys.physmem.bytes_written::tsunami.ethernet         1064                   
 drivesys.physmem.bytes_written::total        14620696                       # Number of bytes written to this memory
 drivesys.physmem.num_reads::cpu.inst         19051393                       # Number of read requests responded to by this memory
 drivesys.physmem.num_reads::cpu.data          3647049                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::tsunami.ethernet      2385838                       # Number of read requests responded to by this memory
-drivesys.physmem.num_reads::total            25084280                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::tsunami.ethernet      2385839                       # Number of read requests responded to by this memory
+drivesys.physmem.num_reads::total            25084281                       # Number of read requests responded to by this memory
 drivesys.physmem.num_writes::cpu.data         2024776                       # Number of write requests responded to by this memory
 drivesys.physmem.num_writes::tsunami.ethernet           37                       # Number of write requests responded to by this memory
 drivesys.physmem.num_writes::total            2024813                       # Number of write requests responded to by this memory
-drivesys.physmem.bw_read::cpu.inst          380249708                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::cpu.data          131153065                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::tsunami.ethernet    285717930                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_read::total             797120704                       # Total read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::cpu.inst     380249708                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_inst_read::total        380249708                       # Instruction read bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::cpu.data          72948876                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::cpu.inst          380249734                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::cpu.data          131153074                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::tsunami.ethernet    285718069                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_read::total             797120878                       # Total read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::cpu.inst     380249734                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_inst_read::total        380249734                       # Instruction read bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_write::cpu.data          72948881                       # Write bandwidth from this memory (bytes/s)
 drivesys.physmem.bw_write::tsunami.ethernet         5309                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_write::total             72954185                       # Write bandwidth from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.inst         380249708                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::cpu.data         204101941                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::tsunami.ethernet    285723240                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.physmem.bw_total::total            870074889                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.membus.throughput                  874808223                       # Throughput (bytes/s)
-drivesys.membus.data_through_bus            175319690                       # Total data (bytes)
-drivesys.membus.snoop_data_through_bus              0                       # Total snoop data (bytes)
+drivesys.physmem.bw_write::total             72954190                       # Write bandwidth from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.inst         380249734                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::cpu.data         204101955                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::tsunami.ethernet    285723379                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.physmem.bw_total::total            870075068                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.membus.trans_dist::ReadReq          25081955                       # Transaction distribution
+drivesys.membus.trans_dist::ReadResp         25182911                       # Transaction distribution
+drivesys.membus.trans_dist::WriteReq          1963575                       # Transaction distribution
+drivesys.membus.trans_dist::WriteResp         1963575                       # Transaction distribution
+drivesys.membus.trans_dist::LoadLockedReq       100956                       # Transaction distribution
+drivesys.membus.trans_dist::StoreCondReq       100924                       # Transaction distribution
+drivesys.membus.trans_dist::StoreCondResp       100924                       # Transaction distribution
+drivesys.membus.pkt_count_drivesys.cpu.icache_port::drivesys.physmem.port     38102786                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.icache_port::total     38102786                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::drivesys.bridge.slave       276632                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::drivesys.physmem.port     11343650                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::total     11620282                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.iobridge.master::drivesys.physmem.port      4771752                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.iobridge.master::total      4771752                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count::total             54494820                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.icache_port::drivesys.physmem.port     76205572                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.icache_port::total     76205572                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::drivesys.bridge.slave       948604                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::drivesys.physmem.port     40903924                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::total     41852528                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port     57261614                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.iobridge.master::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size::total             175319714                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoop_fanout::samples        27109094                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean           0.790778                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev          0.406753                       # Request fanout histogram
+drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0               5671825     20.92%     20.92% # Request fanout histogram
+drivesys.membus.snoop_fanout::1              21437269     79.08%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::total          27109094                       # Request fanout histogram
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -348,7 +428,7 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
-drivesys.cpu.numCycles                      801631448                       # number of cpu cycles simulated
+drivesys.cpu.numCycles                      801651324                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
 drivesys.cpu.committedInsts                  19050784                       # Number of instructions committed
@@ -366,10 +446,10 @@ drivesys.cpu.num_fp_register_writes               766                       # nu
 drivesys.cpu.num_mem_refs                     5830788                       # number of memory refs
 drivesys.cpu.num_load_insts                   3746196                       # Number of load instructions
 drivesys.cpu.num_store_insts                  2084592                       # Number of store instructions
-drivesys.cpu.num_idle_cycles             782579974.227931                       # Number of idle cycles
-drivesys.cpu.num_busy_cycles             19051473.772069                       # Number of busy cycles
-drivesys.cpu.not_idle_fraction               0.023766                       # Percentage of non-idle cycles
-drivesys.cpu.idle_fraction                   0.976234                       # Percentage of idle cycles
+drivesys.cpu.num_idle_cycles             782619252.927065                       # Number of idle cycles
+drivesys.cpu.num_busy_cycles             19032071.072935                       # Number of busy cycles
+drivesys.cpu.not_idle_fraction               0.023741                       # Percentage of non-idle cycles
+drivesys.cpu.idle_fraction                   0.976259                       # Percentage of idle cycles
 drivesys.cpu.Branches                         2793313                       # Number of branches fetched
 drivesys.cpu.op_class::No_OpClass              623554      3.27%      3.27% # Class of executed instruction
 drivesys.cpu.op_class::IntAlu                11538627     60.57%     63.84% # Class of executed instruction
@@ -476,9 +556,9 @@ drivesys.tsunami.ethernet.txTcpChecksums            2                       # Nu
 drivesys.tsunami.ethernet.rxTcpChecksums            8                       # Number of rx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
 drivesys.tsunami.ethernet.rxUdpChecksums            0                       # Number of rx UDP Checksums done by device
-drivesys.tsunami.ethernet.descDMAReads        2385809                       # Number of descriptors the device read w/ DMA
+drivesys.tsunami.ethernet.descDMAReads        2385810                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites            13                       # Number of descriptors the device wrote w/ DMA
-drivesys.tsunami.ethernet.descDmaReadBytes     57259416                       # number of descriptor bytes read w/ DMA
+drivesys.tsunami.ethernet.descDmaReadBytes     57259440                       # number of descriptor bytes read w/ DMA
 drivesys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
 drivesys.tsunami.ethernet.totBandwidth          70176                       # Total Bandwidth (bits/s)
 drivesys.tsunami.ethernet.totPackets               13                       # Total Packets
@@ -505,7 +585,7 @@ drivesys.tsunami.ethernet.coalescedTxOk             0                       # av
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
 drivesys.tsunami.ethernet.postedTxIdle          19726                       # number of TxIdle interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
-drivesys.tsunami.ethernet.totalTxIdle         2385809                       # total number of TxIdle written to ISR
+drivesys.tsunami.ethernet.totalTxIdle         2385810                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
 drivesys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
@@ -513,25 +593,39 @@ drivesys.tsunami.ethernet.postedRxOrn               0                       # nu
 drivesys.tsunami.ethernet.coalescedRxOrn            0                       # average number of RxOrn's coalesced into each post
 drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
-drivesys.tsunami.ethernet.postedInterrupts      2385830                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedInterrupts      2385831                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
-drivesys.iobus.throughput                   290456573                       # Throughput (bytes/s)
-drivesys.iobus.data_through_bus              58210194                       # Total data (bytes)
+drivesys.iobus.trans_dist::ReadReq            2484469                       # Transaction distribution
+drivesys.iobus.trans_dist::ReadResp           2484469                       # Transaction distribution
+drivesys.iobus.trans_dist::WriteReq             39723                       # Transaction distribution
+drivesys.iobus.trans_dist::WriteResp            39723                       # Transaction distribution
+drivesys.iobus.pkt_count_drivesys.bridge.master::drivesys.tsunami.cchip.pio       197670                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.bridge.master::drivesys.tsunami.ethernet.pio        78962                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.bridge.master::total       276632                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave      4771752                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.tsunami.ethernet.dma::total      4771752                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count::total               5048384                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::drivesys.tsunami.cchip.pio       790680                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::drivesys.tsunami.ethernet.pio       157924                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::total       948604                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave     57261614                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size::total               58210218                       # Cumulative packet size per connected master and slave (bytes)
 
 ---------- End Simulation Statistics   ----------
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000407                       # Number of seconds simulated
 sim_ticks                                   407341500                       # Number of ticks simulated
-final_tick                               4321621592000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            11799945954                       # Simulator instruction rate (inst/s)
-host_op_rate                              11797124974                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             9171074905                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 483300                       # Number of bytes of host memory used
-host_seconds                                     0.04                       # Real time elapsed on the host
-sim_insts                                   523862353                       # Number of instructions simulated
-sim_ops                                     523862353                       # Number of ops (including micro ops) simulated
+host_inst_rate                             7893991697                       # Simulator instruction rate (inst/s)
+host_op_rate                               7892445581                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             6135954870                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 534848                       # Number of bytes of host memory used
+host_seconds                                     0.07                       # Real time elapsed on the host
+sim_insts                                   523853183                       # Number of instructions simulated
+sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
 testsys.clk_domain.clock                         1000                       # Clock period in ticks
 testsys.physmem.bytes_read::cpu.inst           144504                       # Number of bytes read from this memory
@@ -560,9 +654,40 @@ testsys.physmem.bw_total::cpu.inst          354749025                       # To
 testsys.physmem.bw_total::cpu.data          190601743                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::tsunami.ethernet    285696400                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::total             831047168                       # Total bandwidth to/from this memory (bytes/s)
-testsys.membus.throughput                   835780297                       # Throughput (bytes/s)
-testsys.membus.data_through_bus                340448                       # Total data (bytes)
-testsys.membus.snoop_data_through_bus               0                       # Total snoop data (bytes)
+testsys.membus.trans_dist::ReadReq              47876                       # Transaction distribution
+testsys.membus.trans_dist::ReadResp             48080                       # Transaction distribution
+testsys.membus.trans_dist::WriteReq              3691                       # Transaction distribution
+testsys.membus.trans_dist::WriteResp             3691                       # Transaction distribution
+testsys.membus.trans_dist::LoadLockedReq          204                       # Transaction distribution
+testsys.membus.trans_dist::StoreCondReq           204                       # Transaction distribution
+testsys.membus.trans_dist::StoreCondResp          204                       # Transaction distribution
+testsys.membus.pkt_count_testsys.cpu.icache_port::testsys.physmem.port        72252                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.icache_port::total        72252                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::testsys.bridge.slave          562                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::testsys.physmem.port        21438                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.cpu.dcache_port::total        22000                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.iobridge.master::testsys.physmem.port         9698                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count_testsys.iobridge.master::total         9698                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_count::total                103950                       # Packet count per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.icache_port::testsys.physmem.port       144504                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.icache_port::total       144504                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::testsys.bridge.slave         1928                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::testsys.physmem.port        77640                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.cpu.dcache_port::total        79568                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port       116376                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size_testsys.iobridge.master::total       116376                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pkt_size::total                 340448                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoop_fanout::samples            51694                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean            0.792645                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev           0.405416                       # Request fanout histogram
+testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                  10719     20.74%     20.74% # Request fanout histogram
+testsys.membus.snoop_fanout::1                  40975     79.26%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::total              51694                       # Request fanout histogram
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -608,7 +733,7 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
-testsys.cpu.numCycles                          821016                       # number of cpu cycles simulated
+testsys.cpu.numCycles                          821056                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 testsys.cpu.committedInsts                      36126                       # Number of instructions committed
@@ -626,10 +751,10 @@ testsys.cpu.num_fp_register_writes                  0                       # nu
 testsys.cpu.num_mem_refs                        11041                       # number of memory refs
 testsys.cpu.num_load_insts                       7105                       # Number of load instructions
 testsys.cpu.num_store_insts                      3936                       # Number of store instructions
-testsys.cpu.num_idle_cycles              784609.171892                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              36406.828108                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.044344                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.955656                       # Percentage of idle cycles
+testsys.cpu.num_idle_cycles              784687.711054                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              36368.288946                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.044295                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.955705                       # Percentage of idle cycles
 testsys.cpu.Branches                             5238                       # Number of branches fetched
 testsys.cpu.op_class::No_OpClass                 1261      3.49%      3.49% # Class of executed instruction
 testsys.cpu.op_class::IntAlu                    21664     59.97%     63.46% # Class of executed instruction
@@ -739,8 +864,22 @@ testsys.tsunami.ethernet.totalRxOrn                 0                       # to
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.postedInterrupts         4849                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
-testsys.iobus.throughput                    290429529                       # Throughput (bytes/s)
-testsys.iobus.data_through_bus                 118304                       # Total data (bytes)
+testsys.iobus.trans_dist::ReadReq                5049                       # Transaction distribution
+testsys.iobus.trans_dist::ReadResp               5049                       # Transaction distribution
+testsys.iobus.trans_dist::WriteReq                 81                       # Transaction distribution
+testsys.iobus.trans_dist::WriteResp                81                       # Transaction distribution
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.cchip.pio          402                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::testsys.tsunami.ethernet.pio          160                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.bridge.master::total          562                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.tsunami.ethernet.dma::testsys.iobridge.slave         9698                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count_testsys.tsunami.ethernet.dma::total         9698                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_count::total                  10260                       # Packet count per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.cchip.pio         1608                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::testsys.tsunami.ethernet.pio          320                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.bridge.master::total         1928                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave       116376                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total       116376                       # Cumulative packet size per connected master and slave (bytes)
+testsys.iobus.pkt_size::total                  118304                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
 drivesys.clk_domain.clock                        1000                       # Clock period in ticks
 drivesys.physmem.bytes_read::cpu.inst          144608                       # Number of bytes read from this memory
@@ -769,9 +908,40 @@ drivesys.physmem.bw_total::cpu.inst         355004339                       # To
 drivesys.physmem.bw_total::cpu.data         190601743                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::tsunami.ethernet    285755318                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::total            831361401                       # Total bandwidth to/from this memory (bytes/s)
-drivesys.membus.throughput                  836094530                       # Throughput (bytes/s)
-drivesys.membus.data_through_bus               340576                       # Total data (bytes)
-drivesys.membus.snoop_data_through_bus              0                       # Total snoop data (bytes)
+drivesys.membus.trans_dist::ReadReq             47907                       # Transaction distribution
+drivesys.membus.trans_dist::ReadResp            48111                       # Transaction distribution
+drivesys.membus.trans_dist::WriteReq             3689                       # Transaction distribution
+drivesys.membus.trans_dist::WriteResp            3689                       # Transaction distribution
+drivesys.membus.trans_dist::LoadLockedReq          204                       # Transaction distribution
+drivesys.membus.trans_dist::StoreCondReq          204                       # Transaction distribution
+drivesys.membus.trans_dist::StoreCondResp          204                       # Transaction distribution
+drivesys.membus.pkt_count_drivesys.cpu.icache_port::drivesys.physmem.port        72304                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.icache_port::total        72304                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::drivesys.bridge.slave          562                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::drivesys.physmem.port        21442                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.cpu.dcache_port::total        22004                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.iobridge.master::drivesys.physmem.port         9700                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count_drivesys.iobridge.master::total         9700                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_count::total               104008                       # Packet count per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.icache_port::drivesys.physmem.port       144608                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.icache_port::total       144608                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::drivesys.bridge.slave         1928                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::drivesys.physmem.port        77640                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.cpu.dcache_port::total        79568                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port       116400                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size_drivesys.iobridge.master::total       116400                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pkt_size::total                340576                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoop_fanout::samples           51723                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean           0.792723                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev          0.405360                       # Request fanout histogram
+drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0                 10721     20.73%     20.73% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                 41002     79.27%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::total             51723                       # Request fanout histogram
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -817,7 +987,7 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
-drivesys.cpu.numCycles                        1626240                       # number of cpu cycles simulated
+drivesys.cpu.numCycles                        1626281                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
 drivesys.cpu.committedInsts                     36152                       # Number of instructions committed
@@ -835,10 +1005,10 @@ drivesys.cpu.num_fp_register_writes                 0                       # nu
 drivesys.cpu.num_mem_refs                       11043                       # number of memory refs
 drivesys.cpu.num_load_insts                      7109                       # Number of load instructions
 drivesys.cpu.num_store_insts                     3934                       # Number of store instructions
-drivesys.cpu.num_idle_cycles             1590157.359061                       # Number of idle cycles
-drivesys.cpu.num_busy_cycles             36082.640939                       # Number of busy cycles
-drivesys.cpu.not_idle_fraction               0.022188                       # Percentage of non-idle cycles
-drivesys.cpu.idle_fraction                   0.977812                       # Percentage of idle cycles
+drivesys.cpu.num_idle_cycles             1590238.371734                       # Number of idle cycles
+drivesys.cpu.num_busy_cycles             36042.628266                       # Number of busy cycles
+drivesys.cpu.not_idle_fraction               0.022163                       # Percentage of non-idle cycles
+drivesys.cpu.idle_fraction                   0.977837                       # Percentage of idle cycles
 drivesys.cpu.Branches                            5243                       # Number of branches fetched
 drivesys.cpu.op_class::No_OpClass                1262      3.49%      3.49% # Class of executed instruction
 drivesys.cpu.op_class::IntAlu                   21687     59.99%     63.48% # Class of executed instruction
@@ -948,7 +1118,21 @@ drivesys.tsunami.ethernet.totalRxOrn                0                       # to
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
 drivesys.tsunami.ethernet.postedInterrupts         4850                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
-drivesys.iobus.throughput                   290488448                       # Throughput (bytes/s)
-drivesys.iobus.data_through_bus                118328                       # Total data (bytes)
+drivesys.iobus.trans_dist::ReadReq               5050                       # Transaction distribution
+drivesys.iobus.trans_dist::ReadResp              5050                       # Transaction distribution
+drivesys.iobus.trans_dist::WriteReq                81                       # Transaction distribution
+drivesys.iobus.trans_dist::WriteResp               81                       # Transaction distribution
+drivesys.iobus.pkt_count_drivesys.bridge.master::drivesys.tsunami.cchip.pio          402                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.bridge.master::drivesys.tsunami.ethernet.pio          160                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.bridge.master::total          562                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave         9700                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count_drivesys.tsunami.ethernet.dma::total         9700                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_count::total                 10262                       # Packet count per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::drivesys.tsunami.cchip.pio         1608                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::drivesys.tsunami.ethernet.pio          320                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.bridge.master::total         1928                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave       116400                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total       116400                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.iobus.pkt_size::total                 118328                       # Cumulative packet size per connected master and slave (bytes)
 
 ---------- End Simulation Statistics   ----------

@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            14364594493                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 195500                       # Number of bytes of host memory used
-host_seconds                                     6.96                       # Real time elapsed on the host
+host_tick_rate                            11160095249                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 262112                       # Number of bytes of host memory used
+host_seconds                                     8.96                       # Real time elapsed on the host
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::cpu                     64                       # Number of bytes read from this memory
@@ -23,16 +23,14 @@ system.physmem.bw_write::cpu               2133291520                       # Wr
 system.physmem.bw_write::total             2133291520                       # Write bandwidth from this memory (bytes/s)
 system.physmem.bw_total::cpu               2133292160                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total             2133292160                       # Total bandwidth to/from this memory (bytes/s)
-system.membus.throughput                   2133292160                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq                   1                       # Transaction distribution
 system.membus.trans_dist::ReadResp                  1                       # Transaction distribution
 system.membus.trans_dist::WriteReq            3333268                       # Transaction distribution
 system.membus.trans_dist::WriteResp           3333267                       # Transaction distribution
 system.membus.pkt_count_system.monitor-master::system.physmem.port      6666537                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                6666537                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.monitor-master::system.physmem.port    213329216                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::total           213329216                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.data_through_bus              213329216                       # Total data (bytes)
+system.membus.pkt_size_system.monitor-master::system.physmem.port    213329216                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total               213329216                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.reqLayer0.occupancy         16666342328                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization              16.7                       # Layer utilization (%)
 system.membus.respLayer0.occupancy         3333272000                       # Layer occupancy (ticks)

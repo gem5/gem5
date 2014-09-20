@@ -4,11 +4,11 @@ sim_seconds                                  0.250954                       # Nu
 sim_ticks                                250953957000                       # Number of ticks simulated
 final_tick                               250953957000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 652190                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1093130                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1239252699                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 313428                       # Number of bytes of host memory used
-host_seconds                                   202.50                       # Real time elapsed on the host
+host_inst_rate                                 881800                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1477977                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1675544377                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 333860                       # Number of bytes of host memory used
+host_seconds                                   149.77                       # Real time elapsed on the host
 sim_insts                                   132071193                       # Number of instructions simulated
 sim_ops                                     221363385                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -29,7 +29,6 @@ system.physmem.bw_inst_read::total             724276                       # In
 system.physmem.bw_total::cpu.inst              724276                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data              483276                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total                1207552                       # Total bandwidth to/from this memory (bytes/s)
-system.membus.throughput                      1207552                       # Throughput (bytes/s)
 system.membus.trans_dist::ReadReq                3160                       # Transaction distribution
 system.membus.trans_dist::ReadResp               3160                       # Transaction distribution
 system.membus.trans_dist::ReadExReq              1575                       # Transaction distribution
@@ -37,11 +36,20 @@ system.membus.trans_dist::ReadExResp             1575                       # Tr
 system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port         9470                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.cpu.l2cache.mem_side::total         9470                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                   9470                       # Packet count per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::system.physmem.port       303040                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size_system.cpu.l2cache.mem_side::total       303040                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.tot_pkt_size::total              303040                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.data_through_bus                 303040                       # Total data (bytes)
-system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.membus.pkt_size_system.cpu.l2cache.mem_side::system.physmem.port       303040                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.l2cache.mem_side::total       303040                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total                  303040                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoop_fanout::samples              4735                       # Request fanout histogram
+system.membus.snoop_fanout::mean                    0                       # Request fanout histogram
+system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
+system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
+system.membus.snoop_fanout::0                    4735    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                       0      0.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::total                4735                       # Request fanout histogram
 system.membus.reqLayer0.occupancy             4753500                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization               0.0                       # Layer utilization (%)
 system.membus.respLayer1.occupancy           42633500                       # Layer occupancy (ticks)
@@ -450,7 +458,6 @@ system.cpu.dcache.demand_avg_mshr_miss_latency::total 52780.314961              
 system.cpu.dcache.overall_avg_mshr_miss_latency::cpu.data 52780.314961                       # average overall mshr miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency::total 52780.314961                       # average overall mshr miss latency
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.toL2Bus.throughput                 1684707                       # Throughput (bytes/s)
 system.cpu.toL2Bus.trans_dist::ReadReq           5021                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadResp          5021                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::Writeback            7                       # Transaction distribution
@@ -459,11 +466,23 @@ system.cpu.toL2Bus.trans_dist::ReadExResp         1578                       # T
 system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side         9388                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side         3817                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count::total             13205                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side       300416                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side       122368                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.tot_pkt_size::total         422784                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.data_through_bus            422784                       # Total data (bytes)
-system.cpu.toL2Bus.snoop_data_through_bus            0                       # Total snoop data (bytes)
+system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side       300416                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side       122368                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size::total             422784                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.snoops                           0                       # Total snoops (count)
+system.cpu.toL2Bus.snoop_fanout::samples         6606                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::mean               3                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::stdev              0                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::0                  0      0.00%      0.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::1                  0      0.00%      0.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::2                  0      0.00%      0.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::3               6606    100.00%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::4                  0      0.00%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::overflows            0      0.00%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::min_value            3                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::max_value            3                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::total           6606                       # Request fanout histogram
 system.cpu.toL2Bus.reqLayer0.occupancy        3310000                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.reqLayer0.utilization          0.0                       # Layer utilization (%)
 system.cpu.toL2Bus.respLayer0.occupancy       7041000                       # Layer occupancy (ticks)

@@ -4,9 +4,9 @@ sim_seconds                                  0.005921                       # Nu
 sim_ticks                                     5920895                       # Number of ticks simulated
 final_tick                                    5920895                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  58624                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 293400                       # Number of bytes of host memory used
-host_seconds                                   101.00                       # Real time elapsed on the host
+host_tick_rate                                  46540                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 317888                       # Number of bytes of host memory used
+host_seconds                                   127.22                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
@@ -52,6 +52,7 @@ system.ruby.l1_cntrl4.L1Icache.demand_accesses            0                     
 system.ruby.l1_cntrl4.L2cache.demand_hits           77                       # Number of cache demand hits
 system.ruby.l1_cntrl4.L2cache.demand_misses        78569                       # Number of cache demand misses
 system.ruby.l1_cntrl4.L2cache.demand_accesses        78646                       # Number of cache demand accesses
+system.cpu_clk_domain.clock                         1                       # Clock period in ticks
 system.ruby.l1_cntrl5.L1Dcache.demand_hits           19                       # Number of cache demand hits
 system.ruby.l1_cntrl5.L1Dcache.demand_misses        78666                       # Number of cache demand misses
 system.ruby.l1_cntrl5.L1Dcache.demand_accesses        78685                       # Number of cache demand accesses
@@ -88,33 +89,6 @@ system.ruby.l1_cntrl0.L1Icache.demand_accesses            0                     
 system.ruby.l1_cntrl0.L2cache.demand_hits           80                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L2cache.demand_misses        78315                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L2cache.demand_accesses        78395                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L1Dcache.demand_hits           15                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Dcache.demand_misses        78908                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Dcache.demand_accesses        78923                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L1Icache.demand_hits            0                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Icache.demand_misses            0                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Icache.demand_accesses            0                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L2cache.demand_hits           80                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L2cache.demand_misses        78828                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L2cache.demand_accesses        78908                       # Number of cache demand accesses
-system.ruby.l1_cntrl2.L1Dcache.demand_hits           15                       # Number of cache demand hits
-system.ruby.l1_cntrl2.L1Dcache.demand_misses        78622                       # Number of cache demand misses
-system.ruby.l1_cntrl2.L1Dcache.demand_accesses        78637                       # Number of cache demand accesses
-system.ruby.l1_cntrl2.L1Icache.demand_hits            0                       # Number of cache demand hits
-system.ruby.l1_cntrl2.L1Icache.demand_misses            0                       # Number of cache demand misses
-system.ruby.l1_cntrl2.L1Icache.demand_accesses            0                       # Number of cache demand accesses
-system.ruby.l1_cntrl2.L2cache.demand_hits           77                       # Number of cache demand hits
-system.ruby.l1_cntrl2.L2cache.demand_misses        78545                       # Number of cache demand misses
-system.ruby.l1_cntrl2.L2cache.demand_accesses        78622                       # Number of cache demand accesses
-system.ruby.l1_cntrl3.L1Dcache.demand_hits           17                       # Number of cache demand hits
-system.ruby.l1_cntrl3.L1Dcache.demand_misses        78711                       # Number of cache demand misses
-system.ruby.l1_cntrl3.L1Dcache.demand_accesses        78728                       # Number of cache demand accesses
-system.ruby.l1_cntrl3.L1Icache.demand_hits            0                       # Number of cache demand hits
-system.ruby.l1_cntrl3.L1Icache.demand_misses            0                       # Number of cache demand misses
-system.ruby.l1_cntrl3.L1Icache.demand_accesses            0                       # Number of cache demand accesses
-system.ruby.l1_cntrl3.L2cache.demand_hits           72                       # Number of cache demand hits
-system.ruby.l1_cntrl3.L2cache.demand_misses        78639                       # Number of cache demand misses
-system.ruby.l1_cntrl3.L2cache.demand_accesses        78711                       # Number of cache demand accesses
 system.ruby.network.routers0.percent_links_utilized    12.539882                      
 system.ruby.network.routers0.msg_count.Request_Control::2        78315                      
 system.ruby.network.routers0.msg_count.Request_Control::3           59                      
@@ -136,6 +110,15 @@ system.ruby.network.routers0.msg_bytes.Writeback_Control::3       591720
 system.ruby.network.routers0.msg_bytes.Writeback_Control::5       370520                      
 system.ruby.network.routers0.msg_bytes.Broadcast_Control::3      4397184                      
 system.ruby.network.routers0.msg_bytes.Unblock_Control::5       626624                      
+system.ruby.l1_cntrl1.L1Dcache.demand_hits           15                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses        78908                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses        78923                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L2cache.demand_hits           80                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L2cache.demand_misses        78828                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L2cache.demand_accesses        78908                       # Number of cache demand accesses
 system.ruby.network.routers1.percent_links_utilized    12.590850                      
 system.ruby.network.routers1.msg_count.Request_Control::2        78828                      
 system.ruby.network.routers1.msg_count.Request_Control::3           53                      
@@ -157,6 +140,15 @@ system.ruby.network.routers1.msg_bytes.Writeback_Control::3       594800
 system.ruby.network.routers1.msg_bytes.Writeback_Control::5       370728                      
 system.ruby.network.routers1.msg_bytes.Broadcast_Control::3      4392992                      
 system.ruby.network.routers1.msg_bytes.Unblock_Control::5       630808                      
+system.ruby.l1_cntrl2.L1Dcache.demand_hits           15                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Dcache.demand_misses        78622                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Dcache.demand_accesses        78637                       # Number of cache demand accesses
+system.ruby.l1_cntrl2.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl2.L2cache.demand_hits           77                       # Number of cache demand hits
+system.ruby.l1_cntrl2.L2cache.demand_misses        78545                       # Number of cache demand misses
+system.ruby.l1_cntrl2.L2cache.demand_accesses        78622                       # Number of cache demand accesses
 system.ruby.network.routers2.percent_links_utilized    12.557548                      
 system.ruby.network.routers2.msg_count.Request_Control::2        78545                      
 system.ruby.network.routers2.msg_count.Request_Control::3           51                      
@@ -178,6 +170,15 @@ system.ruby.network.routers2.msg_bytes.Writeback_Control::3       593024
 system.ruby.network.routers2.msg_bytes.Writeback_Control::5       371048                      
 system.ruby.network.routers2.msg_bytes.Broadcast_Control::3      4395248                      
 system.ruby.network.routers2.msg_bytes.Unblock_Control::5       628504                      
+system.ruby.l1_cntrl3.L1Dcache.demand_hits           17                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Dcache.demand_misses        78711                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Dcache.demand_accesses        78728                       # Number of cache demand accesses
+system.ruby.l1_cntrl3.L1Icache.demand_hits            0                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L1Icache.demand_misses            0                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L1Icache.demand_accesses            0                       # Number of cache demand accesses
+system.ruby.l1_cntrl3.L2cache.demand_hits           72                       # Number of cache demand hits
+system.ruby.l1_cntrl3.L2cache.demand_misses        78639                       # Number of cache demand misses
+system.ruby.l1_cntrl3.L2cache.demand_accesses        78711                       # Number of cache demand accesses
 system.ruby.network.routers3.percent_links_utilized    12.569726                      
 system.ruby.network.routers3.msg_count.Request_Control::2        78639                      
 system.ruby.network.routers3.msg_count.Request_Control::3           54                      
@@ -358,9 +359,6 @@ system.ruby.network.msg_byte.Writeback_Data     47865816
 system.ruby.network.msg_byte.Writeback_Control     37367352                      
 system.ruby.network.msg_byte.Broadcast_Control     75348720                      
 system.ruby.network.msg_byte.Unblock_Control     15084048                      
-system.funcbus.throughput                           0                       # Throughput (bytes/s)
-system.funcbus.data_through_bus                     0                       # Total data (bytes)
-system.cpu_clk_domain.clock                         1                       # Clock period in ticks
 system.cpu0.num_reads                           99506                       # number of read accesses completed
 system.cpu0.num_writes                          55459                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed

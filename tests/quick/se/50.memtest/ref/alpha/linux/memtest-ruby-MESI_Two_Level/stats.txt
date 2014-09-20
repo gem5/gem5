@@ -4,9 +4,9 @@ sim_seconds                                  0.007430                       # Nu
 sim_ticks                                     7430292                       # Number of ticks simulated
 final_tick                                    7430292                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 111636                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 267664                       # Number of bytes of host memory used
-host_seconds                                    66.56                       # Real time elapsed on the host
+host_tick_rate                                  73095                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 318168                       # Number of bytes of host memory used
+host_seconds                                   101.65                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
@@ -380,8 +380,6 @@ system.ruby.network.msg_byte.Response_Data    315144288
 system.ruby.network.msg_byte.Response_Control     51426416                      
 system.ruby.network.msg_byte.Writeback_Data    111484296                      
 system.ruby.network.msg_byte.Writeback_Control      4869144                      
-system.funcbus.throughput                           0                       # Throughput (bytes/s)
-system.funcbus.data_through_bus                     0                       # Total data (bytes)
 system.cpu0.num_reads                           99258                       # number of read accesses completed
 system.cpu0.num_writes                          54534                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed

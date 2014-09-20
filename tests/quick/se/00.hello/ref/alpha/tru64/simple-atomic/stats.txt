@@ -4,10 +4,10 @@ sim_seconds                                  0.000001                       # Nu
 sim_ticks                                     1297500                       # Number of ticks simulated
 final_tick                                    1297500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 741583                       # Simulator instruction rate (inst/s)
-host_op_rate                                   738395                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              370291096                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 253628                       # Number of bytes of host memory used
+host_inst_rate                                 828617                       # Simulator instruction rate (inst/s)
+host_op_rate                                   824640                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              413479924                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 276508                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
@@ -35,9 +35,27 @@ system.physmem.bw_write::total             1586127168                       # Wr
 system.physmem.bw_total::cpu.inst          7969171484                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data          3910597303                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total            11879768786                       # Total bandwidth to/from this memory (bytes/s)
-system.membus.throughput                  11879768786                       # Throughput (bytes/s)
-system.membus.data_through_bus                  15414                       # Total data (bytes)
-system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
+system.membus.trans_dist::ReadReq                3000                       # Transaction distribution
+system.membus.trans_dist::ReadResp               3000                       # Transaction distribution
+system.membus.trans_dist::WriteReq                294                       # Transaction distribution
+system.membus.trans_dist::WriteResp               294                       # Transaction distribution
+system.membus.pkt_count_system.cpu.icache_port::system.physmem.port         5170                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.physmem.port         1418                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                   6588                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.physmem.port        10340                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port         5074                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total                   15414                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoop_fanout::samples              3294                       # Request fanout histogram
+system.membus.snoop_fanout::mean             0.784760                       # Request fanout histogram
+system.membus.snoop_fanout::stdev            0.411051                       # Request fanout histogram
+system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
+system.membus.snoop_fanout::0                     709     21.52%     21.52% # Request fanout histogram
+system.membus.snoop_fanout::1                    2585     78.48%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
+system.membus.snoop_fanout::total                3294                       # Request fanout histogram
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
