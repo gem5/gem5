@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,17 +44,17 @@
 
 /**
  * @file
- * Definition of a bus object.
+ * Definition of a crossbar object.
  */
 
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "debug/Bus.hh"
-#include "debug/BusAddrRanges.hh"
+#include "debug/AddrRanges.hh"
 #include "debug/Drain.hh"
-#include "mem/bus.hh"
+#include "debug/XBar.hh"
+#include "mem/xbar.hh"
 
-BaseBus::BaseBus(const BaseBusParams *p)
+BaseXBar::BaseXBar(const BaseXBarParams *p)
     : MemObject(p),
       headerCycles(p->header_cycles), width(p->width),
       gotAddrRanges(p->port_default_connection_count +
@@ -63,26 +63,22 @@ BaseBus::BaseBus(const BaseBusParams *p)
       useDefaultRange(p->use_default_range)
 {}
 
-BaseBus::~BaseBus()
+BaseXBar::~BaseXBar()
 {
-    for (MasterPortIter m = masterPorts.begin(); m != masterPorts.end();
-         ++m) {
-        delete *m;
-    }
+    for (auto m: masterPorts)
+        delete m;
 
-    for (SlavePortIter s = slavePorts.begin(); s != slavePorts.end();
-         ++s) {
-        delete *s;
-    }
+    for (auto s: slavePorts)
+        delete s;
 }
 
 void
-BaseBus::init()
+BaseXBar::init()
 {
 }
 
 BaseMasterPort &
-BaseBus::getMasterPort(const std::string &if_name, PortID idx)
+BaseXBar::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master" && idx < masterPorts.size()) {
         // the master port index translates directly to the vector position
@@ -95,7 +91,7 @@ BaseBus::getMasterPort(const std::string &if_name, PortID idx)
 }
 
 BaseSlavePort &
-BaseBus::getSlavePort(const std::string &if_name, PortID idx)
+BaseXBar::getSlavePort(const std::string &if_name, PortID idx)
 {
     if (if_name == "slave" && idx < slavePorts.size()) {
         // the slave port index translates directly to the vector position
@@ -106,9 +102,9 @@ BaseBus::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 void
-BaseBus::calcPacketTiming(PacketPtr pkt)
+BaseXBar::calcPacketTiming(PacketPtr pkt)
 {
-    // the bus will be called at a time that is not necessarily
+    // the crossbar will be called at a time that is not necessarily
     // coinciding with its own clock, so start by determining how long
     // until the next clock edge (could be zero)
     Tick offset = clockEdge() - curTick();
@@ -117,58 +113,58 @@ BaseBus::calcPacketTiming(PacketPtr pkt)
     unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;
 
     // before setting the bus delay fields of the packet, ensure that
-    // the delay from any previous bus has been accounted for
-    if (pkt->busFirstWordDelay != 0 || pkt->busLastWordDelay != 0)
-        panic("Packet %s already has bus delay (%d, %d) that should be "
-              "accounted for.\n", pkt->cmdString(), pkt->busFirstWordDelay,
-              pkt->busLastWordDelay);
+    // the delay from any previous crossbar has been accounted for
+    if (pkt->firstWordDelay != 0 || pkt->lastWordDelay != 0)
+        panic("Packet %s already has delay (%d, %d) that should be "
+              "accounted for.\n", pkt->cmdString(), pkt->firstWordDelay,
+              pkt->lastWordDelay);
 
     // The first word will be delivered on the cycle after the header.
-    pkt->busFirstWordDelay = (headerCycles + 1) * clockPeriod() + offset;
+    pkt->firstWordDelay = (headerCycles + 1) * clockPeriod() + offset;
 
-    // Note that currently busLastWordDelay can be smaller than
-    // busFirstWordDelay if the packet has no data
-    pkt->busLastWordDelay = (headerCycles + dataCycles) * clockPeriod() +
+    // Note that currently lastWordDelay can be smaller than
+    // firstWordDelay if the packet has no data
+    pkt->lastWordDelay = (headerCycles + dataCycles) * clockPeriod() +
         offset;
 }
 
 template <typename SrcType, typename DstType>
-BaseBus::Layer<SrcType,DstType>::Layer(DstType& _port, BaseBus& _bus,
+BaseXBar::Layer<SrcType,DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
-    port(_port), bus(_bus), _name(_name), state(IDLE), drainManager(NULL),
+    port(_port), xbar(_xbar), _name(_name), state(IDLE), drainManager(NULL),
     waitingForPeer(NULL), releaseEvent(this)
 {
 }
 
 template <typename SrcType, typename DstType>
-void BaseBus::Layer<SrcType,DstType>::occupyLayer(Tick until)
+void BaseXBar::Layer<SrcType,DstType>::occupyLayer(Tick until)
 {
-    // ensure the state is busy at this point, as the bus should
+    // ensure the state is busy at this point, as the layer should
     // transition from idle as soon as it has decided to forward the
     // packet to prevent any follow-on calls to sendTiming seeing an
-    // unoccupied bus
+    // unoccupied layer
     assert(state == BUSY);
 
-    // until should never be 0 as express snoops never occupy the bus
+    // until should never be 0 as express snoops never occupy the layer
     assert(until != 0);
-    bus.schedule(releaseEvent, until);
+    xbar.schedule(releaseEvent, until);
 
     // account for the occupied ticks
     occupancy += until - curTick();
 
-    DPRINTF(BaseBus, "The bus is now busy from tick %d to %d\n",
+    DPRINTF(BaseXBar, "The crossbar layer is now busy from tick %d to %d\n",
             curTick(), until);
 }
 
 template <typename SrcType, typename DstType>
 bool
-BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
+BaseXBar::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 {
     // if we are in the retry state, we will not see anything but the
     // retrying port (or in the case of the snoop ports the snoop
     // response port that mirrors the actual slave port) as we leave
     // this state again in zero time if the peer does not immediately
-    // call the bus when receiving the retry
+    // call the layer when receiving the retry
 
     // first we see if the layer is busy, next we check if the
     // destination port is already engaged in a transaction waiting
@@ -180,13 +176,12 @@ BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 
         // put the port at the end of the retry list waiting for the
         // layer to be freed up (and in the case of a busy peer, for
-        // that transaction to go through, and then the bus to free
+        // that transaction to go through, and then the layer to free
         // up)
         waitingForLayer.push_back(src_port);
         return false;
     }
 
-    // update the state to busy
     state = BUSY;
 
     return true;
@@ -194,19 +189,19 @@ BaseBus::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
+BaseXBar::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
 {
     // we should have gone from idle or retry to busy in the tryTiming
     // test
     assert(state == BUSY);
 
-    // occupy the bus accordingly
+    // occupy the layer accordingly
     occupyLayer(busy_time);
 }
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
+BaseXBar::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
                                               Tick busy_time)
 {
     // ensure no one got in between and tried to send something to
@@ -228,7 +223,7 @@ BaseBus::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::releaseLayer()
+BaseXBar::Layer<SrcType,DstType>::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
@@ -244,7 +239,7 @@ BaseBus::Layer<SrcType,DstType>::releaseLayer()
         if (waitingForPeer == NULL)
             retryWaiting();
     } else if (waitingForPeer == NULL && drainManager) {
-        DPRINTF(Drain, "Bus done draining, signaling drain manager\n");
+        DPRINTF(Drain, "Crossbar done draining, signaling drain manager\n");
         //If we weren't able to drain before, do it now.
         drainManager->signalDrainDone();
         // Clear the drain event once we're done with it.
@@ -254,7 +249,7 @@ BaseBus::Layer<SrcType,DstType>::releaseLayer()
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::retryWaiting()
+BaseXBar::Layer<SrcType,DstType>::retryWaiting()
 {
     // this should never be called with no one waiting
     assert(!waitingForLayer.empty());
@@ -271,24 +266,24 @@ BaseBus::Layer<SrcType,DstType>::retryWaiting()
     waitingForLayer.pop_front();
 
     // tell the port to retry, which in some cases ends up calling the
-    // bus
+    // layer again
     retryingPort->sendRetry();
 
-    // If the bus is still in the retry state, sendTiming wasn't
+    // If the layer is still in the retry state, sendTiming wasn't
     // called in zero time (e.g. the cache does this), burn a cycle
     if (state == RETRY) {
         // update the state to busy and reset the retrying port, we
         // have done our bit and sent the retry
         state = BUSY;
 
-        // occupy the bus layer until the next cycle ends
-        occupyLayer(bus.clockEdge(Cycles(1)));
+        // occupy the crossbar layer until the next cycle ends
+        occupyLayer(xbar.clockEdge(Cycles(1)));
     }
 }
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::recvRetry()
+BaseXBar::Layer<SrcType,DstType>::recvRetry()
 {
     // we should never get a retry without having failed to forward
     // something to this port
@@ -296,13 +291,13 @@ BaseBus::Layer<SrcType,DstType>::recvRetry()
 
     // add the port where the failed packet originated to the front of
     // the waiting ports for the layer, this allows us to call retry
-    // on the port immediately if the bus layer is idle
+    // on the port immediately if the crossbar layer is idle
     waitingForLayer.push_front(waitingForPeer);
 
     // we are no longer waiting for the peer
     waitingForPeer = NULL;
 
-    // if the bus layer is idle, retry this port straight away, if we
+    // if the layer is idle, retry this port straight away, if we
     // are busy, then simply let the port wait for its turn
     if (state == IDLE) {
         retryWaiting();
@@ -312,7 +307,7 @@ BaseBus::Layer<SrcType,DstType>::recvRetry()
 }
 
 PortID
-BaseBus::findPort(Addr addr)
+BaseXBar::findPort(Addr addr)
 {
     // we should never see any address lookups before we've got the
     // ranges of all connected slave modules
@@ -324,7 +319,7 @@ BaseBus::findPort(Addr addr)
         return dest_id;
 
     // Check the address map interval tree
-    PortMapConstIter i = portMap.find(addr);
+    auto i = portMap.find(addr);
     if (i != portMap.end()) {
         dest_id = i->second;
         updatePortCache(dest_id, i->first);
@@ -334,27 +329,27 @@ BaseBus::findPort(Addr addr)
     // Check if this matches the default range
     if (useDefaultRange) {
         if (defaultRange.contains(addr)) {
-            DPRINTF(BusAddrRanges, "  found addr %#llx on default\n",
+            DPRINTF(AddrRanges, "  found addr %#llx on default\n",
                     addr);
             return defaultPortID;
         }
     } else if (defaultPortID != InvalidPortID) {
-        DPRINTF(BusAddrRanges, "Unable to find destination for addr %#llx, "
+        DPRINTF(AddrRanges, "Unable to find destination for addr %#llx, "
                 "will use default port\n", addr);
         return defaultPortID;
     }
 
     // we should use the range for the default port and it did not
     // match, or the default port is not set
-    fatal("Unable to find destination for addr %#llx on bus %s\n", addr,
+    fatal("Unable to find destination for addr %#llx on %s\n", addr,
           name());
 }
 
-/** Function called by the port when the bus is receiving a range change.*/
+/** Function called by the port when the crossbar is receiving a range change.*/
 void
-BaseBus::recvRangeChange(PortID master_port_id)
+BaseXBar::recvRangeChange(PortID master_port_id)
 {
-    DPRINTF(BusAddrRanges, "Received range change from slave port %s\n",
+    DPRINTF(AddrRanges, "Received range change from slave port %s\n",
             masterPorts[master_port_id]->getSlavePort().name());
 
     // remember that we got a range from this master port and thus the
@@ -371,7 +366,7 @@ BaseBus::recvRangeChange(PortID master_port_id)
             gotAllAddrRanges &= *r++;
         }
         if (gotAllAddrRanges)
-            DPRINTF(BusAddrRanges, "Got address ranges from all slaves\n");
+            DPRINTF(AddrRanges, "Got address ranges from all slaves\n");
     }
 
     // note that we could get the range from the default port at any
@@ -386,7 +381,7 @@ BaseBus::recvRangeChange(PortID master_port_id)
             AddrRangeList ranges = masterPorts[master_port_id]->getAddrRanges();
 
             if (ranges.size() != 1)
-                fatal("Bus %s may only have a single default range",
+                fatal("Crossbar %s may only have a single default range",
                       name());
 
             defaultRange = ranges.front();
@@ -395,7 +390,7 @@ BaseBus::recvRangeChange(PortID master_port_id)
         // the ports are allowed to update their address ranges
         // dynamically, so remove any existing entries
         if (gotAddrRanges[master_port_id]) {
-            for (PortMapIter p = portMap.begin(); p != portMap.end(); ) {
+            for (auto p = portMap.begin(); p != portMap.end(); ) {
                 if (p->second == master_port_id)
                     // erasing invalidates the iterator, so advance it
                     // before the deletion takes place
@@ -407,11 +402,11 @@ BaseBus::recvRangeChange(PortID master_port_id)
 
         AddrRangeList ranges = masterPorts[master_port_id]->getAddrRanges();
 
-        for (AddrRangeConstIter r = ranges.begin(); r != ranges.end(); ++r) {
-            DPRINTF(BusAddrRanges, "Adding range %s for id %d\n",
-                    r->to_string(), master_port_id);
-            if (portMap.insert(*r, master_port_id) == portMap.end()) {
-                PortID conflict_id = portMap.find(*r)->second;
+        for (const auto& r: ranges) {
+            DPRINTF(AddrRanges, "Adding range %s for id %d\n",
+                    r.to_string(), master_port_id);
+            if (portMap.insert(r, master_port_id) == portMap.end()) {
+                PortID conflict_id = portMap.find(r)->second;
                 fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
                       name(),
                       masterPorts[master_port_id]->getSlavePort().name(),
@@ -424,52 +419,51 @@ BaseBus::recvRangeChange(PortID master_port_id)
     // modules, go ahead and tell our connected master modules in
     // turn, this effectively assumes a tree structure of the system
     if (gotAllAddrRanges) {
-        DPRINTF(BusAddrRanges, "Aggregating bus ranges\n");
-        busRanges.clear();
+        DPRINTF(AddrRanges, "Aggregating address ranges\n");
+        xbarRanges.clear();
 
         // start out with the default range
         if (useDefaultRange) {
             if (!gotAddrRanges[defaultPortID])
-                fatal("Bus %s uses default range, but none provided",
+                fatal("Crossbar %s uses default range, but none provided",
                       name());
 
-            busRanges.push_back(defaultRange);
-            DPRINTF(BusAddrRanges, "-- Adding default %s\n",
+            xbarRanges.push_back(defaultRange);
+            DPRINTF(AddrRanges, "-- Adding default %s\n",
                     defaultRange.to_string());
         }
 
         // merge all interleaved ranges and add any range that is not
         // a subset of the default range
         std::vector<AddrRange> intlv_ranges;
-        for (AddrRangeMap<PortID>::const_iterator r = portMap.begin();
-             r != portMap.end(); ++r) {
+        for (const auto& r: portMap) {
             // if the range is interleaved then save it for now
-            if (r->first.interleaved()) {
+            if (r.first.interleaved()) {
                 // if we already got interleaved ranges that are not
                 // part of the same range, then first do a merge
                 // before we add the new one
                 if (!intlv_ranges.empty() &&
-                    !intlv_ranges.back().mergesWith(r->first)) {
-                    DPRINTF(BusAddrRanges, "-- Merging range from %d ranges\n",
+                    !intlv_ranges.back().mergesWith(r.first)) {
+                    DPRINTF(AddrRanges, "-- Merging range from %d ranges\n",
                             intlv_ranges.size());
                     AddrRange merged_range(intlv_ranges);
                     // next decide if we keep the merged range or not
                     if (!(useDefaultRange &&
                           merged_range.isSubset(defaultRange))) {
-                        busRanges.push_back(merged_range);
-                        DPRINTF(BusAddrRanges, "-- Adding merged range %s\n",
+                        xbarRanges.push_back(merged_range);
+                        DPRINTF(AddrRanges, "-- Adding merged range %s\n",
                                 merged_range.to_string());
                     }
                     intlv_ranges.clear();
                 }
-                intlv_ranges.push_back(r->first);
+                intlv_ranges.push_back(r.first);
             } else {
                 // keep the current range if not a subset of the default
                 if (!(useDefaultRange &&
-                      r->first.isSubset(defaultRange))) {
-                    busRanges.push_back(r->first);
-                    DPRINTF(BusAddrRanges, "-- Adding range %s\n",
-                            r->first.to_string());
+                      r.first.isSubset(defaultRange))) {
+                    xbarRanges.push_back(r.first);
+                    DPRINTF(AddrRanges, "-- Adding range %s\n",
+                            r.first.to_string());
                 }
             }
         }
@@ -477,12 +471,12 @@ BaseBus::recvRangeChange(PortID master_port_id)
         // if there is still interleaved ranges waiting to be merged,
         // go ahead and do it
         if (!intlv_ranges.empty()) {
-            DPRINTF(BusAddrRanges, "-- Merging range from %d ranges\n",
+            DPRINTF(AddrRanges, "-- Merging range from %d ranges\n",
                     intlv_ranges.size());
             AddrRange merged_range(intlv_ranges);
             if (!(useDefaultRange && merged_range.isSubset(defaultRange))) {
-                busRanges.push_back(merged_range);
-                DPRINTF(BusAddrRanges, "-- Adding merged range %s\n",
+                xbarRanges.push_back(merged_range);
+                DPRINTF(AddrRanges, "-- Adding merged range %s\n",
                         merged_range.to_string());
             }
         }
@@ -492,30 +486,28 @@ BaseBus::recvRangeChange(PortID master_port_id)
         // as there are no guarantees for when the default range is
         // update with respect to the other ones
         if (useDefaultRange) {
-            for (AddrRangeConstIter r = busRanges.begin();
-                 r != busRanges.end(); ++r) {
+            for (const auto& r: xbarRanges) {
                 // see if the new range is partially
                 // overlapping the default range
-                if (r->intersects(defaultRange) &&
-                    !r->isSubset(defaultRange))
+                if (r.intersects(defaultRange) &&
+                    !r.isSubset(defaultRange))
                     fatal("Range %s intersects the "                    \
                           "default range of %s but is not a "           \
-                          "subset\n", r->to_string(), name());
+                          "subset\n", r.to_string(), name());
             }
         }
 
         // tell all our neighbouring master ports that our address
         // ranges have changed
-        for (SlavePortConstIter s = slavePorts.begin(); s != slavePorts.end();
-             ++s)
-            (*s)->sendRangeChange();
+        for (const auto& s: slavePorts)
+            s->sendRangeChange();
     }
 
     clearPortCache();
 }
 
 AddrRangeList
-BaseBus::getAddrRanges() const
+BaseXBar::getAddrRanges() const
 {
     // we should never be asked without first having sent a range
     // change, and the latter is only done once we have all the ranges
@@ -523,17 +515,17 @@ BaseBus::getAddrRanges() const
     assert(gotAllAddrRanges);
 
     // at the moment, this never happens, as there are no cycles in
-    // the range queries and no devices on the master side of a bus
+    // the range queries and no devices on the master side of a crossbar
     // (CPU, cache, bridge etc) actually care about the ranges of the
     // ports they are connected to
 
-    DPRINTF(BusAddrRanges, "Received address range request\n");
+    DPRINTF(AddrRanges, "Received address range request\n");
 
-    return busRanges;
+    return xbarRanges;
 }
 
 void
-BaseBus::regStats()
+BaseXBar::regStats()
 {
     using namespace Stats;
 
@@ -556,9 +548,9 @@ BaseBus::regStats()
         .desc("Packet count per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
-    totPktSize
+    pktSize
         .init(slavePorts.size(), masterPorts.size())
-        .name(name() + ".tot_pkt_size")
+        .name(name() + ".pkt_size")
         .desc("Cumulative packet size per connected master and slave (bytes)")
         .flags(total | nozero | nonan);
 
@@ -570,23 +562,23 @@ BaseBus::regStats()
     // forwarded to the master (responses and snoop requests)
     for (int i = 0; i < slavePorts.size(); i++) {
         pktCount.subname(i, slavePorts[i]->getMasterPort().name());
-        totPktSize.subname(i, slavePorts[i]->getMasterPort().name());
+        pktSize.subname(i, slavePorts[i]->getMasterPort().name());
         for (int j = 0; j < masterPorts.size(); j++) {
             pktCount.ysubname(j, masterPorts[j]->getSlavePort().name());
-            totPktSize.ysubname(j, masterPorts[j]->getSlavePort().name());
+            pktSize.ysubname(j, masterPorts[j]->getSlavePort().name());
         }
     }
 }
 
 template <typename SrcType, typename DstType>
 unsigned int
-BaseBus::Layer<SrcType,DstType>::drain(DrainManager *dm)
+BaseXBar::Layer<SrcType,DstType>::drain(DrainManager *dm)
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
     if (state != IDLE) {
-        DPRINTF(Drain, "Bus not drained\n");
+        DPRINTF(Drain, "Crossbar not drained\n");
         drainManager = dm;
         return 1;
     }
@@ -595,7 +587,7 @@ BaseBus::Layer<SrcType,DstType>::drain(DrainManager *dm)
 
 template <typename SrcType, typename DstType>
 void
-BaseBus::Layer<SrcType,DstType>::regStats()
+BaseXBar::Layer<SrcType,DstType>::regStats()
 {
     using namespace Stats;
 
@@ -614,9 +606,9 @@ BaseBus::Layer<SrcType,DstType>::regStats()
 }
 
 /**
- * Bus layer template instantiations. Could be removed with _impl.hh
+ * Crossbar layer template instantiations. Could be removed with _impl.hh
  * file, but since there are only two given options (MasterPort and
  * SlavePort) it seems a bit excessive at this point.
  */
-template class BaseBus::Layer<SlavePort,MasterPort>;
-template class BaseBus::Layer<MasterPort,SlavePort>;
+template class BaseXBar::Layer<SlavePort,MasterPort>;
+template class BaseXBar::Layer<MasterPort,SlavePort>;

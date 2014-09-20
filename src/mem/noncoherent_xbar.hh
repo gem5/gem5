@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,36 +45,36 @@
 
 /**
  * @file
- * Declaration of a non-coherent bus.
+ * Declaration of a non-coherent crossbar.
  */
 
-#ifndef __MEM_NONCOHERENT_BUS_HH__
-#define __MEM_NONCOHERENT_BUS_HH__
+#ifndef __MEM_NONCOHERENT_XBAR_HH__
+#define __MEM_NONCOHERENT_XBAR_HH__
 
-#include "mem/bus.hh"
-#include "params/NoncoherentBus.hh"
+#include "mem/xbar.hh"
+#include "params/NoncoherentXBar.hh"
 
 /**
- * A non-coherent bus connects a number of non-snooping masters and
- * slaves, and routes the request and response packets based on the
- * address. The request packets issued by the master connected to a
- * non-coherent bus could still snoop in caches attached to a coherent
- * bus, as is the case with the I/O bus and memory bus in most system
- * configurations. No snoops will, however, reach any master on the
- * non-coherent bus itself.
+ * A non-coherent crossbar connects a number of non-snooping masters
+ * and slaves, and routes the request and response packets based on
+ * the address. The request packets issued by the master connected to
+ * a non-coherent crossbar could still snoop in caches attached to a
+ * coherent crossbar, as is the case with the I/O bus and memory bus
+ * in most system configurations. No snoops will, however, reach any
+ * master on the non-coherent crossbar itself.
  *
- * The non-coherent bus can be used as a template for modelling PCI,
+ * The non-coherent crossbar can be used as a template for modelling
  * PCIe, and non-coherent AMBA and OCP buses, and is typically used
  * for the I/O buses.
  */
-class NoncoherentBus : public BaseBus
+class NoncoherentXBar : public BaseXBar
 {
 
   protected:
 
     /**
-     * Declare the layers of this bus, one vector for requests and one
-     * for responses.
+     * Declare the layers of this crossbar, one vector for requests
+     * and one for responses.
      */
     typedef Layer<SlavePort,MasterPort> ReqLayer;
     typedef Layer<MasterPort,SlavePort> RespLayer;
@@ -82,102 +82,102 @@ class NoncoherentBus : public BaseBus
     std::vector<RespLayer*> respLayers;
 
     /**
-     * Declaration of the non-coherent bus slave port type, one will
-     * be instantiated for each of the master ports connecting to the
-     * bus.
+     * Declaration of the non-coherent crossbar slave port type, one
+     * will be instantiated for each of the master ports connecting to
+     * the crossbar.
      */
-    class NoncoherentBusSlavePort : public SlavePort
+    class NoncoherentXBarSlavePort : public SlavePort
     {
       private:
 
-        /** A reference to the bus to which this port belongs. */
-        NoncoherentBus &bus;
+        /** A reference to the crossbar to which this port belongs. */
+        NoncoherentXBar &xbar;
 
       public:
 
-        NoncoherentBusSlavePort(const std::string &_name,
-                                NoncoherentBus &_bus, PortID _id)
-            : SlavePort(_name, &_bus, _id), bus(_bus)
+        NoncoherentXBarSlavePort(const std::string &_name,
+                                NoncoherentXBar &_xbar, PortID _id)
+            : SlavePort(_name, &_xbar, _id), xbar(_xbar)
         { }
 
       protected:
 
         /**
-         * When receiving a timing request, pass it to the bus.
+         * When receiving a timing request, pass it to the crossbar.
          */
         virtual bool recvTimingReq(PacketPtr pkt)
-        { return bus.recvTimingReq(pkt, id); }
+        { return xbar.recvTimingReq(pkt, id); }
 
         /**
-         * When receiving an atomic request, pass it to the bus.
+         * When receiving an atomic request, pass it to the crossbar.
          */
         virtual Tick recvAtomic(PacketPtr pkt)
-        { return bus.recvAtomic(pkt, id); }
+        { return xbar.recvAtomic(pkt, id); }
 
         /**
-         * When receiving a functional request, pass it to the bus.
+         * When receiving a functional request, pass it to the crossbar.
          */
         virtual void recvFunctional(PacketPtr pkt)
-        { bus.recvFunctional(pkt, id); }
+        { xbar.recvFunctional(pkt, id); }
 
         /**
-         * When receiving a retry, pass it to the bus.
+         * When receiving a retry, pass it to the crossbar.
          */
         virtual void recvRetry()
-        { panic("Bus slave ports always succeed and should never retry.\n"); }
+        { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
-         * Return the union of all adress ranges seen by this bus.
+         * Return the union of all adress ranges seen by this crossbar.
          */
         virtual AddrRangeList getAddrRanges() const
-        { return bus.getAddrRanges(); }
+        { return xbar.getAddrRanges(); }
 
     };
 
     /**
-     * Declaration of the bus master port type, one will be
+     * Declaration of the crossbar master port type, one will be
      * instantiated for each of the slave ports connecting to the
-     * bus.
+     * crossbar.
      */
-    class NoncoherentBusMasterPort : public MasterPort
+    class NoncoherentXBarMasterPort : public MasterPort
     {
       private:
 
-        /** A reference to the bus to which this port belongs. */
-        NoncoherentBus &bus;
+        /** A reference to the crossbar to which this port belongs. */
+        NoncoherentXBar &xbar;
 
       public:
 
-        NoncoherentBusMasterPort(const std::string &_name,
-                                 NoncoherentBus &_bus, PortID _id)
-            : MasterPort(_name, &_bus, _id), bus(_bus)
+        NoncoherentXBarMasterPort(const std::string &_name,
+                                 NoncoherentXBar &_xbar, PortID _id)
+            : MasterPort(_name, &_xbar, _id), xbar(_xbar)
         { }
 
       protected:
 
         /**
-         * When receiving a timing response, pass it to the bus.
+         * When receiving a timing response, pass it to the crossbar.
          */
         virtual bool recvTimingResp(PacketPtr pkt)
-        { return bus.recvTimingResp(pkt, id); }
+        { return xbar.recvTimingResp(pkt, id); }
 
         /** When reciving a range change from the peer port (at id),
-            pass it to the bus. */
+            pass it to the crossbar. */
         virtual void recvRangeChange()
-        { bus.recvRangeChange(id); }
+        { xbar.recvRangeChange(id); }
 
         /** When reciving a retry from the peer port (at id),
-            pass it to the bus. */
+            pass it to the crossbar. */
         virtual void recvRetry()
-        { bus.recvRetry(id); }
+        { xbar.recvRetry(id); }
 
     };
 
-    /** Function called by the port when the bus is recieving a Timing
+    /** Function called by the port when the crossbar is recieving a Timing
       request packet.*/
     virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
 
-    /** Function called by the port when the bus is recieving a Timing
+    /** Function called by the port when the crossbar is recieving a Timing
       response packet.*/
     virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
@@ -185,19 +185,19 @@ class NoncoherentBus : public BaseBus
      * requests. */
     void recvRetry(PortID master_port_id);
 
-    /** Function called by the port when the bus is recieving a Atomic
+    /** Function called by the port when the crossbar is recieving a Atomic
       transaction.*/
     Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
 
-    /** Function called by the port when the bus is recieving a Functional
+    /** Function called by the port when the crossbar is recieving a Functional
         transaction.*/
     void recvFunctional(PacketPtr pkt, PortID slave_port_id);
 
   public:
 
-    NoncoherentBus(const NoncoherentBusParams *p);
+    NoncoherentXBar(const NoncoherentXBarParams *p);
 
-    virtual ~NoncoherentBus();
+    virtual ~NoncoherentXBar();
 
     unsigned int drain(DrainManager *dm);
 
@@ -205,7 +205,7 @@ class NoncoherentBus : public BaseBus
      * stats
      */
     virtual void regStats();
-    Stats::Scalar dataThroughBus;
+    Stats::Scalar totPktSize;
 };
 
-#endif //__MEM_NONCOHERENT_BUS_HH__
+#endif //__MEM_NONCOHERENT_XBAR_HH__

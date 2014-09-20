@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,53 +45,47 @@
 
 /**
  * @file
- * Declaration of an abstract bus base class.
+ * Declaration of an abstract crossbar base class.
  */
 
-#ifndef __MEM_BUS_HH__
-#define __MEM_BUS_HH__
+#ifndef __MEM_XBAR_HH__
+#define __MEM_XBAR_HH__
 
 #include <deque>
 
 #include "base/addr_range_map.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
-#include "params/BaseBus.hh"
+#include "params/BaseXBar.hh"
 #include "sim/stats.hh"
 
 /**
- * The base bus contains the common elements of the non-coherent and
- * coherent bus. It is an abstract class that does not have any of the
- * functionality relating to the actual reception and transmission of
- * packets, as this is left for the subclasses.
+ * The base crossbar contains the common elements of the non-coherent
+ * and coherent crossbar. It is an abstract class that does not have
+ * any of the functionality relating to the actual reception and
+ * transmission of packets, as this is left for the subclasses.
  *
- * The BaseBus is responsible for the basic flow control (busy or
+ * The BaseXBar is responsible for the basic flow control (busy or
  * not), the administration of retries, and the address decoding.
  */
-class BaseBus : public MemObject
+class BaseXBar : public MemObject
 {
 
   protected:
 
     /**
-     * A bus layer is an internal bus structure with its own flow
-     * control and arbitration. Hence, a single-layer bus mimics a
-     * traditional off-chip tri-state bus (like PCI), where only one
-     * set of wires are shared. For on-chip buses, a good starting
-     * point is to have three layers, for requests, responses, and
-     * snoop responses respectively (snoop requests are instantaneous
-     * and do not need any flow control or arbitration). This case is
-     * similar to AHB and some OCP configurations.
-     *
-     * As a further extensions beyond the three-layer bus, a future
-     * multi-layer bus has with one layer per connected slave port
-     * provides a full or partial crossbar, like AXI, OCP, PCIe etc.
+     * A layer is an internal crossbar arbitration point with its own
+     * flow control. Each layer is a converging multiplexer tree. By
+     * instantiating one layer per destination port (and per packet
+     * type, i.e. request, response, snoop request and snoop
+     * response), we model full crossbar structures like AXI, ACE,
+     * PCIe, etc.
      *
      * The template parameter, PortClass, indicates the destination
-     * port type for the bus. The retry list holds either master ports
-     * or slave ports, depending on the direction of the layer. Thus,
-     * a request layer has a retry list containing slave ports,
-     * whereas a response layer holds master ports.
+     * port type for the layer. The retry list holds either master
+     * ports or slave ports, depending on the direction of the
+     * layer. Thus, a request layer has a retry list containing slave
+     * ports, whereas a response layer holds master ports.
      */
     template <typename SrcType, typename DstType>
     class Layer : public Drainable
@@ -100,17 +94,17 @@ class BaseBus : public MemObject
       public:
 
         /**
-         * Create a bus layer and give it a name. The bus layer uses
-         * the bus an event manager.
+         * Create a layer and give it a name. The layer uses
+         * the crossbar an event manager.
          *
          * @param _port destination port the layer converges at
-         * @param _bus the bus this layer belongs to
+         * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        Layer(DstType& _port, BaseBus& _bus, const std::string& _name);
+        Layer(DstType& _port, BaseXBar& _xbar, const std::string& _name);
 
         /**
-         * Drain according to the normal semantics, so that the bus
+         * Drain according to the normal semantics, so that the crossbar
          * can tell the layer to drain, and pass an event to signal
          * back when drained.
          *
@@ -121,27 +115,27 @@ class BaseBus : public MemObject
         unsigned int drain(DrainManager *dm);
 
         /**
-         * Get the bus layer's name
+         * Get the crossbar layer's name
          */
-        const std::string name() const { return bus.name() + _name; }
+        const std::string name() const { return xbar.name() + _name; }
 
 
         /**
-         * Determine if the bus layer accepts a packet from a specific
+         * Determine if the layer accepts a packet from a specific
          * port. If not, the port in question is also added to the
          * retry list. In either case the state of the layer is
          * updated accordingly.
          *
          * @param port Source port presenting the packet
          *
-         * @return True if the bus layer accepts the packet
+         * @return True if the layer accepts the packet
          */
         bool tryTiming(SrcType* src_port);
 
         /**
          * Deal with a destination port accepting a packet by potentially
          * removing the source port from the retry list (if retrying) and
-         * occupying the bus layer accordingly.
+         * occupying the layer accordingly.
          *
          * @param busy_time Time to spend as a result of a successful send
          */
@@ -150,7 +144,7 @@ class BaseBus : public MemObject
         /**
          * Deal with a destination port not accepting a packet by
          * potentially adding the source port to the retry list (if
-         * not already at the front) and occupying the bus layer
+         * not already at the front) and occupying the layer
          * accordingly.
          *
          * @param src_port Source port
@@ -158,7 +152,7 @@ class BaseBus : public MemObject
          */
         void failedTiming(SrcType* src_port, Tick busy_time);
 
-        /** Occupy the bus layer until until */
+        /** Occupy the layer until until */
         void occupyLayer(Tick until);
 
         /**
@@ -184,31 +178,31 @@ class BaseBus : public MemObject
         /** The destination port this layer converges at. */
         DstType& port;
 
-        /** The bus this layer is a part of. */
-        BaseBus& bus;
+        /** The crossbar this layer is a part of. */
+        BaseXBar& xbar;
 
         /** A name for this layer. */
         std::string _name;
 
         /**
-         * We declare an enum to track the state of the bus layer. The
-         * starting point is an idle state where the bus layer is
-         * waiting for a packet to arrive. Upon arrival, the bus layer
+         * We declare an enum to track the state of the layer. The
+         * starting point is an idle state where the layer is waiting
+         * for a packet to arrive. Upon arrival, the layer
          * transitions to the busy state, where it remains either
          * until the packet transfer is done, or the header time is
-         * spent. Once the bus layer leaves the busy state, it can
+         * spent. Once the layer leaves the busy state, it can
          * either go back to idle, if no packets have arrived while it
-         * was busy, or the bus layer goes on to retry the first port
+         * was busy, or the layer goes on to retry the first port
          * in waitingForLayer. A similar transition takes place from
-         * idle to retry if the bus layer receives a retry from one of
+         * idle to retry if the layer receives a retry from one of
          * its connected ports. The retry state lasts until the port
          * in questions calls sendTiming and returns control to the
-         * bus layer, or goes to a busy state if the port does not
+         * layer, or goes to a busy state if the port does not
          * immediately react to the retry by calling sendTiming.
          */
         enum State { IDLE, BUSY, RETRY };
 
-        /** track the state of the bus layer */
+        /** track the state of the layer */
         State state;
 
         /** manager to signal when drained */
@@ -227,7 +221,7 @@ class BaseBus : public MemObject
         SrcType* waitingForPeer;
 
         /**
-         * Release the bus layer after being occupied and return to an
+         * Release the layer after being occupied and return to an
          * idle state where we proceed to send a retry to any
          * potential waiting port, or drain if asked to do so.
          */
@@ -238,7 +232,7 @@ class BaseBus : public MemObject
 
         /**
          * Stats for occupancy and utilization. These stats capture
-         * the time the bus spends in the busy state and are thus only
+         * the time the layer spends in the busy state and are thus only
          * relevant when the memory system is in timing mode.
          */
         Stats::Scalar occupancy;
@@ -248,27 +242,27 @@ class BaseBus : public MemObject
 
     /** cycles of overhead per transaction */
     const Cycles headerCycles;
-    /** the width of the bus in bytes */
+    /** the width of the xbar in bytes */
     const uint32_t width;
 
-    typedef AddrRangeMap<PortID>::iterator PortMapIter;
-    typedef AddrRangeMap<PortID>::const_iterator PortMapConstIter;
     AddrRangeMap<PortID> portMap;
 
-    /** all contigous ranges seen by this bus */
-    AddrRangeList busRanges;
+    /** all contigous ranges seen by this crossbar */
+    AddrRangeList xbarRanges;
 
     AddrRange defaultRange;
 
     /**
-     * Function called by the port when the bus is recieving a range change.
+     * Function called by the port when the crossbar is recieving a
+     * range change.
      *
      * @param master_port_id id of the port that received the change
      */
     void recvRangeChange(PortID master_port_id);
 
-    /** Find which port connected to this bus (if any) should be given a packet
-     * with this address.
+    /** Find which port connected to this crossbar (if any) should be
+     * given a packet with this address.
+     *
      * @param addr Address to find port for.
      * @return id of port that the packet should be sent out of.
      */
@@ -322,7 +316,7 @@ class BaseBus : public MemObject
     }
 
     /**
-     * Return the address ranges the bus is responsible for.
+     * Return the address ranges the crossbar is responsible for.
      *
      * @return a list of non-overlapping address ranges
      */
@@ -330,30 +324,24 @@ class BaseBus : public MemObject
 
     /**
      * Calculate the timing parameters for the packet. Updates the
-     * busFirstWordDelay and busLastWordDelay fields of the packet
+     * firstWordDelay and lastWordDelay fields of the packet
      * object with the relative number of ticks required to transmit
      * the header and the first word, and the last word, respectively.
      */
     void calcPacketTiming(PacketPtr pkt);
 
     /**
-     * Remember for each of the master ports of the bus if we got an
-     * address range from the connected slave. For convenience, also
-     * keep track of if we got ranges from all the slave modules or
-     * not.
+     * Remember for each of the master ports of the crossbar if we got
+     * an address range from the connected slave. For convenience,
+     * also keep track of if we got ranges from all the slave modules
+     * or not.
      */
     std::vector<bool> gotAddrRanges;
     bool gotAllAddrRanges;
 
-    /** The master and slave ports of the bus */
+    /** The master and slave ports of the crossbar */
     std::vector<SlavePort*> slavePorts;
     std::vector<MasterPort*> masterPorts;
-
-    /** Convenience typedefs. */
-    typedef std::vector<SlavePort*>::iterator SlavePortIter;
-    typedef std::vector<MasterPort*>::iterator MasterPortIter;
-    typedef std::vector<SlavePort*>::const_iterator SlavePortConstIter;
-    typedef std::vector<MasterPort*>::const_iterator MasterPortConstIter;
 
     /** Port that handles requests that don't match any of the interfaces.*/
     PortID defaultPortID;
@@ -364,29 +352,28 @@ class BaseBus : public MemObject
        addresses not handled by another port to default device. */
     const bool useDefaultRange;
 
-    BaseBus(const BaseBusParams *p);
+    BaseXBar(const BaseXBarParams *p);
 
-    virtual ~BaseBus();
+    virtual ~BaseXBar();
 
     /**
      * Stats for transaction distribution and data passing through the
-     * bus. The transaction distribution is globally counting
+     * crossbar. The transaction distribution is globally counting
      * different types of commands. The packet count and total packet
-     * size are two-dimensional vectors that are indexed by the bus
+     * size are two-dimensional vectors that are indexed by the
      * slave port and master port id (thus the neighbouring master and
      * neighbouring slave), summing up both directions (request and
      * response).
      */
-    Stats::Formula throughput;
     Stats::Vector transDist;
     Stats::Vector2d pktCount;
-    Stats::Vector2d totPktSize;
+    Stats::Vector2d pktSize;
 
   public:
 
     virtual void init();
 
-    /** A function used to return the port associated with this bus object. */
+    /** A function used to return the port associated with this object. */
     BaseMasterPort& getMasterPort(const std::string& if_name,
                                   PortID idx = InvalidPortID);
     BaseSlavePort& getSlavePort(const std::string& if_name,
@@ -398,4 +385,4 @@ class BaseBus : public MemObject
 
 };
 
-#endif //__MEM_BUS_HH__
+#endif //__MEM_XBAR_HH__

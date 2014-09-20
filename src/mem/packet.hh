@@ -293,14 +293,14 @@ class Packet : public Printable
     /**
      * Source port identifier set on a request packet to enable
      * appropriate routing of the responses. The source port
-     * identifier is set by any multiplexing component, e.g. a bus, as
-     * the timing responses need this information to be routed back to
-     * the appropriate port at a later point in time. The field can be
-     * updated (over-written) as the request packet passes through
-     * additional multiplexing components, and it is their
-     * responsibility to remember the original source port identifier,
-     * for example by using an appropriate sender state. The latter is
-     * done in the cache and bridge.
+     * identifier is set by any multiplexing component, e.g. a
+     * crossbar, as the timing responses need this information to be
+     * routed back to the appropriate port at a later point in
+     * time. The field can be updated (over-written) as the request
+     * packet passes through additional multiplexing components, and
+     * it is their responsibility to remember the original source port
+     * identifier, for example by using an appropriate sender
+     * state. The latter is done in the cache and bridge.
      */
     PortID src;
 
@@ -309,7 +309,7 @@ class Packet : public Printable
      * packets that passed through a multiplexing component as a
      * request packet. The source port identifier is turned into a
      * destination port identifier when the packet is turned into a
-     * response, and the destination is used, e.g. by the bus, to
+     * response, and the destination is used, e.g. by the crossbar, to
      * select the appropriate path through the interconnect.
      */
     PortID dest;
@@ -333,21 +333,22 @@ class Packet : public Printable
 
     /**
      * The extra delay from seeing the packet until the first word is
-     * transmitted by the bus that provided it (if any). This delay is
-     * used to communicate the bus waiting time to the neighbouring
-     * object (e.g. a cache) that actually makes the packet wait. As
-     * the delay is relative, a 32-bit unsigned should be sufficient.
-     */
-    uint32_t busFirstWordDelay;
-
-    /**
-     * The extra delay from seeing the packet until the last word is
-     * transmitted by the bus that provided it (if any). Similar to
-     * the first word time, this is used to make up for the fact that
-     * the bus does not make the packet wait. As the delay is relative,
+     * transmitted. This delay is used to communicate the crossbar
+     * forwarding latency to the neighbouring object (e.g. a cache)
+     * that actually makes the packet wait. As the delay is relative,
      * a 32-bit unsigned should be sufficient.
      */
-    uint32_t busLastWordDelay;
+    uint32_t firstWordDelay;
+
+    /**
+     * The extra pipelining delay from seeing the packet until the
+     * last word is transmitted by the component that provided it (if
+     * any). This includes the first word delay. Similar to the first
+     * word delay, this is used to make up for the fact that the
+     * crossbar does not make the packet wait. As the delay is
+     * relative, a 32-bit unsigned should be sufficient.
+     */
+    uint32_t lastWordDelay;
 
     /**
      * A virtual base opaque structure used to hold state associated
@@ -541,8 +542,6 @@ class Packet : public Printable
     PortID getSrc() const { assert(isSrcValid()); return src; }
     /// Accessor function to set the source index of the packet.
     void setSrc(PortID _src) { src = _src; }
-    /// Reset source field, e.g. to retransmit packet on different bus.
-    void clearSrc() { src = InvalidPortID; }
 
     bool isDestValid() const { return dest != InvalidPortID; }
     /// Accessor function for the destination index of the packet.
@@ -604,7 +603,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           busFirstWordDelay(0), busLastWordDelay(0),
+           firstWordDelay(0), lastWordDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -627,7 +626,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           busFirstWordDelay(0), busLastWordDelay(0),
+           firstWordDelay(0), lastWordDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -653,8 +652,8 @@ class Packet : public Printable
            src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart),
            bytesValidEnd(pkt->bytesValidEnd),
-           busFirstWordDelay(pkt->busFirstWordDelay),
-           busLastWordDelay(pkt->busLastWordDelay),
+           firstWordDelay(pkt->firstWordDelay),
+           lastWordDelay(pkt->lastWordDelay),
            senderState(pkt->senderState)
     {
         if (!clearFlags)
@@ -739,8 +738,8 @@ class Packet : public Printable
         dest = InvalidPortID;
         bytesValidStart = 0;
         bytesValidEnd = 0;
-        busFirstWordDelay = 0;
-        busLastWordDelay = 0;
+        firstWordDelay = 0;
+        lastWordDelay = 0;
 
         flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();
@@ -766,7 +765,7 @@ class Packet : public Printable
         flags.clear(EXPRESS_SNOOP);
 
         dest = src;
-        clearSrc();
+        src = InvalidPortID;
     }
 
     void

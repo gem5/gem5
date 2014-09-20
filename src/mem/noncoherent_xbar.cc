@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,25 +44,24 @@
 
 /**
  * @file
- * Definition of a bus object.
+ * Definition of a non-coherent crossbar object.
  */
 
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "debug/Bus.hh"
-#include "debug/BusAddrRanges.hh"
-#include "debug/NoncoherentBus.hh"
-#include "mem/noncoherent_bus.hh"
+#include "debug/NoncoherentXBar.hh"
+#include "debug/XBar.hh"
+#include "mem/noncoherent_xbar.hh"
 
-NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
-    : BaseBus(p)
+NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
+    : BaseXBar(p)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
     // are enumerated starting from zero
     for (int i = 0; i < p->port_master_connection_count; ++i) {
         std::string portName = csprintf("%s.master[%d]", name(), i);
-        MasterPort* bp = new NoncoherentBusMasterPort(portName, *this, i);
+        MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this, i);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
                                          csprintf(".reqLayer%d", i)));
@@ -73,7 +72,7 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
     if (p->port_default_connection_count) {
         defaultPortID = masterPorts.size();
         std::string portName = name() + ".default";
-        MasterPort* bp = new NoncoherentBusMasterPort(portName, *this,
+        MasterPort* bp = new NoncoherentXBarMasterPort(portName, *this,
                                                       defaultPortID);
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
@@ -83,7 +82,7 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
     // create the slave ports, once again starting at zero
     for (int i = 0; i < p->port_slave_connection_count; ++i) {
         std::string portName = csprintf("%s.slave[%d]", name(), i);
-        SlavePort* bp = new NoncoherentBusSlavePort(portName, *this, i);
+        SlavePort* bp = new NoncoherentXBarSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
         respLayers.push_back(new RespLayer(*bp, *this,
                                            csprintf(".respLayer%d", i)));
@@ -92,35 +91,35 @@ NoncoherentBus::NoncoherentBus(const NoncoherentBusParams *p)
     clearPortCache();
 }
 
-NoncoherentBus::~NoncoherentBus()
+NoncoherentXBar::~NoncoherentXBar()
 {
-    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
-        delete *l;
-    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
-        delete *l;
+    for (auto l: reqLayers)
+        delete l;
+    for (auto l: respLayers)
+        delete l;
 }
 
 bool
-NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
+NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 {
     // determine the source port based on the id
     SlavePort *src_port = slavePorts[slave_port_id];
 
-    // we should never see express snoops on a non-coherent bus
+    // we should never see express snoops on a non-coherent crossbar
     assert(!pkt->isExpressSnoop());
 
     // determine the destination based on the address
     PortID master_port_id = findPort(pkt->getAddr());
 
-    // test if the bus should be considered occupied for the current
+    // test if the layer should be considered occupied for the current
     // port
     if (!reqLayers[master_port_id]->tryTiming(src_port)) {
-        DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x BUSY\n",
+        DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x\n",
+    DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
@@ -132,7 +131,7 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     pkt->setSrc(slave_port_id);
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
+    Tick packetFinishTime = pkt->lastWordDelay + curTick();
 
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
@@ -141,11 +140,11 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         // inhibited packets should never be forced to retry
         assert(!pkt->memInhibitAsserted());
 
-        DPRINTF(NoncoherentBus, "recvTimingReq: src %s %s 0x%x RETRY\n",
+        DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // undo the calculation so we can check for 0 again
-        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+        pkt->firstWordDelay = pkt->lastWordDelay = 0;
 
         // occupy until the header is sent
         reqLayers[master_port_id]->failedTiming(src_port,
@@ -157,16 +156,15 @@ NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     reqLayers[master_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
-    dataThroughBus += pkt_size;
     pktCount[slave_port_id][master_port_id]++;
-    totPktSize[slave_port_id][master_port_id] += pkt_size;
+    pktSize[slave_port_id][master_port_id] += pkt_size;
     transDist[pkt_cmd]++;
 
     return true;
 }
 
 bool
-NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
+NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 {
     // determine the source port based on the id
     MasterPort *src_port = masterPorts[master_port_id];
@@ -174,15 +172,15 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine the destination based on what is stored in the packet
     PortID slave_port_id = pkt->getDest();
 
-    // test if the bus should be considered occupied for the current
+    // test if the layer should be considered occupied for the current
     // port
     if (!respLayers[slave_port_id]->tryTiming(src_port)) {
-        DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x BUSY\n",
+        DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x BUSY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(NoncoherentBus, "recvTimingResp: src %s %s 0x%x\n",
+    DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x\n",
             src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
@@ -191,7 +189,7 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->busLastWordDelay + curTick();
+    Tick packetFinishTime = pkt->lastWordDelay + curTick();
 
     // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
@@ -203,16 +201,15 @@ NoncoherentBus::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     respLayers[slave_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
-    dataThroughBus += pkt_size;
     pktCount[slave_port_id][master_port_id]++;
-    totPktSize[slave_port_id][master_port_id] += pkt_size;
+    pktSize[slave_port_id][master_port_id] += pkt_size;
     transDist[pkt_cmd]++;
 
     return true;
 }
 
 void
-NoncoherentBus::recvRetry(PortID master_port_id)
+NoncoherentXBar::recvRetry(PortID master_port_id)
 {
     // responses never block on forwarding them, so the retry will
     // always be coming from a port to which we tried to forward a
@@ -221,36 +218,48 @@ NoncoherentBus::recvRetry(PortID master_port_id)
 }
 
 Tick
-NoncoherentBus::recvAtomic(PacketPtr pkt, PortID slave_port_id)
+NoncoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
 {
-    DPRINTF(NoncoherentBus, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
+    DPRINTF(NoncoherentXBar, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
             slavePorts[slave_port_id]->name(), pkt->getAddr(),
             pkt->cmdString());
 
-    // add the request data
-    dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+    unsigned int pkt_cmd = pkt->cmdToIndex();
 
     // determine the destination port
-    PortID dest_id = findPort(pkt->getAddr());
+    PortID master_port_id = findPort(pkt->getAddr());
+
+    // stats updates for the request
+    pktCount[slave_port_id][master_port_id]++;
+    pktSize[slave_port_id][master_port_id] += pkt_size;
+    transDist[pkt_cmd]++;
 
     // forward the request to the appropriate destination
-    Tick response_latency = masterPorts[dest_id]->sendAtomic(pkt);
+    Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
 
     // add the response data
-    if (pkt->isResponse())
-        dataThroughBus += pkt->hasData() ? pkt->getSize() : 0;
+    if (pkt->isResponse()) {
+        pkt_size = pkt->hasData() ? pkt->getSize() : 0;
+        pkt_cmd = pkt->cmdToIndex();
+
+        // stats updates
+        pktCount[slave_port_id][master_port_id]++;
+        pktSize[slave_port_id][master_port_id] += pkt_size;
+        transDist[pkt_cmd]++;
+    }
 
     // @todo: Not setting first-word time
-    pkt->busLastWordDelay = response_latency;
+    pkt->lastWordDelay = response_latency;
     return response_latency;
 }
 
 void
-NoncoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
+NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
 {
     if (!pkt->isPrint()) {
         // don't do DPRINTFs on PrintReq as it clutters up the output
-        DPRINTF(NoncoherentBus,
+        DPRINTF(NoncoherentXBar,
                 "recvFunctional: packet src %s addr 0x%x cmd %s\n",
                 slavePorts[slave_port_id]->name(), pkt->getAddr(),
                 pkt->cmdString());
@@ -264,43 +273,30 @@ NoncoherentBus::recvFunctional(PacketPtr pkt, PortID slave_port_id)
 }
 
 unsigned int
-NoncoherentBus::drain(DrainManager *dm)
+NoncoherentXBar::drain(DrainManager *dm)
 {
     // sum up the individual layers
     unsigned int total = 0;
-    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
-        total += (*l)->drain(dm);
-    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
-        total += (*l)->drain(dm);
+    for (auto l: reqLayers)
+        total += l->drain(dm);
+    for (auto l: respLayers)
+        total += l->drain(dm);
     return total;
 }
 
-NoncoherentBus*
-NoncoherentBusParams::create()
+NoncoherentXBar*
+NoncoherentXBarParams::create()
 {
-    return new NoncoherentBus(this);
+    return new NoncoherentXBar(this);
 }
 
 void
-NoncoherentBus::regStats()
+NoncoherentXBar::regStats()
 {
-    // register the stats of the base class and our two bus layers
-    BaseBus::regStats();
-    for (auto l = reqLayers.begin(); l != reqLayers.end(); ++l)
-        (*l)->regStats();
-    for (auto l = respLayers.begin(); l != respLayers.end(); ++l)
-        (*l)->regStats();
-
-    dataThroughBus
-        .name(name() + ".data_through_bus")
-        .desc("Total data (bytes)")
-        ;
-
-    throughput
-        .name(name() + ".throughput")
-        .desc("Throughput (bytes/s)")
-        .precision(0)
-        ;
-
-    throughput = dataThroughBus / simSeconds;
+    // register the stats of the base class and our layers
+    BaseXBar::regStats();
+    for (auto l: reqLayers)
+        l->regStats();
+    for (auto l: respLayers)
+        l->regStats();
 }

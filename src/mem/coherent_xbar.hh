@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,36 +45,36 @@
 
 /**
  * @file
- * Declaration of a coherent bus.
+ * Declaration of a coherent crossbar.
  */
 
-#ifndef __MEM_COHERENT_BUS_HH__
-#define __MEM_COHERENT_BUS_HH__
+#ifndef __MEM_COHERENT_XBAR_HH__
+#define __MEM_COHERENT_XBAR_HH__
 
 #include "base/hashmap.hh"
-#include "mem/bus.hh"
 #include "mem/snoop_filter.hh"
-#include "params/CoherentBus.hh"
+#include "mem/xbar.hh"
+#include "params/CoherentXBar.hh"
 
 /**
- * A coherent bus connects a number of (potentially) snooping masters
- * and slaves, and routes the request and response packets based on
- * the address, and also forwards all requests to the snoopers and
- * deals with the snoop responses.
+ * A coherent crossbar connects a number of (potentially) snooping
+ * masters and slaves, and routes the request and response packets
+ * based on the address, and also forwards all requests to the
+ * snoopers and deals with the snoop responses.
  *
- * The coherent bus can be used as a template for modelling QPI,
-* HyperTransport, ACE and coherent OCP buses, and is typically used
- * for the L1-to-L2 buses and as the main system interconnect.
- * @sa  \ref gem5MemorySystem "gem5 Memory System"
+ * The coherent crossbar can be used as a template for modelling QPI,
+ * HyperTransport, ACE and coherent OCP buses, and is typically used
+ * for the L1-to-L2 buses and as the main system interconnect.  @sa
+ * \ref gem5MemorySystem "gem5 Memory System"
  */
-class CoherentBus : public BaseBus
+class CoherentXBar : public BaseXBar
 {
 
   protected:
 
     /**
-     * Declare the layers of this bus, one vector for requests, one
-     * for responses, and one for snoop responses
+     * Declare the layers of this crossbar, one vector for requests,
+     * one for responses, and one for snoop responses
      */
     typedef Layer<SlavePort,MasterPort> ReqLayer;
     typedef Layer<MasterPort,SlavePort> RespLayer;
@@ -84,88 +84,88 @@ class CoherentBus : public BaseBus
     std::vector<SnoopLayer*> snoopLayers;
 
     /**
-     * Declaration of the coherent bus slave port type, one will be
-     * instantiated for each of the master ports connecting to the
-     * bus.
+     * Declaration of the coherent crossbar slave port type, one will
+     * be instantiated for each of the master ports connecting to the
+     * crossbar.
      */
-    class CoherentBusSlavePort : public SlavePort
+    class CoherentXBarSlavePort : public SlavePort
     {
 
       private:
 
-        /** A reference to the bus to which this port belongs. */
-        CoherentBus &bus;
+        /** A reference to the crossbar to which this port belongs. */
+        CoherentXBar &xbar;
 
       public:
 
-        CoherentBusSlavePort(const std::string &_name,
-                             CoherentBus &_bus, PortID _id)
-            : SlavePort(_name, &_bus, _id), bus(_bus)
+        CoherentXBarSlavePort(const std::string &_name,
+                             CoherentXBar &_xbar, PortID _id)
+            : SlavePort(_name, &_xbar, _id), xbar(_xbar)
         { }
 
       protected:
 
         /**
-         * When receiving a timing request, pass it to the bus.
+         * When receiving a timing request, pass it to the crossbar.
          */
         virtual bool recvTimingReq(PacketPtr pkt)
-        { return bus.recvTimingReq(pkt, id); }
+        { return xbar.recvTimingReq(pkt, id); }
 
         /**
-         * When receiving a timing snoop response, pass it to the bus.
+         * When receiving a timing snoop response, pass it to the crossbar.
          */
         virtual bool recvTimingSnoopResp(PacketPtr pkt)
-        { return bus.recvTimingSnoopResp(pkt, id); }
+        { return xbar.recvTimingSnoopResp(pkt, id); }
 
         /**
-         * When receiving an atomic request, pass it to the bus.
+         * When receiving an atomic request, pass it to the crossbar.
          */
         virtual Tick recvAtomic(PacketPtr pkt)
-        { return bus.recvAtomic(pkt, id); }
+        { return xbar.recvAtomic(pkt, id); }
 
         /**
-         * When receiving a functional request, pass it to the bus.
+         * When receiving a functional request, pass it to the crossbar.
          */
         virtual void recvFunctional(PacketPtr pkt)
-        { bus.recvFunctional(pkt, id); }
+        { xbar.recvFunctional(pkt, id); }
 
         /**
-         * When receiving a retry, pass it to the bus.
+         * When receiving a retry, pass it to the crossbar.
          */
         virtual void recvRetry()
-        { panic("Bus slave ports always succeed and should never retry.\n"); }
+        { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
-         * Return the union of all adress ranges seen by this bus.
+         * Return the union of all adress ranges seen by this crossbar.
          */
         virtual AddrRangeList getAddrRanges() const
-        { return bus.getAddrRanges(); }
+        { return xbar.getAddrRanges(); }
 
     };
 
     /**
-     * Declaration of the coherent bus master port type, one will be
+     * Declaration of the coherent crossbar master port type, one will be
      * instantiated for each of the slave interfaces connecting to the
-     * bus.
+     * crossbar.
      */
-    class CoherentBusMasterPort : public MasterPort
+    class CoherentXBarMasterPort : public MasterPort
     {
       private:
-        /** A reference to the bus to which this port belongs. */
-        CoherentBus &bus;
+        /** A reference to the crossbar to which this port belongs. */
+        CoherentXBar &xbar;
 
       public:
 
-        CoherentBusMasterPort(const std::string &_name,
-                              CoherentBus &_bus, PortID _id)
-            : MasterPort(_name, &_bus, _id), bus(_bus)
+        CoherentXBarMasterPort(const std::string &_name,
+                              CoherentXBar &_xbar, PortID _id)
+            : MasterPort(_name, &_xbar, _id), xbar(_xbar)
         { }
 
       protected:
 
         /**
          * Determine if this port should be considered a snooper. For
-         * a coherent bus master port this is always true.
+         * a coherent crossbar master port this is always true.
          *
          * @return a boolean that is true if this port is snooping
          */
@@ -173,38 +173,38 @@ class CoherentBus : public BaseBus
         { return true; }
 
         /**
-         * When receiving a timing response, pass it to the bus.
+         * When receiving a timing response, pass it to the crossbar.
          */
         virtual bool recvTimingResp(PacketPtr pkt)
-        { return bus.recvTimingResp(pkt, id); }
+        { return xbar.recvTimingResp(pkt, id); }
 
         /**
-         * When receiving a timing snoop request, pass it to the bus.
+         * When receiving a timing snoop request, pass it to the crossbar.
          */
         virtual void recvTimingSnoopReq(PacketPtr pkt)
-        { return bus.recvTimingSnoopReq(pkt, id); }
+        { return xbar.recvTimingSnoopReq(pkt, id); }
 
         /**
-         * When receiving an atomic snoop request, pass it to the bus.
+         * When receiving an atomic snoop request, pass it to the crossbar.
          */
         virtual Tick recvAtomicSnoop(PacketPtr pkt)
-        { return bus.recvAtomicSnoop(pkt, id); }
+        { return xbar.recvAtomicSnoop(pkt, id); }
 
         /**
-         * When receiving a functional snoop request, pass it to the bus.
+         * When receiving a functional snoop request, pass it to the crossbar.
          */
         virtual void recvFunctionalSnoop(PacketPtr pkt)
-        { bus.recvFunctionalSnoop(pkt, id); }
+        { xbar.recvFunctionalSnoop(pkt, id); }
 
         /** When reciving a range change from the peer port (at id),
-            pass it to the bus. */
+            pass it to the crossbar. */
         virtual void recvRangeChange()
-        { bus.recvRangeChange(id); }
+        { xbar.recvRangeChange(id); }
 
         /** When reciving a retry from the peer port (at id),
-            pass it to the bus. */
+            pass it to the crossbar. */
         virtual void recvRetry()
-        { bus.recvRetry(id); }
+        { xbar.recvRetry(id); }
 
     };
 
@@ -226,8 +226,8 @@ class CoherentBus : public BaseBus
         /**
          * Create a snoop response port that mirrors a given slave port.
          */
-        SnoopRespPort(SlavePort& slave_port, CoherentBus& _bus) :
-            MasterPort(slave_port.name() + ".snoopRespPort", &_bus),
+        SnoopRespPort(SlavePort& slave_port, CoherentXBar& _xbar) :
+            MasterPort(slave_port.name() + ".snoopRespPort", &_xbar),
             slavePort(slave_port) { }
 
         /**
@@ -261,7 +261,7 @@ class CoherentBus : public BaseBus
     /**
      * Store the outstanding requests so we can determine which ones
      * we generated and which ones were merely forwarded. This is used
-     * in the coherent bus when coherency responses come back.
+     * in the coherent crossbar when coherency responses come back.
      */
     m5::hash_set<RequestPtr> outstandingReq;
 
@@ -275,19 +275,19 @@ class CoherentBus : public BaseBus
       * broadcast needed for probes.  NULL denotes an absent filter. */
     SnoopFilter *snoopFilter;
 
-    /** Function called by the port when the bus is recieving a Timing
+    /** Function called by the port when the crossbar is recieving a Timing
       request packet.*/
     bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
 
-    /** Function called by the port when the bus is recieving a Timing
+    /** Function called by the port when the crossbar is recieving a Timing
       response packet.*/
     bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
-    /** Function called by the port when the bus is recieving a timing
+    /** Function called by the port when the crossbar is recieving a timing
         snoop request.*/
     void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
 
-    /** Function called by the port when the bus is recieving a timing
+    /** Function called by the port when the crossbar is recieving a timing
         snoop response.*/
     bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
 
@@ -319,11 +319,11 @@ class CoherentBus : public BaseBus
     void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
                        const std::vector<SlavePort*>& dests);
 
-    /** Function called by the port when the bus is recieving a Atomic
+    /** Function called by the port when the crossbar is recieving a Atomic
       transaction.*/
     Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
 
-    /** Function called by the port when the bus is recieving an
+    /** Function called by the port when the crossbar is recieving an
         atomic snoop transaction.*/
     Tick recvAtomicSnoop(PacketPtr pkt, PortID master_port_id);
 
@@ -360,11 +360,11 @@ class CoherentBus : public BaseBus
                                           PortID source_master_port_id,
                                           const std::vector<SlavePort*>& dests);
 
-    /** Function called by the port when the bus is recieving a Functional
+    /** Function called by the port when the crossbar is recieving a Functional
         transaction.*/
     void recvFunctional(PacketPtr pkt, PortID slave_port_id);
 
-    /** Function called by the port when the bus is recieving a functional
+    /** Function called by the port when the crossbar is recieving a functional
         snoop transaction.*/
     void recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id);
 
@@ -378,22 +378,20 @@ class CoherentBus : public BaseBus
      */
     void forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id);
 
-    Stats::Scalar dataThroughBus;
-    Stats::Scalar snoopDataThroughBus;
-    Stats::Scalar snoopsThroughBus;
+    Stats::Scalar snoops;
     Stats::Distribution snoopFanout;
 
   public:
 
     virtual void init();
 
-    CoherentBus(const CoherentBusParams *p);
+    CoherentXBar(const CoherentXBarParams *p);
 
-    virtual ~CoherentBus();
+    virtual ~CoherentXBar();
 
     unsigned int drain(DrainManager *dm);
 
     virtual void regStats();
 };
 
-#endif //__MEM_COHERENT_BUS_HH__
+#endif //__MEM_COHERENT_XBAR_HH__

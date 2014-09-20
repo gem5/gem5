@@ -80,7 +80,7 @@ PciDevice::PciConfigPort::recvAtomic(PacketPtr pkt)
     assert(pkt->getAddr() >= configAddr &&
            pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
     // @todo someone should pay for this
-    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+    pkt->firstWordDelay = pkt->lastWordDelay = 0;
     return pkt->isRead() ? device->readConfig(pkt) : device->writeConfig(pkt);
 }
 

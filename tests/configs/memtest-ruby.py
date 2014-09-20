@@ -81,7 +81,7 @@ options.num_cpus = nb_cores
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
                 physmem = SimpleMemory(null = True),
-                funcbus = NoncoherentBus())
+                funcbus = NoncoherentXBar())
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()
 system.clk_domain = SrcClockDomain(clock = '1GHz',

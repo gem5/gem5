@@ -49,7 +49,7 @@ cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-dram-ctrl.cfg")
 
 # system simulated
 system = System(cpu = cpu, physmem = DDR3_1600_x64(),
-                membus = NoncoherentBus(width = 16),
+                membus = NoncoherentXBar(width = 16),
                 clk_domain = SrcClockDomain(clock = '1GHz',
                                             voltage_domain =
                                             VoltageDomain()))

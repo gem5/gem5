@@ -171,7 +171,7 @@ if options.timing:
     for j in xrange(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
-        cluster.clusterbus = CoherentBus(clock=busFrequency)
+        cluster.clusterbus = CoherentXBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [TimingSimpleCPU(cpu_id = i + cluster.id,
                                         clock=options.frequency)
@@ -184,7 +184,7 @@ elif options.detailed:
     for j in xrange(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
-        cluster.clusterbus = CoherentBus(clock=busFrequency)
+        cluster.clusterbus = CoherentXBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [DerivO3CPU(cpu_id = i + cluster.id,
                                    clock=options.frequency)
@@ -197,7 +197,7 @@ else:
     for j in xrange(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
-        cluster.clusterbus = CoherentBus(clock=busFrequency)
+        cluster.clusterbus = CoherentXBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [AtomicSimpleCPU(cpu_id = i + cluster.id,
                                         clock=options.frequency)
@@ -211,10 +211,10 @@ else:
 # ----------------------
 system = System(cpu = all_cpus, l1_ = all_l1s, l1bus_ = all_l1buses,
                 physmem = SimpleMemory(),
-                membus = CoherentBus(clock = busFrequency))
+                membus = CoherentXBar(clock = busFrequency))
 system.clock = '1GHz'
 
-system.toL2bus = CoherentBus(clock = busFrequency)
+system.toL2bus = CoherentXBar(clock = busFrequency)
 system.l2 = L2(size = options.l2size, assoc = 8)
 
 # ----------------------

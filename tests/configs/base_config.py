@@ -102,7 +102,7 @@ class BaseSystem(object):
         Returns:
           A bus that CPUs should use to connect to the shared cache.
         """
-        system.toL2Bus = CoherentBus(clk_domain=system.cpu_clk_domain)
+        system.toL2Bus = CoherentXBar(clk_domain=system.cpu_clk_domain)
         system.l2c = L2Cache(clk_domain=system.cpu_clk_domain,
                              size='4MB', assoc=8)
         system.l2c.cpu_side = system.toL2Bus.master
@@ -184,7 +184,7 @@ class BaseSESystem(BaseSystem):
 
     def create_system(self):
         system = System(physmem = self.mem_class(),
-                        membus = CoherentBus(),
+                        membus = CoherentXBar(),
                         mem_mode = self.mem_mode)
         system.system_port = system.membus.slave
         system.physmem.port = system.membus.master

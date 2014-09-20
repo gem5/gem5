@@ -47,7 +47,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from Bus import CoherentBus
+from XBar import CoherentXBar
 from InstTracer import InstTracer
 from ExeTracer import ExeTracer
 from MemObject import MemObject
@@ -274,8 +274,8 @@ class BaseCPU(MemObject):
                 self.itb_walker_cache = iwc
                 self.dtb_walker_cache = dwc
                 if buildEnv['TARGET_ISA'] in ['arm']:
-                    self.itb_walker_cache_bus = CoherentBus()
-                    self.dtb_walker_cache_bus = CoherentBus()
+                    self.itb_walker_cache_bus = CoherentXBar()
+                    self.dtb_walker_cache_bus = CoherentXBar()
                     self.itb_walker_cache_bus.master = iwc.cpu_side
                     self.dtb_walker_cache_bus.master = dwc.cpu_side
                     self.itb.walker.port = self.itb_walker_cache_bus.slave
@@ -308,7 +308,7 @@ class BaseCPU(MemObject):
         # Set a width of 32 bytes (256-bits), which is four times that
         # of the default bus. The clock of the CPU is inherited by
         # default.
-        self.toL2Bus = CoherentBus(width = 32)
+        self.toL2Bus = CoherentXBar(width = 32)
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side

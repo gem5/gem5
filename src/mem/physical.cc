@@ -51,7 +51,7 @@
 #include <string>
 
 #include "base/trace.hh"
-#include "debug/BusAddrRanges.hh"
+#include "debug/AddrRanges.hh"
 #include "debug/Checkpoint.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
@@ -79,7 +79,7 @@ PhysicalMemory::PhysicalMemory(const string& _name,
                 fatal("Memory address range for %s is overlapping\n",
                       (*m)->name());
         } else {
-            DPRINTF(BusAddrRanges,
+            DPRINTF(AddrRanges,
                     "Skipping memory %s that is not in global address map\n",
                     (*m)->name());
             // this type of memory is used e.g. as reference memory by
@@ -144,7 +144,7 @@ PhysicalMemory::createBackingStore(AddrRange range,
               range.to_string());
 
     // perform the actual mmap
-    DPRINTF(BusAddrRanges, "Creating backing store for range %s with size %d\n",
+    DPRINTF(AddrRanges, "Creating backing store for range %s with size %d\n",
             range.to_string(), range.size());
     int map_flags = MAP_ANON | MAP_PRIVATE;
     uint8_t* pmem = (uint8_t*) mmap(NULL, range.size(),
@@ -164,7 +164,7 @@ PhysicalMemory::createBackingStore(AddrRange range,
     // point the memories to their backing store
     for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
          m != _memories.end(); ++m) {
-        DPRINTF(BusAddrRanges, "Mapping memory %s to backing store\n",
+        DPRINTF(AddrRanges, "Mapping memory %s to backing store\n",
                 (*m)->name());
         (*m)->setBackingStore(pmem);
     }

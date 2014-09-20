@@ -39,7 +39,7 @@ cpu = DerivO3CPU(cpu_id=0)
 
 system = System(cpu = cpu,
                 physmem = ruby_memory,
-                membus = CoherentBus(),
+                membus = CoherentXBar(),
                 mem_mode = "timing",
                 clk_domain = SrcClockDomain(clock = '1GHz'))
 

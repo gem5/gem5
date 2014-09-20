@@ -819,7 +819,7 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
         assert(pkt->isResponse());
 
         // @todo someone should pay for this
-        pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+        pkt->firstWordDelay = pkt->lastWordDelay = 0;
 
         // queue the packet in the response queue to be sent out after
         // the static latency has passed

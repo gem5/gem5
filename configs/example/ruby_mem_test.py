@@ -106,7 +106,7 @@ cpus = [ MemTest(atomic = False,
 
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
-                funcbus = NoncoherentBus(),
+                funcbus = NoncoherentXBar(),
                 physmem = SimpleMemory(),
                 clk_domain = SrcClockDomain(clock = options.sys_clock),
                 mem_ranges = [AddrRange(options.mem_size)])

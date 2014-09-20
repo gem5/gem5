@@ -44,7 +44,7 @@
 
 /**
  * @file
- * Implementation of a memory-mapped bus bridge that connects a master
+ * Implementation of a memory-mapped bridge that connects a master
  * and a slave through a request and response queue.
  */
 
@@ -108,7 +108,7 @@ Bridge::init()
 {
     // make sure both sides are connected and have the same block size
     if (!slavePort.isConnected() || !masterPort.isConnected())
-        fatal("Both ports of bus bridge are not connected to a bus.\n");
+        fatal("Both ports of a bridge must be connected.\n");
 
     // notify the master side  of our address ranges
     slavePort.sendRangeChange();
@@ -137,7 +137,7 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
     DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
     // @todo: We need to pay for this and not just zero it out
-    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+    pkt->firstWordDelay = pkt->lastWordDelay = 0;
 
     slavePort.schedTimingResp(pkt, bridge.clockEdge(delay));
 
@@ -181,7 +181,7 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
 
         if (!retryReq) {
             // @todo: We need to pay for this and not just zero it out
-            pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+            pkt->firstWordDelay = pkt->lastWordDelay = 0;
 
             masterPort.schedTimingReq(pkt, bridge.clockEdge(delay));
         }
@@ -209,7 +209,7 @@ Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
 {
     // If we expect to see a response, we need to restore the source
     // and destination field that is potentially changed by a second
-    // bus
+    // crossbar
     if (!pkt->memInhibitAsserted() && pkt->needsResponse()) {
         // Update the sender state so we can deal with the response
         // appropriately
@@ -242,7 +242,7 @@ Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
     pkt->setDest(req_state->origSrc);
     delete req_state;
 
-    // the bridge assumes that at least one bus has set the
+    // the bridge assumes that at least one crossbar has set the
     // destination field of the packet
     assert(pkt->isDestValid());
     DPRINTF(Bridge, "response, new dest %d\n", pkt->getDest());

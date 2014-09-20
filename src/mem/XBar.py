@@ -45,14 +45,14 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-class BaseBus(MemObject):
-    type = 'BaseBus'
+class BaseXBar(MemObject):
+    type = 'BaseXBar'
     abstract = True
-    cxx_header = "mem/bus.hh"
+    cxx_header = "mem/xbar.hh"
     slave = VectorSlavePort("vector port for connecting masters")
     master = VectorMasterPort("vector port for connecting slaves")
     header_cycles = Param.Cycles(1, "cycles of overhead per transaction")
-    width = Param.Unsigned(8, "bus width (bytes)")
+    width = Param.Unsigned(8, "xbar width (bytes)")
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port
@@ -62,24 +62,24 @@ class BaseBus(MemObject):
     # address range, in which case it may overlap with other
     # ports. The default range is always checked first, thus creating
     # a two-level hierarchical lookup. This is useful e.g. for the PCI
-    # bus configuration.
+    # xbar configuration.
     use_default_range = Param.Bool(False, "Perform address mapping for " \
                                        "the default port")
 
-class NoncoherentBus(BaseBus):
-    type = 'NoncoherentBus'
-    cxx_header = "mem/noncoherent_bus.hh"
+class NoncoherentXBar(BaseXBar):
+    type = 'NoncoherentXBar'
+    cxx_header = "mem/noncoherent_xbar.hh"
 
-class CoherentBus(BaseBus):
-    type = 'CoherentBus'
-    cxx_header = "mem/coherent_bus.hh"
+class CoherentXBar(BaseXBar):
+    type = 'CoherentXBar'
+    cxx_header = "mem/coherent_xbar.hh"
 
-    system = Param.System(Parent.any, "System that the bus belongs to.")
-    snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter for the bus.")
+    system = Param.System(Parent.any, "System that the crossbar belongs to.")
+    snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter.")
 
 class SnoopFilter(SimObject):
     type = 'SnoopFilter'
     cxx_header = "mem/snoop_filter.hh"
     lookup_latency = Param.Cycles(3, "lookup latency (cycles)")
 
-    system = Param.System(Parent.any, "System that the bus belongs to.")
+    system = Param.System(Parent.any, "System that the crossbar belongs to.")

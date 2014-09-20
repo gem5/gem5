@@ -1870,7 +1870,7 @@ class SlavePort(Port):
             raise TypeError, 'wrong number of arguments'
 
 # VectorPort description object.  Like Port, but represents a vector
-# of connections (e.g., as on a Bus).
+# of connections (e.g., as on a XBar).
 class VectorPort(Port):
     def __init__(self, *args):
         self.isVec = True

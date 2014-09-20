@@ -42,7 +42,7 @@
  */
 
 #include "base/trace.hh"
-#include "debug/BusAddrRanges.hh"
+#include "debug/AddrRanges.hh"
 #include "dev/io_device.hh"
 #include "sim/system.hh"
 
@@ -55,7 +55,7 @@ Tick
 PioPort::recvAtomic(PacketPtr pkt)
 {
     // @todo: We need to pay for this and not just zero it out
-    pkt->busFirstWordDelay = pkt->busLastWordDelay = 0;
+    pkt->firstWordDelay = pkt->lastWordDelay = 0;
 
     return pkt->isRead() ? device->read(pkt) : device->write(pkt);
 }
@@ -113,7 +113,7 @@ BasicPioDevice::getAddrRanges() const
 {
     assert(pioSize != 0);
     AddrRangeList ranges;
-    DPRINTF(BusAddrRanges, "registering range: %#x-%#x\n", pioAddr, pioSize);
+    DPRINTF(AddrRanges, "registering range: %#x-%#x\n", pioAddr, pioSize);
     ranges.push_back(RangeSize(pioAddr, pioSize));
     return ranges;
 }

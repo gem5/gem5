@@ -71,8 +71,8 @@ def config_cache(options, system):
                                    size=options.l2_size,
                                    assoc=options.l2_assoc)
 
-        system.tol2bus = CoherentBus(clk_domain = system.cpu_clk_domain,
-                                     width = 32)
+        system.tol2bus = CoherentXBar(clk_domain = system.cpu_clk_domain,
+                                      width = 32)
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
 

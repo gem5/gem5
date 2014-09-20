@@ -44,7 +44,7 @@
 
 /**
  * @file
- * Declaration of a memory-mapped bus bridge that connects a master
+ * Declaration of a memory-mapped bridge that connects a master
  * and a slave through a request and response queue.
  */
 
@@ -58,7 +58,7 @@
 #include "params/Bridge.hh"
 
 /**
- * A bridge is used to interface two different busses (or in general a
+ * A bridge is used to interface two different crossbars (or in general a
  * memory-mapped master and slave), with buffering for requests and
  * responses. The bridge has a fixed delay for packets passing through
  * it and responds to a fixed set of address ranges.
@@ -125,8 +125,7 @@ class Bridge : public MemObject
         Bridge& bridge;
 
         /**
-         * Master port on the other side of the bridge (connected to
-         * the other bus).
+         * Master port on the other side of the bridge.
          */
         BridgeMasterPort& masterPort;
 
@@ -241,8 +240,7 @@ class Bridge : public MemObject
         Bridge& bridge;
 
         /**
-         * The slave port on the other side of the bridge (connected
-         * to the other bus).
+         * The slave port on the other side of the bridge.
          */
         BridgeSlavePort& slavePort;
 
@@ -343,4 +341,4 @@ class Bridge : public MemObject
     Bridge(Params *p);
 };
 
-#endif //__MEM_BUS_HH__
+#endif //__MEM_BRIDGE_HH__
