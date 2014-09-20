@@ -280,6 +280,16 @@ IniFile::Section::printUnreferenced(const string &sectionName)
 }
 
 
+void
+IniFile::getSectionNames(vector<string> &list) const
+{
+    for (SectionTable::const_iterator i = table.begin();
+         i != table.end(); ++i)
+    {
+        list.push_back((*i).first);
+    }
+}
+
 bool
 IniFile::printUnreferenced()
 {

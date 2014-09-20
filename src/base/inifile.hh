@@ -192,6 +192,9 @@ class IniFile
     /// @return True if the section exists.
     bool sectionExists(const std::string &section) const;
 
+    /// Push all section names into the given vector
+    void getSectionNames(std::vector<std::string> &list) const;
+
     /// Print unreferenced entries in object.  Iteratively calls
     /// printUnreferend() on all the constituent sections.
     bool printUnreferenced();
