@@ -111,6 +111,11 @@ class DRAMCtrl(AbstractMemory):
                                            "device/chip")
     devices_per_rank = Param.Unsigned("Number of devices/chips per rank")
     ranks_per_channel = Param.Unsigned("Number of ranks per channel")
+
+    # default to 0 bank groups per rank, indicating bank group architecture
+    # is not used
+    # update per memory class when bank group architecture is supported
+    bank_groups_per_rank = Param.Unsigned(0, "Number of bank groups per rank")
     banks_per_rank = Param.Unsigned("Number of banks per rank")
     # only used for the address mapping as the controller by
     # construction is a single channel and multiple controllers have
@@ -147,7 +152,16 @@ class DRAMCtrl(AbstractMemory):
     # This parameter has to account for burst length.
     # Read/Write requests with data size larger than one full burst are broken
     # down into multiple requests in the controller
+    # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
+    # With bank group architectures, tBURST represents the CAS-to-CAS
+    # delay for bursts to different bank groups (tCCD_S)
     tBURST = Param.Latency("Burst duration (for DDR burst length / 2 cycles)")
+
+    # CAS-to-CAS delay for bursts to the same bank group
+    # only utilized with bank group architectures; set to 0 for default case
+    # tBURST is equivalent to tCCD_S; no explicit parameter required
+    # for CAS-to-CAS delay for bursts to different bank groups
+    tCCD_L = Param.Latency("0ns", "Same bank group CAS to CAS delay")
 
     # time taken to complete one refresh cycle (N rows in all banks)
     tRFC = Param.Latency("Refresh cycle time")
@@ -170,6 +184,9 @@ class DRAMCtrl(AbstractMemory):
 
     # minimum row activate to row activate delay time
     tRRD = Param.Latency("ACT to ACT delay")
+
+    # only utilized with bank group architectures; set to 0 for default case
+    tRRD_L = Param.Latency("0ns", "Same bank group ACT to ACT delay")
 
     # time window in which a maximum number of activates are allowed
     # to take place, set to 0 to disable
@@ -274,6 +291,10 @@ class DDR4_2400_x64(DRAMCtrl):
     # Use a single rank
     ranks_per_channel = 1
 
+    # DDR4 has 2 (x16) or 4 (x4 and x8) bank groups
+    # Set to 4 for x4, x8 case
+    bank_groups_per_rank = 4
+
     # DDR4 has 16 banks (4 bank groups) in all
     # configurations. Currently we do not capture the additional
     # constraints incurred by the bank groups
@@ -283,7 +304,16 @@ class DDR4_2400_x64(DRAMCtrl):
     tCK = '0.833ns'
 
     # 8 beats across an x64 interface translates to 4 clocks @ 1200 MHz
+    # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
+    # With bank group architectures, tBURST represents the CAS-to-CAS
+    # delay for bursts to different bank groups (tCCD_S)
     tBURST = '3.333ns'
+
+    # @2400 data rate, tCCD_L is 6 CK
+    # CAS-to-CAS delay for bursts to the same bank group
+    # tBURST is equivalent to tCCD_S; no explicit parameter required
+    # for CAS-to-CAS delay for bursts to different bank groups
+    tCCD_L = '5ns';
 
     # DDR4-2400 17-17-17
     tRCD = '14.16ns'
@@ -291,8 +321,12 @@ class DDR4_2400_x64(DRAMCtrl):
     tRP = '14.16ns'
     tRAS = '32ns'
 
-    # Here using the average of RRD_S and RRD_L
-    tRRD = '4.1ns'
+    # RRD_S (different bank group) for 1K page is MAX(4 CK, 3.3ns)
+    tRRD = '3.3ns'
+
+    # RRD_L (same bank group) for 1K page is MAX(4 CK, 4.9ns)
+    tRRD_L = '4.9ns';
+
     tXAW = '21ns'
     activation_limit = 4
     tRFC = '260ns'

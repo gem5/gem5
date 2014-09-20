@@ -69,6 +69,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     columnsPerRowBuffer(rowBufferSize / burstSize),
     columnsPerStripe(range.granularity() / burstSize),
     ranksPerChannel(p->ranks_per_channel),
+    bankGroupsPerRank(p->bank_groups_per_rank),
+    bankGroupArch(p->bank_groups_per_rank > 0),
     banksPerRank(p->banks_per_rank), channels(p->channels), rowsPerBank(0),
     readBufferSize(p->read_buffer_size),
     writeBufferSize(p->write_buffer_size),
@@ -77,9 +79,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
     tCK(p->tCK), tWTR(p->tWTR), tRTW(p->tRTW), tCS(p->tCS), tBURST(p->tBURST),
-    tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS), tWR(p->tWR),
-    tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
-    tXAW(p->tXAW), activationLimit(p->activation_limit),
+    tCCD_L(p->tCCD_L), tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
+    tWR(p->tWR), tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
+    tRRD_L(p->tRRD_L), tXAW(p->tXAW), activationLimit(p->activation_limit),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
     maxAccessesPerRow(p->max_accesses_per_row),
@@ -104,6 +106,19 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
         for (int b = 0; b < banksPerRank; b++) {
             banks[r][b].rank = r;
             banks[r][b].bank = b;
+            if (bankGroupArch) {
+                // Simply assign lower bits to bank group in order to
+                // rotate across bank groups as banks are incremented
+                // e.g. with 4 banks per bank group and 16 banks total:
+                //    banks 0,4,8,12  are in bank group 0
+                //    banks 1,5,9,13  are in bank group 1
+                //    banks 2,6,10,14 are in bank group 2
+                //    banks 3,7,11,15 are in bank group 3
+                banks[r][b].bankgr = b % bankGroupsPerRank;
+            } else {
+                // No bank groups; simply assign to bank number
+                banks[r][b].bankgr = b;
+            }
         }
     }
 
@@ -168,6 +183,35 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
         fatal("tREFI (%d) must be larger than tRP (%d) and tRFC (%d)\n",
               tREFI, tRP, tRFC);
     }
+
+    // basic bank group architecture checks ->
+    if (bankGroupArch) {
+        // must have at least one bank per bank group
+        if (bankGroupsPerRank > banksPerRank) {
+            fatal("banks per rank (%d) must be equal to or larger than "
+                  "banks groups per rank (%d)\n",
+                  banksPerRank, bankGroupsPerRank);
+        }
+        // must have same number of banks in each bank group
+        if ((banksPerRank % bankGroupsPerRank) != 0) {
+            fatal("Banks per rank (%d) must be evenly divisible by bank groups "
+                  "per rank (%d) for equal banks per bank group\n",
+                  banksPerRank, bankGroupsPerRank);
+        }
+        // tCCD_L should be greater than minimal, back-to-back burst delay
+        if (tCCD_L <= tBURST) {
+            fatal("tCCD_L (%d) should be larger than tBURST (%d) when "
+                  "bank groups per rank (%d) is greater than 1\n",
+                  tCCD_L, tBURST, bankGroupsPerRank);
+        }
+        // tRRD_L is greater than minimal, same bank group ACT-to-ACT delay
+        if (tRRD_L <= tRRD) {
+            fatal("tRRD_L (%d) should be larger than tRRD (%d) when "
+                  "bank groups per rank (%d) is greater than 1\n",
+                  tRRD_L, tRRD, bankGroupsPerRank);
+        }
+    }
+
 }
 
 void
@@ -824,14 +868,25 @@ DRAMCtrl::activateBank(Bank& bank, Tick act_tick, uint32_t row)
     bank.preAllowedAt = act_tick + tRAS;
 
     // Respect the row-to-column command delay
-    bank.colAllowedAt = act_tick + tRCD;
+    bank.colAllowedAt = std::max(act_tick + tRCD, bank.colAllowedAt);
 
     // start by enforcing tRRD
     for(int i = 0; i < banksPerRank; i++) {
         // next activate to any bank in this rank must not happen
         // before tRRD
-        banks[rank][i].actAllowedAt = std::max(act_tick + tRRD,
-                                               banks[rank][i].actAllowedAt);
+        if (bankGroupArch && (bank.bankgr == banks[rank][i].bankgr)) {
+            // bank group architecture requires longer delays between
+            // ACT commands within the same bank group.  Use tRRD_L
+            // in this case
+            banks[rank][i].actAllowedAt = std::max(act_tick + tRRD_L,
+                                                   banks[rank][i].actAllowedAt);
+        } else {
+            // use shorter tRRD value when either
+            // 1) bank group architecture is not supportted
+            // 2) bank is in a different bank group
+            banks[rank][i].actAllowedAt = std::max(act_tick + tRRD,
+                                                   banks[rank][i].actAllowedAt);
+        }
     }
 
     // next, we deal with tXAW, if the activation limit is disabled
@@ -986,9 +1041,38 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // only one burst can use the bus at any one point in time
     assert(dram_pkt->readyTime - busBusyUntil >= tBURST);
 
-    // not strictly necessary, but update the time for the next
-    // read/write (add a max with tCCD here)
-    bank.colAllowedAt = cmd_at + tBURST;
+    // update the time for the next read/write burst for each
+    // bank (add a max with tCCD/tCCD_L here)
+    Tick cmd_dly;
+    for(int j = 0; j < ranksPerChannel; j++) {
+        for(int i = 0; i < banksPerRank; i++) {
+            // next burst to same bank group in this rank must not happen
+            // before tCCD_L.  Different bank group timing requirement is
+            // tBURST; Add tCS for different ranks
+            if (dram_pkt->rank == j) {
+                if (bankGroupArch && (bank.bankgr == banks[j][i].bankgr)) {
+                    // bank group architecture requires longer delays between
+                    // RD/WR burst commands to the same bank group.
+                    // Use tCCD_L in this case
+                    cmd_dly = tCCD_L;
+                } else {
+                    // use tBURST (equivalent to tCCD_S), the shorter
+                    // cas-to-cas delay value, when either:
+                    // 1) bank group architecture is not supportted
+                    // 2) bank is in a different bank group
+                    cmd_dly = tBURST;
+                }
+            } else {
+                // different rank is by default in a different bank group
+                // use tBURST (equivalent to tCCD_S), which is the shorter
+                // cas-to-cas delay in this case
+                // Add tCS to account for rank-to-rank bus delay requirements
+                cmd_dly = tBURST + tCS;
+            }
+            banks[j][i].colAllowedAt = std::max(cmd_at + cmd_dly,
+                                                banks[j][i].colAllowedAt);
+        }
+    }
 
     // Save rank of current access
     activeRank = dram_pkt->rank;
@@ -1184,15 +1268,8 @@ DRAMCtrl::processNextReqEvent()
             // that we are allowed to prepare a new bank, but not issue a
             // read command until after tWTR, in essence we capture a
             // bubble on the data bus that is tWTR + tCL
-            if (switched_cmd_type) {
-                // add a bubble to the data bus for write-to-read turn around
-                // or tCS (different rank bus delay).
-                busBusyUntil += (dram_pkt->rank == activeRank) ? tWTR + tCL :
-                                                                 tCS;
-            } else if (dram_pkt->rank != activeRank) {
-                // add a bubble to the data bus, as defined by the
-                // tCS parameter for rank-to-rank delay
-                busBusyUntil += tCS;
+            if (switched_cmd_type && dram_pkt->rank == activeRank) {
+                busBusyUntil += tWTR + tCL;
             }
 
             doDRAMAccess(dram_pkt);
@@ -1235,14 +1312,12 @@ DRAMCtrl::processNextReqEvent()
         // sanity check
         assert(dram_pkt->size <= burstSize);
 
-        if (switched_cmd_type) {
-            // add a bubble to the data bus, as defined by the
-            // tRTW or tCS parameter, depending on whether changing ranks
-            busBusyUntil += (dram_pkt->rank == activeRank) ? tRTW : tCS;
-        } else if (dram_pkt->rank != activeRank) {
-            // add a bubble to the data bus, as defined by the
-            // tCS parameter for rank-to-rank delay
-            busBusyUntil += tCS;
+        // add a bubble to the data bus, as defined by the
+        // tRTW when access is to the same rank as previous burst
+        // Different rank timing is handled with tCS, which is
+        // applied to colAllowedAt
+        if (switched_cmd_type && dram_pkt->rank == activeRank) {
+            busBusyUntil += tRTW;
         }
 
         doDRAMAccess(dram_pkt);

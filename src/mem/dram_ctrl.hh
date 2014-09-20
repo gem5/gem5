@@ -158,6 +158,7 @@ class DRAMCtrl : public AbstractMemory
         uint32_t openRow;
         uint8_t rank;
         uint8_t bank;
+        uint8_t bankgr;
 
         Tick colAllowedAt;
         Tick preAllowedAt;
@@ -167,7 +168,7 @@ class DRAMCtrl : public AbstractMemory
         uint32_t bytesAccessed;
 
         Bank() :
-            openRow(NO_ROW), rank(0), bank(0),
+            openRow(NO_ROW), rank(0), bank(0), bankgr(0),
             colAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
@@ -470,6 +471,8 @@ class DRAMCtrl : public AbstractMemory
     const uint32_t columnsPerRowBuffer;
     const uint32_t columnsPerStripe;
     const uint32_t ranksPerChannel;
+    const uint32_t bankGroupsPerRank;
+    const bool bankGroupArch;
     const uint32_t banksPerRank;
     const uint32_t channels;
     uint32_t rowsPerBank;
@@ -490,6 +493,7 @@ class DRAMCtrl : public AbstractMemory
     const Tick tRTW;
     const Tick tCS;
     const Tick tBURST;
+    const Tick tCCD_L;
     const Tick tRCD;
     const Tick tCL;
     const Tick tRP;
@@ -499,6 +503,7 @@ class DRAMCtrl : public AbstractMemory
     const Tick tRFC;
     const Tick tREFI;
     const Tick tRRD;
+    const Tick tRRD_L;
     const Tick tXAW;
     const uint32_t activationLimit;
 
