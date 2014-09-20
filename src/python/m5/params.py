@@ -114,6 +114,12 @@ class ParamValue(object):
     def ini_str(self):
         return str(self)
 
+    # default for printing to .json file is regular string conversion.
+    # will be overridden in some cases, mostly to use native Python
+    # types where there are similar JSON types
+    def config_value(self):
+        return str(self)
+
     # allows us to blithely call unproxy() on things without checking
     # if they're really proxies or not
     def unproxy(self, base):
@@ -219,6 +225,9 @@ class VectorParamValue(list):
     def __setattr__(self, attr, value):
         raise AttributeError, \
               "Not allowed to set %s on '%s'" % (attr, type(self).__name__)
+
+    def config_value(self):
+        return [v.config_value() for v in self]
 
     def ini_str(self):
         return ' '.join([v.ini_str() for v in self])
@@ -488,6 +497,9 @@ class NumericParamValue(ParamValue):
         newobj._check()
         return newobj
 
+    def config_value(self):
+        return self.value
+
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(MetaParamValue):
     def __init__(cls, name, bases, dict):
@@ -597,6 +609,9 @@ class Float(ParamValue, float):
 
     def getValue(self):
         return float(self.value)
+
+    def config_value(self):
+        return self
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
@@ -764,6 +779,9 @@ class Bool(ParamValue):
         if self.value:
             return 'true'
         return 'false'
+
+    def config_value(self):
+        return self.value
 
 def IncEthernetAddr(addr, val = 1):
     bytes = map(lambda x: int(x, 16), addr.split(':'))
@@ -1045,7 +1063,7 @@ class IpWithPort(IpAddress):
         return IpWithPort(self.ip, self.port)
 
 time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
-                 "%a %b %d %H:%M:%S %Z %Y",
+                 "%a %b %d %H:%M:%S %Y",
                  "%Y/%m/%d %H:%M:%S",
                  "%Y/%m/%d %H:%M",
                  "%Y/%m/%d",
@@ -1133,6 +1151,7 @@ class Time(ParamValue):
         return str(self)
 
     def get_config_as_dict(self):
+        assert false
         return str(self)
 
 # Enumerated types are a little more complex.  The user specifies the
@@ -1352,6 +1371,9 @@ class Latency(TickParamValue):
             value = ticks.fromSeconds(self.value)
         return long(value)
 
+    def config_value(self):
+        return self.getValue()
+
     # convert latency to ticks
     def ini_str(self):
         return '%d' % self.getValue()
@@ -1392,6 +1414,9 @@ class Frequency(TickParamValue):
             value = ticks.fromSeconds(1.0 / self.value)
         return long(value)
 
+    def config_value(self):
+        return self.getValue()
+
     def ini_str(self):
         return '%d' % self.getValue()
 
@@ -1428,6 +1453,9 @@ class Clock(TickParamValue):
 
     def getValue(self):
         return self.period.getValue()
+
+    def config_value(self):
+        return self.period.config_value()
 
     def ini_str(self):
         return self.period.ini_str()
@@ -1485,6 +1513,9 @@ class NetworkBandwidth(float,ParamValue):
     def ini_str(self):
         return '%f' % self.getValue()
 
+    def config_value(self):
+        return '%f' % self.getValue()
+
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
     ex_str = "1GB/s"
@@ -1510,6 +1541,9 @@ class MemoryBandwidth(float,ParamValue):
         return float(value)
 
     def ini_str(self):
+        return '%f' % self.getValue()
+
+    def config_value(self):
         return '%f' % self.getValue()
 
 #
@@ -1540,6 +1574,9 @@ class NullSimObject(object):
 
     def __str__(self):
         return 'Null'
+
+    def config_value(self):
+        return None
 
     def getValue(self):
         return None

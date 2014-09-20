@@ -955,6 +955,9 @@ class SimObject(object):
     def __str__(self):
         return self.path()
 
+    def config_value(self):
+        return self.path()
+
     def ini_str(self):
         return self.path()
 
@@ -1077,18 +1080,7 @@ class SimObject(object):
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
             if value != None:
-                try:
-                    # Use native type for those supported by JSON and
-                    # strings for everything else. skipkeys=True seems
-                    # to not work as well as one would hope
-                    if type(self._values[param].value) in \
-                            [str, unicode, int, long, float, bool, None]:
-                        d[param] = self._values[param].value
-                    else:
-                        d[param] = str(self._values[param])
-
-                except AttributeError:
-                    pass
+                d[param] = value.config_value()
 
         for n in sorted(self._children.keys()):
             child = self._children[n]
