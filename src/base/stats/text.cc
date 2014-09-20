@@ -284,7 +284,7 @@ VectorPrint::operator()(std::ostream &stream) const
         // the case where there are no subnames) and append it to the
         // base name.
         if (forceSubnames)
-            print.name = base + (havesub ? subnames[0] : to_string(0));
+            print.name = base + (havesub ? subnames[0] : std::to_string(0));
         print.value = vec[0];
         print(stream);
         return;
@@ -300,7 +300,7 @@ VectorPrint::operator()(std::ostream &stream) const
             if (havesub && (i >= subnames.size() || subnames[i].empty()))
                 continue;
 
-            print.name = base + (havesub ? subnames[i] : to_string(i));
+            print.name = base + (havesub ? subnames[i] : std::to_string(i));
             print.desc = subdescs.empty() ? desc : subdescs[i];
 
             print.update(vec[i], _total);
@@ -355,7 +355,7 @@ DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
     init(text, info);
 
     name = info.name + "_" +
-        (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
+        (info.subnames[i].empty() ? (std::to_string(i)) : info.subnames[i]);
 
     if (!info.subdescs[i].empty())
         desc = info.subdescs[i];
@@ -605,7 +605,7 @@ Text::visit(const Vector2dInfo &info)
         }
 
         print.name = info.name + "_" +
-            (havesub ? info.subnames[i] : to_string(i));
+            (havesub ? info.subnames[i] : std::to_string(i));
         print.desc = info.desc;
         print.vec = yvec;
         print.total = total;

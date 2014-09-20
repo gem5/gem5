@@ -741,7 +741,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 class ProxyInfo : public ScalarInfo
 {
   public:
-    std::string str() const { return to_string(value()); }
+    std::string str() const { return std::to_string(value()); }
     size_type size() const { return 1; }
     bool check() const { return true; }
     void prepare() { }
@@ -2170,7 +2170,7 @@ class ConstNode : public Node
     const VResult &result() const { return vresult; }
     Result total() const { return vresult[0]; };
     size_type size() const { return 1; }
-    std::string str() const { return to_string(vresult[0]); }
+    std::string str() const { return std::to_string(vresult[0]); }
 };
 
 template <class T>
@@ -2200,7 +2200,7 @@ class ConstVectorNode : public Node
         size_type size = this->size();
         std::string tmp = "(";
         for (off_type i = 0; i < size; i++)
-            tmp += csprintf("%s ",to_string(vresult[i]));
+            tmp += csprintf("%s ", std::to_string(vresult[i]));
         tmp += ")";
         return tmp;
     }

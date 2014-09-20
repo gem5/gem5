@@ -215,7 +215,7 @@ LSQUnit<Impl>::name() const
     if (Impl::MaxThreads == 1) {
         return iewStage->name() + ".lsq";
     } else {
-        return iewStage->name() + ".lsq.thread" + to_string(lsqID);
+        return iewStage->name() + ".lsq.thread" + std::to_string(lsqID);
     }
 }
 

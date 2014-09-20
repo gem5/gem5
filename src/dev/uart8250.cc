@@ -36,7 +36,6 @@
 #include <vector>
 
 #include "base/inifile.hh"
-#include "base/str.hh"        // for to_number
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/Uart.hh"

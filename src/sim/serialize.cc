@@ -111,38 +111,25 @@ showParam(ostream &os, const unsigned char &value)
 }
 
 
-// Use sscanf() for FP types as to_number() only handles integers
 template <>
 bool
 parseParam(const string &s, float &value)
 {
-    return (sscanf(s.c_str(), "%f", &value) == 1);
+    return to_number(s, value);
 }
 
 template <>
 bool
 parseParam(const string &s, double &value)
 {
-    return (sscanf(s.c_str(), "%lf", &value) == 1);
+    return to_number(s, value);
 }
 
 template <>
 bool
 parseParam(const string &s, bool &value)
 {
-    const string &ls = to_lower(s);
-
-    if (ls == "true") {
-        value = true;
-        return true;
-    }
-
-    if (ls == "false") {
-        value = false;
-        return true;
-    }
-
-    return false;
+    return to_bool(s, value);
 }
 
 // Display bools as strings

@@ -29,30 +29,15 @@
  *          Steve Reinhardt
  */
 
-#ifndef __STR_HH__
-#define __STR_HH__
+#ifndef __BASE_STR_HH__
+#define __BASE_STR_HH__
 
-#include <cctype>
 #include <cstring>
-#include <sstream>
+#include <limits>
+#include <locale>
+#include <stdexcept>
 #include <string>
 #include <vector>
-
-template<class> class Hash;
-template<>
-class Hash<std::string> {
-public:
-  unsigned operator()(const std::string &s) {
-      std::string::const_iterator i = s.begin();
-      std::string::const_iterator end = s.end();
-      unsigned hash = 5381;
-
-      while (i < end)
-          hash = ((hash << 5) + hash) + *i++;
-
-      return hash;
-  }
-};
 
 inline void
 eat_lead_white(std::string &s)
@@ -87,8 +72,8 @@ to_lower(const std::string &s)
 
     lower.reserve(len);
 
-    for (int i = 0; i < len; ++i)
-        lower.push_back(tolower(s[i]));
+    for (const auto &c : s)
+        lower.push_back(std::tolower(c));
 
     return lower;
 }
@@ -111,16 +96,87 @@ void
 tokenize(std::vector<std::string> &vector, const std::string &s,
          char token, bool ign = true);
 
-template <class T> bool
-to_number(const std::string &value, T &retval);
+/**
+ * @{
+ *
+ * @name String to number helper functions for signed and unsigned
+ *       integeral type, as well as floating-point types.
+ */
+template <class T>
+typename std::enable_if<std::is_integral<T>::value &&
+                        std::is_signed<T>::value, T>::type
+__to_number(const std::string &value)
+{
+    // start big and narrow it down if needed, determine the base dynamically
+    long long r = std::stoll(value, nullptr, 0);
+    if (r < std::numeric_limits<T>::min() || r > std::numeric_limits<T>::max())
+        throw std::out_of_range("Out of range");
+    return static_cast<T>(r);
+}
 
 template <class T>
-inline std::string
-to_string(const T &value)
+typename std::enable_if<std::is_integral<T>::value &&
+                        !std::is_signed<T>::value, T>::type
+__to_number(const std::string &value)
 {
-    std::stringstream str;
-    str << value;
-    return str.str();
+    // start big and narrow it down if needed, determine the base dynamically
+    unsigned long long r = std::stoull(value, nullptr, 0);
+    if (r > std::numeric_limits<T>::max())
+        throw std::out_of_range("Out of range");
+    return static_cast<T>(r);
+}
+
+template <class T>
+typename std::enable_if<std::is_floating_point<T>::value, T>::type
+__to_number(const std::string &value)
+{
+    // start big and narrow it down if needed
+    long double r = std::stold(value);
+    if (r < std::numeric_limits<T>::min() || r > std::numeric_limits<T>::max())
+        throw std::out_of_range("Out of range");
+    return static_cast<T>(r);
+}
+/** @} */
+
+/**
+ * Turn a string representation of a number, either integral or
+ * floating point, into an actual number.
+ *
+ * @param value The string representing the number
+ * @param retval The resulting value
+ * @return True if the parsing was successful
+ */
+template <class T>
+inline bool
+to_number(const std::string &value, T &retval)
+{
+    try {
+        retval = __to_number<T>(value);
+        return true;
+    } catch (const std::out_of_range&) {
+        return false;
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+}
+
+/**
+ * Turn a string representation of a boolean into a boolean value.
+ */
+inline bool
+to_bool(const std::string &value, bool &retval)
+{
+    std::string s = to_lower(value);
+
+    if (s == "true") {
+        retval = true;
+        return true;
+    } else if (s == "false") {
+        retval = false;
+        return true;
+    }
+
+    return false;
 }
 
 // Put quotes around string arg if it contains spaces.
@@ -172,4 +228,4 @@ startswith(const std::string &s, const std::string &prefix)
 }
 
 
-#endif //__STR_HH__
+#endif //__BASE_STR_HH__
