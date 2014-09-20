@@ -170,7 +170,6 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     void postExecute();
     void advancePC(const Fault &fault);
 
-    virtual void deallocateContext(ThreadID thread_num);
     virtual void haltContext(ThreadID thread_num);
 
     // statistics

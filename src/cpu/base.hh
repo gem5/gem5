@@ -257,9 +257,6 @@ class BaseCPU : public MemObject
     /// Notify the CPU that the indicated context is now suspended.
     virtual void suspendContext(ThreadID thread_num) {}
 
-    /// Notify the CPU that the indicated context is now deallocated.
-    virtual void deallocateContext(ThreadID thread_num) {}
-
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(ThreadID thread_num) {}
 

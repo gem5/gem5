@@ -281,9 +281,6 @@ class InOrderThreadContext : public ThreadContext
     void activateContext()
     { cpu->activateContext(thread->threadId()); }
 
-    void deallocateContext()
-    { cpu->deallocateContext(thread->threadId()); }
-
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
     unsigned readStCondFailures()

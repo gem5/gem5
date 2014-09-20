@@ -571,12 +571,6 @@ InOrderDynInst::setRegOtherThread(int reg_idx, MiscReg val, ThreadID tid)
     }
 }
 
-void
-InOrderDynInst::deallocateContext(int thread_num)
-{
-    this->cpu->deallocateContext(thread_num);
-}
-
 Fault
 InOrderDynInst::readMem(Addr addr, uint8_t *data,
                         unsigned size, unsigned flags)

@@ -326,11 +326,6 @@ class FullO3CPU : public BaseO3CPU
     void suspendContext(ThreadID tid);
 
     /** Remove Thread from Active Threads List &&
-     *  Possibly Remove Thread Context from CPU.
-     */
-    void deallocateContext(ThreadID tid, bool remove);
-
-    /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
     void haltContext(ThreadID tid);

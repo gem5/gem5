@@ -730,20 +730,12 @@ FullO3CPU<Impl>::activateContext(ThreadID tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::deallocateContext(ThreadID tid, bool remove)
-{
-    deactivateThread(tid);
-    if (remove)
-        removeThread(tid);
-}
-
-template <class Impl>
-void
 FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
     assert(!switchedOut());
-    deallocateContext(tid, false);
+
+    deactivateThread(tid);
 
     // If this was the last thread then unschedule the tick event.
     if (activeThreads.size() == 0)
@@ -761,7 +753,9 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
     //For now, this is the same as deallocate
     DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
     assert(!switchedOut());
-    deallocateContext(tid, true);
+
+    deactivateThread(tid);
+    removeThread(tid);
 }
 
 template <class Impl>
